@@ -246,6 +246,10 @@ export default function Salgsmuligheter() {
                     <Input type="number" value={currentSm.forventet_mrr || ""} onChange={e => updateField("forventet_mrr", Number(e.target.value))} />
                   </div>
                   <div>
+                    <span className="text-muted-foreground block text-xs mb-1">SLA</span>
+                    <Input type="number" value={currentSm.sla || ""} onChange={e => updateField("sla", Number(e.target.value))} />
+                  </div>
+                  <div>
                     <span className="text-muted-foreground block text-xs mb-1">Oppstartskostnad</span>
                     <Input type="number" value={currentSm.oppstartskostnad || ""} onChange={e => updateField("oppstartskostnad", Number(e.target.value))} />
                   </div>
