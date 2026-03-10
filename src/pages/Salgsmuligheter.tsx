@@ -217,7 +217,7 @@ export default function Salgsmuligheter() {
 
             return (
               <div className="mt-6 space-y-4 text-sm">
-                <Field label="Selskap" value={getSelskapNavn(currentSm.selskap_id)} />
+                <Field label="Selskap" value={<span className="cursor-pointer hover:text-primary hover:underline" onClick={() => navigate(`/selskaper/${currentSm.selskap_id}`)}>{getSelskapNavn(currentSm.selskap_id)}</span>} />
 
                 {/* Status */}
                 <div>
