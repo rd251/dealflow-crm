@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, GripVertical, Trophy, XCircle } from "lucide-react";
-import { Salgsmulighet, SalgsmulighetStatus, Tapsaarsak, beregnTotalKontraktsverdi, beregnVektetPipeline } from "@/data/crm-data";
+import { Salgsmulighet, SalgsmulighetStatus, Tapsaarsak, beregnTotalKontraktsverdi, beregnVektetPipeline, beregnTotalMrr } from "@/data/crm-data";
 import InlineTaskForm from "@/components/InlineTaskForm";
 
 const openStatuses: SalgsmulighetStatus[] = ["Ny mulighet", "Møte booket", "Demo gjennomført", "Tilbud sendt", "Forhandling"];
@@ -33,7 +33,7 @@ export default function Salgsmuligheter() {
   const [lossDialog, setLossDialog] = useState<string | null>(null);
   const [lossReason, setLossReason] = useState<Tapsaarsak>("Pris");
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [form, setForm] = useState({ navn: "", selskap_id: "", kontakt_id: "", forventet_mrr: 0, oppstartskostnad: 0, kontraktslengde_mnd: 12, sannsynlighet: 50, forventet_lukkedato: "", neste_steg: "" });
+  const [form, setForm] = useState({ navn: "", selskap_id: "", kontakt_id: "", forventet_mrr: 0, sla: 0, oppstartskostnad: 0, kontraktslengde_mnd: 12, sannsynlighet: 50, forventet_lukkedato: "", neste_steg: "" });
 
   const getSelskapNavn = (id: string) => selskaper.find(s => s.id === id)?.firmanavn || "–";
 
@@ -55,7 +55,7 @@ export default function Salgsmuligheter() {
     const id = `SM-${String(salgsmuligheter.length + 1).padStart(4, "0")}`;
     const nySm: Salgsmulighet = {
       id, navn: form.navn, selskap_id: form.selskap_id, kontakt_id: form.kontakt_id,
-      ansvarlig: "", status: "Ny mulighet", forventet_mrr: form.forventet_mrr,
+      ansvarlig: "", status: "Ny mulighet", forventet_mrr: form.forventet_mrr, sla: form.sla,
       oppstartskostnad: form.oppstartskostnad, kontraktslengde_mnd: form.kontraktslengde_mnd,
       sannsynlighet: form.sannsynlighet, forventet_lukkedato: form.forventet_lukkedato,
       vunnet_dato: "", tapt_dato: "", tapsaarsak: "", neste_steg: form.neste_steg, notater: "",
@@ -63,7 +63,7 @@ export default function Salgsmuligheter() {
     };
     updateSalgsmuligheter(prev => [...prev, nySm]);
     setDialogOpen(false);
-    setForm({ navn: "", selskap_id: "", kontakt_id: "", forventet_mrr: 0, oppstartskostnad: 0, kontraktslengde_mnd: 12, sannsynlighet: 50, forventet_lukkedato: "", neste_steg: "" });
+    setForm({ navn: "", selskap_id: "", kontakt_id: "", forventet_mrr: 0, sla: 0, oppstartskostnad: 0, kontraktslengde_mnd: 12, sannsynlighet: 50, forventet_lukkedato: "", neste_steg: "" });
   };
 
   const now = new Date();
@@ -93,8 +93,9 @@ export default function Salgsmuligheter() {
                 <option value="">Velg selskap</option>
                 {selskaper.map(s => <option key={s.id} value={s.id}>{s.firmanavn}</option>)}
               </select>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 <Input type="number" placeholder="Forventet MRR" value={form.forventet_mrr || ""} onChange={e => setForm(f => ({ ...f, forventet_mrr: Number(e.target.value) }))} />
+                <Input type="number" placeholder="SLA" value={form.sla || ""} onChange={e => setForm(f => ({ ...f, sla: Number(e.target.value) }))} />
                 <Input type="number" placeholder="Oppstartskostnad" value={form.oppstartskostnad || ""} onChange={e => setForm(f => ({ ...f, oppstartskostnad: Number(e.target.value) }))} />
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -156,7 +157,8 @@ export default function Salgsmuligheter() {
                             <p className="font-semibold text-sm truncate">{deal.navn}</p>
                             <p className="text-xs text-muted-foreground mt-0.5 truncate cursor-pointer hover:text-primary hover:underline" onClick={e => { e.stopPropagation(); navigate(`/selskaper/${deal.selskap_id}`); }}>{getSelskapNavn(deal.selskap_id)}</p>
                             <div className="flex items-center gap-2 mt-2">
-                              <span className="text-xs font-mono font-semibold">{deal.forventet_mrr.toLocaleString("no-NO")} MRR</span>
+                              <span className="text-xs font-mono font-semibold">{beregnTotalMrr(deal).toLocaleString("no-NO")} MRR</span>
+                              {(deal.sla || 0) > 0 && <span className="text-[10px] text-muted-foreground">(SLA: {deal.sla.toLocaleString("no-NO")})</span>}
                               <span className="text-[10px] text-muted-foreground">{deal.sannsynlighet}%</span>
                             </div>
                             {deal.neste_steg && <p className="text-[10px] text-muted-foreground mt-1 truncate">→ {deal.neste_steg}</p>}
@@ -211,7 +213,8 @@ export default function Salgsmuligheter() {
                 s.id === currentSm.id ? { ...s, [field]: value, sist_aktivitet: today } : s
               ));
             };
-            const arr = currentSm.forventet_mrr * 12;
+            const totalMrr = beregnTotalMrr(currentSm);
+            const arr = totalMrr * 12;
             const totalKontraktsverdi = beregnTotalKontraktsverdi(currentSm);
             const vektetVerdi = beregnVektetPipeline(currentSm);
 
@@ -239,6 +242,10 @@ export default function Salgsmuligheter() {
                   <div>
                     <span className="text-muted-foreground block text-xs mb-1">Forventet MRR</span>
                     <Input type="number" value={currentSm.forventet_mrr || ""} onChange={e => updateField("forventet_mrr", Number(e.target.value))} />
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground block text-xs mb-1">SLA</span>
+                    <Input type="number" value={currentSm.sla || ""} onChange={e => updateField("sla", Number(e.target.value))} />
                   </div>
                   <div>
                     <span className="text-muted-foreground block text-xs mb-1">Oppstartskostnad</span>
@@ -273,6 +280,7 @@ export default function Salgsmuligheter() {
                 <div className="bg-muted/50 rounded-lg p-3 space-y-2">
                   <h4 className="font-semibold text-xs text-muted-foreground uppercase tracking-wide">Beregnede verdier</h4>
                   <div className="grid grid-cols-2 gap-2 text-sm">
+                    <Field label="Total MRR (inkl. SLA)" value={`${totalMrr.toLocaleString("no-NO")} NOK`} />
                     <Field label="ARR" value={`${arr.toLocaleString("no-NO")} NOK`} />
                     <Field label="Total kontraktsverdi" value={`${totalKontraktsverdi.toLocaleString("no-NO")} NOK`} />
                     <Field label="Vektet pipelineverdi" value={`${vektetVerdi.toLocaleString("no-NO")} NOK`} />
