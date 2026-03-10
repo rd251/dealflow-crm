@@ -6,7 +6,7 @@ const navItems = [
   { to: "/leads", icon: UserPlus, label: "Leads" },
   { to: "/salgsmuligheter", icon: Handshake, label: "Salgsmuligheter" },
   { to: "/prosjekter", icon: FolderKanban, label: "Prosjekter" },
-  { to: "/selskaper", icon: Building2, label: "Selskaper" },
+  { to: "/selskaper", icon: Building2, label: "Kundeforhold" },
   { to: "/kontakter", icon: Users, label: "Kontakter" },
   { to: "/oppgaver", icon: ListTodo, label: "Oppgaver" },
 ];
