@@ -52,7 +52,7 @@ export default function Salgsmuligheter() {
 
   const addSm = () => {
     const today = new Date().toISOString().split("T")[0];
-    const id = `SM-${String(salgsmuligheter.length + 1).padStart(4, "0")}`;
+    const id = generateId("SM", salgsmuligheter);
     const nySm: Salgsmulighet = {
       id, navn: form.navn, selskap_id: form.selskap_id, kontakt_id: form.kontakt_id,
       ansvarlig: "", status: "Ny mulighet", forventet_mrr: form.forventet_mrr, sla: form.sla,
