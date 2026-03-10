@@ -79,7 +79,7 @@ export function useCrmStore() {
     const smId = `SM-${String(salgsmuligheter.length + 1).padStart(4, "0")}`;
     const nySm: Salgsmulighet = {
       id: smId, navn: lead.firmanavn, selskap_id: selskapId, kontakt_id: kontaktId || "",
-      ansvarlig: lead.ansvarlig, status: "Ny mulighet", forventet_mrr: 0, oppstartskostnad: 0,
+      ansvarlig: lead.ansvarlig, status: "Ny mulighet", forventet_mrr: 0, sla: 0, oppstartskostnad: 0,
       kontraktslengde_mnd: 12, sannsynlighet: 50, forventet_lukkedato: "", vunnet_dato: "",
       tapt_dato: "", tapsaarsak: "", neste_steg: lead.neste_steg, notater: lead.notater,
       opprettet_dato: today, sist_aktivitet: today,
