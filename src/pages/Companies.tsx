@@ -75,7 +75,7 @@ export default function Companies() {
 
   return (
     <PageShell
-      title="Selskaper"
+      title="Kundeforhold"
       subtitle={`${selskaper.length} selskaper · ${selskaper.filter(s => s.kundestatus === "Live").length} live`}
       actions={
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
