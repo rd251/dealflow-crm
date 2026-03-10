@@ -11,7 +11,7 @@ import { Kontakt } from "@/data/crm-data";
 
 export default function Contacts() {
   const navigate = useNavigate();
-  const { kontakter, selskaper, salgsmuligheter, updateKontakter } = useCrmStore();
+  const { kontakter, selskaper, salgsmuligheter, updateKontakter, generateId } = useCrmStore();
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Kontakt | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
