@@ -132,6 +132,7 @@ export default function Companies() {
               <th className="text-left px-4 py-3 font-medium">Tilstand</th>
               <th className="text-right px-4 py-3 font-medium">MRR</th>
               <th className="text-right px-4 py-3 font-medium">ARR</th>
+              <th className="text-right px-4 py-3 font-medium">Oppstart</th>
             </tr>
           </thead>
           <tbody>
@@ -153,6 +154,7 @@ export default function Companies() {
                 </td>
                 <td className="px-4 py-3 text-right font-mono">{s.mrr.toLocaleString("no-NO")}</td>
                 <td className="px-4 py-3 text-right font-mono">{s.arr.toLocaleString("no-NO")}</td>
+                <td className="px-4 py-3 text-right font-mono">{s.oppstartskostnad.toLocaleString("no-NO")}</td>
               </tr>
             ))}
           </tbody>
