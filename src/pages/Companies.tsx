@@ -33,6 +33,7 @@ const tilstandColors: Record<Kundetilstand, string> = {
 };
 
 export default function Companies() {
+  const navigate = useNavigate();
   const { selskaper, updateSelskaper, kansellerSelskap } = useCrmStore();
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
