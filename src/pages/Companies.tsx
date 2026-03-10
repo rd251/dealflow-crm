@@ -91,7 +91,7 @@ export default function Companies() {
             <Button size="sm"><Plus className="w-4 h-4 mr-1" />Nytt selskap</Button>
           </DialogTrigger>
           <DialogContent>
-            <DialogHeader><DialogTitle>Nytt selskap</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>Nytt selskap</DialogTitle><DialogDescription>Fyll inn detaljer for det nye selskapet.</DialogDescription></DialogHeader>
             <div className="space-y-3">
               <Input placeholder="Firmanavn" value={form.firmanavn} onChange={e => setForm(f => ({ ...f, firmanavn: e.target.value }))} />
               <Input placeholder="Bransje" value={form.bransje} onChange={e => setForm(f => ({ ...f, bransje: e.target.value }))} />
