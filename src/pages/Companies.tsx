@@ -7,7 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Search, Building2 } from "lucide-react";
+import { Plus, Search, Building2, ChevronRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import InlineTaskForm from "@/components/InlineTaskForm";
 import { Selskap, Kundestatus, OnboardingStatus, Kundetilstand, Kanselleringsaarsak } from "@/data/crm-data";
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +33,7 @@ const tilstandColors: Record<Kundetilstand, string> = {
 };
 
 export default function Companies() {
+  const navigate = useNavigate();
   const { selskaper, updateSelskaper, kansellerSelskap } = useCrmStore();
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -137,7 +139,7 @@ export default function Companies() {
           </thead>
           <tbody>
             {filtered.map(s => (
-              <tr key={s.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => setSelected(s)}>
+              <tr key={s.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => navigate(`/selskaper/${s.id}`)}>
                 <td className="px-4 py-3 font-medium">{s.firmanavn}</td>
                 <td className="px-4 py-3 text-muted-foreground">{s.bransje || "–"}</td>
                 <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
