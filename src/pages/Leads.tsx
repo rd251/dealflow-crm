@@ -12,7 +12,7 @@ import { Lead, LeadStatus, LeadKilde } from "@/data/crm-data";
 import { Badge } from "@/components/ui/badge";
 import InlineTaskForm from "@/components/InlineTaskForm";
 
-const statusOptions: LeadStatus[] = ["Ny", "Kontaktet", "Kvalifisert", "Ikke aktuelt", "Konvertert til salg"];
+const statusOptions: LeadStatus[] = ["Ny", "Kontaktet", "Kvalifisert", "Ikke aktuelt", "Konvertert til salg", "Konvertert til partner"];
 const kildeOptions: LeadKilde[] = ["Nettside", "LinkedIn", "Partner", "Referanse", "Kald outbound", "E-post", "Telefon", "Annet"];
 
 const statusColors: Record<LeadStatus, string> = {
