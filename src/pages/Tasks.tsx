@@ -27,7 +27,7 @@ export default function Tasks() {
   const weekEnd = new Date(Date.now() + 7 * 86400000).toISOString().split("T")[0];
 
   const addOppgave = () => {
-    const id = `O-${String(oppgaver.length + 1).padStart(4, "0")}`;
+    const id = generateId("O", oppgaver);
     const ny: Oppgave = { id, ...form, status: "Åpen", paaminnelse: true };
     updateOppgaver(prev => [...prev, ny]);
     setDialogOpen(false);
