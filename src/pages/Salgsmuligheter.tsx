@@ -154,7 +154,7 @@ export default function Salgsmuligheter() {
                           <GripVertical className="w-4 h-4 text-muted-foreground/40 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity" />
                           <div className="flex-1 min-w-0">
                             <p className="font-semibold text-sm truncate">{deal.navn}</p>
-                            <p className="text-xs text-muted-foreground mt-0.5 truncate">{getSelskapNavn(deal.selskap_id)}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5 truncate cursor-pointer hover:text-primary hover:underline" onClick={e => { e.stopPropagation(); navigate(`/selskaper/${deal.selskap_id}`); }}>{getSelskapNavn(deal.selskap_id)}</p>
                             <div className="flex items-center gap-2 mt-2">
                               <span className="text-xs font-mono font-semibold">{deal.forventet_mrr.toLocaleString("no-NO")} MRR</span>
                               <span className="text-[10px] text-muted-foreground">{deal.sannsynlighet}%</span>
