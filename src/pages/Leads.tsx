@@ -153,6 +153,11 @@ export default function Leads() {
               {currentLead.notater && (
                 <div><span className="text-muted-foreground block text-xs mb-1">Notater</span><p className="text-sm">{currentLead.notater}</p></div>
               )}
+
+              <div className="border-t pt-4">
+                <InlineTaskForm lead_id={currentLead.id} selskap_id="" />
+              </div>
+
               {currentLead.konvertert_dato && (
                 <div className="p-3 bg-success/10 rounded-lg text-success text-xs font-medium">
                   Konvertert {currentLead.konvertert_dato}
