@@ -71,7 +71,7 @@ export default function Prosjekter() {
                         {!isMobile && <GripVertical className="w-4 h-4 text-muted-foreground/40 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity" />}
                         <div className="flex-1 min-w-0">
                           <p className="font-semibold text-sm truncate">{p.prosjektnavn}</p>
-                          <p className="text-xs text-muted-foreground mt-0.5 cursor-pointer hover:text-primary hover:underline" onClick={e => { e.stopPropagation(); navigate(`/selskaper/${p.selskap_id}`); }}>{getSelskapNavn(p.selskap_id)}</p>
+                          <p className={`text-xs text-muted-foreground mt-0.5 ${selskaper.find(s => s.id === p.selskap_id && s.kundestatus !== "Ikke kunde") ? "cursor-pointer hover:text-primary hover:underline" : ""}`} onClick={e => { e.stopPropagation(); const sel = selskaper.find(s => s.id === p.selskap_id); if (sel && sel.kundestatus !== "Ikke kunde") navigate(`/selskaper/${p.selskap_id}`); }}>{getSelskapNavn(p.selskap_id)}</p>
                           {p.forventet_go_live && <p className="text-[10px] text-muted-foreground mt-1">Go-live: {p.forventet_go_live}</p>}
                         </div>
                       </div>
