@@ -1,128 +1,203 @@
-export type DealStage = "New Lead" | "Contacted" | "Proposal Sent" | "Won" | "Lost";
-export type CustomerStatus = "Lead" | "Prospect" | "Not Live" | "Live" | "Cancelled";
-export type Priority = "Low" | "Normal" | "High" | "Urgent";
-export type Segment = "SMB" | "Enterprise" | "Partner" | "Restaurant" | "Helse" | "Kommune";
+// ============ TYPES ============
 
-export interface Company {
+export type LeadStatus = "Ny" | "Kontaktet" | "Kvalifisert" | "Ikke aktuelt" | "Konvertert til salg";
+export type LeadKilde = "Nettside" | "LinkedIn" | "Partner" | "Referanse" | "Kald outbound" | "E-post" | "Telefon" | "Annet";
+
+export type SalgsmulighetStatus = "Ny mulighet" | "Møte booket" | "Demo gjennomført" | "Tilbud sendt" | "Forhandling" | "Vunnet" | "Tapt";
+export type Tapsaarsak = "Pris" | "Ikke riktig timing" | "Valgte annen leverandør" | "Ikke behov" | "Teknisk / integrasjon" | "Annet";
+
+export type ProsjektStatus = "Ny" | "I produksjon" | "Test med kunde" | "Live" | "Blokkert";
+export type Integrasjon = "Ingen" | "GastroPlanner" | "HubSpot" | "Lime" | "Salesforce" | "API" | "Annet";
+
+export type Kundestatus = "Ikke kunde" | "Pilot" | "Live" | "Pause" | "Kansellert";
+export type OnboardingStatus = "Ikke startet" | "Pågår" | "Venter på kunde" | "Klar for live" | "Ferdig";
+export type Kundetilstand = "Bra" | "Usikker" | "Risiko";
+export type Kanselleringsaarsak = "Pris" | "Lav bruk" | "Teknisk utfordring" | "Manglende verdi" | "Byttet leverandør" | "Midlertidig stopp" | "Annet";
+
+export type OppgaveStatus = "Åpen" | "Pågår" | "Ferdig";
+export type Prioritet = "Lav" | "Medium" | "Høy";
+
+// ============ INTERFACES ============
+
+export interface Lead {
   id: string;
-  name: string;
-  useCase: string;
-  segment: Segment;
-  status: CustomerStatus;
-  contactCount: number;
-  pricePerMonth: number;
-  baseMRR: number;
-  liveMRR: number;
+  firmanavn: string;
+  kontaktperson: string;
+  e_post: string;
+  telefon: string;
+  kilde: LeadKilde;
+  status: LeadStatus;
+  ansvarlig: string;
+  neste_steg: string;
+  notater: string;
+  opprettet_dato: string;
+  sist_aktivitet: string;
+  konvertert_dato: string;
+}
+
+export interface Salgsmulighet {
+  id: string;
+  navn: string;
+  selskap_id: string;
+  kontakt_id: string;
+  ansvarlig: string;
+  status: SalgsmulighetStatus;
+  forventet_mrr: number;
+  oppstartskostnad: number;
+  kontraktslengde_mnd: number;
+  sannsynlighet: number;
+  forventet_lukkedato: string;
+  vunnet_dato: string;
+  tapt_dato: string;
+  tapsaarsak: Tapsaarsak | "";
+  neste_steg: string;
+  notater: string;
+  opprettet_dato: string;
+  sist_aktivitet: string;
+}
+
+export interface Prosjekt {
+  id: string;
+  prosjektnavn: string;
+  selskap_id: string;
+  salgsmulighet_id: string;
+  ansvarlig: string;
+  status: ProsjektStatus;
+  startdato: string;
+  forventet_go_live: string;
+  go_live_dato: string;
+  oppstartskostnad: number;
+  oppstart_fakturert: boolean;
+  oppstart_faktura_dato: string;
+  oppstart_betalt: boolean;
+  integrasjon: Integrasjon;
+  notater: string;
+}
+
+export interface Selskap {
+  id: string;
+  firmanavn: string;
+  bransje: string;
+  kundeansvarlig: string;
+  kundestatus: Kundestatus;
+  live_status: boolean;
+  onboarding_status: OnboardingStatus;
+  mrr: number;
   arr: number;
-  setupFee: number;
-  notes: string;
+  oppstartskostnad: number;
+  go_live_dato: string;
+  kansellert_dato: string;
+  kanselleringsaarsak: Kanselleringsaarsak | "";
+  kanselleringsnotat: string;
+  kundetilstand: Kundetilstand;
+  sist_aktivitet: string;
+  neste_steg: string;
+  notater: string;
 }
 
-export interface Contact {
+export interface Kontakt {
   id: string;
-  companyId: string;
-  name: string;
-  email: string;
-  phone: string;
-  role: string;
-  source: string;
-  notes: NoteEntry[];
+  navn: string;
+  selskap_id: string;
+  rolle: string;
+  e_post: string;
+  telefon: string;
+  linkedin: string;
+  notater: string;
 }
 
-export interface Deal {
+export interface Oppgave {
   id: string;
-  companyId: string;
-  companyName: string;
-  useCase: string;
-  segment: Segment;
-  stage: DealStage;
-  probability: number;
-  expectedMRR: number;
-  weightedMRR: number;
-  expectedCloseDate: string;
-  status: "Open" | "Won" | "Lost";
-  priority: Priority;
-  lastUpdated: string;
-  notes: string;
+  oppgave: string;
+  selskap_id: string;
+  salgsmulighet_id: string;
+  ansvarlig: string;
+  frist: string;
+  prioritet: Prioritet;
+  status: OppgaveStatus;
+  paaminnelse: boolean;
+  notater: string;
 }
 
-export interface NoteEntry {
-  id: string;
-  date: string;
-  content: string;
-  type: "call" | "email" | "meeting" | "note";
+// ============ HELPERS ============
+
+export function beregnArr(mrr: number) { return mrr * 12; }
+export function beregnTotalKontraktsverdi(s: Salgsmulighet) {
+  return (s.forventet_mrr * s.kontraktslengde_mnd) + s.oppstartskostnad;
+}
+export function beregnVektetPipeline(s: Salgsmulighet) {
+  return beregnTotalKontraktsverdi(s) * (s.sannsynlighet / 100);
 }
 
-export interface Task {
-  id: string;
-  contactId?: string;
-  companyId?: string;
-  dealId?: string;
-  title: string;
-  description: string;
-  dueDate: string;
-  completed: boolean;
-  priority: Priority;
-  reminder: boolean;
-}
+// ============ SEED DATA ============
 
-export const initialCompanies: Company[] = [
-  { id: "ACC-0001", name: "Jobbkort AS", useCase: "Outbound Info agent", segment: "SMB", status: "Not Live", contactCount: 1, pricePerMonth: 990, baseMRR: 990, liveMRR: 0, arr: 0, setupFee: 0, notes: "" },
-  { id: "ACC-0002", name: "Sporty Norge AS", useCase: "Support agent", segment: "SMB", status: "Live", contactCount: 1, pricePerMonth: 12990, baseMRR: 12990, liveMRR: 12990, arr: 155880, setupFee: 15000, notes: "" },
-  { id: "ACC-0003", name: "Protect Vakthold og Sikkerhet Sande AS", useCase: "Support agent", segment: "SMB", status: "Live", contactCount: 1, pricePerMonth: 2999, baseMRR: 2999, liveMRR: 2999, arr: 35988, setupFee: 5000, notes: "" },
-  { id: "ACC-0004", name: "Uni Micro AS", useCase: "Support agent", segment: "Enterprise", status: "Live", contactCount: 1, pricePerMonth: 12900, baseMRR: 12900, liveMRR: 12900, arr: 154800, setupFee: 43700, notes: "" },
-  { id: "ACC-0005", name: "Gastro Planner AS", useCase: "Restaurant agenter", segment: "Partner", status: "Not Live", contactCount: 1, pricePerMonth: 0, baseMRR: 0, liveMRR: 0, arr: 0, setupFee: 0, notes: "" },
-  { id: "ACC-0006", name: "RSA", useCase: "Internt system rapportering", segment: "Enterprise", status: "Not Live", contactCount: 1, pricePerMonth: 12900, baseMRR: 12900, liveMRR: 0, arr: 0, setupFee: 4999, notes: "" },
-  { id: "ACC-0007", name: "Trenogmat AS", useCase: "Support agent", segment: "SMB", status: "Not Live", contactCount: 1, pricePerMonth: 2999, baseMRR: 2999, liveMRR: 0, arr: 0, setupFee: 13997, notes: "" },
-  { id: "ACC-0008", name: "Innlandet Legesenter AS", useCase: "Resepsjonist", segment: "Helse", status: "Not Live", contactCount: 1, pricePerMonth: 12900, baseMRR: 12900, liveMRR: 0, arr: 0, setupFee: 10300, notes: "" },
-  { id: "ACC-0009", name: "Drifti AS", useCase: "Support og salgs agent", segment: "SMB", status: "Not Live", contactCount: 1, pricePerMonth: 12900, baseMRR: 12900, liveMRR: 0, arr: 0, setupFee: 5000, notes: "" },
-  { id: "ACC-0010", name: "LP RESTAURANTDRIFT AS", useCase: "Matbestilling", segment: "Restaurant", status: "Not Live", contactCount: 1, pricePerMonth: 2999, baseMRR: 2999, liveMRR: 0, arr: 0, setupFee: 8997, notes: "" },
-  { id: "ACC-0011", name: "Belron Solutions AS", useCase: "Booking system", segment: "Enterprise", status: "Not Live", contactCount: 1, pricePerMonth: 5990, baseMRR: 5990, liveMRR: 0, arr: 0, setupFee: 0, notes: "" },
-  { id: "ACC-0012", name: "Outwork AS", useCase: "Møte booking", segment: "SMB", status: "Not Live", contactCount: 1, pricePerMonth: 12900, baseMRR: 12900, liveMRR: 0, arr: 0, setupFee: 12900, notes: "" },
-  { id: "ACC-0013", name: "Nimbus Direct AS", useCase: "Outbound Info agent", segment: "Enterprise", status: "Live", contactCount: 1, pricePerMonth: 12900, baseMRR: 12900, liveMRR: 12900, arr: 154800, setupFee: 24500, notes: "" },
-  { id: "ACC-0014", name: "Vanylven Kommune", useCase: "Resepsjonist", segment: "Kommune", status: "Live", contactCount: 1, pricePerMonth: 12900, baseMRR: 12900, liveMRR: 12900, arr: 154800, setupFee: 0, notes: "" },
-  { id: "ACC-0015", name: "Nordic BIM Group", useCase: "Support agent", segment: "Enterprise", status: "Live", contactCount: 1, pricePerMonth: 12900, baseMRR: 12900, liveMRR: 12900, arr: 154800, setupFee: 49000, notes: "" },
-  { id: "ACC-0016", name: "USA kunde (navn mangler)", useCase: "Support agent", segment: "SMB", status: "Live", contactCount: 1, pricePerMonth: 990, baseMRR: 990, liveMRR: 990, arr: 11880, setupFee: 0, notes: "" },
-  { id: "ACC-0017", name: "Defigo AS", useCase: "Support agent", segment: "SMB", status: "Live", contactCount: 1, pricePerMonth: 10000, baseMRR: 10000, liveMRR: 10000, arr: 120000, setupFee: 98000, notes: "" },
-  { id: "ACC-0018", name: "Fair Collection AS", useCase: "Support agent", segment: "Enterprise", status: "Not Live", contactCount: 1, pricePerMonth: 80000, baseMRR: 80000, liveMRR: 0, arr: 0, setupFee: 80000, notes: "" },
-  { id: "ACC-0019", name: "BOB Trafikkskole AS", useCase: "Chatbot", segment: "SMB", status: "Not Live", contactCount: 1, pricePerMonth: 990, baseMRR: 990, liveMRR: 0, arr: 0, setupFee: 5000, notes: "" },
-  { id: "ACC-0020", name: "Zen Finans AS", useCase: "Support agent og salg", segment: "Enterprise", status: "Not Live", contactCount: 1, pricePerMonth: 92900, baseMRR: 92900, liveMRR: 0, arr: 0, setupFee: 60000, notes: "" },
-  { id: "ACC-0021", name: "Eger Group", useCase: "Support agent", segment: "SMB", status: "Not Live", contactCount: 0, pricePerMonth: 0, baseMRR: 0, liveMRR: 0, arr: 0, setupFee: 0, notes: "" },
-  { id: "ACC-0022", name: "FF Rollerskis AS", useCase: "Support agent og chatbot", segment: "SMB", status: "Live", contactCount: 1, pricePerMonth: 990, baseMRR: 990, liveMRR: 990, arr: 11880, setupFee: 0, notes: "" },
+const today = "2026-03-10";
+
+export const initialSelskaper: Selskap[] = [
+  { id: "S-0001", firmanavn: "Jobbkort AS", bransje: "HR Tech", kundeansvarlig: "", kundestatus: "Ikke kunde", live_status: false, onboarding_status: "Ikke startet", mrr: 0, arr: 0, oppstartskostnad: 0, go_live_dato: "", kansellert_dato: "", kanselleringsaarsak: "", kanselleringsnotat: "", kundetilstand: "Bra", sist_aktivitet: today, neste_steg: "", notater: "" },
+  { id: "S-0002", firmanavn: "Sporty Norge AS", bransje: "E-handel", kundeansvarlig: "", kundestatus: "Live", live_status: true, onboarding_status: "Ferdig", mrr: 12990, arr: 155880, oppstartskostnad: 15000, go_live_dato: "2026-01-15", kansellert_dato: "", kanselleringsaarsak: "", kanselleringsnotat: "", kundetilstand: "Bra", sist_aktivitet: today, neste_steg: "", notater: "" },
+  { id: "S-0003", firmanavn: "Protect Vakthold og Sikkerhet Sande AS", bransje: "Sikkerhet", kundeansvarlig: "", kundestatus: "Live", live_status: true, onboarding_status: "Ferdig", mrr: 2999, arr: 35988, oppstartskostnad: 5000, go_live_dato: "2026-02-01", kansellert_dato: "", kanselleringsaarsak: "", kanselleringsnotat: "", kundetilstand: "Bra", sist_aktivitet: today, neste_steg: "", notater: "" },
+  { id: "S-0004", firmanavn: "Uni Micro AS", bransje: "ERP", kundeansvarlig: "", kundestatus: "Live", live_status: true, onboarding_status: "Ferdig", mrr: 12900, arr: 154800, oppstartskostnad: 43700, go_live_dato: "2025-11-01", kansellert_dato: "", kanselleringsaarsak: "", kanselleringsnotat: "", kundetilstand: "Bra", sist_aktivitet: today, neste_steg: "", notater: "" },
+  { id: "S-0005", firmanavn: "Gastro Planner AS", bransje: "Restaurant Tech", kundeansvarlig: "", kundestatus: "Ikke kunde", live_status: false, onboarding_status: "Ikke startet", mrr: 0, arr: 0, oppstartskostnad: 0, go_live_dato: "", kansellert_dato: "", kanselleringsaarsak: "", kanselleringsnotat: "", kundetilstand: "Bra", sist_aktivitet: today, neste_steg: "", notater: "" },
+  { id: "S-0006", firmanavn: "RSA", bransje: "Enterprise", kundeansvarlig: "", kundestatus: "Ikke kunde", live_status: false, onboarding_status: "Ikke startet", mrr: 0, arr: 0, oppstartskostnad: 4999, go_live_dato: "", kansellert_dato: "", kanselleringsaarsak: "", kanselleringsnotat: "", kundetilstand: "Bra", sist_aktivitet: today, neste_steg: "", notater: "" },
+  { id: "S-0007", firmanavn: "Trenogmat AS", bransje: "Mat & Drikke", kundeansvarlig: "", kundestatus: "Ikke kunde", live_status: false, onboarding_status: "Ikke startet", mrr: 0, arr: 0, oppstartskostnad: 13997, go_live_dato: "", kansellert_dato: "", kanselleringsaarsak: "", kanselleringsnotat: "", kundetilstand: "Bra", sist_aktivitet: today, neste_steg: "", notater: "" },
+  { id: "S-0008", firmanavn: "Innlandet Legesenter AS", bransje: "Helse", kundeansvarlig: "", kundestatus: "Ikke kunde", live_status: false, onboarding_status: "Ikke startet", mrr: 0, arr: 0, oppstartskostnad: 10300, go_live_dato: "", kansellert_dato: "", kanselleringsaarsak: "", kanselleringsnotat: "", kundetilstand: "Bra", sist_aktivitet: today, neste_steg: "", notater: "" },
+  { id: "S-0009", firmanavn: "Drifti AS", bransje: "SaaS", kundeansvarlig: "", kundestatus: "Ikke kunde", live_status: false, onboarding_status: "Ikke startet", mrr: 0, arr: 0, oppstartskostnad: 5000, go_live_dato: "", kansellert_dato: "", kanselleringsaarsak: "", kanselleringsnotat: "", kundetilstand: "Bra", sist_aktivitet: today, neste_steg: "", notater: "" },
+  { id: "S-0010", firmanavn: "LP RESTAURANTDRIFT AS", bransje: "Restaurant", kundeansvarlig: "", kundestatus: "Ikke kunde", live_status: false, onboarding_status: "Ikke startet", mrr: 0, arr: 0, oppstartskostnad: 8997, go_live_dato: "", kansellert_dato: "", kanselleringsaarsak: "", kanselleringsnotat: "", kundetilstand: "Bra", sist_aktivitet: today, neste_steg: "", notater: "" },
+  { id: "S-0011", firmanavn: "Belron Solutions AS", bransje: "Enterprise", kundeansvarlig: "", kundestatus: "Ikke kunde", live_status: false, onboarding_status: "Ikke startet", mrr: 0, arr: 0, oppstartskostnad: 0, go_live_dato: "", kansellert_dato: "", kanselleringsaarsak: "", kanselleringsnotat: "", kundetilstand: "Bra", sist_aktivitet: today, neste_steg: "", notater: "" },
+  { id: "S-0012", firmanavn: "Outwork AS", bransje: "SaaS", kundeansvarlig: "", kundestatus: "Ikke kunde", live_status: false, onboarding_status: "Ikke startet", mrr: 0, arr: 0, oppstartskostnad: 12900, go_live_dato: "", kansellert_dato: "", kanselleringsaarsak: "", kanselleringsnotat: "", kundetilstand: "Bra", sist_aktivitet: today, neste_steg: "", notater: "" },
+  { id: "S-0013", firmanavn: "Nimbus Direct AS", bransje: "Logistikk", kundeansvarlig: "", kundestatus: "Live", live_status: true, onboarding_status: "Ferdig", mrr: 12900, arr: 154800, oppstartskostnad: 24500, go_live_dato: "2025-12-01", kansellert_dato: "", kanselleringsaarsak: "", kanselleringsnotat: "", kundetilstand: "Bra", sist_aktivitet: today, neste_steg: "", notater: "" },
+  { id: "S-0014", firmanavn: "Vanylven Kommune", bransje: "Offentlig", kundeansvarlig: "", kundestatus: "Live", live_status: true, onboarding_status: "Ferdig", mrr: 12900, arr: 154800, oppstartskostnad: 0, go_live_dato: "2025-10-15", kansellert_dato: "", kanselleringsaarsak: "", kanselleringsnotat: "", kundetilstand: "Bra", sist_aktivitet: today, neste_steg: "", notater: "" },
+  { id: "S-0015", firmanavn: "Nordic BIM Group", bransje: "Bygg & Anlegg", kundeansvarlig: "", kundestatus: "Live", live_status: true, onboarding_status: "Ferdig", mrr: 12900, arr: 154800, oppstartskostnad: 49000, go_live_dato: "2025-09-01", kansellert_dato: "", kanselleringsaarsak: "", kanselleringsnotat: "", kundetilstand: "Bra", sist_aktivitet: today, neste_steg: "", notater: "" },
+  { id: "S-0016", firmanavn: "USA kunde (navn mangler)", bransje: "Annet", kundeansvarlig: "", kundestatus: "Live", live_status: true, onboarding_status: "Ferdig", mrr: 990, arr: 11880, oppstartskostnad: 0, go_live_dato: "2026-01-01", kansellert_dato: "", kanselleringsaarsak: "", kanselleringsnotat: "", kundetilstand: "Bra", sist_aktivitet: today, neste_steg: "", notater: "" },
+  { id: "S-0017", firmanavn: "Defigo AS", bransje: "PropTech", kundeansvarlig: "", kundestatus: "Live", live_status: true, onboarding_status: "Ferdig", mrr: 10000, arr: 120000, oppstartskostnad: 98000, go_live_dato: "2025-08-01", kansellert_dato: "", kanselleringsaarsak: "", kanselleringsnotat: "", kundetilstand: "Bra", sist_aktivitet: today, neste_steg: "", notater: "" },
+  { id: "S-0018", firmanavn: "Fair Collection AS", bransje: "Finans", kundeansvarlig: "", kundestatus: "Ikke kunde", live_status: false, onboarding_status: "Ikke startet", mrr: 0, arr: 0, oppstartskostnad: 80000, go_live_dato: "", kansellert_dato: "", kanselleringsaarsak: "", kanselleringsnotat: "", kundetilstand: "Bra", sist_aktivitet: today, neste_steg: "", notater: "" },
+  { id: "S-0019", firmanavn: "BOB Trafikkskole AS", bransje: "Utdanning", kundeansvarlig: "", kundestatus: "Ikke kunde", live_status: false, onboarding_status: "Ikke startet", mrr: 0, arr: 0, oppstartskostnad: 5000, go_live_dato: "", kansellert_dato: "", kanselleringsaarsak: "", kanselleringsnotat: "", kundetilstand: "Bra", sist_aktivitet: today, neste_steg: "", notater: "" },
+  { id: "S-0020", firmanavn: "Zen Finans AS", bransje: "Finans", kundeansvarlig: "", kundestatus: "Ikke kunde", live_status: false, onboarding_status: "Ikke startet", mrr: 0, arr: 0, oppstartskostnad: 60000, go_live_dato: "", kansellert_dato: "", kanselleringsaarsak: "", kanselleringsnotat: "", kundetilstand: "Bra", sist_aktivitet: today, neste_steg: "", notater: "" },
+  { id: "S-0021", firmanavn: "Eger Group", bransje: "Retail", kundeansvarlig: "", kundestatus: "Ikke kunde", live_status: false, onboarding_status: "Ikke startet", mrr: 0, arr: 0, oppstartskostnad: 0, go_live_dato: "", kansellert_dato: "", kanselleringsaarsak: "", kanselleringsnotat: "", kundetilstand: "Bra", sist_aktivitet: today, neste_steg: "", notater: "" },
+  { id: "S-0022", firmanavn: "FF Rollerskis AS", bransje: "Sport", kundeansvarlig: "", kundestatus: "Live", live_status: true, onboarding_status: "Ferdig", mrr: 990, arr: 11880, oppstartskostnad: 0, go_live_dato: "2026-02-15", kansellert_dato: "", kanselleringsaarsak: "", kanselleringsnotat: "", kundetilstand: "Bra", sist_aktivitet: today, neste_steg: "", notater: "" },
 ];
 
-export const initialDeals: Deal[] = [
-  { id: "DEAL-0001", companyId: "ACC-0001", companyName: "Jobbkort AS", useCase: "Outbound Info agent", segment: "SMB", stage: "Proposal Sent", probability: 100, expectedMRR: 990, weightedMRR: 990, expectedCloseDate: "2026-04-15", status: "Open", priority: "Normal", lastUpdated: "2026-03-09", notes: "Importert fra Pipeline" },
-  { id: "DEAL-0002", companyId: "ACC-0005", companyName: "Gastro Planner AS", useCase: "Restaurant agenter", segment: "Partner", stage: "Contacted", probability: 50, expectedMRR: 0, weightedMRR: 0, expectedCloseDate: "2026-05-01", status: "Open", priority: "Normal", lastUpdated: "2026-03-09", notes: "Importert fra Pipeline" },
-  { id: "DEAL-0003", companyId: "ACC-0006", companyName: "RSA", useCase: "Internt system rapportering", segment: "Enterprise", stage: "Contacted", probability: 50, expectedMRR: 12900, weightedMRR: 6450, expectedCloseDate: "2026-04-30", status: "Open", priority: "Normal", lastUpdated: "2026-03-09", notes: "Importert fra Pipeline" },
-  { id: "DEAL-0004", companyId: "ACC-0007", companyName: "Trenogmat AS", useCase: "Support agent", segment: "SMB", stage: "Contacted", probability: 50, expectedMRR: 2999, weightedMRR: 1500, expectedCloseDate: "2026-04-20", status: "Open", priority: "Normal", lastUpdated: "2026-03-09", notes: "Importert fra Pipeline" },
-  { id: "DEAL-0005", companyId: "ACC-0008", companyName: "Innlandet Legesenter AS", useCase: "Resepsjonist", segment: "Helse", stage: "Contacted", probability: 50, expectedMRR: 12900, weightedMRR: 6450, expectedCloseDate: "2026-04-25", status: "Open", priority: "Normal", lastUpdated: "2026-03-09", notes: "Importert fra Pipeline" },
-  { id: "DEAL-0006", companyId: "ACC-0009", companyName: "Drifti AS", useCase: "Support og salgs agent", segment: "SMB", stage: "Proposal Sent", probability: 100, expectedMRR: 12900, weightedMRR: 12900, expectedCloseDate: "2026-04-10", status: "Open", priority: "High", lastUpdated: "2026-03-09", notes: "Importert fra Pipeline" },
-  { id: "DEAL-0007", companyId: "ACC-0010", companyName: "LP RESTAURANTDRIFT AS", useCase: "Matbestilling", segment: "Restaurant", stage: "Contacted", probability: 50, expectedMRR: 2999, weightedMRR: 1500, expectedCloseDate: "2026-05-15", status: "Open", priority: "Normal", lastUpdated: "2026-03-09", notes: "Normalisert ved import" },
-  { id: "DEAL-0008", companyId: "ACC-0011", companyName: "Belron Solutions AS", useCase: "Booking system", segment: "Enterprise", stage: "Contacted", probability: 50, expectedMRR: 5990, weightedMRR: 2995, expectedCloseDate: "2026-05-01", status: "Open", priority: "Normal", lastUpdated: "2026-03-09", notes: "Importert fra Pipeline" },
-  { id: "DEAL-0009", companyId: "ACC-0012", companyName: "Outwork AS", useCase: "Møte booking", segment: "SMB", stage: "Proposal Sent", probability: 100, expectedMRR: 12900, weightedMRR: 12900, expectedCloseDate: "2026-04-05", status: "Open", priority: "High", lastUpdated: "2026-03-09", notes: "Importert fra Pipeline" },
-  { id: "DEAL-0010", companyId: "ACC-0018", companyName: "Fair Collection AS", useCase: "Support agent", segment: "Enterprise", stage: "Contacted", probability: 50, expectedMRR: 80000, weightedMRR: 40000, expectedCloseDate: "2026-06-01", status: "Open", priority: "High", lastUpdated: "2026-03-09", notes: "Importert fra Pipeline" },
-  { id: "DEAL-0011", companyId: "ACC-0019", companyName: "BOB Trafikkskole AS", useCase: "Chatbot", segment: "SMB", stage: "New Lead", probability: 50, expectedMRR: 990, weightedMRR: 495, expectedCloseDate: "2026-05-20", status: "Open", priority: "Low", lastUpdated: "2026-03-09", notes: "Importert fra Pipeline" },
-  { id: "DEAL-0012", companyId: "ACC-0020", companyName: "Zen Finans AS", useCase: "Support agent og salg", segment: "Enterprise", stage: "Contacted", probability: 50, expectedMRR: 92900, weightedMRR: 46450, expectedCloseDate: "2026-06-15", status: "Open", priority: "High", lastUpdated: "2026-03-09", notes: "Importert fra Pipeline" },
+export const initialKontakter: Kontakt[] = [
+  { id: "K-0001", selskap_id: "S-0002", navn: "Lars Hansen", e_post: "lars@sportynorge.no", telefon: "+47 900 11 222", rolle: "CEO", linkedin: "", notater: "" },
+  { id: "K-0002", selskap_id: "S-0004", navn: "Maria Olsen", e_post: "maria@unimicro.no", telefon: "+47 900 33 444", rolle: "CTO", linkedin: "", notater: "" },
+  { id: "K-0003", selskap_id: "S-0013", navn: "Erik Johansen", e_post: "erik@nimbusdirect.no", telefon: "+47 900 55 666", rolle: "Salgssjef", linkedin: "", notater: "" },
+  { id: "K-0004", selskap_id: "S-0015", navn: "Kari Nordmann", e_post: "kari@nordicbim.no", telefon: "+47 900 77 888", rolle: "IT-leder", linkedin: "", notater: "" },
+  { id: "K-0005", selskap_id: "S-0017", navn: "Thomas Berg", e_post: "thomas@defigo.no", telefon: "+47 900 99 000", rolle: "CEO", linkedin: "", notater: "" },
+  { id: "K-0006", selskap_id: "S-0018", navn: "Anne Kristiansen", e_post: "anne@faircollection.no", telefon: "+47 901 11 222", rolle: "COO", linkedin: "", notater: "" },
+  { id: "K-0007", selskap_id: "S-0020", navn: "Petter Svendsen", e_post: "petter@zenfinans.no", telefon: "+47 901 33 444", rolle: "CTO", linkedin: "", notater: "" },
+  { id: "K-0008", selskap_id: "S-0009", navn: "Silje Dahl", e_post: "silje@drifti.no", telefon: "+47 901 55 666", rolle: "Grunnlegger", linkedin: "", notater: "" },
+  { id: "K-0009", selskap_id: "S-0014", navn: "Olav Moen", e_post: "olav@vanylven.kommune.no", telefon: "+47 901 77 888", rolle: "IT-leder", linkedin: "", notater: "" },
+  { id: "K-0010", selskap_id: "S-0001", navn: "Henrik Lie", e_post: "henrik@jobbkort.no", telefon: "+47 901 99 000", rolle: "CEO", linkedin: "", notater: "" },
 ];
 
-export const initialContacts: Contact[] = [
-  { id: "CON-0001", companyId: "ACC-0002", name: "Lars Hansen", email: "lars@sportynorge.no", phone: "+47 900 11 222", role: "CEO", source: "Referral", notes: [] },
-  { id: "CON-0002", companyId: "ACC-0004", name: "Maria Olsen", email: "maria@unimicro.no", phone: "+47 900 33 444", role: "CTO", source: "Website", notes: [] },
-  { id: "CON-0003", companyId: "ACC-0013", name: "Erik Johansen", email: "erik@nimbusdirect.no", phone: "+47 900 55 666", role: "Head of Sales", source: "LinkedIn", notes: [] },
-  { id: "CON-0004", companyId: "ACC-0015", name: "Kari Nordmann", email: "kari@nordicbim.no", phone: "+47 900 77 888", role: "IT Manager", source: "Conference", notes: [] },
-  { id: "CON-0005", companyId: "ACC-0017", name: "Thomas Berg", email: "thomas@defigo.no", phone: "+47 900 99 000", role: "CEO", source: "Cold Outreach", notes: [] },
-  { id: "CON-0006", companyId: "ACC-0018", name: "Anne Kristiansen", email: "anne@faircollection.no", phone: "+47 901 11 222", role: "COO", source: "Referral", notes: [] },
-  { id: "CON-0007", companyId: "ACC-0020", name: "Petter Svendsen", email: "petter@zenfinans.no", phone: "+47 901 33 444", role: "CTO", source: "LinkedIn", notes: [] },
-  { id: "CON-0008", companyId: "ACC-0009", name: "Silje Dahl", email: "silje@drifti.no", phone: "+47 901 55 666", role: "Founder", source: "Website", notes: [] },
-  { id: "CON-0009", companyId: "ACC-0014", name: "Olav Moen", email: "olav@vanylven.kommune.no", phone: "+47 901 77 888", role: "IT Lead", source: "Referral", notes: [] },
-  { id: "CON-0010", companyId: "ACC-0001", name: "Henrik Lie", email: "henrik@jobbkort.no", phone: "+47 901 99 000", role: "CEO", source: "Cold Outreach", notes: [] },
+export const initialSalgsmuligheter: Salgsmulighet[] = [
+  { id: "SM-0001", navn: "Outbound Info agent", selskap_id: "S-0001", kontakt_id: "K-0010", ansvarlig: "", status: "Tilbud sendt", forventet_mrr: 990, oppstartskostnad: 0, kontraktslengde_mnd: 12, sannsynlighet: 100, forventet_lukkedato: "2026-04-15", vunnet_dato: "", tapt_dato: "", tapsaarsak: "", neste_steg: "Avventer svar", notater: "", opprettet_dato: "2026-03-01", sist_aktivitet: today },
+  { id: "SM-0002", navn: "Restaurant agenter", selskap_id: "S-0005", kontakt_id: "", ansvarlig: "", status: "Møte booket", forventet_mrr: 0, oppstartskostnad: 0, kontraktslengde_mnd: 12, sannsynlighet: 50, forventet_lukkedato: "2026-05-01", vunnet_dato: "", tapt_dato: "", tapsaarsak: "", neste_steg: "Gjennomfør demo", notater: "", opprettet_dato: "2026-02-20", sist_aktivitet: today },
+  { id: "SM-0003", navn: "Internt system rapportering", selskap_id: "S-0006", kontakt_id: "", ansvarlig: "", status: "Møte booket", forventet_mrr: 12900, oppstartskostnad: 4999, kontraktslengde_mnd: 12, sannsynlighet: 50, forventet_lukkedato: "2026-04-30", vunnet_dato: "", tapt_dato: "", tapsaarsak: "", neste_steg: "Demo planlagt", notater: "", opprettet_dato: "2026-02-15", sist_aktivitet: today },
+  { id: "SM-0004", navn: "Support agent", selskap_id: "S-0007", kontakt_id: "", ansvarlig: "", status: "Møte booket", forventet_mrr: 2999, oppstartskostnad: 13997, kontraktslengde_mnd: 12, sannsynlighet: 50, forventet_lukkedato: "2026-04-20", vunnet_dato: "", tapt_dato: "", tapsaarsak: "", neste_steg: "", notater: "", opprettet_dato: "2026-02-10", sist_aktivitet: today },
+  { id: "SM-0005", navn: "Resepsjonist", selskap_id: "S-0008", kontakt_id: "", ansvarlig: "", status: "Møte booket", forventet_mrr: 12900, oppstartskostnad: 10300, kontraktslengde_mnd: 12, sannsynlighet: 50, forventet_lukkedato: "2026-04-25", vunnet_dato: "", tapt_dato: "", tapsaarsak: "", neste_steg: "", notater: "", opprettet_dato: "2026-02-05", sist_aktivitet: today },
+  { id: "SM-0006", navn: "Support og salgs agent", selskap_id: "S-0009", kontakt_id: "K-0008", ansvarlig: "", status: "Tilbud sendt", forventet_mrr: 12900, oppstartskostnad: 5000, kontraktslengde_mnd: 12, sannsynlighet: 100, forventet_lukkedato: "2026-04-10", vunnet_dato: "", tapt_dato: "", tapsaarsak: "", neste_steg: "Venter på signering", notater: "", opprettet_dato: "2026-01-20", sist_aktivitet: today },
+  { id: "SM-0007", navn: "Matbestilling", selskap_id: "S-0010", kontakt_id: "", ansvarlig: "", status: "Møte booket", forventet_mrr: 2999, oppstartskostnad: 8997, kontraktslengde_mnd: 12, sannsynlighet: 50, forventet_lukkedato: "2026-05-15", vunnet_dato: "", tapt_dato: "", tapsaarsak: "", neste_steg: "", notater: "", opprettet_dato: "2026-02-25", sist_aktivitet: today },
+  { id: "SM-0008", navn: "Booking system", selskap_id: "S-0011", kontakt_id: "", ansvarlig: "", status: "Møte booket", forventet_mrr: 5990, oppstartskostnad: 0, kontraktslengde_mnd: 12, sannsynlighet: 50, forventet_lukkedato: "2026-05-01", vunnet_dato: "", tapt_dato: "", tapsaarsak: "", neste_steg: "", notater: "", opprettet_dato: "2026-02-18", sist_aktivitet: today },
+  { id: "SM-0009", navn: "Møte booking", selskap_id: "S-0012", kontakt_id: "", ansvarlig: "", status: "Tilbud sendt", forventet_mrr: 12900, oppstartskostnad: 12900, kontraktslengde_mnd: 12, sannsynlighet: 100, forventet_lukkedato: "2026-04-05", vunnet_dato: "", tapt_dato: "", tapsaarsak: "", neste_steg: "Signering neste uke", notater: "", opprettet_dato: "2026-01-15", sist_aktivitet: today },
+  { id: "SM-0010", navn: "Support agent", selskap_id: "S-0018", kontakt_id: "K-0006", ansvarlig: "", status: "Møte booket", forventet_mrr: 80000, oppstartskostnad: 80000, kontraktslengde_mnd: 24, sannsynlighet: 50, forventet_lukkedato: "2026-06-01", vunnet_dato: "", tapt_dato: "", tapsaarsak: "", neste_steg: "Enterprise demo", notater: "", opprettet_dato: "2026-01-10", sist_aktivitet: today },
+  { id: "SM-0011", navn: "Chatbot", selskap_id: "S-0019", kontakt_id: "", ansvarlig: "", status: "Ny mulighet", forventet_mrr: 990, oppstartskostnad: 5000, kontraktslengde_mnd: 12, sannsynlighet: 50, forventet_lukkedato: "2026-05-20", vunnet_dato: "", tapt_dato: "", tapsaarsak: "", neste_steg: "Første kontakt", notater: "", opprettet_dato: "2026-03-01", sist_aktivitet: today },
+  { id: "SM-0012", navn: "Support agent og salg", selskap_id: "S-0020", kontakt_id: "K-0007", ansvarlig: "", status: "Møte booket", forventet_mrr: 92900, oppstartskostnad: 60000, kontraktslengde_mnd: 24, sannsynlighet: 50, forventet_lukkedato: "2026-06-15", vunnet_dato: "", tapt_dato: "", tapsaarsak: "", neste_steg: "Teknisk gjennomgang", notater: "", opprettet_dato: "2026-01-05", sist_aktivitet: today },
 ];
 
-export const initialTasks: Task[] = [
-  { id: "TASK-0001", companyId: "ACC-0009", dealId: "DEAL-0006", title: "Follow up Drifti AS proposal", description: "Check if they reviewed the proposal and schedule a meeting", dueDate: "2026-03-12", completed: false, priority: "High", reminder: true },
-  { id: "TASK-0002", companyId: "ACC-0012", dealId: "DEAL-0009", title: "Send contract to Outwork AS", description: "Prepare and send final contract draft", dueDate: "2026-03-14", completed: false, priority: "High", reminder: true },
-  { id: "TASK-0003", companyId: "ACC-0018", dealId: "DEAL-0010", title: "Demo for Fair Collection", description: "Prepare custom demo for enterprise support agent use case", dueDate: "2026-03-18", completed: false, priority: "Urgent", reminder: true },
-  { id: "TASK-0004", companyId: "ACC-0020", dealId: "DEAL-0012", title: "Follow up Zen Finans meeting", description: "Send meeting notes and next steps", dueDate: "2026-03-15", completed: false, priority: "High", reminder: true },
-  { id: "TASK-0005", companyId: "ACC-0001", dealId: "DEAL-0001", title: "Jobbkort onboarding prep", description: "Prepare onboarding materials for Jobbkort integration", dueDate: "2026-03-20", completed: false, priority: "Normal", reminder: false },
+export const initialLeads: Lead[] = [
+  { id: "L-0001", firmanavn: "Eger Group", kontaktperson: "Nina Enger", e_post: "nina@egergroup.no", telefon: "+47 902 11 222", kilde: "LinkedIn", status: "Ny", ansvarlig: "", neste_steg: "Første kontakt", notater: "", opprettet_dato: "2026-03-08", sist_aktivitet: today, konvertert_dato: "" },
+  { id: "L-0002", firmanavn: "Fjord Tech AS", kontaktperson: "Anders Fjord", e_post: "anders@fjordtech.no", telefon: "+47 902 33 444", kilde: "Nettside", status: "Kontaktet", ansvarlig: "", neste_steg: "Sende info", notater: "Interessert i support agent", opprettet_dato: "2026-03-05", sist_aktivitet: today, konvertert_dato: "" },
+  { id: "L-0003", firmanavn: "Bergen Eiendom AS", kontaktperson: "Lise Berg", e_post: "lise@bergeneiendom.no", telefon: "+47 902 55 666", kilde: "Referanse", status: "Kvalifisert", ansvarlig: "", neste_steg: "Booke demo", notater: "Henvist fra Defigo", opprettet_dato: "2026-03-02", sist_aktivitet: today, konvertert_dato: "" },
+];
+
+export const initialProsjekter: Prosjekt[] = [];
+
+export const initialOppgaver: Oppgave[] = [
+  { id: "O-0001", oppgave: "Følg opp Drifti AS tilbud", selskap_id: "S-0009", salgsmulighet_id: "SM-0006", ansvarlig: "", frist: "2026-03-12", prioritet: "Høy", status: "Åpen", paaminnelse: true, notater: "" },
+  { id: "O-0002", oppgave: "Send kontrakt til Outwork AS", selskap_id: "S-0012", salgsmulighet_id: "SM-0009", ansvarlig: "", frist: "2026-03-14", prioritet: "Høy", status: "Åpen", paaminnelse: true, notater: "" },
+  { id: "O-0003", oppgave: "Demo for Fair Collection", selskap_id: "S-0018", salgsmulighet_id: "SM-0010", ansvarlig: "", frist: "2026-03-18", prioritet: "Høy", status: "Åpen", paaminnelse: true, notater: "" },
+  { id: "O-0004", oppgave: "Følg opp Zen Finans møte", selskap_id: "S-0020", salgsmulighet_id: "SM-0012", ansvarlig: "", frist: "2026-03-15", prioritet: "Høy", status: "Åpen", paaminnelse: true, notater: "" },
+  { id: "O-0005", oppgave: "Forbered onboarding Jobbkort", selskap_id: "S-0001", salgsmulighet_id: "SM-0001", ansvarlig: "", frist: "2026-03-20", prioritet: "Medium", status: "Åpen", paaminnelse: false, notater: "" },
 ];
