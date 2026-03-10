@@ -26,7 +26,7 @@ const statusColors: Record<LeadStatus, string> = {
 
 export default function Leads() {
   const isMobile = useIsMobile();
-  const { leads, updateLeads, konverterLead, generateId } = useCrmStore();
+  const { leads, updateLeads, konverterLead, konverterTilPartner, generateId } = useCrmStore();
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
