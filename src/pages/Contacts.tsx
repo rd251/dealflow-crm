@@ -105,7 +105,7 @@ export default function Contacts() {
               {filtered.map(k => (
                 <tr key={k.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => setSelected(k)}>
                   <td className="px-4 py-3 font-medium">{k.navn}</td>
-                  <td className="px-4 py-3 text-muted-foreground"><span className="cursor-pointer hover:text-primary hover:underline" onClick={e => { e.stopPropagation(); navigate(`/selskaper/${k.selskap_id}`); }}>{getSelskapNavn(k.selskap_id)}</span></td>
+                  <td className="px-4 py-3 text-muted-foreground">{(() => { const sel = selskaper.find(s => s.id === k.selskap_id); return sel && sel.kundestatus !== "Ikke kunde" ? <span className="cursor-pointer hover:text-primary hover:underline" onClick={e => { e.stopPropagation(); navigate(`/selskaper/${k.selskap_id}`); }}>{getSelskapNavn(k.selskap_id)}</span> : <span>{getSelskapNavn(k.selskap_id)}</span>; })()}</td>
                   <td className="px-4 py-3 text-muted-foreground">{k.rolle}</td>
                   <td className="px-4 py-3 text-muted-foreground text-xs">{k.e_post}</td>
                   <td className="px-4 py-3 text-muted-foreground text-xs">{k.telefon}</td>
