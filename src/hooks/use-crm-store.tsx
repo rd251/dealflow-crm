@@ -1,5 +1,4 @@
 import { useState, useCallback, createContext, useContext, ReactNode } from "react";
-import React from "react";
 import {
   Lead, Salgsmulighet, Prosjekt, Selskap, Kontakt, Oppgave,
   initialLeads, initialSalgsmuligheter, initialProsjekter,
