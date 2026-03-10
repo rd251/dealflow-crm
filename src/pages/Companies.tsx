@@ -132,7 +132,7 @@ export default function Companies() {
             const selskapSm = salgsmuligheter.filter(sm => sm.selskap_id === s.id && sm.status !== "Tapt");
             const totalSla = selskapSm.reduce((sum, sm) => sum + (sm.sla || 0), 0);
             return (
-              <div key={s.id} className="bg-card border rounded-xl p-4 space-y-2" onClick={() => navigate(`/selskaper/${s.id}`)}>
+              <div key={s.id} className="bg-card border rounded-xl p-4 space-y-2" onClick={() => s.kundestatus !== "Ikke kunde" ? navigate(`/selskaper/${s.id}`) : setSelected(s)}>
                 <div className="flex items-center justify-between">
                   <p className="font-semibold text-sm truncate">{s.firmanavn}</p>
                   <Badge className={`text-[10px] shrink-0 ${kundestatusColors[s.kundestatus]}`}>{s.kundestatus}</Badge>
