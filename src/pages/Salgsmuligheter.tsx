@@ -106,7 +106,7 @@ export default function Salgsmuligheter() {
               </div>
               <Input type="date" placeholder="Forventet lukkedato" value={form.forventet_lukkedato} onChange={e => setForm(f => ({ ...f, forventet_lukkedato: e.target.value }))} />
               <Input placeholder="Neste steg" value={form.neste_steg} onChange={e => setForm(f => ({ ...f, neste_steg: e.target.value }))} />
-              <Button onClick={addSm} className="w-full" disabled={!form.navn || !form.selskap_id}>Opprett</Button>
+              <Button onClick={addSm} className="w-full" disabled={!form.navn}>Opprett</Button>
             </div>
           </DialogContent>
         </Dialog>
