@@ -1,12 +1,19 @@
 import PageShell from "@/components/PageShell";
 import StatCard from "@/components/StatCard";
 import { useCrmStore } from "@/hooks/use-crm-store";
-import { DollarSign, TrendingUp, Users, Target, AlertTriangle, BarChart3, ArrowUpRight, ArrowDownRight, Zap, Trophy, XCircle, UserMinus } from "lucide-react";
+import { DollarSign, TrendingUp, Users, Target, AlertTriangle, BarChart3, ArrowUpRight, ArrowDownRight, Zap, Trophy, XCircle, UserMinus, ListTodo, Clock, CheckCircle2, Activity } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, LineChart, Line, CartesianGrid } from "recharts";
 import { beregnTotalKontraktsverdi } from "@/data/crm-data";
+import { Badge } from "@/components/ui/badge";
+
+const prioritetBadge: Record<string, string> = {
+  "Høy": "bg-destructive/10 text-destructive border-destructive/20",
+  "Medium": "bg-primary/10 text-primary border-primary/20",
+  "Lav": "bg-muted text-muted-foreground border-border",
+};
 
 export default function Dashboard() {
-  const { selskaper, salgsmuligheter, leads, oppgaver } = useCrmStore();
+  const { selskaper, salgsmuligheter, leads, oppgaver, prosjekter } = useCrmStore();
 
   const now = new Date();
   const thisMonth = (d: string) => {
@@ -46,7 +53,7 @@ export default function Dashboard() {
 
   // Churn
   const kansellerteKunder = kansellerteIMnd.length;
-  const mrrStartManed = totalMRR + taptMRR; // approximate
+  const mrrStartManed = totalMRR + taptMRR;
   const churnRate = mrrStartManed > 0 ? ((taptMRR / mrrStartManed) * 100).toFixed(1) : "0";
 
   // Overdue tasks
@@ -68,12 +75,64 @@ export default function Dashboard() {
     antall: allCancelled.filter(s => s.kanselleringsaarsak === r).length,
   })).filter(d => d.antall > 0);
 
-  // MRR trend (simplified - just show current month)
+  // MRR trend (simplified)
   const mrrTrend = [
     { mnd: "Jan", mrr: 0 }, { mnd: "Feb", mrr: 0 }, { mnd: "Mar", mrr: totalMRR },
   ];
 
   const nok = (v: number) => v.toLocaleString("no-NO");
+
+  // === Upcoming / overdue tasks (max 8) ===
+  const activeTasks = oppgaver
+    .filter(o => o.status !== "Ferdig")
+    .sort((a, b) => {
+      if (!a.frist) return 1;
+      if (!b.frist) return -1;
+      return a.frist.localeCompare(b.frist);
+    })
+    .slice(0, 8);
+
+  // === Recent activity feed ===
+  type ActivityItem = { dato: string; tekst: string; type: "lead" | "deal" | "prosjekt" | "selskap" | "oppgave" };
+  const activityItems: ActivityItem[] = [];
+
+  leads.forEach(l => {
+    if (l.opprettet_dato) activityItems.push({ dato: l.opprettet_dato, tekst: `Nytt lead: ${l.firmanavn}`, type: "lead" });
+    if (l.konvertert_dato) activityItems.push({ dato: l.konvertert_dato, tekst: `Lead konvertert: ${l.firmanavn}`, type: "lead" });
+  });
+  salgsmuligheter.forEach(s => {
+    if (s.opprettet_dato) activityItems.push({ dato: s.opprettet_dato, tekst: `Ny salgsmulighet: ${s.navn}`, type: "deal" });
+    if (s.vunnet_dato) activityItems.push({ dato: s.vunnet_dato, tekst: `Deal vunnet: ${s.navn}`, type: "deal" });
+    if (s.tapt_dato) activityItems.push({ dato: s.tapt_dato, tekst: `Deal tapt: ${s.navn}`, type: "deal" });
+  });
+  prosjekter.forEach(p => {
+    if (p.go_live_dato) activityItems.push({ dato: p.go_live_dato, tekst: `Prosjekt live: ${p.prosjektnavn}`, type: "prosjekt" });
+  });
+  selskaper.forEach(s => {
+    if (s.go_live_dato) activityItems.push({ dato: s.go_live_dato, tekst: `Kunde live: ${s.firmanavn}`, type: "selskap" });
+    if (s.kansellert_dato) activityItems.push({ dato: s.kansellert_dato, tekst: `Kunde kansellert: ${s.firmanavn}`, type: "selskap" });
+  });
+
+  const recentActivity = activityItems
+    .sort((a, b) => b.dato.localeCompare(a.dato))
+    .slice(0, 10);
+
+  const activityTypeColors: Record<string, string> = {
+    lead: "bg-blue-500",
+    deal: "bg-emerald-500",
+    prosjekt: "bg-violet-500",
+    selskap: "bg-amber-500",
+    oppgave: "bg-rose-500",
+  };
+
+  const formatDate = (d: string) => {
+    if (!d) return "";
+    const date = new Date(d);
+    return date.toLocaleDateString("nb-NO", { day: "numeric", month: "short" });
+  };
+
+  const isOverdue = (frist: string) => frist && frist < today;
+  const isToday = (frist: string) => frist === today;
 
   return (
     <PageShell title="Dashboard" subtitle="Snakk CRM – SaaS-metrikker og salgsoversikt">
@@ -86,7 +145,7 @@ export default function Dashboard() {
 
       {/* Row 2: New MRR, Lost MRR, Net */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-        <StatCard label="Ny MRR denne mnd" value={`${nok(nyMRR)} NOK`} icon={<ArrowUpRight className="w-5 h-5" />} className={nyMRR > 0 ? "" : ""} />
+        <StatCard label="Ny MRR denne mnd" value={`${nok(nyMRR)} NOK`} icon={<ArrowUpRight className="w-5 h-5" />} />
         <StatCard label="Tapt MRR denne mnd" value={`${nok(taptMRR)} NOK`} icon={<ArrowDownRight className="w-5 h-5" />} />
         <StatCard label="Netto MRR vekst" value={`${nettoMRR >= 0 ? "+" : ""}${nok(nettoMRR)} NOK`} icon={<Zap className="w-5 h-5" />} />
       </div>
@@ -110,6 +169,82 @@ export default function Dashboard() {
         <StatCard label="Kansellerte denne mnd" value={kansellerteKunder} icon={<UserMinus className="w-5 h-5" />} />
         <StatCard label="Churn-rate" value={`${churnRate}%`} icon={<AlertTriangle className="w-5 h-5" />} />
         <StatCard label="Forfalte oppgaver" value={forfaltOppgaver} icon={<AlertTriangle className="w-5 h-5" />} trend={forfaltOppgaver > 0 ? "Handling kreves" : "Alt på stell"} />
+      </div>
+
+      {/* Tasks & Activity */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {/* Upcoming tasks */}
+        <div className="bg-card border rounded-xl p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <ListTodo className="w-5 h-5 text-primary" />
+            <h2 className="text-lg font-semibold">Kommende oppgaver</h2>
+            <Badge variant="secondary" className="ml-auto text-xs">
+              {activeTasks.length} aktive
+            </Badge>
+          </div>
+          {activeTasks.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-6 text-center">Ingen aktive oppgaver</p>
+          ) : (
+            <div className="space-y-2">
+              {activeTasks.map(task => {
+                const selskap = selskaper.find(s => s.id === task.selskap_id);
+                const overdue = isOverdue(task.frist);
+                const todayTask = isToday(task.frist);
+                return (
+                  <div
+                    key={task.id}
+                    className={`flex items-start gap-3 p-3 rounded-lg border transition-colors ${
+                      overdue ? "bg-destructive/5 border-destructive/20" : todayTask ? "bg-primary/5 border-primary/20" : "bg-muted/30 border-border"
+                    }`}
+                  >
+                    <div className={`mt-0.5 w-2 h-2 rounded-full shrink-0 ${overdue ? "bg-destructive" : todayTask ? "bg-primary" : "bg-muted-foreground/40"}`} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{task.oppgave}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        {selskap && <span className="text-xs text-muted-foreground truncate">{selskap.firmanavn}</span>}
+                        {task.frist && (
+                          <span className={`text-xs flex items-center gap-1 ${overdue ? "text-destructive font-medium" : todayTask ? "text-primary font-medium" : "text-muted-foreground"}`}>
+                            <Clock className="w-3 h-3" />
+                            {overdue ? "Forfalt" : todayTask ? "I dag" : formatDate(task.frist)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <Badge variant="outline" className={`text-[10px] shrink-0 ${prioritetBadge[task.prioritet] || ""}`}>
+                      {task.prioritet}
+                    </Badge>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Activity feed */}
+        <div className="bg-card border rounded-xl p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Activity className="w-5 h-5 text-primary" />
+            <h2 className="text-lg font-semibold">Siste aktivitet</h2>
+          </div>
+          {recentActivity.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-6 text-center">Ingen aktivitet ennå</p>
+          ) : (
+            <div className="relative">
+              <div className="absolute left-[7px] top-3 bottom-3 w-px bg-border" />
+              <div className="space-y-3">
+                {recentActivity.map((item, i) => (
+                  <div key={i} className="flex items-start gap-3 relative">
+                    <div className={`w-[15px] h-[15px] rounded-full shrink-0 mt-0.5 border-2 border-card ${activityTypeColors[item.type]}`} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm truncate">{item.tekst}</p>
+                      <p className="text-xs text-muted-foreground">{formatDate(item.dato)}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Charts */}
