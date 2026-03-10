@@ -108,10 +108,15 @@ export default function Leads() {
                 <Badge variant="secondary" className="text-[10px]">{lead.kilde}</Badge>
                 {lead.neste_steg && <span className="text-[10px] text-muted-foreground truncate ml-2">→ {lead.neste_steg}</span>}
               </div>
-              {lead.status !== "Konvertert til salg" && lead.status !== "Ikke aktuelt" && (
-                <Button size="sm" variant="ghost" className="text-xs gap-1 w-full mt-1" onClick={e => { e.stopPropagation(); konverterLead(lead.id); }}>
-                  <ArrowRightCircle className="w-3.5 h-3.5" />Konverter
-                </Button>
+              {lead.status !== "Konvertert til salg" && lead.status !== "Konvertert til partner" && lead.status !== "Ikke aktuelt" && (
+                <div className="flex gap-1 mt-1">
+                  <Button size="sm" variant="ghost" className="text-xs gap-1 flex-1" onClick={e => { e.stopPropagation(); konverterLead(lead.id); }}>
+                    <ArrowRightCircle className="w-3.5 h-3.5" />Salg
+                  </Button>
+                  <Button size="sm" variant="ghost" className="text-xs gap-1 flex-1" onClick={e => { e.stopPropagation(); konverterTilPartner(lead.id); }}>
+                    <Users2 className="w-3.5 h-3.5" />Partner
+                  </Button>
+                </div>
               )}
             </div>
           ))}
