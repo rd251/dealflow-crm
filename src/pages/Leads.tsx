@@ -60,7 +60,7 @@ export default function Leads() {
   return (
     <PageShell
       title="Leads"
-      subtitle={`${leads.filter(l => l.status !== "Konvertert til salg" && l.status !== "Ikke aktuelt").length} aktive leads`}
+      subtitle={`${leads.filter(l => l.status !== "Konvertert til salg" && l.status !== "Konvertert til partner" && l.status !== "Ikke aktuelt").length} aktive leads`}
       actions={
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
