@@ -1,4 +1,5 @@
-import { useState, useCallback, createContext, useContext, ReactNode } from "react";
+// CRM global store
+import { useState, useCallback, createContext, useContext, createElement, ReactNode } from "react";
 import {
   Lead, Salgsmulighet, Prosjekt, Selskap, Kontakt, Oppgave,
   initialLeads, initialSalgsmuligheter, initialProsjekter,
@@ -184,7 +185,7 @@ function useCrmStoreInternal() {
 
 export function CrmProvider({ children }: { children: ReactNode }) {
   const store = useCrmStoreInternal();
-  return <CrmContext.Provider value={store}>{children}</CrmContext.Provider>;
+  return createElement(CrmContext.Provider, { value: store }, children);
 }
 
 export function useCrmStore() {

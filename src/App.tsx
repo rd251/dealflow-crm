@@ -17,29 +17,31 @@ import CompanyProfile from "./pages/CompanyProfile";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <CrmProvider>
-          <AppSidebar />
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/leads" element={<Leads />} />
-            <Route path="/salgsmuligheter" element={<Salgsmuligheter />} />
-            <Route path="/prosjekter" element={<Prosjekter />} />
-            <Route path="/selskaper" element={<Companies />} />
-            <Route path="/selskaper/:id" element={<CompanyProfile />} />
-            <Route path="/kontakter" element={<Contacts />} />
-            <Route path="/oppgaver" element={<Tasks />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </CrmProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <CrmProvider>
+            <AppSidebar />
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/leads" element={<Leads />} />
+              <Route path="/salgsmuligheter" element={<Salgsmuligheter />} />
+              <Route path="/prosjekter" element={<Prosjekter />} />
+              <Route path="/selskaper" element={<Companies />} />
+              <Route path="/selskaper/:id" element={<CompanyProfile />} />
+              <Route path="/kontakter" element={<Contacts />} />
+              <Route path="/oppgaver" element={<Tasks />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </CrmProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+}
 
 export default App;
