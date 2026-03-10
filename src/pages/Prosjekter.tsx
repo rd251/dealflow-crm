@@ -93,7 +93,7 @@ export default function Prosjekter() {
           {currentP && (
             <div className="mt-6 space-y-4 text-sm">
               <div className="grid grid-cols-2 gap-3">
-                <div><span className="text-muted-foreground block text-xs">Selskap</span><span className="cursor-pointer hover:text-primary hover:underline" onClick={() => navigate(`/selskaper/${currentP.selskap_id}`)}>{getSelskapNavn(currentP.selskap_id)}</span></div>
+                <div><span className="text-muted-foreground block text-xs">Selskap</span>{(() => { const sel = selskaper.find(s => s.id === currentP.selskap_id); return sel && sel.kundestatus !== "Ikke kunde" ? <span className="cursor-pointer hover:text-primary hover:underline" onClick={() => navigate(`/selskaper/${currentP.selskap_id}`)}>{getSelskapNavn(currentP.selskap_id)}</span> : <span>{getSelskapNavn(currentP.selskap_id)}</span>; })()}</div>
                 <div><span className="text-muted-foreground block text-xs">Status</span>{currentP.status}</div>
                 <div><span className="text-muted-foreground block text-xs">Startdato</span>{currentP.startdato || "–"}</div>
                 <div><span className="text-muted-foreground block text-xs">Go-live</span>{currentP.forventet_go_live || "–"}</div>

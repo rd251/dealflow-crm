@@ -171,7 +171,7 @@ export default function Companies() {
                 const selskapSm = salgsmuligheter.filter(sm => sm.selskap_id === s.id && sm.status !== "Tapt");
                 const totalSla = selskapSm.reduce((sum, sm) => sum + (sm.sla || 0), 0);
                 return (
-                <tr key={s.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => navigate(`/selskaper/${s.id}`)}>
+                <tr key={s.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => s.kundestatus !== "Ikke kunde" ? navigate(`/selskaper/${s.id}`) : setSelected(s)}>
                   <td className="px-4 py-3 font-medium">{s.firmanavn}</td>
                   <td className="px-4 py-3 text-muted-foreground">{s.bransje || "–"}</td>
                   <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
