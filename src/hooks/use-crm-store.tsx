@@ -184,7 +184,7 @@ function useCrmStoreInternal() {
 
 export function CrmProvider({ children }: { children: ReactNode }) {
   const store = useCrmStoreInternal();
-  return React.createElement(CrmContext.Provider, { value: store }, children);
+  return <CrmContext.Provider value={store}>{children}</CrmContext.Provider>;
 }
 
 export function useCrmStore() {
