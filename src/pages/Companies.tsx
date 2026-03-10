@@ -68,7 +68,12 @@ export default function Companies() {
   };
 
   const toggleLive = (id: string, live: boolean) => {
-    updateSelskaper(prev => prev.map(s => s.id === id ? { ...s, live_status: live, sist_aktivitet: new Date().toISOString().split("T")[0] } : s));
+    updateSelskaper(prev => prev.map(s => s.id === id ? {
+      ...s,
+      live_status: live,
+      kundestatus: live ? "Live" : (s.kundestatus === "Live" ? "Pause" : s.kundestatus),
+      sist_aktivitet: new Date().toISOString().split("T")[0],
+    } : s));
   };
 
   const currentSelskap = selected ? selskaper.find(s => s.id === selected.id) || selected : null;
