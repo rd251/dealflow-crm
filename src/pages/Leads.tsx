@@ -247,10 +247,15 @@ export default function Leads() {
                 </div>
               )}
 
-              {currentLead.status !== "Konvertert til salg" && currentLead.status !== "Ikke aktuelt" && (
-                <Button size="sm" className="w-full" onClick={() => { konverterLead(currentLead.id); setSelectedLead(null); }}>
-                  <ArrowRightCircle className="w-4 h-4 mr-1" /> Konverter til salgsmulighet
-                </Button>
+              {currentLead.status !== "Konvertert til salg" && currentLead.status !== "Konvertert til partner" && currentLead.status !== "Ikke aktuelt" && (
+                <div className="flex gap-2">
+                  <Button size="sm" className="flex-1" onClick={() => { konverterLead(currentLead.id); setSelectedLead(null); }}>
+                    <ArrowRightCircle className="w-4 h-4 mr-1" /> Til salg
+                  </Button>
+                  <Button size="sm" variant="secondary" className="flex-1" onClick={() => { konverterTilPartner(currentLead.id); setSelectedLead(null); }}>
+                    <Users2 className="w-4 h-4 mr-1" /> Til partner
+                  </Button>
+                </div>
               )}
               <Button size="sm" variant="destructive" className="w-full" onClick={() => {
                 updateLeads(prev => prev.filter(l => l.id !== currentLead.id));
