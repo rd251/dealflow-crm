@@ -1,9 +1,10 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { CrmProvider } from "@/hooks/use-crm-store";
+import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import AppSidebar from "@/components/AppSidebar";
 import Dashboard from "./pages/Dashboard";
 import Leads from "./pages/Leads";
@@ -15,10 +16,66 @@ import Tasks from "./pages/Tasks";
 import Partnere from "./pages/Partnere";
 import PartnerProfile from "./pages/PartnerProfile";
 import PartnerPipeline from "./pages/PartnerPipeline";
-import NotFound from "./pages/NotFound";
 import CompanyProfile from "./pages/CompanyProfile";
+import Login from "./pages/Login";
+import Admin from "./pages/Admin";
+import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
+
+function ProtectedRoutes() {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  if (!user) return <Navigate to="/login" replace />;
+
+  return (
+    <CrmProvider>
+      <AppSidebar />
+      <Routes>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/leads" element={<Leads />} />
+        <Route path="/salgsmuligheter" element={<Salgsmuligheter />} />
+        <Route path="/prosjekter" element={<Prosjekter />} />
+        <Route path="/selskaper" element={<Companies />} />
+        <Route path="/selskaper/:id" element={<CompanyProfile />} />
+        <Route path="/kontakter" element={<Contacts />} />
+        <Route path="/oppgaver" element={<Tasks />} />
+        <Route path="/partnere" element={<Partnere />} />
+        <Route path="/partnere/:id" element={<PartnerProfile />} />
+        <Route path="/partner-pipeline" element={<PartnerPipeline />} />
+        <Route path="/admin" element={<Admin />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </CrmProvider>
+  );
+}
+
+function AppRoutes() {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  return (
+    <Routes>
+      <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
+      <Route path="/*" element={<ProtectedRoutes />} />
+    </Routes>
+  );
+}
 
 function App() {
   return (
@@ -27,23 +84,9 @@ function App() {
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <CrmProvider>
-            <AppSidebar />
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/leads" element={<Leads />} />
-              <Route path="/salgsmuligheter" element={<Salgsmuligheter />} />
-              <Route path="/prosjekter" element={<Prosjekter />} />
-              <Route path="/selskaper" element={<Companies />} />
-              <Route path="/selskaper/:id" element={<CompanyProfile />} />
-              <Route path="/kontakter" element={<Contacts />} />
-              <Route path="/oppgaver" element={<Tasks />} />
-              <Route path="/partnere" element={<Partnere />} />
-              <Route path="/partnere/:id" element={<PartnerProfile />} />
-              <Route path="/partner-pipeline" element={<PartnerPipeline />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </CrmProvider>
+          <AuthProvider>
+            <AppRoutes />
+          </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
