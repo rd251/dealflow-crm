@@ -1,6 +1,11 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { LayoutDashboard, UserPlus, Handshake, FolderKanban, Building2, Users, ListTodo } from "lucide-react";
+import { LayoutDashboard, UserPlus, Handshake, FolderKanban, Building2, Users, ListTodo, Menu, ChevronLeft } from "lucide-react";
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { useIsMobile } from "@/hooks/use-mobile";
 import logo from "@/assets/logo-white.svg";
+import { useState } from "react";
+import { cn } from "@/lib/utils";
 
 const navItems = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
@@ -12,36 +17,133 @@ const navItems = [
   { to: "/oppgaver", icon: ListTodo, label: "Oppgaver" },
 ];
 
-export default function AppSidebar() {
+function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   const location = useLocation();
 
   return (
-    <aside className="fixed left-0 top-0 bottom-0 w-60 bg-sidebar flex flex-col z-50">
-      <div className="p-6 pb-4">
-        <img src={logo} alt="Snakk CRM" className="h-8 w-auto" />
-      </div>
-      <nav className="flex-1 px-3 space-y-1">
-        {navItems.map(({ to, icon: Icon, label }) => {
-          const active = location.pathname === to;
-          return (
-            <NavLink
-              key={to}
-              to={to}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                active
-                  ? "bg-sidebar-accent text-sidebar-primary"
-                  : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-              }`}
-            >
-              <Icon className="w-4 h-4" />
-              {label}
-            </NavLink>
-          );
-        })}
-      </nav>
-      <div className="p-4 text-xs text-sidebar-foreground/50">
-        Snakk CRM v2.0
-      </div>
+    <nav className="flex-1 px-3 space-y-1">
+      {navItems.map(({ to, icon: Icon, label }) => {
+        const active = location.pathname === to;
+        return (
+          <NavLink
+            key={to}
+            to={to}
+            onClick={onNavigate}
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+              active
+                ? "bg-sidebar-accent text-sidebar-primary"
+                : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+            }`}
+          >
+            <Icon className="w-4 h-4 shrink-0" />
+            {label}
+          </NavLink>
+        );
+      })}
+    </nav>
+  );
+}
+
+function CollapsedSidebarNav() {
+  const location = useLocation();
+
+  return (
+    <nav className="flex-1 px-2 space-y-1 mt-2">
+      {navItems.map(({ to, icon: Icon, label }) => {
+        const active = location.pathname === to;
+        return (
+          <NavLink
+            key={to}
+            to={to}
+            title={label}
+            className={`flex items-center justify-center p-2.5 rounded-lg transition-colors ${
+              active
+                ? "bg-sidebar-accent text-sidebar-primary"
+                : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+            }`}
+          >
+            <Icon className="w-4 h-4" />
+          </NavLink>
+        );
+      })}
+    </nav>
+  );
+}
+
+export default function AppSidebar() {
+  const isMobile = useIsMobile();
+  const [open, setOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+
+  if (isMobile) {
+    return (
+      <>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="fixed top-3 left-3 z-50 bg-sidebar text-sidebar-foreground hover:bg-sidebar-accent"
+          onClick={() => setOpen(true)}
+        >
+          <Menu className="w-5 h-5" />
+        </Button>
+        <Sheet open={open} onOpenChange={setOpen}>
+          <SheetContent side="left" className="w-60 p-0 bg-sidebar border-sidebar-border">
+            <SheetTitle className="sr-only">Navigasjon</SheetTitle>
+            <div className="p-6 pb-4">
+              <img src={logo} alt="Snakk CRM" className="h-8 w-auto" />
+            </div>
+            <SidebarNav onNavigate={() => setOpen(false)} />
+            <div className="p-4 text-xs text-sidebar-foreground/50">
+              Snakk CRM v2.0
+            </div>
+          </SheetContent>
+        </Sheet>
+      </>
+    );
+  }
+
+  return (
+    <aside
+      className={cn(
+        "fixed left-0 top-0 bottom-0 bg-sidebar flex flex-col z-50 transition-all duration-200",
+        collapsed ? "w-14" : "w-60"
+      )}
+    >
+      {!collapsed && (
+        <div className="p-6 pb-4 flex items-center justify-between">
+          <img src={logo} alt="Snakk CRM" className="h-8 w-auto" />
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 text-sidebar-foreground hover:bg-sidebar-accent"
+            onClick={() => setCollapsed(true)}
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </Button>
+        </div>
+      )}
+      {collapsed && (
+        <div className="p-2 flex justify-center">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-sidebar-foreground hover:bg-sidebar-accent"
+            onClick={() => setCollapsed(false)}
+          >
+            <Menu className="w-4 h-4" />
+          </Button>
+        </div>
+      )}
+      {collapsed ? <CollapsedSidebarNav /> : <SidebarNav />}
+      {!collapsed && (
+        <div className="p-4 text-xs text-sidebar-foreground/50">
+          Snakk CRM v2.0
+        </div>
+      )}
     </aside>
   );
+}
+
+export function useSidebarWidth() {
+  return { collapsed: false };
 }
