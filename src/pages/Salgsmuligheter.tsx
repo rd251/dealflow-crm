@@ -222,7 +222,7 @@ export default function Salgsmuligheter() {
 
             return (
               <div className="mt-6 space-y-4 text-sm">
-                <Field label="Selskap" value={<span className="cursor-pointer hover:text-primary hover:underline" onClick={() => navigate(`/selskaper/${currentSm.selskap_id}`)}>{getSelskapNavn(currentSm.selskap_id)}</span>} />
+                <Field label="Selskap" value={(() => { const sel = selskaper.find(s => s.id === currentSm.selskap_id); return sel && sel.kundestatus !== "Ikke kunde" ? <span className="cursor-pointer hover:text-primary hover:underline" onClick={() => navigate(`/selskaper/${currentSm.selskap_id}`)}>{getSelskapNavn(currentSm.selskap_id)}</span> : <span>{getSelskapNavn(currentSm.selskap_id)}</span>; })()} />
 
                 {/* Status */}
                 <div>
