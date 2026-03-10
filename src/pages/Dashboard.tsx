@@ -18,7 +18,7 @@ const prioritetBadge: Record<string, string> = {
 export default function Dashboard() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const { selskaper, salgsmuligheter, leads, oppgaver, prosjekter } = useCrmStore();
+  const { selskaper, salgsmuligheter, leads, oppgaver, prosjekter, partnere } = useCrmStore();
 
   const now = new Date();
   const thisMonth = (d: string) => {
