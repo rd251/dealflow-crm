@@ -103,7 +103,7 @@ export default function Contacts() {
                 {currentKontakt.linkedin && <div className="flex items-center gap-2"><Linkedin className="w-4 h-4 text-muted-foreground" /><a href={currentKontakt.linkedin} target="_blank" rel="noopener" className="text-primary underline text-xs">{currentKontakt.linkedin}</a></div>}
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div><span className="text-muted-foreground block text-xs">Selskap</span>{getSelskapNavn(currentKontakt.selskap_id)}</div>
+                <div><span className="text-muted-foreground block text-xs">Selskap</span><span className="cursor-pointer hover:text-primary hover:underline" onClick={() => navigate(`/selskaper/${currentKontakt.selskap_id}`)}>{getSelskapNavn(currentKontakt.selskap_id)}</span></div>
                 <div><span className="text-muted-foreground block text-xs">Rolle</span>{currentKontakt.rolle || "–"}</div>
               </div>
               {currentKontakt.notater && (
