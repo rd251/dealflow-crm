@@ -47,8 +47,11 @@ export default function CompanyProfile() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const {
-    selskaper, updateSelskaper, kontakter, salgsmuligheter, prosjekter, oppgaver,
+    selskaper, updateSelskaper, kontakter, updateKontakter, salgsmuligheter, prosjekter, oppgaver,
   } = useCrmStore();
+
+  const [showAddContact, setShowAddContact] = useState(false);
+  const [contactForm, setContactForm] = useState({ navn: "", rolle: "", e_post: "", telefon: "", linkedin: "" });
 
   const selskap = selskaper.find(s => s.id === id);
   if (!selskap) {
