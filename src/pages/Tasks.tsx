@@ -21,7 +21,7 @@ export default function Tasks() {
   const { oppgaver, selskaper, updateOppgaver } = useCrmStore();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [filter, setFilter] = useState<"alle" | "forfalte" | "idag" | "uke">("alle");
-  const [form, setForm] = useState({ oppgave: "", frist: "", prioritet: "Medium" as Prioritet, selskap_id: "", salgsmulighet_id: "", ansvarlig: "", notater: "" });
+  const [form, setForm] = useState({ oppgave: "", frist: "", prioritet: "Medium" as Prioritet, lead_id: "", selskap_id: "", salgsmulighet_id: "", ansvarlig: "", notater: "" });
 
   const today = new Date().toISOString().split("T")[0];
   const weekEnd = new Date(Date.now() + 7 * 86400000).toISOString().split("T")[0];
@@ -31,7 +31,7 @@ export default function Tasks() {
     const ny: Oppgave = { id, ...form, status: "Åpen", paaminnelse: true };
     updateOppgaver(prev => [...prev, ny]);
     setDialogOpen(false);
-    setForm({ oppgave: "", frist: "", prioritet: "Medium", selskap_id: "", salgsmulighet_id: "", ansvarlig: "", notater: "" });
+    setForm({ oppgave: "", frist: "", prioritet: "Medium", lead_id: "", selskap_id: "", salgsmulighet_id: "", ansvarlig: "", notater: "" });
   };
 
   const changeStatus = (id: string, status: OppgaveStatus) => {

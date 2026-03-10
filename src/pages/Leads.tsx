@@ -9,6 +9,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Plus, Search, ArrowRightCircle } from "lucide-react";
 import { Lead, LeadStatus, LeadKilde } from "@/data/crm-data";
 import { Badge } from "@/components/ui/badge";
+import InlineTaskForm from "@/components/InlineTaskForm";
 
 const statusOptions: LeadStatus[] = ["Ny", "Kontaktet", "Kvalifisert", "Ikke aktuelt", "Konvertert til salg"];
 const kildeOptions: LeadKilde[] = ["Nettside", "LinkedIn", "Partner", "Referanse", "Kald outbound", "E-post", "Telefon", "Annet"];
@@ -152,6 +153,11 @@ export default function Leads() {
               {currentLead.notater && (
                 <div><span className="text-muted-foreground block text-xs mb-1">Notater</span><p className="text-sm">{currentLead.notater}</p></div>
               )}
+
+              <div className="border-t pt-4">
+                <InlineTaskForm lead_id={currentLead.id} selskap_id="" />
+              </div>
+
               {currentLead.konvertert_dato && (
                 <div className="p-3 bg-success/10 rounded-lg text-success text-xs font-medium">
                   Konvertert {currentLead.konvertert_dato}

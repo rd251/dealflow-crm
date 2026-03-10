@@ -9,6 +9,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, GripVertical, Trophy, XCircle } from "lucide-react";
 import { Salgsmulighet, SalgsmulighetStatus, Tapsaarsak, beregnTotalKontraktsverdi, beregnVektetPipeline } from "@/data/crm-data";
+import InlineTaskForm from "@/components/InlineTaskForm";
 
 const openStatuses: SalgsmulighetStatus[] = ["Ny mulighet", "Møte booket", "Demo gjennomført", "Tilbud sendt", "Forhandling"];
 const tapsaarsaker: Tapsaarsak[] = ["Pris", "Ikke riktig timing", "Valgte annen leverandør", "Ikke behov", "Teknisk / integrasjon", "Annet"];
@@ -286,6 +287,10 @@ export default function Salgsmuligheter() {
                     <strong>Vunnet:</strong> {currentSm.vunnet_dato}
                   </div>
                 )}
+                <div className="border-t pt-4">
+                  <InlineTaskForm salgsmulighet_id={currentSm.id} selskap_id={currentSm.selskap_id} />
+                </div>
+
                 <div className="flex gap-2 pt-2">
                   {openStatuses.includes(currentSm.status as any) && (
                     <>
