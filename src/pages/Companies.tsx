@@ -139,7 +139,7 @@ export default function Companies() {
           </thead>
           <tbody>
             {filtered.map(s => (
-              <tr key={s.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => setSelected(s)}>
+              <tr key={s.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => navigate(`/selskaper/${s.id}`)}>
                 <td className="px-4 py-3 font-medium">{s.firmanavn}</td>
                 <td className="px-4 py-3 text-muted-foreground">{s.bransje || "–"}</td>
                 <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
