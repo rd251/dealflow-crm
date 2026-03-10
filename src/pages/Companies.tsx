@@ -55,6 +55,7 @@ export default function Companies() {
       mrr: 0, arr: 0, oppstartskostnad: 0, go_live_dato: "", kansellert_dato: "",
       kanselleringsaarsak: "", kanselleringsnotat: "", kundetilstand: "Bra",
       sist_aktivitet: new Date().toISOString().split("T")[0], neste_steg: "", notater: "",
+      kilde: "Direkte salg", partner_id: "",
     };
     updateSelskaper(prev => [...prev, nyttSelskap]);
     setDialogOpen(false);

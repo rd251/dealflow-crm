@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { LayoutDashboard, UserPlus, Handshake, FolderKanban, Building2, Users, ListTodo, Menu, ChevronLeft } from "lucide-react";
+import { LayoutDashboard, UserPlus, Handshake, FolderKanban, Building2, Users, ListTodo, Menu, ChevronLeft, Users2, GitBranch } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -15,6 +15,8 @@ const navItems = [
   { to: "/selskaper", icon: Building2, label: "Kundeforhold" },
   { to: "/kontakter", icon: Users, label: "Kontakter" },
   { to: "/oppgaver", icon: ListTodo, label: "Oppgaver" },
+  { to: "/partnere", icon: Users2, label: "Partnere" },
+  { to: "/partner-pipeline", icon: GitBranch, label: "Partner Pipeline" },
 ];
 
 function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {

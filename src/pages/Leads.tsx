@@ -21,6 +21,7 @@ const statusColors: Record<LeadStatus, string> = {
   "Kvalifisert": "bg-stage-qualified/10 text-stage-qualified",
   "Ikke aktuelt": "bg-muted text-muted-foreground",
   "Konvertert til salg": "bg-success/10 text-success",
+  "Konvertert til partner": "bg-primary/10 text-primary",
 };
 
 export default function Leads() {
