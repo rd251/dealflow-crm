@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import PageShell from "@/components/PageShell";
 import { useCrmStore } from "@/hooks/use-crm-store";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,7 @@ import { Plus, Search, Mail, Phone, Linkedin, Users } from "lucide-react";
 import { Kontakt } from "@/data/crm-data";
 
 export default function Contacts() {
+  const navigate = useNavigate();
   const { kontakter, selskaper, salgsmuligheter, updateKontakter } = useCrmStore();
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Kontakt | null>(null);
@@ -80,7 +82,7 @@ export default function Contacts() {
             {filtered.map(k => (
               <tr key={k.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => setSelected(k)}>
                 <td className="px-4 py-3 font-medium">{k.navn}</td>
-                <td className="px-4 py-3 text-muted-foreground">{getSelskapNavn(k.selskap_id)}</td>
+                <td className="px-4 py-3 text-muted-foreground"><span className="cursor-pointer hover:text-primary hover:underline" onClick={e => { e.stopPropagation(); navigate(`/selskaper/${k.selskap_id}`); }}>{getSelskapNavn(k.selskap_id)}</span></td>
                 <td className="px-4 py-3 text-muted-foreground">{k.rolle}</td>
                 <td className="px-4 py-3 text-muted-foreground text-xs">{k.e_post}</td>
                 <td className="px-4 py-3 text-muted-foreground text-xs">{k.telefon}</td>
@@ -101,7 +103,7 @@ export default function Contacts() {
                 {currentKontakt.linkedin && <div className="flex items-center gap-2"><Linkedin className="w-4 h-4 text-muted-foreground" /><a href={currentKontakt.linkedin} target="_blank" rel="noopener" className="text-primary underline text-xs">{currentKontakt.linkedin}</a></div>}
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div><span className="text-muted-foreground block text-xs">Selskap</span>{getSelskapNavn(currentKontakt.selskap_id)}</div>
+                <div><span className="text-muted-foreground block text-xs">Selskap</span><span className="cursor-pointer hover:text-primary hover:underline" onClick={() => navigate(`/selskaper/${currentKontakt.selskap_id}`)}>{getSelskapNavn(currentKontakt.selskap_id)}</span></div>
                 <div><span className="text-muted-foreground block text-xs">Rolle</span>{currentKontakt.rolle || "–"}</div>
               </div>
               {currentKontakt.notater && (

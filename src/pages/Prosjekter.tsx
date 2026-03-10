@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import PageShell from "@/components/PageShell";
 import { useCrmStore } from "@/hooks/use-crm-store";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ const statusColors: Record<ProsjektStatus, string> = {
 };
 
 export default function Prosjekter() {
+  const navigate = useNavigate();
   const { prosjekter, selskaper, updateProsjekter, settProsjektLive } = useCrmStore();
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [selectedP, setSelectedP] = useState<Prosjekt | null>(null);
@@ -67,7 +69,7 @@ export default function Prosjekter() {
                         <GripVertical className="w-4 h-4 text-muted-foreground/40 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity" />
                         <div className="flex-1 min-w-0">
                           <p className="font-semibold text-sm truncate">{p.prosjektnavn}</p>
-                          <p className="text-xs text-muted-foreground mt-0.5">{getSelskapNavn(p.selskap_id)}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5 cursor-pointer hover:text-primary hover:underline" onClick={e => { e.stopPropagation(); navigate(`/selskaper/${p.selskap_id}`); }}>{getSelskapNavn(p.selskap_id)}</p>
                           {p.forventet_go_live && <p className="text-[10px] text-muted-foreground mt-1">Go-live: {p.forventet_go_live}</p>}
                         </div>
                       </div>
@@ -89,7 +91,7 @@ export default function Prosjekter() {
           {currentP && (
             <div className="mt-6 space-y-4 text-sm">
               <div className="grid grid-cols-2 gap-3">
-                <div><span className="text-muted-foreground block text-xs">Selskap</span>{getSelskapNavn(currentP.selskap_id)}</div>
+                <div><span className="text-muted-foreground block text-xs">Selskap</span><span className="cursor-pointer hover:text-primary hover:underline" onClick={() => navigate(`/selskaper/${currentP.selskap_id}`)}>{getSelskapNavn(currentP.selskap_id)}</span></div>
                 <div><span className="text-muted-foreground block text-xs">Status</span>{currentP.status}</div>
                 <div><span className="text-muted-foreground block text-xs">Startdato</span>{currentP.startdato || "–"}</div>
                 <div><span className="text-muted-foreground block text-xs">Forventet go-live</span>{currentP.forventet_go_live || "–"}</div>

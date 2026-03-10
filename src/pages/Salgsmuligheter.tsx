@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import PageShell from "@/components/PageShell";
 import { useCrmStore } from "@/hooks/use-crm-store";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ const statusColors: Record<SalgsmulighetStatus, string> = {
 };
 
 export default function Salgsmuligheter() {
+  const navigate = useNavigate();
   const { salgsmuligheter, selskaper, kontakter, updateSalgsmuligheter, vinnSalgsmulighet, tapSalgsmulighet } = useCrmStore();
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [selectedSm, setSelectedSm] = useState<Salgsmulighet | null>(null);
@@ -152,7 +154,7 @@ export default function Salgsmuligheter() {
                           <GripVertical className="w-4 h-4 text-muted-foreground/40 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity" />
                           <div className="flex-1 min-w-0">
                             <p className="font-semibold text-sm truncate">{deal.navn}</p>
-                            <p className="text-xs text-muted-foreground mt-0.5 truncate">{getSelskapNavn(deal.selskap_id)}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5 truncate cursor-pointer hover:text-primary hover:underline" onClick={e => { e.stopPropagation(); navigate(`/selskaper/${deal.selskap_id}`); }}>{getSelskapNavn(deal.selskap_id)}</p>
                             <div className="flex items-center gap-2 mt-2">
                               <span className="text-xs font-mono font-semibold">{deal.forventet_mrr.toLocaleString("no-NO")} MRR</span>
                               <span className="text-[10px] text-muted-foreground">{deal.sannsynlighet}%</span>
@@ -188,13 +190,13 @@ export default function Salgsmuligheter() {
         </TabsContent>
 
         <TabsContent value="won">
-          <DealTable deals={wonThisMonth} getSelskapNavn={getSelskapNavn} onSelect={setSelectedSm} label="Vunnet denne måneden" />
+          <DealTable deals={wonThisMonth} getSelskapNavn={getSelskapNavn} onSelect={setSelectedSm} label="Vunnet denne måneden" onNavigateSelskap={id => navigate(`/selskaper/${id}`)} />
         </TabsContent>
         <TabsContent value="lost">
-          <DealTable deals={lostThisMonth} getSelskapNavn={getSelskapNavn} onSelect={setSelectedSm} label="Tapt denne måneden" />
+          <DealTable deals={lostThisMonth} getSelskapNavn={getSelskapNavn} onSelect={setSelectedSm} label="Tapt denne måneden" onNavigateSelskap={id => navigate(`/selskaper/${id}`)} />
         </TabsContent>
         <TabsContent value="all">
-          <DealTable deals={allClosed} getSelskapNavn={getSelskapNavn} onSelect={setSelectedSm} label="Alle avsluttede salg" />
+          <DealTable deals={allClosed} getSelskapNavn={getSelskapNavn} onSelect={setSelectedSm} label="Alle avsluttede salg" onNavigateSelskap={id => navigate(`/selskaper/${id}`)} />
         </TabsContent>
       </Tabs>
 
@@ -215,7 +217,7 @@ export default function Salgsmuligheter() {
 
             return (
               <div className="mt-6 space-y-4 text-sm">
-                <Field label="Selskap" value={getSelskapNavn(currentSm.selskap_id)} />
+                <Field label="Selskap" value={<span className="cursor-pointer hover:text-primary hover:underline" onClick={() => navigate(`/selskaper/${currentSm.selskap_id}`)}>{getSelskapNavn(currentSm.selskap_id)}</span>} />
 
                 {/* Status */}
                 <div>
@@ -312,7 +314,7 @@ export default function Salgsmuligheter() {
   );
 }
 
-function Field({ label, value, badge }: { label: string; value: string; badge?: string }) {
+function Field({ label, value, badge }: { label: string; value: React.ReactNode; badge?: string }) {
   return (
     <div>
       <span className="text-muted-foreground block text-xs">{label}</span>
@@ -322,23 +324,24 @@ function Field({ label, value, badge }: { label: string; value: string; badge?: 
   );
 }
 
-function DealTable({ deals, getSelskapNavn, onSelect, label }: { deals: Salgsmulighet[]; getSelskapNavn: (id: string) => string; onSelect: (s: Salgsmulighet) => void; label: string }) {
+function DealTable({ deals, getSelskapNavn, onSelect, label, onNavigateSelskap }: { deals: Salgsmulighet[]; getSelskapNavn: (id: string) => string; onSelect: (s: Salgsmulighet) => void; label: string; onNavigateSelskap?: (id: string) => void }) {
   if (deals.length === 0) return <div className="text-center py-12 text-muted-foreground text-sm">{label}: ingen</div>;
   return (
     <div className="bg-card border rounded-xl overflow-hidden">
       <table className="w-full text-sm">
-        <thead><tr className="border-b bg-muted/50">
-          <th className="text-left px-4 py-3 font-medium">Navn</th>
-          <th className="text-left px-4 py-3 font-medium">Selskap</th>
-          <th className="text-left px-4 py-3 font-medium">Status</th>
-          <th className="text-right px-4 py-3 font-medium">MRR</th>
-          <th className="text-right px-4 py-3 font-medium">Total verdi</th>
-        </tr></thead>
+        <thead>
+          <tr className="border-b bg-muted/50">
+            <th className="text-left px-4 py-3 font-medium">Navn</th>
+            <th className="text-left px-4 py-3 font-medium">Selskap</th>
+            <th className="text-left px-4 py-3 font-medium">Status</th>
+            <th className="text-right px-4 py-3 font-medium">MRR</th>
+          </tr>
+        </thead>
         <tbody>
           {deals.map(d => (
             <tr key={d.id} className="border-b last:border-0 hover:bg-muted/30 cursor-pointer" onClick={() => onSelect(d)}>
               <td className="px-4 py-3 font-medium">{d.navn}</td>
-              <td className="px-4 py-3 text-muted-foreground">{getSelskapNavn(d.selskap_id)}</td>
+              <td className="px-4 py-3 text-muted-foreground"><span className="cursor-pointer hover:text-primary hover:underline" onClick={e => { e.stopPropagation(); onNavigateSelskap?.(d.selskap_id); }}>{getSelskapNavn(d.selskap_id)}</span></td>
               <td className="px-4 py-3"><span className={`text-xs px-2 py-0.5 rounded-full font-medium ${d.status === "Vunnet" ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>{d.status}</span></td>
               <td className="px-4 py-3 text-right font-mono">{d.forventet_mrr.toLocaleString("no-NO")}</td>
               <td className="px-4 py-3 text-right font-mono">{beregnTotalKontraktsverdi(d).toLocaleString("no-NO")}</td>
