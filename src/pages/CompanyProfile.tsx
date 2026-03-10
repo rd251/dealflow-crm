@@ -11,9 +11,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import {
   Building2, ArrowLeft, DollarSign, TrendingUp, Briefcase, Users,
-  Mail, Phone, Linkedin, FileText, CalendarDays, ChevronRight,
+  Mail, Phone, Linkedin, FileText, CalendarDays, ChevronRight, Plus, X,
 } from "lucide-react";
-import { Kundestatus, OnboardingStatus, Kundetilstand, SalgsmulighetStatus } from "@/data/crm-data";
+import { Kundestatus, OnboardingStatus, Kundetilstand, SalgsmulighetStatus, Kontakt } from "@/data/crm-data";
 
 const kundestatuser: Kundestatus[] = ["Ikke kunde", "Pilot", "Live", "Pause", "Kansellert"];
 const onboardingStatuser: OnboardingStatus[] = ["Ikke startet", "Pågår", "Venter på kunde", "Klar for live", "Ferdig"];
