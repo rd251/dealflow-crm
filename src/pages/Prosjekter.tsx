@@ -104,6 +104,10 @@ export default function Prosjekter() {
                   <Rocket className="w-3.5 h-3.5 mr-1" />Sett som Live
                 </Button>
               )}
+
+              <div className="border-t pt-4">
+                <InlineTaskForm selskap_id={currentP.selskap_id} salgsmulighet_id={currentP.salgsmulighet_id} />
+              </div>
             </div>
           )}
         </SheetContent>

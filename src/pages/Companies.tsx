@@ -184,6 +184,10 @@ export default function Companies() {
                   {currentSelskap.kanselleringsnotat && <p className="mt-1">{currentSelskap.kanselleringsnotat}</p>}
                 </div>
               )}
+
+              <div className="border-t pt-4">
+                <InlineTaskForm selskap_id={currentSelskap.id} />
+              </div>
             </div>
           )}
         </SheetContent>
