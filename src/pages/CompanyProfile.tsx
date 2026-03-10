@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import {
   Building2, ArrowLeft, DollarSign, TrendingUp, Briefcase, Users,
-  Mail, Phone, Linkedin, FileText, CalendarDays, ChevronRight, Plus, X,
+  Mail, Phone, Linkedin, FileText, CalendarDays, ChevronRight, Plus, X, Shield,
 } from "lucide-react";
 import { Kundestatus, OnboardingStatus, Kundetilstand, SalgsmulighetStatus, Kontakt } from "@/data/crm-data";
 
@@ -74,6 +74,7 @@ export default function CompanyProfile() {
 
   const totalKontraktsverdi = selskapSm.reduce((sum, s) => sum + beregnTotalKontraktsverdi(s), 0);
   const totalOppstart = selskapSm.reduce((sum, s) => sum + s.oppstartskostnad, 0) || selskap.oppstartskostnad;
+  const totalSla = selskapSm.filter(s => s.status !== "Tapt").reduce((sum, s) => sum + (s.sla || 0), 0);
   const totalVerdi = totalKontraktsverdi + totalOppstart;
 
   const today = new Date().toISOString().split("T")[0];
@@ -111,9 +112,10 @@ export default function CompanyProfile() {
 
       <main className="p-8 space-y-8">
         {/* KPI cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
           <StatCard label="Aktiv MRR" value={`${selskap.mrr.toLocaleString("no-NO")} kr`} icon={<DollarSign className="w-5 h-5" />} />
           <StatCard label="ARR" value={`${selskap.arr.toLocaleString("no-NO")} kr`} icon={<TrendingUp className="w-5 h-5" />} />
+          <StatCard label="SLA (månedlig)" value={`${totalSla.toLocaleString("no-NO")} kr`} icon={<Shield className="w-5 h-5" />} trend={`Årlig: ${(totalSla * 12).toLocaleString("no-NO")} kr`} />
           <StatCard label="Sum oppstartskostnader" value={`${totalOppstart.toLocaleString("no-NO")} kr`} icon={<Briefcase className="w-5 h-5" />} />
           <StatCard label="Total kontraktsverdi" value={`${totalKontraktsverdi.toLocaleString("no-NO")} kr`} icon={<FileText className="w-5 h-5" />} />
           <StatCard label="Total verdi" value={`${totalVerdi.toLocaleString("no-NO")} kr`} icon={<TrendingUp className="w-5 h-5" />} />
@@ -266,6 +268,7 @@ export default function CompanyProfile() {
                       </div>
                       <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-muted-foreground">
                         <span>MRR: {sm.forventet_mrr.toLocaleString("no-NO")} kr</span>
+                        <span>SLA: {(sm.sla || 0).toLocaleString("no-NO")} kr</span>
                         <span>Oppstart: {sm.oppstartskostnad.toLocaleString("no-NO")} kr</span>
                         <span>Kontraktslengde: {sm.kontraktslengde_mnd} mnd</span>
                         <span>Sannsynlighet: {sm.sannsynlighet}%</span>
