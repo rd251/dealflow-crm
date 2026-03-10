@@ -268,6 +268,7 @@ export default function CompanyProfile() {
                       </div>
                       <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-muted-foreground">
                         <span>MRR: {sm.forventet_mrr.toLocaleString("no-NO")} kr</span>
+                        <span>SLA: {(sm.sla || 0).toLocaleString("no-NO")} kr</span>
                         <span>Oppstart: {sm.oppstartskostnad.toLocaleString("no-NO")} kr</span>
                         <span>Kontraktslengde: {sm.kontraktslengde_mnd} mnd</span>
                         <span>Sannsynlighet: {sm.sannsynlighet}%</span>
