@@ -113,7 +113,7 @@ export default function Salgsmuligheter() {
       {/* Loss reason dialog */}
       <Dialog open={!!lossDialog} onOpenChange={open => !open && setLossDialog(null)}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Tapsårsak</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Tapsårsak</DialogTitle><DialogDescription>Velg årsaken til at denne dealen ble tapt.</DialogDescription></DialogHeader>
           <div className="space-y-3">
             <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background" value={lossReason} onChange={e => setLossReason(e.target.value as Tapsaarsak)}>
               {tapsaarsaker.map(t => <option key={t} value={t}>{t}</option>)}
