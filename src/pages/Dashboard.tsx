@@ -95,24 +95,24 @@ export default function Dashboard() {
     .slice(0, 8);
 
   // === Recent activity feed ===
-  type ActivityItem = { dato: string; tekst: string; type: "lead" | "deal" | "prosjekt" | "selskap" | "oppgave" };
+  type ActivityItem = { dato: string; tekst: string; type: "lead" | "deal" | "prosjekt" | "selskap" | "oppgave"; route: string };
   const activityItems: ActivityItem[] = [];
 
   leads.forEach(l => {
-    if (l.opprettet_dato) activityItems.push({ dato: l.opprettet_dato, tekst: `Nytt lead: ${l.firmanavn}`, type: "lead" });
-    if (l.konvertert_dato) activityItems.push({ dato: l.konvertert_dato, tekst: `Lead konvertert: ${l.firmanavn}`, type: "lead" });
+    if (l.opprettet_dato) activityItems.push({ dato: l.opprettet_dato, tekst: `Nytt lead: ${l.firmanavn}`, type: "lead", route: "/leads" });
+    if (l.konvertert_dato) activityItems.push({ dato: l.konvertert_dato, tekst: `Lead konvertert: ${l.firmanavn}`, type: "lead", route: "/leads" });
   });
   salgsmuligheter.forEach(s => {
-    if (s.opprettet_dato) activityItems.push({ dato: s.opprettet_dato, tekst: `Ny salgsmulighet: ${s.navn}`, type: "deal" });
-    if (s.vunnet_dato) activityItems.push({ dato: s.vunnet_dato, tekst: `Deal vunnet: ${s.navn}`, type: "deal" });
-    if (s.tapt_dato) activityItems.push({ dato: s.tapt_dato, tekst: `Deal tapt: ${s.navn}`, type: "deal" });
+    if (s.opprettet_dato) activityItems.push({ dato: s.opprettet_dato, tekst: `Ny salgsmulighet: ${s.navn}`, type: "deal", route: "/salgsmuligheter" });
+    if (s.vunnet_dato) activityItems.push({ dato: s.vunnet_dato, tekst: `Deal vunnet: ${s.navn}`, type: "deal", route: "/salgsmuligheter" });
+    if (s.tapt_dato) activityItems.push({ dato: s.tapt_dato, tekst: `Deal tapt: ${s.navn}`, type: "deal", route: "/salgsmuligheter" });
   });
   prosjekter.forEach(p => {
-    if (p.go_live_dato) activityItems.push({ dato: p.go_live_dato, tekst: `Prosjekt live: ${p.prosjektnavn}`, type: "prosjekt" });
+    if (p.go_live_dato) activityItems.push({ dato: p.go_live_dato, tekst: `Prosjekt live: ${p.prosjektnavn}`, type: "prosjekt", route: "/prosjekter" });
   });
   selskaper.forEach(s => {
-    if (s.go_live_dato) activityItems.push({ dato: s.go_live_dato, tekst: `Kunde live: ${s.firmanavn}`, type: "selskap" });
-    if (s.kansellert_dato) activityItems.push({ dato: s.kansellert_dato, tekst: `Kunde kansellert: ${s.firmanavn}`, type: "selskap" });
+    if (s.go_live_dato) activityItems.push({ dato: s.go_live_dato, tekst: `Kunde live: ${s.firmanavn}`, type: "selskap", route: "/selskaper" });
+    if (s.kansellert_dato) activityItems.push({ dato: s.kansellert_dato, tekst: `Kunde kansellert: ${s.firmanavn}`, type: "selskap", route: "/selskaper" });
   });
 
   const recentActivity = activityItems
