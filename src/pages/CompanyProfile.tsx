@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import {
   Building2, ArrowLeft, DollarSign, TrendingUp, Briefcase, Users,
-  Mail, Phone, Linkedin, FileText, CalendarDays, ChevronRight, Plus, X,
+  Mail, Phone, Linkedin, FileText, CalendarDays, ChevronRight, Plus, X, Shield,
 } from "lucide-react";
 import { Kundestatus, OnboardingStatus, Kundetilstand, SalgsmulighetStatus, Kontakt } from "@/data/crm-data";
 
