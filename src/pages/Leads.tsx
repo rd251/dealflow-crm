@@ -36,7 +36,7 @@ export default function Leads() {
 
   const addLead = () => {
     const today = new Date().toISOString().split("T")[0];
-    const id = `L-${String(leads.length + 1).padStart(4, "0")}`;
+    const id = generateId("L", leads);
     const newLead: Lead = {
       id, firmanavn: form.firmanavn || "", kontaktperson: form.kontaktperson || "",
       e_post: form.e_post || "", telefon: form.telefon || "", kilde: form.kilde as LeadKilde || "Annet",
