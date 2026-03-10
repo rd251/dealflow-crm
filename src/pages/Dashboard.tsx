@@ -145,9 +145,10 @@ export default function Dashboard() {
   return (
     <PageShell title="Dashboard" subtitle="Snakk CRM – SaaS-metrikker og salgsoversikt">
       {/* Row 1: MRR, ARR, Active */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
         <StatCard label="Totalt MRR" value={`${nok(totalMRR)} NOK`} icon={<DollarSign className="w-5 h-5" />} />
         <StatCard label="ARR" value={`${nok(arr)} NOK`} icon={<TrendingUp className="w-5 h-5" />} />
+        <StatCard label="SLA (månedlig)" value={`${nok(totalSLA)} NOK`} icon={<Shield className="w-5 h-5" />} trend={`ARR: ${nok(slArr)} NOK`} />
         <StatCard label="Aktive kunder" value={aktiveKunder} icon={<Users className="w-5 h-5" />} />
       </div>
 
