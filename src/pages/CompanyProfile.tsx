@@ -112,9 +112,10 @@ export default function CompanyProfile() {
 
       <main className="p-8 space-y-8">
         {/* KPI cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
           <StatCard label="Aktiv MRR" value={`${selskap.mrr.toLocaleString("no-NO")} kr`} icon={<DollarSign className="w-5 h-5" />} />
           <StatCard label="ARR" value={`${selskap.arr.toLocaleString("no-NO")} kr`} icon={<TrendingUp className="w-5 h-5" />} />
+          <StatCard label="SLA (månedlig)" value={`${totalSla.toLocaleString("no-NO")} kr`} icon={<Shield className="w-5 h-5" />} trend={`Årlig: ${(totalSla * 12).toLocaleString("no-NO")} kr`} />
           <StatCard label="Sum oppstartskostnader" value={`${totalOppstart.toLocaleString("no-NO")} kr`} icon={<Briefcase className="w-5 h-5" />} />
           <StatCard label="Total kontraktsverdi" value={`${totalKontraktsverdi.toLocaleString("no-NO")} kr`} icon={<FileText className="w-5 h-5" />} />
           <StatCard label="Total verdi" value={`${totalVerdi.toLocaleString("no-NO")} kr`} icon={<TrendingUp className="w-5 h-5" />} />
