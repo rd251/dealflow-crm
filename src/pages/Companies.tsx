@@ -34,7 +34,7 @@ const tilstandColors: Record<Kundetilstand, string> = {
 
 export default function Companies() {
   const navigate = useNavigate();
-  const { selskaper, updateSelskaper, kansellerSelskap } = useCrmStore();
+  const { selskaper, salgsmuligheter, updateSelskaper, kansellerSelskap } = useCrmStore();
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selected, setSelected] = useState<Selskap | null>(null);
@@ -134,11 +134,15 @@ export default function Companies() {
               <th className="text-left px-4 py-3 font-medium">Tilstand</th>
               <th className="text-right px-4 py-3 font-medium">MRR</th>
               <th className="text-right px-4 py-3 font-medium">ARR</th>
+              <th className="text-right px-4 py-3 font-medium">SLA</th>
               <th className="text-right px-4 py-3 font-medium">Oppstart</th>
             </tr>
           </thead>
           <tbody>
-            {filtered.map(s => (
+            {filtered.map(s => {
+              const selskapSm = salgsmuligheter.filter(sm => sm.selskap_id === s.id && sm.status !== "Tapt");
+              const totalSla = selskapSm.reduce((sum, sm) => sum + (sm.sla || 0), 0);
+              return (
               <tr key={s.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => navigate(`/selskaper/${s.id}`)}>
                 <td className="px-4 py-3 font-medium">{s.firmanavn}</td>
                 <td className="px-4 py-3 text-muted-foreground">{s.bransje || "–"}</td>
@@ -156,9 +160,11 @@ export default function Companies() {
                 </td>
                 <td className="px-4 py-3 text-right font-mono">{s.mrr.toLocaleString("no-NO")}</td>
                 <td className="px-4 py-3 text-right font-mono">{s.arr.toLocaleString("no-NO")}</td>
+                <td className="px-4 py-3 text-right font-mono">{totalSla.toLocaleString("no-NO")}</td>
                 <td className="px-4 py-3 text-right font-mono">{s.oppstartskostnad.toLocaleString("no-NO")}</td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </div>
