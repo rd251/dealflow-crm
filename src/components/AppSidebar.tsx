@@ -1,12 +1,14 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { LayoutDashboard, Building2, Users, Kanban, ListTodo } from "lucide-react";
+import { LayoutDashboard, UserPlus, Handshake, FolderKanban, Building2, Users, ListTodo } from "lucide-react";
 
 const navItems = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
-  { to: "/companies", icon: Building2, label: "Companies" },
-  { to: "/contacts", icon: Users, label: "Contacts" },
-  { to: "/deals", icon: Kanban, label: "Deals" },
-  { to: "/tasks", icon: ListTodo, label: "Tasks" },
+  { to: "/leads", icon: UserPlus, label: "Leads" },
+  { to: "/salgsmuligheter", icon: Handshake, label: "Salgsmuligheter" },
+  { to: "/prosjekter", icon: FolderKanban, label: "Prosjekter" },
+  { to: "/selskaper", icon: Building2, label: "Selskaper" },
+  { to: "/kontakter", icon: Users, label: "Kontakter" },
+  { to: "/oppgaver", icon: ListTodo, label: "Oppgaver" },
 ];
 
 export default function AppSidebar() {
@@ -39,7 +41,7 @@ export default function AppSidebar() {
         })}
       </nav>
       <div className="p-4 text-xs text-sidebar-foreground/50">
-        Snakk CRM v1.0
+        Snakk CRM v2.0
       </div>
     </aside>
   );
