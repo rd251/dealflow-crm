@@ -148,7 +148,7 @@ export default function Leads() {
                       className={`text-xs px-2 py-1 rounded-full font-medium border-0 cursor-pointer ${statusColors[lead.status]}`}
                       value={lead.status}
                       onChange={e => changeStatus(lead.id, e.target.value as LeadStatus)}
-                      disabled={lead.status === "Konvertert til salg"}
+                    disabled={lead.status === "Konvertert til salg" || lead.status === "Konvertert til partner"}
                     >
                       {statusOptions.map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
