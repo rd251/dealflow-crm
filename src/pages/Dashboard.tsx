@@ -5,6 +5,7 @@ import { useCrmStore } from "@/hooks/use-crm-store";
 import { DollarSign, TrendingUp, Users, Target, AlertTriangle, BarChart3, ArrowUpRight, ArrowDownRight, Zap, Trophy, XCircle, UserMinus, ListTodo, Clock, CheckCircle2, Activity, ExternalLink } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, LineChart, Line, CartesianGrid } from "recharts";
 import { beregnTotalKontraktsverdi } from "@/data/crm-data";
+import { Shield } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 const prioritetBadge: Record<string, string> = {
@@ -30,6 +31,11 @@ export default function Dashboard() {
   const totalMRR = liveSelskaper.reduce((sum, s) => sum + s.mrr, 0);
   const arr = totalMRR * 12;
   const aktiveKunder = liveSelskaper.length;
+
+  // SLA – monthly SLA revenue from open pipeline deals
+  const openSmAll = salgsmuligheter.filter(s => s.status !== "Tapt");
+  const totalSLA = openSmAll.reduce((sum, s) => sum + (s.sla || 0), 0);
+  const slArr = totalSLA * 12;
 
   // Ny MRR (go_live this month)
   const nyMRR = selskaper.filter(s => thisMonth(s.go_live_dato)).reduce((sum, s) => sum + s.mrr, 0);
@@ -139,9 +145,10 @@ export default function Dashboard() {
   return (
     <PageShell title="Dashboard" subtitle="Snakk CRM – SaaS-metrikker og salgsoversikt">
       {/* Row 1: MRR, ARR, Active */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
         <StatCard label="Totalt MRR" value={`${nok(totalMRR)} NOK`} icon={<DollarSign className="w-5 h-5" />} />
         <StatCard label="ARR" value={`${nok(arr)} NOK`} icon={<TrendingUp className="w-5 h-5" />} />
+        <StatCard label="SLA (månedlig)" value={`${nok(totalSLA)} NOK`} icon={<Shield className="w-5 h-5" />} trend={`ARR: ${nok(slArr)} NOK`} />
         <StatCard label="Aktive kunder" value={aktiveKunder} icon={<Users className="w-5 h-5" />} />
       </div>
 

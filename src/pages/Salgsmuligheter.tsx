@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, GripVertical, Trophy, XCircle } from "lucide-react";
-import { Salgsmulighet, SalgsmulighetStatus, Tapsaarsak, beregnTotalKontraktsverdi, beregnVektetPipeline, beregnTotalMrr } from "@/data/crm-data";
+import { Salgsmulighet, SalgsmulighetStatus, Tapsaarsak, beregnTotalKontraktsverdi, beregnVektetPipeline } from "@/data/crm-data";
 import InlineTaskForm from "@/components/InlineTaskForm";
 
 const openStatuses: SalgsmulighetStatus[] = ["Ny mulighet", "Møte booket", "Demo gjennomført", "Tilbud sendt", "Forhandling"];
@@ -157,8 +157,8 @@ export default function Salgsmuligheter() {
                             <p className="font-semibold text-sm truncate">{deal.navn}</p>
                             <p className="text-xs text-muted-foreground mt-0.5 truncate cursor-pointer hover:text-primary hover:underline" onClick={e => { e.stopPropagation(); navigate(`/selskaper/${deal.selskap_id}`); }}>{getSelskapNavn(deal.selskap_id)}</p>
                             <div className="flex items-center gap-2 mt-2">
-                              <span className="text-xs font-mono font-semibold">{beregnTotalMrr(deal).toLocaleString("no-NO")} MRR</span>
-                              {(deal.sla || 0) > 0 && <span className="text-[10px] text-muted-foreground">(SLA: {deal.sla.toLocaleString("no-NO")})</span>}
+                              <span className="text-xs font-mono font-semibold">{deal.forventet_mrr.toLocaleString("no-NO")} MRR</span>
+                              {(deal.sla || 0) > 0 && <span className="text-[10px] text-muted-foreground">SLA: {deal.sla.toLocaleString("no-NO")}</span>}
                               <span className="text-[10px] text-muted-foreground">{deal.sannsynlighet}%</span>
                             </div>
                             {deal.neste_steg && <p className="text-[10px] text-muted-foreground mt-1 truncate">→ {deal.neste_steg}</p>}
@@ -213,8 +213,8 @@ export default function Salgsmuligheter() {
                 s.id === currentSm.id ? { ...s, [field]: value, sist_aktivitet: today } : s
               ));
             };
-            const totalMrr = beregnTotalMrr(currentSm);
-            const arr = totalMrr * 12;
+            const arr = currentSm.forventet_mrr * 12;
+            const slaArr = (currentSm.sla || 0) * 12;
             const totalKontraktsverdi = beregnTotalKontraktsverdi(currentSm);
             const vektetVerdi = beregnVektetPipeline(currentSm);
 
@@ -280,8 +280,8 @@ export default function Salgsmuligheter() {
                 <div className="bg-muted/50 rounded-lg p-3 space-y-2">
                   <h4 className="font-semibold text-xs text-muted-foreground uppercase tracking-wide">Beregnede verdier</h4>
                   <div className="grid grid-cols-2 gap-2 text-sm">
-                    <Field label="Total MRR (inkl. SLA)" value={`${totalMrr.toLocaleString("no-NO")} NOK`} />
                     <Field label="ARR" value={`${arr.toLocaleString("no-NO")} NOK`} />
+                    <Field label="SLA (årlig)" value={`${slaArr.toLocaleString("no-NO")} NOK`} />
                     <Field label="Total kontraktsverdi" value={`${totalKontraktsverdi.toLocaleString("no-NO")} NOK`} />
                     <Field label="Vektet pipelineverdi" value={`${vektetVerdi.toLocaleString("no-NO")} NOK`} />
                   </div>
