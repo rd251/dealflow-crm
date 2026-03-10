@@ -213,6 +213,12 @@ export default function Leads() {
                   <ArrowRightCircle className="w-4 h-4 mr-1" /> Konverter til salgsmulighet
                 </Button>
               )}
+              <Button size="sm" variant="destructive" className="w-full" onClick={() => {
+                updateLeads(prev => prev.filter(l => l.id !== currentLead.id));
+                setSelectedLead(null);
+              }}>
+                <Trash2 className="w-4 h-4 mr-1" /> Slett lead
+              </Button>
             </div>
             );
           })()}
