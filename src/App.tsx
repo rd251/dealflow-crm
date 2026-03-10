@@ -3,7 +3,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { CrmProvider } from "@/hooks/use-crm-store";
+import { CrmProvider } from "@/hooks/use-crm-store.js";
 import AppSidebar from "@/components/AppSidebar";
 import Dashboard from "./pages/Dashboard";
 import Leads from "./pages/Leads";

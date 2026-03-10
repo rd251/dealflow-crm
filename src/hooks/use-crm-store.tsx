@@ -1,3 +1,4 @@
+// CRM global store
 import { useState, useCallback, createContext, useContext, ReactNode } from "react";
 import {
   Lead, Salgsmulighet, Prosjekt, Selskap, Kontakt, Oppgave,
