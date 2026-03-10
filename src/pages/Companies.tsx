@@ -46,7 +46,7 @@ export default function Companies() {
   const filtered = selskaper.filter(s => s.firmanavn.toLowerCase().includes(search.toLowerCase()));
 
   const addSelskap = () => {
-    const id = `S-${String(selskaper.length + 1).padStart(4, "0")}`;
+    const id = generateId("S", selskaper);
     const nyttSelskap: Selskap = {
       id, firmanavn: form.firmanavn, bransje: form.bransje, kundeansvarlig: form.kundeansvarlig,
       kundestatus: "Ikke kunde", live_status: false, onboarding_status: "Ikke startet",
