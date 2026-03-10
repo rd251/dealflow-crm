@@ -195,13 +195,14 @@ export default function Dashboard() {
                 return (
                   <div
                     key={task.id}
-                    className={`flex items-start gap-3 p-3 rounded-lg border transition-colors ${
-                      overdue ? "bg-destructive/5 border-destructive/20" : todayTask ? "bg-primary/5 border-primary/20" : "bg-muted/30 border-border"
+                    onClick={() => navigate("/oppgaver")}
+                    className={`flex items-start gap-3 p-3 rounded-lg border transition-colors cursor-pointer group hover:shadow-sm ${
+                      overdue ? "bg-destructive/5 border-destructive/20 hover:bg-destructive/10" : todayTask ? "bg-primary/5 border-primary/20 hover:bg-primary/10" : "bg-muted/30 border-border hover:bg-muted/50"
                     }`}
                   >
                     <div className={`mt-0.5 w-2 h-2 rounded-full shrink-0 ${overdue ? "bg-destructive" : todayTask ? "bg-primary" : "bg-muted-foreground/40"}`} />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{task.oppgave}</p>
+                      <p className="text-sm font-medium truncate group-hover:underline">{task.oppgave}</p>
                       <div className="flex items-center gap-2 mt-1">
                         {selskap && <span className="text-xs text-muted-foreground truncate">{selskap.firmanavn}</span>}
                         {task.frist && (
@@ -215,6 +216,7 @@ export default function Dashboard() {
                     <Badge variant="outline" className={`text-[10px] shrink-0 ${prioritetBadge[task.prioritet] || ""}`}>
                       {task.prioritet}
                     </Badge>
+                    <ExternalLink className="w-3.5 h-3.5 text-muted-foreground/0 group-hover:text-muted-foreground/60 transition-colors shrink-0 mt-0.5" />
                   </div>
                 );
               })}
