@@ -1,6 +1,6 @@
 import { NavLink, useLocation } from "react-router-dom";
 import { LayoutDashboard, UserPlus, Handshake, FolderKanban, Building2, Users, ListTodo } from "lucide-react";
-import logo from "@/assets/logo.svg";
+import logo from "@/assets/logo-white.svg";
 
 const navItems = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
