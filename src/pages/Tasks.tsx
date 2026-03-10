@@ -31,7 +31,7 @@ export default function Tasks() {
     const ny: Oppgave = { id, ...form, status: "Åpen", paaminnelse: true };
     updateOppgaver(prev => [...prev, ny]);
     setDialogOpen(false);
-    setForm({ oppgave: "", frist: "", prioritet: "Medium", selskap_id: "", salgsmulighet_id: "", ansvarlig: "", notater: "" });
+    setForm({ oppgave: "", frist: "", prioritet: "Medium", lead_id: "", selskap_id: "", salgsmulighet_id: "", ansvarlig: "", notater: "" });
   };
 
   const changeStatus = (id: string, status: OppgaveStatus) => {
