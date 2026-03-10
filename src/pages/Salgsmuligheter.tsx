@@ -314,7 +314,7 @@ export default function Salgsmuligheter() {
   );
 }
 
-function Field({ label, value, badge }: { label: string; value: string; badge?: string }) {
+function Field({ label, value, badge }: { label: string; value: React.ReactNode; badge?: string }) {
   return (
     <div>
       <span className="text-muted-foreground block text-xs">{label}</span>
