@@ -287,6 +287,10 @@ export default function Salgsmuligheter() {
                     <strong>Vunnet:</strong> {currentSm.vunnet_dato}
                   </div>
                 )}
+                <div className="border-t pt-4">
+                  <InlineTaskForm salgsmulighet_id={currentSm.id} selskap_id={currentSm.selskap_id} />
+                </div>
+
                 <div className="flex gap-2 pt-2">
                   {openStatuses.includes(currentSm.status as any) && (
                     <>
