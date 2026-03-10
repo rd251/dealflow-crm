@@ -19,7 +19,7 @@ interface InlineTaskFormProps {
 }
 
 export default function InlineTaskForm({ lead_id = "", selskap_id = "", salgsmulighet_id = "" }: InlineTaskFormProps) {
-  const { oppgaver, updateOppgaver } = useCrmStore();
+  const { oppgaver, updateOppgaver, generateId } = useCrmStore();
   const [showForm, setShowForm] = useState(false);
   const [oppgave, setOppgave] = useState("");
   const [frist, setFrist] = useState("");
