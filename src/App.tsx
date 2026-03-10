@@ -12,6 +12,9 @@ import Prosjekter from "./pages/Prosjekter";
 import Companies from "./pages/Companies";
 import Contacts from "./pages/Contacts";
 import Tasks from "./pages/Tasks";
+import Partnere from "./pages/Partnere";
+import PartnerProfile from "./pages/PartnerProfile";
+import PartnerPipeline from "./pages/PartnerPipeline";
 import NotFound from "./pages/NotFound";
 import CompanyProfile from "./pages/CompanyProfile";
 
@@ -35,6 +38,9 @@ function App() {
               <Route path="/selskaper/:id" element={<CompanyProfile />} />
               <Route path="/kontakter" element={<Contacts />} />
               <Route path="/oppgaver" element={<Tasks />} />
+              <Route path="/partnere" element={<Partnere />} />
+              <Route path="/partnere/:id" element={<PartnerProfile />} />
+              <Route path="/partner-pipeline" element={<PartnerPipeline />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </CrmProvider>

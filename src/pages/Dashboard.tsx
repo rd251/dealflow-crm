@@ -3,8 +3,8 @@ import PageShell from "@/components/PageShell";
 import StatCard from "@/components/StatCard";
 import { useCrmStore } from "@/hooks/use-crm-store";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { DollarSign, TrendingUp, Users, Target, AlertTriangle, BarChart3, ArrowUpRight, ArrowDownRight, Zap, Trophy, XCircle, UserMinus, ListTodo, Clock, CheckCircle2, Activity, ExternalLink } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, LineChart, Line, CartesianGrid } from "recharts";
+import { DollarSign, TrendingUp, Users, Target, AlertTriangle, BarChart3, ArrowUpRight, ArrowDownRight, Zap, Trophy, XCircle, UserMinus, ListTodo, Clock, CheckCircle2, Activity, ExternalLink, Users2, Handshake } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, LineChart, Line, CartesianGrid, PieChart, Pie } from "recharts";
 import { beregnTotalKontraktsverdi } from "@/data/crm-data";
 import { Shield } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -18,7 +18,7 @@ const prioritetBadge: Record<string, string> = {
 export default function Dashboard() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const { selskaper, salgsmuligheter, leads, oppgaver, prosjekter } = useCrmStore();
+  const { selskaper, salgsmuligheter, leads, oppgaver, prosjekter, partnere } = useCrmStore();
 
   const now = new Date();
   const thisMonth = (d: string) => {
@@ -257,6 +257,77 @@ export default function Dashboard() {
           )}
         </div>
       </div>
+
+      {/* Partner Section */}
+      {partnere.length > 0 && (() => {
+        const aktivePartnere = partnere.filter(p => p.partnerstatus === "Aktiv");
+        const partnerKunder = selskaper.filter(s => s.partner_id && s.kundestatus === "Live");
+        const partnerMrr = partnerKunder.reduce((sum, s) => sum + s.mrr, 0);
+        const partnerArr = partnerMrr * 12;
+        const partnerAndelMrr = totalMRR > 0 ? ((partnerMrr / totalMRR) * 100).toFixed(1) : "0";
+
+        // Partner type distribution
+        const partnerTypeData = ["Provisjonspartner", "Integrasjonspartner", "Salgspartner", "Strategisk partner"].map(t => ({
+          type: t.replace("partner", ""),
+          antall: partnere.filter(p => p.partnertype === t).length,
+        })).filter(d => d.antall > 0);
+        const typeColors = ["hsl(220, 70%, 55%)", "hsl(142, 71%, 45%)", "hsl(38, 92%, 50%)", "hsl(262, 60%, 55%)"];
+
+        // Top partners by MRR
+        const topPartnere = partnere.map(p => {
+          const kunder = selskaper.filter(s => s.partner_id === p.id && s.kundestatus === "Live");
+          const mrr = kunder.reduce((sum, s) => sum + s.mrr, 0);
+          return { navn: p.partnernavn.length > 15 ? p.partnernavn.substring(0, 15) + "…" : p.partnernavn, mrr };
+        }).sort((a, b) => b.mrr - a.mrr).slice(0, 10).filter(p => p.mrr > 0);
+
+        return (
+          <>
+            <div className="flex items-center gap-2 mb-4 mt-2">
+              <Users2 className="w-5 h-5 text-primary" />
+              <h2 className="text-lg font-semibold">Partnere</h2>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4 mb-6">
+              <StatCard label="Partnere" value={partnere.length} icon={<Users2 className="w-5 h-5" />} />
+              <StatCard label="MRR fra partnere" value={`${nok(partnerMrr)} NOK`} icon={<DollarSign className="w-5 h-5" />} />
+              <StatCard label="ARR fra partnere" value={`${nok(partnerArr)} NOK`} icon={<TrendingUp className="w-5 h-5" />} />
+              <StatCard label="Kunder via partner" value={partnerKunder.length} icon={<Users className="w-5 h-5" />} />
+              <StatCard label="Andel av MRR" value={`${partnerAndelMrr}%`} icon={<Handshake className="w-5 h-5" />} className={isMobile ? "col-span-2" : ""} />
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6">
+              {partnerTypeData.length > 0 && (
+                <div className="bg-card border rounded-xl p-4 sm:p-6">
+                  <h2 className="text-base sm:text-lg font-semibold mb-4">Partnere etter type</h2>
+                  <ResponsiveContainer width="100%" height={isMobile ? 200 : 260}>
+                    <BarChart data={partnerTypeData}>
+                      <XAxis dataKey="type" tick={{ fontSize: isMobile ? 9 : 11 }} />
+                      <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+                      <Tooltip contentStyle={{ borderRadius: "8px", fontSize: "13px" }} />
+                      <Bar dataKey="antall" radius={[6, 6, 0, 0]}>
+                        {partnerTypeData.map((_, i) => <Cell key={i} fill={typeColors[i % typeColors.length]} />)}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+
+              {topPartnere.length > 0 && (
+                <div className="bg-card border rounded-xl p-4 sm:p-6">
+                  <h2 className="text-base sm:text-lg font-semibold mb-4">Topp partnere etter MRR</h2>
+                  <ResponsiveContainer width="100%" height={isMobile ? 200 : 260}>
+                    <BarChart data={topPartnere} layout="vertical">
+                      <XAxis type="number" tick={{ fontSize: 11 }} tickFormatter={v => `${(v / 1000).toFixed(0)}k`} />
+                      <YAxis type="category" dataKey="navn" tick={{ fontSize: isMobile ? 9 : 11 }} width={isMobile ? 80 : 120} />
+                      <Tooltip formatter={(value: number) => [`${nok(value)} NOK`, "MRR"]} contentStyle={{ borderRadius: "8px", fontSize: "13px" }} />
+                      <Bar dataKey="mrr" fill="hsl(3, 76%, 48%)" radius={[0, 6, 6, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+            </div>
+          </>
+        );
+      })()}
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">

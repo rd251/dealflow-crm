@@ -62,6 +62,7 @@ export default function Salgsmuligheter() {
       sannsynlighet: form.sannsynlighet, forventet_lukkedato: form.forventet_lukkedato,
       vunnet_dato: "", tapt_dato: "", tapsaarsak: "", neste_steg: form.neste_steg, notater: "",
       opprettet_dato: today, sist_aktivitet: today,
+      kilde: "Direkte salg", partner_id: "", partner_provisjon: 0, partner_kostnad: 0, netto_inntekt: 0,
     };
     updateSalgsmuligheter(prev => [...prev, nySm]);
     setDialogOpen(false);

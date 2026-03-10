@@ -7,12 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Plus, Search, ArrowRightCircle, Trash2 } from "lucide-react";
+import { Plus, Search, ArrowRightCircle, Trash2, Users2 } from "lucide-react";
 import { Lead, LeadStatus, LeadKilde } from "@/data/crm-data";
 import { Badge } from "@/components/ui/badge";
 import InlineTaskForm from "@/components/InlineTaskForm";
 
-const statusOptions: LeadStatus[] = ["Ny", "Kontaktet", "Kvalifisert", "Ikke aktuelt", "Konvertert til salg"];
+const statusOptions: LeadStatus[] = ["Ny", "Kontaktet", "Kvalifisert", "Ikke aktuelt", "Konvertert til salg", "Konvertert til partner"];
 const kildeOptions: LeadKilde[] = ["Nettside", "LinkedIn", "Partner", "Referanse", "Kald outbound", "E-post", "Telefon", "Annet"];
 
 const statusColors: Record<LeadStatus, string> = {
@@ -21,11 +21,12 @@ const statusColors: Record<LeadStatus, string> = {
   "Kvalifisert": "bg-stage-qualified/10 text-stage-qualified",
   "Ikke aktuelt": "bg-muted text-muted-foreground",
   "Konvertert til salg": "bg-success/10 text-success",
+  "Konvertert til partner": "bg-primary/10 text-primary",
 };
 
 export default function Leads() {
   const isMobile = useIsMobile();
-  const { leads, updateLeads, konverterLead, generateId } = useCrmStore();
+  const { leads, updateLeads, konverterLead, konverterTilPartner, generateId } = useCrmStore();
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
@@ -59,7 +60,7 @@ export default function Leads() {
   return (
     <PageShell
       title="Leads"
-      subtitle={`${leads.filter(l => l.status !== "Konvertert til salg" && l.status !== "Ikke aktuelt").length} aktive leads`}
+      subtitle={`${leads.filter(l => l.status !== "Konvertert til salg" && l.status !== "Konvertert til partner" && l.status !== "Ikke aktuelt").length} aktive leads`}
       actions={
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
@@ -107,10 +108,15 @@ export default function Leads() {
                 <Badge variant="secondary" className="text-[10px]">{lead.kilde}</Badge>
                 {lead.neste_steg && <span className="text-[10px] text-muted-foreground truncate ml-2">→ {lead.neste_steg}</span>}
               </div>
-              {lead.status !== "Konvertert til salg" && lead.status !== "Ikke aktuelt" && (
-                <Button size="sm" variant="ghost" className="text-xs gap-1 w-full mt-1" onClick={e => { e.stopPropagation(); konverterLead(lead.id); }}>
-                  <ArrowRightCircle className="w-3.5 h-3.5" />Konverter
-                </Button>
+              {lead.status !== "Konvertert til salg" && lead.status !== "Konvertert til partner" && lead.status !== "Ikke aktuelt" && (
+                <div className="flex gap-1 mt-1">
+                  <Button size="sm" variant="ghost" className="text-xs gap-1 flex-1" onClick={e => { e.stopPropagation(); konverterLead(lead.id); }}>
+                    <ArrowRightCircle className="w-3.5 h-3.5" />Salg
+                  </Button>
+                  <Button size="sm" variant="ghost" className="text-xs gap-1 flex-1" onClick={e => { e.stopPropagation(); konverterTilPartner(lead.id); }}>
+                    <Users2 className="w-3.5 h-3.5" />Partner
+                  </Button>
+                </div>
               )}
             </div>
           ))}
@@ -142,7 +148,7 @@ export default function Leads() {
                       className={`text-xs px-2 py-1 rounded-full font-medium border-0 cursor-pointer ${statusColors[lead.status]}`}
                       value={lead.status}
                       onChange={e => changeStatus(lead.id, e.target.value as LeadStatus)}
-                      disabled={lead.status === "Konvertert til salg"}
+                    disabled={lead.status === "Konvertert til salg" || lead.status === "Konvertert til partner"}
                     >
                       {statusOptions.map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
@@ -150,10 +156,15 @@ export default function Leads() {
                   <td className="px-4 py-3 text-muted-foreground text-xs">{lead.neste_steg}</td>
                   <td className="px-4 py-3 text-muted-foreground text-xs font-mono">{lead.opprettet_dato}</td>
                   <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
-                    {lead.status !== "Konvertert til salg" && lead.status !== "Ikke aktuelt" && (
-                      <Button size="sm" variant="ghost" className="text-xs gap-1" onClick={() => konverterLead(lead.id)}>
-                        <ArrowRightCircle className="w-3.5 h-3.5" />Konverter
-                      </Button>
+                    {lead.status !== "Konvertert til salg" && lead.status !== "Konvertert til partner" && lead.status !== "Ikke aktuelt" && (
+                      <div className="flex gap-1">
+                        <Button size="sm" variant="ghost" className="text-xs gap-1" onClick={() => konverterLead(lead.id)}>
+                          <ArrowRightCircle className="w-3.5 h-3.5" />Salg
+                        </Button>
+                        <Button size="sm" variant="ghost" className="text-xs gap-1" onClick={() => konverterTilPartner(lead.id)}>
+                          <Users2 className="w-3.5 h-3.5" />Partner
+                        </Button>
+                      </div>
                     )}
                   </td>
                 </tr>
@@ -204,7 +215,7 @@ export default function Leads() {
                   <select className={`w-full border rounded-lg px-3 py-1.5 text-sm bg-background h-8 ${statusColors[currentLead.status]}`}
                     value={currentLead.status}
                     onChange={e => updateField("status", e.target.value)}
-                    disabled={currentLead.status === "Konvertert til salg"}>
+                    disabled={currentLead.status === "Konvertert til salg" || currentLead.status === "Konvertert til partner"}>
                     {statusOptions.map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
                 </div>
@@ -236,10 +247,15 @@ export default function Leads() {
                 </div>
               )}
 
-              {currentLead.status !== "Konvertert til salg" && currentLead.status !== "Ikke aktuelt" && (
-                <Button size="sm" className="w-full" onClick={() => { konverterLead(currentLead.id); setSelectedLead(null); }}>
-                  <ArrowRightCircle className="w-4 h-4 mr-1" /> Konverter til salgsmulighet
-                </Button>
+              {currentLead.status !== "Konvertert til salg" && currentLead.status !== "Konvertert til partner" && currentLead.status !== "Ikke aktuelt" && (
+                <div className="flex gap-2">
+                  <Button size="sm" className="flex-1" onClick={() => { konverterLead(currentLead.id); setSelectedLead(null); }}>
+                    <ArrowRightCircle className="w-4 h-4 mr-1" /> Til salg
+                  </Button>
+                  <Button size="sm" variant="secondary" className="flex-1" onClick={() => { konverterTilPartner(currentLead.id); setSelectedLead(null); }}>
+                    <Users2 className="w-4 h-4 mr-1" /> Til partner
+                  </Button>
+                </div>
               )}
               <Button size="sm" variant="destructive" className="w-full" onClick={() => {
                 updateLeads(prev => prev.filter(l => l.id !== currentLead.id));

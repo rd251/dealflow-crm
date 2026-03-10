@@ -1,9 +1,9 @@
 // CRM global store
 import { useState, useCallback, createContext, useContext, createElement, ReactNode } from "react";
 import {
-  Lead, Salgsmulighet, Prosjekt, Selskap, Kontakt, Oppgave,
+  Lead, Salgsmulighet, Prosjekt, Selskap, Kontakt, Oppgave, Partner,
   initialLeads, initialSalgsmuligheter, initialProsjekter,
-  initialSelskaper, initialKontakter, initialOppgaver,
+  initialSelskaper, initialKontakter, initialOppgaver, initialPartnere,
 } from "@/data/crm-data";
 
 function load<T>(key: string, fallback: T): T {
@@ -36,6 +36,7 @@ function useCrmStoreInternal() {
   const [selskaper, setSelskaper] = useState<Selskap[]>(() => load("crm_selskaper", initialSelskaper));
   const [kontakter, setKontakter] = useState<Kontakt[]>(() => load("crm_kontakter", initialKontakter));
   const [oppgaver, setOppgaver] = useState<Oppgave[]>(() => load("crm_oppgaver", initialOppgaver));
+  const [partnere, setPartnere] = useState<Partner[]>(() => load("crm_partnere", initialPartnere));
 
   const updateLeads = useCallback((fn: (prev: Lead[]) => Lead[]) => {
     setLeads(prev => { const next = fn(prev); save("crm_leads", next); return next; });
@@ -55,6 +56,9 @@ function useCrmStoreInternal() {
   const updateOppgaver = useCallback((fn: (prev: Oppgave[]) => Oppgave[]) => {
     setOppgaver(prev => { const next = fn(prev); save("crm_oppgaver", next); return next; });
   }, []);
+  const updatePartnere = useCallback((fn: (prev: Partner[]) => Partner[]) => {
+    setPartnere(prev => { const next = fn(prev); save("crm_partnere", next); return next; });
+  }, []);
 
   // Convert lead → salgsmulighet + selskap + kontakt
   const konverterLead = useCallback((leadId: string) => {
@@ -73,6 +77,7 @@ function useCrmStoreInternal() {
         mrr: 0, arr: 0, oppstartskostnad: 0, go_live_dato: "", kansellert_dato: "",
         kanselleringsaarsak: "", kanselleringsnotat: "", kundetilstand: "Bra",
         sist_aktivitet: today, neste_steg: "", notater: "",
+        kilde: "Direkte salg", partner_id: "",
       };
       updateSelskaper(prev => [...prev, nyttSelskap]);
     }
@@ -96,6 +101,7 @@ function useCrmStoreInternal() {
       kontraktslengde_mnd: 12, sannsynlighet: 50, forventet_lukkedato: "", vunnet_dato: "",
       tapt_dato: "", tapsaarsak: "", neste_steg: lead.neste_steg, notater: lead.notater,
       opprettet_dato: today, sist_aktivitet: today,
+      kilde: "Direkte salg", partner_id: "", partner_provisjon: 0, partner_kostnad: 0, netto_inntekt: 0,
     };
     updateSalgsmuligheter(prev => [...prev, nySm]);
 
@@ -104,6 +110,55 @@ function useCrmStoreInternal() {
       l.id === leadId ? { ...l, status: "Konvertert til salg" as const, konvertert_dato: today, sist_aktivitet: today } : l
     ));
   }, [leads, selskaper, kontakter, salgsmuligheter, updateLeads, updateSalgsmuligheter, updateSelskaper, updateKontakter]);
+
+  // Convert lead → partner
+  const konverterTilPartner = useCallback((leadId: string) => {
+    const lead = leads.find(l => l.id === leadId);
+    if (!lead) return;
+    const today = new Date().toISOString().split("T")[0];
+
+    // Create partner selskap
+    let selskapId = selskaper.find(s => s.firmanavn.toLowerCase() === lead.firmanavn.toLowerCase())?.id;
+    if (!selskapId) {
+      selskapId = generateId("S", selskaper);
+      const nyttSelskap: Selskap = {
+        id: selskapId, firmanavn: lead.firmanavn, bransje: "", kundeansvarlig: lead.ansvarlig,
+        kundestatus: "Ikke kunde", live_status: false, onboarding_status: "Ikke startet",
+        mrr: 0, arr: 0, oppstartskostnad: 0, go_live_dato: "", kansellert_dato: "",
+        kanselleringsaarsak: "", kanselleringsnotat: "", kundetilstand: "Bra",
+        sist_aktivitet: today, neste_steg: "", notater: "",
+        kilde: "Direkte salg", partner_id: "",
+      };
+      updateSelskaper(prev => [...prev, nyttSelskap]);
+    }
+
+    // Create kontakt
+    let kontaktId = kontakter.find(k => k.e_post.toLowerCase() === lead.e_post.toLowerCase())?.id;
+    if (!kontaktId && lead.kontaktperson) {
+      kontaktId = generateId("K", kontakter);
+      const nyKontakt: Kontakt = {
+        id: kontaktId, selskap_id: selskapId, navn: lead.kontaktperson,
+        e_post: lead.e_post, telefon: lead.telefon, rolle: "", linkedin: "", notater: "",
+      };
+      updateKontakter(prev => [...prev, nyKontakt]);
+    }
+
+    // Create partner
+    const partnerId = generateId("PA", partnere);
+    const nyPartner: Partner = {
+      id: partnerId, partnernavn: lead.firmanavn, partnertype: "Salgspartner",
+      kontaktperson: lead.kontaktperson, e_post: lead.e_post, telefon: lead.telefon,
+      partnerstatus: "Under onboarding", pipeline_status: "Ny partner",
+      ansvarlig: lead.ansvarlig, provisjonsprosent: 0, provisjonstype: "",
+      selskap_id: selskapId, opprettet_dato: today, sist_aktivitet: today, notater: lead.notater,
+    };
+    updatePartnere(prev => [...prev, nyPartner]);
+
+    // Update lead
+    updateLeads(prev => prev.map(l =>
+      l.id === leadId ? { ...l, status: "Konvertert til partner" as const, konvertert_dato: today, sist_aktivitet: today } : l
+    ));
+  }, [leads, selskaper, kontakter, partnere, updateLeads, updateSelskaper, updateKontakter, updatePartnere]);
 
   // Win deal → create prosjekt + update selskap
   const vinnSalgsmulighet = useCallback((smId: string) => {
@@ -176,9 +231,9 @@ function useCrmStoreInternal() {
   }, [updateSelskaper]);
 
   return {
-    leads, salgsmuligheter, prosjekter, selskaper, kontakter, oppgaver,
-    updateLeads, updateSalgsmuligheter, updateProsjekter, updateSelskaper, updateKontakter, updateOppgaver,
-    konverterLead, vinnSalgsmulighet, tapSalgsmulighet, settProsjektLive, kansellerSelskap,
+    leads, salgsmuligheter, prosjekter, selskaper, kontakter, oppgaver, partnere,
+    updateLeads, updateSalgsmuligheter, updateProsjekter, updateSelskaper, updateKontakter, updateOppgaver, updatePartnere,
+    konverterLead, konverterTilPartner, vinnSalgsmulighet, tapSalgsmulighet, settProsjektLive, kansellerSelskap,
     generateId,
   };
 }
