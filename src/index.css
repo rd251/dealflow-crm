@@ -6,25 +6,25 @@
 
 @layer base {
   :root {
-    --background: 220 20% 97%;
-    --foreground: 220 25% 10%;
+    --background: 20 20% 97%;
+    --foreground: 0 10% 15%;
 
     --card: 0 0% 100%;
-    --card-foreground: 220 25% 10%;
+    --card-foreground: 0 10% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 25% 10%;
+    --popover-foreground: 0 10% 15%;
 
-    --primary: 173 58% 39%;
+    --primary: 3 76% 48%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 14% 92%;
-    --secondary-foreground: 220 25% 10%;
+    --secondary: 20 14% 92%;
+    --secondary-foreground: 0 10% 15%;
 
-    --muted: 220 14% 95%;
-    --muted-foreground: 220 10% 46%;
+    --muted: 20 10% 95%;
+    --muted-foreground: 0 5% 45%;
 
-    --accent: 173 58% 39%;
+    --accent: 3 76% 48%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 72% 51%;
@@ -36,27 +36,27 @@
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
 
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 173 58% 39%;
+    --border: 20 10% 90%;
+    --input: 20 10% 90%;
+    --ring: 3 76% 48%;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 220 25% 10%;
-    --sidebar-foreground: 220 10% 80%;
-    --sidebar-primary: 173 58% 45%;
+    --sidebar-background: 0 10% 12%;
+    --sidebar-foreground: 20 10% 80%;
+    --sidebar-primary: 3 76% 52%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 20% 16%;
-    --sidebar-accent-foreground: 220 10% 90%;
-    --sidebar-border: 220 20% 18%;
-    --sidebar-ring: 173 58% 45%;
+    --sidebar-accent: 0 8% 18%;
+    --sidebar-accent-foreground: 20 10% 90%;
+    --sidebar-border: 0 8% 20%;
+    --sidebar-ring: 3 76% 52%;
 
     --stage-new-lead: 220 70% 55%;
     --stage-contacted: 38 92% 50%;
-    --stage-proposal: 262 60% 55%;
+    --stage-proposal: 3 76% 48%;
     --stage-won: 142 71% 45%;
     --stage-lost: 0 72% 51%;
-    --stage-qualified: 173 58% 39%;
+    --stage-qualified: 3 60% 55%;
     --stage-demo: 199 89% 48%;
     --stage-negotiation: 38 70% 50%;
     --stage-contract: 262 60% 55%;
