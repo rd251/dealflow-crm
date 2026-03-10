@@ -132,6 +132,7 @@ export default function Companies() {
               <th className="text-left px-4 py-3 font-medium">Tilstand</th>
               <th className="text-right px-4 py-3 font-medium">MRR</th>
               <th className="text-right px-4 py-3 font-medium">ARR</th>
+              <th className="text-right px-4 py-3 font-medium">Oppstart</th>
             </tr>
           </thead>
           <tbody>
