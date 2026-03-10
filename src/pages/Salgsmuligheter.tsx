@@ -324,23 +324,24 @@ function Field({ label, value, badge }: { label: string; value: string; badge?: 
   );
 }
 
-function DealTable({ deals, getSelskapNavn, onSelect, label }: { deals: Salgsmulighet[]; getSelskapNavn: (id: string) => string; onSelect: (s: Salgsmulighet) => void; label: string }) {
+function DealTable({ deals, getSelskapNavn, onSelect, label, onNavigateSelskap }: { deals: Salgsmulighet[]; getSelskapNavn: (id: string) => string; onSelect: (s: Salgsmulighet) => void; label: string; onNavigateSelskap?: (id: string) => void }) {
   if (deals.length === 0) return <div className="text-center py-12 text-muted-foreground text-sm">{label}: ingen</div>;
   return (
     <div className="bg-card border rounded-xl overflow-hidden">
       <table className="w-full text-sm">
-        <thead><tr className="border-b bg-muted/50">
-          <th className="text-left px-4 py-3 font-medium">Navn</th>
-          <th className="text-left px-4 py-3 font-medium">Selskap</th>
-          <th className="text-left px-4 py-3 font-medium">Status</th>
-          <th className="text-right px-4 py-3 font-medium">MRR</th>
-          <th className="text-right px-4 py-3 font-medium">Total verdi</th>
-        </tr></thead>
+        <thead>
+          <tr className="border-b bg-muted/50">
+            <th className="text-left px-4 py-3 font-medium">Navn</th>
+            <th className="text-left px-4 py-3 font-medium">Selskap</th>
+            <th className="text-left px-4 py-3 font-medium">Status</th>
+            <th className="text-right px-4 py-3 font-medium">MRR</th>
+          </tr>
+        </thead>
         <tbody>
           {deals.map(d => (
             <tr key={d.id} className="border-b last:border-0 hover:bg-muted/30 cursor-pointer" onClick={() => onSelect(d)}>
               <td className="px-4 py-3 font-medium">{d.navn}</td>
-              <td className="px-4 py-3 text-muted-foreground">{getSelskapNavn(d.selskap_id)}</td>
+              <td className="px-4 py-3 text-muted-foreground"><span className="cursor-pointer hover:text-primary hover:underline" onClick={e => { e.stopPropagation(); onNavigateSelskap?.(d.selskap_id); }}>{getSelskapNavn(d.selskap_id)}</span></td>
               <td className="px-4 py-3"><span className={`text-xs px-2 py-0.5 rounded-full font-medium ${d.status === "Vunnet" ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>{d.status}</span></td>
               <td className="px-4 py-3 text-right font-mono">{d.forventet_mrr.toLocaleString("no-NO")}</td>
               <td className="px-4 py-3 text-right font-mono">{beregnTotalKontraktsverdi(d).toLocaleString("no-NO")}</td>
