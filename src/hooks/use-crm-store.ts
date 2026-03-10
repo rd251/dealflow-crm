@@ -1,4 +1,5 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, createContext, useContext, ReactNode } from "react";
+import React from "react";
 import {
   Lead, Salgsmulighet, Prosjekt, Selskap, Kontakt, Oppgave,
   initialLeads, initialSalgsmuligheter, initialProsjekter,
@@ -16,7 +17,19 @@ function save<T>(key: string, data: T) {
   localStorage.setItem(key, JSON.stringify(data));
 }
 
-export function useCrmStore() {
+function generateId(prefix: string, items: { id: string }[]) {
+  const maxNum = items.reduce((max, item) => {
+    const num = parseInt(item.id.split("-")[1], 10);
+    return isNaN(num) ? max : Math.max(max, num);
+  }, 0);
+  return `${prefix}-${String(maxNum + 1).padStart(4, "0")}`;
+}
+
+type CrmStore = ReturnType<typeof useCrmStoreInternal>;
+
+const CrmContext = createContext<CrmStore | null>(null);
+
+function useCrmStoreInternal() {
   const [leads, setLeads] = useState<Lead[]>(() => load("crm_leads", initialLeads));
   const [salgsmuligheter, setSalgsmuligheter] = useState<Salgsmulighet[]>(() => load("crm_salgsmuligheter", initialSalgsmuligheter));
   const [prosjekter, setProsjekter] = useState<Prosjekt[]>(() => load("crm_prosjekter", initialProsjekter));
@@ -53,7 +66,7 @@ export function useCrmStore() {
     // Create or find selskap
     let selskapId = selskaper.find(s => s.firmanavn.toLowerCase() === lead.firmanavn.toLowerCase())?.id;
     if (!selskapId) {
-      selskapId = `S-${String(selskaper.length + 1).padStart(4, "0")}`;
+      selskapId = generateId("S", selskaper);
       const nyttSelskap: Selskap = {
         id: selskapId, firmanavn: lead.firmanavn, bransje: "", kundeansvarlig: lead.ansvarlig,
         kundestatus: "Ikke kunde", live_status: false, onboarding_status: "Ikke startet",
@@ -67,7 +80,7 @@ export function useCrmStore() {
     // Create or find kontakt
     let kontaktId = kontakter.find(k => k.e_post.toLowerCase() === lead.e_post.toLowerCase())?.id;
     if (!kontaktId && lead.kontaktperson) {
-      kontaktId = `K-${String(kontakter.length + 1).padStart(4, "0")}`;
+      kontaktId = generateId("K", kontakter);
       const nyKontakt: Kontakt = {
         id: kontaktId, selskap_id: selskapId, navn: lead.kontaktperson,
         e_post: lead.e_post, telefon: lead.telefon, rolle: "", linkedin: "", notater: "",
@@ -76,7 +89,7 @@ export function useCrmStore() {
     }
 
     // Create salgsmulighet
-    const smId = `SM-${String(salgsmuligheter.length + 1).padStart(4, "0")}`;
+    const smId = generateId("SM", salgsmuligheter);
     const nySm: Salgsmulighet = {
       id: smId, navn: lead.firmanavn, selskap_id: selskapId, kontakt_id: kontaktId || "",
       ansvarlig: lead.ansvarlig, status: "Ny mulighet", forventet_mrr: 0, sla: 0, oppstartskostnad: 0,
@@ -103,8 +116,7 @@ export function useCrmStore() {
     ));
 
     // Create prosjekt
-    const pId = `P-${String(prosjekter.length + 1).padStart(4, "0")}`;
-    const selskap = selskaper.find(s => s.id === sm.selskap_id);
+    const pId = generateId("P", prosjekter);
     const nyttProsjekt: Prosjekt = {
       id: pId, prosjektnavn: sm.navn, selskap_id: sm.selskap_id, salgsmulighet_id: smId,
       ansvarlig: sm.ansvarlig, status: "Ny", startdato: today, forventet_go_live: "",
@@ -167,5 +179,17 @@ export function useCrmStore() {
     leads, salgsmuligheter, prosjekter, selskaper, kontakter, oppgaver,
     updateLeads, updateSalgsmuligheter, updateProsjekter, updateSelskaper, updateKontakter, updateOppgaver,
     konverterLead, vinnSalgsmulighet, tapSalgsmulighet, settProsjektLive, kansellerSelskap,
+    generateId,
   };
+}
+
+export function CrmProvider({ children }: { children: ReactNode }) {
+  const store = useCrmStoreInternal();
+  return React.createElement(CrmContext.Provider, { value: store }, children);
+}
+
+export function useCrmStore() {
+  const ctx = useContext(CrmContext);
+  if (!ctx) throw new Error("useCrmStore must be used within CrmProvider");
+  return ctx;
 }
