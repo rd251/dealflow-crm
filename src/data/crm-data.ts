@@ -43,6 +43,7 @@ export interface Salgsmulighet {
   ansvarlig: string;
   status: SalgsmulighetStatus;
   forventet_mrr: number;
+  sla: number;
   oppstartskostnad: number;
   kontraktslengde_mnd: number;
   sannsynlighet: number;
