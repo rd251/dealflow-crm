@@ -201,44 +201,106 @@ export default function Salgsmuligheter() {
       <Sheet open={!!currentSm} onOpenChange={open => !open && setSelectedSm(null)}>
         <SheetContent className="w-[400px] sm:w-[540px] overflow-y-auto">
           <SheetHeader><SheetTitle>{currentSm?.navn}</SheetTitle></SheetHeader>
-          {currentSm && (
-            <div className="mt-6 space-y-4 text-sm">
-              <div className="grid grid-cols-2 gap-3">
+          {currentSm && (() => {
+            const updateField = (field: string, value: any) => {
+              const today = new Date().toISOString().split("T")[0];
+              updateSalgsmuligheter(prev => prev.map(s =>
+                s.id === currentSm.id ? { ...s, [field]: value, sist_aktivitet: today } : s
+              ));
+            };
+            const arr = currentSm.forventet_mrr * 12;
+            const totalKontraktsverdi = beregnTotalKontraktsverdi(currentSm);
+            const vektetVerdi = beregnVektetPipeline(currentSm);
+
+            return (
+              <div className="mt-6 space-y-4 text-sm">
                 <Field label="Selskap" value={getSelskapNavn(currentSm.selskap_id)} />
-                <Field label="Status" value={currentSm.status} badge={statusColors[currentSm.status]} />
-                <Field label="Forventet MRR" value={`${currentSm.forventet_mrr.toLocaleString("no-NO")} NOK`} />
-                <Field label="Oppstartskostnad" value={`${currentSm.oppstartskostnad.toLocaleString("no-NO")} NOK`} />
-                <Field label="Kontraktslengde" value={`${currentSm.kontraktslengde_mnd} mnd`} />
-                <Field label="Total kontraktsverdi" value={`${beregnTotalKontraktsverdi(currentSm).toLocaleString("no-NO")} NOK`} />
-                <Field label="Sannsynlighet" value={`${currentSm.sannsynlighet}%`} />
-                <Field label="Vektet verdi" value={`${beregnVektetPipeline(currentSm).toLocaleString("no-NO")} NOK`} />
-                <Field label="Neste steg" value={currentSm.neste_steg || "–"} />
-                <Field label="Forventet lukkedato" value={currentSm.forventet_lukkedato || "–"} />
-              </div>
-              {currentSm.status === "Tapt" && currentSm.tapsaarsak && (
-                <div className="p-3 bg-destructive/10 rounded-lg text-destructive text-xs">
-                  <strong>Tapsårsak:</strong> {currentSm.tapsaarsak} · {currentSm.tapt_dato}
+
+                {/* Status */}
+                <div>
+                  <span className="text-muted-foreground block text-xs mb-1">Status</span>
+                  <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background"
+                    value={currentSm.status}
+                    onChange={e => {
+                      const newStatus = e.target.value as SalgsmulighetStatus;
+                      if (newStatus === "Vunnet") { vinnSalgsmulighet(currentSm.id); setSelectedSm(null); }
+                      else if (newStatus === "Tapt") { setSelectedSm(null); setLossDialog(currentSm.id); }
+                      else updateField("status", newStatus);
+                    }}>
+                    {[...openStatuses, "Vunnet", "Tapt"].map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
                 </div>
-              )}
-              {currentSm.status === "Vunnet" && (
-                <div className="p-3 bg-success/10 rounded-lg text-success text-xs">
-                  <strong>Vunnet:</strong> {currentSm.vunnet_dato}
+
+                {/* Editable number fields */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <span className="text-muted-foreground block text-xs mb-1">Forventet MRR</span>
+                    <Input type="number" value={currentSm.forventet_mrr || ""} onChange={e => updateField("forventet_mrr", Number(e.target.value))} />
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground block text-xs mb-1">Oppstartskostnad</span>
+                    <Input type="number" value={currentSm.oppstartskostnad || ""} onChange={e => updateField("oppstartskostnad", Number(e.target.value))} />
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground block text-xs mb-1">Kontraktslengde (mnd)</span>
+                    <Input type="number" value={currentSm.kontraktslengde_mnd || ""} onChange={e => updateField("kontraktslengde_mnd", Number(e.target.value))} />
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground block text-xs mb-1">Sannsynlighet %</span>
+                    <Input type="number" min={0} max={100} value={currentSm.sannsynlighet || ""} onChange={e => updateField("sannsynlighet", Number(e.target.value))} />
+                  </div>
                 </div>
-              )}
-              <div className="flex gap-2 pt-2">
-                {openStatuses.includes(currentSm.status as any) && (
-                  <>
-                    <Button size="sm" className="bg-success hover:bg-success/90 text-success-foreground" onClick={() => { vinnSalgsmulighet(currentSm.id); setSelectedSm(null); }}>
-                      <Trophy className="w-3.5 h-3.5 mr-1" />Merk som vunnet
-                    </Button>
-                    <Button size="sm" variant="destructive" onClick={() => { setSelectedSm(null); setLossDialog(currentSm.id); }}>
-                      <XCircle className="w-3.5 h-3.5 mr-1" />Merk som tapt
-                    </Button>
-                  </>
+
+                <div>
+                  <span className="text-muted-foreground block text-xs mb-1">Forventet lukkedato</span>
+                  <Input type="date" value={currentSm.forventet_lukkedato} onChange={e => updateField("forventet_lukkedato", e.target.value)} />
+                </div>
+
+                <div>
+                  <span className="text-muted-foreground block text-xs mb-1">Neste steg</span>
+                  <Input value={currentSm.neste_steg} onChange={e => updateField("neste_steg", e.target.value)} />
+                </div>
+
+                <div>
+                  <span className="text-muted-foreground block text-xs mb-1">Notater</span>
+                  <Textarea value={currentSm.notater} onChange={e => updateField("notater", e.target.value)} rows={3} />
+                </div>
+
+                {/* Calculated fields */}
+                <div className="bg-muted/50 rounded-lg p-3 space-y-2">
+                  <h4 className="font-semibold text-xs text-muted-foreground uppercase tracking-wide">Beregnede verdier</h4>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <Field label="ARR" value={`${arr.toLocaleString("no-NO")} NOK`} />
+                    <Field label="Total kontraktsverdi" value={`${totalKontraktsverdi.toLocaleString("no-NO")} NOK`} />
+                    <Field label="Vektet pipelineverdi" value={`${vektetVerdi.toLocaleString("no-NO")} NOK`} />
+                  </div>
+                </div>
+
+                {currentSm.status === "Tapt" && currentSm.tapsaarsak && (
+                  <div className="p-3 bg-destructive/10 rounded-lg text-destructive text-xs">
+                    <strong>Tapsårsak:</strong> {currentSm.tapsaarsak} · {currentSm.tapt_dato}
+                  </div>
                 )}
+                {currentSm.status === "Vunnet" && (
+                  <div className="p-3 bg-success/10 rounded-lg text-success text-xs">
+                    <strong>Vunnet:</strong> {currentSm.vunnet_dato}
+                  </div>
+                )}
+                <div className="flex gap-2 pt-2">
+                  {openStatuses.includes(currentSm.status as any) && (
+                    <>
+                      <Button size="sm" className="bg-success hover:bg-success/90 text-success-foreground" onClick={() => { vinnSalgsmulighet(currentSm.id); setSelectedSm(null); }}>
+                        <Trophy className="w-3.5 h-3.5 mr-1" />Merk som vunnet
+                      </Button>
+                      <Button size="sm" variant="destructive" onClick={() => { setSelectedSm(null); setLossDialog(currentSm.id); }}>
+                        <XCircle className="w-3.5 h-3.5 mr-1" />Merk som tapt
+                      </Button>
+                    </>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
         </SheetContent>
       </Sheet>
     </PageShell>
