@@ -39,27 +39,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    let mounted = true;
+
+    // Safety timeout to prevent infinite loading
+    const timeout = setTimeout(() => {
+      if (mounted) {
+        setState(s => {
+          if (s.loading) return { ...s, loading: false };
+          return s;
+        });
+      }
+    }, 8000);
+
     // Set up listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!mounted) return;
       if (session?.user) {
         const role = await fetchRole(session.user.id);
-        setState({ user: session.user, session, role, loading: false, isAdmin: role === "admin" });
+        if (mounted) setState({ user: session.user, session, role, loading: false, isAdmin: role === "admin" });
       } else {
-        setState({ user: null, session: null, role: null, loading: false, isAdmin: false });
+        if (mounted) setState({ user: null, session: null, role: null, loading: false, isAdmin: false });
       }
     });
 
     // Then check existing session
     supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!mounted) return;
       if (session?.user) {
         const role = await fetchRole(session.user.id);
-        setState({ user: session.user, session, role, loading: false, isAdmin: role === "admin" });
+        if (mounted) setState({ user: session.user, session, role, loading: false, isAdmin: role === "admin" });
       } else {
-        setState(s => ({ ...s, loading: false }));
+        if (mounted) setState(s => ({ ...s, loading: false }));
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      clearTimeout(timeout);
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
