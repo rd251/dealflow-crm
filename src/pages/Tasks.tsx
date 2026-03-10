@@ -57,7 +57,7 @@ export default function Tasks() {
             <Button size="sm"><Plus className="w-4 h-4 mr-1" />Ny oppgave</Button>
           </DialogTrigger>
           <DialogContent>
-            <DialogHeader><DialogTitle>Ny oppgave</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>Ny oppgave</DialogTitle><DialogDescription>Fyll inn detaljer for den nye oppgaven.</DialogDescription></DialogHeader>
             <div className="space-y-3">
               <Input placeholder="Oppgave" value={form.oppgave} onChange={e => setForm(f => ({ ...f, oppgave: e.target.value }))} />
               <div className="grid grid-cols-2 gap-3">

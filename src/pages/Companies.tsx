@@ -105,7 +105,7 @@ export default function Companies() {
       {/* Cancel dialog */}
       <Dialog open={!!cancelDialog} onOpenChange={open => !open && setCancelDialog(null)}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Kanseller kunde</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Kanseller kunde</DialogTitle><DialogDescription>Velg årsak og legg til notat.</DialogDescription></DialogHeader>
           <div className="space-y-3">
             <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background" value={cancelReason} onChange={e => setCancelReason(e.target.value as Kanselleringsaarsak)}>
               {kanselleringsaarsaker.map(k => <option key={k} value={k}>{k}</option>)}

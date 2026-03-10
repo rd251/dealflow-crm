@@ -64,7 +64,7 @@ export default function Leads() {
             <Button size="sm"><Plus className="w-4 h-4 mr-1" />Nytt lead</Button>
           </DialogTrigger>
           <DialogContent>
-            <DialogHeader><DialogTitle>Nytt lead</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>Nytt lead</DialogTitle><DialogDescription>Fyll inn detaljer for det nye leadet.</DialogDescription></DialogHeader>
             <div className="space-y-3">
               <Input placeholder="Firmanavn" value={form.firmanavn} onChange={e => setForm(f => ({ ...f, firmanavn: e.target.value }))} />
               <Input placeholder="Kontaktperson" value={form.kontaktperson} onChange={e => setForm(f => ({ ...f, kontaktperson: e.target.value }))} />
