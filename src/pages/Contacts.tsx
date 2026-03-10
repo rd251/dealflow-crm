@@ -24,7 +24,7 @@ export default function Contacts() {
   const getSelskapNavn = (id: string) => selskaper.find(s => s.id === id)?.firmanavn || "–";
 
   const addKontakt = () => {
-    const id = `K-${String(kontakter.length + 1).padStart(4, "0")}`;
+    const id = generateId("K", kontakter);
     updateKontakter(prev => [...prev, { id, ...form }]);
     setDialogOpen(false);
     setForm({ navn: "", selskap_id: "", rolle: "", e_post: "", telefon: "", linkedin: "", notater: "" });
