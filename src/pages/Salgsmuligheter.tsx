@@ -194,7 +194,7 @@ export default function Salgsmuligheter() {
         </TabsContent>
 
         <TabsContent value="won">
-          <DealList deals={wonThisMonth} getSelskapNavn={getSelskapNavn} onSelect={setSelectedSm} label="Vunnet denne måneden" onNavigateSelskap={id => navigate(`/selskaper/${id}`)} isMobile={isMobile} />
+          <DealList deals={wonThisMonth} getSelskapNavn={getSelskapNavn} onSelect={setSelectedSm} label="Vunnet denne måneden" onNavigateSelskap={id => { const sel = selskaper.find(s => s.id === id); if (sel && sel.kundestatus !== "Ikke kunde") navigate(`/selskaper/${id}`); }} isMobile={isMobile} />
         </TabsContent>
         <TabsContent value="lost">
           <DealList deals={lostThisMonth} getSelskapNavn={getSelskapNavn} onSelect={setSelectedSm} label="Tapt denne måneden" onNavigateSelskap={id => navigate(`/selskaper/${id}`)} isMobile={isMobile} />
