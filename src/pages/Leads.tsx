@@ -23,7 +23,7 @@ const statusColors: Record<LeadStatus, string> = {
 };
 
 export default function Leads() {
-  const { leads, updateLeads, konverterLead } = useCrmStore();
+  const { leads, updateLeads, konverterLead, generateId } = useCrmStore();
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
