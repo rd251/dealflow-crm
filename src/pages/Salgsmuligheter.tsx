@@ -215,7 +215,8 @@ export default function Salgsmuligheter() {
                 s.id === currentSm.id ? { ...s, [field]: value, sist_aktivitet: today } : s
               ));
             };
-            const arr = currentSm.forventet_mrr * 12;
+            const totalMrr = beregnTotalMrr(currentSm);
+            const arr = totalMrr * 12;
             const totalKontraktsverdi = beregnTotalKontraktsverdi(currentSm);
             const vektetVerdi = beregnVektetPipeline(currentSm);
 
