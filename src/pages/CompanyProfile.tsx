@@ -198,10 +198,37 @@ export default function CompanyProfile() {
 
             {/* Kontaktpersoner */}
             <div className="bg-card border rounded-xl p-5 space-y-3">
-              <h2 className="font-semibold text-base flex items-center gap-2">
-                <Users className="w-4 h-4" /> Kontaktpersoner ({selskapKontakter.length})
-              </h2>
-              {selskapKontakter.length === 0 ? (
+              <div className="flex items-center justify-between">
+                <h2 className="font-semibold text-base flex items-center gap-2">
+                  <Users className="w-4 h-4" /> Kontaktpersoner ({selskapKontakter.length})
+                </h2>
+                <Button variant="ghost" size="sm" onClick={() => setShowAddContact(!showAddContact)}>
+                  {showAddContact ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                </Button>
+              </div>
+
+              {showAddContact && (
+                <div className="p-3 border border-dashed rounded-lg space-y-2">
+                  <Input placeholder="Navn" value={contactForm.navn} onChange={e => setContactForm(f => ({ ...f, navn: e.target.value }))} className="h-8 text-sm" />
+                  <Input placeholder="Rolle" value={contactForm.rolle} onChange={e => setContactForm(f => ({ ...f, rolle: e.target.value }))} className="h-8 text-sm" />
+                  <Input placeholder="E-post" value={contactForm.e_post} onChange={e => setContactForm(f => ({ ...f, e_post: e.target.value }))} className="h-8 text-sm" />
+                  <Input placeholder="Telefon" value={contactForm.telefon} onChange={e => setContactForm(f => ({ ...f, telefon: e.target.value }))} className="h-8 text-sm" />
+                  <Input placeholder="LinkedIn URL" value={contactForm.linkedin} onChange={e => setContactForm(f => ({ ...f, linkedin: e.target.value }))} className="h-8 text-sm" />
+                  <Button size="sm" className="w-full" disabled={!contactForm.navn} onClick={() => {
+                    const newId = `K-${String(kontakter.length + 1).padStart(4, "0")}`;
+                    const nyKontakt: Kontakt = {
+                      id: newId, selskap_id: id!, navn: contactForm.navn,
+                      rolle: contactForm.rolle, e_post: contactForm.e_post,
+                      telefon: contactForm.telefon, linkedin: contactForm.linkedin, notater: "",
+                    };
+                    updateKontakter(prev => [...prev, nyKontakt]);
+                    setContactForm({ navn: "", rolle: "", e_post: "", telefon: "", linkedin: "" });
+                    setShowAddContact(false);
+                  }}>Legg til kontakt</Button>
+                </div>
+              )}
+
+              {selskapKontakter.length === 0 && !showAddContact ? (
                 <p className="text-xs text-muted-foreground">Ingen kontakter registrert</p>
               ) : (
                 <div className="space-y-3">
