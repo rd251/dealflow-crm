@@ -106,7 +106,7 @@ export default function Salgsmuligheter() {
               </div>
               <Input type="date" placeholder="Forventet lukkedato" value={form.forventet_lukkedato} onChange={e => setForm(f => ({ ...f, forventet_lukkedato: e.target.value }))} />
               <Input placeholder="Neste steg" value={form.neste_steg} onChange={e => setForm(f => ({ ...f, neste_steg: e.target.value }))} />
-              <Button onClick={addSm} className="w-full" disabled={!form.navn}>Opprett</Button>
+              <Button onClick={addSm} className="w-full" disabled={!form.navn || !form.selskap_id}>Opprett</Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -157,7 +157,7 @@ export default function Salgsmuligheter() {
                           {!isMobile && <GripVertical className="w-4 h-4 text-muted-foreground/40 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity" />}
                           <div className="flex-1 min-w-0">
                             <p className="font-semibold text-sm truncate">{deal.navn}</p>
-                            <p className={`text-xs text-muted-foreground mt-0.5 truncate ${selskaper.find(s => s.id === deal.selskap_id && s.kundestatus !== "Ikke kunde") ? "cursor-pointer hover:text-primary hover:underline" : ""}`} onClick={e => { e.stopPropagation(); const sel = selskaper.find(s => s.id === deal.selskap_id); if (sel && sel.kundestatus !== "Ikke kunde") navigate(`/selskaper/${deal.selskap_id}`); }}>{getSelskapNavn(deal.selskap_id)}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5 truncate cursor-pointer hover:text-primary hover:underline" onClick={e => { e.stopPropagation(); navigate(`/selskaper/${deal.selskap_id}`); }}>{getSelskapNavn(deal.selskap_id)}</p>
                             <div className="flex items-center gap-2 mt-2 flex-wrap">
                               <span className="text-xs font-mono font-semibold">{deal.forventet_mrr.toLocaleString("no-NO")} MRR</span>
                               {(deal.sla || 0) > 0 && <span className="text-[10px] text-muted-foreground">SLA: {deal.sla.toLocaleString("no-NO")}</span>}
@@ -194,13 +194,13 @@ export default function Salgsmuligheter() {
         </TabsContent>
 
         <TabsContent value="won">
-          <DealList deals={wonThisMonth} getSelskapNavn={getSelskapNavn} onSelect={setSelectedSm} label="Vunnet denne måneden" onNavigateSelskap={id => { const sel = selskaper.find(s => s.id === id); if (sel && sel.kundestatus !== "Ikke kunde") navigate(`/selskaper/${id}`); }} isMobile={isMobile} />
+          <DealList deals={wonThisMonth} getSelskapNavn={getSelskapNavn} onSelect={setSelectedSm} label="Vunnet denne måneden" onNavigateSelskap={id => navigate(`/selskaper/${id}`)} isMobile={isMobile} />
         </TabsContent>
         <TabsContent value="lost">
-          <DealList deals={lostThisMonth} getSelskapNavn={getSelskapNavn} onSelect={setSelectedSm} label="Tapt denne måneden" onNavigateSelskap={id => { const sel = selskaper.find(s => s.id === id); if (sel && sel.kundestatus !== "Ikke kunde") navigate(`/selskaper/${id}`); }} isMobile={isMobile} />
+          <DealList deals={lostThisMonth} getSelskapNavn={getSelskapNavn} onSelect={setSelectedSm} label="Tapt denne måneden" onNavigateSelskap={id => navigate(`/selskaper/${id}`)} isMobile={isMobile} />
         </TabsContent>
         <TabsContent value="all">
-          <DealList deals={allClosed} getSelskapNavn={getSelskapNavn} onSelect={setSelectedSm} label="Alle avsluttede salg" onNavigateSelskap={id => { const sel = selskaper.find(s => s.id === id); if (sel && sel.kundestatus !== "Ikke kunde") navigate(`/selskaper/${id}`); }} isMobile={isMobile} />
+          <DealList deals={allClosed} getSelskapNavn={getSelskapNavn} onSelect={setSelectedSm} label="Alle avsluttede salg" onNavigateSelskap={id => navigate(`/selskaper/${id}`)} isMobile={isMobile} />
         </TabsContent>
       </Tabs>
 
@@ -222,18 +222,7 @@ export default function Salgsmuligheter() {
 
             return (
               <div className="mt-6 space-y-4 text-sm">
-                <div>
-                  <span className="text-muted-foreground block text-xs mb-1">Selskap</span>
-                  <div className="flex items-center gap-2">
-                    <select className="flex-1 border rounded-lg px-3 py-2 text-sm bg-background"
-                      value={currentSm.selskap_id}
-                      onChange={e => updateField("selskap_id", e.target.value)}>
-                      <option value="">Ingen selskap</option>
-                      {selskaper.map(s => <option key={s.id} value={s.id}>{s.firmanavn}</option>)}
-                    </select>
-                    {(() => { const sel = selskaper.find(s => s.id === currentSm.selskap_id); return sel && sel.kundestatus !== "Ikke kunde" ? <span className="text-xs cursor-pointer text-primary hover:underline shrink-0" onClick={() => navigate(`/selskaper/${currentSm.selskap_id}`)}>Åpne</span> : null; })()}
-                  </div>
-                </div>
+                <Field label="Selskap" value={<span className="cursor-pointer hover:text-primary hover:underline" onClick={() => navigate(`/selskaper/${currentSm.selskap_id}`)}>{getSelskapNavn(currentSm.selskap_id)}</span>} />
 
                 {/* Status */}
                 <div>

@@ -132,7 +132,7 @@ export default function Companies() {
             const selskapSm = salgsmuligheter.filter(sm => sm.selskap_id === s.id && sm.status !== "Tapt");
             const totalSla = selskapSm.reduce((sum, sm) => sum + (sm.sla || 0), 0);
             return (
-              <div key={s.id} className="bg-card border rounded-xl p-4 space-y-2" onClick={() => s.kundestatus !== "Ikke kunde" ? navigate(`/selskaper/${s.id}`) : setSelected(s)}>
+              <div key={s.id} className="bg-card border rounded-xl p-4 space-y-2" onClick={() => navigate(`/selskaper/${s.id}`)}>
                 <div className="flex items-center justify-between">
                   <p className="font-semibold text-sm truncate">{s.firmanavn}</p>
                   <Badge className={`text-[10px] shrink-0 ${kundestatusColors[s.kundestatus]}`}>{s.kundestatus}</Badge>
@@ -171,7 +171,7 @@ export default function Companies() {
                 const selskapSm = salgsmuligheter.filter(sm => sm.selskap_id === s.id && sm.status !== "Tapt");
                 const totalSla = selskapSm.reduce((sum, sm) => sum + (sm.sla || 0), 0);
                 return (
-                <tr key={s.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => s.kundestatus !== "Ikke kunde" ? navigate(`/selskaper/${s.id}`) : setSelected(s)}>
+                <tr key={s.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => navigate(`/selskaper/${s.id}`)}>
                   <td className="px-4 py-3 font-medium">{s.firmanavn}</td>
                   <td className="px-4 py-3 text-muted-foreground">{s.bransje || "–"}</td>
                   <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
