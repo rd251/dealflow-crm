@@ -164,34 +164,108 @@ export default function Companies() {
       <Sheet open={!!currentSelskap} onOpenChange={open => !open && setSelected(null)}>
         <SheetContent className="w-[400px] sm:w-[540px] overflow-y-auto">
           <SheetHeader><SheetTitle>{currentSelskap?.firmanavn}</SheetTitle></SheetHeader>
-          {currentSelskap && (
-            <div className="mt-6 space-y-4 text-sm">
-              <div className="grid grid-cols-2 gap-3">
-                <div><span className="text-muted-foreground block text-xs">Bransje</span>{currentSelskap.bransje || "–"}</div>
-                <div><span className="text-muted-foreground block text-xs">Kundeansvarlig</span>{currentSelskap.kundeansvarlig || "–"}</div>
-                <div><span className="text-muted-foreground block text-xs">Kundestatus</span><span className={`text-xs px-2 py-0.5 rounded-full font-medium ${kundestatusColors[currentSelskap.kundestatus]}`}>{currentSelskap.kundestatus}</span></div>
-                <div><span className="text-muted-foreground block text-xs">Live</span>{currentSelskap.live_status ? "Ja" : "Nei"}</div>
-                <div><span className="text-muted-foreground block text-xs">Onboarding</span>{currentSelskap.onboarding_status}</div>
-                <div><span className="text-muted-foreground block text-xs">Kundetilstand</span><span className={`text-xs px-2 py-0.5 rounded-full font-medium ${tilstandColors[currentSelskap.kundetilstand]}`}>{currentSelskap.kundetilstand}</span></div>
-                <div><span className="text-muted-foreground block text-xs">MRR</span>{currentSelskap.mrr.toLocaleString("no-NO")} NOK</div>
-                <div><span className="text-muted-foreground block text-xs">ARR</span>{currentSelskap.arr.toLocaleString("no-NO")} NOK</div>
-                <div><span className="text-muted-foreground block text-xs">Oppstartskostnad</span>{currentSelskap.oppstartskostnad.toLocaleString("no-NO")} NOK</div>
-                <div><span className="text-muted-foreground block text-xs">Go-live dato</span>{currentSelskap.go_live_dato || "–"}</div>
-                <div><span className="text-muted-foreground block text-xs">Neste steg</span>{currentSelskap.neste_steg || "–"}</div>
-                <div><span className="text-muted-foreground block text-xs">Sist aktivitet</span>{currentSelskap.sist_aktivitet}</div>
-              </div>
-              {currentSelskap.kundestatus === "Kansellert" && (
-                <div className="p-3 bg-destructive/10 rounded-lg text-destructive text-xs">
-                  <strong>Kansellert:</strong> {currentSelskap.kansellert_dato} – {currentSelskap.kanselleringsaarsak}
-                  {currentSelskap.kanselleringsnotat && <p className="mt-1">{currentSelskap.kanselleringsnotat}</p>}
-                </div>
-              )}
+          {currentSelskap && (() => {
+            const updateField = (field: string, value: any) => {
+              const today = new Date().toISOString().split("T")[0];
+              updateSelskaper(prev => prev.map(s =>
+                s.id === currentSelskap.id ? { ...s, [field]: value, sist_aktivitet: today } : s
+              ));
+            };
 
-              <div className="border-t pt-4">
-                <InlineTaskForm selskap_id={currentSelskap.id} />
+            return (
+              <div className="mt-6 space-y-4 text-sm">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <span className="text-muted-foreground block text-xs mb-1">Firmanavn</span>
+                    <Input value={currentSelskap.firmanavn} onChange={e => updateField("firmanavn", e.target.value)} className="h-8 text-sm" />
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground block text-xs mb-1">Bransje</span>
+                    <Input value={currentSelskap.bransje} onChange={e => updateField("bransje", e.target.value)} className="h-8 text-sm" />
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground block text-xs mb-1">Kundeansvarlig</span>
+                    <Input value={currentSelskap.kundeansvarlig} onChange={e => updateField("kundeansvarlig", e.target.value)} className="h-8 text-sm" />
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground block text-xs mb-1">Kundestatus</span>
+                    <select className={`w-full border rounded-lg px-3 py-1.5 text-sm bg-background ${kundestatusColors[currentSelskap.kundestatus]}`}
+                      value={currentSelskap.kundestatus}
+                      onChange={e => {
+                        const val = e.target.value as Kundestatus;
+                        if (val === "Kansellert") {
+                          changeKundestatus(currentSelskap.id, val);
+                        } else {
+                          updateField("kundestatus", val);
+                          if (val === "Live") updateField("live_status", true);
+                          else if (val !== "Pilot") updateField("live_status", false);
+                        }
+                      }}>
+                      {kundestatuser.map(k => <option key={k} value={k}>{k}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground block text-xs mb-1">Live</span>
+                    <Switch checked={currentSelskap.live_status} onCheckedChange={v => toggleLive(currentSelskap.id, v)} />
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground block text-xs mb-1">Onboarding</span>
+                    <select className="w-full border rounded-lg px-3 py-1.5 text-sm bg-background" value={currentSelskap.onboarding_status}
+                      onChange={e => updateField("onboarding_status", e.target.value)}>
+                      {(["Ikke startet", "Pågår", "Venter på kunde", "Klar for live", "Ferdig"] as OnboardingStatus[]).map(o => <option key={o} value={o}>{o}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground block text-xs mb-1">Kundetilstand</span>
+                    <select className={`w-full border rounded-lg px-3 py-1.5 text-sm bg-background ${tilstandColors[currentSelskap.kundetilstand]}`}
+                      value={currentSelskap.kundetilstand} onChange={e => updateField("kundetilstand", e.target.value)}>
+                      {(["Bra", "Usikker", "Risiko"] as Kundetilstand[]).map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground block text-xs mb-1">MRR</span>
+                    <Input type="number" value={currentSelskap.mrr || ""} onChange={e => {
+                      const mrr = Number(e.target.value);
+                      updateSelskaper(prev => prev.map(s => s.id === currentSelskap.id ? { ...s, mrr, arr: mrr * 12, sist_aktivitet: new Date().toISOString().split("T")[0] } : s));
+                    }} className="h-8 text-sm" />
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground block text-xs mb-1">ARR</span>
+                    <span className="text-sm font-mono">{(currentSelskap.mrr * 12).toLocaleString("no-NO")} NOK</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground block text-xs mb-1">Oppstartskostnad</span>
+                    <Input type="number" value={currentSelskap.oppstartskostnad || ""} onChange={e => updateField("oppstartskostnad", Number(e.target.value))} className="h-8 text-sm" />
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground block text-xs mb-1">Go-live dato</span>
+                    <Input type="date" value={currentSelskap.go_live_dato} onChange={e => updateField("go_live_dato", e.target.value)} className="h-8 text-sm" />
+                  </div>
+                </div>
+
+                <div>
+                  <span className="text-muted-foreground block text-xs mb-1">Neste steg</span>
+                  <Input value={currentSelskap.neste_steg} onChange={e => updateField("neste_steg", e.target.value)} className="h-8 text-sm" />
+                </div>
+
+                <div>
+                  <span className="text-muted-foreground block text-xs mb-1">Notater</span>
+                  <Textarea value={currentSelskap.notater} onChange={e => updateField("notater", e.target.value)} rows={3} />
+                </div>
+
+                {currentSelskap.kundestatus === "Kansellert" && (
+                  <div className="p-3 bg-destructive/10 rounded-lg text-destructive text-xs">
+                    <strong>Kansellert:</strong> {currentSelskap.kansellert_dato} – {currentSelskap.kanselleringsaarsak}
+                    {currentSelskap.kanselleringsnotat && <p className="mt-1">{currentSelskap.kanselleringsnotat}</p>}
+                  </div>
+                )}
+
+                <div className="border-t pt-4">
+                  <InlineTaskForm selskap_id={currentSelskap.id} />
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
         </SheetContent>
       </Sheet>
     </PageShell>
