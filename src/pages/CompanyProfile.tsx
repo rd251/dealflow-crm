@@ -74,6 +74,7 @@ export default function CompanyProfile() {
 
   const totalKontraktsverdi = selskapSm.reduce((sum, s) => sum + beregnTotalKontraktsverdi(s), 0);
   const totalOppstart = selskapSm.reduce((sum, s) => sum + s.oppstartskostnad, 0) || selskap.oppstartskostnad;
+  const totalSla = selskapSm.filter(s => s.status !== "Tapt").reduce((sum, s) => sum + (s.sla || 0), 0);
   const totalVerdi = totalKontraktsverdi + totalOppstart;
 
   const today = new Date().toISOString().split("T")[0];
