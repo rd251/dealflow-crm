@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Plus, Search, ArrowRightCircle } from "lucide-react";
+import { Plus, Search, ArrowRightCircle, Trash2 } from "lucide-react";
 import { Lead, LeadStatus, LeadKilde } from "@/data/crm-data";
 import { Badge } from "@/components/ui/badge";
 import InlineTaskForm from "@/components/InlineTaskForm";
@@ -213,6 +213,12 @@ export default function Leads() {
                   <ArrowRightCircle className="w-4 h-4 mr-1" /> Konverter til salgsmulighet
                 </Button>
               )}
+              <Button size="sm" variant="destructive" className="w-full" onClick={() => {
+                updateLeads(prev => prev.filter(l => l.id !== currentLead.id));
+                setSelectedLead(null);
+              }}>
+                <Trash2 className="w-4 h-4 mr-1" /> Slett lead
+              </Button>
             </div>
             );
           })()}

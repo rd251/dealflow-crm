@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, GripVertical, Trophy, XCircle } from "lucide-react";
+import { Plus, GripVertical, Trophy, XCircle, Trash2 } from "lucide-react";
 import { Salgsmulighet, SalgsmulighetStatus, Tapsaarsak, beregnTotalKontraktsverdi, beregnVektetPipeline } from "@/data/crm-data";
 import InlineTaskForm from "@/components/InlineTaskForm";
 
@@ -301,7 +301,7 @@ export default function Salgsmuligheter() {
                   <InlineTaskForm salgsmulighet_id={currentSm.id} selskap_id={currentSm.selskap_id} />
                 </div>
 
-                <div className="flex gap-2 pt-2">
+                <div className="flex gap-2 pt-2 flex-wrap">
                   {openStatuses.includes(currentSm.status as any) && (
                     <>
                       <Button size="sm" className="bg-success hover:bg-success/90 text-success-foreground" onClick={() => { vinnSalgsmulighet(currentSm.id); setSelectedSm(null); }}>
@@ -312,6 +312,12 @@ export default function Salgsmuligheter() {
                       </Button>
                     </>
                   )}
+                  <Button size="sm" variant="outline" className="text-destructive hover:bg-destructive/10 ml-auto" onClick={() => {
+                    updateSalgsmuligheter(prev => prev.filter(s => s.id !== currentSm.id));
+                    setSelectedSm(null);
+                  }}>
+                    <Trash2 className="w-3.5 h-3.5 mr-1" />Slett
+                  </Button>
                 </div>
               </div>
             );
