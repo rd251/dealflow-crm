@@ -18,7 +18,7 @@ const prioritetColors: Record<Prioritet, string> = {
 const statusOptions: OppgaveStatus[] = ["Åpen", "Pågår", "Ferdig"];
 
 export default function Tasks() {
-  const { oppgaver, selskaper, updateOppgaver } = useCrmStore();
+  const { oppgaver, selskaper, updateOppgaver, generateId } = useCrmStore();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [filter, setFilter] = useState<"alle" | "forfalte" | "idag" | "uke">("alle");
   const [form, setForm] = useState({ oppgave: "", frist: "", prioritet: "Medium" as Prioritet, lead_id: "", selskap_id: "", salgsmulighet_id: "", ansvarlig: "", notater: "" });
