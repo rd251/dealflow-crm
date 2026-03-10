@@ -237,12 +237,17 @@ export default function Dashboard() {
               <div className="absolute left-[7px] top-3 bottom-3 w-px bg-border" />
               <div className="space-y-3">
                 {recentActivity.map((item, i) => (
-                  <div key={i} className="flex items-start gap-3 relative">
+                  <div
+                    key={i}
+                    onClick={() => navigate(item.route)}
+                    className="flex items-start gap-3 relative cursor-pointer group hover:bg-muted/30 rounded-lg p-1.5 -ml-1.5 transition-colors"
+                  >
                     <div className={`w-[15px] h-[15px] rounded-full shrink-0 mt-0.5 border-2 border-card ${activityTypeColors[item.type]}`} />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm truncate">{item.tekst}</p>
+                      <p className="text-sm truncate group-hover:underline">{item.tekst}</p>
                       <p className="text-xs text-muted-foreground">{formatDate(item.dato)}</p>
                     </div>
+                    <ExternalLink className="w-3.5 h-3.5 text-muted-foreground/0 group-hover:text-muted-foreground/60 transition-colors shrink-0 mt-1" />
                   </div>
                 ))}
               </div>
