@@ -1,6 +1,7 @@
 import { useState } from "react";
 import PageShell from "@/components/PageShell";
 import { useCrmStore } from "@/hooks/use-crm-store";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -34,6 +35,7 @@ const tilstandColors: Record<Kundetilstand, string> = {
 
 export default function Companies() {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const { selskaper, salgsmuligheter, updateSelskaper, kansellerSelskap, generateId } = useCrmStore();
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -88,9 +90,9 @@ export default function Companies() {
       actions={
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button size="sm"><Plus className="w-4 h-4 mr-1" />Nytt selskap</Button>
+            <Button size="sm"><Plus className="w-4 h-4 mr-1" />{!isMobile && "Nytt selskap"}</Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-[95vw] sm:max-w-lg">
             <DialogHeader><DialogTitle>Nytt selskap</DialogTitle><DialogDescription>Fyll inn detaljer for det nye selskapet.</DialogDescription></DialogHeader>
             <div className="space-y-3">
               <Input placeholder="Firmanavn" value={form.firmanavn} onChange={e => setForm(f => ({ ...f, firmanavn: e.target.value }))} />
@@ -104,7 +106,7 @@ export default function Companies() {
     >
       {/* Cancel dialog */}
       <Dialog open={!!cancelDialog} onOpenChange={open => !open && setCancelDialog(null)}>
-        <DialogContent>
+        <DialogContent className="max-w-[95vw] sm:max-w-lg">
           <DialogHeader><DialogTitle>Kanseller kunde</DialogTitle><DialogDescription>Velg årsak og legg til notat.</DialogDescription></DialogHeader>
           <div className="space-y-3">
             <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background" value={cancelReason} onChange={e => setCancelReason(e.target.value as Kanselleringsaarsak)}>
@@ -123,54 +125,81 @@ export default function Companies() {
         <Input placeholder="Søk selskaper..." className="pl-9" value={search} onChange={e => setSearch(e.target.value)} />
       </div>
 
-      <div className="bg-card border rounded-xl overflow-hidden overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b bg-muted/50">
-              <th className="text-left px-4 py-3 font-medium">Firma</th>
-              <th className="text-left px-4 py-3 font-medium">Bransje</th>
-              <th className="text-left px-4 py-3 font-medium">Kundestatus</th>
-              <th className="text-left px-4 py-3 font-medium">Live</th>
-              <th className="text-left px-4 py-3 font-medium">Tilstand</th>
-              <th className="text-right px-4 py-3 font-medium">MRR</th>
-              <th className="text-right px-4 py-3 font-medium">ARR</th>
-              <th className="text-right px-4 py-3 font-medium">SLA</th>
-              <th className="text-right px-4 py-3 font-medium">Oppstart</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map(s => {
-              const selskapSm = salgsmuligheter.filter(sm => sm.selskap_id === s.id && sm.status !== "Tapt");
-              const totalSla = selskapSm.reduce((sum, sm) => sum + (sm.sla || 0), 0);
-              return (
-              <tr key={s.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => navigate(`/selskaper/${s.id}`)}>
-                <td className="px-4 py-3 font-medium">{s.firmanavn}</td>
-                <td className="px-4 py-3 text-muted-foreground">{s.bransje || "–"}</td>
-                <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
-                  <select className={`text-xs px-2 py-1 rounded-full font-medium border-0 cursor-pointer ${kundestatusColors[s.kundestatus]}`}
-                    value={s.kundestatus} onChange={e => changeKundestatus(s.id, e.target.value as Kundestatus)}>
-                    {kundestatuser.map(k => <option key={k} value={k}>{k}</option>)}
-                  </select>
-                </td>
-                <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
-                  <Switch checked={s.live_status} onCheckedChange={v => toggleLive(s.id, v)} />
-                </td>
-                <td className="px-4 py-3">
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${tilstandColors[s.kundetilstand]}`}>{s.kundetilstand}</span>
-                </td>
-                <td className="px-4 py-3 text-right font-mono">{s.mrr.toLocaleString("no-NO")}</td>
-                <td className="px-4 py-3 text-right font-mono">{s.arr.toLocaleString("no-NO")}</td>
-                <td className="px-4 py-3 text-right font-mono">{totalSla.toLocaleString("no-NO")}</td>
-                <td className="px-4 py-3 text-right font-mono">{s.oppstartskostnad.toLocaleString("no-NO")}</td>
+      {/* Mobile: card layout */}
+      {isMobile ? (
+        <div className="space-y-3">
+          {filtered.map(s => {
+            const selskapSm = salgsmuligheter.filter(sm => sm.selskap_id === s.id && sm.status !== "Tapt");
+            const totalSla = selskapSm.reduce((sum, sm) => sum + (sm.sla || 0), 0);
+            return (
+              <div key={s.id} className="bg-card border rounded-xl p-4 space-y-2" onClick={() => navigate(`/selskaper/${s.id}`)}>
+                <div className="flex items-center justify-between">
+                  <p className="font-semibold text-sm truncate">{s.firmanavn}</p>
+                  <Badge className={`text-[10px] shrink-0 ${kundestatusColors[s.kundestatus]}`}>{s.kundestatus}</Badge>
+                </div>
+                {s.bransje && <p className="text-xs text-muted-foreground">{s.bransje}</p>}
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-mono">MRR: {s.mrr.toLocaleString("no-NO")}</span>
+                  <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${tilstandColors[s.kundetilstand]}`}>{s.kundetilstand}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <ChevronRight className="w-3.5 h-3.5 text-muted-foreground ml-auto" />
+                </div>
+              </div>
+            );
+          })}
+          {filtered.length === 0 && <p className="text-center text-sm text-muted-foreground py-8">Ingen selskaper å vise</p>}
+        </div>
+      ) : (
+        <div className="bg-card border rounded-xl overflow-hidden overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-muted/50">
+                <th className="text-left px-4 py-3 font-medium">Firma</th>
+                <th className="text-left px-4 py-3 font-medium">Bransje</th>
+                <th className="text-left px-4 py-3 font-medium">Kundestatus</th>
+                <th className="text-left px-4 py-3 font-medium">Live</th>
+                <th className="text-left px-4 py-3 font-medium">Tilstand</th>
+                <th className="text-right px-4 py-3 font-medium">MRR</th>
+                <th className="text-right px-4 py-3 font-medium">ARR</th>
+                <th className="text-right px-4 py-3 font-medium">SLA</th>
+                <th className="text-right px-4 py-3 font-medium">Oppstart</th>
               </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {filtered.map(s => {
+                const selskapSm = salgsmuligheter.filter(sm => sm.selskap_id === s.id && sm.status !== "Tapt");
+                const totalSla = selskapSm.reduce((sum, sm) => sum + (sm.sla || 0), 0);
+                return (
+                <tr key={s.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => navigate(`/selskaper/${s.id}`)}>
+                  <td className="px-4 py-3 font-medium">{s.firmanavn}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{s.bransje || "–"}</td>
+                  <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
+                    <select className={`text-xs px-2 py-1 rounded-full font-medium border-0 cursor-pointer ${kundestatusColors[s.kundestatus]}`}
+                      value={s.kundestatus} onChange={e => changeKundestatus(s.id, e.target.value as Kundestatus)}>
+                      {kundestatuser.map(k => <option key={k} value={k}>{k}</option>)}
+                    </select>
+                  </td>
+                  <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
+                    <Switch checked={s.live_status} onCheckedChange={v => toggleLive(s.id, v)} />
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${tilstandColors[s.kundetilstand]}`}>{s.kundetilstand}</span>
+                  </td>
+                  <td className="px-4 py-3 text-right font-mono">{s.mrr.toLocaleString("no-NO")}</td>
+                  <td className="px-4 py-3 text-right font-mono">{s.arr.toLocaleString("no-NO")}</td>
+                  <td className="px-4 py-3 text-right font-mono">{totalSla.toLocaleString("no-NO")}</td>
+                  <td className="px-4 py-3 text-right font-mono">{s.oppstartskostnad.toLocaleString("no-NO")}</td>
+                </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       <Sheet open={!!currentSelskap} onOpenChange={open => !open && setSelected(null)}>
-        <SheetContent className="w-[400px] sm:w-[540px] overflow-y-auto">
+        <SheetContent className="w-full sm:w-[400px] sm:max-w-[540px] overflow-y-auto">
           <SheetHeader><SheetTitle>{currentSelskap?.firmanavn}</SheetTitle></SheetHeader>
           {currentSelskap && (() => {
             const updateField = (field: string, value: any) => {

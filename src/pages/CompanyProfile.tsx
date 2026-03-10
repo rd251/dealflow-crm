@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useCrmStore } from "@/hooks/use-crm-store";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { beregnTotalKontraktsverdi, beregnVektetPipeline } from "@/data/crm-data";
 import StatCard from "@/components/StatCard";
 import InlineTaskForm from "@/components/InlineTaskForm";
@@ -46,6 +47,7 @@ const smStatusColors: Record<SalgsmulighetStatus, string> = {
 export default function CompanyProfile() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const {
     selskaper, updateSelskaper, kontakter, updateKontakter, salgsmuligheter, prosjekter, oppgaver, generateId,
   } = useCrmStore();
@@ -56,7 +58,7 @@ export default function CompanyProfile() {
   const selskap = selskaper.find(s => s.id === id);
   if (!selskap) {
     return (
-      <div className="ml-60 min-h-screen bg-background flex items-center justify-center">
+      <div className={`${isMobile ? "ml-0" : "ml-60"} min-h-screen bg-background flex items-center justify-center`}>
         <div className="text-center">
           <p className="text-muted-foreground">Selskap ikke funnet</p>
           <Button variant="ghost" className="mt-2" onClick={() => navigate("/selskaper")}>
@@ -85,22 +87,22 @@ export default function CompanyProfile() {
   };
 
   return (
-    <div className="ml-60 min-h-screen bg-background">
+    <div className={`${isMobile ? "ml-0" : "ml-60"} min-h-screen bg-background transition-all duration-200`}>
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-sm border-b px-8 py-5">
+      <header className={`sticky top-0 z-40 bg-background/80 backdrop-blur-sm border-b ${isMobile ? "px-4 py-4 pl-14" : "px-8 py-5"}`}>
         <div className="flex items-center gap-3 mb-3">
           <Button variant="ghost" size="sm" onClick={() => navigate("/selskaper")}>
             <ArrowLeft className="w-4 h-4 mr-1" /> Kundeforhold
           </Button>
         </div>
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="p-3 rounded-xl bg-primary/10 text-primary">
-              <Building2 className="w-6 h-6" />
+          <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+            <div className="p-2 sm:p-3 rounded-xl bg-primary/10 text-primary shrink-0">
+              <Building2 className={isMobile ? "w-5 h-5" : "w-6 h-6"} />
             </div>
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight">{selskap.firmanavn}</h1>
-              <div className="flex items-center gap-2 mt-1">
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight truncate">{selskap.firmanavn}</h1>
+              <div className="flex items-center gap-2 mt-1 flex-wrap">
                 <Badge className={kundestatusColors[selskap.kundestatus]}>{selskap.kundestatus}</Badge>
                 {selskap.bransje && <span className="text-sm text-muted-foreground">{selskap.bransje}</span>}
                 {selskap.live_status && <Badge className="bg-success/10 text-success">Live</Badge>}
@@ -110,21 +112,21 @@ export default function CompanyProfile() {
         </div>
       </header>
 
-      <main className="p-8 space-y-8">
+      <main className={`${isMobile ? "p-4" : "p-8"} space-y-6 sm:space-y-8`}>
         {/* KPI cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
           <StatCard label="Aktiv MRR" value={`${selskap.mrr.toLocaleString("no-NO")} kr`} icon={<DollarSign className="w-5 h-5" />} />
           <StatCard label="ARR" value={`${selskap.arr.toLocaleString("no-NO")} kr`} icon={<TrendingUp className="w-5 h-5" />} />
-          <StatCard label="SLA (månedlig)" value={`${totalSla.toLocaleString("no-NO")} kr`} icon={<Shield className="w-5 h-5" />} trend={`Årlig: ${(totalSla * 12).toLocaleString("no-NO")} kr`} />
-          <StatCard label="Sum oppstartskostnader" value={`${totalOppstart.toLocaleString("no-NO")} kr`} icon={<Briefcase className="w-5 h-5" />} />
-          <StatCard label="Total kontraktsverdi" value={`${totalKontraktsverdi.toLocaleString("no-NO")} kr`} icon={<FileText className="w-5 h-5" />} />
-          <StatCard label="Total verdi" value={`${totalVerdi.toLocaleString("no-NO")} kr`} icon={<TrendingUp className="w-5 h-5" />} />
+          <StatCard label="SLA (mnd)" value={`${totalSla.toLocaleString("no-NO")} kr`} icon={<Shield className="w-5 h-5" />} trend={!isMobile ? `Årlig: ${(totalSla * 12).toLocaleString("no-NO")} kr` : undefined} />
+          <StatCard label="Oppstart" value={`${totalOppstart.toLocaleString("no-NO")} kr`} icon={<Briefcase className="w-5 h-5" />} />
+          <StatCard label="Kontrakt" value={`${totalKontraktsverdi.toLocaleString("no-NO")} kr`} icon={<FileText className="w-5 h-5" />} />
+          <StatCard label="Total" value={`${totalVerdi.toLocaleString("no-NO")} kr`} icon={<TrendingUp className="w-5 h-5" />} />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
           {/* Left column – Selskapsinfo */}
           <div className="space-y-6">
-            <div className="bg-card border rounded-xl p-5 space-y-4">
+            <div className="bg-card border rounded-xl p-4 sm:p-5 space-y-4">
               <h2 className="font-semibold text-base">Selskapsinfo</h2>
               <div className="space-y-3 text-sm">
                 <div>
@@ -199,10 +201,10 @@ export default function CompanyProfile() {
             </div>
 
             {/* Kontaktpersoner */}
-            <div className="bg-card border rounded-xl p-5 space-y-3">
+            <div className="bg-card border rounded-xl p-4 sm:p-5 space-y-3">
               <div className="flex items-center justify-between">
                 <h2 className="font-semibold text-base flex items-center gap-2">
-                  <Users className="w-4 h-4" /> Kontaktpersoner ({selskapKontakter.length})
+                  <Users className="w-4 h-4" /> Kontakter ({selskapKontakter.length})
                 </h2>
                 <Button variant="ghost" size="sm" onClick={() => setShowAddContact(!showAddContact)}>
                   {showAddContact ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
@@ -238,8 +240,8 @@ export default function CompanyProfile() {
                     <div key={k.id} className="p-3 bg-muted/50 rounded-lg space-y-1">
                       <p className="font-medium text-sm">{k.navn}</p>
                       {k.rolle && <p className="text-xs text-muted-foreground">{k.rolle}</p>}
-                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                        {k.e_post && <span className="flex items-center gap-1"><Mail className="w-3 h-3" />{k.e_post}</span>}
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
+                        {k.e_post && <span className="flex items-center gap-1"><Mail className="w-3 h-3" /><span className="truncate">{k.e_post}</span></span>}
                         {k.telefon && <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{k.telefon}</span>}
                         {k.linkedin && <a href={k.linkedin} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-primary hover:underline"><Linkedin className="w-3 h-3" />LinkedIn</a>}
                       </div>
@@ -252,7 +254,7 @@ export default function CompanyProfile() {
 
           {/* Middle column – Salgsmuligheter & Prosjekter */}
           <div className="space-y-6">
-            <div className="bg-card border rounded-xl p-5 space-y-3">
+            <div className="bg-card border rounded-xl p-4 sm:p-5 space-y-3">
               <h2 className="font-semibold text-base flex items-center gap-2">
                 <Briefcase className="w-4 h-4" /> Salgsmuligheter ({selskapSm.length})
               </h2>
@@ -263,8 +265,8 @@ export default function CompanyProfile() {
                   {selskapSm.map(sm => (
                     <Link to={`/salgsmuligheter`} key={sm.id} className="block p-3 bg-muted/50 rounded-lg hover:bg-muted/80 transition-colors">
                       <div className="flex items-center justify-between mb-1">
-                        <p className="font-medium text-sm">{sm.navn}</p>
-                        <Badge className={`text-[10px] ${smStatusColors[sm.status]}`}>{sm.status}</Badge>
+                        <p className="font-medium text-sm truncate">{sm.navn}</p>
+                        <Badge className={`text-[10px] shrink-0 ${smStatusColors[sm.status]}`}>{sm.status}</Badge>
                       </div>
                       <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-muted-foreground">
                         <span>MRR: {sm.forventet_mrr.toLocaleString("no-NO")} kr</span>
@@ -282,7 +284,7 @@ export default function CompanyProfile() {
               )}
             </div>
 
-            <div className="bg-card border rounded-xl p-5 space-y-3">
+            <div className="bg-card border rounded-xl p-4 sm:p-5 space-y-3">
               <h2 className="font-semibold text-base flex items-center gap-2">
                 <FileText className="w-4 h-4" /> Prosjekter ({selskapProsjekter.length})
               </h2>
@@ -293,8 +295,8 @@ export default function CompanyProfile() {
                   {selskapProsjekter.map(p => (
                     <Link to={`/prosjekter`} key={p.id} className="block p-3 bg-muted/50 rounded-lg hover:bg-muted/80 transition-colors">
                       <div className="flex items-center justify-between mb-1">
-                        <p className="font-medium text-sm">{p.prosjektnavn}</p>
-                        <Badge variant="outline" className="text-[10px]">{p.status}</Badge>
+                        <p className="font-medium text-sm truncate">{p.prosjektnavn}</p>
+                        <Badge variant="outline" className="text-[10px] shrink-0">{p.status}</Badge>
                       </div>
                       <div className="grid grid-cols-2 gap-x-4 text-xs text-muted-foreground">
                         <span>Start: {p.startdato || "–"}</span>
@@ -311,16 +313,15 @@ export default function CompanyProfile() {
 
           {/* Right column – Oppgaver & Aktivitetslogg */}
           <div className="space-y-6">
-            <div className="bg-card border rounded-xl p-5">
+            <div className="bg-card border rounded-xl p-4 sm:p-5">
               <InlineTaskForm selskap_id={id!} />
             </div>
 
-            <div className="bg-card border rounded-xl p-5 space-y-3">
+            <div className="bg-card border rounded-xl p-4 sm:p-5 space-y-3">
               <h2 className="font-semibold text-base flex items-center gap-2">
                 <CalendarDays className="w-4 h-4" /> Aktivitetslogg
               </h2>
               <div className="space-y-2 text-xs">
-                {/* Compile activity from all sources */}
                 {[
                   ...selskapSm.filter(s => s.vunnet_dato).map(s => ({ dato: s.vunnet_dato, tekst: `Salgsmulighet "${s.navn}" vunnet`, type: "success" as const })),
                   ...selskapSm.filter(s => s.tapt_dato).map(s => ({ dato: s.tapt_dato, tekst: `Salgsmulighet "${s.navn}" tapt – ${s.tapsaarsak}`, type: "destructive" as const })),
@@ -331,7 +332,7 @@ export default function CompanyProfile() {
                   ...(selskap.kansellert_dato ? [{ dato: selskap.kansellert_dato, tekst: `Kansellert – ${selskap.kanselleringsaarsak}`, type: "destructive" as const }] : []),
                 ].sort((a, b) => b.dato.localeCompare(a.dato)).map((entry, i) => (
                   <div key={i} className="flex items-start gap-2 p-2 rounded-lg bg-muted/30">
-                    <span className="text-muted-foreground shrink-0 w-20">{entry.dato}</span>
+                    <span className="text-muted-foreground shrink-0 w-16 sm:w-20">{entry.dato}</span>
                     <span className={entry.type === "success" ? "text-success" : entry.type === "destructive" ? "text-destructive" : "text-foreground"}>
                       {entry.tekst}
                     </span>

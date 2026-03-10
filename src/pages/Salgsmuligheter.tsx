@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PageShell from "@/components/PageShell";
 import { useCrmStore } from "@/hooks/use-crm-store";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -27,6 +28,7 @@ const statusColors: Record<SalgsmulighetStatus, string> = {
 
 export default function Salgsmuligheter() {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const { salgsmuligheter, selskaper, kontakter, updateSalgsmuligheter, vinnSalgsmulighet, tapSalgsmulighet, generateId } = useCrmStore();
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [selectedSm, setSelectedSm] = useState<Salgsmulighet | null>(null);
@@ -83,9 +85,9 @@ export default function Salgsmuligheter() {
       actions={
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button size="sm"><Plus className="w-4 h-4 mr-1" />Ny mulighet</Button>
+            <Button size="sm"><Plus className="w-4 h-4 mr-1" />{!isMobile && "Ny mulighet"}</Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-[95vw] sm:max-w-lg">
             <DialogHeader><DialogTitle>Ny salgsmulighet</DialogTitle><DialogDescription>Fyll inn detaljer for den nye salgsmuligheten.</DialogDescription></DialogHeader>
             <div className="space-y-3">
               <Input placeholder="Navn" value={form.navn} onChange={e => setForm(f => ({ ...f, navn: e.target.value }))} />
@@ -93,7 +95,7 @@ export default function Salgsmuligheter() {
                 <option value="">Velg selskap</option>
                 {selskaper.map(s => <option key={s.id} value={s.id}>{s.firmanavn}</option>)}
               </select>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 <Input type="number" placeholder="Forventet MRR" value={form.forventet_mrr || ""} onChange={e => setForm(f => ({ ...f, forventet_mrr: Number(e.target.value) }))} />
                 <Input type="number" placeholder="SLA" value={form.sla || ""} onChange={e => setForm(f => ({ ...f, sla: Number(e.target.value) }))} />
                 <Input type="number" placeholder="Oppstartskostnad" value={form.oppstartskostnad || ""} onChange={e => setForm(f => ({ ...f, oppstartskostnad: Number(e.target.value) }))} />
@@ -112,7 +114,7 @@ export default function Salgsmuligheter() {
     >
       {/* Loss reason dialog */}
       <Dialog open={!!lossDialog} onOpenChange={open => !open && setLossDialog(null)}>
-        <DialogContent>
+        <DialogContent className="max-w-[95vw] sm:max-w-lg">
           <DialogHeader><DialogTitle>Tapsårsak</DialogTitle><DialogDescription>Velg årsaken til at denne dealen ble tapt.</DialogDescription></DialogHeader>
           <div className="space-y-3">
             <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background" value={lossReason} onChange={e => setLossReason(e.target.value as Tapsaarsak)}>
@@ -124,25 +126,25 @@ export default function Salgsmuligheter() {
       </Dialog>
 
       <Tabs defaultValue="pipeline">
-        <TabsList className="mb-4">
-          <TabsTrigger value="pipeline">Aktiv pipeline</TabsTrigger>
-          <TabsTrigger value="won">Vunnet ({wonThisMonth.length})</TabsTrigger>
-          <TabsTrigger value="lost">Tapt ({lostThisMonth.length})</TabsTrigger>
-          <TabsTrigger value="all">Alle avsluttede</TabsTrigger>
+        <TabsList className="mb-4 flex-wrap h-auto gap-1">
+          <TabsTrigger value="pipeline" className="text-xs sm:text-sm">Pipeline</TabsTrigger>
+          <TabsTrigger value="won" className="text-xs sm:text-sm">Vunnet ({wonThisMonth.length})</TabsTrigger>
+          <TabsTrigger value="lost" className="text-xs sm:text-sm">Tapt ({lostThisMonth.length})</TabsTrigger>
+          <TabsTrigger value="all" className="text-xs sm:text-sm">Avsluttede</TabsTrigger>
         </TabsList>
 
         <TabsContent value="pipeline">
-          <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin">
+          <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-4 scrollbar-thin">
             {openStatuses.map(stage => {
               const stageDeals = openDeals.filter(d => d.status === stage);
               const stageValue = stageDeals.reduce((s, d) => s + beregnTotalKontraktsverdi(d), 0);
               return (
-                <div key={stage} className="min-w-[280px] w-[280px] flex-shrink-0"
+                <div key={stage} className={`${isMobile ? "min-w-[240px] w-[240px]" : "min-w-[280px] w-[280px]"} flex-shrink-0`}
                   onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; }}
                   onDrop={e => handleDrop(e, stage)}>
                   <div className="mb-3 flex items-center gap-2">
                     <div className={`w-2.5 h-2.5 rounded-full ${statusColors[stage]}`} />
-                    <h3 className="font-semibold text-sm">{stage}</h3>
+                    <h3 className="font-semibold text-xs sm:text-sm">{stage}</h3>
                     <span className="text-xs text-muted-foreground ml-auto">{stageDeals.length}</span>
                   </div>
                   <p className="text-xs text-muted-foreground mb-3 font-mono">{stageValue.toLocaleString("no-NO")} NOK</p>
@@ -150,13 +152,13 @@ export default function Salgsmuligheter() {
                     {stageDeals.map(deal => (
                       <div key={deal.id} draggable onDragStart={e => { setDraggedId(deal.id); e.dataTransfer.effectAllowed = "move"; }}
                         onClick={() => setSelectedSm(deal)}
-                        className="bg-card border rounded-lg p-3.5 cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow group">
+                        className="bg-card border rounded-lg p-3 sm:p-3.5 cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow group">
                         <div className="flex items-start gap-2">
-                          <GripVertical className="w-4 h-4 text-muted-foreground/40 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          {!isMobile && <GripVertical className="w-4 h-4 text-muted-foreground/40 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity" />}
                           <div className="flex-1 min-w-0">
                             <p className="font-semibold text-sm truncate">{deal.navn}</p>
                             <p className="text-xs text-muted-foreground mt-0.5 truncate cursor-pointer hover:text-primary hover:underline" onClick={e => { e.stopPropagation(); navigate(`/selskaper/${deal.selskap_id}`); }}>{getSelskapNavn(deal.selskap_id)}</p>
-                            <div className="flex items-center gap-2 mt-2">
+                            <div className="flex items-center gap-2 mt-2 flex-wrap">
                               <span className="text-xs font-mono font-semibold">{deal.forventet_mrr.toLocaleString("no-NO")} MRR</span>
                               {(deal.sla || 0) > 0 && <span className="text-[10px] text-muted-foreground">SLA: {deal.sla.toLocaleString("no-NO")}</span>}
                               <span className="text-[10px] text-muted-foreground">{deal.sannsynlighet}%</span>
@@ -175,14 +177,14 @@ export default function Salgsmuligheter() {
             })}
             {/* Vunnet / Tapt drop zones */}
             {(["Vunnet", "Tapt"] as const).map(stage => (
-              <div key={stage} className="min-w-[200px] w-[200px] flex-shrink-0"
+              <div key={stage} className={`${isMobile ? "min-w-[160px] w-[160px]" : "min-w-[200px] w-[200px]"} flex-shrink-0`}
                 onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; }}
                 onDrop={e => handleDrop(e, stage)}>
                 <div className="mb-3 flex items-center gap-2">
                   <div className={`w-2.5 h-2.5 rounded-full ${statusColors[stage]}`} />
-                  <h3 className="font-semibold text-sm">{stage}</h3>
+                  <h3 className="font-semibold text-xs sm:text-sm">{stage}</h3>
                 </div>
-                <div className="border-2 border-dashed rounded-lg p-8 text-center text-xs text-muted-foreground flex flex-col items-center gap-2">
+                <div className="border-2 border-dashed rounded-lg p-6 sm:p-8 text-center text-xs text-muted-foreground flex flex-col items-center gap-2">
                   {stage === "Vunnet" ? <Trophy className="w-5 h-5 text-success" /> : <XCircle className="w-5 h-5 text-destructive" />}
                   Dra deal hit
                 </div>
@@ -192,19 +194,19 @@ export default function Salgsmuligheter() {
         </TabsContent>
 
         <TabsContent value="won">
-          <DealTable deals={wonThisMonth} getSelskapNavn={getSelskapNavn} onSelect={setSelectedSm} label="Vunnet denne måneden" onNavigateSelskap={id => navigate(`/selskaper/${id}`)} />
+          <DealList deals={wonThisMonth} getSelskapNavn={getSelskapNavn} onSelect={setSelectedSm} label="Vunnet denne måneden" onNavigateSelskap={id => navigate(`/selskaper/${id}`)} isMobile={isMobile} />
         </TabsContent>
         <TabsContent value="lost">
-          <DealTable deals={lostThisMonth} getSelskapNavn={getSelskapNavn} onSelect={setSelectedSm} label="Tapt denne måneden" onNavigateSelskap={id => navigate(`/selskaper/${id}`)} />
+          <DealList deals={lostThisMonth} getSelskapNavn={getSelskapNavn} onSelect={setSelectedSm} label="Tapt denne måneden" onNavigateSelskap={id => navigate(`/selskaper/${id}`)} isMobile={isMobile} />
         </TabsContent>
         <TabsContent value="all">
-          <DealTable deals={allClosed} getSelskapNavn={getSelskapNavn} onSelect={setSelectedSm} label="Alle avsluttede salg" onNavigateSelskap={id => navigate(`/selskaper/${id}`)} />
+          <DealList deals={allClosed} getSelskapNavn={getSelskapNavn} onSelect={setSelectedSm} label="Alle avsluttede salg" onNavigateSelskap={id => navigate(`/selskaper/${id}`)} isMobile={isMobile} />
         </TabsContent>
       </Tabs>
 
       {/* Detail drawer */}
       <Sheet open={!!currentSm} onOpenChange={open => !open && setSelectedSm(null)}>
-        <SheetContent className="w-[400px] sm:w-[540px] overflow-y-auto">
+        <SheetContent className="w-full sm:w-[400px] sm:max-w-[540px] overflow-y-auto">
           <SheetHeader><SheetTitle>{currentSm?.navn}</SheetTitle></SheetHeader>
           {currentSm && (() => {
             const updateField = (field: string, value: any) => {
@@ -305,10 +307,10 @@ export default function Salgsmuligheter() {
                   {openStatuses.includes(currentSm.status as any) && (
                     <>
                       <Button size="sm" className="bg-success hover:bg-success/90 text-success-foreground" onClick={() => { vinnSalgsmulighet(currentSm.id); setSelectedSm(null); }}>
-                        <Trophy className="w-3.5 h-3.5 mr-1" />Merk som vunnet
+                        <Trophy className="w-3.5 h-3.5 mr-1" />Vunnet
                       </Button>
                       <Button size="sm" variant="destructive" onClick={() => { setSelectedSm(null); setLossDialog(currentSm.id); }}>
-                        <XCircle className="w-3.5 h-3.5 mr-1" />Merk som tapt
+                        <XCircle className="w-3.5 h-3.5 mr-1" />Tapt
                       </Button>
                     </>
                   )}
@@ -338,8 +340,26 @@ function Field({ label, value, badge }: { label: string; value: React.ReactNode;
   );
 }
 
-function DealTable({ deals, getSelskapNavn, onSelect, label, onNavigateSelskap }: { deals: Salgsmulighet[]; getSelskapNavn: (id: string) => string; onSelect: (s: Salgsmulighet) => void; label: string; onNavigateSelskap?: (id: string) => void }) {
+function DealList({ deals, getSelskapNavn, onSelect, label, onNavigateSelskap, isMobile }: { deals: Salgsmulighet[]; getSelskapNavn: (id: string) => string; onSelect: (s: Salgsmulighet) => void; label: string; onNavigateSelskap?: (id: string) => void; isMobile: boolean }) {
   if (deals.length === 0) return <div className="text-center py-12 text-muted-foreground text-sm">{label}: ingen</div>;
+
+  if (isMobile) {
+    return (
+      <div className="space-y-3">
+        {deals.map(d => (
+          <div key={d.id} className="bg-card border rounded-xl p-4 space-y-1" onClick={() => onSelect(d)}>
+            <div className="flex items-center justify-between">
+              <p className="font-semibold text-sm truncate">{d.navn}</p>
+              <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium shrink-0 ${d.status === "Vunnet" ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>{d.status}</span>
+            </div>
+            <p className="text-xs text-muted-foreground" onClick={e => { e.stopPropagation(); onNavigateSelskap?.(d.selskap_id); }}>{getSelskapNavn(d.selskap_id)}</p>
+            <p className="text-xs font-mono">{d.forventet_mrr.toLocaleString("no-NO")} MRR</p>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="bg-card border rounded-xl overflow-hidden">
       <table className="w-full text-sm">
@@ -358,7 +378,6 @@ function DealTable({ deals, getSelskapNavn, onSelect, label, onNavigateSelskap }
               <td className="px-4 py-3 text-muted-foreground"><span className="cursor-pointer hover:text-primary hover:underline" onClick={e => { e.stopPropagation(); onNavigateSelskap?.(d.selskap_id); }}>{getSelskapNavn(d.selskap_id)}</span></td>
               <td className="px-4 py-3"><span className={`text-xs px-2 py-0.5 rounded-full font-medium ${d.status === "Vunnet" ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>{d.status}</span></td>
               <td className="px-4 py-3 text-right font-mono">{d.forventet_mrr.toLocaleString("no-NO")}</td>
-              
             </tr>
           ))}
         </tbody>

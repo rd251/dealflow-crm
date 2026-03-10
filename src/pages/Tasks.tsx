@@ -1,6 +1,7 @@
 import { useState } from "react";
 import PageShell from "@/components/PageShell";
 import { useCrmStore } from "@/hooks/use-crm-store";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -18,6 +19,7 @@ const prioritetColors: Record<Prioritet, string> = {
 const statusOptions: OppgaveStatus[] = ["Åpen", "Pågår", "Ferdig"];
 
 export default function Tasks() {
+  const isMobile = useIsMobile();
   const { oppgaver, selskaper, updateOppgaver, generateId } = useCrmStore();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [filter, setFilter] = useState<"alle" | "forfalte" | "idag" | "uke">("alle");
@@ -54,9 +56,9 @@ export default function Tasks() {
       actions={
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button size="sm"><Plus className="w-4 h-4 mr-1" />Ny oppgave</Button>
+            <Button size="sm"><Plus className="w-4 h-4 mr-1" />{!isMobile && "Ny oppgave"}</Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-[95vw] sm:max-w-lg">
             <DialogHeader><DialogTitle>Ny oppgave</DialogTitle><DialogDescription>Fyll inn detaljer for den nye oppgaven.</DialogDescription></DialogHeader>
             <div className="space-y-3">
               <Input placeholder="Oppgave" value={form.oppgave} onChange={e => setForm(f => ({ ...f, oppgave: e.target.value }))} />
@@ -78,9 +80,9 @@ export default function Tasks() {
         </Dialog>
       }
     >
-      <div className="flex gap-2 mb-4">
-        {([["alle", "Alle"], ["forfalte", `Forfalte (${forfalte.length})`], ["idag", `I dag (${idagOppgaver.length})`], ["uke", `Denne uken (${ukeOppgaver.length})`]] as const).map(([key, label]) => (
-          <Button key={key} size="sm" variant={filter === key ? "default" : "outline"} onClick={() => setFilter(key)}>{label}</Button>
+      <div className="flex gap-2 mb-4 flex-wrap">
+        {([["alle", "Alle"], ["forfalte", `Forfalte (${forfalte.length})`], ["idag", `I dag (${idagOppgaver.length})`], ["uke", `Uke (${ukeOppgaver.length})`]] as const).map(([key, label]) => (
+          <Button key={key} size="sm" variant={filter === key ? "default" : "outline"} onClick={() => setFilter(key)} className="text-xs">{label}</Button>
         ))}
       </div>
 
@@ -92,12 +94,12 @@ export default function Tasks() {
             <div key={task.id} className={`bg-card border rounded-xl p-4 flex items-start gap-3 animate-slide-in transition-opacity ${task.status === "Ferdig" ? "opacity-50" : ""}`}>
               <Checkbox checked={task.status === "Ferdig"} onCheckedChange={() => changeStatus(task.id, task.status === "Ferdig" ? "Åpen" : "Ferdig")} className="mt-0.5" />
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <p className={`font-medium text-sm ${task.status === "Ferdig" ? "line-through" : ""}`}>{task.oppgave}</p>
                   <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${prioritetColors[task.prioritet]}`}>{task.prioritet}</span>
-                  {task.paaminnelse ? <Bell className="w-3 h-3 text-primary" /> : <BellOff className="w-3 h-3 text-muted-foreground/40" />}
+                  {!isMobile && (task.paaminnelse ? <Bell className="w-3 h-3 text-primary" /> : <BellOff className="w-3 h-3 text-muted-foreground/40" />)}
                 </div>
-                <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+                <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground flex-wrap">
                   <span onClick={e => e.stopPropagation()}>
                     <select className="text-xs border-0 bg-transparent cursor-pointer" value={task.status} onChange={e => changeStatus(task.id, e.target.value as OppgaveStatus)}>
                       {statusOptions.map(s => <option key={s}>{s}</option>)}
@@ -110,7 +112,7 @@ export default function Tasks() {
                       {task.frist}
                     </span>
                   )}
-                  {selskap && <span>· {selskap.firmanavn}</span>}
+                  {selskap && <span className="truncate">· {selskap.firmanavn}</span>}
                 </div>
               </div>
             </div>
