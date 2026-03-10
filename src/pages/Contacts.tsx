@@ -4,14 +4,14 @@ import PageShell from "@/components/PageShell";
 import { useCrmStore } from "@/hooks/use-crm-store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Plus, Search, Mail, Phone, Linkedin, Users } from "lucide-react";
 import { Kontakt } from "@/data/crm-data";
 
 export default function Contacts() {
   const navigate = useNavigate();
-  const { kontakter, selskaper, salgsmuligheter, updateKontakter } = useCrmStore();
+  const { kontakter, selskaper, salgsmuligheter, updateKontakter, generateId } = useCrmStore();
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Kontakt | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -24,7 +24,7 @@ export default function Contacts() {
   const getSelskapNavn = (id: string) => selskaper.find(s => s.id === id)?.firmanavn || "–";
 
   const addKontakt = () => {
-    const id = `K-${String(kontakter.length + 1).padStart(4, "0")}`;
+    const id = generateId("K", kontakter);
     updateKontakter(prev => [...prev, { id, ...form }]);
     setDialogOpen(false);
     setForm({ navn: "", selskap_id: "", rolle: "", e_post: "", telefon: "", linkedin: "", notater: "" });
@@ -43,7 +43,7 @@ export default function Contacts() {
             <Button size="sm"><Plus className="w-4 h-4 mr-1" />Ny kontakt</Button>
           </DialogTrigger>
           <DialogContent>
-            <DialogHeader><DialogTitle>Ny kontakt</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>Ny kontakt</DialogTitle><DialogDescription>Fyll inn detaljer for den nye kontakten.</DialogDescription></DialogHeader>
             <div className="space-y-3">
               <Input placeholder="Navn" value={form.navn} onChange={e => setForm(f => ({ ...f, navn: e.target.value }))} />
               <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background" value={form.selskap_id} onChange={e => setForm(f => ({ ...f, selskap_id: e.target.value }))}>

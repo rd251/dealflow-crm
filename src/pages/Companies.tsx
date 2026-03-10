@@ -4,7 +4,7 @@ import { useCrmStore } from "@/hooks/use-crm-store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
 import { Plus, Search, Building2, ChevronRight } from "lucide-react";
@@ -34,7 +34,7 @@ const tilstandColors: Record<Kundetilstand, string> = {
 
 export default function Companies() {
   const navigate = useNavigate();
-  const { selskaper, salgsmuligheter, updateSelskaper, kansellerSelskap } = useCrmStore(); // SLA support
+  const { selskaper, salgsmuligheter, updateSelskaper, kansellerSelskap, generateId } = useCrmStore();
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selected, setSelected] = useState<Selskap | null>(null);
@@ -46,7 +46,7 @@ export default function Companies() {
   const filtered = selskaper.filter(s => s.firmanavn.toLowerCase().includes(search.toLowerCase()));
 
   const addSelskap = () => {
-    const id = `S-${String(selskaper.length + 1).padStart(4, "0")}`;
+    const id = generateId("S", selskaper);
     const nyttSelskap: Selskap = {
       id, firmanavn: form.firmanavn, bransje: form.bransje, kundeansvarlig: form.kundeansvarlig,
       kundestatus: "Ikke kunde", live_status: false, onboarding_status: "Ikke startet",
@@ -91,7 +91,7 @@ export default function Companies() {
             <Button size="sm"><Plus className="w-4 h-4 mr-1" />Nytt selskap</Button>
           </DialogTrigger>
           <DialogContent>
-            <DialogHeader><DialogTitle>Nytt selskap</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>Nytt selskap</DialogTitle><DialogDescription>Fyll inn detaljer for det nye selskapet.</DialogDescription></DialogHeader>
             <div className="space-y-3">
               <Input placeholder="Firmanavn" value={form.firmanavn} onChange={e => setForm(f => ({ ...f, firmanavn: e.target.value }))} />
               <Input placeholder="Bransje" value={form.bransje} onChange={e => setForm(f => ({ ...f, bransje: e.target.value }))} />
@@ -105,7 +105,7 @@ export default function Companies() {
       {/* Cancel dialog */}
       <Dialog open={!!cancelDialog} onOpenChange={open => !open && setCancelDialog(null)}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Kanseller kunde</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Kanseller kunde</DialogTitle><DialogDescription>Velg årsak og legg til notat.</DialogDescription></DialogHeader>
           <div className="space-y-3">
             <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background" value={cancelReason} onChange={e => setCancelReason(e.target.value as Kanselleringsaarsak)}>
               {kanselleringsaarsaker.map(k => <option key={k} value={k}>{k}</option>)}

@@ -5,7 +5,7 @@ import { useCrmStore } from "@/hooks/use-crm-store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, GripVertical, Trophy, XCircle, Trash2 } from "lucide-react";
@@ -27,7 +27,7 @@ const statusColors: Record<SalgsmulighetStatus, string> = {
 
 export default function Salgsmuligheter() {
   const navigate = useNavigate();
-  const { salgsmuligheter, selskaper, kontakter, updateSalgsmuligheter, vinnSalgsmulighet, tapSalgsmulighet } = useCrmStore();
+  const { salgsmuligheter, selskaper, kontakter, updateSalgsmuligheter, vinnSalgsmulighet, tapSalgsmulighet, generateId } = useCrmStore();
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [selectedSm, setSelectedSm] = useState<Salgsmulighet | null>(null);
   const [lossDialog, setLossDialog] = useState<string | null>(null);
@@ -52,7 +52,7 @@ export default function Salgsmuligheter() {
 
   const addSm = () => {
     const today = new Date().toISOString().split("T")[0];
-    const id = `SM-${String(salgsmuligheter.length + 1).padStart(4, "0")}`;
+    const id = generateId("SM", salgsmuligheter);
     const nySm: Salgsmulighet = {
       id, navn: form.navn, selskap_id: form.selskap_id, kontakt_id: form.kontakt_id,
       ansvarlig: "", status: "Ny mulighet", forventet_mrr: form.forventet_mrr, sla: form.sla,
@@ -86,7 +86,7 @@ export default function Salgsmuligheter() {
             <Button size="sm"><Plus className="w-4 h-4 mr-1" />Ny mulighet</Button>
           </DialogTrigger>
           <DialogContent>
-            <DialogHeader><DialogTitle>Ny salgsmulighet</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>Ny salgsmulighet</DialogTitle><DialogDescription>Fyll inn detaljer for den nye salgsmuligheten.</DialogDescription></DialogHeader>
             <div className="space-y-3">
               <Input placeholder="Navn" value={form.navn} onChange={e => setForm(f => ({ ...f, navn: e.target.value }))} />
               <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background" value={form.selskap_id} onChange={e => setForm(f => ({ ...f, selskap_id: e.target.value }))}>
@@ -113,7 +113,7 @@ export default function Salgsmuligheter() {
       {/* Loss reason dialog */}
       <Dialog open={!!lossDialog} onOpenChange={open => !open && setLossDialog(null)}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Tapsårsak</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Tapsårsak</DialogTitle><DialogDescription>Velg årsaken til at denne dealen ble tapt.</DialogDescription></DialogHeader>
           <div className="space-y-3">
             <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background" value={lossReason} onChange={e => setLossReason(e.target.value as Tapsaarsak)}>
               {tapsaarsaker.map(t => <option key={t} value={t}>{t}</option>)}
@@ -358,7 +358,7 @@ function DealTable({ deals, getSelskapNavn, onSelect, label, onNavigateSelskap }
               <td className="px-4 py-3 text-muted-foreground"><span className="cursor-pointer hover:text-primary hover:underline" onClick={e => { e.stopPropagation(); onNavigateSelskap?.(d.selskap_id); }}>{getSelskapNavn(d.selskap_id)}</span></td>
               <td className="px-4 py-3"><span className={`text-xs px-2 py-0.5 rounded-full font-medium ${d.status === "Vunnet" ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>{d.status}</span></td>
               <td className="px-4 py-3 text-right font-mono">{d.forventet_mrr.toLocaleString("no-NO")}</td>
-              <td className="px-4 py-3 text-right font-mono">{beregnTotalKontraktsverdi(d).toLocaleString("no-NO")}</td>
+              
             </tr>
           ))}
         </tbody>

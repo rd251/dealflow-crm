@@ -19,7 +19,7 @@ interface InlineTaskFormProps {
 }
 
 export default function InlineTaskForm({ lead_id = "", selskap_id = "", salgsmulighet_id = "" }: InlineTaskFormProps) {
-  const { oppgaver, updateOppgaver } = useCrmStore();
+  const { oppgaver, updateOppgaver, generateId } = useCrmStore();
   const [showForm, setShowForm] = useState(false);
   const [oppgave, setOppgave] = useState("");
   const [frist, setFrist] = useState("");
@@ -35,7 +35,7 @@ export default function InlineTaskForm({ lead_id = "", selskap_id = "", salgsmul
 
   const addTask = () => {
     if (!oppgave.trim()) return;
-    const id = `O-${String(oppgaver.length + 1).padStart(4, "0")}`;
+    const id = generateId("O", oppgaver);
     const ny: Oppgave = {
       id, oppgave, lead_id, selskap_id, salgsmulighet_id,
       ansvarlig: "", frist, prioritet, status: "Åpen", paaminnelse: true, notater: "",

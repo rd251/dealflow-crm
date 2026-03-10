@@ -47,7 +47,7 @@ export default function CompanyProfile() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const {
-    selskaper, updateSelskaper, kontakter, updateKontakter, salgsmuligheter, prosjekter, oppgaver,
+    selskaper, updateSelskaper, kontakter, updateKontakter, salgsmuligheter, prosjekter, oppgaver, generateId,
   } = useCrmStore();
 
   const [showAddContact, setShowAddContact] = useState(false);
@@ -217,7 +217,7 @@ export default function CompanyProfile() {
                   <Input placeholder="Telefon" value={contactForm.telefon} onChange={e => setContactForm(f => ({ ...f, telefon: e.target.value }))} className="h-8 text-sm" />
                   <Input placeholder="LinkedIn URL" value={contactForm.linkedin} onChange={e => setContactForm(f => ({ ...f, linkedin: e.target.value }))} className="h-8 text-sm" />
                   <Button size="sm" className="w-full" disabled={!contactForm.navn} onClick={() => {
-                    const newId = `K-${String(kontakter.length + 1).padStart(4, "0")}`;
+                    const newId = generateId("K", kontakter);
                     const nyKontakt: Kontakt = {
                       id: newId, selskap_id: id!, navn: contactForm.navn,
                       rolle: contactForm.rolle, e_post: contactForm.e_post,

@@ -4,7 +4,7 @@ import { useCrmStore } from "@/hooks/use-crm-store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Plus, Search, ArrowRightCircle, Trash2 } from "lucide-react";
 import { Lead, LeadStatus, LeadKilde } from "@/data/crm-data";
@@ -23,7 +23,7 @@ const statusColors: Record<LeadStatus, string> = {
 };
 
 export default function Leads() {
-  const { leads, updateLeads, konverterLead } = useCrmStore();
+  const { leads, updateLeads, konverterLead, generateId } = useCrmStore();
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
@@ -36,7 +36,7 @@ export default function Leads() {
 
   const addLead = () => {
     const today = new Date().toISOString().split("T")[0];
-    const id = `L-${String(leads.length + 1).padStart(4, "0")}`;
+    const id = generateId("L", leads);
     const newLead: Lead = {
       id, firmanavn: form.firmanavn || "", kontaktperson: form.kontaktperson || "",
       e_post: form.e_post || "", telefon: form.telefon || "", kilde: form.kilde as LeadKilde || "Annet",
@@ -64,7 +64,7 @@ export default function Leads() {
             <Button size="sm"><Plus className="w-4 h-4 mr-1" />Nytt lead</Button>
           </DialogTrigger>
           <DialogContent>
-            <DialogHeader><DialogTitle>Nytt lead</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>Nytt lead</DialogTitle><DialogDescription>Fyll inn detaljer for det nye leadet.</DialogDescription></DialogHeader>
             <div className="space-y-3">
               <Input placeholder="Firmanavn" value={form.firmanavn} onChange={e => setForm(f => ({ ...f, firmanavn: e.target.value }))} />
               <Input placeholder="Kontaktperson" value={form.kontaktperson} onChange={e => setForm(f => ({ ...f, kontaktperson: e.target.value }))} />

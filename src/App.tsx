@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { CrmProvider } from "@/hooks/use-crm-store";
 import AppSidebar from "@/components/AppSidebar";
 import Dashboard from "./pages/Dashboard";
 import Leads from "./pages/Leads";
@@ -22,18 +23,20 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <AppSidebar />
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/leads" element={<Leads />} />
-          <Route path="/salgsmuligheter" element={<Salgsmuligheter />} />
-          <Route path="/prosjekter" element={<Prosjekter />} />
-          <Route path="/selskaper" element={<Companies />} />
-          <Route path="/selskaper/:id" element={<CompanyProfile />} />
-          <Route path="/kontakter" element={<Contacts />} />
-          <Route path="/oppgaver" element={<Tasks />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <CrmProvider>
+          <AppSidebar />
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/leads" element={<Leads />} />
+            <Route path="/salgsmuligheter" element={<Salgsmuligheter />} />
+            <Route path="/prosjekter" element={<Prosjekter />} />
+            <Route path="/selskaper" element={<Companies />} />
+            <Route path="/selskaper/:id" element={<CompanyProfile />} />
+            <Route path="/kontakter" element={<Contacts />} />
+            <Route path="/oppgaver" element={<Tasks />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </CrmProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

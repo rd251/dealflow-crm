@@ -4,7 +4,7 @@ import { useCrmStore } from "@/hooks/use-crm-store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Bell, BellOff, Calendar, AlertTriangle } from "lucide-react";
 import { Oppgave, OppgaveStatus, Prioritet } from "@/data/crm-data";
@@ -18,7 +18,7 @@ const prioritetColors: Record<Prioritet, string> = {
 const statusOptions: OppgaveStatus[] = ["Åpen", "Pågår", "Ferdig"];
 
 export default function Tasks() {
-  const { oppgaver, selskaper, updateOppgaver } = useCrmStore();
+  const { oppgaver, selskaper, updateOppgaver, generateId } = useCrmStore();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [filter, setFilter] = useState<"alle" | "forfalte" | "idag" | "uke">("alle");
   const [form, setForm] = useState({ oppgave: "", frist: "", prioritet: "Medium" as Prioritet, lead_id: "", selskap_id: "", salgsmulighet_id: "", ansvarlig: "", notater: "" });
@@ -27,7 +27,7 @@ export default function Tasks() {
   const weekEnd = new Date(Date.now() + 7 * 86400000).toISOString().split("T")[0];
 
   const addOppgave = () => {
-    const id = `O-${String(oppgaver.length + 1).padStart(4, "0")}`;
+    const id = generateId("O", oppgaver);
     const ny: Oppgave = { id, ...form, status: "Åpen", paaminnelse: true };
     updateOppgaver(prev => [...prev, ny]);
     setDialogOpen(false);
@@ -57,7 +57,7 @@ export default function Tasks() {
             <Button size="sm"><Plus className="w-4 h-4 mr-1" />Ny oppgave</Button>
           </DialogTrigger>
           <DialogContent>
-            <DialogHeader><DialogTitle>Ny oppgave</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>Ny oppgave</DialogTitle><DialogDescription>Fyll inn detaljer for den nye oppgaven.</DialogDescription></DialogHeader>
             <div className="space-y-3">
               <Input placeholder="Oppgave" value={form.oppgave} onChange={e => setForm(f => ({ ...f, oppgave: e.target.value }))} />
               <div className="grid grid-cols-2 gap-3">
