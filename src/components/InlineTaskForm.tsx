@@ -29,7 +29,8 @@ export default function InlineTaskForm({ lead_id = "", selskap_id = "", salgsmul
 
   const relatedTasks = oppgaver.filter(o =>
     (lead_id && o.lead_id === lead_id) ||
-    (salgsmulighet_id && o.salgsmulighet_id === salgsmulighet_id)
+    (salgsmulighet_id && o.salgsmulighet_id === salgsmulighet_id) ||
+    (!lead_id && !salgsmulighet_id && selskap_id && o.selskap_id === selskap_id)
   );
 
   const addTask = () => {
