@@ -156,10 +156,15 @@ export default function Leads() {
                   <td className="px-4 py-3 text-muted-foreground text-xs">{lead.neste_steg}</td>
                   <td className="px-4 py-3 text-muted-foreground text-xs font-mono">{lead.opprettet_dato}</td>
                   <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
-                    {lead.status !== "Konvertert til salg" && lead.status !== "Ikke aktuelt" && (
-                      <Button size="sm" variant="ghost" className="text-xs gap-1" onClick={() => konverterLead(lead.id)}>
-                        <ArrowRightCircle className="w-3.5 h-3.5" />Konverter
-                      </Button>
+                    {lead.status !== "Konvertert til salg" && lead.status !== "Konvertert til partner" && lead.status !== "Ikke aktuelt" && (
+                      <div className="flex gap-1">
+                        <Button size="sm" variant="ghost" className="text-xs gap-1" onClick={() => konverterLead(lead.id)}>
+                          <ArrowRightCircle className="w-3.5 h-3.5" />Salg
+                        </Button>
+                        <Button size="sm" variant="ghost" className="text-xs gap-1" onClick={() => konverterTilPartner(lead.id)}>
+                          <Users2 className="w-3.5 h-3.5" />Partner
+                        </Button>
+                      </div>
                     )}
                   </td>
                 </tr>
