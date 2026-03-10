@@ -26,6 +26,7 @@ const statusColors: Record<SalgsmulighetStatus, string> = {
 };
 
 export default function Salgsmuligheter() {
+  const navigate = useNavigate();
   const { salgsmuligheter, selskaper, kontakter, updateSalgsmuligheter, vinnSalgsmulighet, tapSalgsmulighet } = useCrmStore();
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [selectedSm, setSelectedSm] = useState<Salgsmulighet | null>(null);
