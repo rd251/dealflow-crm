@@ -280,8 +280,8 @@ export default function Salgsmuligheter() {
                 <div className="bg-muted/50 rounded-lg p-3 space-y-2">
                   <h4 className="font-semibold text-xs text-muted-foreground uppercase tracking-wide">Beregnede verdier</h4>
                   <div className="grid grid-cols-2 gap-2 text-sm">
-                    <Field label="Total MRR (inkl. SLA)" value={`${totalMrr.toLocaleString("no-NO")} NOK`} />
                     <Field label="ARR" value={`${arr.toLocaleString("no-NO")} NOK`} />
+                    <Field label="SLA (årlig)" value={`${slaArr.toLocaleString("no-NO")} NOK`} />
                     <Field label="Total kontraktsverdi" value={`${totalKontraktsverdi.toLocaleString("no-NO")} NOK`} />
                     <Field label="Vektet pipelineverdi" value={`${vektetVerdi.toLocaleString("no-NO")} NOK`} />
                   </div>
