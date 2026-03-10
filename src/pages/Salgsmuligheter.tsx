@@ -358,7 +358,7 @@ function DealTable({ deals, getSelskapNavn, onSelect, label, onNavigateSelskap }
               <td className="px-4 py-3 text-muted-foreground"><span className="cursor-pointer hover:text-primary hover:underline" onClick={e => { e.stopPropagation(); onNavigateSelskap?.(d.selskap_id); }}>{getSelskapNavn(d.selskap_id)}</span></td>
               <td className="px-4 py-3"><span className={`text-xs px-2 py-0.5 rounded-full font-medium ${d.status === "Vunnet" ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>{d.status}</span></td>
               <td className="px-4 py-3 text-right font-mono">{d.forventet_mrr.toLocaleString("no-NO")}</td>
-              <td className="px-4 py-3 text-right font-mono">{beregnTotalKontraktsverdi(d).toLocaleString("no-NO")}</td>
+              
             </tr>
           ))}
         </tbody>
