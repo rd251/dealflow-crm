@@ -19,6 +19,7 @@ const statusColors: Record<ProsjektStatus, string> = {
 };
 
 export default function Prosjekter() {
+  const navigate = useNavigate();
   const { prosjekter, selskaper, updateProsjekter, settProsjektLive } = useCrmStore();
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [selectedP, setSelectedP] = useState<Prosjekt | null>(null);
