@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
+import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import logo from "@/assets/logo.svg";
 
 export default function Login() {
