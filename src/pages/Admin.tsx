@@ -61,7 +61,7 @@ export default function Admin() {
   };
 
   if (!isAdmin) {
-    return <PageShell title="Ingen tilgang" subtitle="Du har ikke tilgang til denne siden." />;
+    return <PageShell title="Ingen tilgang" subtitle="Du har ikke tilgang til denne siden."><div /></PageShell>;
   }
 
   return (
