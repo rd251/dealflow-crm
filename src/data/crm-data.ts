@@ -109,6 +109,7 @@ export interface Kontakt {
 export interface Oppgave {
   id: string;
   oppgave: string;
+  lead_id: string;
   selskap_id: string;
   salgsmulighet_id: string;
   ansvarlig: string;
