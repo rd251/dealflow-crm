@@ -154,6 +154,7 @@ export default function Companies() {
                 </td>
                 <td className="px-4 py-3 text-right font-mono">{s.mrr.toLocaleString("no-NO")}</td>
                 <td className="px-4 py-3 text-right font-mono">{s.arr.toLocaleString("no-NO")}</td>
+                <td className="px-4 py-3 text-right font-mono">{s.oppstartskostnad.toLocaleString("no-NO")}</td>
               </tr>
             ))}
           </tbody>
