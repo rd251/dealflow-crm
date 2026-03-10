@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Plus, Search, ArrowRightCircle } from "lucide-react";
+import { Plus, Search, ArrowRightCircle, Trash2 } from "lucide-react";
 import { Lead, LeadStatus, LeadKilde } from "@/data/crm-data";
 import { Badge } from "@/components/ui/badge";
 import InlineTaskForm from "@/components/InlineTaskForm";
