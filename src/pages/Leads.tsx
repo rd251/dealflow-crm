@@ -1,6 +1,7 @@
 import { useState } from "react";
 import PageShell from "@/components/PageShell";
 import { useCrmStore } from "@/hooks/use-crm-store";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -23,6 +24,7 @@ const statusColors: Record<LeadStatus, string> = {
 };
 
 export default function Leads() {
+  const isMobile = useIsMobile();
   const { leads, updateLeads, konverterLead, generateId } = useCrmStore();
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -61,18 +63,18 @@ export default function Leads() {
       actions={
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button size="sm"><Plus className="w-4 h-4 mr-1" />Nytt lead</Button>
+            <Button size="sm"><Plus className="w-4 h-4 mr-1" />{!isMobile && "Nytt lead"}</Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-[95vw] sm:max-w-lg">
             <DialogHeader><DialogTitle>Nytt lead</DialogTitle><DialogDescription>Fyll inn detaljer for det nye leadet.</DialogDescription></DialogHeader>
             <div className="space-y-3">
               <Input placeholder="Firmanavn" value={form.firmanavn} onChange={e => setForm(f => ({ ...f, firmanavn: e.target.value }))} />
               <Input placeholder="Kontaktperson" value={form.kontaktperson} onChange={e => setForm(f => ({ ...f, kontaktperson: e.target.value }))} />
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Input placeholder="E-post" value={form.e_post} onChange={e => setForm(f => ({ ...f, e_post: e.target.value }))} />
                 <Input placeholder="Telefon" value={form.telefon} onChange={e => setForm(f => ({ ...f, telefon: e.target.value }))} />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <select className="border rounded-lg px-3 py-2 text-sm bg-background" value={form.kilde} onChange={e => setForm(f => ({ ...f, kilde: e.target.value as LeadKilde }))}>
                   {kildeOptions.map(k => <option key={k} value={k}>{k}</option>)}
                 </select>
@@ -91,52 +93,78 @@ export default function Leads() {
         <Input placeholder="Søk leads..." className="pl-9" value={search} onChange={e => setSearch(e.target.value)} />
       </div>
 
-      <div className="bg-card border rounded-xl overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b bg-muted/50">
-              <th className="text-left px-4 py-3 font-medium">Firma</th>
-              <th className="text-left px-4 py-3 font-medium">Kontaktperson</th>
-              <th className="text-left px-4 py-3 font-medium">Kilde</th>
-              <th className="text-left px-4 py-3 font-medium">Status</th>
-              <th className="text-left px-4 py-3 font-medium">Neste steg</th>
-              <th className="text-left px-4 py-3 font-medium">Opprettet</th>
-              <th className="text-right px-4 py-3 font-medium">Handling</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map(lead => (
-              <tr key={lead.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => setSelectedLead(lead)}>
-                <td className="px-4 py-3 font-medium">{lead.firmanavn}</td>
-                <td className="px-4 py-3 text-muted-foreground">{lead.kontaktperson}</td>
-                <td className="px-4 py-3"><Badge variant="secondary" className="text-xs">{lead.kilde}</Badge></td>
-                <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
-                  <select
-                    className={`text-xs px-2 py-1 rounded-full font-medium border-0 cursor-pointer ${statusColors[lead.status]}`}
-                    value={lead.status}
-                    onChange={e => changeStatus(lead.id, e.target.value as LeadStatus)}
-                    disabled={lead.status === "Konvertert til salg"}
-                  >
-                    {statusOptions.map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                </td>
-                <td className="px-4 py-3 text-muted-foreground text-xs">{lead.neste_steg}</td>
-                <td className="px-4 py-3 text-muted-foreground text-xs font-mono">{lead.opprettet_dato}</td>
-                <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
-                  {lead.status !== "Konvertert til salg" && lead.status !== "Ikke aktuelt" && (
-                    <Button size="sm" variant="ghost" className="text-xs gap-1" onClick={() => konverterLead(lead.id)}>
-                      <ArrowRightCircle className="w-3.5 h-3.5" />Konverter
-                    </Button>
-                  )}
-                </td>
+      {/* Mobile: card layout */}
+      {isMobile ? (
+        <div className="space-y-3">
+          {filtered.map(lead => (
+            <div key={lead.id} className="bg-card border rounded-xl p-4 space-y-2" onClick={() => setSelectedLead(lead)}>
+              <div className="flex items-center justify-between">
+                <p className="font-semibold text-sm truncate">{lead.firmanavn}</p>
+                <Badge className={`text-[10px] shrink-0 ${statusColors[lead.status]}`}>{lead.status}</Badge>
+              </div>
+              <p className="text-xs text-muted-foreground">{lead.kontaktperson}</p>
+              <div className="flex items-center justify-between">
+                <Badge variant="secondary" className="text-[10px]">{lead.kilde}</Badge>
+                {lead.neste_steg && <span className="text-[10px] text-muted-foreground truncate ml-2">→ {lead.neste_steg}</span>}
+              </div>
+              {lead.status !== "Konvertert til salg" && lead.status !== "Ikke aktuelt" && (
+                <Button size="sm" variant="ghost" className="text-xs gap-1 w-full mt-1" onClick={e => { e.stopPropagation(); konverterLead(lead.id); }}>
+                  <ArrowRightCircle className="w-3.5 h-3.5" />Konverter
+                </Button>
+              )}
+            </div>
+          ))}
+          {filtered.length === 0 && <p className="text-center text-sm text-muted-foreground py-8">Ingen leads å vise</p>}
+        </div>
+      ) : (
+        /* Desktop: table layout */
+        <div className="bg-card border rounded-xl overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-muted/50">
+                <th className="text-left px-4 py-3 font-medium">Firma</th>
+                <th className="text-left px-4 py-3 font-medium">Kontaktperson</th>
+                <th className="text-left px-4 py-3 font-medium">Kilde</th>
+                <th className="text-left px-4 py-3 font-medium">Status</th>
+                <th className="text-left px-4 py-3 font-medium">Neste steg</th>
+                <th className="text-left px-4 py-3 font-medium">Opprettet</th>
+                <th className="text-right px-4 py-3 font-medium">Handling</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {filtered.map(lead => (
+                <tr key={lead.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => setSelectedLead(lead)}>
+                  <td className="px-4 py-3 font-medium">{lead.firmanavn}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{lead.kontaktperson}</td>
+                  <td className="px-4 py-3"><Badge variant="secondary" className="text-xs">{lead.kilde}</Badge></td>
+                  <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
+                    <select
+                      className={`text-xs px-2 py-1 rounded-full font-medium border-0 cursor-pointer ${statusColors[lead.status]}`}
+                      value={lead.status}
+                      onChange={e => changeStatus(lead.id, e.target.value as LeadStatus)}
+                      disabled={lead.status === "Konvertert til salg"}
+                    >
+                      {statusOptions.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </td>
+                  <td className="px-4 py-3 text-muted-foreground text-xs">{lead.neste_steg}</td>
+                  <td className="px-4 py-3 text-muted-foreground text-xs font-mono">{lead.opprettet_dato}</td>
+                  <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
+                    {lead.status !== "Konvertert til salg" && lead.status !== "Ikke aktuelt" && (
+                      <Button size="sm" variant="ghost" className="text-xs gap-1" onClick={() => konverterLead(lead.id)}>
+                        <ArrowRightCircle className="w-3.5 h-3.5" />Konverter
+                      </Button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       <Sheet open={!!currentLead} onOpenChange={(open) => !open && setSelectedLead(null)}>
-        <SheetContent className="w-[400px] sm:w-[500px]">
+        <SheetContent className="w-full sm:w-[400px] sm:max-w-[500px] overflow-y-auto">
           <SheetHeader><SheetTitle>{currentLead?.firmanavn}</SheetTitle></SheetHeader>
           {currentLead && (() => {
             const updateField = (field: string, value: any) => {

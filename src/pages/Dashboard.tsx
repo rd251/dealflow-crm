@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import PageShell from "@/components/PageShell";
 import StatCard from "@/components/StatCard";
 import { useCrmStore } from "@/hooks/use-crm-store";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { DollarSign, TrendingUp, Users, Target, AlertTriangle, BarChart3, ArrowUpRight, ArrowDownRight, Zap, Trophy, XCircle, UserMinus, ListTodo, Clock, CheckCircle2, Activity, ExternalLink } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, LineChart, Line, CartesianGrid } from "recharts";
 import { beregnTotalKontraktsverdi } from "@/data/crm-data";
@@ -16,6 +17,7 @@ const prioritetBadge: Record<string, string> = {
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const { selskaper, salgsmuligheter, leads, oppgaver, prosjekter } = useCrmStore();
 
   const now = new Date();
@@ -32,15 +34,15 @@ export default function Dashboard() {
   const arr = totalMRR * 12;
   const aktiveKunder = liveSelskaper.length;
 
-  // SLA – monthly SLA revenue from open pipeline deals
+  // SLA
   const openSmAll = salgsmuligheter.filter(s => s.status !== "Tapt");
   const totalSLA = openSmAll.reduce((sum, s) => sum + (s.sla || 0), 0);
   const slArr = totalSLA * 12;
 
-  // Ny MRR (go_live this month)
+  // Ny MRR
   const nyMRR = selskaper.filter(s => thisMonth(s.go_live_dato)).reduce((sum, s) => sum + s.mrr, 0);
 
-  // Tapt MRR (cancelled this month)
+  // Tapt MRR
   const kansellerteIMnd = selskaper.filter(s => s.kundestatus === "Kansellert" && thisMonth(s.kansellert_dato));
   const taptMRR = kansellerteIMnd.reduce((sum, s) => sum + s.mrr, 0);
   const nettoMRR = nyMRR - taptMRR;
@@ -53,7 +55,7 @@ export default function Dashboard() {
   const openSm = salgsmuligheter.filter(s => s.status !== "Vunnet" && s.status !== "Tapt");
   const aapenPipeline = openSm.reduce((sum, s) => sum + beregnTotalKontraktsverdi(s), 0);
 
-  // Won / Lost this month
+  // Won / Lost
   const vunnetIMnd = salgsmuligheter.filter(s => s.status === "Vunnet" && thisMonth(s.vunnet_dato));
   const taptIMnd = salgsmuligheter.filter(s => s.status === "Tapt" && thisMonth(s.tapt_dato));
   const winRate = (vunnetIMnd.length + taptIMnd.length) > 0
@@ -83,14 +85,9 @@ export default function Dashboard() {
     antall: allCancelled.filter(s => s.kanselleringsaarsak === r).length,
   })).filter(d => d.antall > 0);
 
-  // MRR trend (simplified)
-  const mrrTrend = [
-    { mnd: "Jan", mrr: 0 }, { mnd: "Feb", mrr: 0 }, { mnd: "Mar", mrr: totalMRR },
-  ];
-
   const nok = (v: number) => v.toLocaleString("no-NO");
 
-  // === Upcoming / overdue tasks (max 8) ===
+  // Upcoming tasks
   const activeTasks = oppgaver
     .filter(o => o.status !== "Ferdig")
     .sort((a, b) => {
@@ -98,9 +95,9 @@ export default function Dashboard() {
       if (!b.frist) return -1;
       return a.frist.localeCompare(b.frist);
     })
-    .slice(0, 8);
+    .slice(0, isMobile ? 5 : 8);
 
-  // === Recent activity feed ===
+  // Activity feed
   type ActivityItem = { dato: string; tekst: string; type: "lead" | "deal" | "prosjekt" | "selskap" | "oppgave"; route: string };
   const activityItems: ActivityItem[] = [];
 
@@ -123,7 +120,7 @@ export default function Dashboard() {
 
   const recentActivity = activityItems
     .sort((a, b) => b.dato.localeCompare(a.dato))
-    .slice(0, 10);
+    .slice(0, isMobile ? 6 : 10);
 
   const activityTypeColors: Record<string, string> = {
     lead: "bg-blue-500",
@@ -145,48 +142,48 @@ export default function Dashboard() {
   return (
     <PageShell title="Dashboard" subtitle="Snakk CRM – SaaS-metrikker og salgsoversikt">
       {/* Row 1: MRR, ARR, Active */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-4">
         <StatCard label="Totalt MRR" value={`${nok(totalMRR)} NOK`} icon={<DollarSign className="w-5 h-5" />} />
         <StatCard label="ARR" value={`${nok(arr)} NOK`} icon={<TrendingUp className="w-5 h-5" />} />
-        <StatCard label="SLA (månedlig)" value={`${nok(totalSLA)} NOK`} icon={<Shield className="w-5 h-5" />} trend={`ARR: ${nok(slArr)} NOK`} />
+        <StatCard label="SLA (mnd)" value={`${nok(totalSLA)} NOK`} icon={<Shield className="w-5 h-5" />} trend={!isMobile ? `ARR: ${nok(slArr)} NOK` : undefined} />
         <StatCard label="Aktive kunder" value={aktiveKunder} icon={<Users className="w-5 h-5" />} />
       </div>
 
       {/* Row 2: New MRR, Lost MRR, Net */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-        <StatCard label="Ny MRR denne mnd" value={`${nok(nyMRR)} NOK`} icon={<ArrowUpRight className="w-5 h-5" />} />
-        <StatCard label="Tapt MRR denne mnd" value={`${nok(taptMRR)} NOK`} icon={<ArrowDownRight className="w-5 h-5" />} />
-        <StatCard label="Netto MRR vekst" value={`${nettoMRR >= 0 ? "+" : ""}${nok(nettoMRR)} NOK`} icon={<Zap className="w-5 h-5" />} />
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mb-4">
+        <StatCard label="Ny MRR" value={`${nok(nyMRR)} NOK`} icon={<ArrowUpRight className="w-5 h-5" />} />
+        <StatCard label="Tapt MRR" value={`${nok(taptMRR)} NOK`} icon={<ArrowDownRight className="w-5 h-5" />} />
+        <StatCard label="Netto MRR" value={`${nettoMRR >= 0 ? "+" : ""}${nok(nettoMRR)} NOK`} icon={<Zap className="w-5 h-5" />} className={isMobile ? "col-span-2" : ""} />
       </div>
 
       {/* Row 3: Leads & Pipeline */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-        <StatCard label="Nye leads denne mnd" value={nyeLeads} icon={<Target className="w-5 h-5" />} />
-        <StatCard label="Kvalifiserte leads" value={kvalifiserteLeads} icon={<Target className="w-5 h-5" />} />
-        <StatCard label="Åpen pipeline" value={`${nok(aapenPipeline)} NOK`} icon={<BarChart3 className="w-5 h-5" />} />
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mb-4">
+        <StatCard label="Nye leads" value={nyeLeads} icon={<Target className="w-5 h-5" />} />
+        <StatCard label="Kvalifiserte" value={kvalifiserteLeads} icon={<Target className="w-5 h-5" />} />
+        <StatCard label="Åpen pipeline" value={`${nok(aapenPipeline)} NOK`} icon={<BarChart3 className="w-5 h-5" />} className={isMobile ? "col-span-2" : ""} />
       </div>
 
       {/* Row 4: Won/Lost/Win rate */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-        <StatCard label="Vunnet denne mnd" value={vunnetIMnd.length} icon={<Trophy className="w-5 h-5" />} />
-        <StatCard label="Tapt denne mnd" value={taptIMnd.length} icon={<XCircle className="w-5 h-5" />} />
-        <StatCard label="Win rate" value={`${winRate}%`} icon={<Target className="w-5 h-5" />} trend={`${vunnetIMnd.length} vunnet / ${vunnetIMnd.length + taptIMnd.length} avsluttet`} />
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mb-4">
+        <StatCard label="Vunnet" value={vunnetIMnd.length} icon={<Trophy className="w-5 h-5" />} />
+        <StatCard label="Tapt" value={taptIMnd.length} icon={<XCircle className="w-5 h-5" />} />
+        <StatCard label="Win rate" value={`${winRate}%`} icon={<Target className="w-5 h-5" />} trend={!isMobile ? `${vunnetIMnd.length} vunnet / ${vunnetIMnd.length + taptIMnd.length} avsluttet` : undefined} className={isMobile ? "col-span-2" : ""} />
       </div>
 
       {/* Row 5: Churn */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <StatCard label="Kansellerte denne mnd" value={kansellerteKunder} icon={<UserMinus className="w-5 h-5" />} />
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
+        <StatCard label="Kansellerte" value={kansellerteKunder} icon={<UserMinus className="w-5 h-5" />} />
         <StatCard label="Churn-rate" value={`${churnRate}%`} icon={<AlertTriangle className="w-5 h-5" />} />
-        <StatCard label="Forfalte oppgaver" value={forfaltOppgaver} icon={<AlertTriangle className="w-5 h-5" />} trend={forfaltOppgaver > 0 ? "Handling kreves" : "Alt på stell"} />
+        <StatCard label="Forfalte oppgaver" value={forfaltOppgaver} icon={<AlertTriangle className="w-5 h-5" />} trend={forfaltOppgaver > 0 ? "Handling kreves" : "Alt på stell"} className={isMobile ? "col-span-2" : ""} />
       </div>
 
       {/* Tasks & Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
         {/* Upcoming tasks */}
-        <div className="bg-card border rounded-xl p-6">
+        <div className="bg-card border rounded-xl p-4 sm:p-6">
           <div className="flex items-center gap-2 mb-4">
             <ListTodo className="w-5 h-5 text-primary" />
-            <h2 className="text-lg font-semibold">Kommende oppgaver</h2>
+            <h2 className="text-base sm:text-lg font-semibold">Kommende oppgaver</h2>
             <Badge variant="secondary" className="ml-auto text-xs">
               {activeTasks.length} aktive
             </Badge>
@@ -203,14 +200,14 @@ export default function Dashboard() {
                   <div
                     key={task.id}
                     onClick={() => navigate("/oppgaver")}
-                    className={`flex items-start gap-3 p-3 rounded-lg border transition-colors cursor-pointer group hover:shadow-sm ${
+                    className={`flex items-start gap-3 p-2.5 sm:p-3 rounded-lg border transition-colors cursor-pointer group hover:shadow-sm ${
                       overdue ? "bg-destructive/5 border-destructive/20 hover:bg-destructive/10" : todayTask ? "bg-primary/5 border-primary/20 hover:bg-primary/10" : "bg-muted/30 border-border hover:bg-muted/50"
                     }`}
                   >
                     <div className={`mt-0.5 w-2 h-2 rounded-full shrink-0 ${overdue ? "bg-destructive" : todayTask ? "bg-primary" : "bg-muted-foreground/40"}`} />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate group-hover:underline">{task.oppgave}</p>
-                      <div className="flex items-center gap-2 mt-1">
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
                         {selskap && <span className="text-xs text-muted-foreground truncate">{selskap.firmanavn}</span>}
                         {task.frist && (
                           <span className={`text-xs flex items-center gap-1 ${overdue ? "text-destructive font-medium" : todayTask ? "text-primary font-medium" : "text-muted-foreground"}`}>
@@ -223,7 +220,6 @@ export default function Dashboard() {
                     <Badge variant="outline" className={`text-[10px] shrink-0 ${prioritetBadge[task.prioritet] || ""}`}>
                       {task.prioritet}
                     </Badge>
-                    <ExternalLink className="w-3.5 h-3.5 text-muted-foreground/0 group-hover:text-muted-foreground/60 transition-colors shrink-0 mt-0.5" />
                   </div>
                 );
               })}
@@ -232,10 +228,10 @@ export default function Dashboard() {
         </div>
 
         {/* Activity feed */}
-        <div className="bg-card border rounded-xl p-6">
+        <div className="bg-card border rounded-xl p-4 sm:p-6">
           <div className="flex items-center gap-2 mb-4">
             <Activity className="w-5 h-5 text-primary" />
-            <h2 className="text-lg font-semibold">Siste aktivitet</h2>
+            <h2 className="text-base sm:text-lg font-semibold">Siste aktivitet</h2>
           </div>
           {recentActivity.length === 0 ? (
             <p className="text-sm text-muted-foreground py-6 text-center">Ingen aktivitet ennå</p>
@@ -254,7 +250,6 @@ export default function Dashboard() {
                       <p className="text-sm truncate group-hover:underline">{item.tekst}</p>
                       <p className="text-xs text-muted-foreground">{formatDate(item.dato)}</p>
                     </div>
-                    <ExternalLink className="w-3.5 h-3.5 text-muted-foreground/0 group-hover:text-muted-foreground/60 transition-colors shrink-0 mt-1" />
                   </div>
                 ))}
               </div>
@@ -264,12 +259,12 @@ export default function Dashboard() {
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-card border rounded-xl p-6">
-          <h2 className="text-lg font-semibold mb-4">Pipeline per status</h2>
-          <ResponsiveContainer width="100%" height={260}>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        <div className="bg-card border rounded-xl p-4 sm:p-6">
+          <h2 className="text-base sm:text-lg font-semibold mb-4">Pipeline per status</h2>
+          <ResponsiveContainer width="100%" height={isMobile ? 200 : 260}>
             <BarChart data={pipelineData}>
-              <XAxis dataKey="status" tick={{ fontSize: 11 }} />
+              <XAxis dataKey="status" tick={{ fontSize: isMobile ? 9 : 11 }} />
               <YAxis tick={{ fontSize: 11 }} tickFormatter={v => `${(v / 1000).toFixed(0)}k`} />
               <Tooltip formatter={(value: number) => [`${nok(value)} NOK`, "Verdi"]} contentStyle={{ borderRadius: "8px", fontSize: "13px" }} />
               <Bar dataKey="verdi" radius={[6, 6, 0, 0]}>
@@ -280,12 +275,12 @@ export default function Dashboard() {
         </div>
 
         {cancelData.length > 0 && (
-          <div className="bg-card border rounded-xl p-6">
-            <h2 className="text-lg font-semibold mb-4">Kanselleringsårsaker</h2>
-            <ResponsiveContainer width="100%" height={260}>
+          <div className="bg-card border rounded-xl p-4 sm:p-6">
+            <h2 className="text-base sm:text-lg font-semibold mb-4">Kanselleringsårsaker</h2>
+            <ResponsiveContainer width="100%" height={isMobile ? 200 : 260}>
               <BarChart data={cancelData} layout="vertical">
                 <XAxis type="number" tick={{ fontSize: 11 }} />
-                <YAxis type="category" dataKey="aarsak" tick={{ fontSize: 11 }} width={100} />
+                <YAxis type="category" dataKey="aarsak" tick={{ fontSize: isMobile ? 9 : 11 }} width={isMobile ? 70 : 100} />
                 <Tooltip contentStyle={{ borderRadius: "8px", fontSize: "13px" }} />
                 <Bar dataKey="antall" fill="hsl(0, 72%, 51%)" radius={[0, 6, 6, 0]} />
               </BarChart>
