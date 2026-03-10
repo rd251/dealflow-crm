@@ -124,8 +124,9 @@ export interface Oppgave {
 // ============ HELPERS ============
 
 export function beregnArr(mrr: number) { return mrr * 12; }
+export function beregnTotalMrr(s: Salgsmulighet) { return s.forventet_mrr + (s.sla || 0); }
 export function beregnTotalKontraktsverdi(s: Salgsmulighet) {
-  return (s.forventet_mrr * s.kontraktslengde_mnd) + s.oppstartskostnad;
+  return (beregnTotalMrr(s) * s.kontraktslengde_mnd) + s.oppstartskostnad;
 }
 export function beregnVektetPipeline(s: Salgsmulighet) {
   return beregnTotalKontraktsverdi(s) * (s.sannsynlighet / 100);
