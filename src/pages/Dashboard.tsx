@@ -1,7 +1,8 @@
+import { useNavigate } from "react-router-dom";
 import PageShell from "@/components/PageShell";
 import StatCard from "@/components/StatCard";
 import { useCrmStore } from "@/hooks/use-crm-store";
-import { DollarSign, TrendingUp, Users, Target, AlertTriangle, BarChart3, ArrowUpRight, ArrowDownRight, Zap, Trophy, XCircle, UserMinus, ListTodo, Clock, CheckCircle2, Activity } from "lucide-react";
+import { DollarSign, TrendingUp, Users, Target, AlertTriangle, BarChart3, ArrowUpRight, ArrowDownRight, Zap, Trophy, XCircle, UserMinus, ListTodo, Clock, CheckCircle2, Activity, ExternalLink } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, LineChart, Line, CartesianGrid } from "recharts";
 import { beregnTotalKontraktsverdi } from "@/data/crm-data";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +14,7 @@ const prioritetBadge: Record<string, string> = {
 };
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const { selskaper, salgsmuligheter, leads, oppgaver, prosjekter } = useCrmStore();
 
   const now = new Date();
@@ -93,24 +95,24 @@ export default function Dashboard() {
     .slice(0, 8);
 
   // === Recent activity feed ===
-  type ActivityItem = { dato: string; tekst: string; type: "lead" | "deal" | "prosjekt" | "selskap" | "oppgave" };
+  type ActivityItem = { dato: string; tekst: string; type: "lead" | "deal" | "prosjekt" | "selskap" | "oppgave"; route: string };
   const activityItems: ActivityItem[] = [];
 
   leads.forEach(l => {
-    if (l.opprettet_dato) activityItems.push({ dato: l.opprettet_dato, tekst: `Nytt lead: ${l.firmanavn}`, type: "lead" });
-    if (l.konvertert_dato) activityItems.push({ dato: l.konvertert_dato, tekst: `Lead konvertert: ${l.firmanavn}`, type: "lead" });
+    if (l.opprettet_dato) activityItems.push({ dato: l.opprettet_dato, tekst: `Nytt lead: ${l.firmanavn}`, type: "lead", route: "/leads" });
+    if (l.konvertert_dato) activityItems.push({ dato: l.konvertert_dato, tekst: `Lead konvertert: ${l.firmanavn}`, type: "lead", route: "/leads" });
   });
   salgsmuligheter.forEach(s => {
-    if (s.opprettet_dato) activityItems.push({ dato: s.opprettet_dato, tekst: `Ny salgsmulighet: ${s.navn}`, type: "deal" });
-    if (s.vunnet_dato) activityItems.push({ dato: s.vunnet_dato, tekst: `Deal vunnet: ${s.navn}`, type: "deal" });
-    if (s.tapt_dato) activityItems.push({ dato: s.tapt_dato, tekst: `Deal tapt: ${s.navn}`, type: "deal" });
+    if (s.opprettet_dato) activityItems.push({ dato: s.opprettet_dato, tekst: `Ny salgsmulighet: ${s.navn}`, type: "deal", route: "/salgsmuligheter" });
+    if (s.vunnet_dato) activityItems.push({ dato: s.vunnet_dato, tekst: `Deal vunnet: ${s.navn}`, type: "deal", route: "/salgsmuligheter" });
+    if (s.tapt_dato) activityItems.push({ dato: s.tapt_dato, tekst: `Deal tapt: ${s.navn}`, type: "deal", route: "/salgsmuligheter" });
   });
   prosjekter.forEach(p => {
-    if (p.go_live_dato) activityItems.push({ dato: p.go_live_dato, tekst: `Prosjekt live: ${p.prosjektnavn}`, type: "prosjekt" });
+    if (p.go_live_dato) activityItems.push({ dato: p.go_live_dato, tekst: `Prosjekt live: ${p.prosjektnavn}`, type: "prosjekt", route: "/prosjekter" });
   });
   selskaper.forEach(s => {
-    if (s.go_live_dato) activityItems.push({ dato: s.go_live_dato, tekst: `Kunde live: ${s.firmanavn}`, type: "selskap" });
-    if (s.kansellert_dato) activityItems.push({ dato: s.kansellert_dato, tekst: `Kunde kansellert: ${s.firmanavn}`, type: "selskap" });
+    if (s.go_live_dato) activityItems.push({ dato: s.go_live_dato, tekst: `Kunde live: ${s.firmanavn}`, type: "selskap", route: "/selskaper" });
+    if (s.kansellert_dato) activityItems.push({ dato: s.kansellert_dato, tekst: `Kunde kansellert: ${s.firmanavn}`, type: "selskap", route: "/selskaper" });
   });
 
   const recentActivity = activityItems
@@ -193,13 +195,14 @@ export default function Dashboard() {
                 return (
                   <div
                     key={task.id}
-                    className={`flex items-start gap-3 p-3 rounded-lg border transition-colors ${
-                      overdue ? "bg-destructive/5 border-destructive/20" : todayTask ? "bg-primary/5 border-primary/20" : "bg-muted/30 border-border"
+                    onClick={() => navigate("/oppgaver")}
+                    className={`flex items-start gap-3 p-3 rounded-lg border transition-colors cursor-pointer group hover:shadow-sm ${
+                      overdue ? "bg-destructive/5 border-destructive/20 hover:bg-destructive/10" : todayTask ? "bg-primary/5 border-primary/20 hover:bg-primary/10" : "bg-muted/30 border-border hover:bg-muted/50"
                     }`}
                   >
                     <div className={`mt-0.5 w-2 h-2 rounded-full shrink-0 ${overdue ? "bg-destructive" : todayTask ? "bg-primary" : "bg-muted-foreground/40"}`} />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{task.oppgave}</p>
+                      <p className="text-sm font-medium truncate group-hover:underline">{task.oppgave}</p>
                       <div className="flex items-center gap-2 mt-1">
                         {selskap && <span className="text-xs text-muted-foreground truncate">{selskap.firmanavn}</span>}
                         {task.frist && (
@@ -213,6 +216,7 @@ export default function Dashboard() {
                     <Badge variant="outline" className={`text-[10px] shrink-0 ${prioritetBadge[task.prioritet] || ""}`}>
                       {task.prioritet}
                     </Badge>
+                    <ExternalLink className="w-3.5 h-3.5 text-muted-foreground/0 group-hover:text-muted-foreground/60 transition-colors shrink-0 mt-0.5" />
                   </div>
                 );
               })}
@@ -233,12 +237,17 @@ export default function Dashboard() {
               <div className="absolute left-[7px] top-3 bottom-3 w-px bg-border" />
               <div className="space-y-3">
                 {recentActivity.map((item, i) => (
-                  <div key={i} className="flex items-start gap-3 relative">
+                  <div
+                    key={i}
+                    onClick={() => navigate(item.route)}
+                    className="flex items-start gap-3 relative cursor-pointer group hover:bg-muted/30 rounded-lg p-1.5 -ml-1.5 transition-colors"
+                  >
                     <div className={`w-[15px] h-[15px] rounded-full shrink-0 mt-0.5 border-2 border-card ${activityTypeColors[item.type]}`} />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm truncate">{item.tekst}</p>
+                      <p className="text-sm truncate group-hover:underline">{item.tekst}</p>
                       <p className="text-xs text-muted-foreground">{formatDate(item.dato)}</p>
                     </div>
+                    <ExternalLink className="w-3.5 h-3.5 text-muted-foreground/0 group-hover:text-muted-foreground/60 transition-colors shrink-0 mt-1" />
                   </div>
                 ))}
               </div>
