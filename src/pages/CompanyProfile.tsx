@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useCrmStore } from "@/hooks/use-crm-store";
 import { beregnTotalKontraktsverdi, beregnVektetPipeline } from "@/data/crm-data";
