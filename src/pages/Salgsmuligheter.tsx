@@ -161,8 +161,6 @@ export default function Salgsmuligheter() {
                               {(deal.sla || 0) > 0 && <span className="text-[10px] text-muted-foreground">(SLA: {deal.sla.toLocaleString("no-NO")})</span>}
                               <span className="text-[10px] text-muted-foreground">{deal.sannsynlighet}%</span>
                             </div>
-                              <span className="text-[10px] text-muted-foreground">{deal.sannsynlighet}%</span>
-                            </div>
                             {deal.neste_steg && <p className="text-[10px] text-muted-foreground mt-1 truncate">→ {deal.neste_steg}</p>}
                           </div>
                         </div>
