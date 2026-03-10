@@ -138,21 +138,65 @@ export default function Leads() {
       <Sheet open={!!currentLead} onOpenChange={(open) => !open && setSelectedLead(null)}>
         <SheetContent className="w-[400px] sm:w-[500px]">
           <SheetHeader><SheetTitle>{currentLead?.firmanavn}</SheetTitle></SheetHeader>
-          {currentLead && (
+          {currentLead && (() => {
+            const updateField = (field: string, value: any) => {
+              const today = new Date().toISOString().split("T")[0];
+              updateLeads(prev => prev.map(l =>
+                l.id === currentLead.id ? { ...l, [field]: value, sist_aktivitet: today } : l
+              ));
+            };
+            return (
             <div className="mt-6 space-y-4 text-sm">
               <div className="grid grid-cols-2 gap-3">
-                <div><span className="text-muted-foreground block text-xs">Kontaktperson</span>{currentLead.kontaktperson}</div>
-                <div><span className="text-muted-foreground block text-xs">E-post</span>{currentLead.e_post}</div>
-                <div><span className="text-muted-foreground block text-xs">Telefon</span>{currentLead.telefon}</div>
-                <div><span className="text-muted-foreground block text-xs">Kilde</span>{currentLead.kilde}</div>
-                <div><span className="text-muted-foreground block text-xs">Status</span><span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColors[currentLead.status]}`}>{currentLead.status}</span></div>
-                <div><span className="text-muted-foreground block text-xs">Ansvarlig</span>{currentLead.ansvarlig || "–"}</div>
-                <div><span className="text-muted-foreground block text-xs">Neste steg</span>{currentLead.neste_steg || "–"}</div>
-                <div><span className="text-muted-foreground block text-xs">Opprettet</span>{currentLead.opprettet_dato}</div>
+                <div>
+                  <span className="text-muted-foreground block text-xs mb-1">Firmanavn</span>
+                  <Input value={currentLead.firmanavn} onChange={e => updateField("firmanavn", e.target.value)} className="h-8 text-sm" />
+                </div>
+                <div>
+                  <span className="text-muted-foreground block text-xs mb-1">Kontaktperson</span>
+                  <Input value={currentLead.kontaktperson} onChange={e => updateField("kontaktperson", e.target.value)} className="h-8 text-sm" />
+                </div>
+                <div>
+                  <span className="text-muted-foreground block text-xs mb-1">E-post</span>
+                  <Input value={currentLead.e_post} onChange={e => updateField("e_post", e.target.value)} className="h-8 text-sm" />
+                </div>
+                <div>
+                  <span className="text-muted-foreground block text-xs mb-1">Telefon</span>
+                  <Input value={currentLead.telefon} onChange={e => updateField("telefon", e.target.value)} className="h-8 text-sm" />
+                </div>
+                <div>
+                  <span className="text-muted-foreground block text-xs mb-1">Kilde</span>
+                  <select className="w-full border rounded-lg px-3 py-1.5 text-sm bg-background h-8" value={currentLead.kilde}
+                    onChange={e => updateField("kilde", e.target.value)}>
+                    {kildeOptions.map(k => <option key={k} value={k}>{k}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <span className="text-muted-foreground block text-xs mb-1">Status</span>
+                  <select className={`w-full border rounded-lg px-3 py-1.5 text-sm bg-background h-8 ${statusColors[currentLead.status]}`}
+                    value={currentLead.status}
+                    onChange={e => updateField("status", e.target.value)}
+                    disabled={currentLead.status === "Konvertert til salg"}>
+                    {statusOptions.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <span className="text-muted-foreground block text-xs mb-1">Ansvarlig</span>
+                  <Input value={currentLead.ansvarlig} onChange={e => updateField("ansvarlig", e.target.value)} className="h-8 text-sm" />
+                </div>
+                <div>
+                  <span className="text-muted-foreground block text-xs mb-1">Opprettet</span>
+                  <span className="text-sm font-mono">{currentLead.opprettet_dato}</span>
+                </div>
               </div>
-              {currentLead.notater && (
-                <div><span className="text-muted-foreground block text-xs mb-1">Notater</span><p className="text-sm">{currentLead.notater}</p></div>
-              )}
+              <div>
+                <span className="text-muted-foreground block text-xs mb-1">Neste steg</span>
+                <Input value={currentLead.neste_steg} onChange={e => updateField("neste_steg", e.target.value)} className="h-8 text-sm" />
+              </div>
+              <div>
+                <span className="text-muted-foreground block text-xs mb-1">Notater</span>
+                <Textarea value={currentLead.notater} onChange={e => updateField("notater", e.target.value)} rows={3} />
+              </div>
 
               <div className="border-t pt-4">
                 <InlineTaskForm lead_id={currentLead.id} selskap_id="" />
@@ -163,8 +207,15 @@ export default function Leads() {
                   Konvertert {currentLead.konvertert_dato}
                 </div>
               )}
+
+              {currentLead.status !== "Konvertert til salg" && currentLead.status !== "Ikke aktuelt" && (
+                <Button size="sm" className="w-full" onClick={() => { konverterLead(currentLead.id); setSelectedLead(null); }}>
+                  <ArrowRightCircle className="w-4 h-4 mr-1" /> Konverter til salgsmulighet
+                </Button>
+              )}
             </div>
-          )}
+            );
+          })()}
         </SheetContent>
       </Sheet>
     </PageShell>
