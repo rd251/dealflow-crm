@@ -32,6 +32,11 @@ export default function Dashboard() {
   const arr = totalMRR * 12;
   const aktiveKunder = liveSelskaper.length;
 
+  // SLA – monthly SLA revenue from open pipeline deals
+  const openSmAll = salgsmuligheter.filter(s => s.status !== "Tapt");
+  const totalSLA = openSmAll.reduce((sum, s) => sum + (s.sla || 0), 0);
+  const slArr = totalSLA * 12;
+
   // Ny MRR (go_live this month)
   const nyMRR = selskaper.filter(s => thisMonth(s.go_live_dato)).reduce((sum, s) => sum + s.mrr, 0);
 
