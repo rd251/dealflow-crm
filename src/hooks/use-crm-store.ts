@@ -1,76 +1,465 @@
-// CRM global store
-import { useState, useCallback, createContext, useContext, createElement, ReactNode } from "react";
+// CRM global store - backed by Supabase
+import { useState, useCallback, useEffect, createContext, useContext, createElement, ReactNode } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
 import {
   Lead, Salgsmulighet, Prosjekt, Selskap, Kontakt, Oppgave, Partner,
-  initialLeads, initialSalgsmuligheter, initialProsjekter,
-  initialSelskaper, initialKontakter, initialOppgaver, initialPartnere,
 } from "@/data/crm-data";
 
-function load<T>(key: string, fallback: T): T {
-  try {
-    const stored = localStorage.getItem(key);
-    return stored ? JSON.parse(stored) : fallback;
-  } catch { return fallback; }
+// Map DB row to app type (handle nulls)
+function rowToLead(r: any): Lead {
+  return {
+    id: r.id, firmanavn: r.firmanavn, kontaktperson: r.kontaktperson || "",
+    e_post: r.e_post || "", telefon: r.telefon || "", kilde: r.kilde || "Annet",
+    status: r.status || "Ny", ansvarlig: r.ansvarlig || "", neste_steg: r.neste_steg || "",
+    notater: r.notater || "", opprettet_dato: r.opprettet_dato || "", sist_aktivitet: r.sist_aktivitet || "",
+    konvertert_dato: r.konvertert_dato || "",
+  };
+}
+function rowToSelskap(r: any): Selskap {
+  return {
+    id: r.id, firmanavn: r.firmanavn, bransje: r.bransje || "", kundeansvarlig: r.kundeansvarlig || "",
+    kundestatus: r.kundestatus || "Ikke kunde", live_status: r.live_status || false,
+    onboarding_status: r.onboarding_status || "Ikke startet", mrr: Number(r.mrr) || 0,
+    arr: Number(r.arr) || 0, oppstartskostnad: Number(r.oppstartskostnad) || 0,
+    go_live_dato: r.go_live_dato || "", kansellert_dato: r.kansellert_dato || "",
+    kanselleringsaarsak: r.kanselleringsaarsak || "", kanselleringsnotat: r.kanselleringsnotat || "",
+    kundetilstand: r.kundetilstand || "Bra", sist_aktivitet: r.sist_aktivitet || "",
+    neste_steg: r.neste_steg || "", notater: r.notater || "",
+    kilde: r.kilde || "Direkte salg", partner_id: r.partner_id || "",
+  };
+}
+function rowToKontakt(r: any): Kontakt {
+  return {
+    id: r.id, selskap_id: r.selskap_id || "", navn: r.navn, rolle: r.rolle || "",
+    e_post: r.e_post || "", telefon: r.telefon || "", linkedin: r.linkedin || "", notater: r.notater || "",
+  };
+}
+function rowToSalgsmulighet(r: any): Salgsmulighet {
+  return {
+    id: r.id, navn: r.navn, selskap_id: r.selskap_id || "", kontakt_id: r.kontakt_id || "",
+    ansvarlig: r.ansvarlig || "", status: r.status || "Ny mulighet",
+    forventet_mrr: Number(r.forventet_mrr) || 0, sla: Number(r.sla) || 0,
+    oppstartskostnad: Number(r.oppstartskostnad) || 0, kontraktslengde_mnd: r.kontraktslengde_mnd || 12,
+    sannsynlighet: r.sannsynlighet || 50, forventet_lukkedato: r.forventet_lukkedato || "",
+    vunnet_dato: r.vunnet_dato || "", tapt_dato: r.tapt_dato || "", tapsaarsak: r.tapsaarsak || "",
+    neste_steg: r.neste_steg || "", notater: r.notater || "", opprettet_dato: r.opprettet_dato || "",
+    sist_aktivitet: r.sist_aktivitet || "", kilde: r.kilde || "Direkte salg",
+    partner_id: r.partner_id || "", partner_provisjon: Number(r.partner_provisjon) || 0,
+    partner_kostnad: Number(r.partner_kostnad) || 0, netto_inntekt: Number(r.netto_inntekt) || 0,
+  };
+}
+function rowToProsjekt(r: any): Prosjekt {
+  return {
+    id: r.id, prosjektnavn: r.prosjektnavn, selskap_id: r.selskap_id || "",
+    salgsmulighet_id: r.salgsmulighet_id || "", ansvarlig: r.ansvarlig || "",
+    status: r.status || "Ny", startdato: r.startdato || "", forventet_go_live: r.forventet_go_live || "",
+    go_live_dato: r.go_live_dato || "", oppstartskostnad: Number(r.oppstartskostnad) || 0,
+    oppstart_fakturert: r.oppstart_fakturert || false, oppstart_faktura_dato: r.oppstart_faktura_dato || "",
+    oppstart_betalt: r.oppstart_betalt || false, integrasjon: r.integrasjon || "Ingen", notater: r.notater || "",
+  };
+}
+function rowToOppgave(r: any): Oppgave {
+  return {
+    id: r.id, oppgave: r.oppgave, lead_id: r.lead_id || "", selskap_id: r.selskap_id || "",
+    salgsmulighet_id: r.salgsmulighet_id || "", ansvarlig: r.ansvarlig || "",
+    frist: r.frist || "", prioritet: r.prioritet || "Medium", status: r.status || "Åpen",
+    paaminnelse: r.paaminnelse ?? true, notater: r.notater || "",
+  };
+}
+function rowToPartner(r: any): Partner {
+  return {
+    id: r.id, partnernavn: r.partnernavn, partnertype: r.partnertype || "Salgspartner",
+    kontaktperson: r.kontaktperson || "", e_post: r.e_post || "", telefon: r.telefon || "",
+    partnerstatus: r.partnerstatus || "Under onboarding", pipeline_status: r.pipeline_status || "Ny partner",
+    ansvarlig: r.ansvarlig || "", provisjonsprosent: Number(r.provisjonsprosent) || 0,
+    provisjonstype: r.provisjonstype || "", selskap_id: r.selskap_id || "",
+    opprettet_dato: r.opprettet_dato || "", sist_aktivitet: r.sist_aktivitet || "", notater: r.notater || "",
+  };
 }
 
-function save<T>(key: string, data: T) {
-  localStorage.setItem(key, JSON.stringify(data));
-}
-
-function generateId(prefix: string, items: { id: string }[]) {
-  const maxNum = items.reduce((max, item) => {
-    const num = parseInt(item.id.split("-")[1], 10);
-    return isNaN(num) ? max : Math.max(max, num);
-  }, 0);
-  return `${prefix}-${String(maxNum + 1).padStart(4, "0")}`;
-}
+// Convert empty strings to null for DB
+function emptyToNull(v: string | undefined) { return v === "" || v === undefined ? null : v; }
+function numOrNull(v: number | undefined) { return v === 0 || v === undefined ? 0 : v; }
 
 type CrmStore = ReturnType<typeof useCrmStoreInternal>;
-
 const CrmContext = createContext<CrmStore | null>(null);
 
 function useCrmStoreInternal() {
-  const [leads, setLeads] = useState<Lead[]>(() => load("crm_leads", initialLeads));
-  const [salgsmuligheter, setSalgsmuligheter] = useState<Salgsmulighet[]>(() => load("crm_salgsmuligheter", initialSalgsmuligheter));
-  const [prosjekter, setProsjekter] = useState<Prosjekt[]>(() => load("crm_prosjekter", initialProsjekter));
-  const [selskaper, setSelskaper] = useState<Selskap[]>(() => load("crm_selskaper", initialSelskaper));
-  const [kontakter, setKontakter] = useState<Kontakt[]>(() => load("crm_kontakter", initialKontakter));
-  const [oppgaver, setOppgaver] = useState<Oppgave[]>(() => load("crm_oppgaver", initialOppgaver));
-  const [partnere, setPartnere] = useState<Partner[]>(() => load("crm_partnere", initialPartnere));
+  const { user } = useAuth();
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [salgsmuligheter, setSalgsmuligheter] = useState<Salgsmulighet[]>([]);
+  const [prosjekter, setProsjekter] = useState<Prosjekt[]>([]);
+  const [selskaper, setSelskaper] = useState<Selskap[]>([]);
+  const [kontakter, setKontakter] = useState<Kontakt[]>([]);
+  const [oppgaver, setOppgaver] = useState<Oppgave[]>([]);
+  const [partnere, setPartnere] = useState<Partner[]>([]);
+  const [loaded, setLoaded] = useState(false);
 
-  const updateLeads = useCallback((fn: (prev: Lead[]) => Lead[]) => {
-    setLeads(prev => { const next = fn(prev); save("crm_leads", next); return next; });
+  // Fetch all data
+  const refresh = useCallback(async () => {
+    const [r1, r2, r3, r4, r5, r6, r7] = await Promise.all([
+      supabase.from("leads").select("*"),
+      supabase.from("salgsmuligheter").select("*"),
+      supabase.from("prosjekter").select("*"),
+      supabase.from("selskaper").select("*"),
+      supabase.from("kontakter").select("*"),
+      supabase.from("oppgaver").select("*"),
+      supabase.from("partnere").select("*"),
+    ]);
+    if (r1.data) setLeads(r1.data.map(rowToLead));
+    if (r2.data) setSalgsmuligheter(r2.data.map(rowToSalgsmulighet));
+    if (r3.data) setProsjekter(r3.data.map(rowToProsjekt));
+    if (r4.data) setSelskaper(r4.data.map(rowToSelskap));
+    if (r5.data) setKontakter(r5.data.map(rowToKontakt));
+    if (r6.data) setOppgaver(r6.data.map(rowToOppgave));
+    if (r7.data) setPartnere(r7.data.map(rowToPartner));
+    setLoaded(true);
   }, []);
-  const updateSalgsmuligheter = useCallback((fn: (prev: Salgsmulighet[]) => Salgsmulighet[]) => {
-    setSalgsmuligheter(prev => { const next = fn(prev); save("crm_salgsmuligheter", next); return next; });
+
+  useEffect(() => { if (user) refresh(); }, [user, refresh]);
+
+  // Generic updater: applies fn locally, then syncs to DB
+  const updateLeads = useCallback(async (fn: (prev: Lead[]) => Lead[]) => {
+    setLeads(prev => {
+      const next = fn(prev);
+      // Sync changes to DB async
+      syncLeads(prev, next);
+      return next;
+    });
   }, []);
-  const updateProsjekter = useCallback((fn: (prev: Prosjekt[]) => Prosjekt[]) => {
-    setProsjekter(prev => { const next = fn(prev); save("crm_prosjekter", next); return next; });
+
+  const updateSelskaper = useCallback(async (fn: (prev: Selskap[]) => Selskap[]) => {
+    setSelskaper(prev => {
+      const next = fn(prev);
+      syncSelskaper(prev, next);
+      return next;
+    });
   }, []);
-  const updateSelskaper = useCallback((fn: (prev: Selskap[]) => Selskap[]) => {
-    setSelskaper(prev => { const next = fn(prev); save("crm_selskaper", next); return next; });
+
+  const updateKontakter = useCallback(async (fn: (prev: Kontakt[]) => Kontakt[]) => {
+    setKontakter(prev => {
+      const next = fn(prev);
+      syncKontakter(prev, next);
+      return next;
+    });
   }, []);
-  const updateKontakter = useCallback((fn: (prev: Kontakt[]) => Kontakt[]) => {
-    setKontakter(prev => { const next = fn(prev); save("crm_kontakter", next); return next; });
+
+  const updateSalgsmuligheter = useCallback(async (fn: (prev: Salgsmulighet[]) => Salgsmulighet[]) => {
+    setSalgsmuligheter(prev => {
+      const next = fn(prev);
+      syncSalgsmuligheter(prev, next);
+      return next;
+    });
   }, []);
-  const updateOppgaver = useCallback((fn: (prev: Oppgave[]) => Oppgave[]) => {
-    setOppgaver(prev => { const next = fn(prev); save("crm_oppgaver", next); return next; });
+
+  const updateProsjekter = useCallback(async (fn: (prev: Prosjekt[]) => Prosjekt[]) => {
+    setProsjekter(prev => {
+      const next = fn(prev);
+      syncProsjekter(prev, next);
+      return next;
+    });
   }, []);
-  const updatePartnere = useCallback((fn: (prev: Partner[]) => Partner[]) => {
-    setPartnere(prev => { const next = fn(prev); save("crm_partnere", next); return next; });
+
+  const updateOppgaver = useCallback(async (fn: (prev: Oppgave[]) => Oppgave[]) => {
+    setOppgaver(prev => {
+      const next = fn(prev);
+      syncOppgaver(prev, next);
+      return next;
+    });
+  }, []);
+
+  const updatePartnere = useCallback(async (fn: (prev: Partner[]) => Partner[]) => {
+    setPartnere(prev => {
+      const next = fn(prev);
+      syncPartnere(prev, next);
+      return next;
+    });
+  }, []);
+
+  // Sync helpers - detect new/updated/deleted items
+  async function syncLeads(prev: Lead[], next: Lead[]) {
+    const prevIds = new Set(prev.map(i => i.id));
+    const nextIds = new Set(next.map(i => i.id));
+    // New items
+    for (const item of next) {
+      if (!prevIds.has(item.id)) {
+        await supabase.from("leads").insert({
+          id: item.id, firmanavn: item.firmanavn, kontaktperson: emptyToNull(item.kontaktperson),
+          e_post: emptyToNull(item.e_post), telefon: emptyToNull(item.telefon),
+          kilde: item.kilde as any, status: item.status as any, ansvarlig: emptyToNull(item.ansvarlig),
+          neste_steg: emptyToNull(item.neste_steg), notater: emptyToNull(item.notater),
+          opprettet_dato: emptyToNull(item.opprettet_dato), sist_aktivitet: emptyToNull(item.sist_aktivitet),
+          konvertert_dato: emptyToNull(item.konvertert_dato),
+        });
+      }
+    }
+    // Updated items
+    for (const item of next) {
+      const old = prev.find(p => p.id === item.id);
+      if (old && JSON.stringify(old) !== JSON.stringify(item)) {
+        await supabase.from("leads").update({
+          firmanavn: item.firmanavn, kontaktperson: emptyToNull(item.kontaktperson),
+          e_post: emptyToNull(item.e_post), telefon: emptyToNull(item.telefon),
+          kilde: item.kilde as any, status: item.status as any, ansvarlig: emptyToNull(item.ansvarlig),
+          neste_steg: emptyToNull(item.neste_steg), notater: emptyToNull(item.notater),
+          opprettet_dato: emptyToNull(item.opprettet_dato), sist_aktivitet: emptyToNull(item.sist_aktivitet),
+          konvertert_dato: emptyToNull(item.konvertert_dato),
+        }).eq("id", item.id);
+      }
+    }
+    // Deleted items
+    for (const item of prev) {
+      if (!nextIds.has(item.id)) {
+        await supabase.from("leads").delete().eq("id", item.id);
+      }
+    }
+  }
+
+  async function syncSelskaper(prev: Selskap[], next: Selskap[]) {
+    const prevIds = new Set(prev.map(i => i.id));
+    const nextIds = new Set(next.map(i => i.id));
+    for (const item of next) {
+      if (!prevIds.has(item.id)) {
+        await supabase.from("selskaper").insert({
+          id: item.id, firmanavn: item.firmanavn, bransje: emptyToNull(item.bransje),
+          kundeansvarlig: emptyToNull(item.kundeansvarlig), kundestatus: item.kundestatus as any,
+          live_status: item.live_status, onboarding_status: item.onboarding_status as any,
+          mrr: item.mrr, arr: item.arr, oppstartskostnad: item.oppstartskostnad,
+          go_live_dato: emptyToNull(item.go_live_dato), kansellert_dato: emptyToNull(item.kansellert_dato),
+          kanselleringsaarsak: emptyToNull(item.kanselleringsaarsak) as any,
+          kanselleringsnotat: emptyToNull(item.kanselleringsnotat),
+          kundetilstand: item.kundetilstand as any, sist_aktivitet: emptyToNull(item.sist_aktivitet),
+          neste_steg: emptyToNull(item.neste_steg), notater: emptyToNull(item.notater),
+          kilde: item.kilde as any, partner_id: emptyToNull(item.partner_id),
+        });
+      }
+    }
+    for (const item of next) {
+      const old = prev.find(p => p.id === item.id);
+      if (old && JSON.stringify(old) !== JSON.stringify(item)) {
+        await supabase.from("selskaper").update({
+          firmanavn: item.firmanavn, bransje: emptyToNull(item.bransje),
+          kundeansvarlig: emptyToNull(item.kundeansvarlig), kundestatus: item.kundestatus as any,
+          live_status: item.live_status, onboarding_status: item.onboarding_status as any,
+          mrr: item.mrr, arr: item.arr, oppstartskostnad: item.oppstartskostnad,
+          go_live_dato: emptyToNull(item.go_live_dato), kansellert_dato: emptyToNull(item.kansellert_dato),
+          kanselleringsaarsak: emptyToNull(item.kanselleringsaarsak) as any,
+          kanselleringsnotat: emptyToNull(item.kanselleringsnotat),
+          kundetilstand: item.kundetilstand as any, sist_aktivitet: emptyToNull(item.sist_aktivitet),
+          neste_steg: emptyToNull(item.neste_steg), notater: emptyToNull(item.notater),
+          kilde: item.kilde as any, partner_id: emptyToNull(item.partner_id),
+        }).eq("id", item.id);
+      }
+    }
+    for (const item of prev) {
+      if (!nextIds.has(item.id)) {
+        await supabase.from("selskaper").delete().eq("id", item.id);
+      }
+    }
+  }
+
+  async function syncKontakter(prev: Kontakt[], next: Kontakt[]) {
+    const prevIds = new Set(prev.map(i => i.id));
+    const nextIds = new Set(next.map(i => i.id));
+    for (const item of next) {
+      if (!prevIds.has(item.id)) {
+        await supabase.from("kontakter").insert({
+          id: item.id, selskap_id: emptyToNull(item.selskap_id), navn: item.navn,
+          rolle: emptyToNull(item.rolle), e_post: emptyToNull(item.e_post),
+          telefon: emptyToNull(item.telefon), linkedin: emptyToNull(item.linkedin),
+          notater: emptyToNull(item.notater),
+        });
+      }
+    }
+    for (const item of next) {
+      const old = prev.find(p => p.id === item.id);
+      if (old && JSON.stringify(old) !== JSON.stringify(item)) {
+        await supabase.from("kontakter").update({
+          selskap_id: emptyToNull(item.selskap_id), navn: item.navn,
+          rolle: emptyToNull(item.rolle), e_post: emptyToNull(item.e_post),
+          telefon: emptyToNull(item.telefon), linkedin: emptyToNull(item.linkedin),
+          notater: emptyToNull(item.notater),
+        }).eq("id", item.id);
+      }
+    }
+    for (const item of prev) {
+      if (!nextIds.has(item.id)) {
+        await supabase.from("kontakter").delete().eq("id", item.id);
+      }
+    }
+  }
+
+  async function syncSalgsmuligheter(prev: Salgsmulighet[], next: Salgsmulighet[]) {
+    const prevIds = new Set(prev.map(i => i.id));
+    const nextIds = new Set(next.map(i => i.id));
+    for (const item of next) {
+      if (!prevIds.has(item.id)) {
+        await supabase.from("salgsmuligheter").insert({
+          id: item.id, navn: item.navn, selskap_id: emptyToNull(item.selskap_id),
+          kontakt_id: emptyToNull(item.kontakt_id), ansvarlig: emptyToNull(item.ansvarlig),
+          status: item.status as any, forventet_mrr: item.forventet_mrr, sla: item.sla,
+          oppstartskostnad: item.oppstartskostnad, kontraktslengde_mnd: item.kontraktslengde_mnd,
+          sannsynlighet: item.sannsynlighet, forventet_lukkedato: emptyToNull(item.forventet_lukkedato),
+          vunnet_dato: emptyToNull(item.vunnet_dato), tapt_dato: emptyToNull(item.tapt_dato),
+          tapsaarsak: emptyToNull(item.tapsaarsak) as any, neste_steg: emptyToNull(item.neste_steg),
+          notater: emptyToNull(item.notater), opprettet_dato: emptyToNull(item.opprettet_dato),
+          sist_aktivitet: emptyToNull(item.sist_aktivitet), kilde: item.kilde as any,
+          partner_id: emptyToNull(item.partner_id), partner_provisjon: item.partner_provisjon,
+          partner_kostnad: item.partner_kostnad, netto_inntekt: item.netto_inntekt,
+        });
+      }
+    }
+    for (const item of next) {
+      const old = prev.find(p => p.id === item.id);
+      if (old && JSON.stringify(old) !== JSON.stringify(item)) {
+        await supabase.from("salgsmuligheter").update({
+          navn: item.navn, selskap_id: emptyToNull(item.selskap_id),
+          kontakt_id: emptyToNull(item.kontakt_id), ansvarlig: emptyToNull(item.ansvarlig),
+          status: item.status as any, forventet_mrr: item.forventet_mrr, sla: item.sla,
+          oppstartskostnad: item.oppstartskostnad, kontraktslengde_mnd: item.kontraktslengde_mnd,
+          sannsynlighet: item.sannsynlighet, forventet_lukkedato: emptyToNull(item.forventet_lukkedato),
+          vunnet_dato: emptyToNull(item.vunnet_dato), tapt_dato: emptyToNull(item.tapt_dato),
+          tapsaarsak: emptyToNull(item.tapsaarsak) as any, neste_steg: emptyToNull(item.neste_steg),
+          notater: emptyToNull(item.notater), opprettet_dato: emptyToNull(item.opprettet_dato),
+          sist_aktivitet: emptyToNull(item.sist_aktivitet), kilde: item.kilde as any,
+          partner_id: emptyToNull(item.partner_id), partner_provisjon: item.partner_provisjon,
+          partner_kostnad: item.partner_kostnad, netto_inntekt: item.netto_inntekt,
+        }).eq("id", item.id);
+      }
+    }
+    for (const item of prev) {
+      if (!nextIds.has(item.id)) {
+        await supabase.from("salgsmuligheter").delete().eq("id", item.id);
+      }
+    }
+  }
+
+  async function syncProsjekter(prev: Prosjekt[], next: Prosjekt[]) {
+    const prevIds = new Set(prev.map(i => i.id));
+    const nextIds = new Set(next.map(i => i.id));
+    for (const item of next) {
+      if (!prevIds.has(item.id)) {
+        await supabase.from("prosjekter").insert({
+          id: item.id, prosjektnavn: item.prosjektnavn, selskap_id: emptyToNull(item.selskap_id),
+          salgsmulighet_id: emptyToNull(item.salgsmulighet_id), ansvarlig: emptyToNull(item.ansvarlig),
+          status: item.status as any, startdato: emptyToNull(item.startdato),
+          forventet_go_live: emptyToNull(item.forventet_go_live), go_live_dato: emptyToNull(item.go_live_dato),
+          oppstartskostnad: item.oppstartskostnad, oppstart_fakturert: item.oppstart_fakturert,
+          oppstart_faktura_dato: emptyToNull(item.oppstart_faktura_dato), oppstart_betalt: item.oppstart_betalt,
+          integrasjon: item.integrasjon as any, notater: emptyToNull(item.notater),
+        });
+      }
+    }
+    for (const item of next) {
+      const old = prev.find(p => p.id === item.id);
+      if (old && JSON.stringify(old) !== JSON.stringify(item)) {
+        await supabase.from("prosjekter").update({
+          prosjektnavn: item.prosjektnavn, selskap_id: emptyToNull(item.selskap_id),
+          salgsmulighet_id: emptyToNull(item.salgsmulighet_id), ansvarlig: emptyToNull(item.ansvarlig),
+          status: item.status as any, startdato: emptyToNull(item.startdato),
+          forventet_go_live: emptyToNull(item.forventet_go_live), go_live_dato: emptyToNull(item.go_live_dato),
+          oppstartskostnad: item.oppstartskostnad, oppstart_fakturert: item.oppstart_fakturert,
+          oppstart_faktura_dato: emptyToNull(item.oppstart_faktura_dato), oppstart_betalt: item.oppstart_betalt,
+          integrasjon: item.integrasjon as any, notater: emptyToNull(item.notater),
+        }).eq("id", item.id);
+      }
+    }
+    for (const item of prev) {
+      if (!nextIds.has(item.id)) {
+        await supabase.from("prosjekter").delete().eq("id", item.id);
+      }
+    }
+  }
+
+  async function syncOppgaver(prev: Oppgave[], next: Oppgave[]) {
+    const prevIds = new Set(prev.map(i => i.id));
+    const nextIds = new Set(next.map(i => i.id));
+    for (const item of next) {
+      if (!prevIds.has(item.id)) {
+        await supabase.from("oppgaver").insert({
+          id: item.id, oppgave: item.oppgave, user_id: user!.id,
+          lead_id: emptyToNull(item.lead_id), selskap_id: emptyToNull(item.selskap_id),
+          salgsmulighet_id: emptyToNull(item.salgsmulighet_id), ansvarlig: emptyToNull(item.ansvarlig),
+          frist: emptyToNull(item.frist), prioritet: item.prioritet as any,
+          status: item.status as any, paaminnelse: item.paaminnelse, notater: emptyToNull(item.notater),
+        });
+      }
+    }
+    for (const item of next) {
+      const old = prev.find(p => p.id === item.id);
+      if (old && JSON.stringify(old) !== JSON.stringify(item)) {
+        await supabase.from("oppgaver").update({
+          oppgave: item.oppgave, lead_id: emptyToNull(item.lead_id),
+          selskap_id: emptyToNull(item.selskap_id), salgsmulighet_id: emptyToNull(item.salgsmulighet_id),
+          ansvarlig: emptyToNull(item.ansvarlig), frist: emptyToNull(item.frist),
+          prioritet: item.prioritet as any, status: item.status as any,
+          paaminnelse: item.paaminnelse, notater: emptyToNull(item.notater),
+        }).eq("id", item.id);
+      }
+    }
+    for (const item of prev) {
+      if (!nextIds.has(item.id)) {
+        await supabase.from("oppgaver").delete().eq("id", item.id);
+      }
+    }
+  }
+
+  async function syncPartnere(prev: Partner[], next: Partner[]) {
+    const prevIds = new Set(prev.map(i => i.id));
+    const nextIds = new Set(next.map(i => i.id));
+    for (const item of next) {
+      if (!prevIds.has(item.id)) {
+        await supabase.from("partnere").insert({
+          id: item.id, partnernavn: item.partnernavn, partnertype: item.partnertype as any,
+          kontaktperson: emptyToNull(item.kontaktperson), e_post: emptyToNull(item.e_post),
+          telefon: emptyToNull(item.telefon), partnerstatus: item.partnerstatus as any,
+          pipeline_status: item.pipeline_status as any, ansvarlig: emptyToNull(item.ansvarlig),
+          provisjonsprosent: item.provisjonsprosent,
+          provisjonstype: emptyToNull(item.provisjonstype) as any,
+          selskap_id: emptyToNull(item.selskap_id),
+          opprettet_dato: emptyToNull(item.opprettet_dato), sist_aktivitet: emptyToNull(item.sist_aktivitet),
+          notater: emptyToNull(item.notater),
+        });
+      }
+    }
+    for (const item of next) {
+      const old = prev.find(p => p.id === item.id);
+      if (old && JSON.stringify(old) !== JSON.stringify(item)) {
+        await supabase.from("partnere").update({
+          partnernavn: item.partnernavn, partnertype: item.partnertype as any,
+          kontaktperson: emptyToNull(item.kontaktperson), e_post: emptyToNull(item.e_post),
+          telefon: emptyToNull(item.telefon), partnerstatus: item.partnerstatus as any,
+          pipeline_status: item.pipeline_status as any, ansvarlig: emptyToNull(item.ansvarlig),
+          provisjonsprosent: item.provisjonsprosent,
+          provisjonstype: emptyToNull(item.provisjonstype) as any,
+          selskap_id: emptyToNull(item.selskap_id),
+          opprettet_dato: emptyToNull(item.opprettet_dato), sist_aktivitet: emptyToNull(item.sist_aktivitet),
+          notater: emptyToNull(item.notater),
+        }).eq("id", item.id);
+      }
+    }
+    for (const item of prev) {
+      if (!nextIds.has(item.id)) {
+        await supabase.from("partnere").delete().eq("id", item.id);
+      }
+    }
+  }
+
+  // ID generator - uses crypto UUID now
+  const generateId = useCallback((_prefix: string, _items: { id: string }[]) => {
+    return crypto.randomUUID();
   }, []);
 
   // Convert lead → salgsmulighet + selskap + kontakt
   const konverterLead = useCallback((leadId: string) => {
     const lead = leads.find(l => l.id === leadId);
     if (!lead) return;
-
     const today = new Date().toISOString().split("T")[0];
 
-    // Create or find selskap
     let selskapId = selskaper.find(s => s.firmanavn.toLowerCase() === lead.firmanavn.toLowerCase())?.id;
     if (!selskapId) {
-      selskapId = generateId("S", selskaper);
+      selskapId = crypto.randomUUID();
       const nyttSelskap: Selskap = {
         id: selskapId, firmanavn: lead.firmanavn, bransje: "", kundeansvarlig: lead.ansvarlig,
         kundestatus: "Ikke kunde", live_status: false, onboarding_status: "Ikke startet",
@@ -82,10 +471,9 @@ function useCrmStoreInternal() {
       updateSelskaper(prev => [...prev, nyttSelskap]);
     }
 
-    // Create or find kontakt
     let kontaktId = kontakter.find(k => k.e_post.toLowerCase() === lead.e_post.toLowerCase())?.id;
     if (!kontaktId && lead.kontaktperson) {
-      kontaktId = generateId("K", kontakter);
+      kontaktId = crypto.randomUUID();
       const nyKontakt: Kontakt = {
         id: kontaktId, selskap_id: selskapId, navn: lead.kontaktperson,
         e_post: lead.e_post, telefon: lead.telefon, rolle: "", linkedin: "", notater: "",
@@ -93,8 +481,7 @@ function useCrmStoreInternal() {
       updateKontakter(prev => [...prev, nyKontakt]);
     }
 
-    // Create salgsmulighet
-    const smId = generateId("SM", salgsmuligheter);
+    const smId = crypto.randomUUID();
     const nySm: Salgsmulighet = {
       id: smId, navn: lead.firmanavn, selskap_id: selskapId, kontakt_id: kontaktId || "",
       ansvarlig: lead.ansvarlig, status: "Ny mulighet", forventet_mrr: 0, sla: 0, oppstartskostnad: 0,
@@ -105,22 +492,19 @@ function useCrmStoreInternal() {
     };
     updateSalgsmuligheter(prev => [...prev, nySm]);
 
-    // Update lead
     updateLeads(prev => prev.map(l =>
       l.id === leadId ? { ...l, status: "Konvertert til salg" as const, konvertert_dato: today, sist_aktivitet: today } : l
     ));
-  }, [leads, selskaper, kontakter, salgsmuligheter, updateLeads, updateSalgsmuligheter, updateSelskaper, updateKontakter]);
+  }, [leads, selskaper, kontakter, updateLeads, updateSalgsmuligheter, updateSelskaper, updateKontakter]);
 
-  // Convert lead → partner
   const konverterTilPartner = useCallback((leadId: string) => {
     const lead = leads.find(l => l.id === leadId);
     if (!lead) return;
     const today = new Date().toISOString().split("T")[0];
 
-    // Create partner selskap
     let selskapId = selskaper.find(s => s.firmanavn.toLowerCase() === lead.firmanavn.toLowerCase())?.id;
     if (!selskapId) {
-      selskapId = generateId("S", selskaper);
+      selskapId = crypto.randomUUID();
       const nyttSelskap: Selskap = {
         id: selskapId, firmanavn: lead.firmanavn, bransje: "", kundeansvarlig: lead.ansvarlig,
         kundestatus: "Ikke kunde", live_status: false, onboarding_status: "Ikke startet",
@@ -132,10 +516,9 @@ function useCrmStoreInternal() {
       updateSelskaper(prev => [...prev, nyttSelskap]);
     }
 
-    // Create kontakt
     let kontaktId = kontakter.find(k => k.e_post.toLowerCase() === lead.e_post.toLowerCase())?.id;
     if (!kontaktId && lead.kontaktperson) {
-      kontaktId = generateId("K", kontakter);
+      kontaktId = crypto.randomUUID();
       const nyKontakt: Kontakt = {
         id: kontaktId, selskap_id: selskapId, navn: lead.kontaktperson,
         e_post: lead.e_post, telefon: lead.telefon, rolle: "", linkedin: "", notater: "",
@@ -143,8 +526,7 @@ function useCrmStoreInternal() {
       updateKontakter(prev => [...prev, nyKontakt]);
     }
 
-    // Create partner
-    const partnerId = generateId("PA", partnere);
+    const partnerId = crypto.randomUUID();
     const nyPartner: Partner = {
       id: partnerId, partnernavn: lead.firmanavn, partnertype: "Salgspartner",
       kontaktperson: lead.kontaktperson, e_post: lead.e_post, telefon: lead.telefon,
@@ -154,13 +536,11 @@ function useCrmStoreInternal() {
     };
     updatePartnere(prev => [...prev, nyPartner]);
 
-    // Update lead
     updateLeads(prev => prev.map(l =>
       l.id === leadId ? { ...l, status: "Konvertert til partner" as const, konvertert_dato: today, sist_aktivitet: today } : l
     ));
-  }, [leads, selskaper, kontakter, partnere, updateLeads, updateSelskaper, updateKontakter, updatePartnere]);
+  }, [leads, selskaper, kontakter, updateLeads, updateSelskaper, updateKontakter, updatePartnere]);
 
-  // Win deal → create prosjekt + update selskap
   const vinnSalgsmulighet = useCallback((smId: string) => {
     const sm = salgsmuligheter.find(s => s.id === smId);
     if (!sm) return;
@@ -170,8 +550,7 @@ function useCrmStoreInternal() {
       s.id === smId ? { ...s, status: "Vunnet" as const, vunnet_dato: today, sist_aktivitet: today } : s
     ));
 
-    // Create prosjekt
-    const pId = generateId("P", prosjekter);
+    const pId = crypto.randomUUID();
     const nyttProsjekt: Prosjekt = {
       id: pId, prosjektnavn: sm.navn, selskap_id: sm.selskap_id, salgsmulighet_id: smId,
       ansvarlig: sm.ansvarlig, status: "Ny", startdato: today, forventet_go_live: "",
@@ -180,7 +559,6 @@ function useCrmStoreInternal() {
     };
     updateProsjekter(prev => [...prev, nyttProsjekt]);
 
-    // Update selskap to Pilot
     updateSelskaper(prev => prev.map(s =>
       s.id === sm.selskap_id ? {
         ...s, kundestatus: "Pilot" as const, live_status: false,
@@ -189,9 +567,8 @@ function useCrmStoreInternal() {
         oppstartskostnad: sm.oppstartskostnad, sist_aktivitet: today,
       } : s
     ));
-  }, [salgsmuligheter, prosjekter, selskaper, updateSalgsmuligheter, updateProsjekter, updateSelskaper]);
+  }, [salgsmuligheter, updateSalgsmuligheter, updateProsjekter, updateSelskaper]);
 
-  // Lose deal
   const tapSalgsmulighet = useCallback((smId: string, tapsaarsak: Salgsmulighet["tapsaarsak"]) => {
     const today = new Date().toISOString().split("T")[0];
     updateSalgsmuligheter(prev => prev.map(s =>
@@ -199,7 +576,6 @@ function useCrmStoreInternal() {
     ));
   }, [updateSalgsmuligheter]);
 
-  // Project go live
   const settProsjektLive = useCallback((pId: string) => {
     const prosjekt = prosjekter.find(p => p.id === pId);
     if (!prosjekt) return;
@@ -218,7 +594,6 @@ function useCrmStoreInternal() {
     ));
   }, [prosjekter, updateProsjekter, updateSelskaper]);
 
-  // Cancel selskap
   const kansellerSelskap = useCallback((selskapId: string, aarsak: Selskap["kanselleringsaarsak"], notat: string) => {
     const today = new Date().toISOString().split("T")[0];
     updateSelskaper(prev => prev.map(s =>
@@ -234,7 +609,7 @@ function useCrmStoreInternal() {
     leads, salgsmuligheter, prosjekter, selskaper, kontakter, oppgaver, partnere,
     updateLeads, updateSalgsmuligheter, updateProsjekter, updateSelskaper, updateKontakter, updateOppgaver, updatePartnere,
     konverterLead, konverterTilPartner, vinnSalgsmulighet, tapSalgsmulighet, settProsjektLive, kansellerSelskap,
-    generateId,
+    generateId, loaded, refresh,
   };
 }
 
