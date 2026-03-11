@@ -219,6 +219,19 @@ export default function Companies() {
         </DialogContent>
       </Dialog>
 
+      {/* Revert to salgsmulighet dialog */}
+      <Dialog open={!!revertDialog} onOpenChange={open => !open && setRevertDialog(null)}>
+        <DialogContent className="max-w-[95vw] sm:max-w-md">
+          <DialogHeader><DialogTitle>Angre til salgsmulighet</DialogTitle><DialogDescription>Selskapet settes tilbake til «Ikke kunde», tilknyttede vunnede salgsmuligheter gjenåpnes, og auto-opprettede prosjekter fjernes.</DialogDescription></DialogHeader>
+          <div className="flex gap-2 justify-end">
+            <Button variant="outline" onClick={() => setRevertDialog(null)}>Avbryt</Button>
+            <Button variant="default" onClick={() => {
+              if (revertDialog) { angreTilSalgsmulighet(revertDialog); setRevertDialog(null); }
+            }}>Angre</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <div className="relative max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
