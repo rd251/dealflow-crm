@@ -201,6 +201,7 @@ export default function Companies() {
                   <td className="px-4 py-3 text-right font-mono">{s.arr.toLocaleString("no-NO")}</td>
                   <td className="px-4 py-3 text-right font-mono">{totalSla.toLocaleString("no-NO")}</td>
                   <td className="px-4 py-3 text-right font-mono">{s.oppstartskostnad.toLocaleString("no-NO")}</td>
+                  <td className="px-4 py-3 text-muted-foreground text-xs font-mono">{s.lukkedato || "–"}</td>
                 </tr>
                 );
               })}
