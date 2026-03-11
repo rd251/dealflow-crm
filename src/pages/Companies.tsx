@@ -48,6 +48,8 @@ export default function Companies() {
   const [cancelReason, setCancelReason] = useState<Kanselleringsaarsak>("Pris");
   const [cancelNote, setCancelNote] = useState("");
   const [form, setForm] = useState({ firmanavn: "", bransje: "", kundeansvarlig: "" });
+  const [lukkedatoFra, setLukkedatoFra] = useState<Date | undefined>(undefined);
+  const [lukkedatoTil, setLukkedatoTil] = useState<Date | undefined>(undefined);
 
   // Hide selskaper with "Ikke kunde" status unless they have a won salgsmulighet or a project
   const filtered = selskaper.filter(s => {
@@ -56,6 +58,12 @@ export default function Companies() {
       const hasWonSm = salgsmuligheter.some(sm => sm.selskap_id === s.id && sm.status === "Vunnet");
       const hasProject = prosjekter.some(p => p.selskap_id === s.id);
       if (!hasWonSm && !hasProject) return false;
+    }
+    if (lukkedatoFra || lukkedatoTil) {
+      if (!s.lukkedato) return false;
+      const ld = new Date(s.lukkedato);
+      if (lukkedatoFra && ld < lukkedatoFra) return false;
+      if (lukkedatoTil && ld > lukkedatoTil) return false;
     }
     return true;
   });
