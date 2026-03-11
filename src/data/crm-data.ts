@@ -110,6 +110,7 @@ export interface Selskap {
   // Partner/kilde fields
   kilde: Kilde;
   partner_id: string;
+  lukkedato: string;
 }
 
 export interface Kontakt {

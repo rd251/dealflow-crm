@@ -27,6 +27,7 @@ function rowToSelskap(r: any): Selskap {
     kundetilstand: r.kundetilstand || "Bra", sist_aktivitet: r.sist_aktivitet || "",
     neste_steg: r.neste_steg || "", notater: r.notater || "",
     kilde: r.kilde || "Direkte salg", partner_id: r.partner_id || "",
+    lukkedato: r.lukkedato || "",
   };
 }
 function rowToKontakt(r: any): Kontakt {
