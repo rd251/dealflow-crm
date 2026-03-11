@@ -122,21 +122,20 @@ function useCrmStoreInternal() {
 
   useEffect(() => { if (user) refresh(); }, [user, refresh]);
 
-  // Generic updater: applies fn locally, then syncs to DB
-  // We store a ref to the latest state to avoid sync issues inside setState
-  const leadsRef = { current: leads };
+  // Use refs to always have latest state available in sync callbacks
+  const leadsRef = useRef(leads);
   leadsRef.current = leads;
-  const selskaperRef = { current: selskaper };
+  const selskaperRef = useRef(selskaper);
   selskaperRef.current = selskaper;
-  const kontakterRef = { current: kontakter };
+  const kontakterRef = useRef(kontakter);
   kontakterRef.current = kontakter;
-  const salgsmuligheterRef = { current: salgsmuligheter };
+  const salgsmuligheterRef = useRef(salgsmuligheter);
   salgsmuligheterRef.current = salgsmuligheter;
-  const prosjekterRef = { current: prosjekter };
+  const prosjekterRef = useRef(prosjekter);
   prosjekterRef.current = prosjekter;
-  const oppgaverRef = { current: oppgaver };
+  const oppgaverRef = useRef(oppgaver);
   oppgaverRef.current = oppgaver;
-  const partnereRef = { current: partnere };
+  const partnereRef = useRef(partnere);
   partnereRef.current = partnere;
 
   const updateLeads = useCallback((fn: (prev: Lead[]) => Lead[]) => {
