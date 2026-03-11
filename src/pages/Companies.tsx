@@ -142,9 +142,41 @@ export default function Companies() {
         </DialogContent>
       </Dialog>
 
-      <div className="mb-4 relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input placeholder="Søk selskaper..." className="pl-9" value={search} onChange={e => setSearch(e.target.value)} />
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <div className="relative max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input placeholder="Søk selskaper..." className="pl-9" value={search} onChange={e => setSearch(e.target.value)} />
+        </div>
+
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" size="sm" className={cn("gap-1.5 text-xs", lukkedatoFra && "border-primary text-primary")}>
+              <CalendarIcon className="w-3.5 h-3.5" />
+              {lukkedatoFra ? format(lukkedatoFra, "dd.MM.yyyy") : "Fra dato"}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar mode="single" selected={lukkedatoFra} onSelect={setLukkedatoFra} initialFocus className={cn("p-3 pointer-events-auto")} />
+          </PopoverContent>
+        </Popover>
+
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" size="sm" className={cn("gap-1.5 text-xs", lukkedatoTil && "border-primary text-primary")}>
+              <CalendarIcon className="w-3.5 h-3.5" />
+              {lukkedatoTil ? format(lukkedatoTil, "dd.MM.yyyy") : "Til dato"}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar mode="single" selected={lukkedatoTil} onSelect={setLukkedatoTil} initialFocus className={cn("p-3 pointer-events-auto")} />
+          </PopoverContent>
+        </Popover>
+
+        {(lukkedatoFra || lukkedatoTil) && (
+          <Button variant="ghost" size="sm" className="gap-1 text-xs text-muted-foreground" onClick={() => { setLukkedatoFra(undefined); setLukkedatoTil(undefined); }}>
+            <X className="w-3.5 h-3.5" /> Nullstill
+          </Button>
+        )}
       </div>
 
       {/* Mobile: card layout */}
