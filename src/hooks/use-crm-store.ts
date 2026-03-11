@@ -603,6 +603,32 @@ function useCrmStoreInternal() {
     updateSelskaper(prev => prev.filter(s => s.id !== selskapId));
   }, [updateSelskaper]);
 
+  const angreTilSalgsmulighet = useCallback((selskapId: string) => {
+    const today = new Date().toISOString().split("T")[0];
+    // Find linked salgsmuligheter that were won for this selskap
+    const vunnetSm = salgsmuligheter.filter(sm => sm.selskap_id === selskapId && sm.status === "Vunnet");
+    // Reopen them back to "Forhandling"
+    if (vunnetSm.length > 0) {
+      updateSalgsmuligheter(prev => prev.map(sm =>
+        sm.selskap_id === selskapId && sm.status === "Vunnet"
+          ? { ...sm, status: "Forhandling" as const, vunnet_dato: "", sist_aktivitet: today }
+          : sm
+      ));
+    }
+    // Remove auto-created projects linked to these salgsmuligheter
+    const smIds = new Set(vunnetSm.map(sm => sm.id));
+    updateProsjekter(prev => prev.filter(p => !smIds.has(p.salgsmulighet_id)));
+    // Reset selskap back to "Ikke kunde"
+    updateSelskaper(prev => prev.map(s =>
+      s.id === selskapId ? {
+        ...s, kundestatus: "Ikke kunde" as const, live_status: false,
+        onboarding_status: "Ikke startet" as const,
+        mrr: 0, arr: 0, oppstartskostnad: 0, lukkedato: "",
+        sist_aktivitet: today,
+      } : s
+    ));
+  }, [salgsmuligheter, updateSalgsmuligheter, updateProsjekter, updateSelskaper]);
+
   const konverterSelskapTilPartner = useCallback((selskapId: string) => {
     const selskap = selskaper.find(s => s.id === selskapId);
     if (!selskap) return;
@@ -624,7 +650,7 @@ function useCrmStoreInternal() {
     leads, salgsmuligheter, prosjekter, selskaper, kontakter, oppgaver, partnere,
     updateLeads, updateSalgsmuligheter, updateProsjekter, updateSelskaper, updateKontakter, updateOppgaver, updatePartnere,
     konverterLead, konverterTilPartner, vinnSalgsmulighet, tapSalgsmulighet, settProsjektLive, kansellerSelskap,
-    slettSelskap, konverterSelskapTilPartner,
+    slettSelskap, konverterSelskapTilPartner, angreTilSalgsmulighet,
     generateId, loaded, refresh,
   };
 }

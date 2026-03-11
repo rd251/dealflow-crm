@@ -12,7 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
-import { Plus, Search, Building2, ChevronRight, CalendarIcon, X, Upload, Trash2, ArrowRightLeft } from "lucide-react";
+import { Plus, Search, Building2, ChevronRight, CalendarIcon, X, Upload, Trash2, ArrowRightLeft, Undo2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import InlineTaskForm from "@/components/InlineTaskForm";
 import { Selskap, Kundestatus, OnboardingStatus, Kundetilstand, Kanselleringsaarsak } from "@/data/crm-data";
@@ -41,7 +41,7 @@ const tilstandColors: Record<Kundetilstand, string> = {
 export default function Companies() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const { selskaper, salgsmuligheter, prosjekter, updateSelskaper, kansellerSelskap, slettSelskap, konverterSelskapTilPartner, generateId } = useCrmStore();
+  const { selskaper, salgsmuligheter, prosjekter, updateSelskaper, kansellerSelskap, slettSelskap, konverterSelskapTilPartner, angreTilSalgsmulighet, generateId } = useCrmStore();
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
@@ -49,6 +49,7 @@ export default function Companies() {
   const [cancelDialog, setCancelDialog] = useState<string | null>(null);
   const [deleteDialog, setDeleteDialog] = useState<string | null>(null);
   const [transferDialog, setTransferDialog] = useState<string | null>(null);
+  const [revertDialog, setRevertDialog] = useState<string | null>(null);
   const [cancelReason, setCancelReason] = useState<Kanselleringsaarsak>("Pris");
   const [cancelNote, setCancelNote] = useState("");
   const [form, setForm] = useState({ firmanavn: "", bransje: "", kundeansvarlig: "" });
@@ -218,6 +219,19 @@ export default function Companies() {
         </DialogContent>
       </Dialog>
 
+      {/* Revert to salgsmulighet dialog */}
+      <Dialog open={!!revertDialog} onOpenChange={open => !open && setRevertDialog(null)}>
+        <DialogContent className="max-w-[95vw] sm:max-w-md">
+          <DialogHeader><DialogTitle>Angre til salgsmulighet</DialogTitle><DialogDescription>Selskapet settes tilbake til «Ikke kunde», tilknyttede vunnede salgsmuligheter gjenåpnes, og auto-opprettede prosjekter fjernes.</DialogDescription></DialogHeader>
+          <div className="flex gap-2 justify-end">
+            <Button variant="outline" onClick={() => setRevertDialog(null)}>Avbryt</Button>
+            <Button variant="default" onClick={() => {
+              if (revertDialog) { angreTilSalgsmulighet(revertDialog); setRevertDialog(null); }
+            }}>Angre</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <div className="relative max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -273,6 +287,9 @@ export default function Companies() {
                   <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${tilstandColors[s.kundetilstand]}`}>{s.kundetilstand}</span>
                 </div>
                 <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
+                  <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => setRevertDialog(s.id)}>
+                    <Undo2 className="w-3 h-3" /> Angre
+                  </Button>
                   <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => setTransferDialog(s.id)}>
                     <ArrowRightLeft className="w-3 h-3" /> Partner
                   </Button>
@@ -331,6 +348,9 @@ export default function Companies() {
                   <td className="px-4 py-3 text-muted-foreground text-xs font-mono">{s.lukkedato || "–"}</td>
                   <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
                     <div className="flex gap-1 justify-end">
+                      <Button variant="ghost" size="icon" className="h-7 w-7" title="Angre til salgsmulighet" onClick={() => setRevertDialog(s.id)}>
+                        <Undo2 className="w-3.5 h-3.5" />
+                      </Button>
                       <Button variant="ghost" size="icon" className="h-7 w-7" title="Overfør til partner" onClick={() => setTransferDialog(s.id)}>
                         <ArrowRightLeft className="w-3.5 h-3.5" />
                       </Button>
