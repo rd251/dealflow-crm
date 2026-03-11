@@ -66,8 +66,37 @@ export default function Contacts() {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       }
     >
+      <DataImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        target="kontakter"
+        onImport={async (rows) => {
+          let success = 0, errors = 0;
+          const newItems: Kontakt[] = [];
+          for (const row of rows) {
+            try {
+              newItems.push({
+                id: crypto.randomUUID(),
+                navn: String(row.navn || ""),
+                selskap_id: "",
+                rolle: String(row.rolle || ""),
+                e_post: String(row.e_post || ""),
+                telefon: String(row.telefon || ""),
+                linkedin: String(row.linkedin || ""),
+                notater: String(row.notater || ""),
+              });
+              success++;
+            } catch { errors++; }
+          }
+          if (newItems.length > 0) {
+            updateKontakter(prev => [...prev, ...newItems]);
+          }
+          return { success, errors };
+        }}
+      />
       <div className="mb-4 relative max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input placeholder="Søk kontakter..." className="pl-9" value={search} onChange={e => setSearch(e.target.value)} />
