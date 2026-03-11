@@ -48,10 +48,11 @@ export default function Leads() {
       e_post: form.e_post || "", telefon: form.telefon || "", kilde: form.kilde as LeadKilde || "Annet",
       status: "Ny", ansvarlig: form.ansvarlig || "", neste_steg: form.neste_steg || "",
       notater: form.notater || "", opprettet_dato: today, sist_aktivitet: today, konvertert_dato: "",
+      rolle_i_firma: form.rolle_i_firma || "", use_case: form.use_case || "",
     };
     updateLeads(prev => [...prev, newLead]);
     setDialogOpen(false);
-    setForm({ firmanavn: "", kontaktperson: "", e_post: "", telefon: "", kilde: "Nettside", status: "Ny", ansvarlig: "", neste_steg: "", notater: "" });
+    setForm({ firmanavn: "", kontaktperson: "", e_post: "", telefon: "", kilde: "Nettside", status: "Ny", ansvarlig: "", neste_steg: "", notater: "", rolle_i_firma: "", use_case: "" });
   };
 
   const changeStatus = (id: string, status: LeadStatus) => {

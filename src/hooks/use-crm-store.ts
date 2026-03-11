@@ -506,6 +506,7 @@ function useCrmStoreInternal() {
       tapt_dato: "", tapsaarsak: "", neste_steg: lead.neste_steg, notater: lead.notater,
       opprettet_dato: today, sist_aktivitet: today,
       kilde: "Direkte salg", partner_id: "", partner_provisjon: 0, partner_kostnad: 0, netto_inntekt: 0,
+      rolle_i_firma: lead.rolle_i_firma || "", use_case: lead.use_case || "",
     };
     updateSalgsmuligheter(prev => [...prev, nySm]);
 
