@@ -64,12 +64,13 @@ export interface Salgsmulighet {
   notater: string;
   opprettet_dato: string;
   sist_aktivitet: string;
-  // Partner/kilde fields
   kilde: Kilde;
   partner_id: string;
   partner_provisjon: number;
   partner_kostnad: number;
   netto_inntekt: number;
+  rolle_i_firma: string;
+  use_case: string;
 }
 
 export interface Prosjekt {
