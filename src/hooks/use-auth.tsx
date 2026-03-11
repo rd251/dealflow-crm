@@ -54,10 +54,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Set up listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
+      // Ignore TOKEN_REFRESHED failures that briefly emit null session
+      if (event === 'TOKEN_REFRESHED' && !session) return;
       if (session?.user) {
         const role = await fetchRole(session.user.id);
         if (mounted) setState({ user: session.user, session, role, loading: false, isAdmin: role === "admin" });
-      } else {
+      } else if (event === 'SIGNED_OUT') {
         if (mounted) setState({ user: null, session: null, role: null, loading: false, isAdmin: false });
       }
     });
