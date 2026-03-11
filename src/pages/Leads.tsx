@@ -32,7 +32,7 @@ export default function Leads() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
-  const [form, setForm] = useState<Partial<Lead>>({ firmanavn: "", kontaktperson: "", e_post: "", telefon: "", kilde: "Nettside", status: "Ny", ansvarlig: "", neste_steg: "", notater: "" });
+  const [form, setForm] = useState<Partial<Lead>>({ firmanavn: "", kontaktperson: "", e_post: "", telefon: "", kilde: "Nettside", status: "Ny", ansvarlig: "", neste_steg: "", notater: "", rolle_i_firma: "", use_case: "" });
 
   const filtered = leads.filter(l =>
     l.status !== "Konvertert til salg" && l.status !== "Konvertert til partner" &&
@@ -48,10 +48,11 @@ export default function Leads() {
       e_post: form.e_post || "", telefon: form.telefon || "", kilde: form.kilde as LeadKilde || "Annet",
       status: "Ny", ansvarlig: form.ansvarlig || "", neste_steg: form.neste_steg || "",
       notater: form.notater || "", opprettet_dato: today, sist_aktivitet: today, konvertert_dato: "",
+      rolle_i_firma: form.rolle_i_firma || "", use_case: form.use_case || "",
     };
     updateLeads(prev => [...prev, newLead]);
     setDialogOpen(false);
-    setForm({ firmanavn: "", kontaktperson: "", e_post: "", telefon: "", kilde: "Nettside", status: "Ny", ansvarlig: "", neste_steg: "", notater: "" });
+    setForm({ firmanavn: "", kontaktperson: "", e_post: "", telefon: "", kilde: "Nettside", status: "Ny", ansvarlig: "", neste_steg: "", notater: "", rolle_i_firma: "", use_case: "" });
   };
 
   const changeStatus = (id: string, status: LeadStatus) => {
@@ -87,6 +88,10 @@ export default function Leads() {
                 <Input placeholder="Ansvarlig" value={form.ansvarlig} onChange={e => setForm(f => ({ ...f, ansvarlig: e.target.value }))} />
               </div>
               <Input placeholder="Neste steg" value={form.neste_steg} onChange={e => setForm(f => ({ ...f, neste_steg: e.target.value }))} />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Input placeholder="Rolle i firma" value={form.rolle_i_firma} onChange={e => setForm(f => ({ ...f, rolle_i_firma: e.target.value }))} />
+                <Input placeholder="Use case" value={form.use_case} onChange={e => setForm(f => ({ ...f, use_case: e.target.value }))} />
+              </div>
               <Textarea placeholder="Notater" value={form.notater} onChange={e => setForm(f => ({ ...f, notater: e.target.value }))} />
               <Button onClick={addLead} className="w-full" disabled={!form.firmanavn}>Opprett lead</Button>
             </div>
@@ -119,6 +124,8 @@ export default function Leads() {
                 opprettet_dato: today,
                 sist_aktivitet: today,
                 konvertert_dato: "",
+                rolle_i_firma: String(row.rolle_i_firma || ""),
+                use_case: String(row.use_case || ""),
               });
               success++;
             } catch { errors++; }

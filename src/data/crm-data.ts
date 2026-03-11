@@ -40,6 +40,8 @@ export interface Lead {
   opprettet_dato: string;
   sist_aktivitet: string;
   konvertert_dato: string;
+  rolle_i_firma: string;
+  use_case: string;
 }
 
 export interface Salgsmulighet {
@@ -62,12 +64,13 @@ export interface Salgsmulighet {
   notater: string;
   opprettet_dato: string;
   sist_aktivitet: string;
-  // Partner/kilde fields
   kilde: Kilde;
   partner_id: string;
   partner_provisjon: number;
   partner_kostnad: number;
   netto_inntekt: number;
+  rolle_i_firma: string;
+  use_case: string;
 }
 
 export interface Prosjekt {
@@ -222,7 +225,7 @@ export const initialKontakter: Kontakt[] = [
   { id: "K-0010", selskap_id: "S-0001", navn: "Henrik Lie", e_post: "henrik@jobbkort.no", telefon: "+47 901 99 000", rolle: "CEO", linkedin: "", notater: "" },
 ];
 
-const smDefaults = { kilde: "Direkte salg" as Kilde, partner_id: "", partner_provisjon: 0, partner_kostnad: 0, netto_inntekt: 0 };
+const smDefaults = { kilde: "Direkte salg" as Kilde, partner_id: "", partner_provisjon: 0, partner_kostnad: 0, netto_inntekt: 0, rolle_i_firma: "", use_case: "" };
 
 export const initialSalgsmuligheter: Salgsmulighet[] = [
   { id: "SM-0001", navn: "Outbound Info agent", selskap_id: "S-0001", kontakt_id: "K-0010", ansvarlig: "", status: "Tilbud sendt", forventet_mrr: 990, sla: 0, oppstartskostnad: 0, kontraktslengde_mnd: 12, sannsynlighet: 100, forventet_lukkedato: "2026-04-15", vunnet_dato: "", tapt_dato: "", tapsaarsak: "", neste_steg: "Avventer svar", notater: "", opprettet_dato: "2026-03-01", sist_aktivitet: today, ...smDefaults },
@@ -252,9 +255,9 @@ export const initialSalgsmuligheter: Salgsmulighet[] = [
 ];
 
 export const initialLeads: Lead[] = [
-  { id: "L-0001", firmanavn: "Eger Group", kontaktperson: "Nina Enger", e_post: "nina@egergroup.no", telefon: "+47 902 11 222", kilde: "LinkedIn", status: "Ny", ansvarlig: "", neste_steg: "Første kontakt", notater: "", opprettet_dato: "2026-03-08", sist_aktivitet: today, konvertert_dato: "" },
-  { id: "L-0002", firmanavn: "Fjord Tech AS", kontaktperson: "Anders Fjord", e_post: "anders@fjordtech.no", telefon: "+47 902 33 444", kilde: "Nettside", status: "Kontaktet", ansvarlig: "", neste_steg: "Sende info", notater: "Interessert i support agent", opprettet_dato: "2026-03-05", sist_aktivitet: today, konvertert_dato: "" },
-  { id: "L-0003", firmanavn: "Bergen Eiendom AS", kontaktperson: "Lise Berg", e_post: "lise@bergeneiendom.no", telefon: "+47 902 55 666", kilde: "Referanse", status: "Kvalifisert", ansvarlig: "", neste_steg: "Booke demo", notater: "Henvist fra Defigo", opprettet_dato: "2026-03-02", sist_aktivitet: today, konvertert_dato: "" },
+  { id: "L-0001", firmanavn: "Eger Group", kontaktperson: "Nina Enger", e_post: "nina@egergroup.no", telefon: "+47 902 11 222", kilde: "LinkedIn", status: "Ny", ansvarlig: "", neste_steg: "Første kontakt", notater: "", opprettet_dato: "2026-03-08", sist_aktivitet: today, konvertert_dato: "", rolle_i_firma: "", use_case: "" },
+  { id: "L-0002", firmanavn: "Fjord Tech AS", kontaktperson: "Anders Fjord", e_post: "anders@fjordtech.no", telefon: "+47 902 33 444", kilde: "Nettside", status: "Kontaktet", ansvarlig: "", neste_steg: "Sende info", notater: "Interessert i support agent", opprettet_dato: "2026-03-05", sist_aktivitet: today, konvertert_dato: "", rolle_i_firma: "", use_case: "" },
+  { id: "L-0003", firmanavn: "Bergen Eiendom AS", kontaktperson: "Lise Berg", e_post: "lise@bergeneiendom.no", telefon: "+47 902 55 666", kilde: "Referanse", status: "Kvalifisert", ansvarlig: "", neste_steg: "Booke demo", notater: "Henvist fra Defigo", opprettet_dato: "2026-03-02", sist_aktivitet: today, konvertert_dato: "", rolle_i_firma: "", use_case: "" },
 ];
 
 export const initialProsjekter: Prosjekt[] = [];

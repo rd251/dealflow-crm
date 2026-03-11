@@ -13,7 +13,7 @@ function rowToLead(r: any): Lead {
     e_post: r.e_post || "", telefon: r.telefon || "", kilde: r.kilde || "Annet",
     status: r.status || "Ny", ansvarlig: r.ansvarlig || "", neste_steg: r.neste_steg || "",
     notater: r.notater || "", opprettet_dato: r.opprettet_dato || "", sist_aktivitet: r.sist_aktivitet || "",
-    konvertert_dato: r.konvertert_dato || "",
+    konvertert_dato: r.konvertert_dato || "", rolle_i_firma: r.rolle_i_firma || "", use_case: r.use_case || "",
   };
 }
 function rowToSelskap(r: any): Selskap {
@@ -48,6 +48,7 @@ function rowToSalgsmulighet(r: any): Salgsmulighet {
     sist_aktivitet: r.sist_aktivitet || "", kilde: r.kilde || "Direkte salg",
     partner_id: r.partner_id || "", partner_provisjon: Number(r.partner_provisjon) || 0,
     partner_kostnad: Number(r.partner_kostnad) || 0, netto_inntekt: Number(r.netto_inntekt) || 0,
+    rolle_i_firma: r.rolle_i_firma || "", use_case: r.use_case || "",
   };
 }
 function rowToProsjekt(r: any): Prosjekt {
@@ -200,7 +201,8 @@ function useCrmStoreInternal() {
           kilde: item.kilde as any, status: item.status as any, ansvarlig: emptyToNull(item.ansvarlig),
           neste_steg: emptyToNull(item.neste_steg), notater: emptyToNull(item.notater),
           opprettet_dato: emptyToNull(item.opprettet_dato), sist_aktivitet: emptyToNull(item.sist_aktivitet),
-          konvertert_dato: emptyToNull(item.konvertert_dato),
+           konvertert_dato: emptyToNull(item.konvertert_dato),
+          rolle_i_firma: emptyToNull(item.rolle_i_firma), use_case: emptyToNull(item.use_case),
         });
         if (error) console.error("Insert lead error:", error);
       }
@@ -214,7 +216,8 @@ function useCrmStoreInternal() {
           kilde: item.kilde as any, status: item.status as any, ansvarlig: emptyToNull(item.ansvarlig),
           neste_steg: emptyToNull(item.neste_steg), notater: emptyToNull(item.notater),
           opprettet_dato: emptyToNull(item.opprettet_dato), sist_aktivitet: emptyToNull(item.sist_aktivitet),
-          konvertert_dato: emptyToNull(item.konvertert_dato),
+           konvertert_dato: emptyToNull(item.konvertert_dato),
+          rolle_i_firma: emptyToNull(item.rolle_i_firma), use_case: emptyToNull(item.use_case),
         }).eq("id", item.id);
         if (error) console.error("Update lead error:", error);
       }
@@ -323,6 +326,7 @@ function useCrmStoreInternal() {
           sist_aktivitet: emptyToNull(item.sist_aktivitet), kilde: item.kilde as any,
           partner_id: emptyToNull(item.partner_id), partner_provisjon: item.partner_provisjon,
           partner_kostnad: item.partner_kostnad, netto_inntekt: item.netto_inntekt,
+          rolle_i_firma: emptyToNull(item.rolle_i_firma), use_case: emptyToNull(item.use_case),
         });
       }
     }
@@ -341,6 +345,7 @@ function useCrmStoreInternal() {
           sist_aktivitet: emptyToNull(item.sist_aktivitet), kilde: item.kilde as any,
           partner_id: emptyToNull(item.partner_id), partner_provisjon: item.partner_provisjon,
           partner_kostnad: item.partner_kostnad, netto_inntekt: item.netto_inntekt,
+          rolle_i_firma: emptyToNull(item.rolle_i_firma), use_case: emptyToNull(item.use_case),
         }).eq("id", item.id);
       }
     }
@@ -505,6 +510,7 @@ function useCrmStoreInternal() {
       tapt_dato: "", tapsaarsak: "", neste_steg: lead.neste_steg, notater: lead.notater,
       opprettet_dato: today, sist_aktivitet: today,
       kilde: "Direkte salg", partner_id: "", partner_provisjon: 0, partner_kostnad: 0, netto_inntekt: 0,
+      rolle_i_firma: lead.rolle_i_firma || "", use_case: lead.use_case || "",
     };
     updateSalgsmuligheter(prev => [...prev, nySm]);
 
