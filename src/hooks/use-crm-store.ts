@@ -326,6 +326,7 @@ function useCrmStoreInternal() {
           sist_aktivitet: emptyToNull(item.sist_aktivitet), kilde: item.kilde as any,
           partner_id: emptyToNull(item.partner_id), partner_provisjon: item.partner_provisjon,
           partner_kostnad: item.partner_kostnad, netto_inntekt: item.netto_inntekt,
+          rolle_i_firma: emptyToNull(item.rolle_i_firma), use_case: emptyToNull(item.use_case),
         });
       }
     }
