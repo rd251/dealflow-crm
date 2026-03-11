@@ -107,6 +107,9 @@ function useCrmStoreInternal() {
       supabase.from("oppgaver").select("*"),
       supabase.from("partnere").select("*"),
     ]);
+    [r1, r2, r3, r4, r5, r6, r7].forEach((r, i) => {
+      if (r.error) console.error(`Fetch error (table ${i}):`, r.error);
+    });
     if (r1.data) setLeads(r1.data.map(rowToLead));
     if (r2.data) setSalgsmuligheter(r2.data.map(rowToSalgsmulighet));
     if (r3.data) setProsjekter(r3.data.map(rowToProsjekt));
