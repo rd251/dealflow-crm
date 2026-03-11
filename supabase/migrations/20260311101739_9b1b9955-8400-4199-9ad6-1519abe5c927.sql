@@ -1,0 +1,1 @@
+ALTER TABLE public.selskaper ADD COLUMN IF NOT EXISTS lukkedato text;

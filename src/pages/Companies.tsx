@@ -64,7 +64,7 @@ export default function Companies() {
       mrr: 0, arr: 0, oppstartskostnad: 0, go_live_dato: "", kansellert_dato: "",
       kanselleringsaarsak: "", kanselleringsnotat: "", kundetilstand: "Bra",
       sist_aktivitet: new Date().toISOString().split("T")[0], neste_steg: "", notater: "",
-      kilde: "Direkte salg", partner_id: "",
+      kilde: "Direkte salg", partner_id: "", lukkedato: "",
     };
     updateSelskaper(prev => [...prev, nyttSelskap]);
     setDialogOpen(false);
@@ -174,6 +174,7 @@ export default function Companies() {
                 <th className="text-right px-4 py-3 font-medium">ARR</th>
                 <th className="text-right px-4 py-3 font-medium">SLA</th>
                 <th className="text-right px-4 py-3 font-medium">Oppstart</th>
+                <th className="text-left px-4 py-3 font-medium">Lukkedato</th>
               </tr>
             </thead>
             <tbody>
@@ -200,6 +201,7 @@ export default function Companies() {
                   <td className="px-4 py-3 text-right font-mono">{s.arr.toLocaleString("no-NO")}</td>
                   <td className="px-4 py-3 text-right font-mono">{totalSla.toLocaleString("no-NO")}</td>
                   <td className="px-4 py-3 text-right font-mono">{s.oppstartskostnad.toLocaleString("no-NO")}</td>
+                  <td className="px-4 py-3 text-muted-foreground text-xs font-mono">{s.lukkedato || "–"}</td>
                 </tr>
                 );
               })}
@@ -283,6 +285,10 @@ export default function Companies() {
                   <div>
                     <span className="text-muted-foreground block text-xs mb-1">Oppstartskostnad</span>
                     <Input type="number" value={currentSelskap.oppstartskostnad || ""} onChange={e => updateField("oppstartskostnad", Number(e.target.value))} className="h-8 text-sm" />
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground block text-xs mb-1">Lukkedato</span>
+                    <Input type="date" value={currentSelskap.lukkedato} onChange={e => updateField("lukkedato", e.target.value)} className="h-8 text-sm" />
                   </div>
                   <div>
                     <span className="text-muted-foreground block text-xs mb-1">Go-live dato</span>

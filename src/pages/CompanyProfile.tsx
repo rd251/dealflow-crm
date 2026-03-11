@@ -186,6 +186,10 @@ export default function CompanyProfile() {
                   <Input type="number" value={selskap.oppstartskostnad || ""} onChange={e => updateField("oppstartskostnad", Number(e.target.value))} className="h-8 text-sm" />
                 </div>
                 <div>
+                  <span className="text-muted-foreground block text-xs mb-1">Lukkedato</span>
+                  <Input type="date" value={selskap.lukkedato} onChange={e => updateField("lukkedato", e.target.value)} className="h-8 text-sm" />
+                </div>
+                <div>
                   <span className="text-muted-foreground block text-xs mb-1">Go-live dato</span>
                   <Input type="date" value={selskap.go_live_dato} onChange={e => updateField("go_live_dato", e.target.value)} className="h-8 text-sm" />
                 </div>

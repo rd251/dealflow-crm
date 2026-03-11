@@ -27,6 +27,7 @@ function rowToSelskap(r: any): Selskap {
     kundetilstand: r.kundetilstand || "Bra", sist_aktivitet: r.sist_aktivitet || "",
     neste_steg: r.neste_steg || "", notater: r.notater || "",
     kilde: r.kilde || "Direkte salg", partner_id: r.partner_id || "",
+    lukkedato: r.lukkedato || "",
   };
 }
 function rowToKontakt(r: any): Kontakt {
@@ -242,6 +243,7 @@ function useCrmStoreInternal() {
           kundetilstand: item.kundetilstand as any, sist_aktivitet: emptyToNull(item.sist_aktivitet),
           neste_steg: emptyToNull(item.neste_steg), notater: emptyToNull(item.notater),
           kilde: item.kilde as any, partner_id: emptyToNull(item.partner_id),
+          lukkedato: emptyToNull(item.lukkedato),
         });
         if (error) console.error("Insert selskap error:", error);
       }
@@ -260,6 +262,7 @@ function useCrmStoreInternal() {
           kundetilstand: item.kundetilstand as any, sist_aktivitet: emptyToNull(item.sist_aktivitet),
           neste_steg: emptyToNull(item.neste_steg), notater: emptyToNull(item.notater),
           kilde: item.kilde as any, partner_id: emptyToNull(item.partner_id),
+          lukkedato: emptyToNull(item.lukkedato),
         }).eq("id", item.id);
         if (error) console.error("Update selskap error:", error);
       }
@@ -479,7 +482,7 @@ function useCrmStoreInternal() {
         mrr: 0, arr: 0, oppstartskostnad: 0, go_live_dato: "", kansellert_dato: "",
         kanselleringsaarsak: "", kanselleringsnotat: "", kundetilstand: "Bra",
         sist_aktivitet: today, neste_steg: "", notater: "",
-        kilde: "Direkte salg", partner_id: "",
+        kilde: "Direkte salg", partner_id: "", lukkedato: "",
       };
       updateSelskaper(prev => [...prev, nyttSelskap]);
     }
