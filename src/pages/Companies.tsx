@@ -192,6 +192,32 @@ export default function Companies() {
         </DialogContent>
       </Dialog>
 
+      {/* Delete dialog */}
+      <Dialog open={!!deleteDialog} onOpenChange={open => !open && setDeleteDialog(null)}>
+        <DialogContent className="max-w-[95vw] sm:max-w-md">
+          <DialogHeader><DialogTitle>Slett selskap</DialogTitle><DialogDescription>Er du sikker på at du vil slette dette selskapet? Handlingen kan ikke angres.</DialogDescription></DialogHeader>
+          <div className="flex gap-2 justify-end">
+            <Button variant="outline" onClick={() => setDeleteDialog(null)}>Avbryt</Button>
+            <Button variant="destructive" onClick={() => {
+              if (deleteDialog) { slettSelskap(deleteDialog); setDeleteDialog(null); }
+            }}>Slett</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Transfer to partner dialog */}
+      <Dialog open={!!transferDialog} onOpenChange={open => !open && setTransferDialog(null)}>
+        <DialogContent className="max-w-[95vw] sm:max-w-md">
+          <DialogHeader><DialogTitle>Overfør til partner</DialogTitle><DialogDescription>Selskapet flyttes til partnersiden og fjernes fra kundeforhold.</DialogDescription></DialogHeader>
+          <div className="flex gap-2 justify-end">
+            <Button variant="outline" onClick={() => setTransferDialog(null)}>Avbryt</Button>
+            <Button onClick={() => {
+              if (transferDialog) { konverterSelskapTilPartner(transferDialog); setTransferDialog(null); }
+            }}>Overfør</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <div className="relative max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
