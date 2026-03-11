@@ -49,6 +49,7 @@ export default function Companies() {
   const [cancelDialog, setCancelDialog] = useState<string | null>(null);
   const [deleteDialog, setDeleteDialog] = useState<string | null>(null);
   const [transferDialog, setTransferDialog] = useState<string | null>(null);
+  const [revertDialog, setRevertDialog] = useState<string | null>(null);
   const [cancelReason, setCancelReason] = useState<Kanselleringsaarsak>("Pris");
   const [cancelNote, setCancelNote] = useState("");
   const [form, setForm] = useState({ firmanavn: "", bransje: "", kundeansvarlig: "" });
