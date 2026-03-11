@@ -120,6 +120,8 @@ export default function Leads() {
                 opprettet_dato: today,
                 sist_aktivitet: today,
                 konvertert_dato: "",
+                rolle_i_firma: String(row.rolle_i_firma || ""),
+                use_case: String(row.use_case || ""),
               });
               success++;
             } catch { errors++; }
