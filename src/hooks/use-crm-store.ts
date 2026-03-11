@@ -599,10 +599,32 @@ function useCrmStoreInternal() {
     ));
   }, [updateSelskaper]);
 
+  const slettSelskap = useCallback((selskapId: string) => {
+    updateSelskaper(prev => prev.filter(s => s.id !== selskapId));
+  }, [updateSelskaper]);
+
+  const konverterSelskapTilPartner = useCallback((selskapId: string) => {
+    const selskap = selskaper.find(s => s.id === selskapId);
+    if (!selskap) return;
+    const today = new Date().toISOString().split("T")[0];
+
+    const partnerId = crypto.randomUUID();
+    const nyPartner: Partner = {
+      id: partnerId, partnernavn: selskap.firmanavn, partnertype: "Salgspartner",
+      kontaktperson: "", e_post: "", telefon: "",
+      partnerstatus: "Under onboarding", pipeline_status: "Ny partner",
+      ansvarlig: selskap.kundeansvarlig, provisjonsprosent: 0, provisjonstype: "",
+      selskap_id: "", opprettet_dato: today, sist_aktivitet: today, notater: selskap.notater,
+    };
+    updatePartnere(prev => [...prev, nyPartner]);
+    updateSelskaper(prev => prev.filter(s => s.id !== selskapId));
+  }, [selskaper, updatePartnere, updateSelskaper]);
+
   return {
     leads, salgsmuligheter, prosjekter, selskaper, kontakter, oppgaver, partnere,
     updateLeads, updateSalgsmuligheter, updateProsjekter, updateSelskaper, updateKontakter, updateOppgaver, updatePartnere,
     konverterLead, konverterTilPartner, vinnSalgsmulighet, tapSalgsmulighet, settProsjektLive, kansellerSelskap,
+    slettSelskap, konverterSelskapTilPartner,
     generateId, loaded, refresh,
   };
 }
