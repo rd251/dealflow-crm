@@ -18,6 +18,7 @@ export default function Contacts() {
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Kontakt | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [form, setForm] = useState({ navn: "", selskap_id: "", rolle: "", e_post: "", telefon: "", linkedin: "", notater: "" });
 
   const filtered = kontakter.filter(k =>
