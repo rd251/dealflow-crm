@@ -262,6 +262,7 @@ function useCrmStoreInternal() {
           kundetilstand: item.kundetilstand as any, sist_aktivitet: emptyToNull(item.sist_aktivitet),
           neste_steg: emptyToNull(item.neste_steg), notater: emptyToNull(item.notater),
           kilde: item.kilde as any, partner_id: emptyToNull(item.partner_id),
+          lukkedato: emptyToNull(item.lukkedato),
         }).eq("id", item.id);
         if (error) console.error("Update selskap error:", error);
       }
