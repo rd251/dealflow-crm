@@ -272,7 +272,13 @@ export default function Companies() {
                   <span className="font-mono">MRR: {s.mrr.toLocaleString("no-NO")}</span>
                   <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${tilstandColors[s.kundetilstand]}`}>{s.kundetilstand}</span>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
+                  <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => setTransferDialog(s.id)}>
+                    <ArrowRightLeft className="w-3 h-3" /> Partner
+                  </Button>
+                  <Button variant="ghost" size="sm" className="h-7 text-xs gap-1 text-destructive hover:text-destructive" onClick={() => setDeleteDialog(s.id)}>
+                    <Trash2 className="w-3 h-3" /> Slett
+                  </Button>
                   <ChevronRight className="w-3.5 h-3.5 text-muted-foreground ml-auto" />
                 </div>
               </div>
