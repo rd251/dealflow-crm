@@ -120,61 +120,69 @@ function useCrmStoreInternal() {
   useEffect(() => { if (user) refresh(); }, [user, refresh]);
 
   // Generic updater: applies fn locally, then syncs to DB
-  const updateLeads = useCallback(async (fn: (prev: Lead[]) => Lead[]) => {
-    setLeads(prev => {
-      const next = fn(prev);
-      // Sync changes to DB async
-      syncLeads(prev, next);
-      return next;
-    });
+  // We store a ref to the latest state to avoid sync issues inside setState
+  const leadsRef = { current: leads };
+  leadsRef.current = leads;
+  const selskaperRef = { current: selskaper };
+  selskaperRef.current = selskaper;
+  const kontakterRef = { current: kontakter };
+  kontakterRef.current = kontakter;
+  const salgsmuligheterRef = { current: salgsmuligheter };
+  salgsmuligheterRef.current = salgsmuligheter;
+  const prosjekterRef = { current: prosjekter };
+  prosjekterRef.current = prosjekter;
+  const oppgaverRef = { current: oppgaver };
+  oppgaverRef.current = oppgaver;
+  const partnereRef = { current: partnere };
+  partnereRef.current = partnere;
+
+  const updateLeads = useCallback((fn: (prev: Lead[]) => Lead[]) => {
+    const prev = leadsRef.current;
+    const next = fn(prev);
+    setLeads(next);
+    syncLeads(prev, next).catch(e => console.error("syncLeads error:", e));
   }, []);
 
-  const updateSelskaper = useCallback(async (fn: (prev: Selskap[]) => Selskap[]) => {
-    setSelskaper(prev => {
-      const next = fn(prev);
-      syncSelskaper(prev, next);
-      return next;
-    });
+  const updateSelskaper = useCallback((fn: (prev: Selskap[]) => Selskap[]) => {
+    const prev = selskaperRef.current;
+    const next = fn(prev);
+    setSelskaper(next);
+    syncSelskaper(prev, next).catch(e => console.error("syncSelskaper error:", e));
   }, []);
 
-  const updateKontakter = useCallback(async (fn: (prev: Kontakt[]) => Kontakt[]) => {
-    setKontakter(prev => {
-      const next = fn(prev);
-      syncKontakter(prev, next);
-      return next;
-    });
+  const updateKontakter = useCallback((fn: (prev: Kontakt[]) => Kontakt[]) => {
+    const prev = kontakterRef.current;
+    const next = fn(prev);
+    setKontakter(next);
+    syncKontakter(prev, next).catch(e => console.error("syncKontakter error:", e));
   }, []);
 
-  const updateSalgsmuligheter = useCallback(async (fn: (prev: Salgsmulighet[]) => Salgsmulighet[]) => {
-    setSalgsmuligheter(prev => {
-      const next = fn(prev);
-      syncSalgsmuligheter(prev, next);
-      return next;
-    });
+  const updateSalgsmuligheter = useCallback((fn: (prev: Salgsmulighet[]) => Salgsmulighet[]) => {
+    const prev = salgsmuligheterRef.current;
+    const next = fn(prev);
+    setSalgsmuligheter(next);
+    syncSalgsmuligheter(prev, next).catch(e => console.error("syncSalgsmuligheter error:", e));
   }, []);
 
-  const updateProsjekter = useCallback(async (fn: (prev: Prosjekt[]) => Prosjekt[]) => {
-    setProsjekter(prev => {
-      const next = fn(prev);
-      syncProsjekter(prev, next);
-      return next;
-    });
+  const updateProsjekter = useCallback((fn: (prev: Prosjekt[]) => Prosjekt[]) => {
+    const prev = prosjekterRef.current;
+    const next = fn(prev);
+    setProsjekter(next);
+    syncProsjekter(prev, next).catch(e => console.error("syncProsjekter error:", e));
   }, []);
 
-  const updateOppgaver = useCallback(async (fn: (prev: Oppgave[]) => Oppgave[]) => {
-    setOppgaver(prev => {
-      const next = fn(prev);
-      syncOppgaver(prev, next);
-      return next;
-    });
+  const updateOppgaver = useCallback((fn: (prev: Oppgave[]) => Oppgave[]) => {
+    const prev = oppgaverRef.current;
+    const next = fn(prev);
+    setOppgaver(next);
+    syncOppgaver(prev, next).catch(e => console.error("syncOppgaver error:", e));
   }, []);
 
-  const updatePartnere = useCallback(async (fn: (prev: Partner[]) => Partner[]) => {
-    setPartnere(prev => {
-      const next = fn(prev);
-      syncPartnere(prev, next);
-      return next;
-    });
+  const updatePartnere = useCallback((fn: (prev: Partner[]) => Partner[]) => {
+    const prev = partnereRef.current;
+    const next = fn(prev);
+    setPartnere(next);
+    syncPartnere(prev, next).catch(e => console.error("syncPartnere error:", e));
   }, []);
 
   // Sync helpers - detect new/updated/deleted items
