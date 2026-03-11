@@ -33,8 +33,9 @@ export default function Leads() {
   const [form, setForm] = useState<Partial<Lead>>({ firmanavn: "", kontaktperson: "", e_post: "", telefon: "", kilde: "Nettside", status: "Ny", ansvarlig: "", neste_steg: "", notater: "" });
 
   const filtered = leads.filter(l =>
-    l.firmanavn.toLowerCase().includes(search.toLowerCase()) ||
-    l.kontaktperson.toLowerCase().includes(search.toLowerCase())
+    l.status !== "Konvertert til salg" && l.status !== "Konvertert til partner" &&
+    (l.firmanavn.toLowerCase().includes(search.toLowerCase()) ||
+    l.kontaktperson.toLowerCase().includes(search.toLowerCase()))
   );
 
   const addLead = () => {
