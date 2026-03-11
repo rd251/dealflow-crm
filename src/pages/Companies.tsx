@@ -113,7 +113,7 @@ export default function Companies() {
   return (
     <PageShell
       title="Kundeforhold"
-      subtitle={`${selskaper.length} selskaper · ${selskaper.filter(s => s.kundestatus === "Live").length} live`}
+      subtitle={`${filtered.length} selskaper · ${selskaper.filter(s => s.kundestatus === "Live").length} live`}
       actions={
         <div className="flex gap-2">
         <Button size="sm" variant="outline" onClick={() => setImportOpen(true)}><Upload className="w-4 h-4 mr-1" />{!isMobile && "Importer"}</Button>
