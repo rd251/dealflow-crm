@@ -1,5 +1,5 @@
 // CRM global store - backed by Supabase
-import { useState, useCallback, useEffect, createContext, useContext, createElement, ReactNode } from "react";
+import { useState, useCallback, useEffect, useRef, createContext, useContext, createElement, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import {
