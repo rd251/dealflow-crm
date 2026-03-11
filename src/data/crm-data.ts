@@ -40,6 +40,8 @@ export interface Lead {
   opprettet_dato: string;
   sist_aktivitet: string;
   konvertert_dato: string;
+  rolle_i_firma: string;
+  use_case: string;
 }
 
 export interface Salgsmulighet {
