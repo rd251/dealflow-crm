@@ -92,8 +92,43 @@ export default function Leads() {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       }
     >
+      <DataImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        target="leads"
+        onImport={async (rows) => {
+          const today = new Date().toISOString().split("T")[0];
+          let success = 0, errors = 0;
+          const newLeads: Lead[] = [];
+          for (const row of rows) {
+            try {
+              newLeads.push({
+                id: crypto.randomUUID(),
+                firmanavn: String(row.firmanavn || ""),
+                kontaktperson: String(row.kontaktperson || ""),
+                e_post: String(row.e_post || ""),
+                telefon: String(row.telefon || ""),
+                kilde: (row.kilde as LeadKilde) || "Annet",
+                status: "Ny",
+                ansvarlig: String(row.ansvarlig || ""),
+                neste_steg: String(row.neste_steg || ""),
+                notater: String(row.notater || ""),
+                opprettet_dato: today,
+                sist_aktivitet: today,
+                konvertert_dato: "",
+              });
+              success++;
+            } catch { errors++; }
+          }
+          if (newLeads.length > 0) {
+            updateLeads(prev => [...prev, ...newLeads]);
+          }
+          return { success, errors };
+        }}
+      />
       <div className="mb-4 relative max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input placeholder="Søk leads..." className="pl-9" value={search} onChange={e => setSearch(e.target.value)} />
