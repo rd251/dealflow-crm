@@ -47,6 +47,8 @@ export default function Companies() {
   const [importOpen, setImportOpen] = useState(false);
   const [selected, setSelected] = useState<Selskap | null>(null);
   const [cancelDialog, setCancelDialog] = useState<string | null>(null);
+  const [deleteDialog, setDeleteDialog] = useState<string | null>(null);
+  const [transferDialog, setTransferDialog] = useState<string | null>(null);
   const [cancelReason, setCancelReason] = useState<Kanselleringsaarsak>("Pris");
   const [cancelNote, setCancelNote] = useState("");
   const [form, setForm] = useState({ firmanavn: "", bransje: "", kundeansvarlig: "" });
