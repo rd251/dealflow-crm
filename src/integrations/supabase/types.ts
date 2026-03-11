@@ -494,6 +494,7 @@ export type Database = {
           kundestatus: Database["public"]["Enums"]["kundestatus"]
           kundetilstand: Database["public"]["Enums"]["kundetilstand"] | null
           live_status: boolean | null
+          lukkedato: string | null
           mrr: number | null
           neste_steg: string | null
           notater: string | null
@@ -522,6 +523,7 @@ export type Database = {
           kundestatus?: Database["public"]["Enums"]["kundestatus"]
           kundetilstand?: Database["public"]["Enums"]["kundetilstand"] | null
           live_status?: boolean | null
+          lukkedato?: string | null
           mrr?: number | null
           neste_steg?: string | null
           notater?: string | null
@@ -550,6 +552,7 @@ export type Database = {
           kundestatus?: Database["public"]["Enums"]["kundestatus"]
           kundetilstand?: Database["public"]["Enums"]["kundetilstand"] | null
           live_status?: boolean | null
+          lukkedato?: string | null
           mrr?: number | null
           neste_steg?: string | null
           notater?: string | null
