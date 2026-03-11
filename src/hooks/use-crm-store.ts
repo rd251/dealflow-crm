@@ -201,7 +201,8 @@ function useCrmStoreInternal() {
           kilde: item.kilde as any, status: item.status as any, ansvarlig: emptyToNull(item.ansvarlig),
           neste_steg: emptyToNull(item.neste_steg), notater: emptyToNull(item.notater),
           opprettet_dato: emptyToNull(item.opprettet_dato), sist_aktivitet: emptyToNull(item.sist_aktivitet),
-          konvertert_dato: emptyToNull(item.konvertert_dato),
+           konvertert_dato: emptyToNull(item.konvertert_dato),
+          rolle_i_firma: emptyToNull(item.rolle_i_firma), use_case: emptyToNull(item.use_case),
         });
         if (error) console.error("Insert lead error:", error);
       }
