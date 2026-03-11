@@ -86,6 +86,99 @@ function rowToPartner(r: any): Partner {
 function emptyToNull(v: string | undefined) { return v === "" || v === undefined ? null : v; }
 function numOrNull(v: number | undefined) { return v === 0 || v === undefined ? 0 : v; }
 
+// Seed database with initial data if tables are empty
+async function seedDatabase(userId: string) {
+  // Build ID mapping: old string IDs → new UUIDs
+  const idMap = new Map<string, string>();
+  
+  // Generate UUIDs for all seed items
+  for (const s of initialSelskaper) idMap.set(s.id, crypto.randomUUID());
+  for (const k of initialKontakter) idMap.set(k.id, crypto.randomUUID());
+  for (const sm of initialSalgsmuligheter) idMap.set(sm.id, crypto.randomUUID());
+  for (const l of initialLeads) idMap.set(l.id, crypto.randomUUID());
+  for (const o of initialOppgaver) idMap.set(o.id, crypto.randomUUID());
+  
+  const mapId = (oldId: string) => idMap.get(oldId) || oldId;
+  
+  // Insert selskaper first (no FK deps)
+  const selskaperRows = initialSelskaper.map(s => ({
+    id: mapId(s.id), firmanavn: s.firmanavn, bransje: emptyToNull(s.bransje),
+    kundeansvarlig: emptyToNull(s.kundeansvarlig), kundestatus: s.kundestatus as any,
+    live_status: s.live_status, onboarding_status: s.onboarding_status as any,
+    mrr: s.mrr, arr: s.arr, oppstartskostnad: s.oppstartskostnad,
+    go_live_dato: emptyToNull(s.go_live_dato), kansellert_dato: emptyToNull(s.kansellert_dato),
+    kanselleringsaarsak: emptyToNull(s.kanselleringsaarsak) as any,
+    kanselleringsnotat: emptyToNull(s.kanselleringsnotat),
+    kundetilstand: s.kundetilstand as any, sist_aktivitet: emptyToNull(s.sist_aktivitet),
+    neste_steg: emptyToNull(s.neste_steg), notater: emptyToNull(s.notater),
+    kilde: s.kilde as any, partner_id: emptyToNull(s.partner_id),
+    lukkedato: emptyToNull(s.lukkedato),
+  }));
+  const { error: e1 } = await supabase.from("selskaper").insert(selskaperRows);
+  if (e1) console.error("Seed selskaper error:", e1);
+  
+  // Insert kontakter (depends on selskaper)
+  const kontakterRows = initialKontakter.map(k => ({
+    id: mapId(k.id), selskap_id: k.selskap_id ? mapId(k.selskap_id) : null,
+    navn: k.navn, rolle: emptyToNull(k.rolle), e_post: emptyToNull(k.e_post),
+    telefon: emptyToNull(k.telefon), linkedin: emptyToNull(k.linkedin), notater: emptyToNull(k.notater),
+  }));
+  const { error: e2 } = await supabase.from("kontakter").insert(kontakterRows);
+  if (e2) console.error("Seed kontakter error:", e2);
+  
+  // Insert salgsmuligheter (depends on selskaper, kontakter)
+  const smRows = initialSalgsmuligheter.map(sm => ({
+    id: mapId(sm.id), navn: sm.navn, selskap_id: sm.selskap_id ? mapId(sm.selskap_id) : null,
+    kontakt_id: sm.kontakt_id ? mapId(sm.kontakt_id) : null,
+    ansvarlig: emptyToNull(sm.ansvarlig), status: sm.status as any,
+    forventet_mrr: sm.forventet_mrr, sla: sm.sla, oppstartskostnad: sm.oppstartskostnad,
+    kontraktslengde_mnd: sm.kontraktslengde_mnd, sannsynlighet: sm.sannsynlighet,
+    forventet_lukkedato: emptyToNull(sm.forventet_lukkedato),
+    vunnet_dato: emptyToNull(sm.vunnet_dato), tapt_dato: emptyToNull(sm.tapt_dato),
+    tapsaarsak: emptyToNull(sm.tapsaarsak) as any, neste_steg: emptyToNull(sm.neste_steg),
+    notater: emptyToNull(sm.notater), opprettet_dato: emptyToNull(sm.opprettet_dato),
+    sist_aktivitet: emptyToNull(sm.sist_aktivitet), kilde: sm.kilde as any,
+    partner_id: sm.partner_id ? mapId(sm.partner_id) : null,
+    partner_provisjon: sm.partner_provisjon, partner_kostnad: sm.partner_kostnad,
+    netto_inntekt: sm.netto_inntekt,
+    rolle_i_firma: emptyToNull(sm.rolle_i_firma), use_case: emptyToNull(sm.use_case),
+  }));
+  const { error: e3 } = await supabase.from("salgsmuligheter").insert(smRows);
+  if (e3) console.error("Seed salgsmuligheter error:", e3);
+  
+  // Insert leads
+  const leadRows = initialLeads.map(l => ({
+    id: mapId(l.id), firmanavn: l.firmanavn, kontaktperson: emptyToNull(l.kontaktperson),
+    e_post: emptyToNull(l.e_post), telefon: emptyToNull(l.telefon),
+    kilde: l.kilde as any, status: l.status as any, ansvarlig: emptyToNull(l.ansvarlig),
+    neste_steg: emptyToNull(l.neste_steg), notater: emptyToNull(l.notater),
+    opprettet_dato: emptyToNull(l.opprettet_dato), sist_aktivitet: emptyToNull(l.sist_aktivitet),
+    konvertert_dato: emptyToNull(l.konvertert_dato),
+    rolle_i_firma: emptyToNull(l.rolle_i_firma), use_case: emptyToNull(l.use_case),
+  }));
+  if (leadRows.length > 0) {
+    const { error: e4 } = await supabase.from("leads").insert(leadRows);
+    if (e4) console.error("Seed leads error:", e4);
+  }
+  
+  // Insert oppgaver (depends on selskaper, salgsmuligheter, leads)
+  const oppgaveRows = initialOppgaver.map(o => ({
+    id: mapId(o.id), oppgave: o.oppgave, user_id: userId,
+    lead_id: o.lead_id ? mapId(o.lead_id) : null,
+    selskap_id: o.selskap_id ? mapId(o.selskap_id) : null,
+    salgsmulighet_id: o.salgsmulighet_id ? mapId(o.salgsmulighet_id) : null,
+    ansvarlig: emptyToNull(o.ansvarlig), frist: emptyToNull(o.frist),
+    prioritet: o.prioritet as any, status: o.status as any,
+    paaminnelse: o.paaminnelse, notater: emptyToNull(o.notater),
+  }));
+  if (oppgaveRows.length > 0) {
+    const { error: e5 } = await supabase.from("oppgaver").insert(oppgaveRows);
+    if (e5) console.error("Seed oppgaver error:", e5);
+  }
+  
+  console.log("Database seeded with initial CRM data");
+}
+
 type CrmStore = ReturnType<typeof useCrmStoreInternal>;
 const CrmContext = createContext<CrmStore | null>(null);
 
