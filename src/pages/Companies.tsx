@@ -147,7 +147,7 @@ export default function Companies() {
                 firmanavn: String(row.firmanavn || ""),
                 bransje: String(row.bransje || ""),
                 kundeansvarlig: String(row.kundeansvarlig || ""),
-                kundestatus: "Ikke kunde",
+                kundestatus: "Pilot",
                 live_status: false,
                 onboarding_status: "Ikke startet",
                 mrr: Number(row.mrr) || 0,
