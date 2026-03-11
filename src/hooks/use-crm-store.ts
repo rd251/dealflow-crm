@@ -480,7 +480,7 @@ function useCrmStoreInternal() {
         mrr: 0, arr: 0, oppstartskostnad: 0, go_live_dato: "", kansellert_dato: "",
         kanselleringsaarsak: "", kanselleringsnotat: "", kundetilstand: "Bra",
         sist_aktivitet: today, neste_steg: "", notater: "",
-        kilde: "Direkte salg", partner_id: "",
+        kilde: "Direkte salg", partner_id: "", lukkedato: "",
       };
       updateSelskaper(prev => [...prev, nyttSelskap]);
     }
