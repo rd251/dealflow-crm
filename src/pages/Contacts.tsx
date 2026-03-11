@@ -7,8 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Plus, Search, Mail, Phone, Linkedin, Users } from "lucide-react";
+import { Plus, Search, Mail, Phone, Linkedin, Users, Upload } from "lucide-react";
 import { Kontakt } from "@/data/crm-data";
+import DataImportDialog from "@/components/DataImportDialog";
 
 export default function Contacts() {
   const navigate = useNavigate();
