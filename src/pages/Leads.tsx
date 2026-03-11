@@ -7,10 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Plus, Search, ArrowRightCircle, Trash2, Users2 } from "lucide-react";
+import { Plus, Search, ArrowRightCircle, Trash2, Users2, Upload } from "lucide-react";
 import { Lead, LeadStatus, LeadKilde } from "@/data/crm-data";
 import { Badge } from "@/components/ui/badge";
 import InlineTaskForm from "@/components/InlineTaskForm";
+import DataImportDialog from "@/components/DataImportDialog";
 
 const statusOptions: LeadStatus[] = ["Ny", "Kontaktet", "Kvalifisert", "Ikke aktuelt", "Konvertert til salg", "Konvertert til partner"];
 const kildeOptions: LeadKilde[] = ["Nettside", "LinkedIn", "Partner", "Referanse", "Kald outbound", "E-post", "Telefon", "Annet"];
@@ -29,6 +30,7 @@ export default function Leads() {
   const { leads, updateLeads, konverterLead, konverterTilPartner, generateId } = useCrmStore();
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [form, setForm] = useState<Partial<Lead>>({ firmanavn: "", kontaktperson: "", e_post: "", telefon: "", kilde: "Nettside", status: "Ny", ansvarlig: "", neste_steg: "", notater: "" });
 
@@ -63,6 +65,8 @@ export default function Leads() {
       title="Leads"
       subtitle={`${leads.filter(l => l.status !== "Konvertert til salg" && l.status !== "Konvertert til partner" && l.status !== "Ikke aktuelt").length} aktive leads`}
       actions={
+        <div className="flex gap-2">
+        <Button size="sm" variant="outline" onClick={() => setImportOpen(true)}><Upload className="w-4 h-4 mr-1" />{!isMobile && "Importer"}</Button>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button size="sm"><Plus className="w-4 h-4 mr-1" />{!isMobile && "Nytt lead"}</Button>
@@ -88,8 +92,43 @@ export default function Leads() {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       }
     >
+      <DataImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        target="leads"
+        onImport={async (rows) => {
+          const today = new Date().toISOString().split("T")[0];
+          let success = 0, errors = 0;
+          const newLeads: Lead[] = [];
+          for (const row of rows) {
+            try {
+              newLeads.push({
+                id: crypto.randomUUID(),
+                firmanavn: String(row.firmanavn || ""),
+                kontaktperson: String(row.kontaktperson || ""),
+                e_post: String(row.e_post || ""),
+                telefon: String(row.telefon || ""),
+                kilde: (row.kilde as LeadKilde) || "Annet",
+                status: "Ny",
+                ansvarlig: String(row.ansvarlig || ""),
+                neste_steg: String(row.neste_steg || ""),
+                notater: String(row.notater || ""),
+                opprettet_dato: today,
+                sist_aktivitet: today,
+                konvertert_dato: "",
+              });
+              success++;
+            } catch { errors++; }
+          }
+          if (newLeads.length > 0) {
+            updateLeads(prev => [...prev, ...newLeads]);
+          }
+          return { success, errors };
+        }}
+      />
       <div className="mb-4 relative max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input placeholder="Søk leads..." className="pl-9" value={search} onChange={e => setSearch(e.target.value)} />

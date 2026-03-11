@@ -12,11 +12,12 @@ import { Switch } from "@/components/ui/switch";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
-import { Plus, Search, Building2, ChevronRight, CalendarIcon, X } from "lucide-react";
+import { Plus, Search, Building2, ChevronRight, CalendarIcon, X, Upload } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import InlineTaskForm from "@/components/InlineTaskForm";
 import { Selskap, Kundestatus, OnboardingStatus, Kundetilstand, Kanselleringsaarsak } from "@/data/crm-data";
 import { Badge } from "@/components/ui/badge";
+import DataImportDialog from "@/components/DataImportDialog";
 
 const kundestatuser: Kundestatus[] = ["Ikke kunde", "Pilot", "Live", "Pause", "Kansellert"];
 const onboardingStatuser: OnboardingStatus[] = ["Ikke startet", "Pågår", "Venter på kunde", "Klar for live", "Ferdig"];
@@ -43,6 +44,7 @@ export default function Companies() {
   const { selskaper, salgsmuligheter, prosjekter, updateSelskaper, kansellerSelskap, generateId } = useCrmStore();
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [selected, setSelected] = useState<Selskap | null>(null);
   const [cancelDialog, setCancelDialog] = useState<string | null>(null);
   const [cancelReason, setCancelReason] = useState<Kanselleringsaarsak>("Pris");
@@ -110,6 +112,8 @@ export default function Companies() {
       title="Kundeforhold"
       subtitle={`${selskaper.length} selskaper · ${selskaper.filter(s => s.kundestatus === "Live").length} live`}
       actions={
+        <div className="flex gap-2">
+        <Button size="sm" variant="outline" onClick={() => setImportOpen(true)}><Upload className="w-4 h-4 mr-1" />{!isMobile && "Importer"}</Button>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button size="sm"><Plus className="w-4 h-4 mr-1" />{!isMobile && "Nytt selskap"}</Button>
@@ -124,8 +128,51 @@ export default function Companies() {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       }
     >
+      <DataImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        target="selskaper"
+        onImport={async (rows) => {
+          let success = 0, errors = 0;
+          const today = new Date().toISOString().split("T")[0];
+          const newItems: Selskap[] = [];
+          for (const row of rows) {
+            try {
+              newItems.push({
+                id: crypto.randomUUID(),
+                firmanavn: String(row.firmanavn || ""),
+                bransje: String(row.bransje || ""),
+                kundeansvarlig: String(row.kundeansvarlig || ""),
+                kundestatus: "Ikke kunde",
+                live_status: false,
+                onboarding_status: "Ikke startet",
+                mrr: Number(row.mrr) || 0,
+                arr: Number(row.arr) || 0,
+                oppstartskostnad: 0,
+                go_live_dato: "",
+                kansellert_dato: "",
+                kanselleringsaarsak: "",
+                kanselleringsnotat: "",
+                kundetilstand: "Bra",
+                sist_aktivitet: today,
+                neste_steg: "",
+                notater: String(row.notater || ""),
+                kilde: "Direkte salg",
+                partner_id: "",
+                lukkedato: "",
+              });
+              success++;
+            } catch { errors++; }
+          }
+          if (newItems.length > 0) {
+            updateSelskaper(prev => [...prev, ...newItems]);
+          }
+          return { success, errors };
+        }}
+      />
       {/* Cancel dialog */}
       <Dialog open={!!cancelDialog} onOpenChange={open => !open && setCancelDialog(null)}>
         <DialogContent className="max-w-[95vw] sm:max-w-lg">
