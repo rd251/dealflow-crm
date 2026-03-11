@@ -274,6 +274,17 @@ export default function Salgsmuligheter() {
                   <Input type="date" value={currentSm.forventet_lukkedato} onChange={e => updateField("forventet_lukkedato", e.target.value)} />
                 </div>
 
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <span className="text-muted-foreground block text-xs mb-1">Rolle i firma</span>
+                    <Input value={currentSm.rolle_i_firma} onChange={e => updateField("rolle_i_firma", e.target.value)} className="h-8 text-sm" />
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground block text-xs mb-1">Use case</span>
+                    <Input value={currentSm.use_case} onChange={e => updateField("use_case", e.target.value)} className="h-8 text-sm" />
+                  </div>
+                </div>
+
                 <div>
                   <span className="text-muted-foreground block text-xs mb-1">Neste steg</span>
                   <Input value={currentSm.neste_steg} onChange={e => updateField("neste_steg", e.target.value)} />
