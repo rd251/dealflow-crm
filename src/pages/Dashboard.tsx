@@ -329,6 +329,49 @@ export default function Dashboard() {
         );
       })()}
 
+      {/* Monthly closed customers */}
+      {(() => {
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Des"];
+        const closedByMonth: { mnd: string; antall: number; mrr: number }[] = [];
+        for (let i = 5; i >= 0; i--) {
+          const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          const m = d.getMonth();
+          const y = d.getFullYear();
+          const closed = selskaper.filter(s => {
+            if (!s.lukkedato) return false;
+            const dt = new Date(s.lukkedato);
+            return dt.getMonth() === m && dt.getFullYear() === y;
+          });
+          closedByMonth.push({
+            mnd: `${monthNames[m]} ${y.toString().slice(2)}`,
+            antall: closed.length,
+            mrr: closed.reduce((sum, s) => sum + s.mrr, 0),
+          });
+        }
+        const hasData = closedByMonth.some(d => d.antall > 0);
+
+        return hasData ? (
+          <div className="bg-card border rounded-xl p-4 sm:p-6 mb-6">
+            <h2 className="text-base sm:text-lg font-semibold mb-4">Lukkede kunder per måned</h2>
+            <ResponsiveContainer width="100%" height={isMobile ? 200 : 260}>
+              <BarChart data={closedByMonth}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="mnd" tick={{ fontSize: isMobile ? 9 : 11 }} />
+                <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+                <Tooltip
+                  formatter={(value: number, name: string) => [
+                    name === "antall" ? value : `${nok(value)} NOK`,
+                    name === "antall" ? "Kunder" : "MRR"
+                  ]}
+                  contentStyle={{ borderRadius: "8px", fontSize: "13px" }}
+                />
+                <Bar dataKey="antall" name="antall" fill="hsl(220, 70%, 55%)" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        ) : null;
+      })()}
+
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         <div className="bg-card border rounded-xl p-4 sm:p-6">
