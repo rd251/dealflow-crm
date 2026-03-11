@@ -44,6 +44,7 @@ export default function Companies() {
   const { selskaper, salgsmuligheter, prosjekter, updateSelskaper, kansellerSelskap, generateId } = useCrmStore();
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [selected, setSelected] = useState<Selskap | null>(null);
   const [cancelDialog, setCancelDialog] = useState<string | null>(null);
   const [cancelReason, setCancelReason] = useState<Kanselleringsaarsak>("Pris");
