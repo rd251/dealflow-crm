@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useCrmStore } from "@/hooks/use-crm-store";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { beregnTotalKontraktsverdi } from "@/data/crm-data";
@@ -9,11 +9,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import {
   Handshake, ArrowLeft, DollarSign, TrendingUp, Users, FileText,
   Mail, Phone, Plus, X,
 } from "lucide-react";
-import { Partnerstatus, Partnertype, Provisjonstype, Kontakt, Kilde, PartnerPipelineStatus } from "@/data/crm-data";
+import { Partnerstatus, Partnertype, Provisjonstype, Kontakt, PartnerPipelineStatus, Selskap, Salgsmulighet, Kilde } from "@/data/crm-data";
 
 const partnertypeOptions: Partnertype[] = ["Provisjonspartner", "Integrasjonspartner", "Salgspartner", "Strategisk partner"];
 const partnerstatusOptions: Partnerstatus[] = ["Aktiv", "Under onboarding", "Inaktiv"];
@@ -31,11 +32,16 @@ export default function PartnerProfile() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const {
-    partnere, updatePartnere, selskaper, salgsmuligheter, kontakter, updateKontakter, generateId,
+    partnere, updatePartnere, selskaper, updateSelskaper, salgsmuligheter, updateSalgsmuligheter,
+    kontakter, updateKontakter, generateId,
   } = useCrmStore();
 
   const [showAddContact, setShowAddContact] = useState(false);
   const [contactForm, setContactForm] = useState({ navn: "", rolle: "", e_post: "", telefon: "" });
+  const [showAddCustomer, setShowAddCustomer] = useState(false);
+  const [customerForm, setCustomerForm] = useState({ firmanavn: "", bransje: "" });
+  const [showAddDeal, setShowAddDeal] = useState(false);
+  const [dealForm, setDealForm] = useState({ navn: "", selskap_id: "", forventet_mrr: 0, oppstartskostnad: 0 });
 
   const partner = partnere.find(p => p.id === id);
   if (!partner) {
@@ -72,6 +78,37 @@ export default function PartnerProfile() {
   };
 
   const nok = (v: number) => v.toLocaleString("no-NO");
+
+  const addCustomer = () => {
+    const selskapId = crypto.randomUUID();
+    const nyttSelskap: Selskap = {
+      id: selskapId, firmanavn: customerForm.firmanavn, bransje: customerForm.bransje,
+      kundeansvarlig: partner.ansvarlig, kundestatus: "Ikke kunde", live_status: false,
+      onboarding_status: "Ikke startet", mrr: 0, arr: 0, oppstartskostnad: 0,
+      go_live_dato: "", kansellert_dato: "", kanselleringsaarsak: "", kanselleringsnotat: "",
+      kundetilstand: "Bra", sist_aktivitet: today, neste_steg: "", notater: "",
+      kilde: "Partner", partner_id: id!,  lukkedato: "",
+    };
+    updateSelskaper(prev => [...prev, nyttSelskap]);
+    setCustomerForm({ firmanavn: "", bransje: "" });
+    setShowAddCustomer(false);
+  };
+
+  const addDeal = () => {
+    const smId = crypto.randomUUID();
+    const nySm: Salgsmulighet = {
+      id: smId, navn: dealForm.navn, selskap_id: dealForm.selskap_id,
+      kontakt_id: "", ansvarlig: partner.ansvarlig, status: "Ny mulighet",
+      forventet_mrr: dealForm.forventet_mrr, sla: 0, oppstartskostnad: dealForm.oppstartskostnad,
+      kontraktslengde_mnd: 12, sannsynlighet: 50, forventet_lukkedato: "",
+      vunnet_dato: "", tapt_dato: "", tapsaarsak: "", neste_steg: "", notater: "",
+      opprettet_dato: today, sist_aktivitet: today,
+      kilde: "Partner", partner_id: id!, partner_provisjon: 0, partner_kostnad: 0, netto_inntekt: 0,
+    };
+    updateSalgsmuligheter(prev => [...prev, nySm]);
+    setDealForm({ navn: "", selskap_id: "", forventet_mrr: 0, oppstartskostnad: 0 });
+    setShowAddDeal(false);
+  };
 
   return (
     <div className={`${isMobile ? "ml-0" : "ml-60"} min-h-screen bg-background transition-all duration-200`}>
@@ -112,32 +149,38 @@ export default function PartnerProfile() {
         <Tabs defaultValue="kunder">
           <TabsList className="flex-wrap h-auto gap-1">
             <TabsTrigger value="kunder" className="text-xs sm:text-sm">Kunder ({partnerKunder.length})</TabsTrigger>
-            <TabsTrigger value="avtaler" className="text-xs sm:text-sm">Avtaler ({partnerAvtaler.length})</TabsTrigger>
             <TabsTrigger value="kontakter" className="text-xs sm:text-sm">Kontakter ({partnerKontakter.length})</TabsTrigger>
             <TabsTrigger value="info" className="text-xs sm:text-sm">Info</TabsTrigger>
           </TabsList>
 
           {/* Kunder tab */}
           <TabsContent value="kunder">
+            <div className="flex items-center gap-2 mb-4">
+              <Button size="sm" variant="outline" onClick={() => setShowAddCustomer(true)}>
+                <Plus className="w-4 h-4 mr-1" /> Ny kunde
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => setShowAddDeal(true)}>
+                <Plus className="w-4 h-4 mr-1" /> Ny salgsmulighet
+              </Button>
+            </div>
+
             {partnerKunder.length === 0 ? (
               <p className="text-center text-sm text-muted-foreground py-8">Ingen kunder tilknyttet denne partneren</p>
             ) : isMobile ? (
               <div className="space-y-3">
-                {partnerKunder.map(k => {
-                  const sm = salgsmuligheter.find(s => s.selskap_id === k.id && s.partner_id === id);
-                  return (
-                    <div key={k.id} className="bg-card border rounded-xl p-4 space-y-1 cursor-pointer" onClick={() => navigate(`/selskaper/${k.id}`)}>
-                      <div className="flex items-center justify-between">
-                        <p className="font-semibold text-sm truncate">{k.firmanavn}</p>
-                        <Badge variant="outline" className="text-[10px] shrink-0">{k.kundestatus}</Badge>
-                      </div>
-                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                        <span className="font-mono">{k.mrr.toLocaleString("no-NO")} MRR</span>
-                        {k.go_live_dato && <span>Go-live: {k.go_live_dato}</span>}
-                      </div>
+                {partnerKunder.map(k => (
+                  <div key={k.id} className="bg-card border rounded-xl p-4 space-y-1 cursor-pointer" onClick={() => navigate(`/selskaper/${k.id}`)}>
+                    <div className="flex items-center justify-between">
+                      <p className="font-semibold text-sm truncate">{k.firmanavn}</p>
+                      <Badge variant="outline" className="text-[10px] shrink-0">{k.kundestatus}</Badge>
                     </div>
-                  );
-                })}
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                      <span className="font-mono">{k.mrr.toLocaleString("no-NO")} MRR</span>
+                      {k.lukkedato && <span>Lukket: {k.lukkedato}</span>}
+                      {k.go_live_dato && <span>Go-live: {k.go_live_dato}</span>}
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : (
               <div className="bg-card border rounded-xl overflow-hidden">
@@ -149,6 +192,7 @@ export default function PartnerProfile() {
                       <th className="text-right px-4 py-3 font-medium">MRR</th>
                       <th className="text-right px-4 py-3 font-medium">Oppstart</th>
                       <th className="text-right px-4 py-3 font-medium">Kontraktsverdi</th>
+                      <th className="text-left px-4 py-3 font-medium">Lukkedato</th>
                       <th className="text-left px-4 py-3 font-medium">Go-live</th>
                       <th className="text-left px-4 py-3 font-medium">Ansvarlig</th>
                     </tr>
@@ -164,70 +208,9 @@ export default function PartnerProfile() {
                           <td className="px-4 py-3 text-right font-mono">{k.mrr.toLocaleString("no-NO")}</td>
                           <td className="px-4 py-3 text-right font-mono">{k.oppstartskostnad.toLocaleString("no-NO")}</td>
                           <td className="px-4 py-3 text-right font-mono">{kontraktsverdi.toLocaleString("no-NO")}</td>
+                          <td className="px-4 py-3 text-muted-foreground text-xs font-mono">{k.lukkedato || "–"}</td>
                           <td className="px-4 py-3 text-muted-foreground text-xs font-mono">{k.go_live_dato || "–"}</td>
                           <td className="px-4 py-3 text-muted-foreground">{k.kundeansvarlig || "–"}</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </TabsContent>
-
-          {/* Avtaler tab */}
-          <TabsContent value="avtaler">
-            {partnerAvtaler.length === 0 ? (
-              <p className="text-center text-sm text-muted-foreground py-8">Ingen avtaler tilknyttet denne partneren</p>
-            ) : isMobile ? (
-              <div className="space-y-3">
-                {partnerAvtaler.map(a => {
-                  const selskap = selskaper.find(s => s.id === a.selskap_id);
-                  return (
-                    <div key={a.id} className="bg-card border rounded-xl p-4 space-y-1">
-                      <div className="flex items-center justify-between">
-                        <p className="font-semibold text-sm truncate">{a.navn}</p>
-                        <Badge variant="outline" className="text-[10px] shrink-0">{a.status}</Badge>
-                      </div>
-                      <p className="text-xs text-muted-foreground">{selskap?.firmanavn || "–"}</p>
-                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                        <span className="font-mono">{a.forventet_mrr.toLocaleString("no-NO")} MRR</span>
-                        <span className="font-mono">{beregnTotalKontraktsverdi(a).toLocaleString("no-NO")} total</span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="bg-card border rounded-xl overflow-hidden">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b bg-muted/50">
-                      <th className="text-left px-4 py-3 font-medium">Avtalenavn</th>
-                      <th className="text-left px-4 py-3 font-medium">Kunde</th>
-                      <th className="text-left px-4 py-3 font-medium">Status</th>
-                      <th className="text-right px-4 py-3 font-medium">MRR</th>
-                      <th className="text-right px-4 py-3 font-medium">Oppstart</th>
-                      <th className="text-right px-4 py-3 font-medium">Lengde</th>
-                      <th className="text-right px-4 py-3 font-medium">Total verdi</th>
-                      <th className="text-left px-4 py-3 font-medium">Opprettet</th>
-                      <th className="text-left px-4 py-3 font-medium">Vunnet</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {partnerAvtaler.map(a => {
-                      const selskap = selskaper.find(s => s.id === a.selskap_id);
-                      return (
-                        <tr key={a.id} className="border-b last:border-0 hover:bg-muted/30">
-                          <td className="px-4 py-3 font-medium">{a.navn}</td>
-                          <td className="px-4 py-3 text-muted-foreground cursor-pointer hover:text-primary hover:underline" onClick={() => navigate(`/selskaper/${a.selskap_id}`)}>{selskap?.firmanavn || "–"}</td>
-                          <td className="px-4 py-3"><Badge variant="outline" className="text-xs">{a.status}</Badge></td>
-                          <td className="px-4 py-3 text-right font-mono">{a.forventet_mrr.toLocaleString("no-NO")}</td>
-                          <td className="px-4 py-3 text-right font-mono">{a.oppstartskostnad.toLocaleString("no-NO")}</td>
-                          <td className="px-4 py-3 text-right">{a.kontraktslengde_mnd} mnd</td>
-                          <td className="px-4 py-3 text-right font-mono">{beregnTotalKontraktsverdi(a).toLocaleString("no-NO")}</td>
-                          <td className="px-4 py-3 text-muted-foreground text-xs font-mono">{a.opprettet_dato}</td>
-                          <td className="px-4 py-3 text-muted-foreground text-xs font-mono">{a.vunnet_dato || "–"}</td>
                         </tr>
                       );
                     })}
@@ -351,6 +334,52 @@ export default function PartnerProfile() {
           </TabsContent>
         </Tabs>
       </main>
+
+      {/* Add Customer Dialog */}
+      <Dialog open={showAddCustomer} onOpenChange={setShowAddCustomer}>
+        <DialogContent className="max-w-[95vw] sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Ny kunde for {partner.partnernavn}</DialogTitle>
+            <DialogDescription>Opprett en ny kunde tilknyttet denne partneren.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <Input placeholder="Firmanavn" value={customerForm.firmanavn} onChange={e => setCustomerForm(f => ({ ...f, firmanavn: e.target.value }))} />
+            <Input placeholder="Bransje" value={customerForm.bransje} onChange={e => setCustomerForm(f => ({ ...f, bransje: e.target.value }))} />
+            <Button onClick={addCustomer} className="w-full" disabled={!customerForm.firmanavn}>Opprett kunde</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Deal Dialog */}
+      <Dialog open={showAddDeal} onOpenChange={setShowAddDeal}>
+        <DialogContent className="max-w-[95vw] sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Ny salgsmulighet for {partner.partnernavn}</DialogTitle>
+            <DialogDescription>Opprett en salgsmulighet tilknyttet denne partneren.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <Input placeholder="Navn på salgsmulighet" value={dealForm.navn} onChange={e => setDealForm(f => ({ ...f, navn: e.target.value }))} />
+            <div>
+              <span className="text-muted-foreground block text-xs mb-1">Kunde (valgfritt)</span>
+              <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background" value={dealForm.selskap_id} onChange={e => setDealForm(f => ({ ...f, selskap_id: e.target.value }))}>
+                <option value="">Velg kunde...</option>
+                {partnerKunder.map(k => <option key={k.id} value={k.id}>{k.firmanavn}</option>)}
+              </select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <span className="text-muted-foreground block text-xs mb-1">Forventet MRR</span>
+                <Input type="number" value={dealForm.forventet_mrr || ""} onChange={e => setDealForm(f => ({ ...f, forventet_mrr: Number(e.target.value) }))} />
+              </div>
+              <div>
+                <span className="text-muted-foreground block text-xs mb-1">Oppstartskostnad</span>
+                <Input type="number" value={dealForm.oppstartskostnad || ""} onChange={e => setDealForm(f => ({ ...f, oppstartskostnad: Number(e.target.value) }))} />
+              </div>
+            </div>
+            <Button onClick={addDeal} className="w-full" disabled={!dealForm.navn}>Opprett salgsmulighet</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
