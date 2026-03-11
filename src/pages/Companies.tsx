@@ -348,6 +348,9 @@ export default function Companies() {
                   <td className="px-4 py-3 text-muted-foreground text-xs font-mono">{s.lukkedato || "–"}</td>
                   <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
                     <div className="flex gap-1 justify-end">
+                      <Button variant="ghost" size="icon" className="h-7 w-7" title="Angre til salgsmulighet" onClick={() => setRevertDialog(s.id)}>
+                        <Undo2 className="w-3.5 h-3.5" />
+                      </Button>
                       <Button variant="ghost" size="icon" className="h-7 w-7" title="Overfør til partner" onClick={() => setTransferDialog(s.id)}>
                         <ArrowRightLeft className="w-3.5 h-3.5" />
                       </Button>
