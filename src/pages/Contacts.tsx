@@ -42,6 +42,8 @@ export default function Contacts() {
       title="Kontakter"
       subtitle={`${kontakter.length} kontakter`}
       actions={
+        <div className="flex gap-2">
+        <Button size="sm" variant="outline" onClick={() => setImportOpen(true)}><Upload className="w-4 h-4 mr-1" />{!isMobile && "Importer"}</Button>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button size="sm"><Plus className="w-4 h-4 mr-1" />{!isMobile && "Ny kontakt"}</Button>
