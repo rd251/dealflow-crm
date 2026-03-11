@@ -650,7 +650,7 @@ function useCrmStoreInternal() {
     leads, salgsmuligheter, prosjekter, selskaper, kontakter, oppgaver, partnere,
     updateLeads, updateSalgsmuligheter, updateProsjekter, updateSelskaper, updateKontakter, updateOppgaver, updatePartnere,
     konverterLead, konverterTilPartner, vinnSalgsmulighet, tapSalgsmulighet, settProsjektLive, kansellerSelskap,
-    slettSelskap, konverterSelskapTilPartner,
+    slettSelskap, konverterSelskapTilPartner, angreTilSalgsmulighet,
     generateId, loaded, refresh,
   };
 }
