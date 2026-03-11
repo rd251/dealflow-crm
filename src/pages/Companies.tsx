@@ -287,6 +287,9 @@ export default function Companies() {
                   <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${tilstandColors[s.kundetilstand]}`}>{s.kundetilstand}</span>
                 </div>
                 <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
+                  <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => setRevertDialog(s.id)}>
+                    <Undo2 className="w-3 h-3" /> Angre
+                  </Button>
                   <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => setTransferDialog(s.id)}>
                     <ArrowRightLeft className="w-3 h-3" /> Partner
                   </Button>
