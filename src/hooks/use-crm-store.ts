@@ -1,5 +1,5 @@
 // CRM global store - backed by Supabase
-import { useState, useCallback, useEffect, createContext, useContext, createElement, ReactNode } from "react";
+import { useState, useCallback, useEffect, useRef, createContext, useContext, createElement, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import {
@@ -107,6 +107,9 @@ function useCrmStoreInternal() {
       supabase.from("oppgaver").select("*"),
       supabase.from("partnere").select("*"),
     ]);
+    [r1, r2, r3, r4, r5, r6, r7].forEach((r, i) => {
+      if (r.error) console.error(`Fetch error (table ${i}):`, r.error);
+    });
     if (r1.data) setLeads(r1.data.map(rowToLead));
     if (r2.data) setSalgsmuligheter(r2.data.map(rowToSalgsmulighet));
     if (r3.data) setProsjekter(r3.data.map(rowToProsjekt));
@@ -119,72 +122,78 @@ function useCrmStoreInternal() {
 
   useEffect(() => { if (user) refresh(); }, [user, refresh]);
 
-  // Generic updater: applies fn locally, then syncs to DB
-  const updateLeads = useCallback(async (fn: (prev: Lead[]) => Lead[]) => {
-    setLeads(prev => {
-      const next = fn(prev);
-      // Sync changes to DB async
-      syncLeads(prev, next);
-      return next;
-    });
+  // Use refs to always have latest state available in sync callbacks
+  const leadsRef = useRef(leads);
+  leadsRef.current = leads;
+  const selskaperRef = useRef(selskaper);
+  selskaperRef.current = selskaper;
+  const kontakterRef = useRef(kontakter);
+  kontakterRef.current = kontakter;
+  const salgsmuligheterRef = useRef(salgsmuligheter);
+  salgsmuligheterRef.current = salgsmuligheter;
+  const prosjekterRef = useRef(prosjekter);
+  prosjekterRef.current = prosjekter;
+  const oppgaverRef = useRef(oppgaver);
+  oppgaverRef.current = oppgaver;
+  const partnereRef = useRef(partnere);
+  partnereRef.current = partnere;
+
+  const updateLeads = useCallback((fn: (prev: Lead[]) => Lead[]) => {
+    const prev = leadsRef.current;
+    const next = fn(prev);
+    setLeads(next);
+    syncLeads(prev, next).catch(e => console.error("syncLeads error:", e));
   }, []);
 
-  const updateSelskaper = useCallback(async (fn: (prev: Selskap[]) => Selskap[]) => {
-    setSelskaper(prev => {
-      const next = fn(prev);
-      syncSelskaper(prev, next);
-      return next;
-    });
+  const updateSelskaper = useCallback((fn: (prev: Selskap[]) => Selskap[]) => {
+    const prev = selskaperRef.current;
+    const next = fn(prev);
+    setSelskaper(next);
+    syncSelskaper(prev, next).catch(e => console.error("syncSelskaper error:", e));
   }, []);
 
-  const updateKontakter = useCallback(async (fn: (prev: Kontakt[]) => Kontakt[]) => {
-    setKontakter(prev => {
-      const next = fn(prev);
-      syncKontakter(prev, next);
-      return next;
-    });
+  const updateKontakter = useCallback((fn: (prev: Kontakt[]) => Kontakt[]) => {
+    const prev = kontakterRef.current;
+    const next = fn(prev);
+    setKontakter(next);
+    syncKontakter(prev, next).catch(e => console.error("syncKontakter error:", e));
   }, []);
 
-  const updateSalgsmuligheter = useCallback(async (fn: (prev: Salgsmulighet[]) => Salgsmulighet[]) => {
-    setSalgsmuligheter(prev => {
-      const next = fn(prev);
-      syncSalgsmuligheter(prev, next);
-      return next;
-    });
+  const updateSalgsmuligheter = useCallback((fn: (prev: Salgsmulighet[]) => Salgsmulighet[]) => {
+    const prev = salgsmuligheterRef.current;
+    const next = fn(prev);
+    setSalgsmuligheter(next);
+    syncSalgsmuligheter(prev, next).catch(e => console.error("syncSalgsmuligheter error:", e));
   }, []);
 
-  const updateProsjekter = useCallback(async (fn: (prev: Prosjekt[]) => Prosjekt[]) => {
-    setProsjekter(prev => {
-      const next = fn(prev);
-      syncProsjekter(prev, next);
-      return next;
-    });
+  const updateProsjekter = useCallback((fn: (prev: Prosjekt[]) => Prosjekt[]) => {
+    const prev = prosjekterRef.current;
+    const next = fn(prev);
+    setProsjekter(next);
+    syncProsjekter(prev, next).catch(e => console.error("syncProsjekter error:", e));
   }, []);
 
-  const updateOppgaver = useCallback(async (fn: (prev: Oppgave[]) => Oppgave[]) => {
-    setOppgaver(prev => {
-      const next = fn(prev);
-      syncOppgaver(prev, next);
-      return next;
-    });
+  const updateOppgaver = useCallback((fn: (prev: Oppgave[]) => Oppgave[]) => {
+    const prev = oppgaverRef.current;
+    const next = fn(prev);
+    setOppgaver(next);
+    syncOppgaver(prev, next).catch(e => console.error("syncOppgaver error:", e));
   }, []);
 
-  const updatePartnere = useCallback(async (fn: (prev: Partner[]) => Partner[]) => {
-    setPartnere(prev => {
-      const next = fn(prev);
-      syncPartnere(prev, next);
-      return next;
-    });
+  const updatePartnere = useCallback((fn: (prev: Partner[]) => Partner[]) => {
+    const prev = partnereRef.current;
+    const next = fn(prev);
+    setPartnere(next);
+    syncPartnere(prev, next).catch(e => console.error("syncPartnere error:", e));
   }, []);
 
   // Sync helpers - detect new/updated/deleted items
   async function syncLeads(prev: Lead[], next: Lead[]) {
     const prevIds = new Set(prev.map(i => i.id));
     const nextIds = new Set(next.map(i => i.id));
-    // New items
     for (const item of next) {
       if (!prevIds.has(item.id)) {
-        await supabase.from("leads").insert({
+        const { error } = await supabase.from("leads").insert({
           id: item.id, firmanavn: item.firmanavn, kontaktperson: emptyToNull(item.kontaktperson),
           e_post: emptyToNull(item.e_post), telefon: emptyToNull(item.telefon),
           kilde: item.kilde as any, status: item.status as any, ansvarlig: emptyToNull(item.ansvarlig),
@@ -192,13 +201,13 @@ function useCrmStoreInternal() {
           opprettet_dato: emptyToNull(item.opprettet_dato), sist_aktivitet: emptyToNull(item.sist_aktivitet),
           konvertert_dato: emptyToNull(item.konvertert_dato),
         });
+        if (error) console.error("Insert lead error:", error);
       }
     }
-    // Updated items
     for (const item of next) {
       const old = prev.find(p => p.id === item.id);
       if (old && JSON.stringify(old) !== JSON.stringify(item)) {
-        await supabase.from("leads").update({
+        const { error } = await supabase.from("leads").update({
           firmanavn: item.firmanavn, kontaktperson: emptyToNull(item.kontaktperson),
           e_post: emptyToNull(item.e_post), telefon: emptyToNull(item.telefon),
           kilde: item.kilde as any, status: item.status as any, ansvarlig: emptyToNull(item.ansvarlig),
@@ -206,12 +215,13 @@ function useCrmStoreInternal() {
           opprettet_dato: emptyToNull(item.opprettet_dato), sist_aktivitet: emptyToNull(item.sist_aktivitet),
           konvertert_dato: emptyToNull(item.konvertert_dato),
         }).eq("id", item.id);
+        if (error) console.error("Update lead error:", error);
       }
     }
-    // Deleted items
     for (const item of prev) {
       if (!nextIds.has(item.id)) {
-        await supabase.from("leads").delete().eq("id", item.id);
+        const { error } = await supabase.from("leads").delete().eq("id", item.id);
+        if (error) console.error("Delete lead error:", error);
       }
     }
   }
@@ -221,7 +231,7 @@ function useCrmStoreInternal() {
     const nextIds = new Set(next.map(i => i.id));
     for (const item of next) {
       if (!prevIds.has(item.id)) {
-        await supabase.from("selskaper").insert({
+        const { error } = await supabase.from("selskaper").insert({
           id: item.id, firmanavn: item.firmanavn, bransje: emptyToNull(item.bransje),
           kundeansvarlig: emptyToNull(item.kundeansvarlig), kundestatus: item.kundestatus as any,
           live_status: item.live_status, onboarding_status: item.onboarding_status as any,
@@ -233,12 +243,13 @@ function useCrmStoreInternal() {
           neste_steg: emptyToNull(item.neste_steg), notater: emptyToNull(item.notater),
           kilde: item.kilde as any, partner_id: emptyToNull(item.partner_id),
         });
+        if (error) console.error("Insert selskap error:", error);
       }
     }
     for (const item of next) {
       const old = prev.find(p => p.id === item.id);
       if (old && JSON.stringify(old) !== JSON.stringify(item)) {
-        await supabase.from("selskaper").update({
+        const { error } = await supabase.from("selskaper").update({
           firmanavn: item.firmanavn, bransje: emptyToNull(item.bransje),
           kundeansvarlig: emptyToNull(item.kundeansvarlig), kundestatus: item.kundestatus as any,
           live_status: item.live_status, onboarding_status: item.onboarding_status as any,
@@ -250,11 +261,13 @@ function useCrmStoreInternal() {
           neste_steg: emptyToNull(item.neste_steg), notater: emptyToNull(item.notater),
           kilde: item.kilde as any, partner_id: emptyToNull(item.partner_id),
         }).eq("id", item.id);
+        if (error) console.error("Update selskap error:", error);
       }
     }
     for (const item of prev) {
       if (!nextIds.has(item.id)) {
-        await supabase.from("selskaper").delete().eq("id", item.id);
+        const { error } = await supabase.from("selskaper").delete().eq("id", item.id);
+        if (error) console.error("Delete selskap error:", error);
       }
     }
   }
