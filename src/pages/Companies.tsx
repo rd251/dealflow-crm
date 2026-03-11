@@ -45,7 +45,16 @@ export default function Companies() {
   const [cancelNote, setCancelNote] = useState("");
   const [form, setForm] = useState({ firmanavn: "", bransje: "", kundeansvarlig: "" });
 
-  const filtered = selskaper.filter(s => s.firmanavn.toLowerCase().includes(search.toLowerCase()));
+  // Hide selskaper with "Ikke kunde" status unless they have a won salgsmulighet or a project
+  const filtered = selskaper.filter(s => {
+    if (!s.firmanavn.toLowerCase().includes(search.toLowerCase())) return false;
+    if (s.kundestatus === "Ikke kunde") {
+      const hasWonSm = salgsmuligheter.some(sm => sm.selskap_id === s.id && sm.status === "Vunnet");
+      const hasProject = prosjekter.some(p => p.selskap_id === s.id);
+      if (!hasWonSm && !hasProject) return false;
+    }
+    return true;
+  });
 
   const addSelskap = () => {
     const id = generateId("S", selskaper);
