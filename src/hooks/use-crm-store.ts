@@ -189,10 +189,9 @@ function useCrmStoreInternal() {
   async function syncLeads(prev: Lead[], next: Lead[]) {
     const prevIds = new Set(prev.map(i => i.id));
     const nextIds = new Set(next.map(i => i.id));
-    // New items
     for (const item of next) {
       if (!prevIds.has(item.id)) {
-        await supabase.from("leads").insert({
+        const { error } = await supabase.from("leads").insert({
           id: item.id, firmanavn: item.firmanavn, kontaktperson: emptyToNull(item.kontaktperson),
           e_post: emptyToNull(item.e_post), telefon: emptyToNull(item.telefon),
           kilde: item.kilde as any, status: item.status as any, ansvarlig: emptyToNull(item.ansvarlig),
@@ -200,13 +199,13 @@ function useCrmStoreInternal() {
           opprettet_dato: emptyToNull(item.opprettet_dato), sist_aktivitet: emptyToNull(item.sist_aktivitet),
           konvertert_dato: emptyToNull(item.konvertert_dato),
         });
+        if (error) console.error("Insert lead error:", error);
       }
     }
-    // Updated items
     for (const item of next) {
       const old = prev.find(p => p.id === item.id);
       if (old && JSON.stringify(old) !== JSON.stringify(item)) {
-        await supabase.from("leads").update({
+        const { error } = await supabase.from("leads").update({
           firmanavn: item.firmanavn, kontaktperson: emptyToNull(item.kontaktperson),
           e_post: emptyToNull(item.e_post), telefon: emptyToNull(item.telefon),
           kilde: item.kilde as any, status: item.status as any, ansvarlig: emptyToNull(item.ansvarlig),
@@ -214,12 +213,13 @@ function useCrmStoreInternal() {
           opprettet_dato: emptyToNull(item.opprettet_dato), sist_aktivitet: emptyToNull(item.sist_aktivitet),
           konvertert_dato: emptyToNull(item.konvertert_dato),
         }).eq("id", item.id);
+        if (error) console.error("Update lead error:", error);
       }
     }
-    // Deleted items
     for (const item of prev) {
       if (!nextIds.has(item.id)) {
-        await supabase.from("leads").delete().eq("id", item.id);
+        const { error } = await supabase.from("leads").delete().eq("id", item.id);
+        if (error) console.error("Delete lead error:", error);
       }
     }
   }
