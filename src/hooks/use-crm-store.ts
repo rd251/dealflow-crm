@@ -229,7 +229,7 @@ function useCrmStoreInternal() {
     const nextIds = new Set(next.map(i => i.id));
     for (const item of next) {
       if (!prevIds.has(item.id)) {
-        await supabase.from("selskaper").insert({
+        const { error } = await supabase.from("selskaper").insert({
           id: item.id, firmanavn: item.firmanavn, bransje: emptyToNull(item.bransje),
           kundeansvarlig: emptyToNull(item.kundeansvarlig), kundestatus: item.kundestatus as any,
           live_status: item.live_status, onboarding_status: item.onboarding_status as any,
@@ -241,12 +241,13 @@ function useCrmStoreInternal() {
           neste_steg: emptyToNull(item.neste_steg), notater: emptyToNull(item.notater),
           kilde: item.kilde as any, partner_id: emptyToNull(item.partner_id),
         });
+        if (error) console.error("Insert selskap error:", error);
       }
     }
     for (const item of next) {
       const old = prev.find(p => p.id === item.id);
       if (old && JSON.stringify(old) !== JSON.stringify(item)) {
-        await supabase.from("selskaper").update({
+        const { error } = await supabase.from("selskaper").update({
           firmanavn: item.firmanavn, bransje: emptyToNull(item.bransje),
           kundeansvarlig: emptyToNull(item.kundeansvarlig), kundestatus: item.kundestatus as any,
           live_status: item.live_status, onboarding_status: item.onboarding_status as any,
@@ -258,11 +259,13 @@ function useCrmStoreInternal() {
           neste_steg: emptyToNull(item.neste_steg), notater: emptyToNull(item.notater),
           kilde: item.kilde as any, partner_id: emptyToNull(item.partner_id),
         }).eq("id", item.id);
+        if (error) console.error("Update selskap error:", error);
       }
     }
     for (const item of prev) {
       if (!nextIds.has(item.id)) {
-        await supabase.from("selskaper").delete().eq("id", item.id);
+        const { error } = await supabase.from("selskaper").delete().eq("id", item.id);
+        if (error) console.error("Delete selskap error:", error);
       }
     }
   }
