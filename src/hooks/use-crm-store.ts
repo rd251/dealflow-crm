@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import {
   Lead, Salgsmulighet, Prosjekt, Selskap, Kontakt, Oppgave, Partner,
+  initialSelskaper, initialKontakter, initialSalgsmuligheter, initialLeads,
+  initialProsjekter, initialOppgaver, initialPartnere,
 } from "@/data/crm-data";
 
 // Map DB row to app type (handle nulls)
