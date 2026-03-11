@@ -515,44 +515,21 @@ function useCrmStoreInternal() {
     if (!lead) return;
     const today = new Date().toISOString().split("T")[0];
 
-    let selskapId = selskaper.find(s => s.firmanavn.toLowerCase() === lead.firmanavn.toLowerCase())?.id;
-    if (!selskapId) {
-      selskapId = crypto.randomUUID();
-      const nyttSelskap: Selskap = {
-        id: selskapId, firmanavn: lead.firmanavn, bransje: "", kundeansvarlig: lead.ansvarlig,
-        kundestatus: "Ikke kunde", live_status: false, onboarding_status: "Ikke startet",
-        mrr: 0, arr: 0, oppstartskostnad: 0, go_live_dato: "", kansellert_dato: "",
-        kanselleringsaarsak: "", kanselleringsnotat: "", kundetilstand: "Bra",
-        sist_aktivitet: today, neste_steg: "", notater: "",
-        kilde: "Direkte salg", partner_id: "",
-      };
-      updateSelskaper(prev => [...prev, nyttSelskap]);
-    }
-
-    let kontaktId = kontakter.find(k => k.e_post.toLowerCase() === lead.e_post.toLowerCase())?.id;
-    if (!kontaktId && lead.kontaktperson) {
-      kontaktId = crypto.randomUUID();
-      const nyKontakt: Kontakt = {
-        id: kontaktId, selskap_id: selskapId, navn: lead.kontaktperson,
-        e_post: lead.e_post, telefon: lead.telefon, rolle: "", linkedin: "", notater: "",
-      };
-      updateKontakter(prev => [...prev, nyKontakt]);
-    }
-
+    // Only create partner – no selskap in kundeforhold for partner leads
     const partnerId = crypto.randomUUID();
     const nyPartner: Partner = {
       id: partnerId, partnernavn: lead.firmanavn, partnertype: "Salgspartner",
       kontaktperson: lead.kontaktperson, e_post: lead.e_post, telefon: lead.telefon,
       partnerstatus: "Under onboarding", pipeline_status: "Ny partner",
       ansvarlig: lead.ansvarlig, provisjonsprosent: 0, provisjonstype: "",
-      selskap_id: selskapId, opprettet_dato: today, sist_aktivitet: today, notater: lead.notater,
+      selskap_id: "", opprettet_dato: today, sist_aktivitet: today, notater: lead.notater,
     };
     updatePartnere(prev => [...prev, nyPartner]);
 
     updateLeads(prev => prev.map(l =>
       l.id === leadId ? { ...l, status: "Konvertert til partner" as const, konvertert_dato: today, sist_aktivitet: today } : l
     ));
-  }, [leads, selskaper, kontakter, updateLeads, updateSelskaper, updateKontakter, updatePartnere]);
+  }, [leads, updateLeads, updatePartnere]);
 
   const vinnSalgsmulighet = useCallback((smId: string) => {
     const sm = salgsmuligheter.find(s => s.id === smId);
