@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Shield, User, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -17,12 +18,13 @@ interface TeamMember {
 }
 
 export default function Admin() {
-  const { isAdmin, inviteUser } = useAuth();
+  const { isAdmin, user, inviteUser } = useAuth();
   const { toast } = useToast();
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({ email: "", password: "", displayName: "" });
   const [loading, setLoading] = useState(false);
+  const [deleting, setDeleting] = useState<string | null>(null);
 
   const fetchMembers = async () => {
     const { data: profiles } = await supabase.from("profiles").select("user_id, display_name, email");
@@ -58,6 +60,20 @@ export default function Admin() {
     const newRole = currentRole === "admin" ? "user" : "admin";
     await supabase.from("user_roles").update({ role: newRole }).eq("user_id", userId);
     fetchMembers();
+  };
+
+  const handleDelete = async (userId: string, email: string) => {
+    setDeleting(userId);
+    const res = await supabase.functions.invoke("delete-user", {
+      body: { userId },
+    });
+    if (res.error || res.data?.error) {
+      toast({ title: "Feil", description: res.data?.error || res.error?.message || "Kunne ikke slette bruker", variant: "destructive" });
+    } else {
+      toast({ title: "Bruker slettet", description: `${email} har blitt fjernet fra teamet.` });
+      fetchMembers();
+    }
+    setDeleting(null);
   };
 
   if (!isAdmin) {
@@ -103,6 +119,29 @@ export default function Admin() {
             <Badge variant={m.role === "admin" ? "default" : "secondary"} className="text-xs cursor-pointer" onClick={() => toggleRole(m.user_id, m.role)}>
               {m.role === "admin" ? "Admin" : "Bruker"}
             </Badge>
+            {m.user_id !== user?.id && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" disabled={deleting === m.user_id}>
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Slett bruker</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Er du sikker på at du vil slette <strong>{m.display_name}</strong> ({m.email}) fra teamet? Denne handlingen kan ikke angres.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Avbryt</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => handleDelete(m.user_id, m.email)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                      Slett
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
           </div>
         ))}
       </div>
