@@ -75,7 +75,7 @@ export default function Companies() {
     const nyttSelskap: Selskap = {
       id, firmanavn: form.firmanavn, bransje: form.bransje, kundeansvarlig: form.kundeansvarlig,
 
-      kundestatus: "Ikke kunde", live_status: false, onboarding_status: "Ikke startet",
+      kundestatus: "Pilot", live_status: false, onboarding_status: "Ikke startet",
       mrr: 0, arr: 0, oppstartskostnad: 0, go_live_dato: "", kansellert_dato: "",
       kanselleringsaarsak: "", kanselleringsnotat: "", kundetilstand: "Bra",
       sist_aktivitet: new Date().toISOString().split("T")[0], neste_steg: "", notater: "",
