@@ -558,6 +558,7 @@ function useCrmStoreInternal() {
         onboarding_status: "Ikke startet" as const,
         mrr: sm.forventet_mrr, arr: sm.forventet_mrr * 12,
         oppstartskostnad: sm.oppstartskostnad, sist_aktivitet: today,
+        lukkedato: today,
       } : s
     ));
   }, [salgsmuligheter, updateSalgsmuligheter, updateProsjekter, updateSelskaper]);
