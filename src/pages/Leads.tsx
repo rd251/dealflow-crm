@@ -65,6 +65,8 @@ export default function Leads() {
       title="Leads"
       subtitle={`${leads.filter(l => l.status !== "Konvertert til salg" && l.status !== "Konvertert til partner" && l.status !== "Ikke aktuelt").length} aktive leads`}
       actions={
+        <div className="flex gap-2">
+        <Button size="sm" variant="outline" onClick={() => setImportOpen(true)}><Upload className="w-4 h-4 mr-1" />{!isMobile && "Importer"}</Button>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button size="sm"><Plus className="w-4 h-4 mr-1" />{!isMobile && "Nytt lead"}</Button>
