@@ -74,10 +74,12 @@ export type Database = {
           neste_steg: string | null
           notater: string | null
           opprettet_dato: string | null
+          rolle_i_firma: string | null
           sist_aktivitet: string | null
           status: Database["public"]["Enums"]["lead_status"] | null
           telefon: string | null
           updated_at: string
+          use_case: string | null
         }
         Insert: {
           ansvarlig?: string | null
@@ -91,10 +93,12 @@ export type Database = {
           neste_steg?: string | null
           notater?: string | null
           opprettet_dato?: string | null
+          rolle_i_firma?: string | null
           sist_aktivitet?: string | null
           status?: Database["public"]["Enums"]["lead_status"] | null
           telefon?: string | null
           updated_at?: string
+          use_case?: string | null
         }
         Update: {
           ansvarlig?: string | null
@@ -108,10 +112,12 @@ export type Database = {
           neste_steg?: string | null
           notater?: string | null
           opprettet_dato?: string | null
+          rolle_i_firma?: string | null
           sist_aktivitet?: string | null
           status?: Database["public"]["Enums"]["lead_status"] | null
           telefon?: string | null
           updated_at?: string
+          use_case?: string | null
         }
         Relationships: []
       }
@@ -386,6 +392,7 @@ export type Database = {
           partner_id: string | null
           partner_kostnad: number | null
           partner_provisjon: number | null
+          rolle_i_firma: string | null
           sannsynlighet: number | null
           selskap_id: string | null
           sist_aktivitet: string | null
@@ -394,6 +401,7 @@ export type Database = {
           tapsaarsak: Database["public"]["Enums"]["tapsaarsak"] | null
           tapt_dato: string | null
           updated_at: string
+          use_case: string | null
           vunnet_dato: string | null
         }
         Insert: {
@@ -414,6 +422,7 @@ export type Database = {
           partner_id?: string | null
           partner_kostnad?: number | null
           partner_provisjon?: number | null
+          rolle_i_firma?: string | null
           sannsynlighet?: number | null
           selskap_id?: string | null
           sist_aktivitet?: string | null
@@ -422,6 +431,7 @@ export type Database = {
           tapsaarsak?: Database["public"]["Enums"]["tapsaarsak"] | null
           tapt_dato?: string | null
           updated_at?: string
+          use_case?: string | null
           vunnet_dato?: string | null
         }
         Update: {
@@ -442,6 +452,7 @@ export type Database = {
           partner_id?: string | null
           partner_kostnad?: number | null
           partner_provisjon?: number | null
+          rolle_i_firma?: string | null
           sannsynlighet?: number | null
           selskap_id?: string | null
           sist_aktivitet?: string | null
@@ -450,6 +461,7 @@ export type Database = {
           tapsaarsak?: Database["public"]["Enums"]["tapsaarsak"] | null
           tapt_dato?: string | null
           updated_at?: string
+          use_case?: string | null
           vunnet_dato?: string | null
         }
         Relationships: [
