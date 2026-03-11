@@ -90,13 +90,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const inviteUser = async (email: string, password: string, displayName: string) => {
-    // Admin creates user via signup (auto-confirm should be enabled for admin-invite flow)
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { display_name: displayName } },
-    });
-    return { error: error ? new Error(error.message) : null };
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await supabase.functions.invoke("invite-user", {
+        body: { email, password, displayName },
+      });
+      if (res.error) {
+        return { error: new Error(res.error.message || "Failed to invite user") };
+      }
+      if (res.data?.error) {
+        return { error: new Error(res.data.error) };
+      }
+      return { error: null };
+    } catch (err: any) {
+      return { error: new Error(err.message || "Failed to invite user") };
+    }
   };
 
   return (
