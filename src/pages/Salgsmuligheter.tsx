@@ -29,7 +29,7 @@ const statusColors: Record<SalgsmulighetStatus, string> = {
 export default function Salgsmuligheter() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const { salgsmuligheter, selskaper, kontakter, updateSalgsmuligheter, vinnSalgsmulighet, tapSalgsmulighet, generateId } = useCrmStore();
+  const { salgsmuligheter, selskaper, kontakter, updateSalgsmuligheter, updateKontakter, vinnSalgsmulighet, tapSalgsmulighet, generateId } = useCrmStore();
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [selectedSm, setSelectedSm] = useState<Salgsmulighet | null>(null);
   const [lossDialog, setLossDialog] = useState<string | null>(null);
