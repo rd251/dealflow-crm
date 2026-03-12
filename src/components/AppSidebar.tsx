@@ -18,6 +18,7 @@ const navItems = [
   { to: "/oppgaver", icon: ListTodo, label: "Oppgaver" },
   { to: "/partnere", icon: Users2, label: "Partnere" },
   { to: "/partner-pipeline", icon: GitBranch, label: "Partner Pipeline" },
+  { to: "/aktiviteter", icon: Activity, label: "Aktivitetslogg" },
 ];
 
 function SidebarNav({ onNavigate, isAdmin }: { onNavigate?: () => void; isAdmin: boolean }) {

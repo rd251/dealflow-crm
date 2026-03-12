@@ -40,6 +40,7 @@ function AppRoutes() {
         <Route path="/partnere" element={<Partnere />} />
         <Route path="/partnere/:id" element={<PartnerProfile />} />
         <Route path="/partner-pipeline" element={<PartnerPipeline />} />
+        <Route path="/aktiviteter" element={<Aktiviteter />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/login" element={<Navigate to="/" replace />} />
         <Route path="*" element={<NotFound />} />
