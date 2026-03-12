@@ -160,6 +160,7 @@ export default function Partnere() {
                     <td className="px-4 py-3 text-right font-mono">{stats.totalMrr.toLocaleString("no-NO")}</td>
                     <td className="px-4 py-3 text-right font-mono">{stats.totalArr.toLocaleString("no-NO")}</td>
                     <td className="px-4 py-3 text-right">{stats.antallAktiveAvtaler}</td>
+                    <td className="px-4 py-3"><LastActivityBadge partner_id={partner.id} sist_aktivitet={partner.sist_aktivitet} /></td>
                     <td className="px-4 py-3 text-muted-foreground text-xs font-mono">{partner.opprettet_dato}</td>
                   </tr>
                 );
