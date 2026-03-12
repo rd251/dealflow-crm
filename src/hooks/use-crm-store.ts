@@ -135,8 +135,7 @@ async function seedDatabaseInternal(userId: string) {
     navn: k.navn, rolle: emptyToNull(k.rolle), e_post: emptyToNull(k.e_post),
     telefon: emptyToNull(k.telefon), linkedin: emptyToNull(k.linkedin), notater: emptyToNull(k.notater),
   }));
-  const { error: e2 } = await supabase.from("kontakter").insert(kontakterRows);
-  if (e2) console.error("Seed kontakter error:", e2);
+  const { error: e2 } = await supabase.from("kontakter").upsert(kontakterRows, { onConflict: "id" });
   
   // Insert salgsmuligheter (depends on selskaper, kontakter)
   const smRows = initialSalgsmuligheter.map(sm => ({
