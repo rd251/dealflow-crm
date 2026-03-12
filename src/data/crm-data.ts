@@ -71,6 +71,9 @@ export interface Salgsmulighet {
   netto_inntekt: number;
   rolle_i_firma: string;
   use_case: string;
+  kontaktperson: string;
+  e_post: string;
+  telefon: string;
 }
 
 export interface Prosjekt {
