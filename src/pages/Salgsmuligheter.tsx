@@ -171,11 +171,12 @@ export default function Salgsmuligheter() {
                             <p className="font-semibold text-sm truncate">{deal.navn}</p>
                             <p className="text-xs text-muted-foreground mt-0.5 truncate cursor-pointer hover:text-primary hover:underline" onClick={e => { e.stopPropagation(); navigate(`/selskaper/${deal.selskap_id}`); }}>{getSelskapNavn(deal.selskap_id)}</p>
                             {(() => {
-                              const contact = kontakter.find(k => k.id === deal.kontakt_id);
-                              return contact ? (
+                              const contactName = deal.kontaktperson || kontakter.find(k => k.id === deal.kontakt_id)?.navn;
+                              const contactPhone = deal.telefon || kontakter.find(k => k.id === deal.kontakt_id)?.telefon;
+                              return contactName ? (
                                 <div className="flex items-center gap-2 mt-1.5 text-[11px] text-muted-foreground">
-                                  <span className="flex items-center gap-1 truncate"><User className="w-3 h-3 shrink-0" />{contact.navn}</span>
-                                  {contact.telefon && <span className="flex items-center gap-1 shrink-0"><Phone className="w-3 h-3" />{contact.telefon}</span>}
+                                  <span className="flex items-center gap-1 truncate"><User className="w-3 h-3 shrink-0" />{contactName}</span>
+                                  {contactPhone && <span className="flex items-center gap-1 shrink-0"><Phone className="w-3 h-3" />{contactPhone}</span>}
                                 </div>
                               ) : null;
                             })()}
