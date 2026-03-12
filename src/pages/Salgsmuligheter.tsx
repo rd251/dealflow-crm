@@ -260,7 +260,7 @@ export default function Salgsmuligheter() {
                           {kontakter.map(k => <option key={k.id} value={k.id}>{k.navn}</option>)}
                         </select>
                       </div>
-                      {linkedContact && (
+                      {linkedContact ? (
                         <div className="space-y-2 bg-muted/30 rounded-lg p-3">
                           <div className="grid grid-cols-2 gap-2">
                             <div>
@@ -277,6 +277,8 @@ export default function Salgsmuligheter() {
                             <Input value={linkedContact.e_post} onChange={e => updateContactField("e_post", e.target.value)} className="h-8 text-sm" />
                           </div>
                         </div>
+                      ) : (
+                        <p className="text-xs text-muted-foreground italic py-2">Velg en kontaktperson for å se og redigere kontaktinfo</p>
                       )}
                     </div>
                   );
