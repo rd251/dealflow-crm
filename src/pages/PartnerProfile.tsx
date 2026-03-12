@@ -331,6 +331,10 @@ export default function PartnerProfile() {
                   <span className="text-muted-foreground block text-xs mb-1">Notater</span>
                   <Textarea value={partner.notater} onChange={e => updateField("notater", e.target.value)} rows={3} />
                 </div>
+
+                <ActivityLog partner_id={id!} onActivityLogged={() => {
+                  updatePartnere(prev => prev.map(p => p.id === id ? { ...p, sist_aktivitet: new Date().toISOString().split("T")[0] } : p));
+                }} />
               </div>
             </div>
           </TabsContent>
