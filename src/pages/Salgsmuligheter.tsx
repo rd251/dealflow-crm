@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, GripVertical, Trophy, XCircle, Trash2, Mail, Phone, User, Briefcase } from "lucide-react";
 import { Salgsmulighet, SalgsmulighetStatus, Tapsaarsak, beregnTotalKontraktsverdi, beregnVektetPipeline } from "@/data/crm-data";
 import InlineTaskForm from "@/components/InlineTaskForm";
+import ActivityLog from "@/components/ActivityLog";
 
 const openStatuses: SalgsmulighetStatus[] = ["Ny mulighet", "Møte booket", "Demo gjennomført", "Tilbud sendt", "Forhandling"];
 const tapsaarsaker: Tapsaarsak[] = ["Pris", "Ikke riktig timing", "Valgte annen leverandør", "Ikke behov", "Teknisk / integrasjon", "Annet"];
