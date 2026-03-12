@@ -217,9 +217,9 @@ function useCrmStoreInternal() {
     if (r7.data) setPartnere(r7.data.map(rowToPartner));
 
     setLoaded(true);
-  }, [user]);
+  }, []);
 
-  useEffect(() => { if (user) refresh(); }, [user, refresh]);
+  useEffect(() => { refresh(); }, [refresh]);
 
   // Use refs to always have latest state available in sync callbacks
   const leadsRef = useRef(leads);
