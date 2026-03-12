@@ -42,24 +42,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let mounted = true;
 
     const setSignedOutState = () => {
-      setState({ user: null, session: null, role: null, loading: false, isAdmin: false });
+      if (mounted) setState({ user: null, session: null, role: null, loading: false, isAdmin: false });
     };
 
     const setSignedInState = async (session: Session) => {
       const role = await fetchRole(session.user.id);
-      if (mounted) {
-        setState({ user: session.user, session, role, loading: false, isAdmin: role === "admin" });
-      }
+      if (mounted) setState({ user: session.user, session, role, loading: false, isAdmin: role === "admin" });
     };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
-
       if (event === "SIGNED_OUT" || (event === "INITIAL_SESSION" && !session)) {
         setSignedOutState();
         return;
       }
-
       if (session?.user) {
         await setSignedInState(session);
       }
@@ -67,12 +63,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!mounted) return;
-
       if (!session?.user) {
         setSignedOutState();
         return;
       }
-
       await setSignedInState(session);
     }).catch(() => {
       if (mounted) setSignedOutState();
@@ -80,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const loadingTimeout = window.setTimeout(() => {
       if (!mounted) return;
-      setState((prev) => (prev.loading ? { ...prev, loading: false } : prev));
+      setState(prev => prev.loading ? { ...prev, loading: false } : prev);
     }, 3000);
 
     return () => {
@@ -104,12 +98,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const res = await supabase.functions.invoke("invite-user", {
         body: { email, password, displayName },
       });
-      if (res.error) {
-        return { error: new Error(res.error.message || "Failed to invite user") };
-      }
-      if (res.data?.error) {
-        return { error: new Error(res.data.error) };
-      }
+      if (res.error) return { error: new Error(res.error.message || "Failed to invite user") };
+      if (res.data?.error) return { error: new Error(res.data.error) };
       return { error: null };
     } catch (err: any) {
       return { error: new Error(err.message || "Failed to invite user") };
@@ -126,5 +116,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuth() {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error("useAuth must be used within AuthProvider");
+  return ctx;
+}
   return ctx;
 }
