@@ -4,10 +4,14 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useCrmStore } from "@/hooks/use-crm-store";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Phone, Mail, MessageSquare, MessageCircle, Users, FileText, Search, Clock, Filter, Building2, UserPlus, Handshake, FolderKanban, Users2 } from "lucide-react";
-import type { AktivitetType } from "@/components/ActivityLog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Phone, Mail, MessageSquare, MessageCircle, Users, FileText, Search, Clock, Filter, Building2, UserPlus, Handshake, FolderKanban, Users2, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { typeIcons, typeColors, typeOptions, type AktivitetType } from "@/components/ActivityLog";
 
 const API_URL = import.meta.env.VITE_SUPABASE_URL + '/rest/v1';
 const API_HEADERS = {
@@ -29,46 +33,20 @@ interface AktivitetRow {
   kontakt_id: string | null;
 }
 
-const typeIcons: Record<AktivitetType, typeof Phone> = {
-  "Telefonsamtale": Phone,
-  "E-post": Mail,
-  "LinkedIn-melding": MessageSquare,
-  "SMS": MessageCircle,
-  "Møte": Users,
-  "Notat": FileText,
-};
-
-const typeColors: Record<AktivitetType, string> = {
-  "Telefonsamtale": "text-emerald-600 bg-emerald-500/10",
-  "E-post": "text-blue-600 bg-blue-500/10",
-  "LinkedIn-melding": "text-sky-600 bg-sky-500/10",
-  "SMS": "text-violet-600 bg-violet-500/10",
-  "Møte": "text-amber-600 bg-amber-500/10",
-  "Notat": "text-muted-foreground bg-muted",
-};
-
-const typeOptions: AktivitetType[] = ["Telefonsamtale", "E-post", "LinkedIn-melding", "SMS", "Møte", "Notat"];
-
 type EntityFilter = "alle" | "lead" | "salgsmulighet" | "selskap" | "partner" | "prosjekt" | "kontakt";
 
 const entityLabels: Record<EntityFilter, string> = {
-  alle: "Alle entiteter",
-  lead: "Leads",
-  salgsmulighet: "Salgsmuligheter",
-  selskap: "Selskaper",
-  partner: "Partnere",
-  prosjekt: "Prosjekter",
-  kontakt: "Kontakter",
+  alle: "Alle entiteter", lead: "Leads", salgsmulighet: "Salgsmuligheter",
+  selskap: "Selskaper", partner: "Partnere", prosjekt: "Prosjekter", kontakt: "Kontakter",
 };
 
-const entityIcons: Record<EntityFilter, typeof Phone> = {
-  alle: Filter,
-  lead: UserPlus,
-  salgsmulighet: Handshake,
-  selskap: Building2,
-  partner: Users2,
-  prosjekt: FolderKanban,
-  kontakt: Users,
+const entityBadgeColor: Record<string, string> = {
+  Lead: "bg-stage-new-lead/10 text-stage-new-lead border-stage-new-lead/20",
+  Salgsmulighet: "bg-primary/10 text-primary border-primary/20",
+  Selskap: "bg-blue-500/10 text-blue-600 border-blue-500/20",
+  Partner: "bg-violet-500/10 text-violet-600 border-violet-500/20",
+  Prosjekt: "bg-amber-500/10 text-amber-600 border-amber-500/20",
+  Kontakt: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
 };
 
 export default function Aktiviteter() {
@@ -79,6 +57,13 @@ export default function Aktiviteter() {
   const [typeFilter, setTypeFilter] = useState<AktivitetType | "alle">("alle");
   const [entityFilter, setEntityFilter] = useState<EntityFilter>("alle");
   const [loading, setLoading] = useState(true);
+
+  // Edit/delete state
+  const [editDialog, setEditDialog] = useState<AktivitetRow | null>(null);
+  const [editType, setEditType] = useState<AktivitetType>("Telefonsamtale");
+  const [editBeskrivelse, setEditBeskrivelse] = useState("");
+  const [editLoading, setEditLoading] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
@@ -98,30 +83,12 @@ export default function Aktiviteter() {
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
   const getEntityName = (a: AktivitetRow): { label: string; type: string } => {
-    if (a.lead_id) {
-      const l = leads.find(x => x.id === a.lead_id);
-      return { label: l?.firmanavn || "Lead", type: "Lead" };
-    }
-    if (a.salgsmulighet_id) {
-      const s = salgsmuligheter.find(x => x.id === a.salgsmulighet_id);
-      return { label: s?.navn || "Salgsmulighet", type: "Salgsmulighet" };
-    }
-    if (a.selskap_id) {
-      const s = selskaper.find(x => x.id === a.selskap_id);
-      return { label: s?.firmanavn || "Selskap", type: "Selskap" };
-    }
-    if (a.partner_id) {
-      const p = partnere.find(x => x.id === a.partner_id);
-      return { label: p?.partnernavn || "Partner", type: "Partner" };
-    }
-    if (a.prosjekt_id) {
-      const p = prosjekter.find(x => x.id === a.prosjekt_id);
-      return { label: p?.prosjektnavn || "Prosjekt", type: "Prosjekt" };
-    }
-    if (a.kontakt_id) {
-      const k = kontakter.find(x => x.id === a.kontakt_id);
-      return { label: k?.navn || "Kontakt", type: "Kontakt" };
-    }
+    if (a.lead_id) return { label: leads.find(x => x.id === a.lead_id)?.firmanavn || "Lead", type: "Lead" };
+    if (a.salgsmulighet_id) return { label: salgsmuligheter.find(x => x.id === a.salgsmulighet_id)?.navn || "Salgsmulighet", type: "Salgsmulighet" };
+    if (a.selskap_id) return { label: selskaper.find(x => x.id === a.selskap_id)?.firmanavn || "Selskap", type: "Selskap" };
+    if (a.partner_id) return { label: partnere.find(x => x.id === a.partner_id)?.partnernavn || "Partner", type: "Partner" };
+    if (a.prosjekt_id) return { label: prosjekter.find(x => x.id === a.prosjekt_id)?.prosjektnavn || "Prosjekt", type: "Prosjekt" };
+    if (a.kontakt_id) return { label: kontakter.find(x => x.id === a.kontakt_id)?.navn || "Kontakt", type: "Kontakt" };
     return { label: "Ukjent", type: "" };
   };
 
@@ -156,11 +123,6 @@ export default function Aktiviteter() {
     return date.toLocaleDateString("no-NO", { day: "numeric", month: "short", year: diffD > 365 ? "numeric" : undefined });
   };
 
-  const formatFullDate = (d: string) => {
-    return new Date(d).toLocaleDateString("no-NO", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" });
-  };
-
-  // Group by date
   const grouped: Record<string, AktivitetRow[]> = {};
   filtered.forEach(a => {
     const dateKey = new Date(a.dato).toLocaleDateString("no-NO", { day: "numeric", month: "long", year: "numeric" });
@@ -168,13 +130,42 @@ export default function Aktiviteter() {
     grouped[dateKey].push(a);
   });
 
-  const entityBadgeColor: Record<string, string> = {
-    Lead: "bg-stage-new-lead/10 text-stage-new-lead border-stage-new-lead/20",
-    Salgsmulighet: "bg-primary/10 text-primary border-primary/20",
-    Selskap: "bg-blue-500/10 text-blue-600 border-blue-500/20",
-    Partner: "bg-violet-500/10 text-violet-600 border-violet-500/20",
-    Prosjekt: "bg-amber-500/10 text-amber-600 border-amber-500/20",
-    Kontakt: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+  const openEdit = (a: AktivitetRow) => {
+    setEditDialog(a);
+    setEditType(a.type);
+    setEditBeskrivelse(a.beskrivelse);
+  };
+
+  const saveEdit = async () => {
+    if (!editDialog || !editBeskrivelse.trim()) return;
+    setEditLoading(true);
+    try {
+      await fetch(`${API_URL}/aktiviteter?id=eq.${editDialog.id}`, {
+        method: 'PATCH',
+        headers: { ...API_HEADERS, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ type: editType, beskrivelse: editBeskrivelse.trim() }),
+      });
+      await fetchAll();
+      setEditDialog(null);
+    } catch (e) {
+      console.error("Error updating aktivitet:", e);
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteId) return;
+    try {
+      await fetch(`${API_URL}/aktiviteter?id=eq.${deleteId}`, {
+        method: 'DELETE',
+        headers: { ...API_HEADERS, 'Prefer': 'return=minimal' },
+      });
+      await fetchAll();
+      setDeleteId(null);
+    } catch (e) {
+      console.error("Error deleting aktivitet:", e);
+    }
   };
 
   return (
@@ -183,29 +174,17 @@ export default function Aktiviteter() {
       <div className={`flex ${isMobile ? "flex-col gap-2" : "items-center gap-3"} mb-6`}>
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Søk i aktiviteter..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="pl-9 h-9"
-          />
+          <Input placeholder="Søk i aktiviteter..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 h-9" />
         </div>
         <Select value={typeFilter} onValueChange={v => setTypeFilter(v as any)}>
-          <SelectTrigger className="w-[180px] h-9">
-            <SelectValue />
-          </SelectTrigger>
+          <SelectTrigger className="w-[180px] h-9"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="alle">Alle typer</SelectItem>
-            {typeOptions.map(t => {
-              const Icon = typeIcons[t];
-              return <SelectItem key={t} value={t}>{t}</SelectItem>;
-            })}
+            {typeOptions.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
           </SelectContent>
         </Select>
         <Select value={entityFilter} onValueChange={v => setEntityFilter(v as EntityFilter)}>
-          <SelectTrigger className="w-[180px] h-9">
-            <SelectValue />
-          </SelectTrigger>
+          <SelectTrigger className="w-[180px] h-9"><SelectValue /></SelectTrigger>
           <SelectContent>
             {(Object.keys(entityLabels) as EntityFilter[]).map(key => (
               <SelectItem key={key} value={key}>{entityLabels[key]}</SelectItem>
@@ -248,6 +227,21 @@ export default function Aktiviteter() {
                             <Clock className="w-3 h-3" />
                             {formatDato(a.dato)}
                           </span>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-muted">
+                                <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-32">
+                              <DropdownMenuItem onClick={() => openEdit(a)} className="text-xs gap-2">
+                                <Pencil className="w-3 h-3" /> Rediger
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => setDeleteId(a.id)} className="text-xs gap-2 text-destructive focus:text-destructive">
+                                <Trash2 className="w-3 h-3" /> Slett
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                         <p className="text-sm text-muted-foreground mt-0.5 whitespace-pre-line line-clamp-2">{a.beskrivelse}</p>
                       </div>
@@ -259,6 +253,53 @@ export default function Aktiviteter() {
           ))}
         </div>
       )}
+
+      {/* Edit Dialog */}
+      <Dialog open={!!editDialog} onOpenChange={open => !open && setEditDialog(null)}>
+        <DialogContent className="max-w-[95vw] sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Rediger aktivitet</DialogTitle>
+            <DialogDescription>Endre type eller beskrivelse</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="grid grid-cols-3 gap-1.5">
+              {typeOptions.map(t => {
+                const TIcon = typeIcons[t];
+                return (
+                  <button
+                    key={t}
+                    onClick={() => setEditType(t)}
+                    className={`flex flex-col items-center gap-1 p-2 rounded-lg border text-xs transition-colors ${
+                      editType === t ? "border-primary bg-primary/5 text-primary font-medium" : "border-border hover:bg-muted/50 text-muted-foreground"
+                    }`}
+                  >
+                    <TIcon className="w-4 h-4" />
+                    <span className="text-[10px] leading-tight text-center">{t}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <Textarea placeholder="Beskriv aktiviteten..." value={editBeskrivelse} onChange={e => setEditBeskrivelse(e.target.value)} rows={3} autoFocus />
+            <Button onClick={saveEdit} className="w-full" disabled={!editBeskrivelse.trim() || editLoading}>
+              {editLoading ? "Lagrer..." : "Lagre endringer"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={!!deleteId} onOpenChange={open => !open && setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Slett aktivitet</AlertDialogTitle>
+            <AlertDialogDescription>Er du sikker på at du vil slette denne aktiviteten? Dette kan ikke angres.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Avbryt</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Slett</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </PageShell>
   );
 }
