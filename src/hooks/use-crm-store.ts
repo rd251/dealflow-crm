@@ -181,6 +181,19 @@ function useCrmStoreInternal() {
   const [partnere, setPartnere] = useState<Partner[]>([]);
   const [loaded, setLoaded] = useState(false);
 
+  // Direct PostgREST fetch to bypass Supabase client auth lock
+  const fetchTable = async (table: string) => {
+    const url = `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/${table}?select=*`;
+    const res = await fetch(url, {
+      headers: {
+        'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+      },
+    });
+    if (!res.ok) throw new Error(`Failed to fetch ${table}: ${res.status}`);
+    return res.json();
+  };
+
   // Fetch all data (robust: one failed table should not block all data)
   const refresh = useCallback(async () => {
     console.log("[CRM] refresh() called, fetching data...");
@@ -188,47 +201,36 @@ function useCrmStoreInternal() {
 
     try {
       const [r1, r2, r3, r4, r5, r6, r7] = await Promise.allSettled([
-        supabase.from("leads").select("*"),
-        supabase.from("salgsmuligheter").select("*"),
-        supabase.from("prosjekter").select("*"),
-        supabase.from("selskaper").select("*"),
-        supabase.from("kontakter").select("*"),
-        supabase.from("oppgaver").select("*"),
-        supabase.from("partnere").select("*"),
+        fetchTable("leads"),
+        fetchTable("salgsmuligheter"),
+        fetchTable("prosjekter"),
+        fetchTable("selskaper"),
+        fetchTable("kontakter"),
+        fetchTable("oppgaver"),
+        fetchTable("partnere"),
       ]);
 
       console.log("[CRM] All queries settled:", [r1, r2, r3, r4, r5, r6, r7].map((r, i) => {
         const tables = ["leads", "salgsmuligheter", "prosjekter", "selskaper", "kontakter", "oppgaver", "partnere"];
-        if (r.status === "rejected") return `${tables[i]}: REJECTED`;
-        const val = r.value as any;
-        return `${tables[i]}: ${val.error ? 'ERROR' : (val.data?.length ?? 0) + ' rows'}`;
+        if (r.status === "rejected") return `${tables[i]}: REJECTED - ${r.reason}`;
+        return `${tables[i]}: ${(r.value as any[])?.length ?? 0} rows`;
       }));
 
-      const applyResult = <T,>(
-        result: PromiseSettledResult<{ data: T[] | null; error: unknown }>,
-        tableName: string,
-        onSuccess: (rows: T[]) => void,
-      ) => {
+      const apply = (result: PromiseSettledResult<any[]>, tableName: string, setter: (rows: any[]) => void) => {
         if (result.status === "rejected") {
           console.error(`[CRM] Fetch rejected (${tableName}):`, result.reason);
           return;
         }
-
-        if (result.value.error) {
-          console.error(`[CRM] Fetch error (${tableName}):`, result.value.error);
-          return;
-        }
-
-        onSuccess(result.value.data ?? []);
+        setter(result.value ?? []);
       };
 
-      applyResult(r1 as PromiseSettledResult<{ data: any[] | null; error: unknown }>, "leads", rows => setLeads(rows.map(rowToLead)));
-      applyResult(r2 as PromiseSettledResult<{ data: any[] | null; error: unknown }>, "salgsmuligheter", rows => setSalgsmuligheter(rows.map(rowToSalgsmulighet)));
-      applyResult(r3 as PromiseSettledResult<{ data: any[] | null; error: unknown }>, "prosjekter", rows => setProsjekter(rows.map(rowToProsjekt)));
-      applyResult(r4 as PromiseSettledResult<{ data: any[] | null; error: unknown }>, "selskaper", rows => setSelskaper(rows.map(rowToSelskap)));
-      applyResult(r5 as PromiseSettledResult<{ data: any[] | null; error: unknown }>, "kontakter", rows => setKontakter(rows.map(rowToKontakt)));
-      applyResult(r6 as PromiseSettledResult<{ data: any[] | null; error: unknown }>, "oppgaver", rows => setOppgaver(rows.map(rowToOppgave)));
-      applyResult(r7 as PromiseSettledResult<{ data: any[] | null; error: unknown }>, "partnere", rows => setPartnere(rows.map(rowToPartner)));
+      apply(r1, "leads", rows => setLeads(rows.map(rowToLead)));
+      apply(r2, "salgsmuligheter", rows => setSalgsmuligheter(rows.map(rowToSalgsmulighet)));
+      apply(r3, "prosjekter", rows => setProsjekter(rows.map(rowToProsjekt)));
+      apply(r4, "selskaper", rows => setSelskaper(rows.map(rowToSelskap)));
+      apply(r5, "kontakter", rows => setKontakter(rows.map(rowToKontakt)));
+      apply(r6, "oppgaver", rows => setOppgaver(rows.map(rowToOppgave)));
+      apply(r7, "partnere", rows => setPartnere(rows.map(rowToPartner)));
     } catch (err) {
       console.error("[CRM] refresh() unexpected error:", err);
     }
