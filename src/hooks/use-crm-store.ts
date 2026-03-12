@@ -183,43 +183,55 @@ function useCrmStoreInternal() {
 
   // Fetch all data (robust: one failed table should not block all data)
   const refresh = useCallback(async () => {
+    console.log("[CRM] refresh() called, fetching data...");
     setLoaded(false);
 
-    const [r1, r2, r3, r4, r5, r6, r7] = await Promise.allSettled([
-      supabase.from("leads").select("*"),
-      supabase.from("salgsmuligheter").select("*"),
-      supabase.from("prosjekter").select("*"),
-      supabase.from("selskaper").select("*"),
-      supabase.from("kontakter").select("*"),
-      supabase.from("oppgaver").select("*"),
-      supabase.from("partnere").select("*"),
-    ]);
+    try {
+      const [r1, r2, r3, r4, r5, r6, r7] = await Promise.allSettled([
+        supabase.from("leads").select("*"),
+        supabase.from("salgsmuligheter").select("*"),
+        supabase.from("prosjekter").select("*"),
+        supabase.from("selskaper").select("*"),
+        supabase.from("kontakter").select("*"),
+        supabase.from("oppgaver").select("*"),
+        supabase.from("partnere").select("*"),
+      ]);
 
-    const applyResult = <T,>(
-      result: PromiseSettledResult<{ data: T[] | null; error: unknown }>,
-      tableName: string,
-      onSuccess: (rows: T[]) => void,
-    ) => {
-      if (result.status === "rejected") {
-        console.error(`Fetch rejected (${tableName}):`, result.reason);
-        return;
-      }
+      console.log("[CRM] All queries settled:", [r1, r2, r3, r4, r5, r6, r7].map((r, i) => {
+        const tables = ["leads", "salgsmuligheter", "prosjekter", "selskaper", "kontakter", "oppgaver", "partnere"];
+        if (r.status === "rejected") return `${tables[i]}: REJECTED`;
+        const val = r.value as any;
+        return `${tables[i]}: ${val.error ? 'ERROR' : (val.data?.length ?? 0) + ' rows'}`;
+      }));
 
-      if (result.value.error) {
-        console.error(`Fetch error (${tableName}):`, result.value.error);
-        return;
-      }
+      const applyResult = <T,>(
+        result: PromiseSettledResult<{ data: T[] | null; error: unknown }>,
+        tableName: string,
+        onSuccess: (rows: T[]) => void,
+      ) => {
+        if (result.status === "rejected") {
+          console.error(`[CRM] Fetch rejected (${tableName}):`, result.reason);
+          return;
+        }
 
-      onSuccess(result.value.data ?? []);
-    };
+        if (result.value.error) {
+          console.error(`[CRM] Fetch error (${tableName}):`, result.value.error);
+          return;
+        }
 
-    applyResult(r1 as PromiseSettledResult<{ data: any[] | null; error: unknown }>, "leads", rows => setLeads(rows.map(rowToLead)));
-    applyResult(r2 as PromiseSettledResult<{ data: any[] | null; error: unknown }>, "salgsmuligheter", rows => setSalgsmuligheter(rows.map(rowToSalgsmulighet)));
-    applyResult(r3 as PromiseSettledResult<{ data: any[] | null; error: unknown }>, "prosjekter", rows => setProsjekter(rows.map(rowToProsjekt)));
-    applyResult(r4 as PromiseSettledResult<{ data: any[] | null; error: unknown }>, "selskaper", rows => setSelskaper(rows.map(rowToSelskap)));
-    applyResult(r5 as PromiseSettledResult<{ data: any[] | null; error: unknown }>, "kontakter", rows => setKontakter(rows.map(rowToKontakt)));
-    applyResult(r6 as PromiseSettledResult<{ data: any[] | null; error: unknown }>, "oppgaver", rows => setOppgaver(rows.map(rowToOppgave)));
-    applyResult(r7 as PromiseSettledResult<{ data: any[] | null; error: unknown }>, "partnere", rows => setPartnere(rows.map(rowToPartner)));
+        onSuccess(result.value.data ?? []);
+      };
+
+      applyResult(r1 as PromiseSettledResult<{ data: any[] | null; error: unknown }>, "leads", rows => setLeads(rows.map(rowToLead)));
+      applyResult(r2 as PromiseSettledResult<{ data: any[] | null; error: unknown }>, "salgsmuligheter", rows => setSalgsmuligheter(rows.map(rowToSalgsmulighet)));
+      applyResult(r3 as PromiseSettledResult<{ data: any[] | null; error: unknown }>, "prosjekter", rows => setProsjekter(rows.map(rowToProsjekt)));
+      applyResult(r4 as PromiseSettledResult<{ data: any[] | null; error: unknown }>, "selskaper", rows => setSelskaper(rows.map(rowToSelskap)));
+      applyResult(r5 as PromiseSettledResult<{ data: any[] | null; error: unknown }>, "kontakter", rows => setKontakter(rows.map(rowToKontakt)));
+      applyResult(r6 as PromiseSettledResult<{ data: any[] | null; error: unknown }>, "oppgaver", rows => setOppgaver(rows.map(rowToOppgave)));
+      applyResult(r7 as PromiseSettledResult<{ data: any[] | null; error: unknown }>, "partnere", rows => setPartnere(rows.map(rowToPartner)));
+    } catch (err) {
+      console.error("[CRM] refresh() unexpected error:", err);
+    }
 
     setLoaded(true);
   }, []);
