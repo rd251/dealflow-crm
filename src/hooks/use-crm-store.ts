@@ -4,8 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import {
   Lead, Salgsmulighet, Prosjekt, Selskap, Kontakt, Oppgave, Partner,
-  initialSelskaper, initialKontakter, initialSalgsmuligheter, initialLeads,
-  initialProsjekter, initialOppgaver, initialPartnere,
 } from "@/data/crm-data";
 
 // Map DB row to app type (handle nulls)
@@ -86,34 +84,24 @@ function rowToPartner(r: any): Partner {
 function emptyToNull(v: string | undefined) { return v === "" || v === undefined ? null : v; }
 function numOrNull(v: number | undefined) { return v === 0 || v === undefined ? 0 : v; }
 
-// Guard against concurrent seeding
-let seedingInProgress = false;
-
-// Seed database with initial data if tables are empty
-async function seedDatabase(userId: string) {
-  if (seedingInProgress) return;
-  seedingInProgress = true;
-  try {
-    await seedDatabaseInternal(userId);
-  } finally {
-    seedingInProgress = false;
+// Seed function only available in dev mode, triggered manually
+export async function seedDatabase(userId: string) {
+  if (!import.meta.env.DEV) {
+    console.warn("seedDatabase is only available in development mode");
+    return;
   }
-}
 
-async function seedDatabaseInternal(userId: string) {
+  const { initialSelskaper, initialKontakter, initialSalgsmuligheter, initialLeads, initialOppgaver } = await import("@/data/crm-data");
+
   // Build ID mapping: old string IDs → new UUIDs
   const idMap = new Map<string, string>();
-  
-  // Generate UUIDs for all seed items
   for (const s of initialSelskaper) idMap.set(s.id, crypto.randomUUID());
   for (const k of initialKontakter) idMap.set(k.id, crypto.randomUUID());
   for (const sm of initialSalgsmuligheter) idMap.set(sm.id, crypto.randomUUID());
   for (const l of initialLeads) idMap.set(l.id, crypto.randomUUID());
   for (const o of initialOppgaver) idMap.set(o.id, crypto.randomUUID());
-  
   const mapId = (oldId: string) => idMap.get(oldId) || oldId;
-  
-  // Insert selskaper first (no FK deps)
+
   const selskaperRows = initialSelskaper.map(s => ({
     id: mapId(s.id), firmanavn: s.firmanavn, bransje: emptyToNull(s.bransje),
     kundeansvarlig: emptyToNull(s.kundeansvarlig), kundestatus: s.kundestatus as any,
@@ -127,17 +115,15 @@ async function seedDatabaseInternal(userId: string) {
     kilde: s.kilde as any, partner_id: emptyToNull(s.partner_id),
     lukkedato: emptyToNull(s.lukkedato),
   }));
-  const { error: e1 } = await supabase.from("selskaper").upsert(selskaperRows, { onConflict: "id" });
-  
-  // Insert kontakter (depends on selskaper)
+  await supabase.from("selskaper").upsert(selskaperRows, { onConflict: "id" });
+
   const kontakterRows = initialKontakter.map(k => ({
     id: mapId(k.id), selskap_id: k.selskap_id ? mapId(k.selskap_id) : null,
     navn: k.navn, rolle: emptyToNull(k.rolle), e_post: emptyToNull(k.e_post),
     telefon: emptyToNull(k.telefon), linkedin: emptyToNull(k.linkedin), notater: emptyToNull(k.notater),
   }));
-  const { error: e2 } = await supabase.from("kontakter").upsert(kontakterRows, { onConflict: "id" });
-  
-  // Insert salgsmuligheter (depends on selskaper, kontakter)
+  await supabase.from("kontakter").upsert(kontakterRows, { onConflict: "id" });
+
   const smRows = initialSalgsmuligheter.map(sm => ({
     id: mapId(sm.id), navn: sm.navn, selskap_id: sm.selskap_id ? mapId(sm.selskap_id) : null,
     kontakt_id: sm.kontakt_id ? mapId(sm.kontakt_id) : null,
@@ -154,9 +140,8 @@ async function seedDatabaseInternal(userId: string) {
     netto_inntekt: sm.netto_inntekt,
     rolle_i_firma: emptyToNull(sm.rolle_i_firma), use_case: emptyToNull(sm.use_case),
   }));
-  const { error: e3 } = await supabase.from("salgsmuligheter").upsert(smRows, { onConflict: "id" });
-  
-  // Insert leads
+  await supabase.from("salgsmuligheter").upsert(smRows, { onConflict: "id" });
+
   const leadRows = initialLeads.map(l => ({
     id: mapId(l.id), firmanavn: l.firmanavn, kontaktperson: emptyToNull(l.kontaktperson),
     e_post: emptyToNull(l.e_post), telefon: emptyToNull(l.telefon),
@@ -166,11 +151,8 @@ async function seedDatabaseInternal(userId: string) {
     konvertert_dato: emptyToNull(l.konvertert_dato),
     rolle_i_firma: emptyToNull(l.rolle_i_firma), use_case: emptyToNull(l.use_case),
   }));
-  if (leadRows.length > 0) {
-    const { error: e4 } = await supabase.from("leads").upsert(leadRows, { onConflict: "id" });
-  }
-  
-  // Insert oppgaver (depends on selskaper, salgsmuligheter, leads)
+  if (leadRows.length > 0) await supabase.from("leads").upsert(leadRows, { onConflict: "id" });
+
   const oppgaveRows = initialOppgaver.map(o => ({
     id: mapId(o.id), oppgave: o.oppgave, user_id: userId,
     lead_id: o.lead_id ? mapId(o.lead_id) : null,
@@ -180,11 +162,9 @@ async function seedDatabaseInternal(userId: string) {
     prioritet: o.prioritet as any, status: o.status as any,
     paaminnelse: o.paaminnelse, notater: emptyToNull(o.notater),
   }));
-  if (oppgaveRows.length > 0) {
-    const { error: e5 } = await supabase.from("oppgaver").upsert(oppgaveRows, { onConflict: "id" });
-  }
-  
-  console.log("Database seeded with initial CRM data");
+  if (oppgaveRows.length > 0) await supabase.from("oppgaver").upsert(oppgaveRows, { onConflict: "id" });
+
+  console.log("Database seeded with initial CRM data (dev only)");
 }
 
 type CrmStore = ReturnType<typeof useCrmStoreInternal>;
@@ -227,36 +207,14 @@ function useCrmStoreInternal() {
       return;
     }
 
-    // Check if database is empty and seed if needed
-    const allEmpty = results.every(r => !r.data || r.data.length === 0);
-    if (allEmpty && user) {
-      await seedDatabase(user.id);
-      // Re-fetch after seeding
-      const [s1, s2, s3, s4, s5, s6, s7] = await Promise.all([
-        supabase.from("leads").select("*"),
-        supabase.from("salgsmuligheter").select("*"),
-        supabase.from("prosjekter").select("*"),
-        supabase.from("selskaper").select("*"),
-        supabase.from("kontakter").select("*"),
-        supabase.from("oppgaver").select("*"),
-        supabase.from("partnere").select("*"),
-      ]);
-      if (s1.data) setLeads(s1.data.map(rowToLead));
-      if (s2.data) setSalgsmuligheter(s2.data.map(rowToSalgsmulighet));
-      if (s3.data) setProsjekter(s3.data.map(rowToProsjekt));
-      if (s4.data) setSelskaper(s4.data.map(rowToSelskap));
-      if (s5.data) setKontakter(s5.data.map(rowToKontakt));
-      if (s6.data) setOppgaver(s6.data.map(rowToOppgave));
-      if (s7.data) setPartnere(s7.data.map(rowToPartner));
-    } else {
-      if (r1.data) setLeads(r1.data.map(rowToLead));
-      if (r2.data) setSalgsmuligheter(r2.data.map(rowToSalgsmulighet));
-      if (r3.data) setProsjekter(r3.data.map(rowToProsjekt));
-      if (r4.data) setSelskaper(r4.data.map(rowToSelskap));
-      if (r5.data) setKontakter(r5.data.map(rowToKontakt));
-      if (r6.data) setOppgaver(r6.data.map(rowToOppgave));
-      if (r7.data) setPartnere(r7.data.map(rowToPartner));
-    }
+    // Simply set state from database - no auto-seeding
+    if (r1.data) setLeads(r1.data.map(rowToLead));
+    if (r2.data) setSalgsmuligheter(r2.data.map(rowToSalgsmulighet));
+    if (r3.data) setProsjekter(r3.data.map(rowToProsjekt));
+    if (r4.data) setSelskaper(r4.data.map(rowToSelskap));
+    if (r5.data) setKontakter(r5.data.map(rowToKontakt));
+    if (r6.data) setOppgaver(r6.data.map(rowToOppgave));
+    if (r7.data) setPartnere(r7.data.map(rowToPartner));
 
     setLoaded(true);
   }, [user]);
