@@ -75,14 +75,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (mounted) setSignedOutState();
     });
 
-    const loadingTimeout = window.setTimeout(() => {
-      if (!mounted) return;
-      setState(prev => prev.loading ? { ...prev, loading: false } : prev);
-    }, 3000);
-
     return () => {
       mounted = false;
-      window.clearTimeout(loadingTimeout);
       subscription.unsubscribe();
     };
   }, []);
