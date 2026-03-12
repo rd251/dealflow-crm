@@ -19,6 +19,7 @@ import PartnerProfile from "./pages/PartnerProfile";
 import PartnerPipeline from "./pages/PartnerPipeline";
 import CompanyProfile from "./pages/CompanyProfile";
 import Admin from "./pages/Admin";
+import Aktiviteter from "./pages/Aktiviteter";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
