@@ -260,7 +260,7 @@ export default function Salgsmuligheter() {
                           {kontakter.map(k => <option key={k.id} value={k.id}>{k.navn}</option>)}
                         </select>
                       </div>
-                      {linkedContact && (
+                      {linkedContact ? (
                         <div className="space-y-2 bg-muted/30 rounded-lg p-3">
                           <div className="grid grid-cols-2 gap-2">
                             <div>
