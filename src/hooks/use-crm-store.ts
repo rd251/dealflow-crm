@@ -207,36 +207,14 @@ function useCrmStoreInternal() {
       return;
     }
 
-    // Check if database is empty and seed if needed
-    const allEmpty = results.every(r => !r.data || r.data.length === 0);
-    if (allEmpty && user) {
-      await seedDatabase(user.id);
-      // Re-fetch after seeding
-      const [s1, s2, s3, s4, s5, s6, s7] = await Promise.all([
-        supabase.from("leads").select("*"),
-        supabase.from("salgsmuligheter").select("*"),
-        supabase.from("prosjekter").select("*"),
-        supabase.from("selskaper").select("*"),
-        supabase.from("kontakter").select("*"),
-        supabase.from("oppgaver").select("*"),
-        supabase.from("partnere").select("*"),
-      ]);
-      if (s1.data) setLeads(s1.data.map(rowToLead));
-      if (s2.data) setSalgsmuligheter(s2.data.map(rowToSalgsmulighet));
-      if (s3.data) setProsjekter(s3.data.map(rowToProsjekt));
-      if (s4.data) setSelskaper(s4.data.map(rowToSelskap));
-      if (s5.data) setKontakter(s5.data.map(rowToKontakt));
-      if (s6.data) setOppgaver(s6.data.map(rowToOppgave));
-      if (s7.data) setPartnere(s7.data.map(rowToPartner));
-    } else {
-      if (r1.data) setLeads(r1.data.map(rowToLead));
-      if (r2.data) setSalgsmuligheter(r2.data.map(rowToSalgsmulighet));
-      if (r3.data) setProsjekter(r3.data.map(rowToProsjekt));
-      if (r4.data) setSelskaper(r4.data.map(rowToSelskap));
-      if (r5.data) setKontakter(r5.data.map(rowToKontakt));
-      if (r6.data) setOppgaver(r6.data.map(rowToOppgave));
-      if (r7.data) setPartnere(r7.data.map(rowToPartner));
-    }
+    // Simply set state from database - no auto-seeding
+    if (r1.data) setLeads(r1.data.map(rowToLead));
+    if (r2.data) setSalgsmuligheter(r2.data.map(rowToSalgsmulighet));
+    if (r3.data) setProsjekter(r3.data.map(rowToProsjekt));
+    if (r4.data) setSelskaper(r4.data.map(rowToSelskap));
+    if (r5.data) setKontakter(r5.data.map(rowToKontakt));
+    if (r6.data) setOppgaver(r6.data.map(rowToOppgave));
+    if (r7.data) setPartnere(r7.data.map(rowToPartner));
 
     setLoaded(true);
   }, [user]);
