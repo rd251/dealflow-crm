@@ -182,6 +182,7 @@ export default function Leads() {
                 <th className="text-left px-4 py-3 font-medium">Kilde</th>
                 <th className="text-left px-4 py-3 font-medium">Status</th>
                 <th className="text-left px-4 py-3 font-medium">Neste steg</th>
+                <th className="text-left px-4 py-3 font-medium">Sist aktivitet</th>
                 <th className="text-left px-4 py-3 font-medium">Opprettet</th>
                 <th className="text-right px-4 py-3 font-medium">Handling</th>
               </tr>
