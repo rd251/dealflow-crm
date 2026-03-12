@@ -277,6 +277,8 @@ export default function Salgsmuligheter() {
                             <Input value={linkedContact.e_post} onChange={e => updateContactField("e_post", e.target.value)} className="h-8 text-sm" />
                           </div>
                         </div>
+                      ) : (
+                        <p className="text-xs text-muted-foreground italic py-2">Velg en kontaktperson for å se og redigere kontaktinfo</p>
                       )}
                     </div>
                   );
