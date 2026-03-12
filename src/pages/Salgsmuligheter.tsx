@@ -35,7 +35,7 @@ export default function Salgsmuligheter() {
   const [lossDialog, setLossDialog] = useState<string | null>(null);
   const [lossReason, setLossReason] = useState<Tapsaarsak>("Pris");
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [form, setForm] = useState({ navn: "", selskap_id: "", kontakt_id: "", forventet_mrr: 0, sla: 0, oppstartskostnad: 0, kontraktslengde_mnd: 12, sannsynlighet: 50, forventet_lukkedato: "", neste_steg: "", rolle_i_firma: "", use_case: "" });
+  const [form, setForm] = useState({ navn: "", selskap_id: "", kontakt_id: "", forventet_mrr: 0, sla: 0, oppstartskostnad: 0, kontraktslengde_mnd: 12, sannsynlighet: 50, forventet_lukkedato: "", neste_steg: "", rolle_i_firma: "", use_case: "", kontaktperson: "", e_post: "", telefon: "" });
 
   const getSelskapNavn = (id: string) => selskaper.find(s => s.id === id)?.firmanavn || "–";
 
@@ -64,10 +64,11 @@ export default function Salgsmuligheter() {
       opprettet_dato: today, sist_aktivitet: today,
       kilde: "Direkte salg", partner_id: "", partner_provisjon: 0, partner_kostnad: 0, netto_inntekt: 0,
       rolle_i_firma: form.rolle_i_firma, use_case: form.use_case,
+      kontaktperson: form.kontaktperson, e_post: form.e_post, telefon: form.telefon,
     };
     updateSalgsmuligheter(prev => [...prev, nySm]);
     setDialogOpen(false);
-    setForm({ navn: "", selskap_id: "", kontakt_id: "", forventet_mrr: 0, sla: 0, oppstartskostnad: 0, kontraktslengde_mnd: 12, sannsynlighet: 50, forventet_lukkedato: "", neste_steg: "", rolle_i_firma: "", use_case: "" });
+    setForm({ navn: "", selskap_id: "", kontakt_id: "", forventet_mrr: 0, sla: 0, oppstartskostnad: 0, kontraktslengde_mnd: 12, sannsynlighet: 50, forventet_lukkedato: "", neste_steg: "", rolle_i_firma: "", use_case: "", kontaktperson: "", e_post: "", telefon: "" });
   };
 
   const now = new Date();
@@ -109,9 +110,14 @@ export default function Salgsmuligheter() {
               <Input type="date" placeholder="Forventet lukkedato" value={form.forventet_lukkedato} onChange={e => setForm(f => ({ ...f, forventet_lukkedato: e.target.value }))} />
               <Input placeholder="Neste steg" value={form.neste_steg} onChange={e => setForm(f => ({ ...f, neste_steg: e.target.value }))} />
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <Input placeholder="Rolle i firma" value={form.rolle_i_firma} onChange={e => setForm(f => ({ ...f, rolle_i_firma: e.target.value }))} />
-                <Input placeholder="Use case" value={form.use_case} onChange={e => setForm(f => ({ ...f, use_case: e.target.value }))} />
+                <Input placeholder="Kontaktperson" value={form.kontaktperson} onChange={e => setForm(f => ({ ...f, kontaktperson: e.target.value }))} />
+                <Input placeholder="E-post" value={form.e_post} onChange={e => setForm(f => ({ ...f, e_post: e.target.value }))} />
               </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Input placeholder="Telefon" value={form.telefon} onChange={e => setForm(f => ({ ...f, telefon: e.target.value }))} />
+                <Input placeholder="Rolle i firma" value={form.rolle_i_firma} onChange={e => setForm(f => ({ ...f, rolle_i_firma: e.target.value }))} />
+              </div>
+              <Input placeholder="Use case" value={form.use_case} onChange={e => setForm(f => ({ ...f, use_case: e.target.value }))} />
               <Button onClick={addSm} className="w-full" disabled={!form.navn || !form.selskap_id}>Opprett</Button>
             </div>
           </DialogContent>
@@ -165,11 +171,12 @@ export default function Salgsmuligheter() {
                             <p className="font-semibold text-sm truncate">{deal.navn}</p>
                             <p className="text-xs text-muted-foreground mt-0.5 truncate cursor-pointer hover:text-primary hover:underline" onClick={e => { e.stopPropagation(); navigate(`/selskaper/${deal.selskap_id}`); }}>{getSelskapNavn(deal.selskap_id)}</p>
                             {(() => {
-                              const contact = kontakter.find(k => k.id === deal.kontakt_id);
-                              return contact ? (
+                              const contactName = deal.kontaktperson || kontakter.find(k => k.id === deal.kontakt_id)?.navn;
+                              const contactPhone = deal.telefon || kontakter.find(k => k.id === deal.kontakt_id)?.telefon;
+                              return contactName ? (
                                 <div className="flex items-center gap-2 mt-1.5 text-[11px] text-muted-foreground">
-                                  <span className="flex items-center gap-1 truncate"><User className="w-3 h-3 shrink-0" />{contact.navn}</span>
-                                  {contact.telefon && <span className="flex items-center gap-1 shrink-0"><Phone className="w-3 h-3" />{contact.telefon}</span>}
+                                  <span className="flex items-center gap-1 truncate"><User className="w-3 h-3 shrink-0" />{contactName}</span>
+                                  {contactPhone && <span className="flex items-center gap-1 shrink-0"><Phone className="w-3 h-3" />{contactPhone}</span>}
                                 </div>
                               ) : null;
                             })()}
@@ -240,49 +247,51 @@ export default function Salgsmuligheter() {
                 <Field label="Selskap" value={<span className="cursor-pointer hover:text-primary hover:underline" onClick={() => navigate(`/selskaper/${currentSm.selskap_id}`)}>{getSelskapNavn(currentSm.selskap_id)}</span>} />
 
                 {/* Kontaktinformasjon */}
-                {(() => {
-                  const linkedContact = kontakter.find(k => k.id === currentSm.kontakt_id);
-                  const updateContactField = (field: string, value: string) => {
-                    if (!linkedContact) return;
-                    updateKontakter(prev => prev.map(k =>
-                      k.id === linkedContact.id ? { ...k, [field]: value } : k
-                    ));
-                  };
-                  return (
-                    <div className="space-y-2">
-                      <span className="text-muted-foreground block text-xs font-medium uppercase tracking-wide">Kontaktinformasjon</span>
+                <div className="space-y-2">
+                  <span className="text-muted-foreground block text-xs font-medium uppercase tracking-wide">Kontaktinformasjon</span>
+                  <div className="space-y-2 bg-muted/30 rounded-lg p-3">
+                    <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <span className="text-muted-foreground block text-xs mb-1">Kontaktperson</span>
-                        <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background"
-                          value={currentSm.kontakt_id}
-                          onChange={e => updateField("kontakt_id", e.target.value)}>
-                          <option value="">Velg kontakt</option>
-                          {kontakter.map(k => <option key={k.id} value={k.id}>{k.navn}</option>)}
-                        </select>
+                        <span className="text-muted-foreground block text-xs mb-1 flex items-center gap-1"><User className="w-3 h-3" />Kontaktperson</span>
+                        <Input value={currentSm.kontaktperson} onChange={e => updateField("kontaktperson", e.target.value)} className="h-8 text-sm" placeholder="Navn" />
                       </div>
-                      {linkedContact ? (
-                        <div className="space-y-2 bg-muted/30 rounded-lg p-3">
-                          <div className="grid grid-cols-2 gap-2">
-                            <div>
-                              <span className="text-muted-foreground block text-xs mb-1 flex items-center gap-1"><Briefcase className="w-3 h-3" />Rolle</span>
-                              <Input value={linkedContact.rolle} onChange={e => updateContactField("rolle", e.target.value)} className="h-8 text-sm" />
-                            </div>
-                            <div>
-                              <span className="text-muted-foreground block text-xs mb-1 flex items-center gap-1"><Phone className="w-3 h-3" />Telefon</span>
-                              <Input value={linkedContact.telefon} onChange={e => updateContactField("telefon", e.target.value)} className="h-8 text-sm" />
-                            </div>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground block text-xs mb-1 flex items-center gap-1"><Mail className="w-3 h-3" />E-post</span>
-                            <Input value={linkedContact.e_post} onChange={e => updateContactField("e_post", e.target.value)} className="h-8 text-sm" />
-                          </div>
-                        </div>
-                      ) : (
-                        <p className="text-xs text-muted-foreground italic py-2">Velg en kontaktperson for å se og redigere kontaktinfo</p>
-                      )}
+                      <div>
+                        <span className="text-muted-foreground block text-xs mb-1 flex items-center gap-1"><Briefcase className="w-3 h-3" />Rolle</span>
+                        <Input value={currentSm.rolle_i_firma} onChange={e => updateField("rolle_i_firma", e.target.value)} className="h-8 text-sm" placeholder="Rolle" />
+                      </div>
                     </div>
-                  );
-                })()}
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <span className="text-muted-foreground block text-xs mb-1 flex items-center gap-1"><Mail className="w-3 h-3" />E-post</span>
+                        <Input value={currentSm.e_post} onChange={e => updateField("e_post", e.target.value)} className="h-8 text-sm" placeholder="E-post" />
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground block text-xs mb-1 flex items-center gap-1"><Phone className="w-3 h-3" />Telefon</span>
+                        <Input value={currentSm.telefon} onChange={e => updateField("telefon", e.target.value)} className="h-8 text-sm" placeholder="Telefon" />
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground block text-xs mb-1">Koble til kontakt</span>
+                      <select className="w-full border rounded-lg px-3 py-1.5 text-xs bg-background"
+                        value={currentSm.kontakt_id}
+                        onChange={e => {
+                          const kontakt = kontakter.find(k => k.id === e.target.value);
+                          if (kontakt) {
+                            updateField("kontakt_id", kontakt.id);
+                            updateField("kontaktperson", kontakt.navn);
+                            updateField("e_post", kontakt.e_post);
+                            updateField("telefon", kontakt.telefon);
+                            updateField("rolle_i_firma", kontakt.rolle);
+                          } else {
+                            updateField("kontakt_id", "");
+                          }
+                        }}>
+                        <option value="">Ingen koblet kontakt</option>
+                        {kontakter.map(k => <option key={k.id} value={k.id}>{k.navn}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                </div>
 
                 {/* Status */}
                 <div>

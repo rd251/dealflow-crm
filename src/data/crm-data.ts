@@ -71,6 +71,9 @@ export interface Salgsmulighet {
   netto_inntekt: number;
   rolle_i_firma: string;
   use_case: string;
+  kontaktperson: string;
+  e_post: string;
+  telefon: string;
 }
 
 export interface Prosjekt {
@@ -225,7 +228,7 @@ export const initialKontakter: Kontakt[] = [
   { id: "K-0010", selskap_id: "S-0001", navn: "Henrik Lie", e_post: "henrik@jobbkort.no", telefon: "+47 901 99 000", rolle: "CEO", linkedin: "", notater: "" },
 ];
 
-const smDefaults = { kilde: "Direkte salg" as Kilde, partner_id: "", partner_provisjon: 0, partner_kostnad: 0, netto_inntekt: 0, rolle_i_firma: "", use_case: "" };
+const smDefaults = { kilde: "Direkte salg" as Kilde, partner_id: "", partner_provisjon: 0, partner_kostnad: 0, netto_inntekt: 0, rolle_i_firma: "", use_case: "", kontaktperson: "", e_post: "", telefon: "" };
 
 export const initialSalgsmuligheter: Salgsmulighet[] = [
   { id: "SM-0001", navn: "Outbound Info agent", selskap_id: "S-0001", kontakt_id: "K-0010", ansvarlig: "", status: "Tilbud sendt", forventet_mrr: 990, sla: 0, oppstartskostnad: 0, kontraktslengde_mnd: 12, sannsynlighet: 100, forventet_lukkedato: "2026-04-15", vunnet_dato: "", tapt_dato: "", tapsaarsak: "", neste_steg: "Avventer svar", notater: "", opprettet_dato: "2026-03-01", sist_aktivitet: today, ...smDefaults },

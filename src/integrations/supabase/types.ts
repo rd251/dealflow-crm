@@ -377,11 +377,13 @@ export type Database = {
         Row: {
           ansvarlig: string | null
           created_at: string
+          e_post: string | null
           forventet_lukkedato: string | null
           forventet_mrr: number | null
           id: string
           kilde: Database["public"]["Enums"]["kilde"] | null
           kontakt_id: string | null
+          kontaktperson: string | null
           kontraktslengde_mnd: number | null
           navn: string
           neste_steg: string | null
@@ -400,6 +402,7 @@ export type Database = {
           status: Database["public"]["Enums"]["salgsmulighet_status"] | null
           tapsaarsak: Database["public"]["Enums"]["tapsaarsak"] | null
           tapt_dato: string | null
+          telefon: string | null
           updated_at: string
           use_case: string | null
           vunnet_dato: string | null
@@ -407,11 +410,13 @@ export type Database = {
         Insert: {
           ansvarlig?: string | null
           created_at?: string
+          e_post?: string | null
           forventet_lukkedato?: string | null
           forventet_mrr?: number | null
           id?: string
           kilde?: Database["public"]["Enums"]["kilde"] | null
           kontakt_id?: string | null
+          kontaktperson?: string | null
           kontraktslengde_mnd?: number | null
           navn: string
           neste_steg?: string | null
@@ -430,6 +435,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["salgsmulighet_status"] | null
           tapsaarsak?: Database["public"]["Enums"]["tapsaarsak"] | null
           tapt_dato?: string | null
+          telefon?: string | null
           updated_at?: string
           use_case?: string | null
           vunnet_dato?: string | null
@@ -437,11 +443,13 @@ export type Database = {
         Update: {
           ansvarlig?: string | null
           created_at?: string
+          e_post?: string | null
           forventet_lukkedato?: string | null
           forventet_mrr?: number | null
           id?: string
           kilde?: Database["public"]["Enums"]["kilde"] | null
           kontakt_id?: string | null
+          kontaktperson?: string | null
           kontraktslengde_mnd?: number | null
           navn?: string
           neste_steg?: string | null
@@ -460,6 +468,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["salgsmulighet_status"] | null
           tapsaarsak?: Database["public"]["Enums"]["tapsaarsak"] | null
           tapt_dato?: string | null
+          telefon?: string | null
           updated_at?: string
           use_case?: string | null
           vunnet_dato?: string | null
