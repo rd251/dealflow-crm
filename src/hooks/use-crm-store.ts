@@ -659,6 +659,7 @@ function useCrmStoreInternal() {
       opprettet_dato: today, sist_aktivitet: today,
       kilde: "Direkte salg", partner_id: "", partner_provisjon: 0, partner_kostnad: 0, netto_inntekt: 0,
       rolle_i_firma: lead.rolle_i_firma || "", use_case: lead.use_case || "",
+      kontaktperson: lead.kontaktperson || "", e_post: lead.e_post || "", telefon: lead.telefon || "",
     };
     updateSalgsmuligheter(prev => [...prev, nySm]);
 
