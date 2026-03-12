@@ -167,8 +167,7 @@ async function seedDatabaseInternal(userId: string) {
     rolle_i_firma: emptyToNull(l.rolle_i_firma), use_case: emptyToNull(l.use_case),
   }));
   if (leadRows.length > 0) {
-    const { error: e4 } = await supabase.from("leads").insert(leadRows);
-    if (e4) console.error("Seed leads error:", e4);
+    const { error: e4 } = await supabase.from("leads").upsert(leadRows, { onConflict: "id" });
   }
   
   // Insert oppgaver (depends on selskaper, salgsmuligheter, leads)
