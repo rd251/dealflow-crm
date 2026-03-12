@@ -271,53 +271,76 @@ function useCrmStoreInternal() {
   const partnereRef = useRef(partnere);
   partnereRef.current = partnere;
 
+  // Serialize sync operations per table to avoid race conditions on rapid edits
+  const leadsSyncQueueRef = useRef<Promise<void>>(Promise.resolve());
+  const selskaperSyncQueueRef = useRef<Promise<void>>(Promise.resolve());
+  const kontakterSyncQueueRef = useRef<Promise<void>>(Promise.resolve());
+  const salgsmuligheterSyncQueueRef = useRef<Promise<void>>(Promise.resolve());
+  const prosjekterSyncQueueRef = useRef<Promise<void>>(Promise.resolve());
+  const oppgaverSyncQueueRef = useRef<Promise<void>>(Promise.resolve());
+  const partnereSyncQueueRef = useRef<Promise<void>>(Promise.resolve());
+
   const updateLeads = useCallback((fn: (prev: Lead[]) => Lead[]) => {
     const prev = leadsRef.current;
     const next = fn(prev);
     setLeads(next);
-    syncLeads(prev, next).catch(e => console.error("syncLeads error:", e));
+    leadsSyncQueueRef.current = leadsSyncQueueRef.current
+      .then(() => syncLeads(prev, next))
+      .catch(e => console.error("syncLeads error:", e));
   }, []);
 
   const updateSelskaper = useCallback((fn: (prev: Selskap[]) => Selskap[]) => {
     const prev = selskaperRef.current;
     const next = fn(prev);
     setSelskaper(next);
-    syncSelskaper(prev, next).catch(e => console.error("syncSelskaper error:", e));
+    selskaperSyncQueueRef.current = selskaperSyncQueueRef.current
+      .then(() => syncSelskaper(prev, next))
+      .catch(e => console.error("syncSelskaper error:", e));
   }, []);
 
   const updateKontakter = useCallback((fn: (prev: Kontakt[]) => Kontakt[]) => {
     const prev = kontakterRef.current;
     const next = fn(prev);
     setKontakter(next);
-    syncKontakter(prev, next).catch(e => console.error("syncKontakter error:", e));
+    kontakterSyncQueueRef.current = kontakterSyncQueueRef.current
+      .then(() => syncKontakter(prev, next))
+      .catch(e => console.error("syncKontakter error:", e));
   }, []);
 
   const updateSalgsmuligheter = useCallback((fn: (prev: Salgsmulighet[]) => Salgsmulighet[]) => {
     const prev = salgsmuligheterRef.current;
     const next = fn(prev);
     setSalgsmuligheter(next);
-    syncSalgsmuligheter(prev, next).catch(e => console.error("syncSalgsmuligheter error:", e));
+    salgsmuligheterSyncQueueRef.current = salgsmuligheterSyncQueueRef.current
+      .then(() => syncSalgsmuligheter(prev, next))
+      .catch(e => console.error("syncSalgsmuligheter error:", e));
   }, []);
 
   const updateProsjekter = useCallback((fn: (prev: Prosjekt[]) => Prosjekt[]) => {
     const prev = prosjekterRef.current;
     const next = fn(prev);
     setProsjekter(next);
-    syncProsjekter(prev, next).catch(e => console.error("syncProsjekter error:", e));
+    prosjekterSyncQueueRef.current = prosjekterSyncQueueRef.current
+      .then(() => syncProsjekter(prev, next))
+      .catch(e => console.error("syncProsjekter error:", e));
   }, []);
 
   const updateOppgaver = useCallback((fn: (prev: Oppgave[]) => Oppgave[]) => {
     const prev = oppgaverRef.current;
     const next = fn(prev);
     setOppgaver(next);
-    syncOppgaver(prev, next).catch(e => console.error("syncOppgaver error:", e));
+    oppgaverSyncQueueRef.current = oppgaverSyncQueueRef.current
+      .then(() => syncOppgaver(prev, next))
+      .catch(e => console.error("syncOppgaver error:", e));
   }, []);
 
   const updatePartnere = useCallback((fn: (prev: Partner[]) => Partner[]) => {
     const prev = partnereRef.current;
     const next = fn(prev);
     setPartnere(next);
-    syncPartnere(prev, next).catch(e => console.error("syncPartnere error:", e));
+    partnereSyncQueueRef.current = partnereSyncQueueRef.current
+      .then(() => syncPartnere(prev, next))
+      .catch(e => console.error("syncPartnere error:", e));
   }, []);
 
   // Sync helpers - detect new/updated/deleted items
