@@ -18,6 +18,7 @@ import InlineTaskForm from "@/components/InlineTaskForm";
 import { Selskap, Kundestatus, OnboardingStatus, Kundetilstand, Kanselleringsaarsak } from "@/data/crm-data";
 import { Badge } from "@/components/ui/badge";
 import DataImportDialog from "@/components/DataImportDialog";
+import LastActivityBadge from "@/components/LastActivityBadge";
 
 const kundestatuser: Kundestatus[] = ["Ikke kunde", "Pilot", "Live", "Pause", "Kansellert"];
 const onboardingStatuser: OnboardingStatus[] = ["Ikke startet", "Pågår", "Venter på kunde", "Klar for live", "Ferdig"];
