@@ -154,8 +154,7 @@ async function seedDatabaseInternal(userId: string) {
     netto_inntekt: sm.netto_inntekt,
     rolle_i_firma: emptyToNull(sm.rolle_i_firma), use_case: emptyToNull(sm.use_case),
   }));
-  const { error: e3 } = await supabase.from("salgsmuligheter").insert(smRows);
-  if (e3) console.error("Seed salgsmuligheter error:", e3);
+  const { error: e3 } = await supabase.from("salgsmuligheter").upsert(smRows, { onConflict: "id" });
   
   // Insert leads
   const leadRows = initialLeads.map(l => ({
