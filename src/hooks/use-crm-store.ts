@@ -86,8 +86,21 @@ function rowToPartner(r: any): Partner {
 function emptyToNull(v: string | undefined) { return v === "" || v === undefined ? null : v; }
 function numOrNull(v: number | undefined) { return v === 0 || v === undefined ? 0 : v; }
 
+// Guard against concurrent seeding
+let seedingInProgress = false;
+
 // Seed database with initial data if tables are empty
 async function seedDatabase(userId: string) {
+  if (seedingInProgress) return;
+  seedingInProgress = true;
+  try {
+    await seedDatabaseInternal(userId);
+  } finally {
+    seedingInProgress = false;
+  }
+}
+
+async function seedDatabaseInternal(userId: string) {
   // Build ID mapping: old string IDs → new UUIDs
   const idMap = new Map<string, string>();
   
