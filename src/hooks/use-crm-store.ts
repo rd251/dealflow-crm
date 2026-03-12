@@ -181,17 +181,45 @@ function useCrmStoreInternal() {
   const [partnere, setPartnere] = useState<Partner[]>([]);
   const [loaded, setLoaded] = useState(false);
 
-  // Direct PostgREST fetch to bypass Supabase client auth lock
+  // Direct PostgREST helpers to bypass Supabase client auth lock
+  const API_URL = import.meta.env.VITE_SUPABASE_URL + '/rest/v1';
+  const API_HEADERS = {
+    'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+    'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+    'Content-Type': 'application/json',
+    'Prefer': 'return=minimal',
+  };
+
   const fetchTable = async (table: string) => {
-    const url = `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/${table}?select=*`;
-    const res = await fetch(url, {
-      headers: {
-        'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-      },
-    });
+    const res = await fetch(`${API_URL}/${table}?select=*`, { headers: API_HEADERS });
     if (!res.ok) throw new Error(`Failed to fetch ${table}: ${res.status}`);
     return res.json();
+  };
+
+  const dbUpsert = async (table: string, data: Record<string, any>) => {
+    const res = await fetch(`${API_URL}/${table}`, {
+      method: 'POST',
+      headers: { ...API_HEADERS, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) console.error(`Upsert ${table} error:`, res.status, await res.text());
+  };
+
+  const dbUpdate = async (table: string, id: string, data: Record<string, any>) => {
+    const res = await fetch(`${API_URL}/${table}?id=eq.${id}`, {
+      method: 'PATCH',
+      headers: API_HEADERS,
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) console.error(`Update ${table} error:`, res.status, await res.text());
+  };
+
+  const dbDelete = async (table: string, id: string) => {
+    const res = await fetch(`${API_URL}/${table}?id=eq.${id}`, {
+      method: 'DELETE',
+      headers: API_HEADERS,
+    });
+    if (!res.ok) console.error(`Delete ${table} error:`, res.status, await res.text());
   };
 
   // Fetch all data (robust: one failed table should not block all data)
