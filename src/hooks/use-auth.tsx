@@ -63,18 +63,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      console.log("getSession result:", !!session);
-      if (!mounted) return;
-      if (!session?.user) {
-        setSignedOutState();
-        return;
-      }
-      await setSignedInState(session);
-    }).catch(() => {
-      if (mounted) setSignedOutState();
-    });
-
     return () => {
       mounted = false;
       subscription.unsubscribe();
