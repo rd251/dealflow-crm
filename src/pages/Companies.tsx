@@ -319,6 +319,7 @@ export default function Companies() {
                 <th className="text-right px-4 py-3 font-medium">SLA</th>
                 <th className="text-right px-4 py-3 font-medium">Oppstart</th>
                 <th className="text-left px-4 py-3 font-medium">Lukkedato</th>
+                <th className="text-left px-4 py-3 font-medium">Sist aktivitet</th>
                 <th className="text-right px-4 py-3 font-medium">Handlinger</th>
               </tr>
             </thead>
