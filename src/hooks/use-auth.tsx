@@ -41,48 +41,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let mounted = true;
 
-    // Safety timeout to prevent infinite loading
-    const timeout = setTimeout(() => {
-      if (mounted) {
-        setState(s => {
-          if (s.loading) return { ...s, loading: false };
-          return s;
-        });
-      }
-    }, 8000);
-
-    // Set up listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
-      // Ignore TOKEN_REFRESHED failures that briefly emit null session
-      if (event === 'TOKEN_REFRESHED' && !session) return;
-      if (session?.user) {
-        const role = await fetchRole(session.user.id);
-        if (mounted) setState({ user: session.user, session, role, loading: false, isAdmin: role === "admin" });
-      } else if (event === 'INITIAL_SESSION' && !session) {
-        // Let getSession() handle the initial no-session case
+      if (event === 'SIGNED_OUT') {
+        setState({ user: null, session: null, role: null, loading: false, isAdmin: false });
         return;
-      } else if (event === 'SIGNED_OUT') {
-        if (mounted) setState({ user: null, session: null, role: null, loading: false, isAdmin: false });
-      } else if (!session) {
-        if (mounted) setState(s => ({ ...s, loading: false }));
       }
-    });
-
-    // Then check existing session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (!mounted) return;
       if (session?.user) {
         const role = await fetchRole(session.user.id);
         if (mounted) setState({ user: session.user, session, role, loading: false, isAdmin: role === "admin" });
-      } else {
-        if (mounted) setState(s => ({ ...s, loading: false }));
       }
     });
 
     return () => {
       mounted = false;
-      clearTimeout(timeout);
       subscription.unsubscribe();
     };
   }, []);
