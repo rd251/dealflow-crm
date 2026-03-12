@@ -64,7 +64,7 @@ function SidebarNav({ onNavigate, isAdmin }: { onNavigate?: () => void; isAdmin:
 
 function CollapsedSidebarNav({ isAdmin }: { isAdmin: boolean }) {
   const location = useLocation();
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const allItems = isAdmin ? [...navItems, { to: "/admin", icon: Shield, label: "Admin" }] : navItems;
 
   return (
@@ -88,15 +88,17 @@ function CollapsedSidebarNav({ isAdmin }: { isAdmin: boolean }) {
           );
         })}
       </nav>
-      <div className="px-2 pb-2">
-        <button
-          onClick={() => signOut()}
-          title="Logg ut"
-          className="flex items-center justify-center p-2.5 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors w-full"
-        >
-          <LogOut className="w-4 h-4" />
-        </button>
-      </div>
+      {user && (
+        <div className="px-2 pb-2">
+          <button
+            onClick={() => signOut()}
+            title="Logg ut"
+            className="flex items-center justify-center p-2.5 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors w-full"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
+        </div>
+      )}
     </>
   );
 }
