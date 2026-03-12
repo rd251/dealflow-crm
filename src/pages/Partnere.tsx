@@ -143,6 +143,7 @@ export default function Partnere() {
                 <th className="text-right px-4 py-3 font-medium">MRR</th>
                 <th className="text-right px-4 py-3 font-medium">ARR</th>
                 <th className="text-right px-4 py-3 font-medium">Avtaler</th>
+                <th className="text-left px-4 py-3 font-medium">Sist aktivitet</th>
                 <th className="text-left px-4 py-3 font-medium">Opprettet</th>
               </tr>
             </thead>
