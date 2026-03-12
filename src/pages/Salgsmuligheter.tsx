@@ -230,6 +230,49 @@ export default function Salgsmuligheter() {
               <div className="mt-6 space-y-4 text-sm">
                 <Field label="Selskap" value={<span className="cursor-pointer hover:text-primary hover:underline" onClick={() => navigate(`/selskaper/${currentSm.selskap_id}`)}>{getSelskapNavn(currentSm.selskap_id)}</span>} />
 
+                {/* Kontaktinformasjon */}
+                {(() => {
+                  const linkedContact = kontakter.find(k => k.id === currentSm.kontakt_id);
+                  const updateContactField = (field: string, value: string) => {
+                    if (!linkedContact) return;
+                    updateKontakter(prev => prev.map(k =>
+                      k.id === linkedContact.id ? { ...k, [field]: value } : k
+                    ));
+                  };
+                  return (
+                    <div className="space-y-2">
+                      <span className="text-muted-foreground block text-xs font-medium uppercase tracking-wide">Kontaktinformasjon</span>
+                      <div>
+                        <span className="text-muted-foreground block text-xs mb-1">Kontaktperson</span>
+                        <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background"
+                          value={currentSm.kontakt_id}
+                          onChange={e => updateField("kontakt_id", e.target.value)}>
+                          <option value="">Velg kontakt</option>
+                          {kontakter.map(k => <option key={k.id} value={k.id}>{k.navn}</option>)}
+                        </select>
+                      </div>
+                      {linkedContact && (
+                        <div className="space-y-2 bg-muted/30 rounded-lg p-3">
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <span className="text-muted-foreground block text-xs mb-1 flex items-center gap-1"><Briefcase className="w-3 h-3" />Rolle</span>
+                              <Input value={linkedContact.rolle} onChange={e => updateContactField("rolle", e.target.value)} className="h-8 text-sm" />
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground block text-xs mb-1 flex items-center gap-1"><Phone className="w-3 h-3" />Telefon</span>
+                              <Input value={linkedContact.telefon} onChange={e => updateContactField("telefon", e.target.value)} className="h-8 text-sm" />
+                            </div>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground block text-xs mb-1 flex items-center gap-1"><Mail className="w-3 h-3" />E-post</span>
+                            <Input value={linkedContact.e_post} onChange={e => updateContactField("e_post", e.target.value)} className="h-8 text-sm" />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+
                 {/* Status */}
                 <div>
                   <span className="text-muted-foreground block text-xs mb-1">Status</span>
