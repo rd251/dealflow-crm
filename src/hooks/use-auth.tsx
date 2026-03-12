@@ -40,6 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
+    console.log("Auth useEffect started");
 
     const setSignedOutState = () => {
       if (mounted) setState({ user: null, session: null, role: null, loading: false, isAdmin: false });
@@ -51,6 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth event:", event, "session:", !!session);
       if (!mounted) return;
       if (event === "SIGNED_OUT" || (event === "INITIAL_SESSION" && !session)) {
         setSignedOutState();
@@ -62,6 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     supabase.auth.getSession().then(async ({ data: { session } }) => {
+      console.log("getSession result:", !!session);
       if (!mounted) return;
       if (!session?.user) {
         setSignedOutState();
