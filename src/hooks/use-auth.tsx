@@ -39,25 +39,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-  let mounted = true;
+    let mounted = true;
 
-  const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-    if (!mounted) return;
-    if (event === 'SIGNED_OUT' || (event === 'INITIAL_SESSION' && !session)) {
-      setState({ user: null, session: null, role: null, loading: false, isAdmin: false });
-      return;
-    }
-    if (session?.user) {
-      const role = await fetchRole(session.user.id);
-      if (mounted) setState({ user: session.user, session, role, loading: false, isAdmin: role === "admin" });
-    }
-  });
-
-  return () => {
-    mounted = false;
-    subscription.unsubscribe();
-  };
-}, []);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!mounted) return;
+      if (event === 'SIGNED_OUT' || (event === 'INITIAL_SESSION' && !session)) {
+        setState({ user: null, session: null, role: null, loading: false, isAdmin: false });
+        return;
+      }
+      if (session?.user) {
+        const role = await fetchRole(session.user.id);
+        if (mounted) setState({ user: session.user, session, role, loading: false, isAdmin: role === "admin" });
+      }
+    });
 
     return () => {
       mounted = false;
@@ -76,7 +70,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const inviteUser = async (email: string, password: string, displayName: string) => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
       const res = await supabase.functions.invoke("invite-user", {
         body: { email, password, displayName },
       });
