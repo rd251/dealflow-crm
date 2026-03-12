@@ -247,49 +247,51 @@ export default function Salgsmuligheter() {
                 <Field label="Selskap" value={<span className="cursor-pointer hover:text-primary hover:underline" onClick={() => navigate(`/selskaper/${currentSm.selskap_id}`)}>{getSelskapNavn(currentSm.selskap_id)}</span>} />
 
                 {/* Kontaktinformasjon */}
-                {(() => {
-                  const linkedContact = kontakter.find(k => k.id === currentSm.kontakt_id);
-                  const updateContactField = (field: string, value: string) => {
-                    if (!linkedContact) return;
-                    updateKontakter(prev => prev.map(k =>
-                      k.id === linkedContact.id ? { ...k, [field]: value } : k
-                    ));
-                  };
-                  return (
-                    <div className="space-y-2">
-                      <span className="text-muted-foreground block text-xs font-medium uppercase tracking-wide">Kontaktinformasjon</span>
+                <div className="space-y-2">
+                  <span className="text-muted-foreground block text-xs font-medium uppercase tracking-wide">Kontaktinformasjon</span>
+                  <div className="space-y-2 bg-muted/30 rounded-lg p-3">
+                    <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <span className="text-muted-foreground block text-xs mb-1">Kontaktperson</span>
-                        <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background"
-                          value={currentSm.kontakt_id}
-                          onChange={e => updateField("kontakt_id", e.target.value)}>
-                          <option value="">Velg kontakt</option>
-                          {kontakter.map(k => <option key={k.id} value={k.id}>{k.navn}</option>)}
-                        </select>
+                        <span className="text-muted-foreground block text-xs mb-1 flex items-center gap-1"><User className="w-3 h-3" />Kontaktperson</span>
+                        <Input value={currentSm.kontaktperson} onChange={e => updateField("kontaktperson", e.target.value)} className="h-8 text-sm" placeholder="Navn" />
                       </div>
-                      {linkedContact ? (
-                        <div className="space-y-2 bg-muted/30 rounded-lg p-3">
-                          <div className="grid grid-cols-2 gap-2">
-                            <div>
-                              <span className="text-muted-foreground block text-xs mb-1 flex items-center gap-1"><Briefcase className="w-3 h-3" />Rolle</span>
-                              <Input value={linkedContact.rolle} onChange={e => updateContactField("rolle", e.target.value)} className="h-8 text-sm" />
-                            </div>
-                            <div>
-                              <span className="text-muted-foreground block text-xs mb-1 flex items-center gap-1"><Phone className="w-3 h-3" />Telefon</span>
-                              <Input value={linkedContact.telefon} onChange={e => updateContactField("telefon", e.target.value)} className="h-8 text-sm" />
-                            </div>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground block text-xs mb-1 flex items-center gap-1"><Mail className="w-3 h-3" />E-post</span>
-                            <Input value={linkedContact.e_post} onChange={e => updateContactField("e_post", e.target.value)} className="h-8 text-sm" />
-                          </div>
-                        </div>
-                      ) : (
-                        <p className="text-xs text-muted-foreground italic py-2">Velg en kontaktperson for å se og redigere kontaktinfo</p>
-                      )}
+                      <div>
+                        <span className="text-muted-foreground block text-xs mb-1 flex items-center gap-1"><Briefcase className="w-3 h-3" />Rolle</span>
+                        <Input value={currentSm.rolle_i_firma} onChange={e => updateField("rolle_i_firma", e.target.value)} className="h-8 text-sm" placeholder="Rolle" />
+                      </div>
                     </div>
-                  );
-                })()}
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <span className="text-muted-foreground block text-xs mb-1 flex items-center gap-1"><Mail className="w-3 h-3" />E-post</span>
+                        <Input value={currentSm.e_post} onChange={e => updateField("e_post", e.target.value)} className="h-8 text-sm" placeholder="E-post" />
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground block text-xs mb-1 flex items-center gap-1"><Phone className="w-3 h-3" />Telefon</span>
+                        <Input value={currentSm.telefon} onChange={e => updateField("telefon", e.target.value)} className="h-8 text-sm" placeholder="Telefon" />
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground block text-xs mb-1">Koble til kontakt</span>
+                      <select className="w-full border rounded-lg px-3 py-1.5 text-xs bg-background"
+                        value={currentSm.kontakt_id}
+                        onChange={e => {
+                          const kontakt = kontakter.find(k => k.id === e.target.value);
+                          if (kontakt) {
+                            updateField("kontakt_id", kontakt.id);
+                            updateField("kontaktperson", kontakt.navn);
+                            updateField("e_post", kontakt.e_post);
+                            updateField("telefon", kontakt.telefon);
+                            updateField("rolle_i_firma", kontakt.rolle);
+                          } else {
+                            updateField("kontakt_id", "");
+                          }
+                        }}>
+                        <option value="">Ingen koblet kontakt</option>
+                        {kontakter.map(k => <option key={k.id} value={k.id}>{k.navn}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                </div>
 
                 {/* Status */}
                 <div>
