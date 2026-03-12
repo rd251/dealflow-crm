@@ -14,6 +14,94 @@ export type Database = {
   }
   public: {
     Tables: {
+      aktiviteter: {
+        Row: {
+          beskrivelse: string
+          created_at: string
+          dato: string
+          id: string
+          kontakt_id: string | null
+          lead_id: string | null
+          partner_id: string | null
+          prosjekt_id: string | null
+          salgsmulighet_id: string | null
+          selskap_id: string | null
+          type: Database["public"]["Enums"]["aktivitet_type"]
+          updated_at: string
+        }
+        Insert: {
+          beskrivelse?: string
+          created_at?: string
+          dato?: string
+          id?: string
+          kontakt_id?: string | null
+          lead_id?: string | null
+          partner_id?: string | null
+          prosjekt_id?: string | null
+          salgsmulighet_id?: string | null
+          selskap_id?: string | null
+          type: Database["public"]["Enums"]["aktivitet_type"]
+          updated_at?: string
+        }
+        Update: {
+          beskrivelse?: string
+          created_at?: string
+          dato?: string
+          id?: string
+          kontakt_id?: string | null
+          lead_id?: string | null
+          partner_id?: string | null
+          prosjekt_id?: string | null
+          salgsmulighet_id?: string | null
+          selskap_id?: string | null
+          type?: Database["public"]["Enums"]["aktivitet_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aktiviteter_kontakt_id_fkey"
+            columns: ["kontakt_id"]
+            isOneToOne: false
+            referencedRelation: "kontakter"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aktiviteter_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aktiviteter_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partnere"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aktiviteter_prosjekt_id_fkey"
+            columns: ["prosjekt_id"]
+            isOneToOne: false
+            referencedRelation: "prosjekter"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aktiviteter_salgsmulighet_id_fkey"
+            columns: ["salgsmulighet_id"]
+            isOneToOne: false
+            referencedRelation: "salgsmuligheter"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aktiviteter_selskap_id_fkey"
+            columns: ["selskap_id"]
+            isOneToOne: false
+            referencedRelation: "selskaper"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       kontakter: {
         Row: {
           created_at: string
@@ -627,6 +715,13 @@ export type Database = {
       }
     }
     Enums: {
+      aktivitet_type:
+        | "Telefonsamtale"
+        | "E-post"
+        | "LinkedIn-melding"
+        | "SMS"
+        | "Møte"
+        | "Notat"
       app_role: "admin" | "user"
       integrasjon:
         | "Ingen"
@@ -832,6 +927,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      aktivitet_type: [
+        "Telefonsamtale",
+        "E-post",
+        "LinkedIn-melding",
+        "SMS",
+        "Møte",
+        "Notat",
+      ],
       app_role: ["admin", "user"],
       integrasjon: [
         "Ingen",

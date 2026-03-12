@@ -5,6 +5,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { beregnTotalKontraktsverdi, beregnVektetPipeline } from "@/data/crm-data";
 import StatCard from "@/components/StatCard";
 import InlineTaskForm from "@/components/InlineTaskForm";
+import ActivityLog from "@/components/ActivityLog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -321,31 +322,10 @@ export default function CompanyProfile() {
               <InlineTaskForm selskap_id={id!} />
             </div>
 
-            <div className="bg-card border rounded-xl p-4 sm:p-5 space-y-3">
-              <h2 className="font-semibold text-base flex items-center gap-2">
-                <CalendarDays className="w-4 h-4" /> Aktivitetslogg
-              </h2>
-              <div className="space-y-2 text-xs">
-                {[
-                  ...selskapSm.filter(s => s.vunnet_dato).map(s => ({ dato: s.vunnet_dato, tekst: `Salgsmulighet "${s.navn}" vunnet`, type: "success" as const })),
-                  ...selskapSm.filter(s => s.tapt_dato).map(s => ({ dato: s.tapt_dato, tekst: `Salgsmulighet "${s.navn}" tapt – ${s.tapsaarsak}`, type: "destructive" as const })),
-                  ...selskapSm.map(s => ({ dato: s.opprettet_dato, tekst: `Salgsmulighet "${s.navn}" opprettet`, type: "default" as const })),
-                  ...selskapProsjekter.filter(p => p.go_live_dato).map(p => ({ dato: p.go_live_dato, tekst: `Prosjekt "${p.prosjektnavn}" gikk live`, type: "success" as const })),
-                  ...selskapProsjekter.filter(p => p.startdato).map(p => ({ dato: p.startdato, tekst: `Prosjekt "${p.prosjektnavn}" startet`, type: "default" as const })),
-                  ...(selskap.go_live_dato ? [{ dato: selskap.go_live_dato, tekst: "Selskapet gikk live", type: "success" as const }] : []),
-                  ...(selskap.kansellert_dato ? [{ dato: selskap.kansellert_dato, tekst: `Kansellert – ${selskap.kanselleringsaarsak}`, type: "destructive" as const }] : []),
-                ].sort((a, b) => b.dato.localeCompare(a.dato)).map((entry, i) => (
-                  <div key={i} className="flex items-start gap-2 p-2 rounded-lg bg-muted/30">
-                    <span className="text-muted-foreground shrink-0 w-16 sm:w-20">{entry.dato}</span>
-                    <span className={entry.type === "success" ? "text-success" : entry.type === "destructive" ? "text-destructive" : "text-foreground"}>
-                      {entry.tekst}
-                    </span>
-                  </div>
-                ))}
-                {selskapSm.length === 0 && selskapProsjekter.length === 0 && !selskap.go_live_dato && (
-                  <p className="text-muted-foreground">Ingen aktivitet registrert</p>
-                )}
-              </div>
+            <div className="bg-card border rounded-xl p-4 sm:p-5">
+              <ActivityLog selskap_id={id!} onActivityLogged={() => {
+                updateSelskaper(prev => prev.map(s => s.id === id ? { ...s, sist_aktivitet: new Date().toISOString().split("T")[0] } : s));
+              }} />
             </div>
           </div>
         </div>

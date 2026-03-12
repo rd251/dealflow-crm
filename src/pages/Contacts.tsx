@@ -10,6 +10,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Plus, Search, Mail, Phone, Linkedin, Users, Upload } from "lucide-react";
 import { Kontakt } from "@/data/crm-data";
 import DataImportDialog from "@/components/DataImportDialog";
+import ActivityLog from "@/components/ActivityLog";
 
 export default function Contacts() {
   const navigate = useNavigate();
@@ -177,7 +178,9 @@ export default function Contacts() {
                     ))}
                   </div>
                 </div>
-              )}
+               )}
+
+              <ActivityLog kontakt_id={currentKontakt.id} />
             </div>
           )}
         </SheetContent>

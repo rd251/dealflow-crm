@@ -11,6 +11,7 @@ import { Plus, Search, ArrowRightCircle, Trash2, Users2, Upload } from "lucide-r
 import { Lead, LeadStatus, LeadKilde } from "@/data/crm-data";
 import { Badge } from "@/components/ui/badge";
 import InlineTaskForm from "@/components/InlineTaskForm";
+import ActivityLog from "@/components/ActivityLog";
 import DataImportDialog from "@/components/DataImportDialog";
 
 const statusOptions: LeadStatus[] = ["Ny", "Kontaktet", "Kvalifisert", "Ikke aktuelt", "Konvertert til salg", "Konvertert til partner"];
@@ -287,6 +288,10 @@ export default function Leads() {
               <div className="border-t pt-4">
                 <InlineTaskForm lead_id={currentLead.id} selskap_id="" />
               </div>
+
+              <ActivityLog lead_id={currentLead.id} onActivityLogged={() => {
+                updateLeads(prev => prev.map(l => l.id === currentLead.id ? { ...l, sist_aktivitet: new Date().toISOString().split("T")[0] } : l));
+              }} />
 
               {currentLead.konvertert_dato && (
                 <div className="p-3 bg-success/10 rounded-lg text-success text-xs font-medium">

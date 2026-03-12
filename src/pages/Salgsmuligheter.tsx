@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, GripVertical, Trophy, XCircle, Trash2, Mail, Phone, User, Briefcase } from "lucide-react";
 import { Salgsmulighet, SalgsmulighetStatus, Tapsaarsak, beregnTotalKontraktsverdi, beregnVektetPipeline } from "@/data/crm-data";
 import InlineTaskForm from "@/components/InlineTaskForm";
+import ActivityLog from "@/components/ActivityLog";
 
 const openStatuses: SalgsmulighetStatus[] = ["Ny mulighet", "Møte booket", "Demo gjennomført", "Tilbud sendt", "Forhandling"];
 const tapsaarsaker: Tapsaarsak[] = ["Pris", "Ikke riktig timing", "Valgte annen leverandør", "Ikke behov", "Teknisk / integrasjon", "Annet"];
@@ -382,6 +383,10 @@ export default function Salgsmuligheter() {
                 <div className="border-t pt-4">
                   <InlineTaskForm salgsmulighet_id={currentSm.id} selskap_id={currentSm.selskap_id} />
                 </div>
+
+                <ActivityLog salgsmulighet_id={currentSm.id} onActivityLogged={() => {
+                  updateSalgsmuligheter(prev => prev.map(s => s.id === currentSm.id ? { ...s, sist_aktivitet: new Date().toISOString().split("T")[0] } : s));
+                }} />
 
                 <div className="flex gap-2 pt-2 flex-wrap">
                   {openStatuses.includes(currentSm.status as any) && (

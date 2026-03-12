@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { GripVertical, Rocket } from "lucide-react";
 import InlineTaskForm from "@/components/InlineTaskForm";
+import ActivityLog from "@/components/ActivityLog";
 import { Prosjekt, ProsjektStatus, Integrasjon } from "@/data/crm-data";
 
 const statuses: ProsjektStatus[] = ["Ny", "I produksjon", "Test med kunde", "Live", "Blokkert"];
@@ -112,6 +113,8 @@ export default function Prosjekter() {
               <div className="border-t pt-4">
                 <InlineTaskForm selskap_id={currentP.selskap_id} salgsmulighet_id={currentP.salgsmulighet_id} />
               </div>
+
+              <ActivityLog prosjekt_id={currentP.id} />
             </div>
           )}
         </SheetContent>
