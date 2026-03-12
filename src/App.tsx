@@ -19,6 +19,7 @@ import PartnerProfile from "./pages/PartnerProfile";
 import PartnerPipeline from "./pages/PartnerPipeline";
 import CompanyProfile from "./pages/CompanyProfile";
 import Admin from "./pages/Admin";
+import Aktiviteter from "./pages/Aktiviteter";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -39,6 +40,7 @@ function AppRoutes() {
         <Route path="/partnere" element={<Partnere />} />
         <Route path="/partnere/:id" element={<PartnerProfile />} />
         <Route path="/partner-pipeline" element={<PartnerPipeline />} />
+        <Route path="/aktiviteter" element={<Aktiviteter />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/login" element={<Navigate to="/" replace />} />
         <Route path="*" element={<NotFound />} />

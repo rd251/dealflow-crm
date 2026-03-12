@@ -18,6 +18,7 @@ import InlineTaskForm from "@/components/InlineTaskForm";
 import { Selskap, Kundestatus, OnboardingStatus, Kundetilstand, Kanselleringsaarsak } from "@/data/crm-data";
 import { Badge } from "@/components/ui/badge";
 import DataImportDialog from "@/components/DataImportDialog";
+import LastActivityBadge from "@/components/LastActivityBadge";
 
 const kundestatuser: Kundestatus[] = ["Ikke kunde", "Pilot", "Live", "Pause", "Kansellert"];
 const onboardingStatuser: OnboardingStatus[] = ["Ikke startet", "Pågår", "Venter på kunde", "Klar for live", "Ferdig"];
@@ -318,6 +319,7 @@ export default function Companies() {
                 <th className="text-right px-4 py-3 font-medium">SLA</th>
                 <th className="text-right px-4 py-3 font-medium">Oppstart</th>
                 <th className="text-left px-4 py-3 font-medium">Lukkedato</th>
+                <th className="text-left px-4 py-3 font-medium">Sist aktivitet</th>
                 <th className="text-right px-4 py-3 font-medium">Handlinger</th>
               </tr>
             </thead>
@@ -346,6 +348,7 @@ export default function Companies() {
                   <td className="px-4 py-3 text-right font-mono">{totalSla.toLocaleString("no-NO")}</td>
                   <td className="px-4 py-3 text-right font-mono">{s.oppstartskostnad.toLocaleString("no-NO")}</td>
                   <td className="px-4 py-3 text-muted-foreground text-xs font-mono">{s.lukkedato || "–"}</td>
+                  <td className="px-4 py-3"><LastActivityBadge selskap_id={s.id} sist_aktivitet={s.sist_aktivitet} /></td>
                   <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
                     <div className="flex gap-1 justify-end">
                       <Button variant="ghost" size="icon" className="h-7 w-7" title="Angre til salgsmulighet" onClick={() => setRevertDialog(s.id)}>

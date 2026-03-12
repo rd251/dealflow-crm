@@ -12,6 +12,7 @@ import { Lead, LeadStatus, LeadKilde } from "@/data/crm-data";
 import { Badge } from "@/components/ui/badge";
 import InlineTaskForm from "@/components/InlineTaskForm";
 import ActivityLog from "@/components/ActivityLog";
+import LastActivityBadge from "@/components/LastActivityBadge";
 import DataImportDialog from "@/components/DataImportDialog";
 
 const statusOptions: LeadStatus[] = ["Ny", "Kontaktet", "Kvalifisert", "Ikke aktuelt", "Konvertert til salg", "Konvertert til partner"];
@@ -181,6 +182,7 @@ export default function Leads() {
                 <th className="text-left px-4 py-3 font-medium">Kilde</th>
                 <th className="text-left px-4 py-3 font-medium">Status</th>
                 <th className="text-left px-4 py-3 font-medium">Neste steg</th>
+                <th className="text-left px-4 py-3 font-medium">Sist aktivitet</th>
                 <th className="text-left px-4 py-3 font-medium">Opprettet</th>
                 <th className="text-right px-4 py-3 font-medium">Handling</th>
               </tr>
@@ -202,6 +204,7 @@ export default function Leads() {
                     </select>
                   </td>
                   <td className="px-4 py-3 text-muted-foreground text-xs">{lead.neste_steg}</td>
+                  <td className="px-4 py-3"><LastActivityBadge lead_id={lead.id} sist_aktivitet={lead.sist_aktivitet} /></td>
                   <td className="px-4 py-3 text-muted-foreground text-xs font-mono">{lead.opprettet_dato}</td>
                   <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
                     {lead.status !== "Konvertert til salg" && lead.status !== "Konvertert til partner" && lead.status !== "Ikke aktuelt" && (

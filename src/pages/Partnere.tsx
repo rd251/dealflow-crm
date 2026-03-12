@@ -11,6 +11,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Plus, Search, Trash2 } from "lucide-react";
 import { Partner, Partnertype, Partnerstatus, Provisjonstype, beregnTotalKontraktsverdi } from "@/data/crm-data";
 import { Badge } from "@/components/ui/badge";
+import LastActivityBadge from "@/components/LastActivityBadge";
 
 const partnertypeOptions: Partnertype[] = ["Provisjonspartner", "Integrasjonspartner", "Salgspartner", "Strategisk partner"];
 const partnerstatusOptions: Partnerstatus[] = ["Aktiv", "Under onboarding", "Inaktiv"];
@@ -142,6 +143,7 @@ export default function Partnere() {
                 <th className="text-right px-4 py-3 font-medium">MRR</th>
                 <th className="text-right px-4 py-3 font-medium">ARR</th>
                 <th className="text-right px-4 py-3 font-medium">Avtaler</th>
+                <th className="text-left px-4 py-3 font-medium">Sist aktivitet</th>
                 <th className="text-left px-4 py-3 font-medium">Opprettet</th>
               </tr>
             </thead>
@@ -158,6 +160,7 @@ export default function Partnere() {
                     <td className="px-4 py-3 text-right font-mono">{stats.totalMrr.toLocaleString("no-NO")}</td>
                     <td className="px-4 py-3 text-right font-mono">{stats.totalArr.toLocaleString("no-NO")}</td>
                     <td className="px-4 py-3 text-right">{stats.antallAktiveAvtaler}</td>
+                    <td className="px-4 py-3"><LastActivityBadge partner_id={partner.id} sist_aktivitet={partner.sist_aktivitet} /></td>
                     <td className="px-4 py-3 text-muted-foreground text-xs font-mono">{partner.opprettet_dato}</td>
                   </tr>
                 );

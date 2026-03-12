@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { LayoutDashboard, UserPlus, Handshake, FolderKanban, Building2, Users, ListTodo, Menu, ChevronLeft, Users2, GitBranch, Shield, LogOut } from "lucide-react";
+import { LayoutDashboard, UserPlus, Handshake, FolderKanban, Building2, Users, ListTodo, Menu, ChevronLeft, Users2, GitBranch, Shield, LogOut, Activity } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -18,6 +18,7 @@ const navItems = [
   { to: "/oppgaver", icon: ListTodo, label: "Oppgaver" },
   { to: "/partnere", icon: Users2, label: "Partnere" },
   { to: "/partner-pipeline", icon: GitBranch, label: "Partner Pipeline" },
+  { to: "/aktiviteter", icon: Activity, label: "Aktivitetslogg" },
 ];
 
 function SidebarNav({ onNavigate, isAdmin }: { onNavigate?: () => void; isAdmin: boolean }) {
