@@ -144,7 +144,11 @@ export default function Dashboard() {
   const isToday = (frist: string) => frist === today;
 
   return (
-    <PageShell title="Dashboard" subtitle="Snakk CRM – SaaS-metrikker og salgsoversikt">
+    <PageShell title="Dashboard" subtitle="Snakk CRM – SaaS-metrikker og salgsoversikt" actions={
+      <button onClick={() => navigate("/rapporter")} className="flex items-center gap-1.5 text-sm text-primary hover:underline font-medium">
+        <BarChart3 className="w-4 h-4" /> Rapporter
+      </button>
+    }>
       {/* Row 1: MRR, ARR, Active */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-4">
         <StatCard label="Totalt MRR" value={`${nok(totalMRR)} NOK`} icon={<DollarSign className="w-5 h-5" />} />

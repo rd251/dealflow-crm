@@ -19,6 +19,7 @@ const navItems = [
   { to: "/partnere", icon: Users2, label: "Partnere" },
   { to: "/partner-pipeline", icon: GitBranch, label: "Partner Pipeline" },
   { to: "/aktiviteter", icon: Activity, label: "Aktivitetslogg" },
+  { to: "/rapporter", icon: BarChart3, label: "Rapporter" },
 ];
 
 function SidebarNav({ onNavigate, isAdmin }: { onNavigate?: () => void; isAdmin: boolean }) {
