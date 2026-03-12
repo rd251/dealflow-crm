@@ -164,7 +164,16 @@ export default function Salgsmuligheter() {
                           <div className="flex-1 min-w-0">
                             <p className="font-semibold text-sm truncate">{deal.navn}</p>
                             <p className="text-xs text-muted-foreground mt-0.5 truncate cursor-pointer hover:text-primary hover:underline" onClick={e => { e.stopPropagation(); navigate(`/selskaper/${deal.selskap_id}`); }}>{getSelskapNavn(deal.selskap_id)}</p>
-                            <div className="flex items-center gap-2 mt-2 flex-wrap">
+                            {(() => {
+                              const contact = kontakter.find(k => k.id === deal.kontakt_id);
+                              return contact ? (
+                                <div className="flex items-center gap-2 mt-1.5 text-[11px] text-muted-foreground">
+                                  <span className="flex items-center gap-1 truncate"><User className="w-3 h-3 shrink-0" />{contact.navn}</span>
+                                  {contact.telefon && <span className="flex items-center gap-1 shrink-0"><Phone className="w-3 h-3" />{contact.telefon}</span>}
+                                </div>
+                              ) : null;
+                            })()}
+                            <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                               <span className="text-xs font-mono font-semibold">{deal.forventet_mrr.toLocaleString("no-NO")} MRR</span>
                               {(deal.sla || 0) > 0 && <span className="text-[10px] text-muted-foreground">SLA: {deal.sla.toLocaleString("no-NO")}</span>}
                               <span className="text-[10px] text-muted-foreground">{deal.sannsynlighet}%</span>
