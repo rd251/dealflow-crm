@@ -86,8 +86,21 @@ function rowToPartner(r: any): Partner {
 function emptyToNull(v: string | undefined) { return v === "" || v === undefined ? null : v; }
 function numOrNull(v: number | undefined) { return v === 0 || v === undefined ? 0 : v; }
 
+// Guard against concurrent seeding
+let seedingInProgress = false;
+
 // Seed database with initial data if tables are empty
 async function seedDatabase(userId: string) {
+  if (seedingInProgress) return;
+  seedingInProgress = true;
+  try {
+    await seedDatabaseInternal(userId);
+  } finally {
+    seedingInProgress = false;
+  }
+}
+
+async function seedDatabaseInternal(userId: string) {
   // Build ID mapping: old string IDs → new UUIDs
   const idMap = new Map<string, string>();
   
@@ -114,8 +127,7 @@ async function seedDatabase(userId: string) {
     kilde: s.kilde as any, partner_id: emptyToNull(s.partner_id),
     lukkedato: emptyToNull(s.lukkedato),
   }));
-  const { error: e1 } = await supabase.from("selskaper").insert(selskaperRows);
-  if (e1) console.error("Seed selskaper error:", e1);
+  const { error: e1 } = await supabase.from("selskaper").upsert(selskaperRows, { onConflict: "id" });
   
   // Insert kontakter (depends on selskaper)
   const kontakterRows = initialKontakter.map(k => ({
@@ -123,8 +135,7 @@ async function seedDatabase(userId: string) {
     navn: k.navn, rolle: emptyToNull(k.rolle), e_post: emptyToNull(k.e_post),
     telefon: emptyToNull(k.telefon), linkedin: emptyToNull(k.linkedin), notater: emptyToNull(k.notater),
   }));
-  const { error: e2 } = await supabase.from("kontakter").insert(kontakterRows);
-  if (e2) console.error("Seed kontakter error:", e2);
+  const { error: e2 } = await supabase.from("kontakter").upsert(kontakterRows, { onConflict: "id" });
   
   // Insert salgsmuligheter (depends on selskaper, kontakter)
   const smRows = initialSalgsmuligheter.map(sm => ({
@@ -143,8 +154,7 @@ async function seedDatabase(userId: string) {
     netto_inntekt: sm.netto_inntekt,
     rolle_i_firma: emptyToNull(sm.rolle_i_firma), use_case: emptyToNull(sm.use_case),
   }));
-  const { error: e3 } = await supabase.from("salgsmuligheter").insert(smRows);
-  if (e3) console.error("Seed salgsmuligheter error:", e3);
+  const { error: e3 } = await supabase.from("salgsmuligheter").upsert(smRows, { onConflict: "id" });
   
   // Insert leads
   const leadRows = initialLeads.map(l => ({
@@ -157,8 +167,7 @@ async function seedDatabase(userId: string) {
     rolle_i_firma: emptyToNull(l.rolle_i_firma), use_case: emptyToNull(l.use_case),
   }));
   if (leadRows.length > 0) {
-    const { error: e4 } = await supabase.from("leads").insert(leadRows);
-    if (e4) console.error("Seed leads error:", e4);
+    const { error: e4 } = await supabase.from("leads").upsert(leadRows, { onConflict: "id" });
   }
   
   // Insert oppgaver (depends on selskaper, salgsmuligheter, leads)
@@ -172,8 +181,7 @@ async function seedDatabase(userId: string) {
     paaminnelse: o.paaminnelse, notater: emptyToNull(o.notater),
   }));
   if (oppgaveRows.length > 0) {
-    const { error: e5 } = await supabase.from("oppgaver").insert(oppgaveRows);
-    if (e5) console.error("Seed oppgaver error:", e5);
+    const { error: e5 } = await supabase.from("oppgaver").upsert(oppgaveRows, { onConflict: "id" });
   }
   
   console.log("Database seeded with initial CRM data");
@@ -349,7 +357,7 @@ function useCrmStoreInternal() {
     const nextIds = new Set(next.map(i => i.id));
     for (const item of next) {
       if (!prevIds.has(item.id)) {
-        const { error } = await supabase.from("leads").insert({
+        const { error } = await supabase.from("leads").upsert({
           id: item.id, firmanavn: item.firmanavn, kontaktperson: emptyToNull(item.kontaktperson),
           e_post: emptyToNull(item.e_post), telefon: emptyToNull(item.telefon),
           kilde: item.kilde as any, status: item.status as any, ansvarlig: emptyToNull(item.ansvarlig),
@@ -389,7 +397,7 @@ function useCrmStoreInternal() {
     const nextIds = new Set(next.map(i => i.id));
     for (const item of next) {
       if (!prevIds.has(item.id)) {
-        const { error } = await supabase.from("selskaper").insert({
+        const { error } = await supabase.from("selskaper").upsert({
           id: item.id, firmanavn: item.firmanavn, bransje: emptyToNull(item.bransje),
           kundeansvarlig: emptyToNull(item.kundeansvarlig), kundestatus: item.kundestatus as any,
           live_status: item.live_status, onboarding_status: item.onboarding_status as any,
@@ -437,7 +445,7 @@ function useCrmStoreInternal() {
     const nextIds = new Set(next.map(i => i.id));
     for (const item of next) {
       if (!prevIds.has(item.id)) {
-        await supabase.from("kontakter").insert({
+        await supabase.from("kontakter").upsert({
           id: item.id, selskap_id: emptyToNull(item.selskap_id), navn: item.navn,
           rolle: emptyToNull(item.rolle), e_post: emptyToNull(item.e_post),
           telefon: emptyToNull(item.telefon), linkedin: emptyToNull(item.linkedin),
@@ -468,7 +476,7 @@ function useCrmStoreInternal() {
     const nextIds = new Set(next.map(i => i.id));
     for (const item of next) {
       if (!prevIds.has(item.id)) {
-        await supabase.from("salgsmuligheter").insert({
+        await supabase.from("salgsmuligheter").upsert({
           id: item.id, navn: item.navn, selskap_id: emptyToNull(item.selskap_id),
           kontakt_id: emptyToNull(item.kontakt_id), ansvarlig: emptyToNull(item.ansvarlig),
           status: item.status as any, forventet_mrr: item.forventet_mrr, sla: item.sla,
@@ -515,7 +523,7 @@ function useCrmStoreInternal() {
     const nextIds = new Set(next.map(i => i.id));
     for (const item of next) {
       if (!prevIds.has(item.id)) {
-        await supabase.from("prosjekter").insert({
+        await supabase.from("prosjekter").upsert({
           id: item.id, prosjektnavn: item.prosjektnavn, selskap_id: emptyToNull(item.selskap_id),
           salgsmulighet_id: emptyToNull(item.salgsmulighet_id), ansvarlig: emptyToNull(item.ansvarlig),
           status: item.status as any, startdato: emptyToNull(item.startdato),
@@ -552,7 +560,7 @@ function useCrmStoreInternal() {
     const nextIds = new Set(next.map(i => i.id));
     for (const item of next) {
       if (!prevIds.has(item.id)) {
-        await supabase.from("oppgaver").insert({
+        await supabase.from("oppgaver").upsert({
           id: item.id, oppgave: item.oppgave, user_id: user!.id,
           lead_id: emptyToNull(item.lead_id), selskap_id: emptyToNull(item.selskap_id),
           salgsmulighet_id: emptyToNull(item.salgsmulighet_id), ansvarlig: emptyToNull(item.ansvarlig),
@@ -585,7 +593,7 @@ function useCrmStoreInternal() {
     const nextIds = new Set(next.map(i => i.id));
     for (const item of next) {
       if (!prevIds.has(item.id)) {
-        await supabase.from("partnere").insert({
+        await supabase.from("partnere").upsert({
           id: item.id, partnernavn: item.partnernavn, partnertype: item.partnertype as any,
           kontaktperson: emptyToNull(item.kontaktperson), e_post: emptyToNull(item.e_post),
           telefon: emptyToNull(item.telefon), partnerstatus: item.partnerstatus as any,
