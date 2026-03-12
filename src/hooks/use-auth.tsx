@@ -40,6 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
+    console.log("Auth useEffect started");
 
     const setSignedOutState = () => {
       if (mounted) setState({ user: null, session: null, role: null, loading: false, isAdmin: false });
