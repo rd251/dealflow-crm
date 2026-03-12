@@ -362,38 +362,33 @@ function useCrmStoreInternal() {
     const nextIds = new Set(next.map(i => i.id));
     for (const item of next) {
       if (!prevIds.has(item.id)) {
-        const { error } = await supabase.from("leads").upsert({
+        await dbUpsert("leads", {
           id: item.id, firmanavn: item.firmanavn, kontaktperson: emptyToNull(item.kontaktperson),
           e_post: emptyToNull(item.e_post), telefon: emptyToNull(item.telefon),
-          kilde: item.kilde as any, status: item.status as any, ansvarlig: emptyToNull(item.ansvarlig),
+          kilde: item.kilde, status: item.status, ansvarlig: emptyToNull(item.ansvarlig),
           neste_steg: emptyToNull(item.neste_steg), notater: emptyToNull(item.notater),
           opprettet_dato: emptyToNull(item.opprettet_dato), sist_aktivitet: emptyToNull(item.sist_aktivitet),
-           konvertert_dato: emptyToNull(item.konvertert_dato),
+          konvertert_dato: emptyToNull(item.konvertert_dato),
           rolle_i_firma: emptyToNull(item.rolle_i_firma), use_case: emptyToNull(item.use_case),
         });
-        if (error) console.error("Insert lead error:", error);
       }
     }
     for (const item of next) {
       const old = prev.find(p => p.id === item.id);
       if (old && JSON.stringify(old) !== JSON.stringify(item)) {
-        const { error } = await supabase.from("leads").update({
+        await dbUpdate("leads", item.id, {
           firmanavn: item.firmanavn, kontaktperson: emptyToNull(item.kontaktperson),
           e_post: emptyToNull(item.e_post), telefon: emptyToNull(item.telefon),
-          kilde: item.kilde as any, status: item.status as any, ansvarlig: emptyToNull(item.ansvarlig),
+          kilde: item.kilde, status: item.status, ansvarlig: emptyToNull(item.ansvarlig),
           neste_steg: emptyToNull(item.neste_steg), notater: emptyToNull(item.notater),
           opprettet_dato: emptyToNull(item.opprettet_dato), sist_aktivitet: emptyToNull(item.sist_aktivitet),
-           konvertert_dato: emptyToNull(item.konvertert_dato),
+          konvertert_dato: emptyToNull(item.konvertert_dato),
           rolle_i_firma: emptyToNull(item.rolle_i_firma), use_case: emptyToNull(item.use_case),
-        }).eq("id", item.id);
-        if (error) console.error("Update lead error:", error);
+        });
       }
     }
     for (const item of prev) {
-      if (!nextIds.has(item.id)) {
-        const { error } = await supabase.from("leads").delete().eq("id", item.id);
-        if (error) console.error("Delete lead error:", error);
-      }
+      if (!nextIds.has(item.id)) await dbDelete("leads", item.id);
     }
   }
 
@@ -402,46 +397,41 @@ function useCrmStoreInternal() {
     const nextIds = new Set(next.map(i => i.id));
     for (const item of next) {
       if (!prevIds.has(item.id)) {
-        const { error } = await supabase.from("selskaper").upsert({
+        await dbUpsert("selskaper", {
           id: item.id, firmanavn: item.firmanavn, bransje: emptyToNull(item.bransje),
-          kundeansvarlig: emptyToNull(item.kundeansvarlig), kundestatus: item.kundestatus as any,
-          live_status: item.live_status, onboarding_status: item.onboarding_status as any,
+          kundeansvarlig: emptyToNull(item.kundeansvarlig), kundestatus: item.kundestatus,
+          live_status: item.live_status, onboarding_status: item.onboarding_status,
           mrr: item.mrr, arr: item.arr, oppstartskostnad: item.oppstartskostnad,
           go_live_dato: emptyToNull(item.go_live_dato), kansellert_dato: emptyToNull(item.kansellert_dato),
-          kanselleringsaarsak: emptyToNull(item.kanselleringsaarsak) as any,
+          kanselleringsaarsak: emptyToNull(item.kanselleringsaarsak),
           kanselleringsnotat: emptyToNull(item.kanselleringsnotat),
-          kundetilstand: item.kundetilstand as any, sist_aktivitet: emptyToNull(item.sist_aktivitet),
+          kundetilstand: item.kundetilstand, sist_aktivitet: emptyToNull(item.sist_aktivitet),
           neste_steg: emptyToNull(item.neste_steg), notater: emptyToNull(item.notater),
-          kilde: item.kilde as any, partner_id: emptyToNull(item.partner_id),
+          kilde: item.kilde, partner_id: emptyToNull(item.partner_id),
           lukkedato: emptyToNull(item.lukkedato),
         });
-        if (error) console.error("Insert selskap error:", error);
       }
     }
     for (const item of next) {
       const old = prev.find(p => p.id === item.id);
       if (old && JSON.stringify(old) !== JSON.stringify(item)) {
-        const { error } = await supabase.from("selskaper").update({
+        await dbUpdate("selskaper", item.id, {
           firmanavn: item.firmanavn, bransje: emptyToNull(item.bransje),
-          kundeansvarlig: emptyToNull(item.kundeansvarlig), kundestatus: item.kundestatus as any,
-          live_status: item.live_status, onboarding_status: item.onboarding_status as any,
+          kundeansvarlig: emptyToNull(item.kundeansvarlig), kundestatus: item.kundestatus,
+          live_status: item.live_status, onboarding_status: item.onboarding_status,
           mrr: item.mrr, arr: item.arr, oppstartskostnad: item.oppstartskostnad,
           go_live_dato: emptyToNull(item.go_live_dato), kansellert_dato: emptyToNull(item.kansellert_dato),
-          kanselleringsaarsak: emptyToNull(item.kanselleringsaarsak) as any,
+          kanselleringsaarsak: emptyToNull(item.kanselleringsaarsak),
           kanselleringsnotat: emptyToNull(item.kanselleringsnotat),
-          kundetilstand: item.kundetilstand as any, sist_aktivitet: emptyToNull(item.sist_aktivitet),
+          kundetilstand: item.kundetilstand, sist_aktivitet: emptyToNull(item.sist_aktivitet),
           neste_steg: emptyToNull(item.neste_steg), notater: emptyToNull(item.notater),
-          kilde: item.kilde as any, partner_id: emptyToNull(item.partner_id),
+          kilde: item.kilde, partner_id: emptyToNull(item.partner_id),
           lukkedato: emptyToNull(item.lukkedato),
-        }).eq("id", item.id);
-        if (error) console.error("Update selskap error:", error);
+        });
       }
     }
     for (const item of prev) {
-      if (!nextIds.has(item.id)) {
-        const { error } = await supabase.from("selskaper").delete().eq("id", item.id);
-        if (error) console.error("Delete selskap error:", error);
-      }
+      if (!nextIds.has(item.id)) await dbDelete("selskaper", item.id);
     }
   }
 
@@ -450,7 +440,7 @@ function useCrmStoreInternal() {
     const nextIds = new Set(next.map(i => i.id));
     for (const item of next) {
       if (!prevIds.has(item.id)) {
-        await supabase.from("kontakter").upsert({
+        await dbUpsert("kontakter", {
           id: item.id, selskap_id: emptyToNull(item.selskap_id), navn: item.navn,
           rolle: emptyToNull(item.rolle), e_post: emptyToNull(item.e_post),
           telefon: emptyToNull(item.telefon), linkedin: emptyToNull(item.linkedin),
@@ -461,18 +451,16 @@ function useCrmStoreInternal() {
     for (const item of next) {
       const old = prev.find(p => p.id === item.id);
       if (old && JSON.stringify(old) !== JSON.stringify(item)) {
-        await supabase.from("kontakter").update({
+        await dbUpdate("kontakter", item.id, {
           selskap_id: emptyToNull(item.selskap_id), navn: item.navn,
           rolle: emptyToNull(item.rolle), e_post: emptyToNull(item.e_post),
           telefon: emptyToNull(item.telefon), linkedin: emptyToNull(item.linkedin),
           notater: emptyToNull(item.notater),
-        }).eq("id", item.id);
+        });
       }
     }
     for (const item of prev) {
-      if (!nextIds.has(item.id)) {
-        await supabase.from("kontakter").delete().eq("id", item.id);
-      }
+      if (!nextIds.has(item.id)) await dbDelete("kontakter", item.id);
     }
   }
 
@@ -481,16 +469,16 @@ function useCrmStoreInternal() {
     const nextIds = new Set(next.map(i => i.id));
     for (const item of next) {
       if (!prevIds.has(item.id)) {
-        await supabase.from("salgsmuligheter").upsert({
+        await dbUpsert("salgsmuligheter", {
           id: item.id, navn: item.navn, selskap_id: emptyToNull(item.selskap_id),
           kontakt_id: emptyToNull(item.kontakt_id), ansvarlig: emptyToNull(item.ansvarlig),
-          status: item.status as any, forventet_mrr: item.forventet_mrr, sla: item.sla,
+          status: item.status, forventet_mrr: item.forventet_mrr, sla: item.sla,
           oppstartskostnad: item.oppstartskostnad, kontraktslengde_mnd: item.kontraktslengde_mnd,
           sannsynlighet: item.sannsynlighet, forventet_lukkedato: emptyToNull(item.forventet_lukkedato),
           vunnet_dato: emptyToNull(item.vunnet_dato), tapt_dato: emptyToNull(item.tapt_dato),
-          tapsaarsak: emptyToNull(item.tapsaarsak) as any, neste_steg: emptyToNull(item.neste_steg),
+          tapsaarsak: emptyToNull(item.tapsaarsak), neste_steg: emptyToNull(item.neste_steg),
           notater: emptyToNull(item.notater), opprettet_dato: emptyToNull(item.opprettet_dato),
-          sist_aktivitet: emptyToNull(item.sist_aktivitet), kilde: item.kilde as any,
+          sist_aktivitet: emptyToNull(item.sist_aktivitet), kilde: item.kilde,
           partner_id: emptyToNull(item.partner_id), partner_provisjon: item.partner_provisjon,
           partner_kostnad: item.partner_kostnad, netto_inntekt: item.netto_inntekt,
           rolle_i_firma: emptyToNull(item.rolle_i_firma), use_case: emptyToNull(item.use_case),
@@ -500,26 +488,24 @@ function useCrmStoreInternal() {
     for (const item of next) {
       const old = prev.find(p => p.id === item.id);
       if (old && JSON.stringify(old) !== JSON.stringify(item)) {
-        await supabase.from("salgsmuligheter").update({
+        await dbUpdate("salgsmuligheter", item.id, {
           navn: item.navn, selskap_id: emptyToNull(item.selskap_id),
           kontakt_id: emptyToNull(item.kontakt_id), ansvarlig: emptyToNull(item.ansvarlig),
-          status: item.status as any, forventet_mrr: item.forventet_mrr, sla: item.sla,
+          status: item.status, forventet_mrr: item.forventet_mrr, sla: item.sla,
           oppstartskostnad: item.oppstartskostnad, kontraktslengde_mnd: item.kontraktslengde_mnd,
           sannsynlighet: item.sannsynlighet, forventet_lukkedato: emptyToNull(item.forventet_lukkedato),
           vunnet_dato: emptyToNull(item.vunnet_dato), tapt_dato: emptyToNull(item.tapt_dato),
-          tapsaarsak: emptyToNull(item.tapsaarsak) as any, neste_steg: emptyToNull(item.neste_steg),
+          tapsaarsak: emptyToNull(item.tapsaarsak), neste_steg: emptyToNull(item.neste_steg),
           notater: emptyToNull(item.notater), opprettet_dato: emptyToNull(item.opprettet_dato),
-          sist_aktivitet: emptyToNull(item.sist_aktivitet), kilde: item.kilde as any,
+          sist_aktivitet: emptyToNull(item.sist_aktivitet), kilde: item.kilde,
           partner_id: emptyToNull(item.partner_id), partner_provisjon: item.partner_provisjon,
           partner_kostnad: item.partner_kostnad, netto_inntekt: item.netto_inntekt,
           rolle_i_firma: emptyToNull(item.rolle_i_firma), use_case: emptyToNull(item.use_case),
-        }).eq("id", item.id);
+        });
       }
     }
     for (const item of prev) {
-      if (!nextIds.has(item.id)) {
-        await supabase.from("salgsmuligheter").delete().eq("id", item.id);
-      }
+      if (!nextIds.has(item.id)) await dbDelete("salgsmuligheter", item.id);
     }
   }
 
@@ -528,35 +514,33 @@ function useCrmStoreInternal() {
     const nextIds = new Set(next.map(i => i.id));
     for (const item of next) {
       if (!prevIds.has(item.id)) {
-        await supabase.from("prosjekter").upsert({
+        await dbUpsert("prosjekter", {
           id: item.id, prosjektnavn: item.prosjektnavn, selskap_id: emptyToNull(item.selskap_id),
           salgsmulighet_id: emptyToNull(item.salgsmulighet_id), ansvarlig: emptyToNull(item.ansvarlig),
-          status: item.status as any, startdato: emptyToNull(item.startdato),
+          status: item.status, startdato: emptyToNull(item.startdato),
           forventet_go_live: emptyToNull(item.forventet_go_live), go_live_dato: emptyToNull(item.go_live_dato),
           oppstartskostnad: item.oppstartskostnad, oppstart_fakturert: item.oppstart_fakturert,
           oppstart_faktura_dato: emptyToNull(item.oppstart_faktura_dato), oppstart_betalt: item.oppstart_betalt,
-          integrasjon: item.integrasjon as any, notater: emptyToNull(item.notater),
+          integrasjon: item.integrasjon, notater: emptyToNull(item.notater),
         });
       }
     }
     for (const item of next) {
       const old = prev.find(p => p.id === item.id);
       if (old && JSON.stringify(old) !== JSON.stringify(item)) {
-        await supabase.from("prosjekter").update({
+        await dbUpdate("prosjekter", item.id, {
           prosjektnavn: item.prosjektnavn, selskap_id: emptyToNull(item.selskap_id),
           salgsmulighet_id: emptyToNull(item.salgsmulighet_id), ansvarlig: emptyToNull(item.ansvarlig),
-          status: item.status as any, startdato: emptyToNull(item.startdato),
+          status: item.status, startdato: emptyToNull(item.startdato),
           forventet_go_live: emptyToNull(item.forventet_go_live), go_live_dato: emptyToNull(item.go_live_dato),
           oppstartskostnad: item.oppstartskostnad, oppstart_fakturert: item.oppstart_fakturert,
           oppstart_faktura_dato: emptyToNull(item.oppstart_faktura_dato), oppstart_betalt: item.oppstart_betalt,
-          integrasjon: item.integrasjon as any, notater: emptyToNull(item.notater),
-        }).eq("id", item.id);
+          integrasjon: item.integrasjon, notater: emptyToNull(item.notater),
+        });
       }
     }
     for (const item of prev) {
-      if (!nextIds.has(item.id)) {
-        await supabase.from("prosjekter").delete().eq("id", item.id);
-      }
+      if (!nextIds.has(item.id)) await dbDelete("prosjekter", item.id);
     }
   }
 
@@ -565,31 +549,29 @@ function useCrmStoreInternal() {
     const nextIds = new Set(next.map(i => i.id));
     for (const item of next) {
       if (!prevIds.has(item.id)) {
-        await supabase.from("oppgaver").upsert({
+        await dbUpsert("oppgaver", {
           id: item.id, oppgave: item.oppgave, user_id: user?.id ?? "00000000-0000-0000-0000-000000000000",
           lead_id: emptyToNull(item.lead_id), selskap_id: emptyToNull(item.selskap_id),
           salgsmulighet_id: emptyToNull(item.salgsmulighet_id), ansvarlig: emptyToNull(item.ansvarlig),
-          frist: emptyToNull(item.frist), prioritet: item.prioritet as any,
-          status: item.status as any, paaminnelse: item.paaminnelse, notater: emptyToNull(item.notater),
+          frist: emptyToNull(item.frist), prioritet: item.prioritet,
+          status: item.status, paaminnelse: item.paaminnelse, notater: emptyToNull(item.notater),
         });
       }
     }
     for (const item of next) {
       const old = prev.find(p => p.id === item.id);
       if (old && JSON.stringify(old) !== JSON.stringify(item)) {
-        await supabase.from("oppgaver").update({
+        await dbUpdate("oppgaver", item.id, {
           oppgave: item.oppgave, lead_id: emptyToNull(item.lead_id),
           selskap_id: emptyToNull(item.selskap_id), salgsmulighet_id: emptyToNull(item.salgsmulighet_id),
           ansvarlig: emptyToNull(item.ansvarlig), frist: emptyToNull(item.frist),
-          prioritet: item.prioritet as any, status: item.status as any,
+          prioritet: item.prioritet, status: item.status,
           paaminnelse: item.paaminnelse, notater: emptyToNull(item.notater),
-        }).eq("id", item.id);
+        });
       }
     }
     for (const item of prev) {
-      if (!nextIds.has(item.id)) {
-        await supabase.from("oppgaver").delete().eq("id", item.id);
-      }
+      if (!nextIds.has(item.id)) await dbDelete("oppgaver", item.id);
     }
   }
 
@@ -598,13 +580,13 @@ function useCrmStoreInternal() {
     const nextIds = new Set(next.map(i => i.id));
     for (const item of next) {
       if (!prevIds.has(item.id)) {
-        await supabase.from("partnere").upsert({
-          id: item.id, partnernavn: item.partnernavn, partnertype: item.partnertype as any,
+        await dbUpsert("partnere", {
+          id: item.id, partnernavn: item.partnernavn, partnertype: item.partnertype,
           kontaktperson: emptyToNull(item.kontaktperson), e_post: emptyToNull(item.e_post),
-          telefon: emptyToNull(item.telefon), partnerstatus: item.partnerstatus as any,
-          pipeline_status: item.pipeline_status as any, ansvarlig: emptyToNull(item.ansvarlig),
+          telefon: emptyToNull(item.telefon), partnerstatus: item.partnerstatus,
+          pipeline_status: item.pipeline_status, ansvarlig: emptyToNull(item.ansvarlig),
           provisjonsprosent: item.provisjonsprosent,
-          provisjonstype: emptyToNull(item.provisjonstype) as any,
+          provisjonstype: emptyToNull(item.provisjonstype),
           selskap_id: emptyToNull(item.selskap_id),
           opprettet_dato: emptyToNull(item.opprettet_dato), sist_aktivitet: emptyToNull(item.sist_aktivitet),
           notater: emptyToNull(item.notater),
@@ -614,23 +596,21 @@ function useCrmStoreInternal() {
     for (const item of next) {
       const old = prev.find(p => p.id === item.id);
       if (old && JSON.stringify(old) !== JSON.stringify(item)) {
-        await supabase.from("partnere").update({
-          partnernavn: item.partnernavn, partnertype: item.partnertype as any,
+        await dbUpdate("partnere", item.id, {
+          partnernavn: item.partnernavn, partnertype: item.partnertype,
           kontaktperson: emptyToNull(item.kontaktperson), e_post: emptyToNull(item.e_post),
-          telefon: emptyToNull(item.telefon), partnerstatus: item.partnerstatus as any,
-          pipeline_status: item.pipeline_status as any, ansvarlig: emptyToNull(item.ansvarlig),
+          telefon: emptyToNull(item.telefon), partnerstatus: item.partnerstatus,
+          pipeline_status: item.pipeline_status, ansvarlig: emptyToNull(item.ansvarlig),
           provisjonsprosent: item.provisjonsprosent,
-          provisjonstype: emptyToNull(item.provisjonstype) as any,
+          provisjonstype: emptyToNull(item.provisjonstype),
           selskap_id: emptyToNull(item.selskap_id),
           opprettet_dato: emptyToNull(item.opprettet_dato), sist_aktivitet: emptyToNull(item.sist_aktivitet),
           notater: emptyToNull(item.notater),
-        }).eq("id", item.id);
+        });
       }
     }
     for (const item of prev) {
-      if (!nextIds.has(item.id)) {
-        await supabase.from("partnere").delete().eq("id", item.id);
-      }
+      if (!nextIds.has(item.id)) await dbDelete("partnere", item.id);
     }
   }
 
