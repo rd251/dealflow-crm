@@ -173,6 +173,45 @@ export default function Dashboard() {
         <StatCard label="Oppstart i pipeline" value={`${nok(oppstartPipeline)} NOK`} icon={<Rocket className="w-5 h-5" />} trend={`${openSm.length} åpne`} />
       </div>
 
+      {/* Oppstartskostnader per måned */}
+      {(() => {
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Des"];
+        const oppstartByMonth: { mnd: string; vunnet: number; pipeline: number }[] = [];
+        for (let i = 5; i >= 0; i--) {
+          const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          const m = d.getMonth();
+          const y = d.getFullYear();
+          const vunnetInMonth = salgsmuligheter.filter(s => s.status === "Vunnet" && s.vunnet_dato && new Date(s.vunnet_dato).getMonth() === m && new Date(s.vunnet_dato).getFullYear() === y);
+          const vunnetSum = vunnetInMonth.reduce((sum, s) => sum + (s.oppstartskostnad || 0), 0);
+          oppstartByMonth.push({
+            mnd: `${monthNames[m]} ${y.toString().slice(2)}`,
+            vunnet: vunnetSum,
+            pipeline: 0,
+          });
+        }
+        // Add current pipeline value to last month
+        if (oppstartByMonth.length > 0) {
+          oppstartByMonth[oppstartByMonth.length - 1].pipeline = oppstartPipeline;
+        }
+        const hasData = oppstartByMonth.some(d => d.vunnet > 0 || d.pipeline > 0);
+
+        return hasData ? (
+          <div className="bg-card border rounded-xl p-4 sm:p-6 mb-4">
+            <h2 className="text-base sm:text-lg font-semibold mb-4">Oppstartskostnader per måned</h2>
+            <ResponsiveContainer width="100%" height={isMobile ? 200 : 260}>
+              <BarChart data={oppstartByMonth}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="mnd" tick={{ fontSize: isMobile ? 9 : 11 }} />
+                <YAxis tick={{ fontSize: 11 }} tickFormatter={v => `${(v / 1000).toFixed(0)}k`} />
+                <Tooltip formatter={(value: number, name: string) => [`${nok(value)} NOK`, name === "vunnet" ? "Vunnet" : "Pipeline"]} contentStyle={{ borderRadius: "8px", fontSize: "13px" }} />
+                <Bar dataKey="vunnet" name="vunnet" fill="hsl(142, 71%, 45%)" radius={[6, 6, 0, 0]} stackId="a" />
+                <Bar dataKey="pipeline" name="pipeline" fill="hsl(38, 92%, 50%)" radius={[6, 6, 0, 0]} stackId="a" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        ) : null;
+      })()}
+
       {/* Row 4: Won/Lost/Win rate */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mb-4">
         <StatCard label="Vunnet" value={vunnetIMnd.length} icon={<Trophy className="w-5 h-5" />} />
