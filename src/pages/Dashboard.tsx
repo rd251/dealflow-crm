@@ -167,6 +167,12 @@ export default function Dashboard() {
         <StatCard label="Åpen pipeline" value={`${nok(aapenPipeline)} NOK`} icon={<BarChart3 className="w-5 h-5" />} className={isMobile ? "col-span-2" : ""} />
       </div>
 
+      {/* Row 3b: Oppstartskostnader */}
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-4">
+        <StatCard label="Oppstart denne mnd" value={`${nok(oppstartVunnetMnd)} NOK`} icon={<Rocket className="w-5 h-5" />} trend={`${vunnetIMnd.length} vunnet`} />
+        <StatCard label="Oppstart i pipeline" value={`${nok(oppstartPipeline)} NOK`} icon={<Rocket className="w-5 h-5" />} trend={`${openSm.length} åpne`} />
+      </div>
+
       {/* Row 4: Won/Lost/Win rate */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mb-4">
         <StatCard label="Vunnet" value={vunnetIMnd.length} icon={<Trophy className="w-5 h-5" />} />
