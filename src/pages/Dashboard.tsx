@@ -3,7 +3,7 @@ import PageShell from "@/components/PageShell";
 import StatCard from "@/components/StatCard";
 import { useCrmStore } from "@/hooks/use-crm-store";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { DollarSign, TrendingUp, Users, Target, AlertTriangle, BarChart3, ArrowUpRight, ArrowDownRight, Zap, Trophy, XCircle, UserMinus, ListTodo, Clock, CheckCircle2, Activity, ExternalLink, Users2, Handshake } from "lucide-react";
+import { DollarSign, TrendingUp, Users, Target, AlertTriangle, BarChart3, ArrowUpRight, ArrowDownRight, Zap, Trophy, XCircle, UserMinus, ListTodo, Clock, CheckCircle2, Activity, ExternalLink, Users2, Handshake, Rocket } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, LineChart, Line, CartesianGrid, PieChart, Pie } from "recharts";
 import { beregnTotalKontraktsverdi } from "@/data/crm-data";
 import { Shield } from "lucide-react";
@@ -60,6 +60,10 @@ export default function Dashboard() {
   const taptIMnd = salgsmuligheter.filter(s => s.status === "Tapt" && thisMonth(s.tapt_dato));
   const winRate = (vunnetIMnd.length + taptIMnd.length) > 0
     ? Math.round((vunnetIMnd.length / (vunnetIMnd.length + taptIMnd.length)) * 100) : 0;
+
+  // Oppstartskostnader
+  const oppstartVunnetMnd = vunnetIMnd.reduce((sum, s) => sum + (s.oppstartskostnad || 0), 0);
+  const oppstartPipeline = openSm.reduce((sum, s) => sum + (s.oppstartskostnad || 0), 0);
 
   // Churn
   const kansellerteKunder = kansellerteIMnd.length;
@@ -161,6 +165,12 @@ export default function Dashboard() {
         <StatCard label="Nye leads" value={nyeLeads} icon={<Target className="w-5 h-5" />} />
         <StatCard label="Kvalifiserte" value={kvalifiserteLeads} icon={<Target className="w-5 h-5" />} />
         <StatCard label="Åpen pipeline" value={`${nok(aapenPipeline)} NOK`} icon={<BarChart3 className="w-5 h-5" />} className={isMobile ? "col-span-2" : ""} />
+      </div>
+
+      {/* Row 3b: Oppstartskostnader */}
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-4">
+        <StatCard label="Oppstart denne mnd" value={`${nok(oppstartVunnetMnd)} NOK`} icon={<Rocket className="w-5 h-5" />} trend={`${vunnetIMnd.length} vunnet`} />
+        <StatCard label="Oppstart i pipeline" value={`${nok(oppstartPipeline)} NOK`} icon={<Rocket className="w-5 h-5" />} trend={`${openSm.length} åpne`} />
       </div>
 
       {/* Row 4: Won/Lost/Win rate */}
