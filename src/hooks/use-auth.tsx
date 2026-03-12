@@ -39,19 +39,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    let mounted = true;
+  let mounted = true;
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (!mounted) return;
-      if (event === 'SIGNED_OUT' || (event === 'INITIAL_SESSION' && !session)) {
-        setState({ user: null, session: null, role: null, loading: false, isAdmin: false });
-        return;
-      }
-      if (session?.user) {
-        const role = await fetchRole(session.user.id);
-        if (mounted) setState({ user: session.user, session, role, loading: false, isAdmin: role === "admin" });
-      }
-    });
+  const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    if (!mounted) return;
+    if (event === 'SIGNED_OUT' || (event === 'INITIAL_SESSION' && !session)) {
+      setState({ user: null, session: null, role: null, loading: false, isAdmin: false });
+      return;
+    }
+    if (session?.user) {
+      const role = await fetchRole(session.user.id);
+      if (mounted) setState({ user: session.user, session, role, loading: false, isAdmin: role === "admin" });
+    }
+  });
+
+  return () => {
+    mounted = false;
+    subscription.unsubscribe();
+  };
+}, []);
 
     return () => {
       mounted = false;
