@@ -5,7 +5,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { CrmProvider } from "@/hooks/use-crm-store";
-import { AuthProvider, useAuth } from "@/hooks/use-auth";
+import { AuthProvider } from "@/hooks/use-auth";
 import AppSidebar from "@/components/AppSidebar";
 import Dashboard from "./pages/Dashboard";
 import Leads from "./pages/Leads";
@@ -18,25 +18,12 @@ import Partnere from "./pages/Partnere";
 import PartnerProfile from "./pages/PartnerProfile";
 import PartnerPipeline from "./pages/PartnerPipeline";
 import CompanyProfile from "./pages/CompanyProfile";
-import Login from "./pages/Login";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-function ProtectedRoutes() {
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
-      </div>
-    );
-  }
-
-  if (!user) return <Navigate to="/login" replace />;
-
+function AppRoutes() {
   return (
     <CrmProvider>
       <AppSidebar />
@@ -53,28 +40,10 @@ function ProtectedRoutes() {
         <Route path="/partnere/:id" element={<PartnerProfile />} />
         <Route path="/partner-pipeline" element={<PartnerPipeline />} />
         <Route path="/admin" element={<Admin />} />
+        <Route path="/login" element={<Navigate to="/" replace />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </CrmProvider>
-  );
-}
-
-function AppRoutes() {
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
-      </div>
-    );
-  }
-
-  return (
-    <Routes>
-      <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
-      <Route path="/*" element={<ProtectedRoutes />} />
-    </Routes>
   );
 }
 
