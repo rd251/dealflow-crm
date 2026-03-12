@@ -181,8 +181,7 @@ async function seedDatabaseInternal(userId: string) {
     paaminnelse: o.paaminnelse, notater: emptyToNull(o.notater),
   }));
   if (oppgaveRows.length > 0) {
-    const { error: e5 } = await supabase.from("oppgaver").insert(oppgaveRows);
-    if (e5) console.error("Seed oppgaver error:", e5);
+    const { error: e5 } = await supabase.from("oppgaver").upsert(oppgaveRows, { onConflict: "id" });
   }
   
   console.log("Database seeded with initial CRM data");
