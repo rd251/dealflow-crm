@@ -181,11 +181,11 @@ function useCrmStoreInternal() {
   const [partnere, setPartnere] = useState<Partner[]>([]);
   const [loaded, setLoaded] = useState(false);
 
-  // Fetch all data
+  // Fetch all data (robust: one failed table should not block all data)
   const refresh = useCallback(async () => {
     setLoaded(false);
 
-    const [r1, r2, r3, r4, r5, r6, r7] = await Promise.all([
+    const [r1, r2, r3, r4, r5, r6, r7] = await Promise.allSettled([
       supabase.from("leads").select("*"),
       supabase.from("salgsmuligheter").select("*"),
       supabase.from("prosjekter").select("*"),
@@ -195,26 +195,31 @@ function useCrmStoreInternal() {
       supabase.from("partnere").select("*"),
     ]);
 
-    const results = [r1, r2, r3, r4, r5, r6, r7];
-    results.forEach((r, i) => {
-      if (r.error) console.error(`Fetch error (table ${i}):`, r.error);
-    });
+    const applyResult = <T,>(
+      result: PromiseSettledResult<{ data: T[] | null; error: unknown }>,
+      tableName: string,
+      onSuccess: (rows: T[]) => void,
+    ) => {
+      if (result.status === "rejected") {
+        console.error(`Fetch rejected (${tableName}):`, result.reason);
+        return;
+      }
 
-    // Avoid seeding or overwriting local state when fetch returned errors
-    const hasFetchErrors = results.some(r => !!r.error);
-    if (hasFetchErrors) {
-      setLoaded(true);
-      return;
-    }
+      if (result.value.error) {
+        console.error(`Fetch error (${tableName}):`, result.value.error);
+        return;
+      }
 
-    // Simply set state from database - no auto-seeding
-    if (r1.data) setLeads(r1.data.map(rowToLead));
-    if (r2.data) setSalgsmuligheter(r2.data.map(rowToSalgsmulighet));
-    if (r3.data) setProsjekter(r3.data.map(rowToProsjekt));
-    if (r4.data) setSelskaper(r4.data.map(rowToSelskap));
-    if (r5.data) setKontakter(r5.data.map(rowToKontakt));
-    if (r6.data) setOppgaver(r6.data.map(rowToOppgave));
-    if (r7.data) setPartnere(r7.data.map(rowToPartner));
+      onSuccess(result.value.data ?? []);
+    };
+
+    applyResult(r1 as PromiseSettledResult<{ data: any[] | null; error: unknown }>, "leads", rows => setLeads(rows.map(rowToLead)));
+    applyResult(r2 as PromiseSettledResult<{ data: any[] | null; error: unknown }>, "salgsmuligheter", rows => setSalgsmuligheter(rows.map(rowToSalgsmulighet)));
+    applyResult(r3 as PromiseSettledResult<{ data: any[] | null; error: unknown }>, "prosjekter", rows => setProsjekter(rows.map(rowToProsjekt)));
+    applyResult(r4 as PromiseSettledResult<{ data: any[] | null; error: unknown }>, "selskaper", rows => setSelskaper(rows.map(rowToSelskap)));
+    applyResult(r5 as PromiseSettledResult<{ data: any[] | null; error: unknown }>, "kontakter", rows => setKontakter(rows.map(rowToKontakt)));
+    applyResult(r6 as PromiseSettledResult<{ data: any[] | null; error: unknown }>, "oppgaver", rows => setOppgaver(rows.map(rowToOppgave)));
+    applyResult(r7 as PromiseSettledResult<{ data: any[] | null; error: unknown }>, "partnere", rows => setPartnere(rows.map(rowToPartner)));
 
     setLoaded(true);
   }, []);
