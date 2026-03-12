@@ -178,7 +178,9 @@ export default function Contacts() {
                     ))}
                   </div>
                 </div>
-              )}
+               )}
+
+              <ActivityLog kontakt_id={currentKontakt.id} />
             </div>
           )}
         </SheetContent>

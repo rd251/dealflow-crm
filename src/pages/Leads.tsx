@@ -289,6 +289,10 @@ export default function Leads() {
                 <InlineTaskForm lead_id={currentLead.id} selskap_id="" />
               </div>
 
+              <ActivityLog lead_id={currentLead.id} onActivityLogged={() => {
+                updateLeads(prev => prev.map(l => l.id === currentLead.id ? { ...l, sist_aktivitet: new Date().toISOString().split("T")[0] } : l));
+              }} />
+
               {currentLead.konvertert_dato && (
                 <div className="p-3 bg-success/10 rounded-lg text-success text-xs font-medium">
                   Konvertert {currentLead.konvertert_dato}

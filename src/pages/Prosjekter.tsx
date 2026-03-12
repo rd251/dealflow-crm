@@ -113,6 +113,8 @@ export default function Prosjekter() {
               <div className="border-t pt-4">
                 <InlineTaskForm selskap_id={currentP.selskap_id} salgsmulighet_id={currentP.salgsmulighet_id} />
               </div>
+
+              <ActivityLog prosjekt_id={currentP.id} />
             </div>
           )}
         </SheetContent>

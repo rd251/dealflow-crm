@@ -384,6 +384,10 @@ export default function Salgsmuligheter() {
                   <InlineTaskForm salgsmulighet_id={currentSm.id} selskap_id={currentSm.selskap_id} />
                 </div>
 
+                <ActivityLog salgsmulighet_id={currentSm.id} onActivityLogged={() => {
+                  updateSalgsmuligheter(prev => prev.map(s => s.id === currentSm.id ? { ...s, sist_aktivitet: new Date().toISOString().split("T")[0] } : s));
+                }} />
+
                 <div className="flex gap-2 pt-2 flex-wrap">
                   {openStatuses.includes(currentSm.status as any) && (
                     <>
