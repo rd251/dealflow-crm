@@ -64,6 +64,7 @@ export default function Salgsmuligheter() {
       opprettet_dato: today, sist_aktivitet: today,
       kilde: "Direkte salg", partner_id: "", partner_provisjon: 0, partner_kostnad: 0, netto_inntekt: 0,
       rolle_i_firma: form.rolle_i_firma, use_case: form.use_case,
+      kontaktperson: form.kontaktperson, e_post: form.e_post, telefon: form.telefon,
     };
     updateSalgsmuligheter(prev => [...prev, nySm]);
     setDialogOpen(false);
