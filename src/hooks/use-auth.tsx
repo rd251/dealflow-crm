@@ -59,8 +59,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (session?.user) {
         const role = await fetchRole(session.user.id);
         if (mounted) setState({ user: session.user, session, role, loading: false, isAdmin: role === "admin" });
+      } else if (event === 'INITIAL_SESSION' && !session) {
+        // Let getSession() handle the initial no-session case
+        return;
       } else if (event === 'SIGNED_OUT') {
         if (mounted) setState({ user: null, session: null, role: null, loading: false, isAdmin: false });
+      } else if (!session) {
+        if (mounted) setState(s => ({ ...s, loading: false }));
       }
     });
 
