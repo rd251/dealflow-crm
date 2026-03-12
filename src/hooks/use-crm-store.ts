@@ -195,6 +195,8 @@ function useCrmStoreInternal() {
 
   // Fetch all data
   const refresh = useCallback(async () => {
+    setLoaded(false);
+
     const [r1, r2, r3, r4, r5, r6, r7] = await Promise.all([
       supabase.from("leads").select("*"),
       supabase.from("salgsmuligheter").select("*"),
@@ -204,12 +206,21 @@ function useCrmStoreInternal() {
       supabase.from("oppgaver").select("*"),
       supabase.from("partnere").select("*"),
     ]);
-    [r1, r2, r3, r4, r5, r6, r7].forEach((r, i) => {
+
+    const results = [r1, r2, r3, r4, r5, r6, r7];
+    results.forEach((r, i) => {
       if (r.error) console.error(`Fetch error (table ${i}):`, r.error);
     });
-    
+
+    // Avoid seeding or overwriting local state when fetch returned errors
+    const hasFetchErrors = results.some(r => !!r.error);
+    if (hasFetchErrors) {
+      setLoaded(true);
+      return;
+    }
+
     // Check if database is empty and seed if needed
-    const allEmpty = [r1, r2, r3, r4, r5, r6, r7].every(r => !r.data || r.data.length === 0);
+    const allEmpty = results.every(r => !r.data || r.data.length === 0);
     if (allEmpty && user) {
       await seedDatabase(user.id);
       // Re-fetch after seeding
@@ -238,6 +249,7 @@ function useCrmStoreInternal() {
       if (r6.data) setOppgaver(r6.data.map(rowToOppgave));
       if (r7.data) setPartnere(r7.data.map(rowToPartner));
     }
+
     setLoaded(true);
   }, [user]);
 
