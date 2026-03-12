@@ -593,7 +593,7 @@ function useCrmStoreInternal() {
     const nextIds = new Set(next.map(i => i.id));
     for (const item of next) {
       if (!prevIds.has(item.id)) {
-        await supabase.from("partnere").insert({
+        await supabase.from("partnere").upsert({
           id: item.id, partnernavn: item.partnernavn, partnertype: item.partnertype as any,
           kontaktperson: emptyToNull(item.kontaktperson), e_post: emptyToNull(item.e_post),
           telefon: emptyToNull(item.telefon), partnerstatus: item.partnerstatus as any,
