@@ -644,7 +644,7 @@ function useCrmStoreInternal() {
       kontaktId = crypto.randomUUID();
       const nyKontakt: Kontakt = {
         id: kontaktId, selskap_id: selskapId, navn: lead.kontaktperson,
-        e_post: lead.e_post, telefon: lead.telefon, rolle: "", linkedin: "", notater: "",
+        e_post: lead.e_post, telefon: lead.telefon, rolle: lead.rolle_i_firma || "", linkedin: "", notater: "",
       };
       updateKontakter(prev => [...prev, nyKontakt]);
     }
