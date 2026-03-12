@@ -55,13 +55,15 @@ export default function Dashboard() {
   const openSm = salgsmuligheter.filter(s => s.status !== "Vunnet" && s.status !== "Tapt");
   const aapenPipeline = openSm.reduce((sum, s) => sum + beregnTotalKontraktsverdi(s), 0);
 
+  // Won / Lost
+  const vunnetIMnd = salgsmuligheter.filter(s => s.status === "Vunnet" && thisMonth(s.vunnet_dato));
+  const taptIMnd = salgsmuligheter.filter(s => s.status === "Tapt" && thisMonth(s.tapt_dato));
+  const winRate = (vunnetIMnd.length + taptIMnd.length) > 0
+    ? Math.round((vunnetIMnd.length / (vunnetIMnd.length + taptIMnd.length)) * 100) : 0;
+
   // Oppstartskostnader
   const oppstartVunnetMnd = vunnetIMnd.reduce((sum, s) => sum + (s.oppstartskostnad || 0), 0);
   const oppstartPipeline = openSm.reduce((sum, s) => sum + (s.oppstartskostnad || 0), 0);
-
-  // Won / Lost
-  const winRate = (vunnetIMnd.length + taptIMnd.length) > 0
-    ? Math.round((vunnetIMnd.length / (vunnetIMnd.length + taptIMnd.length)) * 100) : 0;
 
   // Churn
   const kansellerteKunder = kansellerteIMnd.length;
