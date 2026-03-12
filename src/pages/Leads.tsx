@@ -204,6 +204,7 @@ export default function Leads() {
                     </select>
                   </td>
                   <td className="px-4 py-3 text-muted-foreground text-xs">{lead.neste_steg}</td>
+                  <td className="px-4 py-3"><LastActivityBadge lead_id={lead.id} sist_aktivitet={lead.sist_aktivitet} /></td>
                   <td className="px-4 py-3 text-muted-foreground text-xs font-mono">{lead.opprettet_dato}</td>
                   <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
                     {lead.status !== "Konvertert til salg" && lead.status !== "Konvertert til partner" && lead.status !== "Ikke aktuelt" && (
