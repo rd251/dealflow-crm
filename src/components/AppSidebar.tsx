@@ -48,23 +48,25 @@ function SidebarNav({ onNavigate, isAdmin }: { onNavigate?: () => void; isAdmin:
           );
         })}
       </nav>
-      <div className="px-3 pb-2">
-        <div className="px-3 py-2 text-xs text-sidebar-foreground/60 truncate">{user?.email}</div>
-        <button
-          onClick={() => { signOut(); onNavigate?.(); }}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors w-full"
-        >
-          <LogOut className="w-4 h-4 shrink-0" />
-          Logg ut
-        </button>
-      </div>
+      {user && (
+        <div className="px-3 pb-2">
+          <div className="px-3 py-2 text-xs text-sidebar-foreground/60 truncate">{user.email}</div>
+          <button
+            onClick={() => { signOut(); onNavigate?.(); }}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors w-full"
+          >
+            <LogOut className="w-4 h-4 shrink-0" />
+            Logg ut
+          </button>
+        </div>
+      )}
     </>
   );
 }
 
 function CollapsedSidebarNav({ isAdmin }: { isAdmin: boolean }) {
   const location = useLocation();
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const allItems = isAdmin ? [...navItems, { to: "/admin", icon: Shield, label: "Admin" }] : navItems;
 
   return (
@@ -88,15 +90,17 @@ function CollapsedSidebarNav({ isAdmin }: { isAdmin: boolean }) {
           );
         })}
       </nav>
-      <div className="px-2 pb-2">
-        <button
-          onClick={() => signOut()}
-          title="Logg ut"
-          className="flex items-center justify-center p-2.5 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors w-full"
-        >
-          <LogOut className="w-4 h-4" />
-        </button>
-      </div>
+      {user && (
+        <div className="px-2 pb-2">
+          <button
+            onClick={() => signOut()}
+            title="Logg ut"
+            className="flex items-center justify-center p-2.5 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors w-full"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
+        </div>
+      )}
     </>
   );
 }
