@@ -9,11 +9,105 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Plus, Search, Mail, Phone, Linkedin, Upload, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
-import { Kontakt } from "@/data/crm-data";
+import { Textarea } from "@/components/ui/textarea";
+import { Kontakt, Selskap, Salgsmulighet } from "@/data/crm-data";
 import DataImportDialog from "@/components/DataImportDialog";
 import ActivityLog from "@/components/ActivityLog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Separator } from "@/components/ui/separator";
+
+function EditableField({ label, value, onChange, icon, type = "text", placeholder }: {
+  label: string; value: string; onChange: (v: string) => void; icon?: React.ReactNode; type?: string; placeholder?: string;
+}) {
+  return (
+    <div className="space-y-1">
+      <span className="text-muted-foreground text-xs">{label}</span>
+      <div className="flex items-center gap-2">
+        {icon}
+        <Input
+          type={type}
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          placeholder={placeholder || label}
+          className="h-8 text-sm"
+        />
+      </div>
+    </div>
+  );
+}
+
+function ContactDetailPanel({ kontakt, selskaper, salgsmuligheter, onUpdate, onNavigate, onDelete }: {
+  kontakt: Kontakt;
+  selskaper: Selskap[];
+  salgsmuligheter: Salgsmulighet[];
+  onUpdate: (field: keyof Kontakt, value: string) => void;
+  onNavigate: (path: string) => void;
+  onDelete: () => void;
+}) {
+  const getSelskapNavn = (id: string) => selskaper.find(s => s.id === id)?.firmanavn || "–";
+
+  return (
+    <div className="mt-6 space-y-4 text-sm">
+      <EditableField label="E-post" value={kontakt.e_post} onChange={v => onUpdate("e_post", v)} icon={<Mail className="w-4 h-4 text-muted-foreground shrink-0" />} type="email" />
+      <EditableField label="Telefon" value={kontakt.telefon} onChange={v => onUpdate("telefon", v)} icon={<Phone className="w-4 h-4 text-muted-foreground shrink-0" />} type="tel" />
+      <EditableField label="LinkedIn" value={kontakt.linkedin} onChange={v => onUpdate("linkedin", v)} icon={<Linkedin className="w-4 h-4 text-muted-foreground shrink-0" />} placeholder="https://linkedin.com/in/..." />
+
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1">
+          <span className="text-muted-foreground text-xs">Selskap</span>
+          <select
+            className="w-full border rounded-md px-2 py-1.5 text-sm bg-background h-8"
+            value={kontakt.selskap_id}
+            onChange={e => onUpdate("selskap_id", e.target.value)}
+          >
+            <option value="">Ingen</option>
+            {selskaper.map(s => <option key={s.id} value={s.id}>{s.firmanavn}</option>)}
+          </select>
+          {kontakt.selskap_id && (
+            <span className="text-xs text-primary cursor-pointer hover:underline" onClick={() => onNavigate(`/selskaper/${kontakt.selskap_id}`)}>
+              Gå til selskapsprofil →
+            </span>
+          )}
+        </div>
+        <EditableField label="Rolle" value={kontakt.rolle} onChange={v => onUpdate("rolle", v)} />
+      </div>
+
+      <div className="space-y-1">
+        <span className="text-muted-foreground text-xs">Notater</span>
+        <Textarea
+          value={kontakt.notater}
+          onChange={e => onUpdate("notater", e.target.value)}
+          placeholder="Legg til notater..."
+          className="text-sm min-h-[60px]"
+        />
+      </div>
+
+      <Separator />
+
+      {salgsmuligheter.length > 0 && (
+        <div>
+          <span className="text-muted-foreground block text-xs mb-2">Relaterte salgsmuligheter</span>
+          <div className="space-y-1.5">
+            {salgsmuligheter.map(d => (
+              <div key={d.id} className="p-2 bg-muted/50 rounded-lg text-xs">
+                <span className="font-medium">{d.navn}</span> · {d.status} · {d.forventet_mrr.toLocaleString("no-NO")} MRR
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <ActivityLog kontakt_id={kontakt.id} />
+
+      <Separator />
+
+      <Button variant="destructive" size="sm" className="w-full" onClick={onDelete}>
+        <Trash2 className="w-4 h-4 mr-2" />Slett kontakt
+      </Button>
+    </div>
+  );
+}
 
 export default function Contacts() {
   const navigate = useNavigate();
