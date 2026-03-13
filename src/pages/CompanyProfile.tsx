@@ -128,6 +128,7 @@ export default function CompanyProfile() {
   };
 
   return (
+    <>
     <div className={`${isMobile ? "ml-0" : "ml-60"} min-h-screen bg-background transition-all duration-200`}>
       {/* Header */}
       <header className={`sticky top-0 z-40 bg-background/80 backdrop-blur-sm border-b ${isMobile ? "px-4 py-4 pl-14" : "px-8 py-5"}`}>
