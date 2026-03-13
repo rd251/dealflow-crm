@@ -54,6 +54,7 @@ export default function CompanyProfile() {
   } = useCrmStore();
 
   const [showAddContact, setShowAddContact] = useState(false);
+  const [expandedContact, setExpandedContact] = useState<string | null>(null);
   const [contactForm, setContactForm] = useState({ navn: "", rolle: "", e_post: "", telefon: "", linkedin: "" });
 
   const selskap = selskaper.find(s => s.id === id);
