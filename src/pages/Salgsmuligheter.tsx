@@ -147,12 +147,12 @@ export default function Salgsmuligheter() {
         </TabsList>
 
         <TabsContent value="pipeline">
-          <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-4 scrollbar-thin">
+          <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-4 scrollbar-thin items-start">
             {openStatuses.map(stage => {
               const stageDeals = openDeals.filter(d => d.status === stage);
               const stageValue = stageDeals.reduce((s, d) => s + beregnTotalKontraktsverdi(d), 0);
               return (
-                <div key={stage} className={`${isMobile ? "min-w-[240px] w-[240px]" : "min-w-[280px] w-[280px]"} flex-shrink-0`}
+                <div key={stage} className={`${isMobile ? "min-w-[240px] w-[240px]" : "min-w-[280px] w-[280px]"} flex-shrink-0 flex flex-col`}
                   onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; }}
                   onDrop={e => handleDrop(e, stage)}>
                   <div className="mb-3 flex items-center gap-2">
@@ -161,7 +161,7 @@ export default function Salgsmuligheter() {
                     <span className="text-xs text-muted-foreground ml-auto">{stageDeals.length}</span>
                   </div>
                   <p className="text-xs text-muted-foreground mb-3 font-mono">{stageValue.toLocaleString("no-NO")} NOK</p>
-                  <div className="space-y-2.5">
+                  <div className="space-y-2.5 max-h-[calc(75vh-80px)] overflow-y-auto pr-1 scrollbar-thin">
                     {stageDeals.map(deal => (
                       <div key={deal.id} draggable onDragStart={e => { setDraggedId(deal.id); e.dataTransfer.effectAllowed = "move"; }}
                         onClick={() => setSelectedSm(deal)}
