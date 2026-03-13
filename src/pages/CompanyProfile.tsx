@@ -324,6 +324,10 @@ export default function CompanyProfile() {
                               <span className="text-muted-foreground text-xs">LinkedIn</span>
                               <Input value={k.linkedin || ""} onChange={e => updateKontakter(prev => prev.map(c => c.id === k.id ? { ...c, linkedin: e.target.value } : c))} className="h-8 text-sm" placeholder="LinkedIn URL" />
                             </div>
+                            <Button variant="ghost" size="sm" className="w-full mt-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+                              onClick={() => handleDeleteContact(k)}>
+                              <Trash2 className="w-4 h-4 mr-1" /> Slett kontakt
+                            </Button>
                           </div>
                         )}
                       </div>
