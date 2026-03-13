@@ -267,34 +267,16 @@ export default function Contacts() {
         <SheetContent className="w-full sm:w-[400px] sm:max-w-[500px] overflow-y-auto">
           <SheetHeader><SheetTitle>{currentKontakt?.navn}</SheetTitle></SheetHeader>
           {currentKontakt && (
-            <div className="mt-6 space-y-4 text-sm">
-              <div className="space-y-2">
-                <div className="flex items-center gap-2"><Mail className="w-4 h-4 text-muted-foreground" />{currentKontakt.e_post || "–"}</div>
-                <div className="flex items-center gap-2"><Phone className="w-4 h-4 text-muted-foreground" />{currentKontakt.telefon || "–"}</div>
-                {currentKontakt.linkedin && <div className="flex items-center gap-2"><Linkedin className="w-4 h-4 text-muted-foreground" /><a href={currentKontakt.linkedin} target="_blank" rel="noopener" className="text-primary underline text-xs truncate">{currentKontakt.linkedin}</a></div>}
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div><span className="text-muted-foreground block text-xs">Selskap</span><span className="cursor-pointer hover:text-primary hover:underline" onClick={() => navigate(`/selskaper/${currentKontakt.selskap_id}`)}>{getSelskapNavn(currentKontakt.selskap_id)}</span></div>
-                <div><span className="text-muted-foreground block text-xs">Rolle</span>{currentKontakt.rolle || "–"}</div>
-              </div>
-              {currentKontakt.notater && (
-                <div><span className="text-muted-foreground block text-xs mb-1">Notater</span><p>{currentKontakt.notater}</p></div>
-              )}
-              {relatedDeals.length > 0 && (
-                <div>
-                  <span className="text-muted-foreground block text-xs mb-2">Relaterte salgsmuligheter</span>
-                  <div className="space-y-1.5">
-                    {relatedDeals.map(d => (
-                      <div key={d.id} className="p-2 bg-muted/50 rounded-lg text-xs">
-                        <span className="font-medium">{d.navn}</span> · {d.status} · {d.forventet_mrr.toLocaleString("no-NO")} MRR
-                      </div>
-                    ))}
-                  </div>
-                </div>
-               )}
-
-              <ActivityLog kontakt_id={currentKontakt.id} />
-            </div>
+            <ContactDetailPanel
+              kontakt={currentKontakt}
+              selskaper={selskaper}
+              salgsmuligheter={relatedDeals}
+              onUpdate={(field, value) => {
+                updateKontakter(prev => prev.map(k => k.id === currentKontakt.id ? { ...k, [field]: value } : k));
+              }}
+              onNavigate={navigate}
+              onDelete={() => handleDeleteClick(currentKontakt)}
+            />
           )}
         </SheetContent>
       </Sheet>
