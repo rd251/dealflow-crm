@@ -204,8 +204,10 @@ export default function Salgsmuligheter() {
             })}
             {/* Vunnet / Tapt drop zones */}
             {(["Vunnet", "Tapt"] as const).map(stage => (
-              <div key={stage} className={`${isMobile ? "min-w-[160px] w-[160px]" : "min-w-[200px] w-[200px]"} flex-shrink-0`}
-                onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; }}
+              <div key={stage} className={`${isMobile ? "min-w-[160px] w-[160px]" : "min-w-[200px] w-[200px]"} flex-shrink-0 rounded-xl p-2 -m-2 transition-colors ${dragOverStage === stage ? (stage === "Vunnet" ? "bg-success/10 ring-2 ring-success/30" : "bg-destructive/10 ring-2 ring-destructive/30") : ""}`}
+                onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; setDragOverStage(stage); }}
+                onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOverStage(null); }}
+                onDragEnd={() => { setDragOverStage(null); setDraggedId(null); }}
                 onDrop={e => handleDrop(e, stage)}>
                 <div className="mb-3 flex items-center gap-2">
                   <div className={`w-2.5 h-2.5 rounded-full ${statusColors[stage]}`} />
