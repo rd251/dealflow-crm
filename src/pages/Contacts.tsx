@@ -143,6 +143,9 @@ export default function Contacts() {
 
   // Check relations and open delete dialog
   const handleDeleteClick = async (kontakt: Kontakt) => {
+    // Close the sheet first so the dialog isn't behind it
+    setSelected(null);
+
     const relations: string[] = [];
 
     // Check salgsmuligheter
