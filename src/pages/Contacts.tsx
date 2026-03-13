@@ -359,7 +359,19 @@ export default function Contacts() {
 
       <Sheet open={!!currentKontakt} onOpenChange={open => !open && setSelected(null)}>
         <SheetContent className="w-full sm:w-[400px] sm:max-w-[500px] overflow-y-auto">
-          <SheetHeader><SheetTitle>{currentKontakt?.navn}</SheetTitle></SheetHeader>
+          <SheetHeader>
+            <SheetTitle>
+              <Input
+                value={currentKontakt?.navn || ""}
+                onChange={e => {
+                  if (currentKontakt) {
+                    updateKontakter(prev => prev.map(k => k.id === currentKontakt.id ? { ...k, navn: e.target.value } : k));
+                  }
+                }}
+                className="text-lg font-semibold border-none shadow-none px-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0"
+              />
+            </SheetTitle>
+          </SheetHeader>
           {currentKontakt && (
             <ContactDetailPanel
               kontakt={currentKontakt}
