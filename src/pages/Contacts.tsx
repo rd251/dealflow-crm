@@ -368,7 +368,7 @@ export default function Contacts() {
                     updateKontakter(prev => prev.map(k => k.id === currentKontakt.id ? { ...k, navn: e.target.value } : k));
                   }
                 }}
-                className="text-lg font-semibold border-none shadow-none px-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0"
+                className="text-lg font-semibold border-transparent shadow-none px-2 -mx-2 h-auto hover:border-input focus-visible:border-input focus-visible:ring-1 focus-visible:ring-ring transition-colors rounded-md"
               />
             </SheetTitle>
           </SheetHeader>
