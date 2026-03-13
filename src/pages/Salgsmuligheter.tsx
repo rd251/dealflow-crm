@@ -43,6 +43,7 @@ export default function Salgsmuligheter() {
 
   const handleDrop = (e: React.DragEvent, stage: SalgsmulighetStatus) => {
     e.preventDefault();
+    setDragOverStage(null);
     if (!draggedId) return;
     if (stage === "Vunnet") { vinnSalgsmulighet(draggedId); }
     else if (stage === "Tapt") { setLossDialog(draggedId); }
