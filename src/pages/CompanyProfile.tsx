@@ -412,5 +412,29 @@ export default function CompanyProfile() {
         </div>
       </main>
     </div>
+
+      {/* Delete contact dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Slett kontakt</DialogTitle>
+            <DialogDescription>
+              Er du sikker på at du vil slette kontakten «{deleteTarget?.navn}»?
+              {deleteRelations.length > 0 && (
+                <span className="block mt-2 text-warning">
+                  Denne kontakten er koblet til: {deleteRelations.join(", ")}. Koblingene vil bli fjernet.
+                </span>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)} disabled={deleting}>Avbryt</Button>
+            <Button variant="destructive" onClick={confirmDeleteContact} disabled={deleting}>
+              {deleting ? "Sletter..." : "Slett"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
