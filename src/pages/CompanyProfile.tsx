@@ -11,11 +11,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import {
   Building2, ArrowLeft, DollarSign, TrendingUp, Briefcase, Users,
-  Mail, Phone, Linkedin, FileText, CalendarDays, ChevronRight, Plus, X, Shield,
+  Mail, Phone, Linkedin, FileText, CalendarDays, ChevronRight, Plus, X, Shield, Trash2,
 } from "lucide-react";
 import { Kundestatus, OnboardingStatus, Kundetilstand, SalgsmulighetStatus, Kontakt } from "@/data/crm-data";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const kundestatuser: Kundestatus[] = ["Ikke kunde", "Pilot", "Live", "Pause", "Kansellert"];
 const onboardingStatuser: OnboardingStatus[] = ["Ikke startet", "Pågår", "Venter på kunde", "Klar for live", "Ferdig"];
@@ -50,12 +53,48 @@ export default function CompanyProfile() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const {
-    selskaper, updateSelskaper, kontakter, updateKontakter, salgsmuligheter, prosjekter, oppgaver, generateId,
+    selskaper, updateSelskaper, kontakter, updateKontakter, salgsmuligheter, updateSalgsmuligheter, prosjekter, oppgaver, generateId,
   } = useCrmStore();
 
   const [showAddContact, setShowAddContact] = useState(false);
   const [expandedContact, setExpandedContact] = useState<string | null>(null);
   const [contactForm, setContactForm] = useState({ navn: "", rolle: "", e_post: "", telefon: "", linkedin: "" });
+  const [deleteTarget, setDeleteTarget] = useState<Kontakt | null>(null);
+  const [deleteRelations, setDeleteRelations] = useState<string[]>([]);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDeleteContact = async (kontakt: Kontakt) => {
+    const relations: string[] = [];
+    const { data: smData } = await supabase.from("salgsmuligheter").select("id").eq("kontakt_id", kontakt.id).limit(1);
+    if (smData && smData.length > 0) relations.push("Salgsmuligheter");
+    const { data: aktData } = await supabase.from("aktiviteter").select("id").eq("kontakt_id", kontakt.id).limit(1);
+    if (aktData && aktData.length > 0) relations.push("Aktiviteter");
+    setDeleteTarget(kontakt);
+    setDeleteRelations(relations);
+    setExpandedContact(null);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteContact = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await supabase.from("salgsmuligheter").update({ kontakt_id: null }).eq("kontakt_id", deleteTarget.id);
+      await supabase.from("aktiviteter").update({ kontakt_id: null }).eq("kontakt_id", deleteTarget.id);
+      await supabase.from("kontakter").delete().eq("id", deleteTarget.id);
+      updateKontakter(prev => prev.filter(k => k.id !== deleteTarget.id));
+      updateSalgsmuligheter(prev => prev.map(s => s.kontakt_id === deleteTarget.id ? { ...s, kontakt_id: "" } : s));
+      toast.success(`Kontakten "${deleteTarget.navn}" ble slettet`);
+    } catch (err) {
+      console.error("Delete contact error:", err);
+      toast.error("Kunne ikke slette kontakten");
+    } finally {
+      setDeleting(false);
+      setDeleteDialogOpen(false);
+      setDeleteTarget(null);
+    }
+  };
 
   const selskap = selskaper.find(s => s.id === id);
   if (!selskap) {
@@ -89,6 +128,7 @@ export default function CompanyProfile() {
   };
 
   return (
+    <>
     <div className={`${isMobile ? "ml-0" : "ml-60"} min-h-screen bg-background transition-all duration-200`}>
       {/* Header */}
       <header className={`sticky top-0 z-40 bg-background/80 backdrop-blur-sm border-b ${isMobile ? "px-4 py-4 pl-14" : "px-8 py-5"}`}>
@@ -285,6 +325,10 @@ export default function CompanyProfile() {
                               <span className="text-muted-foreground text-xs">LinkedIn</span>
                               <Input value={k.linkedin || ""} onChange={e => updateKontakter(prev => prev.map(c => c.id === k.id ? { ...c, linkedin: e.target.value } : c))} className="h-8 text-sm" placeholder="LinkedIn URL" />
                             </div>
+                            <Button variant="ghost" size="sm" className="w-full mt-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+                              onClick={() => handleDeleteContact(k)}>
+                              <Trash2 className="w-4 h-4 mr-1" /> Slett kontakt
+                            </Button>
                           </div>
                         )}
                       </div>
@@ -369,5 +413,29 @@ export default function CompanyProfile() {
         </div>
       </main>
     </div>
+
+      {/* Delete contact dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Slett kontakt</DialogTitle>
+            <DialogDescription>
+              Er du sikker på at du vil slette kontakten «{deleteTarget?.navn}»?
+              {deleteRelations.length > 0 && (
+                <span className="block mt-2 text-warning">
+                  Denne kontakten er koblet til: {deleteRelations.join(", ")}. Koblingene vil bli fjernet.
+                </span>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)} disabled={deleting}>Avbryt</Button>
+            <Button variant="destructive" onClick={confirmDeleteContact} disabled={deleting}>
+              {deleting ? "Sletter..." : "Slett"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
