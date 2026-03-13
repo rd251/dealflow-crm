@@ -241,14 +241,36 @@ export default function CompanyProfile() {
                 <p className="text-xs text-muted-foreground">Ingen kontakter registrert</p>
               ) : (
                 <div className="space-y-3">
-                  {selskapKontakter.map(k => (
-                    <div key={k.id} className="p-3 bg-muted/50 rounded-lg space-y-1">
-                      <p className="font-medium text-sm">{k.navn}</p>
-                      {k.rolle && <p className="text-xs text-muted-foreground">{k.rolle}</p>}
-                      <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
-                        {k.e_post && <span className="flex items-center gap-1"><Mail className="w-3 h-3" /><span className="truncate">{k.e_post}</span></span>}
-                        {k.telefon && <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{k.telefon}</span>}
-                        {k.linkedin && <a href={k.linkedin} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-primary hover:underline"><Linkedin className="w-3 h-3" />LinkedIn</a>}
+              {selskapKontakter.map(k => (
+                    <div key={k.id} className="p-3 bg-muted/50 rounded-lg space-y-2">
+                      <div>
+                        <span className="text-muted-foreground text-xs">Navn</span>
+                        <Input value={k.navn} onChange={e => updateKontakter(prev => prev.map(c => c.id === k.id ? { ...c, navn: e.target.value } : c))} className="h-8 text-sm font-medium" />
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground text-xs">Rolle</span>
+                        <Input value={k.rolle || ""} onChange={e => updateKontakter(prev => prev.map(c => c.id === k.id ? { ...c, rolle: e.target.value } : c))} className="h-8 text-sm" placeholder="Rolle" />
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground text-xs">E-post</span>
+                        <div className="flex items-center gap-1">
+                          <Mail className="w-3 h-3 text-muted-foreground shrink-0" />
+                          <Input value={k.e_post || ""} onChange={e => updateKontakter(prev => prev.map(c => c.id === k.id ? { ...c, e_post: e.target.value } : c))} className="h-8 text-sm" placeholder="E-post" />
+                        </div>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground text-xs">Telefon</span>
+                        <div className="flex items-center gap-1">
+                          <Phone className="w-3 h-3 text-muted-foreground shrink-0" />
+                          <Input value={k.telefon || ""} onChange={e => updateKontakter(prev => prev.map(c => c.id === k.id ? { ...c, telefon: e.target.value } : c))} className="h-8 text-sm" placeholder="Telefon" />
+                        </div>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground text-xs">LinkedIn</span>
+                        <div className="flex items-center gap-1">
+                          <Linkedin className="w-3 h-3 text-muted-foreground shrink-0" />
+                          <Input value={k.linkedin || ""} onChange={e => updateKontakter(prev => prev.map(c => c.id === k.id ? { ...c, linkedin: e.target.value } : c))} className="h-8 text-sm" placeholder="LinkedIn URL" />
+                        </div>
                       </div>
                     </div>
                   ))}
