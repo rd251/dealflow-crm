@@ -63,27 +63,82 @@ export default function CompanyProfile() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
+  const API_URL = `${import.meta.env.VITE_SUPABASE_URL}/rest/v1`;
+  const API_HEADERS: HeadersInit = {
+    apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+    Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+    "Content-Type": "application/json",
+    Prefer: "return=minimal",
+  };
+
+  const requestJson = async <T,>(path: string, init?: RequestInit): Promise<T> => {
+    const response = await fetch(`${API_URL}${path}`, {
+      ...init,
+      headers: {
+        ...API_HEADERS,
+        ...(init?.headers || {}),
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(errorText || `Request failed (${response.status})`);
+    }
+
+    if (response.status === 204) {
+      return null as T;
+    }
+
+    const text = await response.text();
+    return (text ? JSON.parse(text) : null) as T;
+  };
+
   const handleDeleteContact = async (kontakt: Kontakt) => {
-    const relations: string[] = [];
-    const { data: smData } = await supabase.from("salgsmuligheter").select("id").eq("kontakt_id", kontakt.id).limit(1);
-    if (smData && smData.length > 0) relations.push("Salgsmuligheter");
-    const { data: aktData } = await supabase.from("aktiviteter").select("id").eq("kontakt_id", kontakt.id).limit(1);
-    if (aktData && aktData.length > 0) relations.push("Aktiviteter");
-    setDeleteTarget(kontakt);
-    setDeleteRelations(relations);
-    setExpandedContact(null);
-    setDeleteDialogOpen(true);
+    try {
+      const encodedId = encodeURIComponent(kontakt.id);
+      const [smData, aktData] = await Promise.all([
+        requestJson<Array<{ id: string }>>(`/salgsmuligheter?select=id&kontakt_id=eq.${encodedId}&limit=1`, { method: "GET" }),
+        requestJson<Array<{ id: string }>>(`/aktiviteter?select=id&kontakt_id=eq.${encodedId}&limit=1`, { method: "GET" }),
+      ]);
+
+      const relations: string[] = [];
+      if (smData?.length > 0) relations.push("Salgsmuligheter");
+      if (aktData?.length > 0) relations.push("Aktiviteter");
+
+      setDeleteTarget(kontakt);
+      setDeleteRelations(relations);
+      setExpandedContact(null);
+      setDeleteDialogOpen(true);
+    } catch (err) {
+      console.error("Delete contact relation check error:", err);
+      toast.error("Kunne ikke sjekke relasjoner for kontakten");
+    }
   };
 
   const confirmDeleteContact = async () => {
     if (!deleteTarget) return;
     setDeleting(true);
+
     try {
-      await supabase.from("salgsmuligheter").update({ kontakt_id: null }).eq("kontakt_id", deleteTarget.id);
-      await supabase.from("aktiviteter").update({ kontakt_id: null }).eq("kontakt_id", deleteTarget.id);
-      await supabase.from("kontakter").delete().eq("id", deleteTarget.id);
-      updateKontakter(prev => prev.filter(k => k.id !== deleteTarget.id));
+      const encodedId = encodeURIComponent(deleteTarget.id);
+
+      await requestJson(`/salgsmuligheter?kontakt_id=eq.${encodedId}`, {
+        method: "PATCH",
+        body: JSON.stringify({ kontakt_id: null }),
+      });
+
+      await requestJson(`/aktiviteter?kontakt_id=eq.${encodedId}`, {
+        method: "PATCH",
+        body: JSON.stringify({ kontakt_id: null }),
+      });
+
+      await requestJson(`/kontakter?id=eq.${encodedId}`, {
+        method: "DELETE",
+      });
+
       updateSalgsmuligheter(prev => prev.map(s => s.kontakt_id === deleteTarget.id ? { ...s, kontakt_id: "" } : s));
+      updateKontakter(prev => prev.filter(k => k.id !== deleteTarget.id));
+
       toast.success(`Kontakten "${deleteTarget.navn}" ble slettet`);
     } catch (err) {
       console.error("Delete contact error:", err);
