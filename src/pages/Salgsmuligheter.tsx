@@ -32,6 +32,7 @@ export default function Salgsmuligheter() {
   const isMobile = useIsMobile();
   const { salgsmuligheter, selskaper, kontakter, updateSalgsmuligheter, updateKontakter, vinnSalgsmulighet, tapSalgsmulighet, generateId } = useCrmStore();
   const [draggedId, setDraggedId] = useState<string | null>(null);
+  const [dragOverStage, setDragOverStage] = useState<string | null>(null);
   const [selectedSm, setSelectedSm] = useState<Salgsmulighet | null>(null);
   const [lossDialog, setLossDialog] = useState<string | null>(null);
   const [lossReason, setLossReason] = useState<Tapsaarsak>("Pris");
