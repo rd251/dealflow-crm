@@ -5,22 +5,31 @@ import { useCrmStore } from "@/hooks/use-crm-store";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Plus, Search, Mail, Phone, Linkedin, Users, Upload } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Plus, Search, Mail, Phone, Linkedin, Upload, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { Kontakt } from "@/data/crm-data";
 import DataImportDialog from "@/components/DataImportDialog";
 import ActivityLog from "@/components/ActivityLog";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export default function Contacts() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const { kontakter, selskaper, salgsmuligheter, updateKontakter, generateId } = useCrmStore();
+  const { kontakter, selskaper, salgsmuligheter, updateKontakter, updateSalgsmuligheter, generateId, refresh } = useCrmStore();
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Kontakt | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [form, setForm] = useState({ navn: "", selskap_id: "", rolle: "", e_post: "", telefon: "", linkedin: "", notater: "" });
+
+  // Delete state
+  const [deleteTarget, setDeleteTarget] = useState<Kontakt | null>(null);
+  const [deleteRelations, setDeleteRelations] = useState<string[]>([]);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const filtered = kontakter.filter(k =>
     k.navn.toLowerCase().includes(search.toLowerCase()) || k.e_post.toLowerCase().includes(search.toLowerCase())
@@ -37,6 +46,75 @@ export default function Contacts() {
 
   const currentKontakt = selected ? kontakter.find(k => k.id === selected.id) || selected : null;
   const relatedDeals = currentKontakt ? salgsmuligheter.filter(s => s.kontakt_id === currentKontakt.id || s.selskap_id === currentKontakt.selskap_id) : [];
+
+  // Check relations and open delete dialog
+  const handleDeleteClick = async (kontakt: Kontakt) => {
+    const relations: string[] = [];
+
+    // Check salgsmuligheter
+    const { data: smData } = await supabase.from("salgsmuligheter").select("id").eq("kontakt_id", kontakt.id).limit(1);
+    if (smData && smData.length > 0) relations.push("Salgsmuligheter");
+
+    // Check aktiviteter
+    const { data: aktData } = await supabase.from("aktiviteter").select("id").eq("kontakt_id", kontakt.id).limit(1);
+    if (aktData && aktData.length > 0) relations.push("Aktiviteter");
+
+    // Check if linked to a selskap
+    if (kontakt.selskap_id) relations.push("Selskaper");
+
+    setDeleteTarget(kontakt);
+    setDeleteRelations(relations);
+    setDeleteDialogOpen(true);
+  };
+
+  // Perform deletion
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      // Clear kontakt_id on salgsmuligheter
+      await supabase.from("salgsmuligheter").update({ kontakt_id: null }).eq("kontakt_id", deleteTarget.id);
+
+      // Clear kontakt_id on aktiviteter
+      await supabase.from("aktiviteter").update({ kontakt_id: null }).eq("kontakt_id", deleteTarget.id);
+
+      // Delete the contact
+      await supabase.from("kontakter").delete().eq("id", deleteTarget.id);
+
+      // Update local state
+      updateKontakter(prev => prev.filter(k => k.id !== deleteTarget.id));
+      updateSalgsmuligheter(prev => prev.map(s => s.kontakt_id === deleteTarget.id ? { ...s, kontakt_id: "" } : s));
+
+      if (selected?.id === deleteTarget.id) setSelected(null);
+
+      toast.success(`Kontakten "${deleteTarget.navn}" ble slettet`);
+    } catch (err) {
+      console.error("Delete contact error:", err);
+      toast.error("Kunne ikke slette kontakten");
+    } finally {
+      setDeleting(false);
+      setDeleteDialogOpen(false);
+      setDeleteTarget(null);
+    }
+  };
+
+  const ContactMenu = ({ kontakt, onEdit }: { kontakt: Kontakt; onEdit: () => void }) => (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={e => e.stopPropagation()}>
+          <MoreHorizontal className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={e => { e.stopPropagation(); onEdit(); }}>
+          <Pencil className="h-4 w-4 mr-2" />Rediger kontakt
+        </DropdownMenuItem>
+        <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={e => { e.stopPropagation(); handleDeleteClick(kontakt); }}>
+          <Trash2 className="h-4 w-4 mr-2" />Slett kontakt
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
 
   return (
     <PageShell
@@ -107,12 +185,12 @@ export default function Contacts() {
       {isMobile ? (
         <div className="space-y-3">
           {filtered.map(k => (
-            <div key={k.id} className="bg-card border rounded-xl p-4 space-y-2" onClick={() => setSelected(k)}>
+            <div key={k.id} className="bg-card border rounded-xl p-4 space-y-2">
               <div className="flex items-center justify-between">
-                <p className="font-semibold text-sm">{k.navn}</p>
-                {k.rolle && <span className="text-[10px] text-muted-foreground">{k.rolle}</span>}
+                <p className="font-semibold text-sm cursor-pointer" onClick={() => setSelected(k)}>{k.navn}</p>
+                <ContactMenu kontakt={k} onEdit={() => setSelected(k)} />
               </div>
-              <p className="text-xs text-muted-foreground" onClick={e => { e.stopPropagation(); navigate(`/selskaper/${k.selskap_id}`); }}>
+              <p className="text-xs text-muted-foreground cursor-pointer" onClick={() => navigate(`/selskaper/${k.selskap_id}`)}>
                 {getSelskapNavn(k.selskap_id)}
               </p>
               <div className="flex items-center gap-3 text-xs text-muted-foreground">
@@ -133,6 +211,7 @@ export default function Contacts() {
                 <th className="text-left px-4 py-3 font-medium">Rolle</th>
                 <th className="text-left px-4 py-3 font-medium">E-post</th>
                 <th className="text-left px-4 py-3 font-medium">Telefon</th>
+                <th className="w-10"></th>
               </tr>
             </thead>
             <tbody>
@@ -143,12 +222,46 @@ export default function Contacts() {
                   <td className="px-4 py-3 text-muted-foreground">{k.rolle}</td>
                   <td className="px-4 py-3 text-muted-foreground text-xs">{k.e_post}</td>
                   <td className="px-4 py-3 text-muted-foreground text-xs">{k.telefon}</td>
+                  <td className="px-4 py-3">
+                    <ContactMenu kontakt={k} onEdit={() => setSelected(k)} />
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       )}
+
+      {/* Delete confirmation dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Slett kontakt</DialogTitle>
+            <DialogDescription>
+              {deleteRelations.length > 0
+                ? "Dette vil fjerne kontakten fra alle relaterte objekter."
+                : `Er du sikker på at du vil slette "${deleteTarget?.navn}"?`
+              }
+            </DialogDescription>
+          </DialogHeader>
+          {deleteRelations.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">Kontakten er koblet til:</p>
+              <ul className="list-disc list-inside text-sm space-y-1">
+                {deleteRelations.map(r => (
+                  <li key={r}>{r}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)} disabled={deleting}>Avbryt</Button>
+            <Button variant="destructive" onClick={confirmDelete} disabled={deleting}>
+              {deleting ? "Sletter..." : "Slett kontakt"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Sheet open={!!currentKontakt} onOpenChange={open => !open && setSelected(null)}>
         <SheetContent className="w-full sm:w-[400px] sm:max-w-[500px] overflow-y-auto">
