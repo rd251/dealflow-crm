@@ -154,8 +154,10 @@ export default function Salgsmuligheter() {
               const stageDeals = openDeals.filter(d => d.status === stage);
               const stageValue = stageDeals.reduce((s, d) => s + beregnTotalKontraktsverdi(d), 0);
               return (
-                <div key={stage} className={`${isMobile ? "min-w-[240px] w-[240px]" : "min-w-[280px] w-[280px]"} flex-shrink-0 flex flex-col`}
-                  onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; }}
+                <div key={stage} className={`${isMobile ? "min-w-[240px] w-[240px]" : "min-w-[280px] w-[280px]"} flex-shrink-0 flex flex-col rounded-xl p-2 -m-2 transition-colors ${dragOverStage === stage ? "bg-primary/10 ring-2 ring-primary/30" : ""}`}
+                  onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; setDragOverStage(stage); }}
+                  onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOverStage(null); }}
+                  onDragEnd={() => { setDragOverStage(null); setDraggedId(null); }}
                   onDrop={e => handleDrop(e, stage)}>
                   <div className="mb-3 flex items-center gap-2">
                     <div className={`w-2.5 h-2.5 rounded-full ${statusColors[stage]}`} />
