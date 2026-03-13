@@ -53,12 +53,48 @@ export default function CompanyProfile() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const {
-    selskaper, updateSelskaper, kontakter, updateKontakter, salgsmuligheter, prosjekter, oppgaver, generateId,
+    selskaper, updateSelskaper, kontakter, updateKontakter, salgsmuligheter, updateSalgsmuligheter, prosjekter, oppgaver, generateId,
   } = useCrmStore();
 
   const [showAddContact, setShowAddContact] = useState(false);
   const [expandedContact, setExpandedContact] = useState<string | null>(null);
   const [contactForm, setContactForm] = useState({ navn: "", rolle: "", e_post: "", telefon: "", linkedin: "" });
+  const [deleteTarget, setDeleteTarget] = useState<Kontakt | null>(null);
+  const [deleteRelations, setDeleteRelations] = useState<string[]>([]);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDeleteContact = async (kontakt: Kontakt) => {
+    const relations: string[] = [];
+    const { data: smData } = await supabase.from("salgsmuligheter").select("id").eq("kontakt_id", kontakt.id).limit(1);
+    if (smData && smData.length > 0) relations.push("Salgsmuligheter");
+    const { data: aktData } = await supabase.from("aktiviteter").select("id").eq("kontakt_id", kontakt.id).limit(1);
+    if (aktData && aktData.length > 0) relations.push("Aktiviteter");
+    setDeleteTarget(kontakt);
+    setDeleteRelations(relations);
+    setExpandedContact(null);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteContact = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await supabase.from("salgsmuligheter").update({ kontakt_id: null }).eq("kontakt_id", deleteTarget.id);
+      await supabase.from("aktiviteter").update({ kontakt_id: null }).eq("kontakt_id", deleteTarget.id);
+      await supabase.from("kontakter").delete().eq("id", deleteTarget.id);
+      updateKontakter(prev => prev.filter(k => k.id !== deleteTarget.id));
+      updateSalgsmuligheter(prev => prev.map(s => s.kontakt_id === deleteTarget.id ? { ...s, kontakt_id: "" } : s));
+      toast.success(`Kontakten "${deleteTarget.navn}" ble slettet`);
+    } catch (err) {
+      console.error("Delete contact error:", err);
+      toast.error("Kunne ikke slette kontakten");
+    } finally {
+      setDeleting(false);
+      setDeleteDialogOpen(false);
+      setDeleteTarget(null);
+    }
+  };
 
   const selskap = selskaper.find(s => s.id === id);
   if (!selskap) {
