@@ -32,6 +32,7 @@ export default function Salgsmuligheter() {
   const isMobile = useIsMobile();
   const { salgsmuligheter, selskaper, kontakter, updateSalgsmuligheter, updateKontakter, vinnSalgsmulighet, tapSalgsmulighet, generateId } = useCrmStore();
   const [draggedId, setDraggedId] = useState<string | null>(null);
+  const [dragOverStage, setDragOverStage] = useState<string | null>(null);
   const [selectedSm, setSelectedSm] = useState<Salgsmulighet | null>(null);
   const [lossDialog, setLossDialog] = useState<string | null>(null);
   const [lossReason, setLossReason] = useState<Tapsaarsak>("Pris");
@@ -42,6 +43,7 @@ export default function Salgsmuligheter() {
 
   const handleDrop = (e: React.DragEvent, stage: SalgsmulighetStatus) => {
     e.preventDefault();
+    setDragOverStage(null);
     if (!draggedId) return;
     if (stage === "Vunnet") { vinnSalgsmulighet(draggedId); }
     else if (stage === "Tapt") { setLossDialog(draggedId); }
@@ -152,8 +154,10 @@ export default function Salgsmuligheter() {
               const stageDeals = openDeals.filter(d => d.status === stage);
               const stageValue = stageDeals.reduce((s, d) => s + beregnTotalKontraktsverdi(d), 0);
               return (
-                <div key={stage} className={`${isMobile ? "min-w-[240px] w-[240px]" : "min-w-[280px] w-[280px]"} flex-shrink-0 flex flex-col`}
-                  onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; }}
+                <div key={stage} className={`${isMobile ? "min-w-[240px] w-[240px]" : "min-w-[280px] w-[280px]"} flex-shrink-0 flex flex-col rounded-xl p-2 -m-2 transition-colors ${dragOverStage === stage ? "bg-primary/10 ring-2 ring-primary/30" : ""}`}
+                  onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; setDragOverStage(stage); }}
+                  onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOverStage(null); }}
+                  onDragEnd={() => { setDragOverStage(null); setDraggedId(null); }}
                   onDrop={e => handleDrop(e, stage)}>
                   <div className="mb-3 flex items-center gap-2">
                     <div className={`w-2.5 h-2.5 rounded-full ${statusColors[stage]}`} />
@@ -200,8 +204,10 @@ export default function Salgsmuligheter() {
             })}
             {/* Vunnet / Tapt drop zones */}
             {(["Vunnet", "Tapt"] as const).map(stage => (
-              <div key={stage} className={`${isMobile ? "min-w-[160px] w-[160px]" : "min-w-[200px] w-[200px]"} flex-shrink-0`}
-                onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; }}
+              <div key={stage} className={`${isMobile ? "min-w-[160px] w-[160px]" : "min-w-[200px] w-[200px]"} flex-shrink-0 rounded-xl p-2 -m-2 transition-colors ${dragOverStage === stage ? (stage === "Vunnet" ? "bg-success/10 ring-2 ring-success/30" : "bg-destructive/10 ring-2 ring-destructive/30") : ""}`}
+                onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; setDragOverStage(stage); }}
+                onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOverStage(null); }}
+                onDragEnd={() => { setDragOverStage(null); setDraggedId(null); }}
                 onDrop={e => handleDrop(e, stage)}>
                 <div className="mb-3 flex items-center gap-2">
                   <div className={`w-2.5 h-2.5 rounded-full ${statusColors[stage]}`} />
