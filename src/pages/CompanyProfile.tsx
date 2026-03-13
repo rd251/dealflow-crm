@@ -54,6 +54,7 @@ export default function CompanyProfile() {
   } = useCrmStore();
 
   const [showAddContact, setShowAddContact] = useState(false);
+  const [expandedContact, setExpandedContact] = useState<string | null>(null);
   const [contactForm, setContactForm] = useState({ navn: "", rolle: "", e_post: "", telefon: "", linkedin: "" });
 
   const selskap = selskaper.find(s => s.id === id);
@@ -241,39 +242,54 @@ export default function CompanyProfile() {
                 <p className="text-xs text-muted-foreground">Ingen kontakter registrert</p>
               ) : (
                 <div className="space-y-3">
-              {selskapKontakter.map(k => (
-                    <div key={k.id} className="p-3 bg-muted/50 rounded-lg space-y-2">
-                      <div>
-                        <span className="text-muted-foreground text-xs">Navn</span>
-                        <Input value={k.navn} onChange={e => updateKontakter(prev => prev.map(c => c.id === k.id ? { ...c, navn: e.target.value } : c))} className="h-8 text-sm font-medium" />
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground text-xs">Rolle</span>
-                        <Input value={k.rolle || ""} onChange={e => updateKontakter(prev => prev.map(c => c.id === k.id ? { ...c, rolle: e.target.value } : c))} className="h-8 text-sm" placeholder="Rolle" />
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground text-xs">E-post</span>
-                        <div className="flex items-center gap-1">
-                          <Mail className="w-3 h-3 text-muted-foreground shrink-0" />
-                          <Input value={k.e_post || ""} onChange={e => updateKontakter(prev => prev.map(c => c.id === k.id ? { ...c, e_post: e.target.value } : c))} className="h-8 text-sm" placeholder="E-post" />
+              {selskapKontakter.map(k => {
+                    const isExpanded = expandedContact === k.id;
+                    return (
+                      <div key={k.id} className="p-3 bg-muted/50 rounded-lg cursor-pointer hover:bg-muted/80 transition-colors"
+                        onClick={() => setExpandedContact(isExpanded ? null : k.id)}>
+                        {/* Compact card view */}
+                        <div className="flex items-center justify-between">
+                          <div className="min-w-0">
+                            <p className="font-medium text-sm">{k.navn}</p>
+                            {k.rolle && <p className="text-xs text-muted-foreground">{k.rolle}</p>}
+                          </div>
+                          <ChevronRight className={`w-4 h-4 text-muted-foreground shrink-0 transition-transform ${isExpanded ? "rotate-90" : ""}`} />
                         </div>
+                        {!isExpanded && (
+                          <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap mt-1">
+                            {k.e_post && <span className="flex items-center gap-1"><Mail className="w-3 h-3" /><span className="truncate">{k.e_post}</span></span>}
+                            {k.telefon && <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{k.telefon}</span>}
+                            {k.linkedin && <span className="flex items-center gap-1"><Linkedin className="w-3 h-3" />LinkedIn</span>}
+                          </div>
+                        )}
+                        {/* Expanded edit view */}
+                        {isExpanded && (
+                          <div className="mt-3 space-y-2 border-t pt-3" onClick={e => e.stopPropagation()}>
+                            <div>
+                              <span className="text-muted-foreground text-xs">Navn</span>
+                              <Input value={k.navn} onChange={e => updateKontakter(prev => prev.map(c => c.id === k.id ? { ...c, navn: e.target.value } : c))} className="h-8 text-sm" />
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground text-xs">Rolle</span>
+                              <Input value={k.rolle || ""} onChange={e => updateKontakter(prev => prev.map(c => c.id === k.id ? { ...c, rolle: e.target.value } : c))} className="h-8 text-sm" placeholder="Rolle" />
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground text-xs">E-post</span>
+                              <Input value={k.e_post || ""} onChange={e => updateKontakter(prev => prev.map(c => c.id === k.id ? { ...c, e_post: e.target.value } : c))} className="h-8 text-sm" placeholder="E-post" />
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground text-xs">Telefon</span>
+                              <Input value={k.telefon || ""} onChange={e => updateKontakter(prev => prev.map(c => c.id === k.id ? { ...c, telefon: e.target.value } : c))} className="h-8 text-sm" placeholder="Telefon" />
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground text-xs">LinkedIn</span>
+                              <Input value={k.linkedin || ""} onChange={e => updateKontakter(prev => prev.map(c => c.id === k.id ? { ...c, linkedin: e.target.value } : c))} className="h-8 text-sm" placeholder="LinkedIn URL" />
+                            </div>
+                          </div>
+                        )}
                       </div>
-                      <div>
-                        <span className="text-muted-foreground text-xs">Telefon</span>
-                        <div className="flex items-center gap-1">
-                          <Phone className="w-3 h-3 text-muted-foreground shrink-0" />
-                          <Input value={k.telefon || ""} onChange={e => updateKontakter(prev => prev.map(c => c.id === k.id ? { ...c, telefon: e.target.value } : c))} className="h-8 text-sm" placeholder="Telefon" />
-                        </div>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground text-xs">LinkedIn</span>
-                        <div className="flex items-center gap-1">
-                          <Linkedin className="w-3 h-3 text-muted-foreground shrink-0" />
-                          <Input value={k.linkedin || ""} onChange={e => updateKontakter(prev => prev.map(c => c.id === k.id ? { ...c, linkedin: e.target.value } : c))} className="h-8 text-sm" placeholder="LinkedIn URL" />
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
