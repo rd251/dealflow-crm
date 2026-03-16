@@ -2,6 +2,7 @@
 import { useState, useCallback, useEffect, useRef, createContext, useContext, createElement, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { toast } from "sonner";
 import {
   Lead, Salgsmulighet, Prosjekt, Selskap, Kontakt, Oppgave, Partner,
 } from "@/data/crm-data";
