@@ -188,39 +188,68 @@ function useCrmStoreInternal() {
     'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
     'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
     'Content-Type': 'application/json',
-    'Prefer': 'return=minimal',
+  };
+
+  const sanitizePayload = (data: Record<string, any>) =>
+    Object.fromEntries(Object.entries(data).filter(([, value]) => value !== undefined));
+
+  const readResponseBody = async (res: Response) => {
+    const text = await res.text();
+    return text ? JSON.parse(text) : null;
   };
 
   const fetchTable = async (table: string) => {
-    const res = await fetch(`${API_URL}/${table}?select=*`, { headers: API_HEADERS });
-    if (!res.ok) throw new Error(`Failed to fetch ${table}: ${res.status}`);
-    return res.json();
+    const res = await fetch(`${API_URL}/${table}?select=*`, {
+      headers: { ...API_HEADERS, 'Prefer': 'return=representation' },
+      cache: 'no-store',
+    });
+    if (!res.ok) throw new Error(`Failed to fetch ${table}: ${res.status} ${await res.text()}`);
+    return readResponseBody(res);
   };
 
   const dbUpsert = async (table: string, data: Record<string, any>) => {
-    const res = await fetch(`${API_URL}/${table}`, {
+    const res = await fetch(`${API_URL}/${table}?on_conflict=id`, {
       method: 'POST',
-      headers: { ...API_HEADERS, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
-      body: JSON.stringify(data),
+      headers: { ...API_HEADERS, 'Prefer': 'resolution=merge-duplicates,return=representation' },
+      body: JSON.stringify(sanitizePayload(data)),
     });
-    if (!res.ok) console.error(`Upsert ${table} error:`, res.status, await res.text());
+
+    if (!res.ok) {
+      throw new Error(`Upsert ${table} failed: ${res.status} ${await res.text()}`);
+    }
+
+    const rows = await readResponseBody(res);
+    if (!Array.isArray(rows) || rows.length === 0) {
+      throw new Error(`Upsert ${table} returned no rows`);
+    }
   };
 
   const dbUpdate = async (table: string, id: string, data: Record<string, any>) => {
-    const res = await fetch(`${API_URL}/${table}?id=eq.${id}`, {
+    const res = await fetch(`${API_URL}/${table}?id=eq.${encodeURIComponent(id)}`, {
       method: 'PATCH',
-      headers: API_HEADERS,
-      body: JSON.stringify(data),
+      headers: { ...API_HEADERS, 'Prefer': 'return=representation' },
+      body: JSON.stringify(sanitizePayload(data)),
     });
-    if (!res.ok) console.error(`Update ${table} error:`, res.status, await res.text());
+
+    if (!res.ok) {
+      throw new Error(`Update ${table} failed: ${res.status} ${await res.text()}`);
+    }
+
+    const rows = await readResponseBody(res);
+    if (!Array.isArray(rows) || rows.length === 0) {
+      throw new Error(`Update ${table} matched no rows for id ${id}`);
+    }
   };
 
   const dbDelete = async (table: string, id: string) => {
-    const res = await fetch(`${API_URL}/${table}?id=eq.${id}`, {
+    const res = await fetch(`${API_URL}/${table}?id=eq.${encodeURIComponent(id)}`, {
       method: 'DELETE',
-      headers: API_HEADERS,
+      headers: { ...API_HEADERS, 'Prefer': 'return=representation' },
     });
-    if (!res.ok) console.error(`Delete ${table} error:`, res.status, await res.text());
+
+    if (!res.ok) {
+      throw new Error(`Delete ${table} failed: ${res.status} ${await res.text()}`);
+    }
   };
 
   // Fetch all data (robust: one failed table should not block all data)
@@ -483,6 +512,8 @@ function useCrmStoreInternal() {
           partner_id: emptyToNull(item.partner_id), partner_provisjon: item.partner_provisjon,
           partner_kostnad: item.partner_kostnad, netto_inntekt: item.netto_inntekt,
           rolle_i_firma: emptyToNull(item.rolle_i_firma), use_case: emptyToNull(item.use_case),
+          kontaktperson: emptyToNull(item.kontaktperson), e_post: emptyToNull(item.e_post),
+          telefon: emptyToNull(item.telefon),
         });
       }
     }
@@ -502,6 +533,8 @@ function useCrmStoreInternal() {
           partner_id: emptyToNull(item.partner_id), partner_provisjon: item.partner_provisjon,
           partner_kostnad: item.partner_kostnad, netto_inntekt: item.netto_inntekt,
           rolle_i_firma: emptyToNull(item.rolle_i_firma), use_case: emptyToNull(item.use_case),
+          kontaktperson: emptyToNull(item.kontaktperson), e_post: emptyToNull(item.e_post),
+          telefon: emptyToNull(item.telefon),
         });
       }
     }
