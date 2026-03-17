@@ -603,7 +603,7 @@ function useCrmStoreInternal() {
     for (const item of next) {
       if (!prevIds.has(item.id)) {
         await dbUpsert("oppgaver", {
-          id: item.id, oppgave: item.oppgave, user_id: user?.id ?? "00000000-0000-0000-0000-000000000000",
+          id: item.id, oppgave: item.oppgave, user_id: user?.id ?? null,
           lead_id: emptyToNull(item.lead_id), selskap_id: emptyToNull(item.selskap_id),
           salgsmulighet_id: emptyToNull(item.salgsmulighet_id), ansvarlig: emptyToNull(item.ansvarlig),
           frist: emptyToNull(item.frist), prioritet: item.prioritet,
