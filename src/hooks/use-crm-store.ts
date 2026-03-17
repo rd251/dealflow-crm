@@ -209,47 +209,58 @@ function useCrmStoreInternal() {
   };
 
   const dbUpsert = async (table: string, data: Record<string, any>) => {
+    const payload = sanitizePayload(data);
+    console.log(`[CRM-SYNC] UPSERT ${table}`, JSON.stringify(payload).substring(0, 200));
     const res = await fetch(`${API_URL}/${table}?on_conflict=id`, {
       method: 'POST',
       headers: { ...API_HEADERS, 'Prefer': 'resolution=merge-duplicates,return=representation' },
-      body: JSON.stringify(sanitizePayload(data)),
+      body: JSON.stringify(payload),
     });
 
+    const bodyText = await res.text();
+    console.log(`[CRM-SYNC] UPSERT ${table} response: ${res.status}`, bodyText.substring(0, 200));
     if (!res.ok) {
-      throw new Error(`Upsert ${table} failed: ${res.status} ${await res.text()}`);
+      throw new Error(`Upsert ${table} failed: ${res.status} ${bodyText}`);
     }
 
-    const rows = await readResponseBody(res);
+    const rows = bodyText ? JSON.parse(bodyText) : null;
     if (!Array.isArray(rows) || rows.length === 0) {
       throw new Error(`Upsert ${table} returned no rows`);
     }
   };
 
   const dbUpdate = async (table: string, id: string, data: Record<string, any>) => {
+    const payload = sanitizePayload(data);
+    console.log(`[CRM-SYNC] UPDATE ${table} id=${id}`, JSON.stringify(payload).substring(0, 200));
     const res = await fetch(`${API_URL}/${table}?id=eq.${encodeURIComponent(id)}`, {
       method: 'PATCH',
       headers: { ...API_HEADERS, 'Prefer': 'return=representation' },
-      body: JSON.stringify(sanitizePayload(data)),
+      body: JSON.stringify(payload),
     });
 
+    const bodyText = await res.text();
+    console.log(`[CRM-SYNC] UPDATE ${table} response: ${res.status}`, bodyText.substring(0, 200));
     if (!res.ok) {
-      throw new Error(`Update ${table} failed: ${res.status} ${await res.text()}`);
+      throw new Error(`Update ${table} failed: ${res.status} ${bodyText}`);
     }
 
-    const rows = await readResponseBody(res);
+    const rows = bodyText ? JSON.parse(bodyText) : null;
     if (!Array.isArray(rows) || rows.length === 0) {
       throw new Error(`Update ${table} matched no rows for id ${id}`);
     }
   };
 
   const dbDelete = async (table: string, id: string) => {
+    console.log(`[CRM-SYNC] DELETE ${table} id=${id}`);
     const res = await fetch(`${API_URL}/${table}?id=eq.${encodeURIComponent(id)}`, {
       method: 'DELETE',
       headers: { ...API_HEADERS, 'Prefer': 'return=representation' },
     });
 
+    const bodyText = await res.text();
+    console.log(`[CRM-SYNC] DELETE ${table} response: ${res.status}`, bodyText.substring(0, 200));
     if (!res.ok) {
-      throw new Error(`Delete ${table} failed: ${res.status} ${await res.text()}`);
+      throw new Error(`Delete ${table} failed: ${res.status} ${bodyText}`);
     }
   };
 
