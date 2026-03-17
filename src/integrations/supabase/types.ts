@@ -224,7 +224,7 @@ export type Database = {
           selskap_id: string | null
           status: Database["public"]["Enums"]["oppgave_status"] | null
           updated_at: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           ansvarlig?: string | null
@@ -240,7 +240,7 @@ export type Database = {
           selskap_id?: string | null
           status?: Database["public"]["Enums"]["oppgave_status"] | null
           updated_at?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           ansvarlig?: string | null
@@ -256,7 +256,7 @@ export type Database = {
           selskap_id?: string | null
           status?: Database["public"]["Enums"]["oppgave_status"] | null
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {
