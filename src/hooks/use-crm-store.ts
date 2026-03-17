@@ -191,8 +191,15 @@ function useCrmStoreInternal() {
     'Content-Type': 'application/json',
   };
 
+  // Foreign-key columns that must be null (not empty string) when unset
+  const FK_COLUMNS = new Set(["selskap_id", "kontakt_id", "partner_id", "salgsmulighet_id", "lead_id", "prosjekt_id", "user_id"]);
+
   const sanitizePayload = (data: Record<string, any>) =>
-    Object.fromEntries(Object.entries(data).filter(([, value]) => value !== undefined));
+    Object.fromEntries(
+      Object.entries(data)
+        .filter(([, value]) => value !== undefined)
+        .map(([key, value]) => [key, FK_COLUMNS.has(key) && value === "" ? null : value])
+    );
 
   const readResponseBody = async (res: Response) => {
     const text = await res.text();
