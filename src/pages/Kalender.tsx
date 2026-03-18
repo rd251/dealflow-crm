@@ -123,6 +123,7 @@ export default function Kalender() {
       setSalgsmulighetListe(sm);
       setLeadListe(l);
     }).catch(() => {});
+  }, []);
 
   const fetchEvents = useCallback(async () => {
     let from: string, to: string;
