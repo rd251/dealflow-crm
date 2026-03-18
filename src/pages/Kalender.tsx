@@ -704,6 +704,9 @@ export default function Kalender() {
                   onDatoChange={setEditDato}
                   onStartTidChange={setEditStartTid}
                   onSluttTidChange={setEditSluttTid}
+                  deltakere={editDeltakere}
+                  onDeltakereChange={setEditDeltakere}
+                  kontaktListe={kontaktListe}
                 />
               )}
               {selectedEvent.type === "task" && (
