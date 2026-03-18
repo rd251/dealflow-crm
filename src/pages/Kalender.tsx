@@ -62,6 +62,7 @@ export default function Kalender() {
   const [linkedKontakt, setLinkedKontakt] = useState<any>(null);
   const [linkedSalgsmulighet, setLinkedSalgsmulighet] = useState<any>(null);
   const [linkedLead, setLinkedLead] = useState<any>(null);
+  const [linkedPartner, setLinkedPartner] = useState<any>(null);
 
   // Entity lists for linking
   const [selskapListe, setSelskapListe] = useState<{ id: string; firmanavn: string }[]>([]);
