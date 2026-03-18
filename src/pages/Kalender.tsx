@@ -279,6 +279,7 @@ export default function Kalender() {
     setLinkedKontakt(null);
     setLinkedSalgsmulighet(null);
     setLinkedLead(null);
+    setLinkedPartner(null);
 
     const fetches: Promise<void>[] = [];
 
