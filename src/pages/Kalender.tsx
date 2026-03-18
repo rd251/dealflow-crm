@@ -332,6 +332,7 @@ export default function Kalender() {
           beskrivelse: newMeetingBeskrivelse.trim(),
           start_tid: `${newMeetingDato}T${newMeetingStartTid}:00`,
           slutt_tid: `${newMeetingDato}T${newMeetingSluttTid}:00`,
+          deltakere: newMeetingDeltakere,
         }),
       });
       setCreateOpen(false);
