@@ -10,6 +10,7 @@ import { ChevronLeft, ChevronRight, Clock, Users, CalendarDays, ListTodo, Pencil
 import { format, startOfWeek, startOfMonth, addDays, addWeeks, subWeeks, addMonths, subMonths, isSameDay, getDaysInMonth, getDay } from "date-fns";
 import { nb } from "date-fns/locale";
 import MeetingFields from "@/components/MeetingFields";
+import EntityLinkPicker from "@/components/EntityLinkPicker";
 
 const API_URL = import.meta.env.VITE_SUPABASE_URL + '/rest/v1';
 const API_HEADERS = {
