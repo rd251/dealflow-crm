@@ -535,12 +535,14 @@ export default function Kalender() {
                         >
                           <EventCard event={event} />
                         </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   );
                 })}
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
