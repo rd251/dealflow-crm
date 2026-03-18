@@ -61,6 +61,7 @@ export default function Kalender() {
   const [newMeetingStartTid, setNewMeetingStartTid] = useState("09:00");
   const [newMeetingSluttTid, setNewMeetingSluttTid] = useState("10:00");
   const [newMeetingBeskrivelse, setNewMeetingBeskrivelse] = useState("");
+  const [newMeetingDeltakere, setNewMeetingDeltakere] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
 
   // Drag state
