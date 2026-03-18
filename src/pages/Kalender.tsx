@@ -726,6 +726,99 @@ export default function Kalender() {
               <Badge variant="secondary" className="text-xs">
                 {selectedEvent.type === "meeting" ? "Møte" : selectedEvent.type === "task" ? "Oppgave" : "Aktivitet"}
               </Badge>
+
+              {/* Tilknyttet info */}
+              <div className="space-y-3 pt-3 border-t">
+                <h4 className="text-xs font-semibold uppercase text-muted-foreground tracking-wide">Tilknyttet informasjon</h4>
+
+                {/* Selskap */}
+                <div className="rounded-lg border p-3 space-y-1">
+                  <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                    <Building2 className="w-3.5 h-3.5" /> Selskap
+                  </div>
+                  {linkedSelskap ? (
+                    <button
+                      className="text-sm font-medium text-primary hover:underline flex items-center gap-1"
+                      onClick={() => { setDrawerOpen(false); navigate(`/kundeforhold/${linkedSelskap.id}`); }}
+                    >
+                      {linkedSelskap.firmanavn}
+                      <ExternalLink className="w-3 h-3" />
+                    </button>
+                  ) : (
+                    <span className="text-xs text-muted-foreground italic">Ikke tilknyttet</span>
+                  )}
+                </div>
+
+                {/* Kontaktperson */}
+                <div className="rounded-lg border p-3 space-y-1.5">
+                  <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                    <UserCircle className="w-3.5 h-3.5" /> Kontaktperson
+                  </div>
+                  {linkedKontakt ? (
+                    <div className="space-y-0.5">
+                      <p className="text-sm font-medium">{linkedKontakt.navn}</p>
+                      {linkedKontakt.rolle && <p className="text-xs text-muted-foreground">{linkedKontakt.rolle}</p>}
+                      {linkedKontakt.e_post && (
+                        <a href={`mailto:${linkedKontakt.e_post}`} className="text-xs text-primary hover:underline flex items-center gap-1">
+                          <Mail className="w-3 h-3" /> {linkedKontakt.e_post}
+                        </a>
+                      )}
+                      {linkedKontakt.telefon && (
+                        <a href={`tel:${linkedKontakt.telefon}`} className="text-xs text-primary hover:underline flex items-center gap-1">
+                          <Phone className="w-3 h-3" /> {linkedKontakt.telefon}
+                        </a>
+                      )}
+                    </div>
+                  ) : (
+                    <span className="text-xs text-muted-foreground italic">Ikke tilknyttet</span>
+                  )}
+                </div>
+
+                {/* Salgsmulighet */}
+                {(linkedSalgsmulighet || selectedEvent.raw?.salgsmulighet_id !== undefined) && (
+                  <div className="rounded-lg border p-3 space-y-1">
+                    <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                      <Briefcase className="w-3.5 h-3.5" /> Salgsmulighet
+                    </div>
+                    {linkedSalgsmulighet ? (
+                      <div>
+                        <p className="text-sm font-medium">{linkedSalgsmulighet.navn}</p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <Badge variant="outline" className="text-[10px]">{linkedSalgsmulighet.status}</Badge>
+                          {linkedSalgsmulighet.forventet_mrr > 0 && (
+                            <span className="text-[10px] text-muted-foreground">{linkedSalgsmulighet.forventet_mrr.toLocaleString("nb-NO")} kr/mnd</span>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-muted-foreground italic">Ikke tilknyttet</span>
+                    )}
+                  </div>
+                )}
+
+                {/* Lead */}
+                {(linkedLead || selectedEvent.raw?.lead_id !== undefined) && (
+                  <div className="rounded-lg border p-3 space-y-1">
+                    <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                      <Users className="w-3.5 h-3.5" /> Lead
+                    </div>
+                    {linkedLead ? (
+                      <div>
+                        <p className="text-sm font-medium">{linkedLead.firmanavn}</p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <Badge variant="outline" className="text-[10px]">{linkedLead.status}</Badge>
+                          {linkedLead.kontaktperson && (
+                            <span className="text-[10px] text-muted-foreground">{linkedLead.kontaktperson}</span>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-muted-foreground italic">Ikke tilknyttet</span>
+                    )}
+                  </div>
+                )}
+              </div>
+
               <div className="flex gap-2 pt-4 border-t">
                 <Button variant="outline" size="sm" className="gap-1.5" onClick={startEditing}>
                   <Pencil className="w-3.5 h-3.5" /> Rediger
