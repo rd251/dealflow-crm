@@ -93,6 +93,7 @@ export default function Kalender() {
         const map: Record<string, string> = {};
         data.forEach(k => { map[k.id] = k.navn; });
         setKontakter(map);
+        setKontaktListe(data.map(k => ({ id: k.id, navn: k.navn })));
       })
       .catch(() => {});
   }, []);
