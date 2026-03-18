@@ -766,6 +766,9 @@ export default function Kalender() {
               onDatoChange={setNewMeetingDato}
               onStartTidChange={setNewMeetingStartTid}
               onSluttTidChange={setNewMeetingSluttTid}
+              deltakere={newMeetingDeltakere}
+              onDeltakereChange={setNewMeetingDeltakere}
+              kontaktListe={kontaktListe}
             />
             <Textarea
               placeholder="Beskrivelse..."
