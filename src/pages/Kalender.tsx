@@ -37,6 +37,7 @@ const TASK_HIGH_COLOR = "bg-destructive/15 border-destructive text-destructive";
 const ACTIVITY_COLOR = "bg-sky-500/15 border-sky-500 text-sky-800 dark:text-sky-300";
 
 export default function Kalender() {
+  const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<"week" | "month">("week");
   const [events, setEvents] = useState<CalendarEvent[]>([]);
@@ -54,6 +55,12 @@ export default function Kalender() {
   const [editSluttTid, setEditSluttTid] = useState("");
   const [editSaving, setEditSaving] = useState(false);
   const [editDeltakere, setEditDeltakere] = useState<string[]>([]);
+
+  // Linked entity details for drawer
+  const [linkedSelskap, setLinkedSelskap] = useState<any>(null);
+  const [linkedKontakt, setLinkedKontakt] = useState<any>(null);
+  const [linkedSalgsmulighet, setLinkedSalgsmulighet] = useState<any>(null);
+  const [linkedLead, setLinkedLead] = useState<any>(null);
 
   // Create meeting dialog
   const [createOpen, setCreateOpen] = useState(false);
