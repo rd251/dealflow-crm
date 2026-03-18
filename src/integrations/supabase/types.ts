@@ -16,9 +16,13 @@ export type Database = {
     Tables: {
       aktiviteter: {
         Row: {
+          aktivitet_kilde: string | null
           beskrivelse: string
           created_at: string
           dato: string
+          deltakere: string[] | null
+          ekstern_id: string | null
+          ekstern_provider: string | null
           id: string
           kontakt_id: string | null
           lead_id: string | null
@@ -26,13 +30,20 @@ export type Database = {
           prosjekt_id: string | null
           salgsmulighet_id: string | null
           selskap_id: string | null
+          slutt_tid: string | null
+          start_tid: string | null
+          tittel: string | null
           type: Database["public"]["Enums"]["aktivitet_type"]
           updated_at: string
         }
         Insert: {
+          aktivitet_kilde?: string | null
           beskrivelse?: string
           created_at?: string
           dato?: string
+          deltakere?: string[] | null
+          ekstern_id?: string | null
+          ekstern_provider?: string | null
           id?: string
           kontakt_id?: string | null
           lead_id?: string | null
@@ -40,13 +51,20 @@ export type Database = {
           prosjekt_id?: string | null
           salgsmulighet_id?: string | null
           selskap_id?: string | null
+          slutt_tid?: string | null
+          start_tid?: string | null
+          tittel?: string | null
           type: Database["public"]["Enums"]["aktivitet_type"]
           updated_at?: string
         }
         Update: {
+          aktivitet_kilde?: string | null
           beskrivelse?: string
           created_at?: string
           dato?: string
+          deltakere?: string[] | null
+          ekstern_id?: string | null
+          ekstern_provider?: string | null
           id?: string
           kontakt_id?: string | null
           lead_id?: string | null
@@ -54,6 +72,9 @@ export type Database = {
           prosjekt_id?: string | null
           salgsmulighet_id?: string | null
           selskap_id?: string | null
+          slutt_tid?: string | null
+          start_tid?: string | null
+          tittel?: string | null
           type?: Database["public"]["Enums"]["aktivitet_type"]
           updated_at?: string
         }
