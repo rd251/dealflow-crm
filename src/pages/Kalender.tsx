@@ -139,7 +139,7 @@ export default function Kalender() {
       }
 
       const tasksRes = await fetch(
-        `${API_URL}/oppgaver?frist=gte.${fromDate}&frist=lte.${toDate}&status=neq.Ferdig&select=id,oppgave,frist,prioritet,ansvarlig,notater`,
+        `${API_URL}/oppgaver?frist=gte.${fromDate}&frist=lte.${toDate}&status=neq.Ferdig&select=id,oppgave,frist,prioritet,ansvarlig,notater,selskap_id,lead_id,salgsmulighet_id`,
         { headers: API_HEADERS }
       );
       if (tasksRes.ok) {
