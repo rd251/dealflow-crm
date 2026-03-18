@@ -1,12 +1,12 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import PageShell from "@/components/PageShell";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, ChevronRight, Clock, Users, CalendarDays, ListTodo, Pencil, Trash2 } from "lucide-react";
-import { format, startOfWeek, startOfMonth, addDays, addWeeks, subWeeks, addMonths, subMonths, isSameDay, isSameMonth, getDaysInMonth, getDay } from "date-fns";
+import { ChevronLeft, ChevronRight, Clock, Users, CalendarDays, ListTodo, Pencil, Trash2, GripVertical, Check, X } from "lucide-react";
+import { format, startOfWeek, startOfMonth, addDays, addWeeks, subWeeks, addMonths, subMonths, isSameDay, getDaysInMonth, getDay } from "date-fns";
 import { nb } from "date-fns/locale";
 import MeetingFields from "@/components/MeetingFields";
 
@@ -44,6 +44,13 @@ export default function Kalender() {
   // Drawer state
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [editTittel, setEditTittel] = useState("");
+  const [editBeskrivelse, setEditBeskrivelse] = useState("");
+  const [editDato, setEditDato] = useState("");
+  const [editStartTid, setEditStartTid] = useState("");
+  const [editSluttTid, setEditSluttTid] = useState("");
+  const [editSaving, setEditSaving] = useState(false);
 
   // Create meeting dialog
   const [createOpen, setCreateOpen] = useState(false);
@@ -53,6 +60,10 @@ export default function Kalender() {
   const [newMeetingSluttTid, setNewMeetingSluttTid] = useState("10:00");
   const [newMeetingBeskrivelse, setNewMeetingBeskrivelse] = useState("");
   const [saving, setSaving] = useState(false);
+
+  // Drag state
+  const [dragEvent, setDragEvent] = useState<CalendarEvent | null>(null);
+  const [dragOverSlot, setDragOverSlot] = useState<{ day: Date; hour: number } | null>(null);
 
   const today = new Date();
 
@@ -64,7 +75,7 @@ export default function Kalender() {
   const monthStart = useMemo(() => startOfMonth(currentDate), [currentDate]);
   const monthDays = useMemo(() => {
     const daysInMonth = getDaysInMonth(currentDate);
-    const firstDayOfWeek = (getDay(monthStart) + 6) % 7; // Monday = 0
+    const firstDayOfWeek = (getDay(monthStart) + 6) % 7;
     const cells: (Date | null)[] = [];
     for (let i = 0; i < firstDayOfWeek; i++) cells.push(null);
     for (let i = 0; i < daysInMonth; i++) cells.push(addDays(monthStart, i));
@@ -72,7 +83,6 @@ export default function Kalender() {
     return cells;
   }, [currentDate, monthStart]);
 
-  // Fetch kontakter for name display
   useEffect(() => {
     fetch(`${API_URL}/kontakter?select=id,navn`, { headers: API_HEADERS })
       .then(r => r.ok ? r.json() : [])
@@ -99,7 +109,6 @@ export default function Kalender() {
     const allEvents: CalendarEvent[] = [];
 
     try {
-      // Meetings
       const meetingsRes = await fetch(
         `${API_URL}/aktiviteter?type=eq.Møte&start_tid=gte.${from}&start_tid=lte.${to}&select=id,tittel,beskrivelse,start_tid,slutt_tid,type,deltakere,lead_id,salgsmulighet_id,selskap_id,kontakt_id`,
         { headers: API_HEADERS }
@@ -109,20 +118,14 @@ export default function Kalender() {
         meetings.forEach((m: any) => {
           const deltakereNavn = (m.deltakere || []).map((id: string) => kontakter[id] || "").filter(Boolean);
           allEvents.push({
-            id: m.id,
-            title: m.tittel || m.beskrivelse || "Møte",
-            description: m.beskrivelse || "",
-            start: new Date(m.start_tid),
-            end: m.slutt_tid ? new Date(m.slutt_tid) : undefined,
-            type: "meeting",
-            color: MEETING_COLOR,
-            raw: m,
+            id: m.id, title: m.tittel || m.beskrivelse || "Møte", description: m.beskrivelse || "",
+            start: new Date(m.start_tid), end: m.slutt_tid ? new Date(m.slutt_tid) : undefined,
+            type: "meeting", color: MEETING_COLOR, raw: m,
             kontaktNavn: deltakereNavn.length > 0 ? deltakereNavn.join(", ") : (m.kontakt_id ? kontakter[m.kontakt_id] : undefined),
           });
         });
       }
 
-      // Tasks
       const tasksRes = await fetch(
         `${API_URL}/oppgaver?frist=gte.${fromDate}&frist=lte.${toDate}&status=neq.Ferdig&select=id,oppgave,frist,prioritet,ansvarlig,notater`,
         { headers: API_HEADERS }
@@ -132,19 +135,14 @@ export default function Kalender() {
         tasks.forEach((t: any) => {
           if (t.frist) {
             allEvents.push({
-              id: t.id,
-              title: t.oppgave,
-              description: t.notater || "",
-              start: new Date(t.frist + "T09:00:00"),
-              type: "task",
-              color: t.prioritet === "Høy" ? TASK_HIGH_COLOR : TASK_COLOR,
-              raw: t,
+              id: t.id, title: t.oppgave, description: t.notater || "",
+              start: new Date(t.frist + "T09:00:00"), type: "task",
+              color: t.prioritet === "Høy" ? TASK_HIGH_COLOR : TASK_COLOR, raw: t,
             });
           }
         });
       }
 
-      // Fetch other upcoming activities
       const activitiesRes = await fetch(
         `${API_URL}/aktiviteter?type=neq.Møte&dato=gte.${from}&dato=lte.${to}&select=id,type,beskrivelse,dato,kontakt_id`,
         { headers: API_HEADERS }
@@ -153,13 +151,8 @@ export default function Kalender() {
         const activities = await activitiesRes.json();
         activities.forEach((a: any) => {
           allEvents.push({
-            id: a.id,
-            title: `${a.type}: ${a.beskrivelse}`.substring(0, 50),
-            description: a.beskrivelse || "",
-            start: new Date(a.dato),
-            type: "activity",
-            color: ACTIVITY_COLOR,
-            raw: a,
+            id: a.id, title: `${a.type}: ${a.beskrivelse}`.substring(0, 50), description: a.beskrivelse || "",
+            start: new Date(a.dato), type: "activity", color: ACTIVITY_COLOR, raw: a,
             kontaktNavn: a.kontakt_id ? kontakter[a.kontakt_id] : undefined,
           });
         });
@@ -181,17 +174,81 @@ export default function Kalender() {
     return Math.max(28, diffMs / 60000);
   };
 
-  // Handlers
+  // Event click -> open drawer
   const handleEventClick = (event: CalendarEvent) => {
     setSelectedEvent(event);
+    setEditing(false);
     setDrawerOpen(true);
   };
 
+  // Start editing in drawer
+  const startEditing = () => {
+    if (!selectedEvent) return;
+    if (selectedEvent.type === "meeting") {
+      const raw = selectedEvent.raw;
+      setEditTittel(raw.tittel || "");
+      setEditBeskrivelse(raw.beskrivelse || "");
+      setEditDato(raw.start_tid ? format(new Date(raw.start_tid), "yyyy-MM-dd") : "");
+      setEditStartTid(raw.start_tid ? format(new Date(raw.start_tid), "HH:mm") : "09:00");
+      setEditSluttTid(raw.slutt_tid ? format(new Date(raw.slutt_tid), "HH:mm") : "10:00");
+    } else if (selectedEvent.type === "task") {
+      setEditTittel(selectedEvent.raw.oppgave || "");
+      setEditBeskrivelse(selectedEvent.raw.notater || "");
+      setEditDato(selectedEvent.raw.frist || "");
+    } else {
+      setEditBeskrivelse(selectedEvent.raw.beskrivelse || "");
+    }
+    setEditing(true);
+  };
+
+  // Save edit
+  const saveEdit = async () => {
+    if (!selectedEvent) return;
+    setEditSaving(true);
+    try {
+      if (selectedEvent.type === "meeting") {
+        await fetch(`${API_URL}/aktiviteter?id=eq.${selectedEvent.id}`, {
+          method: 'PATCH',
+          headers: { ...API_HEADERS, 'Prefer': 'return=minimal' },
+          body: JSON.stringify({
+            tittel: editTittel.trim(),
+            beskrivelse: editBeskrivelse.trim(),
+            start_tid: `${editDato}T${editStartTid}:00`,
+            slutt_tid: `${editDato}T${editSluttTid}:00`,
+          }),
+        });
+      } else if (selectedEvent.type === "task") {
+        await fetch(`${API_URL}/oppgaver?id=eq.${selectedEvent.id}`, {
+          method: 'PATCH',
+          headers: { ...API_HEADERS, 'Prefer': 'return=minimal' },
+          body: JSON.stringify({
+            oppgave: editTittel.trim(),
+            notater: editBeskrivelse.trim(),
+            frist: editDato || null,
+          }),
+        });
+      } else {
+        await fetch(`${API_URL}/aktiviteter?id=eq.${selectedEvent.id}`, {
+          method: 'PATCH',
+          headers: { ...API_HEADERS, 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ beskrivelse: editBeskrivelse.trim() }),
+        });
+      }
+      setEditing(false);
+      setDrawerOpen(false);
+      await fetchEvents();
+    } catch (e) {
+      console.error("Error saving edit:", e);
+    } finally {
+      setEditSaving(false);
+    }
+  };
+
+  // Slot click -> create
   const handleSlotClick = (day: Date, hour: number) => {
-    const dateStr = format(day, "yyyy-MM-dd");
-    setNewMeetingDato(dateStr);
+    setNewMeetingDato(format(day, "yyyy-MM-dd"));
     setNewMeetingStartTid(`${String(hour).padStart(2, "0")}:00`);
-    setNewMeetingSluttTid(`${String(hour + 1).padStart(2, "0")}:00`);
+    setNewMeetingSluttTid(`${String(Math.min(hour + 1, 20)).padStart(2, "0")}:00`);
     setNewMeetingTittel("");
     setNewMeetingBeskrivelse("");
     setCreateOpen(true);
@@ -201,17 +258,16 @@ export default function Kalender() {
     if (!newMeetingTittel.trim()) return;
     setSaving(true);
     try {
-      const body: Record<string, any> = {
-        type: "Møte",
-        tittel: newMeetingTittel.trim(),
-        beskrivelse: newMeetingBeskrivelse.trim(),
-        start_tid: `${newMeetingDato}T${newMeetingStartTid}:00`,
-        slutt_tid: `${newMeetingDato}T${newMeetingSluttTid}:00`,
-      };
       await fetch(`${API_URL}/aktiviteter`, {
         method: 'POST',
         headers: { ...API_HEADERS, 'Prefer': 'return=minimal' },
-        body: JSON.stringify(body),
+        body: JSON.stringify({
+          type: "Møte",
+          tittel: newMeetingTittel.trim(),
+          beskrivelse: newMeetingBeskrivelse.trim(),
+          start_tid: `${newMeetingDato}T${newMeetingStartTid}:00`,
+          slutt_tid: `${newMeetingDato}T${newMeetingSluttTid}:00`,
+        }),
       });
       setCreateOpen(false);
       await fetchEvents();
@@ -238,6 +294,61 @@ export default function Kalender() {
     }
   };
 
+  // Drag and drop handlers
+  const handleDragStart = (e: React.DragEvent, event: CalendarEvent) => {
+    if (event.type !== "meeting") return;
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", event.id);
+    setDragEvent(event);
+  };
+
+  const handleDragOver = (e: React.DragEvent, day: Date, hour: number) => {
+    if (!dragEvent) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    setDragOverSlot({ day, hour });
+  };
+
+  const handleDragLeave = () => {
+    setDragOverSlot(null);
+  };
+
+  const handleDrop = async (e: React.DragEvent, day: Date, hour: number) => {
+    e.preventDefault();
+    setDragOverSlot(null);
+    if (!dragEvent || dragEvent.type !== "meeting") { setDragEvent(null); return; }
+
+    const oldStart = dragEvent.start;
+    const durationMs = dragEvent.end ? dragEvent.end.getTime() - oldStart.getTime() : 3600000;
+
+    const newStartDate = format(day, "yyyy-MM-dd");
+    const newStartTime = `${String(hour).padStart(2, "0")}:00`;
+    const newEnd = new Date(day.getFullYear(), day.getMonth(), day.getDate(), hour, 0, 0);
+    newEnd.setTime(newEnd.getTime() + durationMs);
+    const newEndTime = format(newEnd, "HH:mm");
+
+    try {
+      await fetch(`${API_URL}/aktiviteter?id=eq.${dragEvent.id}`, {
+        method: 'PATCH',
+        headers: { ...API_HEADERS, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({
+          start_tid: `${newStartDate}T${newStartTime}:00`,
+          slutt_tid: `${newStartDate}T${newEndTime}:00`,
+        }),
+      });
+      await fetchEvents();
+    } catch (e) {
+      console.error("Error moving event:", e);
+    } finally {
+      setDragEvent(null);
+    }
+  };
+
+  const handleDragEnd = () => {
+    setDragEvent(null);
+    setDragOverSlot(null);
+  };
+
   // Navigation
   const navigatePrev = () => {
     if (viewMode === "week") setCurrentDate(subWeeks(currentDate, 1));
@@ -256,9 +367,17 @@ export default function Kalender() {
   const EventCard = ({ event, compact = false }: { event: CalendarEvent; compact?: boolean }) => (
     <div
       onClick={(e) => { e.stopPropagation(); handleEventClick(event); }}
-      className={`rounded px-1.5 py-0.5 text-[10px] leading-tight border-l-2 overflow-hidden cursor-pointer hover:opacity-80 transition-opacity ${event.color}`}
+      draggable={event.type === "meeting"}
+      onDragStart={(e) => handleDragStart(e, event)}
+      onDragEnd={handleDragEnd}
+      className={`rounded px-1.5 py-0.5 text-[10px] leading-tight border-l-2 overflow-hidden cursor-pointer hover:opacity-80 transition-opacity ${event.color} ${
+        event.type === "meeting" ? "cursor-grab active:cursor-grabbing" : ""
+      } ${dragEvent?.id === event.id ? "opacity-40" : ""}`}
     >
-      <span className="font-medium truncate block">{event.title}</span>
+      <div className="flex items-center gap-0.5">
+        {event.type === "meeting" && !compact && <GripVertical className="w-2.5 h-2.5 shrink-0 opacity-40" />}
+        <span className="font-medium truncate">{event.title}</span>
+      </div>
       {!compact && event.kontaktNavn && (
         <span className="truncate block opacity-70 flex items-center gap-0.5">
           <Users className="w-2.5 h-2.5 inline shrink-0" /> {event.kontaktNavn}
@@ -284,20 +403,10 @@ export default function Kalender() {
         </div>
         <span className="text-sm font-semibold capitalize">{dateLabel}</span>
         <div className="flex items-center gap-1 border rounded-lg p-0.5">
-          <Button
-            variant={viewMode === "week" ? "default" : "ghost"}
-            size="sm"
-            className="text-xs h-7 px-3"
-            onClick={() => setViewMode("week")}
-          >
+          <Button variant={viewMode === "week" ? "default" : "ghost"} size="sm" className="text-xs h-7 px-3" onClick={() => setViewMode("week")}>
             Uke
           </Button>
-          <Button
-            variant={viewMode === "month" ? "default" : "ghost"}
-            size="sm"
-            className="text-xs h-7 px-3"
-            onClick={() => setViewMode("month")}
-          >
+          <Button variant={viewMode === "month" ? "default" : "ghost"} size="sm" className="text-xs h-7 px-3" onClick={() => setViewMode("month")}>
             Måned
           </Button>
         </div>
@@ -308,12 +417,12 @@ export default function Kalender() {
         <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-amber-500" /> Møter</span>
         <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-violet-500" /> Oppgaver</span>
         <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-sky-500" /> Aktiviteter</span>
+        {viewMode === "week" && <span className="text-muted-foreground ml-2">Dra møter for å flytte</span>}
       </div>
 
       {/* WEEK VIEW */}
       {viewMode === "week" && (
         <div className="border rounded-xl overflow-hidden bg-card">
-          {/* Day headers */}
           <div className="grid grid-cols-[60px_repeat(7,1fr)] border-b">
             <div className="p-2 border-r bg-muted/30" />
             {weekDays.map((day, i) => {
@@ -327,7 +436,6 @@ export default function Kalender() {
             })}
           </div>
 
-          {/* Time grid */}
           <div className="grid grid-cols-[60px_repeat(7,1fr)] max-h-[600px] overflow-y-auto">
             {HOURS.map(hour => (
               <div key={hour} className="contents">
@@ -337,11 +445,17 @@ export default function Kalender() {
                 {weekDays.map((day, di) => {
                   const isToday = isSameDay(day, today);
                   const dayEvents = getEventsForDay(day).filter(e => e.start.getHours() === hour);
+                  const isDropTarget = dragOverSlot && isSameDay(dragOverSlot.day, day) && dragOverSlot.hour === hour;
                   return (
                     <div
                       key={di}
-                      className={`h-[60px] border-b border-r last:border-r-0 relative cursor-pointer hover:bg-muted/30 transition-colors ${isToday ? "bg-primary/[0.02]" : ""}`}
+                      className={`h-[60px] border-b border-r last:border-r-0 relative cursor-pointer transition-colors ${
+                        isDropTarget ? "bg-primary/10 ring-1 ring-inset ring-primary/30" : isToday ? "bg-primary/[0.02]" : "hover:bg-muted/30"
+                      }`}
                       onClick={() => handleSlotClick(day, hour)}
+                      onDragOver={(e) => handleDragOver(e, day, hour)}
+                      onDragLeave={handleDragLeave}
+                      onDrop={(e) => handleDrop(e, day, hour)}
                     >
                       {dayEvents.map(event => (
                         <div
@@ -367,16 +481,11 @@ export default function Kalender() {
       {/* MONTH VIEW */}
       {viewMode === "month" && (
         <div className="border rounded-xl overflow-hidden bg-card">
-          {/* Day of week headers */}
           <div className="grid grid-cols-7 border-b">
             {["man", "tir", "ons", "tor", "fre", "lør", "søn"].map(d => (
-              <div key={d} className="p-2 text-center text-[10px] uppercase text-muted-foreground bg-muted/30 border-r last:border-r-0">
-                {d}
-              </div>
+              <div key={d} className="p-2 text-center text-[10px] uppercase text-muted-foreground bg-muted/30 border-r last:border-r-0">{d}</div>
             ))}
           </div>
-
-          {/* Day cells */}
           <div className="grid grid-cols-7">
             {monthDays.map((day, i) => {
               if (!day) return <div key={i} className="min-h-[100px] border-b border-r last:border-r-0 bg-muted/10" />;
@@ -385,9 +494,7 @@ export default function Kalender() {
               return (
                 <div
                   key={i}
-                  className={`min-h-[100px] border-b border-r last:border-r-0 p-1 cursor-pointer hover:bg-muted/20 transition-colors ${
-                    isToday ? "bg-primary/5" : ""
-                  }`}
+                  className={`min-h-[100px] border-b border-r last:border-r-0 p-1 cursor-pointer hover:bg-muted/20 transition-colors ${isToday ? "bg-primary/5" : ""}`}
                   onClick={() => {
                     setNewMeetingDato(format(day, "yyyy-MM-dd"));
                     setNewMeetingStartTid("09:00");
@@ -397,9 +504,7 @@ export default function Kalender() {
                     setCreateOpen(true);
                   }}
                 >
-                  <div className={`text-xs font-medium mb-1 ${isToday ? "text-primary" : "text-muted-foreground"}`}>
-                    {format(day, "d")}
-                  </div>
+                  <div className={`text-xs font-medium mb-1 ${isToday ? "text-primary" : "text-muted-foreground"}`}>{format(day, "d")}</div>
                   <div className="space-y-0.5">
                     {dayEvents.slice(0, 3).map(event => (
                       <EventCard key={event.id} event={event} compact />
@@ -415,7 +520,7 @@ export default function Kalender() {
         </div>
       )}
 
-      {/* Tasks list below calendar */}
+      {/* Tasks list */}
       {(() => {
         const taskEvents = events.filter(e => e.type === "task");
         if (taskEvents.length === 0) return null;
@@ -427,16 +532,10 @@ export default function Kalender() {
             </h3>
             <div className="space-y-2">
               {taskEvents.sort((a, b) => a.start.getTime() - b.start.getTime()).map(event => (
-                <div
-                  key={event.id}
-                  className={`flex items-center gap-3 p-2 rounded-lg border-l-2 cursor-pointer hover:opacity-80 transition-opacity ${event.color}`}
-                  onClick={() => handleEventClick(event)}
-                >
+                <div key={event.id} className={`flex items-center gap-3 p-2 rounded-lg border-l-2 cursor-pointer hover:opacity-80 transition-opacity ${event.color}`} onClick={() => handleEventClick(event)}>
                   <span className="text-xs font-medium">{format(event.start, "EEE d. MMM", { locale: nb })}</span>
                   <span className="text-xs flex-1 truncate">{event.title}</span>
-                  {event.raw?.prioritet && (
-                    <Badge variant="outline" className="text-[9px]">{event.raw.prioritet}</Badge>
-                  )}
+                  {event.raw?.prioritet && <Badge variant="outline" className="text-[9px]">{event.raw.prioritet}</Badge>}
                 </div>
               ))}
             </div>
@@ -444,24 +543,23 @@ export default function Kalender() {
         );
       })()}
 
-      {/* Event detail drawer */}
-      <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
+      {/* Event detail drawer with edit mode */}
+      <Sheet open={drawerOpen} onOpenChange={(open) => { setDrawerOpen(open); if (!open) setEditing(false); }}>
         <SheetContent className="sm:max-w-md">
           <SheetHeader>
             <SheetTitle className="flex items-center gap-2">
               {selectedEvent?.type === "meeting" && <CalendarDays className="w-5 h-5 text-amber-500" />}
               {selectedEvent?.type === "task" && <ListTodo className="w-5 h-5 text-violet-500" />}
               {selectedEvent?.type === "activity" && <Clock className="w-5 h-5 text-sky-500" />}
-              {selectedEvent?.title}
+              {editing ? "Rediger" : selectedEvent?.title}
             </SheetTitle>
             <SheetDescription>
               {selectedEvent?.type === "meeting" ? "Møtedetaljer" : selectedEvent?.type === "task" ? "Oppgavedetaljer" : "Aktivitetsdetaljer"}
             </SheetDescription>
           </SheetHeader>
 
-          {selectedEvent && (
+          {selectedEvent && !editing && (
             <div className="space-y-4 mt-4">
-              {/* Date/time */}
               <div className="flex items-center gap-2 text-sm">
                 <CalendarDays className="w-4 h-4 text-muted-foreground" />
                 <span>{format(selectedEvent.start, "EEEE d. MMMM yyyy", { locale: nb })}</span>
@@ -472,23 +570,17 @@ export default function Kalender() {
                   <span>{format(selectedEvent.start, "HH:mm")} – {format(selectedEvent.end, "HH:mm")}</span>
                 </div>
               )}
-
-              {/* Contact/participants */}
               {selectedEvent.kontaktNavn && (
                 <div className="flex items-center gap-2 text-sm">
                   <Users className="w-4 h-4 text-muted-foreground" />
                   <span>{selectedEvent.kontaktNavn}</span>
                 </div>
               )}
-
-              {/* Description */}
               {selectedEvent.description && (
                 <div className="border rounded-lg p-3 bg-muted/30">
                   <p className="text-sm whitespace-pre-line">{selectedEvent.description}</p>
                 </div>
               )}
-
-              {/* Task-specific info */}
               {selectedEvent.type === "task" && selectedEvent.raw && (
                 <div className="space-y-2">
                   {selectedEvent.raw.prioritet && (
@@ -505,16 +597,68 @@ export default function Kalender() {
                   )}
                 </div>
               )}
-
-              {/* Type badge */}
               <Badge variant="secondary" className="text-xs">
                 {selectedEvent.type === "meeting" ? "Møte" : selectedEvent.type === "task" ? "Oppgave" : "Aktivitet"}
               </Badge>
-
-              {/* Actions */}
               <div className="flex gap-2 pt-4 border-t">
+                <Button variant="outline" size="sm" className="gap-1.5" onClick={startEditing}>
+                  <Pencil className="w-3.5 h-3.5" /> Rediger
+                </Button>
                 <Button variant="destructive" size="sm" className="gap-1.5" onClick={handleDeleteEvent}>
                   <Trash2 className="w-3.5 h-3.5" /> Slett
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Edit mode */}
+          {selectedEvent && editing && (
+            <div className="space-y-4 mt-4">
+              {selectedEvent.type === "meeting" && (
+                <MeetingFields
+                  tittel={editTittel}
+                  dato={editDato}
+                  startTid={editStartTid}
+                  sluttTid={editSluttTid}
+                  onTittelChange={setEditTittel}
+                  onDatoChange={setEditDato}
+                  onStartTidChange={setEditStartTid}
+                  onSluttTidChange={setEditSluttTid}
+                />
+              )}
+              {selectedEvent.type === "task" && (
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-xs font-medium">Oppgave</label>
+                    <input
+                      className="flex h-8 w-full rounded-md border border-input bg-background px-3 py-1 text-sm mt-1"
+                      value={editTittel}
+                      onChange={e => setEditTittel(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium">Frist</label>
+                    <input
+                      type="date"
+                      className="flex h-8 w-full rounded-md border border-input bg-background px-3 py-1 text-sm mt-1"
+                      value={editDato}
+                      onChange={e => setEditDato(e.target.value)}
+                    />
+                  </div>
+                </div>
+              )}
+              <Textarea
+                placeholder="Beskrivelse / notater..."
+                value={editBeskrivelse}
+                onChange={e => setEditBeskrivelse(e.target.value)}
+                rows={3}
+              />
+              <div className="flex gap-2 pt-4 border-t">
+                <Button size="sm" className="gap-1.5" onClick={saveEdit} disabled={editSaving}>
+                  <Check className="w-3.5 h-3.5" /> {editSaving ? "Lagrer..." : "Lagre"}
+                </Button>
+                <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setEditing(false)}>
+                  <X className="w-3.5 h-3.5" /> Avbryt
                 </Button>
               </div>
             </div>
