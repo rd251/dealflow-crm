@@ -315,6 +315,7 @@ export default function Kalender() {
     setNewMeetingSluttTid(`${String(Math.min(hour + 1, 20)).padStart(2, "0")}:00`);
     setNewMeetingTittel("");
     setNewMeetingBeskrivelse("");
+    setNewMeetingDeltakere([]);
     setCreateOpen(true);
   };
 
