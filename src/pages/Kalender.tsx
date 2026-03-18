@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, ChevronRight, Clock, Users, CalendarDays, ListTodo, Pencil, Trash2, GripVertical, Check, X, Building2, Briefcase, UserCircle, Mail, Phone, ExternalLink } from "lucide-react";
+import { ChevronLeft, ChevronRight, Clock, Users, CalendarDays, ListTodo, Pencil, Trash2, GripVertical, Check, X, Building2, Briefcase, UserCircle, Mail, Phone, ExternalLink, Handshake } from "lucide-react";
 import { format, startOfWeek, startOfMonth, addDays, addWeeks, subWeeks, addMonths, subMonths, isSameDay, getDaysInMonth, getDay } from "date-fns";
 import { nb } from "date-fns/locale";
 import MeetingFields from "@/components/MeetingFields";
