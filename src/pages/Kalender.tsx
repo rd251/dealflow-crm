@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, ChevronRight, Clock, Users, CalendarDays, ListTodo, Pencil, Trash2, GripVertical, Check, X, Building2, Briefcase, UserCircle, Mail, Phone, ExternalLink } from "lucide-react";
+import { ChevronLeft, ChevronRight, Clock, Users, CalendarDays, ListTodo, Pencil, Trash2, GripVertical, Check, X, Building2, Briefcase, UserCircle, Mail, Phone, ExternalLink, Handshake } from "lucide-react";
 import { format, startOfWeek, startOfMonth, addDays, addWeeks, subWeeks, addMonths, subMonths, isSameDay, getDaysInMonth, getDay } from "date-fns";
 import { nb } from "date-fns/locale";
 import MeetingFields from "@/components/MeetingFields";
@@ -62,11 +62,13 @@ export default function Kalender() {
   const [linkedKontakt, setLinkedKontakt] = useState<any>(null);
   const [linkedSalgsmulighet, setLinkedSalgsmulighet] = useState<any>(null);
   const [linkedLead, setLinkedLead] = useState<any>(null);
+  const [linkedPartner, setLinkedPartner] = useState<any>(null);
 
   // Entity lists for linking
   const [selskapListe, setSelskapListe] = useState<{ id: string; firmanavn: string }[]>([]);
   const [salgsmulighetListe, setSalgsmulighetListe] = useState<{ id: string; navn: string; status: string }[]>([]);
   const [leadListe, setLeadListe] = useState<{ id: string; firmanavn: string; status: string }[]>([]);
+  const [partnerListe, setPartnerListe] = useState<{ id: string; partnernavn: string; partnertype: string | null }[]>([]);
 
   // Create meeting dialog
   const [createOpen, setCreateOpen] = useState(false);
@@ -80,6 +82,7 @@ export default function Kalender() {
   const [newMeetingKontaktId, setNewMeetingKontaktId] = useState<string | null>(null);
   const [newMeetingSalgsmulighetId, setNewMeetingSalgsmulighetId] = useState<string | null>(null);
   const [newMeetingLeadId, setNewMeetingLeadId] = useState<string | null>(null);
+  const [newMeetingPartnerId, setNewMeetingPartnerId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   // Drag state
@@ -122,10 +125,12 @@ export default function Kalender() {
       fetch(`${API_URL}/selskaper?select=id,firmanavn&order=firmanavn`, { headers: API_HEADERS }).then(r => r.ok ? r.json() : []),
       fetch(`${API_URL}/salgsmuligheter?select=id,navn,status&order=navn`, { headers: API_HEADERS }).then(r => r.ok ? r.json() : []),
       fetch(`${API_URL}/leads?select=id,firmanavn,status&order=firmanavn`, { headers: API_HEADERS }).then(r => r.ok ? r.json() : []),
-    ]).then(([s, sm, l]) => {
+      fetch(`${API_URL}/partnere?select=id,partnernavn,partnertype&order=partnernavn`, { headers: API_HEADERS }).then(r => r.ok ? r.json() : []),
+    ]).then(([s, sm, l, p]) => {
       setSelskapListe(s);
       setSalgsmulighetListe(sm);
       setLeadListe(l);
+      setPartnerListe(p);
     }).catch(() => {});
   }, []);
 
@@ -274,6 +279,7 @@ export default function Kalender() {
     setLinkedKontakt(null);
     setLinkedSalgsmulighet(null);
     setLinkedLead(null);
+    setLinkedPartner(null);
 
     const fetches: Promise<void>[] = [];
 
@@ -299,6 +305,12 @@ export default function Kalender() {
       fetches.push(
         fetch(`${API_URL}/leads?id=eq.${raw.lead_id}&select=id,firmanavn,status,kontaktperson`, { headers: API_HEADERS })
           .then(r => r.ok ? r.json() : []).then(d => { if (d[0]) setLinkedLead(d[0]); })
+      );
+    }
+    if (raw.partner_id) {
+      fetches.push(
+        fetch(`${API_URL}/partnere?id=eq.${raw.partner_id}&select=id,partnernavn,partnertype,partnerstatus`, { headers: API_HEADERS })
+          .then(r => r.ok ? r.json() : []).then(d => { if (d[0]) setLinkedPartner(d[0]); })
       );
     }
 
@@ -409,6 +421,7 @@ export default function Kalender() {
     setNewMeetingKontaktId(null);
     setNewMeetingSalgsmulighetId(null);
     setNewMeetingLeadId(null);
+    setNewMeetingPartnerId(null);
     setCreateOpen(true);
   };
 
@@ -430,6 +443,7 @@ export default function Kalender() {
           kontakt_id: newMeetingKontaktId,
           salgsmulighet_id: newMeetingSalgsmulighetId,
           lead_id: newMeetingLeadId,
+          partner_id: newMeetingPartnerId,
         }),
       });
       setCreateOpen(false);
@@ -682,6 +696,7 @@ export default function Kalender() {
                     setNewMeetingKontaktId(null);
                     setNewMeetingSalgsmulighetId(null);
                     setNewMeetingLeadId(null);
+                    setNewMeetingPartnerId(null);
                     setCreateOpen(true);
                   }}
                 >
@@ -908,6 +923,40 @@ export default function Kalender() {
                     />
                   )}
                 </div>
+
+                {/* Partner */}
+                <div className="rounded-lg border p-3 space-y-1.5">
+                  <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                    <Handshake className="w-3.5 h-3.5" /> Partner
+                  </div>
+                  {linkedPartner ? (
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          className="text-sm font-medium text-primary hover:underline flex items-center gap-1 flex-1"
+                          onClick={() => { setDrawerOpen(false); navigate(`/partnere/${linkedPartner.id}`); }}
+                        >
+                          {linkedPartner.partnernavn}
+                          <ExternalLink className="w-3 h-3" />
+                        </button>
+                        <Button variant="ghost" size="icon" className="h-5 w-5 shrink-0" onClick={() => handleLinkEntity('partner_id', null)}>
+                          <X className="w-3 h-3" />
+                        </Button>
+                      </div>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        {linkedPartner.partnertype && <Badge variant="outline" className="text-[10px]">{linkedPartner.partnertype}</Badge>}
+                        {linkedPartner.partnerstatus && <Badge variant="outline" className="text-[10px]">{linkedPartner.partnerstatus}</Badge>}
+                      </div>
+                    </div>
+                  ) : (
+                    <EntityLinkPicker
+                      options={partnerListe.map(p => ({ id: p.id, label: p.partnernavn, sublabel: p.partnertype || undefined }))}
+                      value={null}
+                      onChange={(id) => handleLinkEntity('partner_id', id)}
+                      placeholder="Søk partner..."
+                    />
+                  )}
+                </div>
               </div>
 
               <div className="flex gap-2 pt-4 border-t">
@@ -1043,6 +1092,15 @@ export default function Kalender() {
                     value={newMeetingLeadId}
                     onChange={setNewMeetingLeadId}
                     placeholder="Søk lead..."
+                  />
+                </div>
+                <div>
+                  <p className="text-[10px] text-muted-foreground mb-1 flex items-center gap-1"><Handshake className="w-3 h-3" /> Partner</p>
+                  <EntityLinkPicker
+                    options={partnerListe.map(p => ({ id: p.id, label: p.partnernavn, sublabel: p.partnertype || undefined }))}
+                    value={newMeetingPartnerId}
+                    onChange={setNewMeetingPartnerId}
+                    placeholder="Søk partner..."
                   />
                 </div>
               </div>
