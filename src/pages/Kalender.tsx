@@ -426,6 +426,10 @@ export default function Kalender() {
           start_tid: `${newMeetingDato}T${newMeetingStartTid}:00`,
           slutt_tid: `${newMeetingDato}T${newMeetingSluttTid}:00`,
           deltakere: newMeetingDeltakere,
+          selskap_id: newMeetingSelskapId,
+          kontakt_id: newMeetingKontaktId,
+          salgsmulighet_id: newMeetingSalgsmulighetId,
+          lead_id: newMeetingLeadId,
         }),
       });
       setCreateOpen(false);
