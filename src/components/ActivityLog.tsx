@@ -257,6 +257,18 @@ export default function ActivityLog(props: ActivityLogProps) {
                 );
               })}
             </div>
+            {type === "Møte" && (
+              <MeetingFields
+                tittel={meetingTittel}
+                dato={meetingDato}
+                startTid={meetingStartTid}
+                sluttTid={meetingSluttTid}
+                onTittelChange={setMeetingTittel}
+                onDatoChange={setMeetingDato}
+                onStartTidChange={setMeetingStartTid}
+                onSluttTidChange={setMeetingSluttTid}
+              />
+            )}
             <Textarea
               placeholder="Beskriv aktiviteten..."
               value={beskrivelse}
