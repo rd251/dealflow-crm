@@ -56,8 +56,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     const setSignedInState = async (session: Session) => {
-      const role = await fetchRole(session.user.id);
-      if (mounted) setState({ user: session.user, session, role, loading: false, isAdmin: role === "admin" });
+      try {
+        const role = await fetchRole(session.user.id);
+        if (mounted) setState({ user: session.user, session, role, loading: false, isAdmin: role === "admin" });
+      } catch (err) {
+        console.error("setSignedInState error:", err);
+        if (mounted) setState({ user: session.user, session, role: "user", loading: false, isAdmin: false });
+      }
     };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
