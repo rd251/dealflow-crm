@@ -40,6 +40,7 @@ export default function Kalender() {
   const [viewMode, setViewMode] = useState<"week" | "month">("week");
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [kontakter, setKontakter] = useState<Record<string, string>>({});
+  const [kontaktListe, setKontaktListe] = useState<{ id: string; navn: string }[]>([]);
 
   // Drawer state
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
@@ -51,6 +52,7 @@ export default function Kalender() {
   const [editStartTid, setEditStartTid] = useState("");
   const [editSluttTid, setEditSluttTid] = useState("");
   const [editSaving, setEditSaving] = useState(false);
+  const [editDeltakere, setEditDeltakere] = useState<string[]>([]);
 
   // Create meeting dialog
   const [createOpen, setCreateOpen] = useState(false);
@@ -59,6 +61,7 @@ export default function Kalender() {
   const [newMeetingStartTid, setNewMeetingStartTid] = useState("09:00");
   const [newMeetingSluttTid, setNewMeetingSluttTid] = useState("10:00");
   const [newMeetingBeskrivelse, setNewMeetingBeskrivelse] = useState("");
+  const [newMeetingDeltakere, setNewMeetingDeltakere] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
 
   // Drag state
@@ -90,6 +93,7 @@ export default function Kalender() {
         const map: Record<string, string> = {};
         data.forEach(k => { map[k.id] = k.navn; });
         setKontakter(map);
+        setKontaktListe(data.map(k => ({ id: k.id, navn: k.navn })));
       })
       .catch(() => {});
   }, []);
@@ -250,7 +254,7 @@ export default function Kalender() {
       setEditDato(raw.start_tid ? format(new Date(raw.start_tid), "yyyy-MM-dd") : "");
       setEditStartTid(raw.start_tid ? format(new Date(raw.start_tid), "HH:mm") : "09:00");
       setEditSluttTid(raw.slutt_tid ? format(new Date(raw.slutt_tid), "HH:mm") : "10:00");
-    } else if (selectedEvent.type === "task") {
+      setEditDeltakere(raw.deltakere || []);
       setEditTittel(selectedEvent.raw.oppgave || "");
       setEditBeskrivelse(selectedEvent.raw.notater || "");
       setEditDato(selectedEvent.raw.frist || "");
@@ -274,6 +278,7 @@ export default function Kalender() {
             beskrivelse: editBeskrivelse.trim(),
             start_tid: `${editDato}T${editStartTid}:00`,
             slutt_tid: `${editDato}T${editSluttTid}:00`,
+            deltakere: editDeltakere,
           }),
         });
       } else if (selectedEvent.type === "task") {
@@ -310,6 +315,7 @@ export default function Kalender() {
     setNewMeetingSluttTid(`${String(Math.min(hour + 1, 20)).padStart(2, "0")}:00`);
     setNewMeetingTittel("");
     setNewMeetingBeskrivelse("");
+    setNewMeetingDeltakere([]);
     setCreateOpen(true);
   };
 
@@ -326,6 +332,7 @@ export default function Kalender() {
           beskrivelse: newMeetingBeskrivelse.trim(),
           start_tid: `${newMeetingDato}T${newMeetingStartTid}:00`,
           slutt_tid: `${newMeetingDato}T${newMeetingSluttTid}:00`,
+          deltakere: newMeetingDeltakere,
         }),
       });
       setCreateOpen(false);
@@ -573,6 +580,7 @@ export default function Kalender() {
                     setNewMeetingSluttTid("10:00");
                     setNewMeetingTittel("");
                     setNewMeetingBeskrivelse("");
+                    setNewMeetingDeltakere([]);
                     setCreateOpen(true);
                   }}
                 >
@@ -696,6 +704,9 @@ export default function Kalender() {
                   onDatoChange={setEditDato}
                   onStartTidChange={setEditStartTid}
                   onSluttTidChange={setEditSluttTid}
+                  deltakere={editDeltakere}
+                  onDeltakereChange={setEditDeltakere}
+                  kontaktListe={kontaktListe}
                 />
               )}
               {selectedEvent.type === "task" && (
@@ -755,6 +766,9 @@ export default function Kalender() {
               onDatoChange={setNewMeetingDato}
               onStartTidChange={setNewMeetingStartTid}
               onSluttTidChange={setNewMeetingSluttTid}
+              deltakere={newMeetingDeltakere}
+              onDeltakereChange={setNewMeetingDeltakere}
+              kontaktListe={kontaktListe}
             />
             <Textarea
               placeholder="Beskrivelse..."
