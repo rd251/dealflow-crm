@@ -254,7 +254,7 @@ export default function Kalender() {
       setEditDato(raw.start_tid ? format(new Date(raw.start_tid), "yyyy-MM-dd") : "");
       setEditStartTid(raw.start_tid ? format(new Date(raw.start_tid), "HH:mm") : "09:00");
       setEditSluttTid(raw.slutt_tid ? format(new Date(raw.slutt_tid), "HH:mm") : "10:00");
-    } else if (selectedEvent.type === "task") {
+      setEditDeltakere(raw.deltakere || []);
       setEditTittel(selectedEvent.raw.oppgave || "");
       setEditBeskrivelse(selectedEvent.raw.notater || "");
       setEditDato(selectedEvent.raw.frist || "");
