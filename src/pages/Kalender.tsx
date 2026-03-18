@@ -307,6 +307,12 @@ export default function Kalender() {
           .then(r => r.ok ? r.json() : []).then(d => { if (d[0]) setLinkedLead(d[0]); })
       );
     }
+    if (raw.partner_id) {
+      fetches.push(
+        fetch(`${API_URL}/partnere?id=eq.${raw.partner_id}&select=id,partnernavn,partnertype,partnerstatus`, { headers: API_HEADERS })
+          .then(r => r.ok ? r.json() : []).then(d => { if (d[0]) setLinkedPartner(d[0]); })
+      );
+    }
 
     await Promise.all(fetches);
   }, []);
