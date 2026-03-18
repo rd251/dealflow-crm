@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Phone, Mail, MessageSquare, MessageCircle, Users, FileText, Plus, Clock, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import MeetingFields from "@/components/MeetingFields";
 
 const API_URL = import.meta.env.VITE_SUPABASE_URL + '/rest/v1';
 const API_HEADERS = {
