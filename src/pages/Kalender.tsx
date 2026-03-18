@@ -156,7 +156,7 @@ export default function Kalender() {
       }
 
       const activitiesRes = await fetch(
-        `${API_URL}/aktiviteter?type=neq.Møte&dato=gte.${from}&dato=lte.${to}&select=id,type,beskrivelse,dato,kontakt_id`,
+        `${API_URL}/aktiviteter?type=neq.Møte&dato=gte.${from}&dato=lte.${to}&select=id,type,beskrivelse,dato,kontakt_id,selskap_id,lead_id,salgsmulighet_id`,
         { headers: API_HEADERS }
       );
       if (activitiesRes.ok) {
