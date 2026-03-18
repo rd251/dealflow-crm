@@ -443,6 +443,7 @@ export default function Kalender() {
           kontakt_id: newMeetingKontaktId,
           salgsmulighet_id: newMeetingSalgsmulighetId,
           lead_id: newMeetingLeadId,
+          partner_id: newMeetingPartnerId,
         }),
       });
       setCreateOpen(false);
