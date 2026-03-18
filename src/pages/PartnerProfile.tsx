@@ -148,7 +148,7 @@ export default function PartnerProfile() {
         </div>
 
         {/* Tabs */}
-        <Tabs defaultValue="kunder">
+        <Tabs defaultValue="aktiviteter">
           <TabsList className="flex-wrap h-auto gap-1">
              <TabsTrigger value="aktiviteter" className="text-xs sm:text-sm">Aktiviteter</TabsTrigger>
              <TabsTrigger value="kunder" className="text-xs sm:text-sm">Kunder ({partnerKunder.length})</TabsTrigger>
