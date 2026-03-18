@@ -112,14 +112,25 @@ export default function ActivityLog(props: ActivityLogProps) {
     if (!beskrivelse.trim()) return;
     setLoading(true);
     try {
+      const meetingData: Record<string, any> = {};
+      if (type === "Møte") {
+        meetingData.tittel = meetingTittel.trim();
+        if (meetingDato && meetingStartTid) {
+          meetingData.start_tid = `${meetingDato}T${meetingStartTid}:00`;
+        }
+        if (meetingDato && meetingSluttTid) {
+          meetingData.slutt_tid = `${meetingDato}T${meetingSluttTid}:00`;
+        }
+      }
+
       if (editingId) {
         await fetch(`${API_URL}/aktiviteter?id=eq.${editingId}`, {
           method: 'PATCH',
           headers: { ...API_HEADERS, 'Prefer': 'return=minimal' },
-          body: JSON.stringify({ type, beskrivelse: beskrivelse.trim() }),
+          body: JSON.stringify({ type, beskrivelse: beskrivelse.trim(), ...meetingData }),
         });
       } else {
-        const body: Record<string, any> = { type, beskrivelse: beskrivelse.trim() };
+        const body: Record<string, any> = { type, beskrivelse: beskrivelse.trim(), ...meetingData };
         if (props.lead_id) body.lead_id = props.lead_id;
         if (props.salgsmulighet_id) body.salgsmulighet_id = props.salgsmulighet_id;
         if (props.selskap_id) body.selskap_id = props.selskap_id;
