@@ -405,6 +405,10 @@ export default function Kalender() {
     setNewMeetingTittel("");
     setNewMeetingBeskrivelse("");
     setNewMeetingDeltakere([]);
+    setNewMeetingSelskapId(null);
+    setNewMeetingKontaktId(null);
+    setNewMeetingSalgsmulighetId(null);
+    setNewMeetingLeadId(null);
     setCreateOpen(true);
   };
 
