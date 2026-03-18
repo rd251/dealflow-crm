@@ -29,13 +29,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isAdmin: false,
   });
 
-  const fetchRole = async (userId: string) => {
-    const { data } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId)
-      .maybeSingle();
-    return (data?.role as AppRole) || "user";
+  const fetchRole = async (userId: string): Promise<AppRole> => {
+    try {
+      const { data, error } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (error) {
+        console.error("Failed to fetch role:", error.message);
+        return "user";
+      }
+      return (data?.role as AppRole) || "user";
+    } catch (err) {
+      console.error("fetchRole exception:", err);
+      return "user";
+    }
   };
 
   useEffect(() => {
