@@ -68,6 +68,7 @@ export default function Kalender() {
   const [selskapListe, setSelskapListe] = useState<{ id: string; firmanavn: string }[]>([]);
   const [salgsmulighetListe, setSalgsmulighetListe] = useState<{ id: string; navn: string; status: string }[]>([]);
   const [leadListe, setLeadListe] = useState<{ id: string; firmanavn: string; status: string }[]>([]);
+  const [partnerListe, setPartnerListe] = useState<{ id: string; partnernavn: string; partnertype: string | null }[]>([]);
 
   // Create meeting dialog
   const [createOpen, setCreateOpen] = useState(false);
