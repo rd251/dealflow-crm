@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import PageShell from "@/components/PageShell";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, ChevronRight, Clock, Users, CalendarDays, ListTodo, Pencil, Trash2, GripVertical, Check, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Clock, Users, CalendarDays, ListTodo, Pencil, Trash2, GripVertical, Check, X, Building2, Briefcase, UserCircle, Mail, Phone, ExternalLink } from "lucide-react";
 import { format, startOfWeek, startOfMonth, addDays, addWeeks, subWeeks, addMonths, subMonths, isSameDay, getDaysInMonth, getDay } from "date-fns";
 import { nb } from "date-fns/locale";
 import MeetingFields from "@/components/MeetingFields";
@@ -36,6 +37,7 @@ const TASK_HIGH_COLOR = "bg-destructive/15 border-destructive text-destructive";
 const ACTIVITY_COLOR = "bg-sky-500/15 border-sky-500 text-sky-800 dark:text-sky-300";
 
 export default function Kalender() {
+  const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<"week" | "month">("week");
   const [events, setEvents] = useState<CalendarEvent[]>([]);
@@ -53,6 +55,12 @@ export default function Kalender() {
   const [editSluttTid, setEditSluttTid] = useState("");
   const [editSaving, setEditSaving] = useState(false);
   const [editDeltakere, setEditDeltakere] = useState<string[]>([]);
+
+  // Linked entity details for drawer
+  const [linkedSelskap, setLinkedSelskap] = useState<any>(null);
+  const [linkedKontakt, setLinkedKontakt] = useState<any>(null);
+  const [linkedSalgsmulighet, setLinkedSalgsmulighet] = useState<any>(null);
+  const [linkedLead, setLinkedLead] = useState<any>(null);
 
   // Create meeting dialog
   const [createOpen, setCreateOpen] = useState(false);
@@ -131,7 +139,7 @@ export default function Kalender() {
       }
 
       const tasksRes = await fetch(
-        `${API_URL}/oppgaver?frist=gte.${fromDate}&frist=lte.${toDate}&status=neq.Ferdig&select=id,oppgave,frist,prioritet,ansvarlig,notater`,
+        `${API_URL}/oppgaver?frist=gte.${fromDate}&frist=lte.${toDate}&status=neq.Ferdig&select=id,oppgave,frist,prioritet,ansvarlig,notater,selskap_id,lead_id,salgsmulighet_id`,
         { headers: API_HEADERS }
       );
       if (tasksRes.ok) {
@@ -148,7 +156,7 @@ export default function Kalender() {
       }
 
       const activitiesRes = await fetch(
-        `${API_URL}/aktiviteter?type=neq.Møte&dato=gte.${from}&dato=lte.${to}&select=id,type,beskrivelse,dato,kontakt_id`,
+        `${API_URL}/aktiviteter?type=neq.Møte&dato=gte.${from}&dato=lte.${to}&select=id,type,beskrivelse,dato,kontakt_id,selskap_id,lead_id,salgsmulighet_id`,
         { headers: API_HEADERS }
       );
       if (activitiesRes.ok) {
@@ -237,11 +245,49 @@ export default function Kalender() {
     return layout;
   };
 
+  // Fetch linked entity details
+  const fetchLinkedEntities = useCallback(async (raw: any) => {
+    setLinkedSelskap(null);
+    setLinkedKontakt(null);
+    setLinkedSalgsmulighet(null);
+    setLinkedLead(null);
+
+    const fetches: Promise<void>[] = [];
+
+    if (raw.selskap_id) {
+      fetches.push(
+        fetch(`${API_URL}/selskaper?id=eq.${raw.selskap_id}&select=id,firmanavn,kundestatus,bransje`, { headers: API_HEADERS })
+          .then(r => r.ok ? r.json() : []).then(d => { if (d[0]) setLinkedSelskap(d[0]); })
+      );
+    }
+    if (raw.kontakt_id) {
+      fetches.push(
+        fetch(`${API_URL}/kontakter?id=eq.${raw.kontakt_id}&select=id,navn,rolle,e_post,telefon`, { headers: API_HEADERS })
+          .then(r => r.ok ? r.json() : []).then(d => { if (d[0]) setLinkedKontakt(d[0]); })
+      );
+    }
+    if (raw.salgsmulighet_id) {
+      fetches.push(
+        fetch(`${API_URL}/salgsmuligheter?id=eq.${raw.salgsmulighet_id}&select=id,navn,status,forventet_mrr`, { headers: API_HEADERS })
+          .then(r => r.ok ? r.json() : []).then(d => { if (d[0]) setLinkedSalgsmulighet(d[0]); })
+      );
+    }
+    if (raw.lead_id) {
+      fetches.push(
+        fetch(`${API_URL}/leads?id=eq.${raw.lead_id}&select=id,firmanavn,status,kontaktperson`, { headers: API_HEADERS })
+          .then(r => r.ok ? r.json() : []).then(d => { if (d[0]) setLinkedLead(d[0]); })
+      );
+    }
+
+    await Promise.all(fetches);
+  }, []);
+
   // Event click -> open drawer
   const handleEventClick = (event: CalendarEvent) => {
     setSelectedEvent(event);
     setEditing(false);
     setDrawerOpen(true);
+    fetchLinkedEntities(event.raw);
   };
 
   // Start editing in drawer
@@ -680,6 +726,99 @@ export default function Kalender() {
               <Badge variant="secondary" className="text-xs">
                 {selectedEvent.type === "meeting" ? "Møte" : selectedEvent.type === "task" ? "Oppgave" : "Aktivitet"}
               </Badge>
+
+              {/* Tilknyttet info */}
+              <div className="space-y-3 pt-3 border-t">
+                <h4 className="text-xs font-semibold uppercase text-muted-foreground tracking-wide">Tilknyttet informasjon</h4>
+
+                {/* Selskap */}
+                <div className="rounded-lg border p-3 space-y-1">
+                  <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                    <Building2 className="w-3.5 h-3.5" /> Selskap
+                  </div>
+                  {linkedSelskap ? (
+                    <button
+                      className="text-sm font-medium text-primary hover:underline flex items-center gap-1"
+                      onClick={() => { setDrawerOpen(false); navigate(`/kundeforhold/${linkedSelskap.id}`); }}
+                    >
+                      {linkedSelskap.firmanavn}
+                      <ExternalLink className="w-3 h-3" />
+                    </button>
+                  ) : (
+                    <span className="text-xs text-muted-foreground italic">Ikke tilknyttet</span>
+                  )}
+                </div>
+
+                {/* Kontaktperson */}
+                <div className="rounded-lg border p-3 space-y-1.5">
+                  <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                    <UserCircle className="w-3.5 h-3.5" /> Kontaktperson
+                  </div>
+                  {linkedKontakt ? (
+                    <div className="space-y-0.5">
+                      <p className="text-sm font-medium">{linkedKontakt.navn}</p>
+                      {linkedKontakt.rolle && <p className="text-xs text-muted-foreground">{linkedKontakt.rolle}</p>}
+                      {linkedKontakt.e_post && (
+                        <a href={`mailto:${linkedKontakt.e_post}`} className="text-xs text-primary hover:underline flex items-center gap-1">
+                          <Mail className="w-3 h-3" /> {linkedKontakt.e_post}
+                        </a>
+                      )}
+                      {linkedKontakt.telefon && (
+                        <a href={`tel:${linkedKontakt.telefon}`} className="text-xs text-primary hover:underline flex items-center gap-1">
+                          <Phone className="w-3 h-3" /> {linkedKontakt.telefon}
+                        </a>
+                      )}
+                    </div>
+                  ) : (
+                    <span className="text-xs text-muted-foreground italic">Ikke tilknyttet</span>
+                  )}
+                </div>
+
+                {/* Salgsmulighet */}
+                {(linkedSalgsmulighet || selectedEvent.raw?.salgsmulighet_id !== undefined) && (
+                  <div className="rounded-lg border p-3 space-y-1">
+                    <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                      <Briefcase className="w-3.5 h-3.5" /> Salgsmulighet
+                    </div>
+                    {linkedSalgsmulighet ? (
+                      <div>
+                        <p className="text-sm font-medium">{linkedSalgsmulighet.navn}</p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <Badge variant="outline" className="text-[10px]">{linkedSalgsmulighet.status}</Badge>
+                          {linkedSalgsmulighet.forventet_mrr > 0 && (
+                            <span className="text-[10px] text-muted-foreground">{linkedSalgsmulighet.forventet_mrr.toLocaleString("nb-NO")} kr/mnd</span>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-muted-foreground italic">Ikke tilknyttet</span>
+                    )}
+                  </div>
+                )}
+
+                {/* Lead */}
+                {(linkedLead || selectedEvent.raw?.lead_id !== undefined) && (
+                  <div className="rounded-lg border p-3 space-y-1">
+                    <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                      <Users className="w-3.5 h-3.5" /> Lead
+                    </div>
+                    {linkedLead ? (
+                      <div>
+                        <p className="text-sm font-medium">{linkedLead.firmanavn}</p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <Badge variant="outline" className="text-[10px]">{linkedLead.status}</Badge>
+                          {linkedLead.kontaktperson && (
+                            <span className="text-[10px] text-muted-foreground">{linkedLead.kontaktperson}</span>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-muted-foreground italic">Ikke tilknyttet</span>
+                    )}
+                  </div>
+                )}
+              </div>
+
               <div className="flex gap-2 pt-4 border-t">
                 <Button variant="outline" size="sm" className="gap-1.5" onClick={startEditing}>
                   <Pencil className="w-3.5 h-3.5" /> Rediger
