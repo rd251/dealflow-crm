@@ -1006,6 +1006,47 @@ export default function Kalender() {
               onChange={e => setNewMeetingBeskrivelse(e.target.value)}
               rows={3}
             />
+            <div className="space-y-2 border rounded-lg p-3 bg-muted/30">
+              <p className="text-xs font-medium text-muted-foreground">Tilknytninger</p>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <p className="text-[10px] text-muted-foreground mb-1 flex items-center gap-1"><Building2 className="w-3 h-3" /> Selskap</p>
+                  <EntityLinkPicker
+                    options={selskapListe.map(s => ({ id: s.id, label: s.firmanavn }))}
+                    value={newMeetingSelskapId}
+                    onChange={setNewMeetingSelskapId}
+                    placeholder="Søk selskap..."
+                  />
+                </div>
+                <div>
+                  <p className="text-[10px] text-muted-foreground mb-1 flex items-center gap-1"><UserCircle className="w-3 h-3" /> Kontakt</p>
+                  <EntityLinkPicker
+                    options={kontaktListe.map(k => ({ id: k.id, label: k.navn }))}
+                    value={newMeetingKontaktId}
+                    onChange={setNewMeetingKontaktId}
+                    placeholder="Søk kontakt..."
+                  />
+                </div>
+                <div>
+                  <p className="text-[10px] text-muted-foreground mb-1 flex items-center gap-1"><Briefcase className="w-3 h-3" /> Salgsmulighet</p>
+                  <EntityLinkPicker
+                    options={salgsmulighetListe.map(s => ({ id: s.id, label: s.navn, sublabel: s.status }))}
+                    value={newMeetingSalgsmulighetId}
+                    onChange={setNewMeetingSalgsmulighetId}
+                    placeholder="Søk salgsmulighet..."
+                  />
+                </div>
+                <div>
+                  <p className="text-[10px] text-muted-foreground mb-1 flex items-center gap-1"><ExternalLink className="w-3 h-3" /> Lead</p>
+                  <EntityLinkPicker
+                    options={leadListe.map(l => ({ id: l.id, label: l.firmanavn, sublabel: l.status }))}
+                    value={newMeetingLeadId}
+                    onChange={setNewMeetingLeadId}
+                    placeholder="Søk lead..."
+                  />
+                </div>
+              </div>
+            </div>
             <Button onClick={handleCreateMeeting} className="w-full" disabled={!newMeetingTittel.trim() || saving}>
               {saving ? "Oppretter..." : "Opprett møte"}
             </Button>
