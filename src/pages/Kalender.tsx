@@ -40,6 +40,7 @@ export default function Kalender() {
   const [viewMode, setViewMode] = useState<"week" | "month">("week");
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [kontakter, setKontakter] = useState<Record<string, string>>({});
+  const [kontaktListe, setKontaktListe] = useState<{ id: string; navn: string }[]>([]);
 
   // Drawer state
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
