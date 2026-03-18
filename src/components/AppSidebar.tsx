@@ -16,6 +16,7 @@ const navItems = [
   { to: "/selskaper", icon: Building2, label: "Kundeforhold" },
   { to: "/kontakter", icon: Users, label: "Kontakter" },
   { to: "/oppgaver", icon: ListTodo, label: "Oppgaver" },
+  { to: "/kalender", icon: CalendarDays, label: "Kalender" },
   { to: "/partnere", icon: Users2, label: "Partnere" },
   { to: "/partner-pipeline", icon: GitBranch, label: "Partner Pipeline" },
   { to: "/aktiviteter", icon: Activity, label: "Aktivitetslogg" },
