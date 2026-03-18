@@ -493,14 +493,17 @@ export default function Kalender() {
           </div>
 
           <div className="grid grid-cols-[60px_repeat(7,1fr)] max-h-[600px] overflow-y-auto">
-            {HOURS.map(hour => (
+            {HOURS.map(hour => {
+              return (
               <div key={hour} className="contents">
                 <div className="h-[60px] border-b border-r px-1 flex items-start justify-end pt-0.5">
                   <span className="text-[10px] text-muted-foreground">{String(hour).padStart(2, "0")}:00</span>
                 </div>
                 {weekDays.map((day, di) => {
                   const isToday = isSameDay(day, today);
-                  const dayEvents = getEventsForDay(day).filter(e => e.start.getHours() === hour);
+                  const allDayEvents = getEventsForDay(day);
+                  const dayEvents = allDayEvents.filter(e => e.start.getHours() === hour);
+                  const overlapLayout = getOverlapLayout(allDayEvents);
                   const isDropTarget = dragOverSlot && isSameDay(dragOverSlot.day, day) && dragOverSlot.hour === hour;
                   return (
                     <div
@@ -513,13 +516,21 @@ export default function Kalender() {
                       onDragLeave={handleDragLeave}
                       onDrop={(e) => handleDrop(e, day, hour)}
                     >
-                      {dayEvents.map(event => (
+                      {dayEvents.map(event => {
+                        const ol = overlapLayout.get(event.id) || { column: 0, totalColumns: 1 };
+                        const widthPct = 100 / ol.totalColumns;
+                        const leftPct = ol.column * widthPct;
+                        return (
                         <div
                           key={event.id}
-                          className="absolute left-0.5 right-0.5"
+                          className="absolute"
                           style={{
                             top: `${event.start.getMinutes()}px`,
                             height: `${Math.min(getEventHeight(event), 60 - event.start.getMinutes())}px`,
+                            left: `${leftPct}%`,
+                            width: `${widthPct}%`,
+                            paddingLeft: '1px',
+                            paddingRight: '1px',
                           }}
                         >
                           <EventCard event={event} />
