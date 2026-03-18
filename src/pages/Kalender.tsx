@@ -174,6 +174,62 @@ export default function Kalender() {
     return Math.max(28, diffMs / 60000);
   };
 
+  // Calculate overlap layout for events in a day
+  const getOverlapLayout = (dayEvents: CalendarEvent[]) => {
+    const timed = dayEvents.filter(e => e.end).sort((a, b) => a.start.getTime() - b.start.getTime());
+    const untimed = dayEvents.filter(e => !e.end);
+    const layout: Map<string, { column: number; totalColumns: number }> = new Map();
+
+    // Group overlapping events into clusters
+    const clusters: CalendarEvent[][] = [];
+    for (const event of timed) {
+      const eStart = event.start.getTime();
+      const eEnd = event.end!.getTime();
+      let placed = false;
+      for (const cluster of clusters) {
+        if (cluster.some(c => c.start.getTime() < eEnd && c.end!.getTime() > eStart)) {
+          cluster.push(event);
+          placed = true;
+          break;
+        }
+      }
+      if (!placed) clusters.push([event]);
+    }
+
+    // Assign columns within each cluster
+    for (const cluster of clusters) {
+      const columns: CalendarEvent[][] = [];
+      for (const event of cluster) {
+        let placed = false;
+        for (let col = 0; col < columns.length; col++) {
+          const last = columns[col][columns[col].length - 1];
+          if (last.end!.getTime() <= event.start.getTime()) {
+            columns[col].push(event);
+            layout.set(event.id, { column: col, totalColumns: 0 });
+            placed = true;
+            break;
+          }
+        }
+        if (!placed) {
+          layout.set(event.id, { column: columns.length, totalColumns: 0 });
+          columns.push([event]);
+        }
+      }
+      const total = columns.length;
+      for (const event of cluster) {
+        const l = layout.get(event.id)!;
+        l.totalColumns = total;
+      }
+    }
+
+    // Untimed events get full width
+    for (const event of untimed) {
+      layout.set(event.id, { column: 0, totalColumns: 1 });
+    }
+
+    return layout;
+  };
+
   // Event click -> open drawer
   const handleEventClick = (event: CalendarEvent) => {
     setSelectedEvent(event);
