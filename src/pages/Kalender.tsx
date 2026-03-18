@@ -301,6 +301,26 @@ export default function Kalender() {
     await Promise.all(fetches);
   }, []);
 
+  // Link/unlink an entity
+  const handleLinkEntity = async (field: string, entityId: string | null) => {
+    if (!selectedEvent) return;
+    const table = selectedEvent.type === "task" ? "oppgaver" : "aktiviteter";
+    try {
+      await fetch(`${API_URL}/${table}?id=eq.${selectedEvent.id}`, {
+        method: 'PATCH',
+        headers: { ...API_HEADERS, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ [field]: entityId }),
+      });
+      // Update raw and re-fetch linked entities
+      const updatedRaw = { ...selectedEvent.raw, [field]: entityId };
+      setSelectedEvent({ ...selectedEvent, raw: updatedRaw });
+      fetchLinkedEntities(updatedRaw);
+      await fetchEvents();
+    } catch (e) {
+      console.error("Error linking entity:", e);
+    }
+  };
+
   // Event click -> open drawer
   const handleEventClick = (event: CalendarEvent) => {
     setSelectedEvent(event);
