@@ -125,10 +125,12 @@ export default function Kalender() {
       fetch(`${API_URL}/selskaper?select=id,firmanavn&order=firmanavn`, { headers: API_HEADERS }).then(r => r.ok ? r.json() : []),
       fetch(`${API_URL}/salgsmuligheter?select=id,navn,status&order=navn`, { headers: API_HEADERS }).then(r => r.ok ? r.json() : []),
       fetch(`${API_URL}/leads?select=id,firmanavn,status&order=firmanavn`, { headers: API_HEADERS }).then(r => r.ok ? r.json() : []),
-    ]).then(([s, sm, l]) => {
+      fetch(`${API_URL}/partnere?select=id,partnernavn,partnertype&order=partnernavn`, { headers: API_HEADERS }).then(r => r.ok ? r.json() : []),
+    ]).then(([s, sm, l, p]) => {
       setSelskapListe(s);
       setSalgsmulighetListe(sm);
       setLeadListe(l);
+      setPartnerListe(p);
     }).catch(() => {});
   }, []);
 
