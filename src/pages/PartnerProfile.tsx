@@ -156,6 +156,11 @@ export default function PartnerProfile() {
              <TabsTrigger value="info" className="text-xs sm:text-sm">Info</TabsTrigger>
           </TabsList>
 
+          {/* Aktiviteter tab */}
+          <TabsContent value="aktiviteter">
+            <ActivityLog partner_id={id} kontaktListe={partnerKontakter.map(k => ({ id: k.id, navn: k.navn }))} />
+          </TabsContent>
+
           {/* Kunder tab */}
           <TabsContent value="kunder">
             <div className="flex items-center gap-2 mb-4">
