@@ -5,7 +5,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { CrmProvider } from "@/hooks/use-crm-store";
-import { AuthProvider } from "@/hooks/use-auth";
+import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import AppSidebar from "@/components/AppSidebar";
 import Dashboard from "./pages/Dashboard";
 import Leads from "./pages/Leads";
@@ -22,32 +22,68 @@ import Admin from "./pages/Admin";
 import Aktiviteter from "./pages/Aktiviteter";
 import Rapporter from "./pages/Rapporter";
 import NotFound from "./pages/NotFound";
+import Login from "./pages/Login";
 
 const queryClient = new QueryClient();
 
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
+  }
+  if (!user) return <Navigate to="/login" replace />;
+  return <>{children}</>;
+}
+
+function LoginRoute() {
+  const { user, loading } = useAuth();
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
+  }
+  if (user) return <Navigate to="/" replace />;
+  return <Login />;
+}
+
 function AppRoutes() {
   return (
-    <CrmProvider>
-      <AppSidebar />
-      <Routes>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/leads" element={<Leads />} />
-        <Route path="/salgsmuligheter" element={<Salgsmuligheter />} />
-        <Route path="/prosjekter" element={<Prosjekter />} />
-        <Route path="/selskaper" element={<Companies />} />
-        <Route path="/selskaper/:id" element={<CompanyProfile />} />
-        <Route path="/kontakter" element={<Contacts />} />
-        <Route path="/oppgaver" element={<Tasks />} />
-        <Route path="/partnere" element={<Partnere />} />
-        <Route path="/partnere/:id" element={<PartnerProfile />} />
-        <Route path="/partner-pipeline" element={<PartnerPipeline />} />
-        <Route path="/aktiviteter" element={<Aktiviteter />} />
-        <Route path="/rapporter" element={<Rapporter />} />
-        <Route path="/admin" element={<Admin />} />
-        <Route path="/login" element={<Navigate to="/" replace />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </CrmProvider>
+    <Routes>
+      <Route path="/login" element={<LoginRoute />} />
+      <Route
+        path="/*"
+        element={
+          <ProtectedRoute>
+            <CrmProvider>
+              <AppSidebar />
+              <Routes>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/leads" element={<Leads />} />
+                <Route path="/salgsmuligheter" element={<Salgsmuligheter />} />
+                <Route path="/prosjekter" element={<Prosjekter />} />
+                <Route path="/selskaper" element={<Companies />} />
+                <Route path="/selskaper/:id" element={<CompanyProfile />} />
+                <Route path="/kontakter" element={<Contacts />} />
+                <Route path="/oppgaver" element={<Tasks />} />
+                <Route path="/partnere" element={<Partnere />} />
+                <Route path="/partnere/:id" element={<PartnerProfile />} />
+                <Route path="/partner-pipeline" element={<PartnerPipeline />} />
+                <Route path="/aktiviteter" element={<Aktiviteter />} />
+                <Route path="/rapporter" element={<Rapporter />} />
+                <Route path="/admin" element={<Admin />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </CrmProvider>
+          </ProtectedRoute>
+        }
+      />
+    </Routes>
   );
 }
 
