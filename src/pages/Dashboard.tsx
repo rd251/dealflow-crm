@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import PageShell from "@/components/PageShell";
+import UpcomingMeetings from "@/components/UpcomingMeetings";
 import StatCard from "@/components/StatCard";
 import { useCrmStore } from "@/hooks/use-crm-store";
 import { useIsMobile } from "@/hooks/use-mobile";
