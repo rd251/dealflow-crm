@@ -771,20 +771,30 @@ export default function Kalender() {
                 <h4 className="text-xs font-semibold uppercase text-muted-foreground tracking-wide">Tilknyttet informasjon</h4>
 
                 {/* Selskap */}
-                <div className="rounded-lg border p-3 space-y-1">
+                <div className="rounded-lg border p-3 space-y-1.5">
                   <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                     <Building2 className="w-3.5 h-3.5" /> Selskap
                   </div>
                   {linkedSelskap ? (
-                    <button
-                      className="text-sm font-medium text-primary hover:underline flex items-center gap-1"
-                      onClick={() => { setDrawerOpen(false); navigate(`/kundeforhold/${linkedSelskap.id}`); }}
-                    >
-                      {linkedSelskap.firmanavn}
-                      <ExternalLink className="w-3 h-3" />
-                    </button>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        className="text-sm font-medium text-primary hover:underline flex items-center gap-1 flex-1"
+                        onClick={() => { setDrawerOpen(false); navigate(`/kundeforhold/${linkedSelskap.id}`); }}
+                      >
+                        {linkedSelskap.firmanavn}
+                        <ExternalLink className="w-3 h-3" />
+                      </button>
+                      <Button variant="ghost" size="icon" className="h-5 w-5 shrink-0" onClick={() => handleLinkEntity('selskap_id', null)}>
+                        <X className="w-3 h-3" />
+                      </Button>
+                    </div>
                   ) : (
-                    <span className="text-xs text-muted-foreground italic">Ikke tilknyttet</span>
+                    <EntityLinkPicker
+                      options={selskapListe.map(s => ({ id: s.id, label: s.firmanavn }))}
+                      value={null}
+                      onChange={(id) => handleLinkEntity('selskap_id', id)}
+                      placeholder="Søk selskap..."
+                    />
                   )}
                 </div>
 
@@ -794,8 +804,13 @@ export default function Kalender() {
                     <UserCircle className="w-3.5 h-3.5" /> Kontaktperson
                   </div>
                   {linkedKontakt ? (
-                    <div className="space-y-0.5">
-                      <p className="text-sm font-medium">{linkedKontakt.navn}</p>
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-sm font-medium flex-1">{linkedKontakt.navn}</p>
+                        <Button variant="ghost" size="icon" className="h-5 w-5 shrink-0" onClick={() => handleLinkEntity('kontakt_id', null)}>
+                          <X className="w-3 h-3" />
+                        </Button>
+                      </div>
                       {linkedKontakt.rolle && <p className="text-xs text-muted-foreground">{linkedKontakt.rolle}</p>}
                       {linkedKontakt.e_post && (
                         <a href={`mailto:${linkedKontakt.e_post}`} className="text-xs text-primary hover:underline flex items-center gap-1">
@@ -809,53 +824,74 @@ export default function Kalender() {
                       )}
                     </div>
                   ) : (
-                    <span className="text-xs text-muted-foreground italic">Ikke tilknyttet</span>
+                    <EntityLinkPicker
+                      options={kontaktListe.map(k => ({ id: k.id, label: k.navn }))}
+                      value={null}
+                      onChange={(id) => handleLinkEntity('kontakt_id', id)}
+                      placeholder="Søk kontakt..."
+                    />
                   )}
                 </div>
 
                 {/* Salgsmulighet */}
-                {(linkedSalgsmulighet || selectedEvent.raw?.salgsmulighet_id !== undefined) && (
-                  <div className="rounded-lg border p-3 space-y-1">
-                    <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                      <Briefcase className="w-3.5 h-3.5" /> Salgsmulighet
-                    </div>
-                    {linkedSalgsmulighet ? (
-                      <div>
-                        <p className="text-sm font-medium">{linkedSalgsmulighet.navn}</p>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          <Badge variant="outline" className="text-[10px]">{linkedSalgsmulighet.status}</Badge>
-                          {linkedSalgsmulighet.forventet_mrr > 0 && (
-                            <span className="text-[10px] text-muted-foreground">{linkedSalgsmulighet.forventet_mrr.toLocaleString("nb-NO")} kr/mnd</span>
-                          )}
-                        </div>
-                      </div>
-                    ) : (
-                      <span className="text-xs text-muted-foreground italic">Ikke tilknyttet</span>
-                    )}
+                <div className="rounded-lg border p-3 space-y-1.5">
+                  <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                    <Briefcase className="w-3.5 h-3.5" /> Salgsmulighet
                   </div>
-                )}
+                  {linkedSalgsmulighet ? (
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-sm font-medium flex-1">{linkedSalgsmulighet.navn}</p>
+                        <Button variant="ghost" size="icon" className="h-5 w-5 shrink-0" onClick={() => handleLinkEntity('salgsmulighet_id', null)}>
+                          <X className="w-3 h-3" />
+                        </Button>
+                      </div>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <Badge variant="outline" className="text-[10px]">{linkedSalgsmulighet.status}</Badge>
+                        {linkedSalgsmulighet.forventet_mrr > 0 && (
+                          <span className="text-[10px] text-muted-foreground">{linkedSalgsmulighet.forventet_mrr.toLocaleString("nb-NO")} kr/mnd</span>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <EntityLinkPicker
+                      options={salgsmulighetListe.map(s => ({ id: s.id, label: s.navn, sublabel: s.status }))}
+                      value={null}
+                      onChange={(id) => handleLinkEntity('salgsmulighet_id', id)}
+                      placeholder="Søk salgsmulighet..."
+                    />
+                  )}
+                </div>
 
                 {/* Lead */}
-                {(linkedLead || selectedEvent.raw?.lead_id !== undefined) && (
-                  <div className="rounded-lg border p-3 space-y-1">
-                    <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                      <Users className="w-3.5 h-3.5" /> Lead
-                    </div>
-                    {linkedLead ? (
-                      <div>
-                        <p className="text-sm font-medium">{linkedLead.firmanavn}</p>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          <Badge variant="outline" className="text-[10px]">{linkedLead.status}</Badge>
-                          {linkedLead.kontaktperson && (
-                            <span className="text-[10px] text-muted-foreground">{linkedLead.kontaktperson}</span>
-                          )}
-                        </div>
-                      </div>
-                    ) : (
-                      <span className="text-xs text-muted-foreground italic">Ikke tilknyttet</span>
-                    )}
+                <div className="rounded-lg border p-3 space-y-1.5">
+                  <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                    <Users className="w-3.5 h-3.5" /> Lead
                   </div>
-                )}
+                  {linkedLead ? (
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-sm font-medium flex-1">{linkedLead.firmanavn}</p>
+                        <Button variant="ghost" size="icon" className="h-5 w-5 shrink-0" onClick={() => handleLinkEntity('lead_id', null)}>
+                          <X className="w-3 h-3" />
+                        </Button>
+                      </div>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <Badge variant="outline" className="text-[10px]">{linkedLead.status}</Badge>
+                        {linkedLead.kontaktperson && (
+                          <span className="text-[10px] text-muted-foreground">{linkedLead.kontaktperson}</span>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <EntityLinkPicker
+                      options={leadListe.map(l => ({ id: l.id, label: l.firmanavn, sublabel: l.status }))}
+                      value={null}
+                      onChange={(id) => handleLinkEntity('lead_id', id)}
+                      placeholder="Søk lead..."
+                    />
+                  )}
+                </div>
               </div>
 
               <div className="flex gap-2 pt-4 border-t">
