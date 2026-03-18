@@ -1094,6 +1094,15 @@ export default function Kalender() {
                     placeholder="Søk lead..."
                   />
                 </div>
+                <div>
+                  <p className="text-[10px] text-muted-foreground mb-1 flex items-center gap-1"><Handshake className="w-3 h-3" /> Partner</p>
+                  <EntityLinkPicker
+                    options={partnerListe.map(p => ({ id: p.id, label: p.partnernavn, sublabel: p.partnertype || undefined }))}
+                    value={newMeetingPartnerId}
+                    onChange={setNewMeetingPartnerId}
+                    placeholder="Søk partner..."
+                  />
+                </div>
               </div>
             </div>
             <Button onClick={handleCreateMeeting} className="w-full" disabled={!newMeetingTittel.trim() || saving}>
