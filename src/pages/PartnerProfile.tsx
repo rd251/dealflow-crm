@@ -150,9 +150,10 @@ export default function PartnerProfile() {
         {/* Tabs */}
         <Tabs defaultValue="kunder">
           <TabsList className="flex-wrap h-auto gap-1">
-            <TabsTrigger value="kunder" className="text-xs sm:text-sm">Kunder ({partnerKunder.length})</TabsTrigger>
-            <TabsTrigger value="kontakter" className="text-xs sm:text-sm">Kontakter ({partnerKontakter.length})</TabsTrigger>
-            <TabsTrigger value="info" className="text-xs sm:text-sm">Info</TabsTrigger>
+             <TabsTrigger value="aktiviteter" className="text-xs sm:text-sm">Aktiviteter</TabsTrigger>
+             <TabsTrigger value="kunder" className="text-xs sm:text-sm">Kunder ({partnerKunder.length})</TabsTrigger>
+             <TabsTrigger value="kontakter" className="text-xs sm:text-sm">Kontakter ({partnerKontakter.length})</TabsTrigger>
+             <TabsTrigger value="info" className="text-xs sm:text-sm">Info</TabsTrigger>
           </TabsList>
 
           {/* Kunder tab */}
