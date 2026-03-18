@@ -112,6 +112,18 @@ export default function Kalender() {
       .catch(() => {});
   }, []);
 
+  // Fetch entity lists for linking
+  useEffect(() => {
+    Promise.all([
+      fetch(`${API_URL}/selskaper?select=id,firmanavn&order=firmanavn`, { headers: API_HEADERS }).then(r => r.ok ? r.json() : []),
+      fetch(`${API_URL}/salgsmuligheter?select=id,navn,status&order=navn`, { headers: API_HEADERS }).then(r => r.ok ? r.json() : []),
+      fetch(`${API_URL}/leads?select=id,firmanavn,status&order=firmanavn`, { headers: API_HEADERS }).then(r => r.ok ? r.json() : []),
+    ]).then(([s, sm, l]) => {
+      setSelskapListe(s);
+      setSalgsmulighetListe(sm);
+      setLeadListe(l);
+    }).catch(() => {});
+
   const fetchEvents = useCallback(async () => {
     let from: string, to: string;
     if (viewMode === "week") {
