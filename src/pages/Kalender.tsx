@@ -278,6 +278,7 @@ export default function Kalender() {
             beskrivelse: editBeskrivelse.trim(),
             start_tid: `${editDato}T${editStartTid}:00`,
             slutt_tid: `${editDato}T${editSluttTid}:00`,
+            deltakere: editDeltakere,
           }),
         });
       } else if (selectedEvent.type === "task") {
