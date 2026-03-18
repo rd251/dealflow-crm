@@ -923,6 +923,40 @@ export default function Kalender() {
                     />
                   )}
                 </div>
+
+                {/* Partner */}
+                <div className="rounded-lg border p-3 space-y-1.5">
+                  <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                    <Handshake className="w-3.5 h-3.5" /> Partner
+                  </div>
+                  {linkedPartner ? (
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          className="text-sm font-medium text-primary hover:underline flex items-center gap-1 flex-1"
+                          onClick={() => { setDrawerOpen(false); navigate(`/partnere/${linkedPartner.id}`); }}
+                        >
+                          {linkedPartner.partnernavn}
+                          <ExternalLink className="w-3 h-3" />
+                        </button>
+                        <Button variant="ghost" size="icon" className="h-5 w-5 shrink-0" onClick={() => handleLinkEntity('partner_id', null)}>
+                          <X className="w-3 h-3" />
+                        </Button>
+                      </div>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        {linkedPartner.partnertype && <Badge variant="outline" className="text-[10px]">{linkedPartner.partnertype}</Badge>}
+                        {linkedPartner.partnerstatus && <Badge variant="outline" className="text-[10px]">{linkedPartner.partnerstatus}</Badge>}
+                      </div>
+                    </div>
+                  ) : (
+                    <EntityLinkPicker
+                      options={partnerListe.map(p => ({ id: p.id, label: p.partnernavn, sublabel: p.partnertype || undefined }))}
+                      value={null}
+                      onChange={(id) => handleLinkEntity('partner_id', id)}
+                      placeholder="Søk partner..."
+                    />
+                  )}
+                </div>
               </div>
 
               <div className="flex gap-2 pt-4 border-t">
