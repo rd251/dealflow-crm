@@ -61,6 +61,10 @@ export default function ActivityLog(props: ActivityLogProps) {
   const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [meetingTittel, setMeetingTittel] = useState("");
+  const [meetingDato, setMeetingDato] = useState("");
+  const [meetingStartTid, setMeetingStartTid] = useState("");
+  const [meetingSluttTid, setMeetingSluttTid] = useState("");
 
   const buildFilter = useCallback(() => {
     const filters: string[] = [];
