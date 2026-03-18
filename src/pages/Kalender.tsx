@@ -174,6 +174,62 @@ export default function Kalender() {
     return Math.max(28, diffMs / 60000);
   };
 
+  // Calculate overlap layout for events in a day
+  const getOverlapLayout = (dayEvents: CalendarEvent[]) => {
+    const timed = dayEvents.filter(e => e.end).sort((a, b) => a.start.getTime() - b.start.getTime());
+    const untimed = dayEvents.filter(e => !e.end);
+    const layout: Map<string, { column: number; totalColumns: number }> = new Map();
+
+    // Group overlapping events into clusters
+    const clusters: CalendarEvent[][] = [];
+    for (const event of timed) {
+      const eStart = event.start.getTime();
+      const eEnd = event.end!.getTime();
+      let placed = false;
+      for (const cluster of clusters) {
+        if (cluster.some(c => c.start.getTime() < eEnd && c.end!.getTime() > eStart)) {
+          cluster.push(event);
+          placed = true;
+          break;
+        }
+      }
+      if (!placed) clusters.push([event]);
+    }
+
+    // Assign columns within each cluster
+    for (const cluster of clusters) {
+      const columns: CalendarEvent[][] = [];
+      for (const event of cluster) {
+        let placed = false;
+        for (let col = 0; col < columns.length; col++) {
+          const last = columns[col][columns[col].length - 1];
+          if (last.end!.getTime() <= event.start.getTime()) {
+            columns[col].push(event);
+            layout.set(event.id, { column: col, totalColumns: 0 });
+            placed = true;
+            break;
+          }
+        }
+        if (!placed) {
+          layout.set(event.id, { column: columns.length, totalColumns: 0 });
+          columns.push([event]);
+        }
+      }
+      const total = columns.length;
+      for (const event of cluster) {
+        const l = layout.get(event.id)!;
+        l.totalColumns = total;
+      }
+    }
+
+    // Untimed events get full width
+    for (const event of untimed) {
+      layout.set(event.id, { column: 0, totalColumns: 1 });
+    }
+
+    return layout;
+  };
+
   // Event click -> open drawer
   const handleEventClick = (event: CalendarEvent) => {
     setSelectedEvent(event);
@@ -437,14 +493,17 @@ export default function Kalender() {
           </div>
 
           <div className="grid grid-cols-[60px_repeat(7,1fr)] max-h-[600px] overflow-y-auto">
-            {HOURS.map(hour => (
+            {HOURS.map(hour => {
+              return (
               <div key={hour} className="contents">
                 <div className="h-[60px] border-b border-r px-1 flex items-start justify-end pt-0.5">
                   <span className="text-[10px] text-muted-foreground">{String(hour).padStart(2, "0")}:00</span>
                 </div>
                 {weekDays.map((day, di) => {
                   const isToday = isSameDay(day, today);
-                  const dayEvents = getEventsForDay(day).filter(e => e.start.getHours() === hour);
+                  const allDayEvents = getEventsForDay(day);
+                  const dayEvents = allDayEvents.filter(e => e.start.getHours() === hour);
+                  const overlapLayout = getOverlapLayout(allDayEvents);
                   const isDropTarget = dragOverSlot && isSameDay(dragOverSlot.day, day) && dragOverSlot.hour === hour;
                   return (
                     <div
@@ -457,23 +516,33 @@ export default function Kalender() {
                       onDragLeave={handleDragLeave}
                       onDrop={(e) => handleDrop(e, day, hour)}
                     >
-                      {dayEvents.map(event => (
+                      {dayEvents.map(event => {
+                        const ol = overlapLayout.get(event.id) || { column: 0, totalColumns: 1 };
+                        const widthPct = 100 / ol.totalColumns;
+                        const leftPct = ol.column * widthPct;
+                        return (
                         <div
                           key={event.id}
-                          className="absolute left-0.5 right-0.5"
+                          className="absolute"
                           style={{
                             top: `${event.start.getMinutes()}px`,
                             height: `${Math.min(getEventHeight(event), 60 - event.start.getMinutes())}px`,
+                            left: `${leftPct}%`,
+                            width: `${widthPct}%`,
+                            paddingLeft: '1px',
+                            paddingRight: '1px',
                           }}
                         >
                           <EventCard event={event} />
                         </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   );
                 })}
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
