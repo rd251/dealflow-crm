@@ -76,6 +76,10 @@ export default function Kalender() {
   const [newMeetingSluttTid, setNewMeetingSluttTid] = useState("10:00");
   const [newMeetingBeskrivelse, setNewMeetingBeskrivelse] = useState("");
   const [newMeetingDeltakere, setNewMeetingDeltakere] = useState<string[]>([]);
+  const [newMeetingSelskapId, setNewMeetingSelskapId] = useState<string | null>(null);
+  const [newMeetingKontaktId, setNewMeetingKontaktId] = useState<string | null>(null);
+  const [newMeetingSalgsmulighetId, setNewMeetingSalgsmulighetId] = useState<string | null>(null);
+  const [newMeetingLeadId, setNewMeetingLeadId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   // Drag state
@@ -401,6 +405,10 @@ export default function Kalender() {
     setNewMeetingTittel("");
     setNewMeetingBeskrivelse("");
     setNewMeetingDeltakere([]);
+    setNewMeetingSelskapId(null);
+    setNewMeetingKontaktId(null);
+    setNewMeetingSalgsmulighetId(null);
+    setNewMeetingLeadId(null);
     setCreateOpen(true);
   };
 
@@ -418,6 +426,10 @@ export default function Kalender() {
           start_tid: `${newMeetingDato}T${newMeetingStartTid}:00`,
           slutt_tid: `${newMeetingDato}T${newMeetingSluttTid}:00`,
           deltakere: newMeetingDeltakere,
+          selskap_id: newMeetingSelskapId,
+          kontakt_id: newMeetingKontaktId,
+          salgsmulighet_id: newMeetingSalgsmulighetId,
+          lead_id: newMeetingLeadId,
         }),
       });
       setCreateOpen(false);
@@ -666,6 +678,10 @@ export default function Kalender() {
                     setNewMeetingTittel("");
                     setNewMeetingBeskrivelse("");
                     setNewMeetingDeltakere([]);
+                    setNewMeetingSelskapId(null);
+                    setNewMeetingKontaktId(null);
+                    setNewMeetingSalgsmulighetId(null);
+                    setNewMeetingLeadId(null);
                     setCreateOpen(true);
                   }}
                 >
@@ -990,6 +1006,47 @@ export default function Kalender() {
               onChange={e => setNewMeetingBeskrivelse(e.target.value)}
               rows={3}
             />
+            <div className="space-y-2 border rounded-lg p-3 bg-muted/30">
+              <p className="text-xs font-medium text-muted-foreground">Tilknytninger</p>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <p className="text-[10px] text-muted-foreground mb-1 flex items-center gap-1"><Building2 className="w-3 h-3" /> Selskap</p>
+                  <EntityLinkPicker
+                    options={selskapListe.map(s => ({ id: s.id, label: s.firmanavn }))}
+                    value={newMeetingSelskapId}
+                    onChange={setNewMeetingSelskapId}
+                    placeholder="Søk selskap..."
+                  />
+                </div>
+                <div>
+                  <p className="text-[10px] text-muted-foreground mb-1 flex items-center gap-1"><UserCircle className="w-3 h-3" /> Kontakt</p>
+                  <EntityLinkPicker
+                    options={kontaktListe.map(k => ({ id: k.id, label: k.navn }))}
+                    value={newMeetingKontaktId}
+                    onChange={setNewMeetingKontaktId}
+                    placeholder="Søk kontakt..."
+                  />
+                </div>
+                <div>
+                  <p className="text-[10px] text-muted-foreground mb-1 flex items-center gap-1"><Briefcase className="w-3 h-3" /> Salgsmulighet</p>
+                  <EntityLinkPicker
+                    options={salgsmulighetListe.map(s => ({ id: s.id, label: s.navn, sublabel: s.status }))}
+                    value={newMeetingSalgsmulighetId}
+                    onChange={setNewMeetingSalgsmulighetId}
+                    placeholder="Søk salgsmulighet..."
+                  />
+                </div>
+                <div>
+                  <p className="text-[10px] text-muted-foreground mb-1 flex items-center gap-1"><ExternalLink className="w-3 h-3" /> Lead</p>
+                  <EntityLinkPicker
+                    options={leadListe.map(l => ({ id: l.id, label: l.firmanavn, sublabel: l.status }))}
+                    value={newMeetingLeadId}
+                    onChange={setNewMeetingLeadId}
+                    placeholder="Søk lead..."
+                  />
+                </div>
+              </div>
+            </div>
             <Button onClick={handleCreateMeeting} className="w-full" disabled={!newMeetingTittel.trim() || saving}>
               {saving ? "Oppretter..." : "Opprett møte"}
             </Button>
