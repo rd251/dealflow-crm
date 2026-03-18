@@ -421,6 +421,7 @@ export default function Kalender() {
     setNewMeetingKontaktId(null);
     setNewMeetingSalgsmulighetId(null);
     setNewMeetingLeadId(null);
+    setNewMeetingPartnerId(null);
     setCreateOpen(true);
   };
 
