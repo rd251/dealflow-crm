@@ -21,6 +21,7 @@ import CompanyProfile from "./pages/CompanyProfile";
 import Admin from "./pages/Admin";
 import Aktiviteter from "./pages/Aktiviteter";
 import Rapporter from "./pages/Rapporter";
+import Kalender from "./pages/Kalender";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 
