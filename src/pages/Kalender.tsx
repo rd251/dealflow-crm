@@ -580,6 +580,7 @@ export default function Kalender() {
                     setNewMeetingSluttTid("10:00");
                     setNewMeetingTittel("");
                     setNewMeetingBeskrivelse("");
+                    setNewMeetingDeltakere([]);
                     setCreateOpen(true);
                   }}
                 >
