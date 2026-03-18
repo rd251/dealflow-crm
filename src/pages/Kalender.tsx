@@ -52,6 +52,7 @@ export default function Kalender() {
   const [editStartTid, setEditStartTid] = useState("");
   const [editSluttTid, setEditSluttTid] = useState("");
   const [editSaving, setEditSaving] = useState(false);
+  const [editDeltakere, setEditDeltakere] = useState<string[]>([]);
 
   // Create meeting dialog
   const [createOpen, setCreateOpen] = useState(false);
