@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import PageShell from "@/components/PageShell";
+import UpcomingMeetings from "@/components/UpcomingMeetings";
 import StatCard from "@/components/StatCard";
 import { useCrmStore } from "@/hooks/use-crm-store";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -229,6 +230,9 @@ export default function Dashboard() {
         <StatCard label="Churn-rate" value={`${churnRate}%`} icon={<AlertTriangle className="w-5 h-5" />} />
         <StatCard label="Forfalte oppgaver" value={forfaltOppgaver} icon={<AlertTriangle className="w-5 h-5" />} trend={forfaltOppgaver > 0 ? "Handling kreves" : "Alt på stell"} className={isMobile ? "col-span-2" : ""} />
       </div>
+
+      {/* Upcoming meetings & activities */}
+      <UpcomingMeetings />
 
       {/* Tasks & Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">

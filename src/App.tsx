@@ -21,6 +21,7 @@ import CompanyProfile from "./pages/CompanyProfile";
 import Admin from "./pages/Admin";
 import Aktiviteter from "./pages/Aktiviteter";
 import Rapporter from "./pages/Rapporter";
+import Kalender from "./pages/Kalender";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 
@@ -71,6 +72,7 @@ function AppRoutes() {
                 <Route path="/selskaper/:id" element={<CompanyProfile />} />
                 <Route path="/kontakter" element={<Contacts />} />
                 <Route path="/oppgaver" element={<Tasks />} />
+                <Route path="/kalender" element={<Kalender />} />
                 <Route path="/partnere" element={<Partnere />} />
                 <Route path="/partnere/:id" element={<PartnerProfile />} />
                 <Route path="/partner-pipeline" element={<PartnerPipeline />} />

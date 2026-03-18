@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Phone, Mail, MessageSquare, MessageCircle, Users, FileText, Plus, Clock, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import MeetingFields from "@/components/MeetingFields";
 
 const API_URL = import.meta.env.VITE_SUPABASE_URL + '/rest/v1';
 const API_HEADERS = {
@@ -60,6 +61,10 @@ export default function ActivityLog(props: ActivityLogProps) {
   const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [meetingTittel, setMeetingTittel] = useState("");
+  const [meetingDato, setMeetingDato] = useState("");
+  const [meetingStartTid, setMeetingStartTid] = useState("");
+  const [meetingSluttTid, setMeetingSluttTid] = useState("");
 
   const buildFilter = useCallback(() => {
     const filters: string[] = [];
@@ -89,6 +94,10 @@ export default function ActivityLog(props: ActivityLogProps) {
     setEditingId(null);
     setType("Telefonsamtale");
     setBeskrivelse("");
+    setMeetingTittel("");
+    setMeetingDato(new Date().toISOString().split("T")[0]);
+    setMeetingStartTid("09:00");
+    setMeetingSluttTid("10:00");
     setDialogOpen(true);
   };
 
@@ -103,14 +112,25 @@ export default function ActivityLog(props: ActivityLogProps) {
     if (!beskrivelse.trim()) return;
     setLoading(true);
     try {
+      const meetingData: Record<string, any> = {};
+      if (type === "Møte") {
+        meetingData.tittel = meetingTittel.trim();
+        if (meetingDato && meetingStartTid) {
+          meetingData.start_tid = `${meetingDato}T${meetingStartTid}:00`;
+        }
+        if (meetingDato && meetingSluttTid) {
+          meetingData.slutt_tid = `${meetingDato}T${meetingSluttTid}:00`;
+        }
+      }
+
       if (editingId) {
         await fetch(`${API_URL}/aktiviteter?id=eq.${editingId}`, {
           method: 'PATCH',
           headers: { ...API_HEADERS, 'Prefer': 'return=minimal' },
-          body: JSON.stringify({ type, beskrivelse: beskrivelse.trim() }),
+          body: JSON.stringify({ type, beskrivelse: beskrivelse.trim(), ...meetingData }),
         });
       } else {
-        const body: Record<string, any> = { type, beskrivelse: beskrivelse.trim() };
+        const body: Record<string, any> = { type, beskrivelse: beskrivelse.trim(), ...meetingData };
         if (props.lead_id) body.lead_id = props.lead_id;
         if (props.salgsmulighet_id) body.salgsmulighet_id = props.salgsmulighet_id;
         if (props.selskap_id) body.selskap_id = props.selskap_id;
@@ -237,6 +257,18 @@ export default function ActivityLog(props: ActivityLogProps) {
                 );
               })}
             </div>
+            {type === "Møte" && (
+              <MeetingFields
+                tittel={meetingTittel}
+                dato={meetingDato}
+                startTid={meetingStartTid}
+                sluttTid={meetingSluttTid}
+                onTittelChange={setMeetingTittel}
+                onDatoChange={setMeetingDato}
+                onStartTidChange={setMeetingStartTid}
+                onSluttTidChange={setMeetingSluttTid}
+              />
+            )}
             <Textarea
               placeholder="Beskriv aktiviteten..."
               value={beskrivelse}
