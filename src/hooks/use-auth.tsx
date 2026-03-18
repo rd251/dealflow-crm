@@ -20,6 +20,13 @@ interface AuthContextType extends AuthState {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((resolve) => setTimeout(() => resolve(fallback), ms)),
+  ]);
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({
     user: null,
@@ -49,36 +56,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
-    console.log("Auth useEffect started");
 
-    const setSignedOutState = () => {
-      if (mounted) setState({ user: null, session: null, role: null, loading: false, isAdmin: false });
-    };
-
-    const setSignedInState = async (session: Session) => {
-      try {
-        const role = await fetchRole(session.user.id);
-        if (mounted) setState({ user: session.user, session, role, loading: false, isAdmin: role === "admin" });
-      } catch (err) {
-        console.error("setSignedInState error:", err);
-        if (mounted) setState({ user: session.user, session, role: "user", loading: false, isAdmin: false });
-      }
-    };
+    // Safety timeout: if loading hasn't resolved in 5s, check session manually
+    const safetyTimeout = setTimeout(async () => {
+      if (!mounted) return;
+      // If still loading, force resolve
+      setState((prev) => {
+        if (!prev.loading) return prev;
+        console.warn("Auth safety timeout: forcing loading=false");
+        return { ...prev, loading: false };
+      });
+    }, 5000);
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth event:", event, "session:", !!session);
       if (!mounted) return;
-      if (event === "SIGNED_OUT" || (event === "INITIAL_SESSION" && !session)) {
-        setSignedOutState();
+
+      if (event === "SIGNED_OUT" || !session) {
+        setState({ user: null, session: null, role: null, loading: false, isAdmin: false });
         return;
       }
+
       if (session?.user) {
-        await setSignedInState(session);
+        // Fetch role with 3s timeout
+        const role = await withTimeout(fetchRole(session.user.id), 3000, "user" as AppRole);
+        if (mounted) {
+          setState({
+            user: session.user,
+            session,
+            role,
+            loading: false,
+            isAdmin: role === "admin",
+          });
+        }
       }
     });
 
     return () => {
       mounted = false;
+      clearTimeout(safetyTimeout);
       subscription.unsubscribe();
     };
   }, []);
