@@ -176,55 +176,58 @@ export default function Kalender() {
 
   // Calculate overlap layout for events in a day
   const getOverlapLayout = (dayEvents: CalendarEvent[]) => {
-    const timed = dayEvents.filter(e => e.end).sort((a, b) => a.start.getTime() - b.start.getTime());
-    const untimed = dayEvents.filter(e => !e.end);
+    const DEFAULT_DURATION_MS = 30 * 60 * 1000; // 30 min for untimed events
     const layout: Map<string, { column: number; totalColumns: number }> = new Map();
 
+    // Normalize: give every event a virtual end for layout purposes
+    const normalized = dayEvents
+      .map(e => ({
+        event: e,
+        start: e.start.getTime(),
+        end: e.end ? e.end.getTime() : e.start.getTime() + DEFAULT_DURATION_MS,
+      }))
+      .sort((a, b) => a.start - b.start);
+
     // Group overlapping events into clusters
-    const clusters: CalendarEvent[][] = [];
-    for (const event of timed) {
-      const eStart = event.start.getTime();
-      const eEnd = event.end!.getTime();
+    const clusters: typeof normalized = [];
+    const clusterGroups: (typeof normalized)[] = [];
+
+    for (const item of normalized) {
       let placed = false;
-      for (const cluster of clusters) {
-        if (cluster.some(c => c.start.getTime() < eEnd && c.end!.getTime() > eStart)) {
-          cluster.push(event);
+      for (const group of clusterGroups) {
+        if (group.some(c => c.start < item.end && c.end > item.start)) {
+          group.push(item);
           placed = true;
           break;
         }
       }
-      if (!placed) clusters.push([event]);
+      if (!placed) clusterGroups.push([item]);
     }
 
     // Assign columns within each cluster
-    for (const cluster of clusters) {
-      const columns: CalendarEvent[][] = [];
-      for (const event of cluster) {
+    for (const group of clusterGroups) {
+      const columns: (typeof normalized)[] = [];
+      for (const item of group) {
         let placed = false;
         for (let col = 0; col < columns.length; col++) {
           const last = columns[col][columns[col].length - 1];
-          if (last.end!.getTime() <= event.start.getTime()) {
-            columns[col].push(event);
-            layout.set(event.id, { column: col, totalColumns: 0 });
+          if (last.end <= item.start) {
+            columns[col].push(item);
+            layout.set(item.event.id, { column: col, totalColumns: 0 });
             placed = true;
             break;
           }
         }
         if (!placed) {
-          layout.set(event.id, { column: columns.length, totalColumns: 0 });
-          columns.push([event]);
+          layout.set(item.event.id, { column: columns.length, totalColumns: 0 });
+          columns.push([item]);
         }
       }
       const total = columns.length;
-      for (const event of cluster) {
-        const l = layout.get(event.id)!;
+      for (const item of group) {
+        const l = layout.get(item.event.id)!;
         l.totalColumns = total;
       }
-    }
-
-    // Untimed events get full width
-    for (const event of untimed) {
-      layout.set(event.id, { column: 0, totalColumns: 1 });
     }
 
     return layout;
