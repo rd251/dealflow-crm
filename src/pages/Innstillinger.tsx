@@ -28,6 +28,17 @@ export default function Innstillinger() {
   const [syncingGmail, setSyncingGmail] = useState(false);
   const [connecting, setConnecting] = useState(false);
   const [togglingGmail, setTogglingGmail] = useState(false);
+  const [copied, setCopied] = useState<string | null>(null);
+
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const leadApiUrl = `${supabaseUrl}/functions/v1/lead-intake`;
+
+  const copyToClipboard = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    setCopied(label);
+    toast.success("Kopiert!");
+    setTimeout(() => setCopied(null), 2000);
+  };
 
   useEffect(() => {
     if (searchParams.get("gcal_connected") === "true") {
