@@ -43,6 +43,11 @@ export const typeColors: Record<AktivitetType, string> = {
 
 export const typeOptions: AktivitetType[] = ["Telefonsamtale", "E-post", "LinkedIn-melding", "SMS", "Møte", "Notat"];
 
+interface KontaktOption {
+  id: string;
+  navn: string;
+}
+
 interface ActivityLogProps {
   lead_id?: string;
   salgsmulighet_id?: string;
@@ -51,6 +56,7 @@ interface ActivityLogProps {
   prosjekt_id?: string;
   kontakt_id?: string;
   onActivityLogged?: () => void;
+  kontaktListe?: KontaktOption[];
 }
 
 export default function ActivityLog(props: ActivityLogProps) {
