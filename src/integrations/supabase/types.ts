@@ -787,10 +787,10 @@ export type Database = {
         | "Ferdig"
       oppgave_status: "Åpen" | "Pågår" | "Ferdig"
       partner_pipeline_status:
-        | "Ny partner"
+        | "Ny partnermulighet"
         | "Introduksjon"
         | "Demo / gjennomgang"
-        | "Avtale"
+        | "Forhandling"
         | "Aktiv partner"
       partnerstatus: "Aktiv" | "Under onboarding" | "Inaktiv"
       partnertype:
@@ -1005,10 +1005,10 @@ export const Constants = {
       ],
       oppgave_status: ["Åpen", "Pågår", "Ferdig"],
       partner_pipeline_status: [
-        "Ny partner",
+        "Ny partnermulighet",
         "Introduksjon",
         "Demo / gjennomgang",
-        "Avtale",
+        "Forhandling",
         "Aktiv partner",
       ],
       partnerstatus: ["Aktiv", "Under onboarding", "Inaktiv"],

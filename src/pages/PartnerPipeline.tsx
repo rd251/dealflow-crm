@@ -7,13 +7,13 @@ import { Badge } from "@/components/ui/badge";
 import { PartnerPipelineStatus } from "@/data/crm-data";
 import { GripVertical } from "lucide-react";
 
-const pipelineStatuses: PartnerPipelineStatus[] = ["Ny partner", "Introduksjon", "Demo / gjennomgang", "Avtale", "Aktiv partner"];
+const pipelineStatuses: PartnerPipelineStatus[] = ["Ny partnermulighet", "Introduksjon", "Demo / gjennomgang", "Forhandling", "Aktiv partner"];
 
 const stageColors: Record<PartnerPipelineStatus, string> = {
-  "Ny partner": "bg-stage-new-lead",
+  "Ny partnermulighet": "bg-stage-new-lead",
   "Introduksjon": "bg-stage-contacted",
   "Demo / gjennomgang": "bg-stage-demo",
-  "Avtale": "bg-stage-proposal",
+  "Forhandling": "bg-stage-proposal",
   "Aktiv partner": "bg-stage-won",
 };
 

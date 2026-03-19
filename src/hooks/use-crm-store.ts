@@ -75,7 +75,7 @@ function rowToPartner(r: any): Partner {
   return {
     id: r.id, partnernavn: r.partnernavn, partnertype: r.partnertype || "Salgspartner",
     kontaktperson: r.kontaktperson || "", e_post: r.e_post || "", telefon: r.telefon || "",
-    partnerstatus: r.partnerstatus || "Under onboarding", pipeline_status: r.pipeline_status || "Ny partner",
+    partnerstatus: r.partnerstatus || "Under onboarding", pipeline_status: r.pipeline_status || "Ny partnermulighet",
     ansvarlig: r.ansvarlig || "", provisjonsprosent: Number(r.provisjonsprosent) || 0,
     provisjonstype: r.provisjonstype || "", selskap_id: r.selskap_id || "",
     opprettet_dato: r.opprettet_dato || "", sist_aktivitet: r.sist_aktivitet || "", notater: r.notater || "",
@@ -737,7 +737,7 @@ function useCrmStoreInternal() {
     const nyPartner: Partner = {
       id: partnerId, partnernavn: lead.firmanavn, partnertype: "Salgspartner",
       kontaktperson: lead.kontaktperson, e_post: lead.e_post, telefon: lead.telefon,
-      partnerstatus: "Under onboarding", pipeline_status: "Ny partner",
+      partnerstatus: "Under onboarding", pipeline_status: "Ny partnermulighet",
       ansvarlig: lead.ansvarlig, provisjonsprosent: 0, provisjonstype: "",
       selskap_id: "", opprettet_dato: today, sist_aktivitet: today, notater: lead.notater,
     };
@@ -852,7 +852,7 @@ function useCrmStoreInternal() {
     const nyPartner: Partner = {
       id: partnerId, partnernavn: selskap.firmanavn, partnertype: "Salgspartner",
       kontaktperson: "", e_post: "", telefon: "",
-      partnerstatus: "Under onboarding", pipeline_status: "Ny partner",
+      partnerstatus: "Under onboarding", pipeline_status: "Ny partnermulighet",
       ansvarlig: selskap.kundeansvarlig, provisjonsprosent: 0, provisjonstype: "",
       selskap_id: "", opprettet_dato: today, sist_aktivitet: today, notater: selskap.notater,
     };
