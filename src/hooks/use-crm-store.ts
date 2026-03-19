@@ -75,7 +75,7 @@ function rowToPartner(r: any): Partner {
   return {
     id: r.id, partnernavn: r.partnernavn, partnertype: r.partnertype || "Salgspartner",
     kontaktperson: r.kontaktperson || "", e_post: r.e_post || "", telefon: r.telefon || "",
-    partnerstatus: r.partnerstatus || "Under onboarding", pipeline_status: r.pipeline_status || "Ny partner",
+    partnerstatus: r.partnerstatus || "Under onboarding", pipeline_status: r.pipeline_status || "Ny partnermulighet",
     ansvarlig: r.ansvarlig || "", provisjonsprosent: Number(r.provisjonsprosent) || 0,
     provisjonstype: r.provisjonstype || "", selskap_id: r.selskap_id || "",
     opprettet_dato: r.opprettet_dato || "", sist_aktivitet: r.sist_aktivitet || "", notater: r.notater || "",
