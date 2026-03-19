@@ -129,6 +129,9 @@ export default function ActivityLog(props: ActivityLogProps) {
         if (meetingDato && meetingSluttTid) {
           meetingData.slutt_tid = `${meetingDato}T${meetingSluttTid}:00`;
         }
+        if (meetingDeltakere.length > 0) {
+          meetingData.deltakere = meetingDeltakere;
+        }
       }
 
       if (editingId) {
