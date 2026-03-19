@@ -91,7 +91,7 @@ export default function ActivityLog(props: ActivityLogProps) {
     const filter = buildFilter();
     if (!filter) return;
     try {
-      const res = await fetch(`${API_URL}/aktiviteter?${filter}&order=dato.desc&select=id,type,beskrivelse,dato`, { headers: API_HEADERS });
+      const res = await fetch(`${API_URL}/aktiviteter?${filter}&order=dato.desc&select=id,type,beskrivelse,dato,tittel,aktivitet_kilde,ekstern_provider`, { headers: API_HEADERS });
       if (res.ok) setAktiviteter(await res.json());
     } catch (e) {
       console.error("Error fetching aktiviteter:", e);
