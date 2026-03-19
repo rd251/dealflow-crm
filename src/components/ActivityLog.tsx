@@ -43,6 +43,11 @@ export const typeColors: Record<AktivitetType, string> = {
 
 export const typeOptions: AktivitetType[] = ["Telefonsamtale", "E-post", "LinkedIn-melding", "SMS", "Møte", "Notat"];
 
+interface KontaktOption {
+  id: string;
+  navn: string;
+}
+
 interface ActivityLogProps {
   lead_id?: string;
   salgsmulighet_id?: string;
@@ -51,6 +56,7 @@ interface ActivityLogProps {
   prosjekt_id?: string;
   kontakt_id?: string;
   onActivityLogged?: () => void;
+  kontaktListe?: KontaktOption[];
 }
 
 export default function ActivityLog(props: ActivityLogProps) {
@@ -65,6 +71,7 @@ export default function ActivityLog(props: ActivityLogProps) {
   const [meetingDato, setMeetingDato] = useState("");
   const [meetingStartTid, setMeetingStartTid] = useState("");
   const [meetingSluttTid, setMeetingSluttTid] = useState("");
+  const [meetingDeltakere, setMeetingDeltakere] = useState<string[]>([]);
 
   const buildFilter = useCallback(() => {
     const filters: string[] = [];
@@ -98,6 +105,7 @@ export default function ActivityLog(props: ActivityLogProps) {
     setMeetingDato(new Date().toISOString().split("T")[0]);
     setMeetingStartTid("09:00");
     setMeetingSluttTid("10:00");
+    setMeetingDeltakere([]);
     setDialogOpen(true);
   };
 
@@ -120,6 +128,9 @@ export default function ActivityLog(props: ActivityLogProps) {
         }
         if (meetingDato && meetingSluttTid) {
           meetingData.slutt_tid = `${meetingDato}T${meetingSluttTid}:00`;
+        }
+        if (meetingDeltakere.length > 0) {
+          meetingData.deltakere = meetingDeltakere;
         }
       }
 
@@ -267,6 +278,9 @@ export default function ActivityLog(props: ActivityLogProps) {
                 onDatoChange={setMeetingDato}
                 onStartTidChange={setMeetingStartTid}
                 onSluttTidChange={setMeetingSluttTid}
+                deltakere={meetingDeltakere}
+                onDeltakereChange={setMeetingDeltakere}
+                kontaktListe={props.kontaktListe}
               />
             )}
             <Textarea
