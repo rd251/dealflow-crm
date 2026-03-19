@@ -194,6 +194,10 @@ export default function Aktiviteter() {
     const date = new Date(d);
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
+    if (diffMs < 0) {
+      // Future date
+      return date.toLocaleDateString("no-NO", { day: "numeric", month: "short" });
+    }
     const diffMin = Math.floor(diffMs / 60000);
     if (diffMin < 1) return "Nå";
     if (diffMin < 60) return `${diffMin} min siden`;
