@@ -158,7 +158,7 @@ export default function PartnerProfile() {
 
           {/* Aktiviteter tab */}
           <TabsContent value="aktiviteter">
-            <ActivityLog partner_id={id} />
+            <ActivityLog partner_id={id} kontaktListe={kontakter.map(k => ({ id: k.id, navn: k.navn }))} />
           </TabsContent>
 
           {/* Kunder tab */}
