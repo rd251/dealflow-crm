@@ -20,7 +20,7 @@ export type Prioritet = "Lav" | "Medium" | "Høy";
 // Partner types
 export type Partnertype = "Provisjonspartner" | "Integrasjonspartner" | "Salgspartner" | "Strategisk partner";
 export type Partnerstatus = "Aktiv" | "Under onboarding" | "Inaktiv";
-export type PartnerPipelineStatus = "Ny partner" | "Introduksjon" | "Demo / gjennomgang" | "Avtale" | "Aktiv partner";
+export type PartnerPipelineStatus = "Ny partnermulighet" | "Introduksjon" | "Demo / gjennomgang" | "Forhandling" | "Aktiv partner";
 export type Provisjonstype = "Engangsprovisjon" | "Løpende provisjon" | "Hybrid";
 export type Kilde = "Direkte salg" | "Partner" | "Inbound" | "Outbound";
 

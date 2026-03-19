@@ -20,7 +20,7 @@ import ActivityLog from "@/components/ActivityLog";
 const partnertypeOptions: Partnertype[] = ["Provisjonspartner", "Integrasjonspartner", "Salgspartner", "Strategisk partner"];
 const partnerstatusOptions: Partnerstatus[] = ["Aktiv", "Under onboarding", "Inaktiv"];
 const provisjonstypeOptions: Provisjonstype[] = ["Engangsprovisjon", "Løpende provisjon", "Hybrid"];
-const pipelineOptions: PartnerPipelineStatus[] = ["Ny partner", "Introduksjon", "Demo / gjennomgang", "Avtale", "Aktiv partner"];
+const pipelineOptions: PartnerPipelineStatus[] = ["Ny partnermulighet", "Introduksjon", "Demo / gjennomgang", "Forhandling", "Aktiv partner"];
 
 const statusColors: Record<Partnerstatus, string> = {
   "Aktiv": "bg-success/10 text-success",

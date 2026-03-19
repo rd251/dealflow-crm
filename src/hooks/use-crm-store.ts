@@ -852,7 +852,7 @@ function useCrmStoreInternal() {
     const nyPartner: Partner = {
       id: partnerId, partnernavn: selskap.firmanavn, partnertype: "Salgspartner",
       kontaktperson: "", e_post: "", telefon: "",
-      partnerstatus: "Under onboarding", pipeline_status: "Ny partner",
+      partnerstatus: "Under onboarding", pipeline_status: "Ny partnermulighet",
       ansvarlig: selskap.kundeansvarlig, provisjonsprosent: 0, provisjonstype: "",
       selskap_id: "", opprettet_dato: today, sist_aktivitet: today, notater: selskap.notater,
     };
