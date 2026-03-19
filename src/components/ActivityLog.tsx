@@ -21,6 +21,9 @@ interface Aktivitet {
   type: AktivitetType;
   beskrivelse: string;
   dato: string;
+  tittel?: string;
+  aktivitet_kilde?: string;
+  ekstern_provider?: string;
 }
 
 export const typeIcons: Record<AktivitetType, typeof Phone> = {
