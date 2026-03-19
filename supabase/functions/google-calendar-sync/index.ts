@@ -1,0 +1,340 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+const GOOGLE_CLIENT_ID = Deno.env.get('GOOGLE_CLIENT_ID')!;
+const GOOGLE_CLIENT_SECRET = Deno.env.get('GOOGLE_CLIENT_SECRET')!;
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+async function refreshAccessToken(refreshToken: string): Promise<{ access_token: string; expires_in: number } | null> {
+  const res = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      client_id: GOOGLE_CLIENT_ID,
+      client_secret: GOOGLE_CLIENT_SECRET,
+      refresh_token: refreshToken,
+      grant_type: 'refresh_token',
+    }),
+  });
+  if (!res.ok) return null;
+  return await res.json();
+}
+
+async function getValidAccessToken(supabase: any, connection: any): Promise<string | null> {
+  const now = new Date();
+  const expiresAt = new Date(connection.token_expires_at);
+
+  if (expiresAt > new Date(now.getTime() + 60000)) {
+    return connection.access_token;
+  }
+
+  const refreshed = await refreshAccessToken(connection.refresh_token);
+  if (!refreshed) return null;
+
+  const newExpires = new Date(Date.now() + refreshed.expires_in * 1000).toISOString();
+  await supabase.from('google_calendar_connections').update({
+    access_token: refreshed.access_token,
+    token_expires_at: newExpires,
+  }).eq('user_id', connection.user_id);
+
+  return refreshed.access_token;
+}
+
+async function fetchCalendarEvents(accessToken: string, syncToken?: string | null) {
+  const params = new URLSearchParams({
+    maxResults: '250',
+    singleEvents: 'true',
+    orderBy: 'startTime',
+  });
+
+  if (syncToken) {
+    params.set('syncToken', syncToken);
+  } else {
+    // Initial sync: fetch events from 30 days ago to 90 days ahead
+    const timeMin = new Date(Date.now() - 30 * 86400000).toISOString();
+    const timeMax = new Date(Date.now() + 90 * 86400000).toISOString();
+    params.set('timeMin', timeMin);
+    params.set('timeMax', timeMax);
+  }
+
+  const allEvents: any[] = [];
+  let nextPageToken: string | undefined;
+  let newSyncToken: string | undefined;
+
+  do {
+    if (nextPageToken) params.set('pageToken', nextPageToken);
+
+    const res = await fetch(
+      `https://www.googleapis.com/calendar/v3/calendars/primary/events?${params.toString()}`,
+      { headers: { Authorization: `Bearer ${accessToken}` } }
+    );
+
+    if (res.status === 410) {
+      // Sync token expired, need full sync
+      return { events: [], syncToken: null, needFullSync: true };
+    }
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      throw new Error(`Google Calendar API error [${res.status}]: ${errorText}`);
+    }
+
+    const data = await res.json();
+    allEvents.push(...(data.items || []));
+    nextPageToken = data.nextPageToken;
+    newSyncToken = data.nextSyncToken;
+  } while (nextPageToken);
+
+  return { events: allEvents, syncToken: newSyncToken, needFullSync: false };
+}
+
+async function matchDeltakere(supabase: any, attendees: any[]): Promise<string[]> {
+  if (!attendees || attendees.length === 0) return [];
+
+  const emails = attendees
+    .filter((a: any) => !a.self)
+    .map((a: any) => a.email?.toLowerCase())
+    .filter(Boolean);
+
+  if (emails.length === 0) return [];
+
+  const { data: kontakter } = await supabase
+    .from('kontakter')
+    .select('id, e_post')
+    .in('e_post', emails);
+
+  return (kontakter || []).map((k: any) => k.id);
+}
+
+async function syncForUser(supabase: any, connection: any) {
+  const accessToken = await getValidAccessToken(supabase, connection);
+  if (!accessToken) {
+    console.error(`Failed to get access token for user ${connection.user_id}`);
+    return { synced: 0, error: 'token_refresh_failed' };
+  }
+
+  let result = await fetchCalendarEvents(accessToken, connection.sync_token);
+
+  if (result.needFullSync) {
+    // Re-sync without syncToken
+    result = await fetchCalendarEvents(accessToken, null);
+  }
+
+  let synced = 0;
+
+  for (const event of result.events) {
+    const eksternId = event.id;
+    const cancelled = event.status === 'cancelled';
+
+    if (cancelled) {
+      // Delete from CRM
+      await supabase
+        .from('aktiviteter')
+        .delete()
+        .eq('ekstern_id', eksternId)
+        .eq('ekstern_provider', 'google_calendar');
+      synced++;
+      continue;
+    }
+
+    const startDt = event.start?.dateTime || event.start?.date;
+    const endDt = event.end?.dateTime || event.end?.date;
+    if (!startDt) continue;
+
+    const deltakere = await matchDeltakere(supabase, event.attendees || []);
+
+    // Find matching kontakt by first attendee email
+    let kontaktId: string | null = null;
+    if (event.attendees) {
+      const externalAttendees = event.attendees.filter((a: any) => !a.self);
+      if (externalAttendees.length > 0) {
+        const { data: kontakt } = await supabase
+          .from('kontakter')
+          .select('id, selskap_id')
+          .eq('e_post', externalAttendees[0].email?.toLowerCase())
+          .maybeSingle();
+        if (kontakt) {
+          kontaktId = kontakt.id;
+        }
+      }
+    }
+
+    const aktivitetData = {
+      type: 'Møte' as const,
+      tittel: event.summary || 'Google Calendar-møte',
+      beskrivelse: event.description || '',
+      dato: new Date(startDt).toISOString(),
+      start_tid: new Date(startDt).toISOString(),
+      slutt_tid: endDt ? new Date(endDt).toISOString() : null,
+      ekstern_id: eksternId,
+      ekstern_provider: 'google_calendar',
+      aktivitet_kilde: 'google_calendar',
+      deltakere: deltakere.length > 0 ? deltakere : [],
+      kontakt_id: kontaktId,
+    };
+
+    // Upsert: check if exists
+    const { data: existing } = await supabase
+      .from('aktiviteter')
+      .select('id')
+      .eq('ekstern_id', eksternId)
+      .eq('ekstern_provider', 'google_calendar')
+      .maybeSingle();
+
+    if (existing) {
+      await supabase
+        .from('aktiviteter')
+        .update(aktivitetData)
+        .eq('id', existing.id);
+    } else {
+      await supabase
+        .from('aktiviteter')
+        .insert(aktivitetData);
+    }
+    synced++;
+  }
+
+  // Update sync token and last_synced_at
+  const updateData: any = { last_synced_at: new Date().toISOString() };
+  if (result.syncToken) updateData.sync_token = result.syncToken;
+
+  await supabase
+    .from('google_calendar_connections')
+    .update(updateData)
+    .eq('user_id', connection.user_id);
+
+  return { synced, error: null };
+}
+
+// Push CRM meetings to Google Calendar
+async function pushToGoogle(supabase: any, connection: any, accessToken: string) {
+  // Find CRM meetings without ekstern_id that were created manually
+  const { data: localMeetings } = await supabase
+    .from('aktiviteter')
+    .select('*')
+    .eq('type', 'Møte')
+    .is('ekstern_id', null)
+    .eq('aktivitet_kilde', 'manuell')
+    .not('start_tid', 'is', null);
+
+  if (!localMeetings || localMeetings.length === 0) return 0;
+
+  let pushed = 0;
+
+  // Get kontakt emails for attendees
+  const allDeltakere = localMeetings.flatMap((m: any) => m.deltakere || []);
+  const { data: kontaktEmails } = await supabase
+    .from('kontakter')
+    .select('id, e_post')
+    .in('id', allDeltakere.length > 0 ? allDeltakere : ['__none__']);
+
+  const emailMap = new Map((kontaktEmails || []).map((k: any) => [k.id, k.e_post]));
+
+  for (const meeting of localMeetings) {
+    const attendees = (meeting.deltakere || [])
+      .map((id: string) => emailMap.get(id))
+      .filter(Boolean)
+      .map((email: string) => ({ email }));
+
+    const gcalEvent = {
+      summary: meeting.tittel || meeting.beskrivelse || 'CRM-møte',
+      description: meeting.beskrivelse || '',
+      start: { dateTime: meeting.start_tid, timeZone: 'Europe/Oslo' },
+      end: { dateTime: meeting.slutt_tid || meeting.start_tid, timeZone: 'Europe/Oslo' },
+      attendees: attendees.length > 0 ? attendees : undefined,
+    };
+
+    const res = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(gcalEvent),
+    });
+
+    if (res.ok) {
+      const created = await res.json();
+      await supabase
+        .from('aktiviteter')
+        .update({ ekstern_id: created.id, ekstern_provider: 'google_calendar', aktivitet_kilde: 'manuell' })
+        .eq('id', meeting.id);
+      pushed++;
+    } else {
+      const errText = await res.text();
+      console.error(`Failed to push meeting ${meeting.id}: ${errText}`);
+    }
+  }
+
+  return pushed;
+}
+
+Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+
+    let userId: string | null = null;
+
+    // If called with auth header, sync only that user
+    const authHeader = req.headers.get('Authorization');
+    if (authHeader && !authHeader.includes(Deno.env.get('SUPABASE_ANON_KEY')!)) {
+      const userClient = createClient(SUPABASE_URL, Deno.env.get('SUPABASE_ANON_KEY')!, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: { user } } = await userClient.auth.getUser();
+      if (user) userId = user.id;
+    }
+
+    // Fetch connections to sync
+    let query = supabase.from('google_calendar_connections').select('*');
+    if (userId) query = query.eq('user_id', userId);
+    const { data: connections, error } = await query;
+
+    if (error || !connections) {
+      return new Response(JSON.stringify({ error: 'No connections found' }), {
+        status: 404,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const results = [];
+    for (const conn of connections) {
+      const accessToken = await getValidAccessToken(supabase, conn);
+
+      // Pull from Google
+      const syncResult = await syncForUser(supabase, conn);
+
+      // Push to Google (two-way sync)
+      let pushed = 0;
+      if (accessToken) {
+        pushed = await pushToGoogle(supabase, conn, accessToken);
+      }
+
+      results.push({
+        user_id: conn.user_id,
+        synced: syncResult.synced,
+        pushed,
+        error: syncResult.error,
+      });
+    }
+
+    return new Response(JSON.stringify({ results }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  } catch (e) {
+    console.error('Sync error:', e);
+    return new Response(JSON.stringify({ error: e.message }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+});

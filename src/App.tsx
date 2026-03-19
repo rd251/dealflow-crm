@@ -22,6 +22,7 @@ import Admin from "./pages/Admin";
 import Aktiviteter from "./pages/Aktiviteter";
 import Rapporter from "./pages/Rapporter";
 import Kalender from "./pages/Kalender";
+import Innstillinger from "./pages/Innstillinger";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 
@@ -79,6 +80,7 @@ function AppRoutes() {
                 <Route path="/aktiviteter" element={<Aktiviteter />} />
                 <Route path="/rapporter" element={<Rapporter />} />
                 <Route path="/admin" element={<Admin />} />
+                <Route path="/innstillinger" element={<Innstillinger />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </CrmProvider>
