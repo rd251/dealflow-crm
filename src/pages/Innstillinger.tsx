@@ -9,7 +9,8 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
-import { CalendarDays, Mail, RefreshCw, Unlink, CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { CalendarDays, Mail, RefreshCw, Unlink, CheckCircle2, XCircle, Loader2, Globe, Copy, Check } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 interface ConnectionData {
   last_synced_at: string | null;
@@ -27,6 +28,17 @@ export default function Innstillinger() {
   const [syncingGmail, setSyncingGmail] = useState(false);
   const [connecting, setConnecting] = useState(false);
   const [togglingGmail, setTogglingGmail] = useState(false);
+  const [copied, setCopied] = useState<string | null>(null);
+
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const leadApiUrl = `${supabaseUrl}/functions/v1/lead-intake`;
+
+  const copyToClipboard = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    setCopied(label);
+    toast.success("Kopiert!");
+    setTimeout(() => setCopied(null), 2000);
+  };
 
   useEffect(() => {
     if (searchParams.get("gcal_connected") === "true") {
@@ -280,6 +292,69 @@ export default function Innstillinger() {
             </Card>
           </>
         )}
+
+        {/* Lead API */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Globe className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <CardTitle className="text-lg">Lead API</CardTitle>
+                <CardDescription>Motta leads automatisk fra nettsiden din</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label className="text-xs text-muted-foreground mb-1 block">API-endepunkt (POST)</Label>
+              <div className="flex gap-2">
+                <Input value={leadApiUrl} readOnly className="font-mono text-xs" />
+                <Button size="icon" variant="outline" onClick={() => copyToClipboard(leadApiUrl, "url")}>
+                  {copied === "url" ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                </Button>
+              </div>
+            </div>
+
+            <div>
+              <Label className="text-xs text-muted-foreground mb-1 block">Eksempel (fra nettskjema)</Label>
+              <div className="relative">
+                <pre className="bg-muted rounded-lg p-3 text-xs overflow-x-auto whitespace-pre">{`fetch("${leadApiUrl}", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    navn: "Ola Nordmann",
+    firmanavn: "Acme AS",
+    email: "ola@acme.no",
+    telefon: "+4791234567",
+    melding: "Ønsker en demo"
+  })
+})`}</pre>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="absolute top-2 right-2 h-7 text-xs"
+                  onClick={() => copyToClipboard(`fetch("${leadApiUrl}", {\n  method: "POST",\n  headers: { "Content-Type": "application/json" },\n  body: JSON.stringify({\n    navn: "Ola Nordmann",\n    firmanavn: "Acme AS",\n    email: "ola@acme.no",\n    telefon: "+4791234567",\n    melding: "Ønsker en demo"\n  })\n})`, "code")}
+                >
+                  {copied === "code" ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                </Button>
+              </div>
+            </div>
+
+            <div className="text-xs text-muted-foreground space-y-1">
+              <p className="font-medium text-foreground">Støttede felt:</p>
+              <ul className="list-disc pl-5 space-y-0.5">
+                <li><code className="bg-muted px-1 rounded">navn</code> / <code className="bg-muted px-1 rounded">kontaktperson</code> — Kontaktperson</li>
+                <li><code className="bg-muted px-1 rounded">firmanavn</code> / <code className="bg-muted px-1 rounded">company</code> — Firmanavn</li>
+                <li><code className="bg-muted px-1 rounded">email</code> / <code className="bg-muted px-1 rounded">e_post</code> — E-postadresse</li>
+                <li><code className="bg-muted px-1 rounded">telefon</code> / <code className="bg-muted px-1 rounded">phone</code> — Telefonnummer</li>
+                <li><code className="bg-muted px-1 rounded">melding</code> / <code className="bg-muted px-1 rounded">notater</code> — Melding/notater</li>
+                <li><code className="bg-muted px-1 rounded">kilde</code> — Leadkilde (standard: Nettside)</li>
+              </ul>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </PageShell>
   );
