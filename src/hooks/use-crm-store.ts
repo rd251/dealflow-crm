@@ -737,7 +737,7 @@ function useCrmStoreInternal() {
     const nyPartner: Partner = {
       id: partnerId, partnernavn: lead.firmanavn, partnertype: "Salgspartner",
       kontaktperson: lead.kontaktperson, e_post: lead.e_post, telefon: lead.telefon,
-      partnerstatus: "Under onboarding", pipeline_status: "Ny partner",
+      partnerstatus: "Under onboarding", pipeline_status: "Ny partnermulighet",
       ansvarlig: lead.ansvarlig, provisjonsprosent: 0, provisjonstype: "",
       selskap_id: "", opprettet_dato: today, sist_aktivitet: today, notater: lead.notater,
     };
