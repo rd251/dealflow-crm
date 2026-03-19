@@ -105,6 +105,7 @@ export default function ActivityLog(props: ActivityLogProps) {
     setMeetingDato(new Date().toISOString().split("T")[0]);
     setMeetingStartTid("09:00");
     setMeetingSluttTid("10:00");
+    setMeetingDeltakere([]);
     setDialogOpen(true);
   };
 
