@@ -80,6 +80,7 @@ function AppRoutes() {
                 <Route path="/aktiviteter" element={<Aktiviteter />} />
                 <Route path="/rapporter" element={<Rapporter />} />
                 <Route path="/admin" element={<Admin />} />
+                <Route path="/innstillinger" element={<Innstillinger />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </CrmProvider>
