@@ -338,7 +338,7 @@ export default function PartnerProfile() {
                   <Textarea value={partner.notater} onChange={e => updateField("notater", e.target.value)} rows={3} />
                 </div>
 
-                <ActivityLog partner_id={id!} onActivityLogged={() => {
+                <ActivityLog partner_id={id!} kontaktListe={kontakter.map(k => ({ id: k.id, navn: k.navn }))} onActivityLogged={() => {
                   updatePartnere(prev => prev.map(p => p.id === id ? { ...p, sist_aktivitet: new Date().toISOString().split("T")[0] } : p));
                 }} />
               </div>
