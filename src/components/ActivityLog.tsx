@@ -278,6 +278,9 @@ export default function ActivityLog(props: ActivityLogProps) {
                 onDatoChange={setMeetingDato}
                 onStartTidChange={setMeetingStartTid}
                 onSluttTidChange={setMeetingSluttTid}
+                deltakere={meetingDeltakere}
+                onDeltakereChange={setMeetingDeltakere}
+                kontaktListe={props.kontaktListe}
               />
             )}
             <Textarea
