@@ -128,6 +128,9 @@ export type Database = {
           access_token: string
           calendar_id: string
           created_at: string
+          gmail_history_id: string | null
+          gmail_last_synced_at: string | null
+          gmail_sync_enabled: boolean
           id: string
           last_synced_at: string | null
           refresh_token: string
@@ -140,6 +143,9 @@ export type Database = {
           access_token: string
           calendar_id?: string
           created_at?: string
+          gmail_history_id?: string | null
+          gmail_last_synced_at?: string | null
+          gmail_sync_enabled?: boolean
           id?: string
           last_synced_at?: string | null
           refresh_token: string
@@ -152,6 +158,9 @@ export type Database = {
           access_token?: string
           calendar_id?: string
           created_at?: string
+          gmail_history_id?: string | null
+          gmail_last_synced_at?: string | null
+          gmail_sync_enabled?: boolean
           id?: string
           last_synced_at?: string | null
           refresh_token?: string
