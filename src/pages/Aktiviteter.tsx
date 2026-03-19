@@ -403,13 +403,15 @@ export default function Aktiviteter() {
                               {a.ekstern_provider === 'gmail' ? 'Gmail' : 'GCal'}
                             </span>
                           )}
-                          <Badge
-                            variant="outline"
-                            className={`text-[10px] px-1.5 py-0 h-5 transition-colors ${entityBadgeColor[entity.type] || ""}`}
-                            onClick={() => entity.path && navigate(entity.path)}
-                          >
-                            {entity.type}: {entity.label}
-                          </Badge>
+                          {entity.type && (
+                            <Badge
+                              variant="outline"
+                              className={`text-[10px] px-1.5 py-0 h-5 transition-colors ${entityBadgeColor[entity.type] || ""}`}
+                              onClick={() => entity.path && navigate(entity.path)}
+                            >
+                              {entity.type}: {entity.label}
+                            </Badge>
+                          )}
                           <span className="text-[11px] text-muted-foreground flex items-center gap-0.5 ml-auto shrink-0">
                             <Clock className="w-3 h-3" />
                             {formatDato(a.dato)}
