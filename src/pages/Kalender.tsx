@@ -43,6 +43,7 @@ const ACTIVITY_COLOR = "bg-sky-500/15 border-sky-500 text-sky-800 dark:text-sky-
 export default function Kalender() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<"week" | "month">("week");
   const [events, setEvents] = useState<CalendarEvent[]>([]);
