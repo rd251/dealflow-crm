@@ -159,6 +159,16 @@ export default function Kalender() {
         setKontaktListe(data.map(k => ({ id: k.id, navn: k.navn })));
       })
       .catch(() => {});
+
+    // Fetch user profiles for ownership display
+    fetch(`${API_URL}/profiles?select=user_id,display_name,avatar_url`, { headers: API_HEADERS })
+      .then(r => r.ok ? r.json() : [])
+      .then((data: UserProfile[]) => {
+        const map: Record<string, UserProfile> = {};
+        data.forEach(p => { map[p.user_id] = p; });
+        setProfiles(map);
+      })
+      .catch(() => {});
   }, []);
 
   // Fetch entity lists for linking
