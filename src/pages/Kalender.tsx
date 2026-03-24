@@ -32,7 +32,6 @@ const getUserColor = (userId: string) => {
   for (let i = 0; i < userId.length; i++) hash = userId.charCodeAt(i) + ((hash << 5) - hash);
   return USER_COLORS[Math.abs(hash) % USER_COLORS.length];
 };
-import { toast } from "sonner";
 
 const API_URL = import.meta.env.VITE_SUPABASE_URL + '/rest/v1';
 const API_HEADERS = {
