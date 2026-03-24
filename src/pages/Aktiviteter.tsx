@@ -83,6 +83,7 @@ export default function Aktiviteter() {
   const navigate = useNavigate();
   const { leads, salgsmuligheter, selskaper, partnere, prosjekter, kontakter } = useCrmStore();
   const [aktiviteter, setAktiviteter] = useState<AktivitetRow[]>([]);
+  const [profiles, setProfiles] = useState<Record<string, UserProfile>>({});
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<AktivitetType | "alle">("alle");
   const [entityFilter, setEntityFilter] = useState<EntityFilter>("alle");
