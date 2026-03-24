@@ -245,7 +245,7 @@ export default function Kalender() {
 
     try {
       const meetingsRes = await fetch(
-        `${API_URL}/aktiviteter?type=eq.Møte&start_tid=gte.${from}&start_tid=lte.${to}&select=id,tittel,beskrivelse,start_tid,slutt_tid,type,deltakere,lead_id,salgsmulighet_id,selskap_id,kontakt_id`,
+        `${API_URL}/aktiviteter?type=eq.Møte&start_tid=gte.${from}&start_tid=lte.${to}&select=id,tittel,beskrivelse,start_tid,slutt_tid,type,deltakere,lead_id,salgsmulighet_id,selskap_id,kontakt_id,user_id`,
         { headers: API_HEADERS }
       );
       if (meetingsRes.ok) {
@@ -257,6 +257,7 @@ export default function Kalender() {
             start: new Date(m.start_tid), end: m.slutt_tid ? new Date(m.slutt_tid) : undefined,
             type: "meeting", color: MEETING_COLOR, raw: m,
             kontaktNavn: deltakereNavn.length > 0 ? deltakereNavn.join(", ") : (m.kontakt_id ? kontakter[m.kontakt_id] : undefined),
+            ownerUserId: m.user_id,
           });
         });
       }
