@@ -900,6 +900,15 @@ export default function Kalender() {
 
           {selectedEvent && !editing && (
             <div className="space-y-4 mt-4">
+              {/* Owner */}
+              {selectedEvent.ownerUserId && profiles[selectedEvent.ownerUserId] && (
+                <div className="flex items-center gap-2 text-sm">
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold text-white ${getUserColor(selectedEvent.ownerUserId)}`}>
+                    {profiles[selectedEvent.ownerUserId].display_name.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase()}
+                  </div>
+                  <span>{profiles[selectedEvent.ownerUserId].display_name}</span>
+                </div>
+              )}
               <div className="flex items-center gap-2 text-sm">
                 <CalendarDays className="w-4 h-4 text-muted-foreground" />
                 <span>{format(selectedEvent.start, "EEEE d. MMMM yyyy", { locale: nb })}</span>
