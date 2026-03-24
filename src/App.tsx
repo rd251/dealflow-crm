@@ -1,6 +1,7 @@
 // CRM App
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
+import { useEffect } from "react";
+import { BrowserRouter, Route, Routes, Navigate, useNavigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -28,37 +29,67 @@ import Login from "./pages/Login";
 
 const queryClient = new QueryClient();
 
+function AuthSpinner() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+    </div>
+  );
+}
+
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-      </div>
-    );
+    return <AuthSpinner />;
   }
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) {
+    console.info("[Auth] Ingen session i ProtectedRoute, redirecter til /login");
+    return <Navigate to="/login" replace />;
+  }
   return <>{children}</>;
 }
 
 function LoginRoute() {
   const { user, loading } = useAuth();
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-      </div>
-    );
+    return <AuthSpinner />;
   }
-  if (user) return <Navigate to="/" replace />;
+  if (user) {
+    console.info("[Auth] Session funnet på /login, redirecter til /dashboard");
+    return <Navigate to="/dashboard" replace />;
+  }
   return <Login />;
+}
+
+function OAuthCallbackRoute() {
+  const { user, session, loading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    console.info("[Auth] Callback mottatt på /~oauth");
+  }, []);
+
+  useEffect(() => {
+    if (loading) return;
+
+    if (user && session) {
+      console.info("[Auth] Session funnet etter callback, redirecter til /dashboard");
+      navigate("/dashboard", { replace: true });
+      return;
+    }
+
+    console.warn("[Auth] Ingen session etter callback, redirecter til /login");
+    navigate("/login", { replace: true, state: { authError: "Google-innlogging mislyktes. Prøv igjen." } });
+  }, [loading, navigate, session, user]);
+
+  return <AuthSpinner />;
 }
 
 function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<LoginRoute />} />
-      <Route path="/~oauth" element={<div className="min-h-screen flex items-center justify-center bg-background"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>} />
+      <Route path="/~oauth" element={<OAuthCallbackRoute />} />
       <Route
         path="/*"
         element={
@@ -66,7 +97,8 @@ function AppRoutes() {
             <CrmProvider>
               <AppSidebar />
               <Routes>
-                <Route path="/" element={<Dashboard />} />
+                <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/leads" element={<Leads />} />
                 <Route path="/salgsmuligheter" element={<Salgsmuligheter />} />
                 <Route path="/prosjekter" element={<Prosjekter />} />

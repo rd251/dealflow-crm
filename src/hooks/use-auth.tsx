@@ -71,12 +71,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
 
+      console.info("[Auth] onAuthStateChange:", event);
+
       if (event === "SIGNED_OUT" || !session) {
+        console.info("[Auth] Session ikke funnet, setter bruker til utlogget");
         setState({ user: null, session: null, role: null, loading: false, isAdmin: false });
         return;
       }
 
       if (session?.user) {
+        console.info("[Auth] Session funnet for bruker", session.user.email);
         // Fetch role with 3s timeout
         const role = await withTimeout(fetchRole(session.user.id), 3000, "user" as AppRole);
         if (mounted) {
@@ -91,6 +95,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
+    supabase.auth.getSession().then(async ({ data, error }) => {
+      if (!mounted) return;
+
+      if (error) {
+        console.error("[Auth] Feil ved lesing av session:", error.message);
+        setState({ user: null, session: null, role: null, loading: false, isAdmin: false });
+        return;
+      }
+
+      if (!data.session?.user) {
+        console.info("[Auth] Ingen eksisterende session ved init");
+        setState({ user: null, session: null, role: null, loading: false, isAdmin: false });
+        return;
+      }
+
+      console.info("[Auth] Eksisterende session funnet ved init for", data.session.user.email);
+      const role = await withTimeout(fetchRole(data.session.user.id), 3000, "user" as AppRole);
+      if (!mounted) return;
+
+      setState({
+        user: data.session.user,
+        session: data.session,
+        role,
+        loading: false,
+        isAdmin: role === "admin",
+      });
+    });
+
     return () => {
       mounted = false;
       clearTimeout(safetyTimeout);
@@ -99,6 +131,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
+    console.info("[Auth] Starter e-post innlogging");
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     return { error: error ? new Error(error.message) : null };
   };
