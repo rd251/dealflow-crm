@@ -638,27 +638,46 @@ export default function Kalender() {
     : format(currentDate, "MMMM yyyy", { locale: nb });
 
   // Event card component
-  const EventCard = ({ event, compact = false }: { event: CalendarEvent; compact?: boolean }) => (
-    <div
-      onClick={(e) => { e.stopPropagation(); handleEventClick(event); }}
-      draggable={event.type === "meeting"}
-      onDragStart={(e) => handleDragStart(e, event)}
-      onDragEnd={handleDragEnd}
-      className={`rounded px-1.5 py-0.5 text-[10px] leading-tight border-l-2 overflow-hidden cursor-pointer hover:opacity-80 transition-opacity ${event.color} ${
-        event.type === "meeting" ? "cursor-grab active:cursor-grabbing" : ""
-      } ${dragEvent?.id === event.id ? "opacity-40" : ""}`}
-    >
-      <div className="flex items-center gap-0.5">
-        {event.type === "meeting" && !compact && <GripVertical className="w-2.5 h-2.5 shrink-0 opacity-40" />}
-        <span className="font-medium truncate">{event.title}</span>
+  const EventCard = ({ event, compact = false }: { event: CalendarEvent; compact?: boolean }) => {
+    const ownerProfile = event.ownerUserId ? profiles[event.ownerUserId] : null;
+    const initials = ownerProfile
+      ? ownerProfile.display_name.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase()
+      : null;
+
+    return (
+      <div
+        onClick={(e) => { e.stopPropagation(); handleEventClick(event); }}
+        draggable={event.type === "meeting"}
+        onDragStart={(e) => handleDragStart(e, event)}
+        onDragEnd={handleDragEnd}
+        className={`rounded px-1.5 py-0.5 text-[10px] leading-tight border-l-2 overflow-hidden cursor-pointer hover:opacity-80 transition-opacity ${event.color} ${
+          event.type === "meeting" ? "cursor-grab active:cursor-grabbing" : ""
+        } ${dragEvent?.id === event.id ? "opacity-40" : ""}`}
+      >
+        <div className="flex items-center gap-0.5">
+          {event.type === "meeting" && !compact && <GripVertical className="w-2.5 h-2.5 shrink-0 opacity-40" />}
+          <span className="font-medium truncate flex-1">{event.title}</span>
+          {ownerProfile && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className={`w-4 h-4 rounded-full flex items-center justify-center text-[7px] font-bold text-white shrink-0 ${getUserColor(event.ownerUserId!)}`}>
+                  {initials}
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="text-xs">
+                {ownerProfile.display_name}
+              </TooltipContent>
+            </Tooltip>
+          )}
+        </div>
+        {!compact && event.kontaktNavn && (
+          <span className="truncate block opacity-70 flex items-center gap-0.5">
+            <Users className="w-2.5 h-2.5 inline shrink-0" /> {event.kontaktNavn}
+          </span>
+        )}
       </div>
-      {!compact && event.kontaktNavn && (
-        <span className="truncate block opacity-70 flex items-center gap-0.5">
-          <Users className="w-2.5 h-2.5 inline shrink-0" /> {event.kontaktNavn}
-        </span>
-      )}
-    </div>
-  );
+    );
+  };
 
   return (
     <PageShell title="Kalender" subtitle="Oversikt over møter, oppgaver og aktiviteter">
