@@ -650,7 +650,34 @@ export default function Kalender() {
         {viewMode === "week" && <span className="text-muted-foreground ml-2">Dra møter for å flytte</span>}
       </div>
 
-      {/* WEEK VIEW */}
+      {/* Google Calendar connection banner */}
+      {gcalConnected === false && (
+        <div className="mb-3 flex items-center gap-3 rounded-lg border border-dashed border-primary/40 bg-primary/5 px-4 py-3">
+          <CalendarDays className="w-5 h-5 text-primary shrink-0" />
+          <div className="flex-1">
+            <p className="text-sm font-medium">Koble til Google Calendar</p>
+            <p className="text-xs text-muted-foreground">Synkroniser møtene dine automatisk med kalenderen</p>
+          </div>
+          <Button size="sm" onClick={connectGoogleCalendar} disabled={gcalConnecting}>
+            {gcalConnecting ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : null}
+            Koble til
+          </Button>
+        </div>
+      )}
+      {gcalConnected === true && (
+        <div className="mb-3 flex items-center gap-3 text-xs text-muted-foreground">
+          <CalendarDays className="w-4 h-4 text-primary" />
+          <span>Google Calendar tilkoblet</span>
+          {gcalLastSynced && (
+            <span>· Sist synkronisert {format(new Date(gcalLastSynced), "dd.MM.yyyy HH:mm")}</span>
+          )}
+          <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={syncNow} disabled={gcalSyncing}>
+            {gcalSyncing ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <RefreshCw className="w-3 h-3 mr-1" />}
+            Synk nå
+          </Button>
+        </div>
+      )}
+
       {viewMode === "week" && (
         <div className="border rounded-xl overflow-hidden bg-card">
           <div className="grid grid-cols-[60px_repeat(7,1fr)] border-b">
