@@ -42,7 +42,23 @@ interface AktivitetRow {
   partner_id: string | null;
   prosjekt_id: string | null;
   kontakt_id: string | null;
+  user_id: string | null;
 }
+
+interface UserProfile {
+  user_id: string;
+  display_name: string;
+}
+
+const USER_COLORS = [
+  "bg-blue-500", "bg-emerald-500", "bg-amber-500", "bg-rose-500",
+  "bg-violet-500", "bg-cyan-500", "bg-pink-500", "bg-indigo-500",
+];
+const getUserColor = (userId: string) => {
+  let hash = 0;
+  for (let i = 0; i < userId.length; i++) hash = userId.charCodeAt(i) + ((hash << 5) - hash);
+  return USER_COLORS[Math.abs(hash) % USER_COLORS.length];
+};
 
 type EntityFilter = "alle" | "lead" | "salgsmulighet" | "selskap" | "partner" | "prosjekt" | "kontakt";
 
