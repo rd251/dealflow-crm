@@ -69,6 +69,7 @@ export default function Kalender() {
   const [kontakter, setKontakter] = useState<Record<string, string>>({});
   const [kontaktListe, setKontaktListe] = useState<{ id: string; navn: string }[]>([]);
   const [profiles, setProfiles] = useState<Record<string, UserProfile>>({});
+  const [userFilter, setUserFilter] = useState<"all" | "mine">("all");
 
   // Google Calendar connection state
   const [gcalConnected, setGcalConnected] = useState<boolean | null>(null);
@@ -303,7 +304,14 @@ export default function Kalender() {
 
   useEffect(() => { fetchEvents(); }, [fetchEvents]);
 
-  const getEventsForDay = (day: Date) => events.filter(e => isSameDay(e.start, day));
+  const filteredEvents = useMemo(() => {
+    if (userFilter === "mine" && user) {
+      return events.filter(e => e.ownerUserId === user.id);
+    }
+    return events;
+  }, [events, userFilter, user]);
+
+  const getEventsForDay = (day: Date) => filteredEvents.filter(e => isSameDay(e.start, day));
 
   const getEventHeight = (event: CalendarEvent) => {
     if (!event.end) return 28;
@@ -696,13 +704,23 @@ export default function Kalender() {
           </Button>
         </div>
         <span className="text-sm font-semibold capitalize">{dateLabel}</span>
-        <div className="flex items-center gap-1 border rounded-lg p-0.5">
-          <Button variant={viewMode === "week" ? "default" : "ghost"} size="sm" className="text-xs h-7 px-3" onClick={() => setViewMode("week")}>
-            Uke
-          </Button>
-          <Button variant={viewMode === "month" ? "default" : "ghost"} size="sm" className="text-xs h-7 px-3" onClick={() => setViewMode("month")}>
-            Måned
-          </Button>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 border rounded-lg p-0.5">
+            <Button variant={viewMode === "week" ? "default" : "ghost"} size="sm" className="text-xs h-7 px-3" onClick={() => setViewMode("week")}>
+              Uke
+            </Button>
+            <Button variant={viewMode === "month" ? "default" : "ghost"} size="sm" className="text-xs h-7 px-3" onClick={() => setViewMode("month")}>
+              Måned
+            </Button>
+          </div>
+          <div className="flex items-center gap-1 border rounded-lg p-0.5">
+            <Button variant={userFilter === "all" ? "default" : "ghost"} size="sm" className="text-xs h-7 px-3" onClick={() => setUserFilter("all")}>
+              Alle
+            </Button>
+            <Button variant={userFilter === "mine" ? "default" : "ghost"} size="sm" className="text-xs h-7 px-3" onClick={() => setUserFilter("mine")}>
+              Mine
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -862,7 +880,7 @@ export default function Kalender() {
 
       {/* Tasks list */}
       {(() => {
-        const taskEvents = events.filter(e => e.type === "task");
+        const taskEvents = filteredEvents.filter(e => e.type === "task");
         if (taskEvents.length === 0) return null;
         return (
           <div className="mt-4 border rounded-xl p-4 bg-card">

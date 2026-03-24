@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Phone, Mail, MessageSquare, MessageCircle, Users, FileText, Plus, Clock, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import MeetingFields from "@/components/MeetingFields";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -25,7 +26,23 @@ interface Aktivitet {
   tittel?: string;
   aktivitet_kilde?: string;
   ekstern_provider?: string;
+  user_id?: string;
 }
+
+interface UserProfile {
+  user_id: string;
+  display_name: string;
+}
+
+const USER_COLORS = [
+  "bg-blue-500", "bg-emerald-500", "bg-amber-500", "bg-rose-500",
+  "bg-violet-500", "bg-cyan-500", "bg-pink-500", "bg-indigo-500",
+];
+const getUserColor = (userId: string) => {
+  let hash = 0;
+  for (let i = 0; i < userId.length; i++) hash = userId.charCodeAt(i) + ((hash << 5) - hash);
+  return USER_COLORS[Math.abs(hash) % USER_COLORS.length];
+};
 
 export const typeIcons: Record<AktivitetType, typeof Phone> = {
   "Telefonsamtale": Phone,
@@ -66,6 +83,7 @@ interface ActivityLogProps {
 export default function ActivityLog(props: ActivityLogProps) {
   const { user } = useAuth();
   const [aktiviteter, setAktiviteter] = useState<Aktivitet[]>([]);
+  const [profiles, setProfiles] = useState<Record<string, UserProfile>>({});
   const [dialogOpen, setDialogOpen] = useState(false);
   const [type, setType] = useState<AktivitetType>("Telefonsamtale");
   const [beskrivelse, setBeskrivelse] = useState("");
@@ -93,7 +111,7 @@ export default function ActivityLog(props: ActivityLogProps) {
     const filter = buildFilter();
     if (!filter) return;
     try {
-      const res = await fetch(`${API_URL}/aktiviteter?${filter}&order=dato.desc&select=id,type,beskrivelse,dato,tittel,aktivitet_kilde,ekstern_provider`, { headers: API_HEADERS });
+      const res = await fetch(`${API_URL}/aktiviteter?${filter}&order=dato.desc&select=id,type,beskrivelse,dato,tittel,aktivitet_kilde,ekstern_provider,user_id`, { headers: API_HEADERS });
       if (res.ok) setAktiviteter(await res.json());
     } catch (e) {
       console.error("Error fetching aktiviteter:", e);
@@ -101,6 +119,17 @@ export default function ActivityLog(props: ActivityLogProps) {
   }, [buildFilter]);
 
   useEffect(() => { fetchAktiviteter(); }, [fetchAktiviteter]);
+
+  useEffect(() => {
+    fetch(`${API_URL}/profiles?select=user_id,display_name`, { headers: API_HEADERS })
+      .then(r => r.ok ? r.json() : [])
+      .then((data: UserProfile[]) => {
+        const map: Record<string, UserProfile> = {};
+        data.forEach(p => { map[p.user_id] = p; });
+        setProfiles(map);
+      })
+      .catch(() => {});
+  }, []);
 
   const openCreate = () => {
     setEditingId(null);
@@ -236,6 +265,19 @@ export default function ActivityLog(props: ActivityLogProps) {
                       <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
                         {a.ekstern_provider === 'gmail' ? 'Gmail' : 'GCal'}
                       </span>
+                    )}
+                    {/* Owner avatar */}
+                    {a.user_id && profiles[a.user_id] && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className={`w-4 h-4 rounded-full flex items-center justify-center text-[7px] font-bold text-white shrink-0 ${getUserColor(a.user_id)}`}>
+                            {profiles[a.user_id].display_name.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase()}
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="text-xs">
+                          {profiles[a.user_id].display_name}
+                        </TooltipContent>
+                      </Tooltip>
                     )}
                     <span className="text-[10px] text-muted-foreground flex items-center gap-0.5"><Clock className="w-2.5 h-2.5" />{formatDato(a.dato)}</span>
                     {!isExternal && (

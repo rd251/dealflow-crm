@@ -5,6 +5,7 @@ import PageShell from "@/components/PageShell";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useCrmStore } from "@/hooks/use-crm-store";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -42,7 +43,23 @@ interface AktivitetRow {
   partner_id: string | null;
   prosjekt_id: string | null;
   kontakt_id: string | null;
+  user_id: string | null;
 }
+
+interface UserProfile {
+  user_id: string;
+  display_name: string;
+}
+
+const USER_COLORS = [
+  "bg-blue-500", "bg-emerald-500", "bg-amber-500", "bg-rose-500",
+  "bg-violet-500", "bg-cyan-500", "bg-pink-500", "bg-indigo-500",
+];
+const getUserColor = (userId: string) => {
+  let hash = 0;
+  for (let i = 0; i < userId.length; i++) hash = userId.charCodeAt(i) + ((hash << 5) - hash);
+  return USER_COLORS[Math.abs(hash) % USER_COLORS.length];
+};
 
 type EntityFilter = "alle" | "lead" | "salgsmulighet" | "selskap" | "partner" | "prosjekt" | "kontakt";
 
@@ -66,6 +83,7 @@ export default function Aktiviteter() {
   const navigate = useNavigate();
   const { leads, salgsmuligheter, selskaper, partnere, prosjekter, kontakter } = useCrmStore();
   const [aktiviteter, setAktiviteter] = useState<AktivitetRow[]>([]);
+  const [profiles, setProfiles] = useState<Record<string, UserProfile>>({});
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<AktivitetType | "alle">("alle");
   const [entityFilter, setEntityFilter] = useState<EntityFilter>("alle");
@@ -93,7 +111,7 @@ export default function Aktiviteter() {
   const [createLoading, setCreateLoading] = useState(false);
 
   const buildUrl = useCallback((currentOffset: number) => {
-    let url = `${API_URL}/aktiviteter?order=dato.desc&select=id,type,beskrivelse,dato,tittel,aktivitet_kilde,ekstern_provider,lead_id,salgsmulighet_id,selskap_id,partner_id,prosjekt_id,kontakt_id&limit=${PAGE_SIZE}&offset=${currentOffset}`;
+    let url = `${API_URL}/aktiviteter?order=dato.desc&select=id,type,beskrivelse,dato,tittel,aktivitet_kilde,ekstern_provider,lead_id,salgsmulighet_id,selskap_id,partner_id,prosjekt_id,kontakt_id,user_id&limit=${PAGE_SIZE}&offset=${currentOffset}`;
     if (dateFrom) url += `&dato=gte.${dateFrom.toISOString()}`;
     if (dateTo) {
       const end = new Date(dateTo);
@@ -132,6 +150,18 @@ export default function Aktiviteter() {
   }, [buildUrl, offset]);
 
   useEffect(() => { fetchAll(true); }, [dateFrom, dateTo]);
+
+  // Fetch profiles for owner display
+  useEffect(() => {
+    fetch(`${API_URL}/profiles?select=user_id,display_name`, { headers: API_HEADERS })
+      .then(r => r.ok ? r.json() : [])
+      .then((data: UserProfile[]) => {
+        const map: Record<string, UserProfile> = {};
+        data.forEach(p => { map[p.user_id] = p; });
+        setProfiles(map);
+      })
+      .catch(() => {});
+  }, []);
 
   const loadMore = () => {
     if (!loadingMore && hasMore) fetchAll(false);
@@ -413,6 +443,19 @@ export default function Aktiviteter() {
                             >
                               {entity.type}: {entity.label}
                             </Badge>
+                          )}
+                          {/* Owner avatar */}
+                          {a.user_id && profiles[a.user_id] && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-bold text-white shrink-0 ${getUserColor(a.user_id)}`}>
+                                  {profiles[a.user_id].display_name.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase()}
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent side="top" className="text-xs">
+                                {profiles[a.user_id].display_name}
+                              </TooltipContent>
+                            </Tooltip>
                           )}
                           <span className="text-[11px] text-muted-foreground flex items-center gap-0.5 ml-auto shrink-0">
                             <Clock className="w-3 h-3" />
