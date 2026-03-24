@@ -271,7 +271,7 @@ export default function Aktiviteter() {
     if (!createBeskrivelse.trim()) return;
     setCreateLoading(true);
     try {
-      const body: Record<string, any> = { type: createType, beskrivelse: createBeskrivelse.trim() };
+      const body: Record<string, any> = { type: createType, beskrivelse: createBeskrivelse.trim(), user_id: user?.id || null };
       if (createEntityType !== "alle" && createEntityId) {
         const keyMap: Record<string, string> = {
           lead: "lead_id", salgsmulighet: "salgsmulighet_id", selskap: "selskap_id",
