@@ -25,7 +25,23 @@ interface Aktivitet {
   tittel?: string;
   aktivitet_kilde?: string;
   ekstern_provider?: string;
+  user_id?: string;
 }
+
+interface UserProfile {
+  user_id: string;
+  display_name: string;
+}
+
+const USER_COLORS = [
+  "bg-blue-500", "bg-emerald-500", "bg-amber-500", "bg-rose-500",
+  "bg-violet-500", "bg-cyan-500", "bg-pink-500", "bg-indigo-500",
+];
+const getUserColor = (userId: string) => {
+  let hash = 0;
+  for (let i = 0; i < userId.length; i++) hash = userId.charCodeAt(i) + ((hash << 5) - hash);
+  return USER_COLORS[Math.abs(hash) % USER_COLORS.length];
+};
 
 export const typeIcons: Record<AktivitetType, typeof Phone> = {
   "Telefonsamtale": Phone,
