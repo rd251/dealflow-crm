@@ -1,18 +1,27 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { useLocation } from "react-router-dom";
 import logo from "@/assets/logo.svg";
 
 export default function Login() {
   const { signIn } = useAuth();
+  const location = useLocation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const stateError = location.state && typeof location.state === "object" ? (location.state as { authError?: string }).authError : undefined;
+    if (stateError) {
+      setError(stateError);
+    }
+  }, [location.state]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,10 +74,14 @@ export default function Login() {
             className="w-full gap-2"
             onClick={async () => {
               setError("");
+              console.info("[Auth] OAuth startet: Google");
               const result = await lovable.auth.signInWithOAuth("google", {
-                redirect_uri: window.location.origin,
+                redirect_uri: `${window.location.origin}/~oauth`,
               });
-              if (result?.error) setError(result.error.message);
+              if (result?.error) {
+                console.error("[Auth] Google OAuth feilet:", result.error.message);
+                setError(result.error.message);
+              }
             }}
           >
             <svg className="h-4 w-4" viewBox="0 0 24 24">
