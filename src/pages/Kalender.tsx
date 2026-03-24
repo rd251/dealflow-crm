@@ -880,7 +880,7 @@ export default function Kalender() {
 
       {/* Tasks list */}
       {(() => {
-        const taskEvents = events.filter(e => e.type === "task");
+        const taskEvents = filteredEvents.filter(e => e.type === "task");
         if (taskEvents.length === 0) return null;
         return (
           <div className="mt-4 border rounded-xl p-4 bg-card">
