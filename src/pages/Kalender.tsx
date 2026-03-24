@@ -56,7 +56,18 @@ export default function Kalender() {
   const [gcalSyncing, setGcalSyncing] = useState(false);
   const [gcalLastSynced, setGcalLastSynced] = useState<string | null>(null);
 
-  // Drawer state
+  // Handle Google Calendar OAuth callback
+  useEffect(() => {
+    if (searchParams.get("gcal_connected") === "true") {
+      toast.success("Google Calendar koblet til!");
+      setGcalConnected(true);
+    }
+    if (searchParams.get("gcal_error")) {
+      toast.error("Feil ved tilkobling: " + searchParams.get("gcal_error"));
+    }
+  }, [searchParams]);
+
+
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editing, setEditing] = useState(false);
