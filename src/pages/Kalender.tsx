@@ -1,16 +1,19 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import PageShell from "@/components/PageShell";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, ChevronRight, Clock, Users, CalendarDays, ListTodo, Pencil, Trash2, GripVertical, Check, X, Building2, Briefcase, UserCircle, Mail, Phone, ExternalLink, Handshake } from "lucide-react";
+import { ChevronLeft, ChevronRight, Clock, Users, CalendarDays, ListTodo, Pencil, Trash2, GripVertical, Check, X, Building2, Briefcase, UserCircle, Mail, Phone, ExternalLink, Handshake, RefreshCw, Loader2 } from "lucide-react";
 import { format, startOfWeek, startOfMonth, addDays, addWeeks, subWeeks, addMonths, subMonths, isSameDay, getDaysInMonth, getDay } from "date-fns";
 import { nb } from "date-fns/locale";
 import MeetingFields from "@/components/MeetingFields";
 import EntityLinkPicker from "@/components/EntityLinkPicker";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
+import { toast } from "sonner";
 
 const API_URL = import.meta.env.VITE_SUPABASE_URL + '/rest/v1';
 const API_HEADERS = {
@@ -38,14 +41,33 @@ const TASK_HIGH_COLOR = "bg-destructive/15 border-destructive text-destructive";
 const ACTIVITY_COLOR = "bg-sky-500/15 border-sky-500 text-sky-800 dark:text-sky-300";
 
 export default function Kalender() {
+  const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<"week" | "month">("week");
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [kontakter, setKontakter] = useState<Record<string, string>>({});
   const [kontaktListe, setKontaktListe] = useState<{ id: string; navn: string }[]>([]);
 
-  // Drawer state
+  // Google Calendar connection state
+  const [gcalConnected, setGcalConnected] = useState<boolean | null>(null);
+  const [gcalConnecting, setGcalConnecting] = useState(false);
+  const [gcalSyncing, setGcalSyncing] = useState(false);
+  const [gcalLastSynced, setGcalLastSynced] = useState<string | null>(null);
+
+  // Handle Google Calendar OAuth callback
+  useEffect(() => {
+    if (searchParams.get("gcal_connected") === "true") {
+      toast.success("Google Calendar koblet til!");
+      setGcalConnected(true);
+    }
+    if (searchParams.get("gcal_error")) {
+      toast.error("Feil ved tilkobling: " + searchParams.get("gcal_error"));
+    }
+  }, [searchParams]);
+
+
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -133,6 +155,49 @@ export default function Kalender() {
       setPartnerListe(p);
     }).catch(() => {});
   }, []);
+
+  // Check Google Calendar connection
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("google_calendar_connections" as any)
+      .select("last_synced_at")
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }: any) => {
+        setGcalConnected(!!data);
+        setGcalLastSynced(data?.last_synced_at || null);
+      });
+  }, [user]);
+
+  const connectGoogleCalendar = async () => {
+    setGcalConnecting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("google-calendar-auth", {
+        body: { redirect_uri: window.location.origin + "/kalender" },
+      });
+      if (error) throw error;
+      if (data?.url) window.location.href = data.url;
+    } catch (e: any) {
+      toast.error("Kunne ikke starte Google-tilkobling: " + e.message);
+      setGcalConnecting(false);
+    }
+  };
+
+  const syncNow = async () => {
+    setGcalSyncing(true);
+    try {
+      const { error } = await supabase.functions.invoke("google-calendar-sync");
+      if (error) throw error;
+      toast.success("Kalender synkronisert!");
+      setGcalLastSynced(new Date().toISOString());
+      fetchEvents();
+    } catch (e: any) {
+      toast.error("Synkronisering feilet: " + e.message);
+    } finally {
+      setGcalSyncing(false);
+    }
+  };
 
   const fetchEvents = useCallback(async () => {
     let from: string, to: string;
@@ -597,7 +662,34 @@ export default function Kalender() {
         {viewMode === "week" && <span className="text-muted-foreground ml-2">Dra møter for å flytte</span>}
       </div>
 
-      {/* WEEK VIEW */}
+      {/* Google Calendar connection banner */}
+      {gcalConnected === false && (
+        <div className="mb-3 flex items-center gap-3 rounded-lg border border-dashed border-primary/40 bg-primary/5 px-4 py-3">
+          <CalendarDays className="w-5 h-5 text-primary shrink-0" />
+          <div className="flex-1">
+            <p className="text-sm font-medium">Koble til Google Calendar</p>
+            <p className="text-xs text-muted-foreground">Synkroniser møtene dine automatisk med kalenderen</p>
+          </div>
+          <Button size="sm" onClick={connectGoogleCalendar} disabled={gcalConnecting}>
+            {gcalConnecting ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : null}
+            Koble til
+          </Button>
+        </div>
+      )}
+      {gcalConnected === true && (
+        <div className="mb-3 flex items-center gap-3 text-xs text-muted-foreground">
+          <CalendarDays className="w-4 h-4 text-primary" />
+          <span>Google Calendar tilkoblet</span>
+          {gcalLastSynced && (
+            <span>· Sist synkronisert {format(new Date(gcalLastSynced), "dd.MM.yyyy HH:mm")}</span>
+          )}
+          <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={syncNow} disabled={gcalSyncing}>
+            {gcalSyncing ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <RefreshCw className="w-3 h-3 mr-1" />}
+            Synk nå
+          </Button>
+        </div>
+      )}
+
       {viewMode === "week" && (
         <div className="border rounded-xl overflow-hidden bg-card">
           <div className="grid grid-cols-[60px_repeat(7,1fr)] border-b">
