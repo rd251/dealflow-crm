@@ -144,6 +144,49 @@ export default function Kalender() {
     }).catch(() => {});
   }, []);
 
+  // Check Google Calendar connection
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("google_calendar_connections" as any)
+      .select("last_synced_at")
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }: any) => {
+        setGcalConnected(!!data);
+        setGcalLastSynced(data?.last_synced_at || null);
+      });
+  }, [user]);
+
+  const connectGoogleCalendar = async () => {
+    setGcalConnecting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("google-calendar-auth", {
+        body: { redirect_uri: window.location.origin + "/kalender" },
+      });
+      if (error) throw error;
+      if (data?.url) window.location.href = data.url;
+    } catch (e: any) {
+      toast.error("Kunne ikke starte Google-tilkobling: " + e.message);
+      setGcalConnecting(false);
+    }
+  };
+
+  const syncNow = async () => {
+    setGcalSyncing(true);
+    try {
+      const { error } = await supabase.functions.invoke("google-calendar-sync");
+      if (error) throw error;
+      toast.success("Kalender synkronisert!");
+      setGcalLastSynced(new Date().toISOString());
+      fetchEvents();
+    } catch (e: any) {
+      toast.error("Synkronisering feilet: " + e.message);
+    } finally {
+      setGcalSyncing(false);
+    }
+  };
+
   const fetchEvents = useCallback(async () => {
     let from: string, to: string;
     if (viewMode === "week") {
