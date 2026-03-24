@@ -720,6 +720,21 @@ export default function Kalender() {
             <Button variant={userFilter === "mine" ? "default" : "ghost"} size="sm" className="text-xs h-7 px-3" onClick={() => setUserFilter("mine")}>
               Mine
             </Button>
+            <Select value={userFilter !== "all" && userFilter !== "mine" ? userFilter : ""} onValueChange={(val) => setUserFilter(val)}>
+              <SelectTrigger className={cn("h-7 text-xs w-auto min-w-[110px] border-0 shadow-none", userFilter !== "all" && userFilter !== "mine" ? "bg-primary text-primary-foreground" : "")}>
+                <SelectValue placeholder="Velg bruker" />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.values(profiles).map(p => (
+                  <SelectItem key={p.user_id} value={p.user_id}>
+                    <span className="flex items-center gap-2">
+                      <span className={cn("w-2 h-2 rounded-full", getUserColor(p.user_id))} />
+                      {p.display_name}
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </div>
