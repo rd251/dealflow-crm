@@ -5,6 +5,7 @@ import PageShell from "@/components/PageShell";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useCrmStore } from "@/hooks/use-crm-store";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
