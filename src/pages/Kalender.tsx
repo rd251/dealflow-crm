@@ -41,12 +41,19 @@ const TASK_HIGH_COLOR = "bg-destructive/15 border-destructive text-destructive";
 const ACTIVITY_COLOR = "bg-sky-500/15 border-sky-500 text-sky-800 dark:text-sky-300";
 
 export default function Kalender() {
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<"week" | "month">("week");
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [kontakter, setKontakter] = useState<Record<string, string>>({});
   const [kontaktListe, setKontaktListe] = useState<{ id: string; navn: string }[]>([]);
+
+  // Google Calendar connection state
+  const [gcalConnected, setGcalConnected] = useState<boolean | null>(null);
+  const [gcalConnecting, setGcalConnecting] = useState(false);
+  const [gcalSyncing, setGcalSyncing] = useState(false);
+  const [gcalLastSynced, setGcalLastSynced] = useState<string | null>(null);
 
   // Drawer state
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
