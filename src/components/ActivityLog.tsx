@@ -61,10 +61,10 @@ interface ActivityLogProps {
   kontakt_id?: string;
   onActivityLogged?: () => void;
   kontaktListe?: KontaktOption[];
-  currentUserId?: string;
 }
 
 export default function ActivityLog(props: ActivityLogProps) {
+  const { user } = useAuth();
   const [aktiviteter, setAktiviteter] = useState<Aktivitet[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [type, setType] = useState<AktivitetType>("Telefonsamtale");
