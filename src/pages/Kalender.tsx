@@ -704,13 +704,23 @@ export default function Kalender() {
           </Button>
         </div>
         <span className="text-sm font-semibold capitalize">{dateLabel}</span>
-        <div className="flex items-center gap-1 border rounded-lg p-0.5">
-          <Button variant={viewMode === "week" ? "default" : "ghost"} size="sm" className="text-xs h-7 px-3" onClick={() => setViewMode("week")}>
-            Uke
-          </Button>
-          <Button variant={viewMode === "month" ? "default" : "ghost"} size="sm" className="text-xs h-7 px-3" onClick={() => setViewMode("month")}>
-            Måned
-          </Button>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 border rounded-lg p-0.5">
+            <Button variant={viewMode === "week" ? "default" : "ghost"} size="sm" className="text-xs h-7 px-3" onClick={() => setViewMode("week")}>
+              Uke
+            </Button>
+            <Button variant={viewMode === "month" ? "default" : "ghost"} size="sm" className="text-xs h-7 px-3" onClick={() => setViewMode("month")}>
+              Måned
+            </Button>
+          </div>
+          <div className="flex items-center gap-1 border rounded-lg p-0.5">
+            <Button variant={userFilter === "all" ? "default" : "ghost"} size="sm" className="text-xs h-7 px-3" onClick={() => setUserFilter("all")}>
+              Alle
+            </Button>
+            <Button variant={userFilter === "mine" ? "default" : "ghost"} size="sm" className="text-xs h-7 px-3" onClick={() => setUserFilter("mine")}>
+              Mine
+            </Button>
+          </div>
         </div>
       </div>
 
