@@ -304,7 +304,14 @@ export default function Kalender() {
 
   useEffect(() => { fetchEvents(); }, [fetchEvents]);
 
-  const getEventsForDay = (day: Date) => events.filter(e => isSameDay(e.start, day));
+  const filteredEvents = useMemo(() => {
+    if (userFilter === "mine" && user) {
+      return events.filter(e => e.ownerUserId === user.id);
+    }
+    return events;
+  }, [events, userFilter, user]);
+
+  const getEventsForDay = (day: Date) => filteredEvents.filter(e => isSameDay(e.start, day));
 
   const getEventHeight = (event: CalendarEvent) => {
     if (!event.end) return 28;
