@@ -16,6 +16,8 @@ import EntityLinkPicker from "@/components/EntityLinkPicker";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 
 interface UserProfile {
   user_id: string;
