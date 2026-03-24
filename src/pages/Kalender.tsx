@@ -6,6 +6,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ChevronLeft, ChevronRight, Clock, Users, CalendarDays, ListTodo, Pencil, Trash2, GripVertical, Check, X, Building2, Briefcase, UserCircle, Mail, Phone, ExternalLink, Handshake, RefreshCw, Loader2 } from "lucide-react";
 import { format, startOfWeek, startOfMonth, addDays, addWeeks, subWeeks, addMonths, subMonths, isSameDay, getDaysInMonth, getDay } from "date-fns";
 import { nb } from "date-fns/locale";
@@ -13,6 +15,22 @@ import MeetingFields from "@/components/MeetingFields";
 import EntityLinkPicker from "@/components/EntityLinkPicker";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+
+interface UserProfile {
+  user_id: string;
+  display_name: string;
+  avatar_url: string | null;
+}
+
+const USER_COLORS = [
+  "bg-blue-500", "bg-emerald-500", "bg-amber-500", "bg-rose-500",
+  "bg-violet-500", "bg-cyan-500", "bg-pink-500", "bg-indigo-500",
+];
+const getUserColor = (userId: string) => {
+  let hash = 0;
+  for (let i = 0; i < userId.length; i++) hash = userId.charCodeAt(i) + ((hash << 5) - hash);
+  return USER_COLORS[Math.abs(hash) % USER_COLORS.length];
+};
 import { toast } from "sonner";
 
 const API_URL = import.meta.env.VITE_SUPABASE_URL + '/rest/v1';
