@@ -111,7 +111,7 @@ export default function Aktiviteter() {
   const [createLoading, setCreateLoading] = useState(false);
 
   const buildUrl = useCallback((currentOffset: number) => {
-    let url = `${API_URL}/aktiviteter?order=dato.desc&select=id,type,beskrivelse,dato,tittel,aktivitet_kilde,ekstern_provider,lead_id,salgsmulighet_id,selskap_id,partner_id,prosjekt_id,kontakt_id&limit=${PAGE_SIZE}&offset=${currentOffset}`;
+    let url = `${API_URL}/aktiviteter?order=dato.desc&select=id,type,beskrivelse,dato,tittel,aktivitet_kilde,ekstern_provider,lead_id,salgsmulighet_id,selskap_id,partner_id,prosjekt_id,kontakt_id,user_id&limit=${PAGE_SIZE}&offset=${currentOffset}`;
     if (dateFrom) url += `&dato=gte.${dateFrom.toISOString()}`;
     if (dateTo) {
       const end = new Date(dateTo);
