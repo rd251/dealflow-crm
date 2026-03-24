@@ -120,7 +120,18 @@ export default function ActivityLog(props: ActivityLogProps) {
 
   useEffect(() => { fetchAktiviteter(); }, [fetchAktiviteter]);
 
-  const openCreate = () => {
+  useEffect(() => {
+    fetch(`${API_URL}/profiles?select=user_id,display_name`, { headers: API_HEADERS })
+      .then(r => r.ok ? r.json() : [])
+      .then((data: UserProfile[]) => {
+        const map: Record<string, UserProfile> = {};
+        data.forEach(p => { map[p.user_id] = p; });
+        setProfiles(map);
+      })
+      .catch(() => {});
+  }, []);
+
+
     setEditingId(null);
     setType("Telefonsamtale");
     setBeskrivelse("");
