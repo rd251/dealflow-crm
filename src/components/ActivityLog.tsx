@@ -83,6 +83,7 @@ interface ActivityLogProps {
 export default function ActivityLog(props: ActivityLogProps) {
   const { user } = useAuth();
   const [aktiviteter, setAktiviteter] = useState<Aktivitet[]>([]);
+  const [profiles, setProfiles] = useState<Record<string, UserProfile>>({});
   const [dialogOpen, setDialogOpen] = useState(false);
   const [type, setType] = useState<AktivitetType>("Telefonsamtale");
   const [beskrivelse, setBeskrivelse] = useState("");
