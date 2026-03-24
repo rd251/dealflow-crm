@@ -60,6 +60,7 @@ interface ActivityLogProps {
   kontakt_id?: string;
   onActivityLogged?: () => void;
   kontaktListe?: KontaktOption[];
+  currentUserId?: string;
 }
 
 export default function ActivityLog(props: ActivityLogProps) {
