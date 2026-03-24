@@ -61,6 +61,7 @@ const entityBadgeColor: Record<string, string> = {
 };
 
 export default function Aktiviteter() {
+  const { user } = useAuth();
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const { leads, salgsmuligheter, selskaper, partnere, prosjekter, kontakter } = useCrmStore();
