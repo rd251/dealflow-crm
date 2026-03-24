@@ -68,6 +68,7 @@ export default function Kalender() {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [kontakter, setKontakter] = useState<Record<string, string>>({});
   const [kontaktListe, setKontaktListe] = useState<{ id: string; navn: string }[]>([]);
+  const [profiles, setProfiles] = useState<Record<string, UserProfile>>({});
 
   // Google Calendar connection state
   const [gcalConnected, setGcalConnected] = useState<boolean | null>(null);
