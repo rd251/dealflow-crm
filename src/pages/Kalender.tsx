@@ -305,10 +305,10 @@ export default function Kalender() {
   useEffect(() => { fetchEvents(); }, [fetchEvents]);
 
   const filteredEvents = useMemo(() => {
-    if (userFilter === "mine" && user) {
-      return events.filter(e => e.ownerUserId === user.id);
-    }
-    return events;
+    if (userFilter === "all") return events;
+    if (userFilter === "mine" && user) return events.filter(e => e.ownerUserId === user.id);
+    // Specific user_id
+    return events.filter(e => e.ownerUserId === userFilter);
   }, [events, userFilter, user]);
 
   const getEventsForDay = (day: Date) => filteredEvents.filter(e => isSameDay(e.start, day));
