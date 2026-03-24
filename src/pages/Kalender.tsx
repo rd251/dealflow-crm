@@ -541,6 +541,7 @@ export default function Kalender() {
           salgsmulighet_id: newMeetingSalgsmulighetId,
           lead_id: newMeetingLeadId,
           partner_id: newMeetingPartnerId,
+          user_id: user?.id || null,
         }),
       });
       setCreateOpen(false);
