@@ -50,6 +50,7 @@ interface CalendarEvent {
   color: string;
   raw: any;
   kontaktNavn?: string;
+  ownerUserId?: string;
 }
 
 const HOURS = Array.from({ length: 14 }, (_, i) => i + 7);
