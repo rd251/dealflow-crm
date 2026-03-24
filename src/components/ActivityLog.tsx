@@ -266,6 +266,19 @@ export default function ActivityLog(props: ActivityLogProps) {
                         {a.ekstern_provider === 'gmail' ? 'Gmail' : 'GCal'}
                       </span>
                     )}
+                    {/* Owner avatar */}
+                    {a.user_id && profiles[a.user_id] && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className={`w-4 h-4 rounded-full flex items-center justify-center text-[7px] font-bold text-white shrink-0 ${getUserColor(a.user_id)}`}>
+                            {profiles[a.user_id].display_name.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase()}
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="text-xs">
+                          {profiles[a.user_id].display_name}
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
                     <span className="text-[10px] text-muted-foreground flex items-center gap-0.5"><Clock className="w-2.5 h-2.5" />{formatDato(a.dato)}</span>
                     {!isExternal && (
                       <DropdownMenu>
