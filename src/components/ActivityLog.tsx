@@ -131,7 +131,7 @@ export default function ActivityLog(props: ActivityLogProps) {
       .catch(() => {});
   }, []);
 
-
+  const openCreate = () => {
     setEditingId(null);
     setType("Telefonsamtale");
     setBeskrivelse("");
