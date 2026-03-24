@@ -15,6 +15,7 @@ import MeetingFields from "@/components/MeetingFields";
 import EntityLinkPicker from "@/components/EntityLinkPicker";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { toast } from "sonner";
 
 interface UserProfile {
   user_id: string;
