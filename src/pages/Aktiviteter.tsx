@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/use-auth";
 import PageShell from "@/components/PageShell";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useCrmStore } from "@/hooks/use-crm-store";
@@ -60,6 +61,7 @@ const entityBadgeColor: Record<string, string> = {
 };
 
 export default function Aktiviteter() {
+  const { user } = useAuth();
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const { leads, salgsmuligheter, selskaper, partnere, prosjekter, kontakter } = useCrmStore();
@@ -269,7 +271,7 @@ export default function Aktiviteter() {
     if (!createBeskrivelse.trim()) return;
     setCreateLoading(true);
     try {
-      const body: Record<string, any> = { type: createType, beskrivelse: createBeskrivelse.trim() };
+      const body: Record<string, any> = { type: createType, beskrivelse: createBeskrivelse.trim(), user_id: user?.id || null };
       if (createEntityType !== "alle" && createEntityId) {
         const keyMap: Record<string, string> = {
           lead: "lead_id", salgsmulighet: "salgsmulighet_id", selskap: "selskap_id",

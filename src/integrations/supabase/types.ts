@@ -35,6 +35,7 @@ export type Database = {
           tittel: string | null
           type: Database["public"]["Enums"]["aktivitet_type"]
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           aktivitet_kilde?: string | null
@@ -56,6 +57,7 @@ export type Database = {
           tittel?: string | null
           type: Database["public"]["Enums"]["aktivitet_type"]
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           aktivitet_kilde?: string | null
@@ -77,6 +79,7 @@ export type Database = {
           tittel?: string | null
           type?: Database["public"]["Enums"]["aktivitet_type"]
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: [
           {

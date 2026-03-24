@@ -6,6 +6,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ChevronLeft, ChevronRight, Clock, Users, CalendarDays, ListTodo, Pencil, Trash2, GripVertical, Check, X, Building2, Briefcase, UserCircle, Mail, Phone, ExternalLink, Handshake, RefreshCw, Loader2 } from "lucide-react";
 import { format, startOfWeek, startOfMonth, addDays, addWeeks, subWeeks, addMonths, subMonths, isSameDay, getDaysInMonth, getDay } from "date-fns";
 import { nb } from "date-fns/locale";
@@ -14,6 +16,22 @@ import EntityLinkPicker from "@/components/EntityLinkPicker";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
+
+interface UserProfile {
+  user_id: string;
+  display_name: string;
+  avatar_url: string | null;
+}
+
+const USER_COLORS = [
+  "bg-blue-500", "bg-emerald-500", "bg-amber-500", "bg-rose-500",
+  "bg-violet-500", "bg-cyan-500", "bg-pink-500", "bg-indigo-500",
+];
+const getUserColor = (userId: string) => {
+  let hash = 0;
+  for (let i = 0; i < userId.length; i++) hash = userId.charCodeAt(i) + ((hash << 5) - hash);
+  return USER_COLORS[Math.abs(hash) % USER_COLORS.length];
+};
 
 const API_URL = import.meta.env.VITE_SUPABASE_URL + '/rest/v1';
 const API_HEADERS = {
@@ -32,6 +50,7 @@ interface CalendarEvent {
   color: string;
   raw: any;
   kontaktNavn?: string;
+  ownerUserId?: string;
 }
 
 const HOURS = Array.from({ length: 14 }, (_, i) => i + 7);
@@ -49,6 +68,7 @@ export default function Kalender() {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [kontakter, setKontakter] = useState<Record<string, string>>({});
   const [kontaktListe, setKontaktListe] = useState<{ id: string; navn: string }[]>([]);
+  const [profiles, setProfiles] = useState<Record<string, UserProfile>>({});
 
   // Google Calendar connection state
   const [gcalConnected, setGcalConnected] = useState<boolean | null>(null);
@@ -139,6 +159,16 @@ export default function Kalender() {
         setKontaktListe(data.map(k => ({ id: k.id, navn: k.navn })));
       })
       .catch(() => {});
+
+    // Fetch user profiles for ownership display
+    fetch(`${API_URL}/profiles?select=user_id,display_name,avatar_url`, { headers: API_HEADERS })
+      .then(r => r.ok ? r.json() : [])
+      .then((data: UserProfile[]) => {
+        const map: Record<string, UserProfile> = {};
+        data.forEach(p => { map[p.user_id] = p; });
+        setProfiles(map);
+      })
+      .catch(() => {});
   }, []);
 
   // Fetch entity lists for linking
@@ -215,7 +245,7 @@ export default function Kalender() {
 
     try {
       const meetingsRes = await fetch(
-        `${API_URL}/aktiviteter?type=eq.Møte&start_tid=gte.${from}&start_tid=lte.${to}&select=id,tittel,beskrivelse,start_tid,slutt_tid,type,deltakere,lead_id,salgsmulighet_id,selskap_id,kontakt_id`,
+        `${API_URL}/aktiviteter?type=eq.Møte&start_tid=gte.${from}&start_tid=lte.${to}&select=id,tittel,beskrivelse,start_tid,slutt_tid,type,deltakere,lead_id,salgsmulighet_id,selskap_id,kontakt_id,user_id`,
         { headers: API_HEADERS }
       );
       if (meetingsRes.ok) {
@@ -227,6 +257,7 @@ export default function Kalender() {
             start: new Date(m.start_tid), end: m.slutt_tid ? new Date(m.slutt_tid) : undefined,
             type: "meeting", color: MEETING_COLOR, raw: m,
             kontaktNavn: deltakereNavn.length > 0 ? deltakereNavn.join(", ") : (m.kontakt_id ? kontakter[m.kontakt_id] : undefined),
+            ownerUserId: m.user_id,
           });
         });
       }
@@ -249,7 +280,7 @@ export default function Kalender() {
       }
 
       const activitiesRes = await fetch(
-        `${API_URL}/aktiviteter?type=neq.Møte&dato=gte.${from}&dato=lte.${to}&select=id,type,beskrivelse,dato,kontakt_id,selskap_id,lead_id,salgsmulighet_id`,
+        `${API_URL}/aktiviteter?type=neq.Møte&dato=gte.${from}&dato=lte.${to}&select=id,type,beskrivelse,dato,kontakt_id,selskap_id,lead_id,salgsmulighet_id,user_id`,
         { headers: API_HEADERS }
       );
       if (activitiesRes.ok) {
@@ -259,6 +290,7 @@ export default function Kalender() {
             id: a.id, title: `${a.type}: ${a.beskrivelse}`.substring(0, 50), description: a.beskrivelse || "",
             start: new Date(a.dato), type: "activity", color: ACTIVITY_COLOR, raw: a,
             kontaktNavn: a.kontakt_id ? kontakter[a.kontakt_id] : undefined,
+            ownerUserId: a.user_id,
           });
         });
       }
@@ -509,6 +541,7 @@ export default function Kalender() {
           salgsmulighet_id: newMeetingSalgsmulighetId,
           lead_id: newMeetingLeadId,
           partner_id: newMeetingPartnerId,
+          user_id: user?.id || null,
         }),
       });
       setCreateOpen(false);
@@ -606,27 +639,46 @@ export default function Kalender() {
     : format(currentDate, "MMMM yyyy", { locale: nb });
 
   // Event card component
-  const EventCard = ({ event, compact = false }: { event: CalendarEvent; compact?: boolean }) => (
-    <div
-      onClick={(e) => { e.stopPropagation(); handleEventClick(event); }}
-      draggable={event.type === "meeting"}
-      onDragStart={(e) => handleDragStart(e, event)}
-      onDragEnd={handleDragEnd}
-      className={`rounded px-1.5 py-0.5 text-[10px] leading-tight border-l-2 overflow-hidden cursor-pointer hover:opacity-80 transition-opacity ${event.color} ${
-        event.type === "meeting" ? "cursor-grab active:cursor-grabbing" : ""
-      } ${dragEvent?.id === event.id ? "opacity-40" : ""}`}
-    >
-      <div className="flex items-center gap-0.5">
-        {event.type === "meeting" && !compact && <GripVertical className="w-2.5 h-2.5 shrink-0 opacity-40" />}
-        <span className="font-medium truncate">{event.title}</span>
+  const EventCard = ({ event, compact = false }: { event: CalendarEvent; compact?: boolean }) => {
+    const ownerProfile = event.ownerUserId ? profiles[event.ownerUserId] : null;
+    const initials = ownerProfile
+      ? ownerProfile.display_name.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase()
+      : null;
+
+    return (
+      <div
+        onClick={(e) => { e.stopPropagation(); handleEventClick(event); }}
+        draggable={event.type === "meeting"}
+        onDragStart={(e) => handleDragStart(e, event)}
+        onDragEnd={handleDragEnd}
+        className={`rounded px-1.5 py-0.5 text-[10px] leading-tight border-l-2 overflow-hidden cursor-pointer hover:opacity-80 transition-opacity ${event.color} ${
+          event.type === "meeting" ? "cursor-grab active:cursor-grabbing" : ""
+        } ${dragEvent?.id === event.id ? "opacity-40" : ""}`}
+      >
+        <div className="flex items-center gap-0.5">
+          {event.type === "meeting" && !compact && <GripVertical className="w-2.5 h-2.5 shrink-0 opacity-40" />}
+          <span className="font-medium truncate flex-1">{event.title}</span>
+          {ownerProfile && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className={`w-4 h-4 rounded-full flex items-center justify-center text-[7px] font-bold text-white shrink-0 ${getUserColor(event.ownerUserId!)}`}>
+                  {initials}
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="text-xs">
+                {ownerProfile.display_name}
+              </TooltipContent>
+            </Tooltip>
+          )}
+        </div>
+        {!compact && event.kontaktNavn && (
+          <span className="truncate block opacity-70 flex items-center gap-0.5">
+            <Users className="w-2.5 h-2.5 inline shrink-0" /> {event.kontaktNavn}
+          </span>
+        )}
       </div>
-      {!compact && event.kontaktNavn && (
-        <span className="truncate block opacity-70 flex items-center gap-0.5">
-          <Users className="w-2.5 h-2.5 inline shrink-0" /> {event.kontaktNavn}
-        </span>
-      )}
-    </div>
-  );
+    );
+  };
 
   return (
     <PageShell title="Kalender" subtitle="Oversikt over møter, oppgaver og aktiviteter">
@@ -848,6 +900,15 @@ export default function Kalender() {
 
           {selectedEvent && !editing && (
             <div className="space-y-4 mt-4">
+              {/* Owner */}
+              {selectedEvent.ownerUserId && profiles[selectedEvent.ownerUserId] && (
+                <div className="flex items-center gap-2 text-sm">
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold text-white ${getUserColor(selectedEvent.ownerUserId)}`}>
+                    {profiles[selectedEvent.ownerUserId].display_name.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase()}
+                  </div>
+                  <span>{profiles[selectedEvent.ownerUserId].display_name}</span>
+                </div>
+              )}
               <div className="flex items-center gap-2 text-sm">
                 <CalendarDays className="w-4 h-4 text-muted-foreground" />
                 <span>{format(selectedEvent.start, "EEEE d. MMMM yyyy", { locale: nb })}</span>

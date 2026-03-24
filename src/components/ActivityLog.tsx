@@ -6,6 +6,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Phone, Mail, MessageSquare, MessageCircle, Users, FileText, Plus, Clock, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import MeetingFields from "@/components/MeetingFields";
+import { useAuth } from "@/hooks/use-auth";
 
 const API_URL = import.meta.env.VITE_SUPABASE_URL + '/rest/v1';
 const API_HEADERS = {
@@ -63,6 +64,7 @@ interface ActivityLogProps {
 }
 
 export default function ActivityLog(props: ActivityLogProps) {
+  const { user } = useAuth();
   const [aktiviteter, setAktiviteter] = useState<Aktivitet[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [type, setType] = useState<AktivitetType>("Telefonsamtale");
@@ -144,7 +146,7 @@ export default function ActivityLog(props: ActivityLogProps) {
           body: JSON.stringify({ type, beskrivelse: beskrivelse.trim(), ...meetingData }),
         });
       } else {
-        const body: Record<string, any> = { type, beskrivelse: beskrivelse.trim(), ...meetingData };
+        const body: Record<string, any> = { type, beskrivelse: beskrivelse.trim(), ...meetingData, user_id: user?.id || null };
         if (props.lead_id) body.lead_id = props.lead_id;
         if (props.salgsmulighet_id) body.salgsmulighet_id = props.salgsmulighet_id;
         if (props.selskap_id) body.selskap_id = props.selskap_id;
