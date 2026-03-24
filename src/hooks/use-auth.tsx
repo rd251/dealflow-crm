@@ -20,6 +20,25 @@ interface AuthContextType extends AuthState {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+function readOAuthResponseFromUrl() {
+  const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+  const searchParams = new URLSearchParams(window.location.search);
+
+  const accessToken = hashParams.get("access_token") ?? searchParams.get("access_token");
+  const refreshToken = hashParams.get("refresh_token") ?? searchParams.get("refresh_token");
+  const error = hashParams.get("error_description")
+    ?? searchParams.get("error_description")
+    ?? hashParams.get("error")
+    ?? searchParams.get("error");
+
+  return { accessToken, refreshToken, error };
+}
+
+function clearOAuthResponseFromUrl() {
+  const cleanUrl = `${window.location.origin}${window.location.pathname}`;
+  window.history.replaceState({}, document.title, cleanUrl);
+}
+
 function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
   return Promise.race([
     promise,
@@ -57,6 +76,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let mounted = true;
 
+    const applySession = async (session: Session | null, source: string) => {
+      if (!mounted) return;
+
+      if (!session?.user) {
+        console.info(`[Auth] Session ikke funnet (${source})`);
+        setState({ user: null, session: null, role: null, loading: false, isAdmin: false });
+        return;
+      }
+
+      console.info(`[Auth] Session funnet (${source}) for`, session.user.email);
+      const role = await withTimeout(fetchRole(session.user.id), 3000, "user" as AppRole);
+
+      if (!mounted) return;
+
+      setState({
+        user: session.user,
+        session,
+        role,
+        loading: false,
+        isAdmin: role === "admin",
+      });
+    };
+
     // Safety timeout: if loading hasn't resolved in 5s, check session manually
     const safetyTimeout = setTimeout(async () => {
       if (!mounted) return;
@@ -73,55 +115,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       console.info("[Auth] onAuthStateChange:", event);
 
-      if (event === "SIGNED_OUT" || !session) {
-        console.info("[Auth] Session ikke funnet, setter bruker til utlogget");
-        setState({ user: null, session: null, role: null, loading: false, isAdmin: false });
+      if (event === "SIGNED_OUT") {
+        await applySession(null, "signed_out");
         return;
       }
 
-      if (session?.user) {
-        console.info("[Auth] Session funnet for bruker", session.user.email);
-        // Fetch role with 3s timeout
-        const role = await withTimeout(fetchRole(session.user.id), 3000, "user" as AppRole);
-        if (mounted) {
-          setState({
-            user: session.user,
-            session,
-            role,
-            loading: false,
-            isAdmin: role === "admin",
-          });
-        }
-      }
+      await applySession(session, `event:${event}`);
     });
 
-    supabase.auth.getSession().then(async ({ data, error }) => {
+    const bootstrapAuth = async () => {
+      const { accessToken, refreshToken, error: oauthError } = readOAuthResponseFromUrl();
+
+      if (oauthError) {
+        console.error("[Auth] OAuth callback returnerte feil:", oauthError);
+        clearOAuthResponseFromUrl();
+      }
+
+      if (accessToken && refreshToken) {
+        console.info("[Auth] OAuth tokens funnet i URL, oppretter session");
+        const { error } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        });
+
+        if (error) {
+          console.error("[Auth] Kunne ikke opprette session fra callback:", error.message);
+        } else {
+          console.info("[Auth] Session opprettet fra OAuth callback");
+        }
+
+        clearOAuthResponseFromUrl();
+      }
+
+      const { data, error } = await supabase.auth.getSession();
+
       if (!mounted) return;
 
       if (error) {
         console.error("[Auth] Feil ved lesing av session:", error.message);
-        setState({ user: null, session: null, role: null, loading: false, isAdmin: false });
+        await applySession(null, "init_error");
         return;
       }
 
-      if (!data.session?.user) {
-        console.info("[Auth] Ingen eksisterende session ved init");
-        setState({ user: null, session: null, role: null, loading: false, isAdmin: false });
-        return;
-      }
+      await applySession(data.session, "init");
+    };
 
-      console.info("[Auth] Eksisterende session funnet ved init for", data.session.user.email);
-      const role = await withTimeout(fetchRole(data.session.user.id), 3000, "user" as AppRole);
-      if (!mounted) return;
-
-      setState({
-        user: data.session.user,
-        session: data.session,
-        role,
-        loading: false,
-        isAdmin: role === "admin",
-      });
-    });
+    bootstrapAuth();
 
     return () => {
       mounted = false;

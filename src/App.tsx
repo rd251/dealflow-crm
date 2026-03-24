@@ -64,6 +64,7 @@ function LoginRoute() {
 function OAuthCallbackRoute() {
   const { user, session, loading } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = [new URLSearchParams(window.location.search)];
 
   useEffect(() => {
     console.info("[Auth] Callback mottatt på /~oauth");
@@ -71,6 +72,14 @@ function OAuthCallbackRoute() {
 
   useEffect(() => {
     if (loading) return;
+
+    const oauthError = searchParams.get("error") ?? searchParams.get("error_description");
+
+    if (oauthError) {
+      console.warn("[Auth] Callback inneholder feil, redirecter til /login");
+      navigate("/login", { replace: true, state: { authError: "Google-innlogging mislyktes. Prøv igjen." } });
+      return;
+    }
 
     if (user && session) {
       console.info("[Auth] Session funnet etter callback, redirecter til /dashboard");
