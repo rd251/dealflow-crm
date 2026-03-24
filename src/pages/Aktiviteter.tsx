@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/use-auth";
 import PageShell from "@/components/PageShell";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useCrmStore } from "@/hooks/use-crm-store";
