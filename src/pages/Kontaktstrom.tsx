@@ -15,7 +15,6 @@ import { nb } from "date-fns/locale";
 import { toast } from "sonner";
 import ActivityLog from "@/components/ActivityLog";
 
-// Unified person row
 interface KontaktStromPerson {
   email: string;
   navn: string;
@@ -26,8 +25,8 @@ interface KontaktStromPerson {
   sistKontaktetDato: string | null;
   sistKontaktetType: string;
   nesteSteg: string;
-  aktivitetTekster: string[];
-  // CRM refs
+  totalSent: number;
+  totalReceived: number;
   kontaktId: string | null;
   leadId: string | null;
   salgsmulighetId: string | null;
@@ -64,9 +63,9 @@ function formatAktivitetDato(dato: string | null) {
 export default function Kontaktstrom() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const { kontakter, leads, salgsmuligheter, selskaper, partnere, updateLeads, refresh } = useCrmStore();
+  const { kontakter, leads, salgsmuligheter, selskaper, partnere, refresh } = useCrmStore();
 
-  const [aktiviteter, setAktiviteter] = useState<any[]>([]);
+  const [emailContacts, setEmailContacts] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState<string>("alle");
   const [filterAnsvarlig, setFilterAnsvarlig] = useState<string>("alle");
@@ -74,8 +73,7 @@ export default function Kontaktstrom() {
   const [creatingLead, setCreatingLead] = useState(false);
   const [syncing, setSyncing] = useState(false);
 
-  const refreshAktiviteter = async () => {
-    // Fetch all aktiviteter, paginating past the 1000-row default limit
+  const fetchEmailContacts = async () => {
     let allData: any[] = [];
     let from = 0;
     const pageSize = 1000;
@@ -83,11 +81,11 @@ export default function Kontaktstrom() {
 
     while (keepFetching) {
       const { data } = await supabase
-        .from("aktiviteter")
-        .select("id, type, dato, tittel, beskrivelse, kontakt_id, lead_id, salgsmulighet_id, selskap_id, partner_id, ekstern_provider, aktivitet_kilde")
-        .order("dato", { ascending: false })
+        .from("email_contacts")
+        .select("*")
+        .order("last_contacted_at", { ascending: false, nullsFirst: false })
         .range(from, from + pageSize - 1);
-      
+
       const rows = data || [];
       allData = allData.concat(rows);
       if (rows.length < pageSize) {
@@ -96,7 +94,7 @@ export default function Kontaktstrom() {
         from += pageSize;
       }
     }
-    setAktiviteter(allData);
+    setEmailContacts(allData);
   };
 
   const handleGmailSync = async (silent = false) => {
@@ -112,7 +110,7 @@ export default function Kontaktstrom() {
       });
       if (res.error) throw res.error;
       if (!silent) toast.success("Gmail-synkronisering fullført");
-      await refreshAktiviteter();
+      await fetchEmailContacts();
       refresh();
     } catch (e: any) {
       if (!silent) toast.error("Synkronisering feilet: " + (e.message || "Ukjent feil"));
@@ -121,23 +119,17 @@ export default function Kontaktstrom() {
     }
   };
 
-  // Fetch aktiviteter and auto-sync Gmail on mount
   useEffect(() => {
-    refreshAktiviteter();
+    fetchEmailContacts();
     handleGmailSync(true);
   }, []);
 
-  // Build unified list
+  // Build unified list: merge email_contacts with CRM data
   const persons = useMemo(() => {
     const map = new Map<string, KontaktStromPerson>();
 
-    // Helper: get selskap name
     const getSelskapNavn = (id: string) => selskaper.find(s => s.id === id)?.firmanavn || "";
-
-    // Helper: get selskap kundestatus
     const getSelskapStatus = (id: string) => selskaper.find(s => s.id === id)?.kundestatus || "";
-
-    // Helper: determine type from selskap
     const getTypeFromSelskap = (selskapId: string): KontaktStromPerson["type"] => {
       const selskap = selskaper.find(s => s.id === selskapId);
       if (!selskap) return "Ukjent";
@@ -145,11 +137,10 @@ export default function Kontaktstrom() {
       return "Ukjent";
     };
 
-    // 1. Add kontakter
+    // 1. Add CRM kontakter
     for (const k of kontakter) {
       if (!k.e_post) continue;
       const email = k.e_post.toLowerCase();
-      // Check if linked to lead
       const lead = leads.find(l => l.e_post?.toLowerCase() === email);
       const sm = salgsmuligheter.find(s => s.e_post?.toLowerCase() === email || s.kontakt_id === k.id);
       const partner = partnere.find(p => p.e_post?.toLowerCase() === email);
@@ -159,42 +150,23 @@ export default function Kontaktstrom() {
       let ansvarlig = "";
       let nesteSteg = "";
 
-      if (sm) {
-        type = "Salgsmulighet";
-        status = sm.status;
-        ansvarlig = sm.ansvarlig;
-        nesteSteg = sm.neste_steg;
-      }
-      if (lead) {
-        type = "Lead";
-        status = lead.status;
-        ansvarlig = lead.ansvarlig;
-        nesteSteg = lead.neste_steg;
-      }
-      if (partner) {
-        type = "Partner";
-        status = partner.partnerstatus;
-        ansvarlig = partner.ansvarlig;
-      }
-      if (k.selskap_id) {
-        const selskapType = getTypeFromSelskap(k.selskap_id);
-        if (selskapType === "Kunde") {
-          type = "Kunde";
-          status = getSelskapStatus(k.selskap_id);
-        }
+      if (sm) { type = "Salgsmulighet"; status = sm.status; ansvarlig = sm.ansvarlig; nesteSteg = sm.neste_steg; }
+      if (lead) { type = "Lead"; status = lead.status; ansvarlig = lead.ansvarlig; nesteSteg = lead.neste_steg; }
+      if (partner) { type = "Partner"; status = partner.partnerstatus; ansvarlig = partner.ansvarlig; }
+      if (k.selskap_id && getTypeFromSelskap(k.selskap_id) === "Kunde") {
+        type = "Kunde"; status = getSelskapStatus(k.selskap_id);
       }
 
       map.set(email, {
         email,
         navn: k.navn,
         firmanavn: k.selskap_id ? getSelskapNavn(k.selskap_id) : (lead?.firmanavn || ""),
-        type,
-        status,
-        ansvarlig,
+        type, status, ansvarlig,
         sistKontaktetDato: null,
         sistKontaktetType: "",
         nesteSteg,
-        aktivitetTekster: [],
+        totalSent: 0,
+        totalReceived: 0,
         kontaktId: k.id,
         leadId: lead?.id || null,
         salgsmulighetId: sm?.id || null,
@@ -204,177 +176,93 @@ export default function Kontaktstrom() {
       });
     }
 
-    // 2. Add leads not already present
+    // 2. Add leads not present
     for (const l of leads) {
       if (!l.e_post) continue;
       const email = l.e_post.toLowerCase();
       if (map.has(email)) continue;
       map.set(email, {
-        email,
-        navn: l.kontaktperson || l.firmanavn,
-        firmanavn: l.firmanavn,
-        type: "Lead",
-        status: l.status,
-        ansvarlig: l.ansvarlig,
-        sistKontaktetDato: null,
-        sistKontaktetType: "",
-        aktivitetTekster: [],
-        nesteSteg: l.neste_steg,
-        kontaktId: null,
-        leadId: l.id,
-        salgsmulighetId: null,
-        selskapId: null,
-        partnerId: null,
-        inCrm: true,
+        email, navn: l.kontaktperson || l.firmanavn, firmanavn: l.firmanavn,
+        type: "Lead", status: l.status, ansvarlig: l.ansvarlig,
+        sistKontaktetDato: null, sistKontaktetType: "",
+        nesteSteg: l.neste_steg, totalSent: 0, totalReceived: 0,
+        kontaktId: null, leadId: l.id, salgsmulighetId: null,
+        selskapId: null, partnerId: null, inCrm: true,
       });
     }
 
-    // 3. Add salgsmuligheter not already present
+    // 3. Add salgsmuligheter not present
     for (const s of salgsmuligheter) {
       if (!s.e_post) continue;
       const email = s.e_post.toLowerCase();
       if (map.has(email)) continue;
       map.set(email, {
-        email,
-        navn: s.kontaktperson || s.navn,
+        email, navn: s.kontaktperson || s.navn,
         firmanavn: s.selskap_id ? getSelskapNavn(s.selskap_id) : "",
-        type: "Salgsmulighet",
-        status: s.status,
-        ansvarlig: s.ansvarlig,
-        sistKontaktetDato: null,
-        sistKontaktetType: "",
-        nesteSteg: s.neste_steg,
-        aktivitetTekster: [],
-        kontaktId: s.kontakt_id || null,
-        leadId: null,
-        salgsmulighetId: s.id,
-        selskapId: s.selskap_id || null,
-        partnerId: null,
-        inCrm: true,
+        type: "Salgsmulighet", status: s.status, ansvarlig: s.ansvarlig,
+        sistKontaktetDato: null, sistKontaktetType: "",
+        nesteSteg: s.neste_steg, totalSent: 0, totalReceived: 0,
+        kontaktId: s.kontakt_id || null, leadId: null, salgsmulighetId: s.id,
+        selskapId: s.selskap_id || null, partnerId: null, inCrm: true,
       });
     }
 
-    // 4. Add partnere not already present
+    // 4. Add partnere not present
     for (const p of partnere) {
       if (!p.e_post) continue;
       const email = p.e_post.toLowerCase();
       if (map.has(email)) continue;
       map.set(email, {
-        email,
-        navn: p.kontaktperson || p.partnernavn,
-        firmanavn: p.partnernavn,
-        type: "Partner",
-        status: p.partnerstatus,
-        ansvarlig: p.ansvarlig,
-        sistKontaktetDato: null,
-        sistKontaktetType: "",
-        nesteSteg: "",
-        aktivitetTekster: [],
-        kontaktId: null,
-        leadId: null,
-        salgsmulighetId: null,
-        selskapId: p.selskap_id || null,
-        partnerId: p.id,
-        inCrm: true,
+        email, navn: p.kontaktperson || p.partnernavn, firmanavn: p.partnernavn,
+        type: "Partner", status: p.partnerstatus, ansvarlig: p.ansvarlig,
+        sistKontaktetDato: null, sistKontaktetType: "",
+        nesteSteg: "", totalSent: 0, totalReceived: 0,
+        kontaktId: null, leadId: null, salgsmulighetId: null,
+        selskapId: p.selskap_id || null, partnerId: p.id, inCrm: true,
       });
     }
 
-    // 5. Match aktiviteter to find "sist kontaktet" and add unknown emails
-    // Build kontakt_id → email map
-    const kontaktIdToEmail = new Map<string, string>();
-    for (const k of kontakter) {
-      if (k.e_post) kontaktIdToEmail.set(k.id, k.e_post.toLowerCase());
-    }
-    const leadIdToEmail = new Map<string, string>();
-    for (const l of leads) {
-      if (l.e_post) leadIdToEmail.set(l.id, l.e_post.toLowerCase());
-    }
-    const smIdToEmail = new Map<string, string>();
-    for (const s of salgsmuligheter) {
-      if (s.e_post) smIdToEmail.set(s.id, s.e_post.toLowerCase());
-    }
-    const partnerIdToEmail = new Map<string, string>();
-    for (const p of partnere) {
-      if (p.e_post) partnerIdToEmail.set(p.id, p.e_post.toLowerCase());
-    }
-
-    // For each aktivitet, find the email and update sist kontaktet
-    // Also extract unmatched email contacts from gmail aktiviteter
-    const emailRegex = /[\w.+-]+@[\w.-]+\.\w+/g;
-
-    for (const akt of aktiviteter) {
-      let email: string | null = null;
-
-      if (akt.kontakt_id && kontaktIdToEmail.has(akt.kontakt_id)) {
-        email = kontaktIdToEmail.get(akt.kontakt_id)!;
-      } else if (akt.lead_id && leadIdToEmail.has(akt.lead_id)) {
-        email = leadIdToEmail.get(akt.lead_id)!;
-      } else if (akt.salgsmulighet_id && smIdToEmail.has(akt.salgsmulighet_id)) {
-        email = smIdToEmail.get(akt.salgsmulighet_id)!;
-      } else if (akt.partner_id && partnerIdToEmail.has(akt.partner_id)) {
-        email = partnerIdToEmail.get(akt.partner_id)!;
-      } else if (akt.ekstern_provider === "gmail" && akt.beskrivelse) {
-        // Extract ALL emails from beskrivelse format: [email1@ex.com][email2@ex.com] snippet
-        const bracketMatches = akt.beskrivelse.match(/\[([^\]]+@[^\]]+)\]/g);
-        if (bracketMatches) {
-          const extractedEmails = bracketMatches.map((m: string) => m.slice(1, -1).toLowerCase());
-          const subject = (akt.tittel || "").replace(/^[→←]\s*/, "");
-          
-          for (const extractedEmail of extractedEmails) {
-            if (!map.has(extractedEmail)) {
-              map.set(extractedEmail, {
-                email: extractedEmail,
-                navn: extractedEmail,
-                firmanavn: extractedEmail.split("@")[1]?.replace(/\.\w+$/, "") || "",
-                type: "Ukjent",
-                status: "",
-                ansvarlig: "",
-                sistKontaktetDato: akt.dato,
-                sistKontaktetType: akt.type,
-                nesteSteg: "",
-                aktivitetTekster: [subject],
-                kontaktId: null,
-                leadId: null,
-                salgsmulighetId: null,
-                selskapId: null,
-                partnerId: null,
-                inCrm: false,
-              });
-            }
-            // Also update sist kontaktet for already-known emails
-            const person = map.get(extractedEmail);
-            if (person) {
-              const txt = (akt.tittel || akt.beskrivelse || "").trim();
-              if (txt) person.aktivitetTekster.push(txt);
-              if (!person.sistKontaktetDato || new Date(akt.dato) > new Date(person.sistKontaktetDato)) {
-                person.sistKontaktetDato = akt.dato;
-                person.sistKontaktetType = akt.type;
-              }
-            }
-          }
-          // Set email to first one for the matched-kontakt flow below
-          email = extractedEmails[0];
-          // Skip the generic update below since we already handled all emails
-          continue;
-        }
-      }
-
+    // 5. Merge email_contacts data (structured Gmail data)
+    for (const ec of emailContacts) {
+      const email = ec.primary_email?.toLowerCase();
       if (!email) continue;
 
-      const person = map.get(email);
-      if (person) {
-        // Collect aktivitet text for search
-        const txt = (akt.tittel || akt.beskrivelse || "").trim();
-        if (txt) person.aktivitetTekster.push(txt);
-        // Only update sist kontaktet if this is more recent
-        if (!person.sistKontaktetDato || new Date(akt.dato) > new Date(person.sistKontaktetDato)) {
-          person.sistKontaktetDato = akt.dato;
-          person.sistKontaktetType = akt.type;
+      const existing = map.get(email);
+      if (existing) {
+        // Merge: update last contacted and counts
+        if (ec.last_contacted_at) {
+          if (!existing.sistKontaktetDato || new Date(ec.last_contacted_at) > new Date(existing.sistKontaktetDato)) {
+            existing.sistKontaktetDato = ec.last_contacted_at;
+            existing.sistKontaktetType = ec.last_activity_type || "E-post";
+          }
         }
+        existing.totalSent += ec.total_emails_sent || 0;
+        existing.totalReceived += ec.total_emails_received || 0;
+      } else {
+        // New person from Gmail, not in CRM
+        map.set(email, {
+          email,
+          navn: ec.display_name || email,
+          firmanavn: ec.domain || "",
+          type: "Ukjent",
+          status: "",
+          ansvarlig: "",
+          sistKontaktetDato: ec.last_contacted_at,
+          sistKontaktetType: ec.last_activity_type || "E-post",
+          nesteSteg: "",
+          totalSent: ec.total_emails_sent || 0,
+          totalReceived: ec.total_emails_received || 0,
+          kontaktId: ec.kontakt_id || null,
+          leadId: ec.lead_id || null,
+          salgsmulighetId: ec.salgsmulighet_id || null,
+          selskapId: ec.selskap_id || null,
+          partnerId: ec.partner_id || null,
+          inCrm: false,
+        });
       }
     }
 
-    // Convert to array and sort by sist kontaktet
+    // Sort by last contacted
     const result = Array.from(map.values());
     result.sort((a, b) => {
       if (!a.sistKontaktetDato && !b.sistKontaktetDato) return 0;
@@ -384,22 +272,19 @@ export default function Kontaktstrom() {
     });
 
     return result;
-  }, [kontakter, leads, salgsmuligheter, selskaper, partnere, aktiviteter]);
+  }, [kontakter, leads, salgsmuligheter, selskaper, partnere, emailContacts]);
 
-  // Get unique ansvarlige
   const ansvarlige = useMemo(() => {
     const set = new Set<string>();
     persons.forEach(p => { if (p.ansvarlig) set.add(p.ansvarlig); });
     return Array.from(set).sort();
   }, [persons]);
 
-  // Filter
   const filtered = useMemo(() => {
     return persons.filter(p => {
       if (search) {
         const q = search.toLowerCase();
-        const matchesAktivitet = p.aktivitetTekster.some(t => t.toLowerCase().includes(q));
-        if (!p.navn.toLowerCase().includes(q) && !p.email.includes(q) && !p.firmanavn.toLowerCase().includes(q) && !matchesAktivitet) return false;
+        if (!p.navn.toLowerCase().includes(q) && !p.email.includes(q) && !p.firmanavn.toLowerCase().includes(q)) return false;
       }
       if (filterType !== "alle" && p.type !== filterType) return false;
       if (filterAnsvarlig !== "alle" && p.ansvarlig !== filterAnsvarlig) return false;
@@ -407,7 +292,6 @@ export default function Kontaktstrom() {
     });
   }, [persons, search, filterType, filterAnsvarlig]);
 
-  // Create lead from person
   const handleCreateLead = async (person: KontaktStromPerson) => {
     setCreatingLead(true);
     try {
@@ -420,7 +304,6 @@ export default function Kontaktstrom() {
       }).select().single();
 
       if (error) throw error;
-
       toast.success(`Lead opprettet for ${person.navn}`);
       refresh();
       setSelected(null);
@@ -487,14 +370,15 @@ export default function Kontaktstrom() {
               {!isMobile && <th className="text-left px-4 py-3 font-medium">Selskap</th>}
               {!isMobile && <th className="text-left px-4 py-3 font-medium">E-post</th>}
               <th className="text-left px-4 py-3 font-medium">Type</th>
-              {!isMobile && <th className="text-left px-4 py-3 font-medium">Status</th>}
+              {!isMobile && <th className="text-left px-4 py-3 font-medium">E-poster</th>}
               <th className="text-left px-4 py-3 font-medium">Sist kontaktet</th>
-              {!isMobile && <th className="text-left px-4 py-3 font-medium">Neste steg</th>}
+              {!isMobile && <th className="text-left px-4 py-3 font-medium">I CRM</th>}
             </tr>
           </thead>
           <tbody>
             {filtered.map(p => {
               const AktIcon = AKTIVITET_TYPE_ICONS[p.sistKontaktetType] || Clock;
+              const totalEmails = p.totalSent + p.totalReceived;
               return (
                 <tr
                   key={p.email}
@@ -530,7 +414,13 @@ export default function Kontaktstrom() {
                     </Badge>
                   </td>
                   {!isMobile && (
-                    <td className="px-4 py-3 text-muted-foreground text-xs">{p.status || "–"}</td>
+                    <td className="px-4 py-3 text-xs text-muted-foreground">
+                      {totalEmails > 0 ? (
+                        <span title={`${p.totalSent} sendt, ${p.totalReceived} mottatt`}>
+                          ↑{p.totalSent} ↓{p.totalReceived}
+                        </span>
+                      ) : "–"}
+                    </td>
                   )}
                   <td className="px-4 py-3">
                     {p.sistKontaktetDato ? (
@@ -543,8 +433,16 @@ export default function Kontaktstrom() {
                     )}
                   </td>
                   {!isMobile && (
-                    <td className="px-4 py-3 text-muted-foreground text-xs max-w-[200px] truncate">
-                      {p.nesteSteg || "–"}
+                    <td className="px-4 py-3">
+                      {p.inCrm ? (
+                        <Badge variant="outline" className="text-xs bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800">
+                          Ja
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-xs bg-muted text-muted-foreground">
+                          Nei
+                        </Badge>
+                      )}
                     </td>
                   )}
                 </tr>
@@ -569,7 +467,6 @@ export default function Kontaktstrom() {
           </SheetHeader>
           {selected && (
             <div className="mt-4 space-y-5">
-              {/* Info */}
               <div className="space-y-3">
                 <div className="flex items-center gap-2 text-sm">
                   <Mail className="w-4 h-4 text-muted-foreground" />
@@ -597,6 +494,13 @@ export default function Kontaktstrom() {
                   {selected.status && (
                     <Badge variant="outline" className="text-xs">{selected.status}</Badge>
                   )}
+                  {selected.inCrm ? (
+                    <Badge variant="outline" className="text-xs bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400">
+                      I CRM
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="text-xs">Ikke i CRM</Badge>
+                  )}
                 </div>
                 {selected.ansvarlig && (
                   <div className="text-xs text-muted-foreground">
@@ -609,6 +513,11 @@ export default function Kontaktstrom() {
                     Sist kontaktet: {selected.sistKontaktetType} – {format(new Date(selected.sistKontaktetDato), "d. MMM yyyy", { locale: nb })}
                   </div>
                 )}
+                {(selected.totalSent > 0 || selected.totalReceived > 0) && (
+                  <div className="text-xs text-muted-foreground">
+                    E-poster: {selected.totalSent} sendt, {selected.totalReceived} mottatt
+                  </div>
+                )}
                 {selected.nesteSteg && (
                   <div className="text-xs text-muted-foreground">
                     Neste steg: <span className="font-medium text-foreground">{selected.nesteSteg}</span>
@@ -616,7 +525,6 @@ export default function Kontaktstrom() {
                 )}
               </div>
 
-              {/* Actions */}
               <div className="flex flex-wrap gap-2">
                 {!selected.inCrm || (!selected.leadId && !selected.salgsmulighetId && selected.type === "Ukjent") ? (
                   <Button size="sm" onClick={() => handleCreateLead(selected)} disabled={creatingLead}>
