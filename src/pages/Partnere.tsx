@@ -53,14 +53,12 @@ export default function Partnere() {
   const addPartner = () => {
     const today = new Date().toISOString().split("T")[0];
     const id = generateId("PA", partnere);
-    // Create selskap for partner
-    const selskapId = generateId("S", selskaper);
     const nyPartner: Partner = {
       id, partnernavn: form.partnernavn || "", partnertype: form.partnertype as Partnertype || "Salgspartner",
       kontaktperson: form.kontaktperson || "", e_post: form.e_post || "", telefon: form.telefon || "",
       partnerstatus: form.partnerstatus as Partnerstatus || "Under onboarding",
       pipeline_status: "Ny partnermulighet", ansvarlig: form.ansvarlig || "",
-      provisjonsprosent: 0, provisjonstype: "", selskap_id: selskapId,
+      provisjonsprosent: 0, provisjonstype: "", selskap_id: "",
       opprettet_dato: today, sist_aktivitet: today, notater: form.notater || "",
     };
     updatePartnere(prev => [...prev, nyPartner]);
