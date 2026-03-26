@@ -89,7 +89,7 @@ export default function Kontaktstrom() {
       // Refresh data
       const { data } = await supabase
         .from("aktiviteter")
-        .select("id, type, dato, tittel, kontakt_id, lead_id, salgsmulighet_id, selskap_id, partner_id, ekstern_provider, aktivitet_kilde")
+        .select("id, type, dato, tittel, beskrivelse, kontakt_id, lead_id, salgsmulighet_id, selskap_id, partner_id, ekstern_provider, aktivitet_kilde")
         .order("dato", { ascending: false });
       setAktiviteter(data || []);
       refresh();
