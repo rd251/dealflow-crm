@@ -291,6 +291,9 @@ export default function Kontaktstrom() {
     }
 
     // For each aktivitet, find the email and update sist kontaktet
+    // Also extract unmatched email contacts from gmail aktiviteter
+    const emailRegex = /[\w.+-]+@[\w.-]+\.\w+/g;
+
     for (const akt of aktiviteter) {
       let email: string | null = null;
 
@@ -298,6 +301,37 @@ export default function Kontaktstrom() {
         email = kontaktIdToEmail.get(akt.kontakt_id)!;
       } else if (akt.lead_id && leadIdToEmail.has(akt.lead_id)) {
         email = leadIdToEmail.get(akt.lead_id)!;
+      } else if (akt.ekstern_provider === "gmail" && akt.beskrivelse) {
+        // Extract email from beskrivelse format: [email@example.com] snippet
+        const match = akt.beskrivelse.match(/^\[([^\]]+)\]/);
+        if (match) {
+          const extractedEmail = match[1].toLowerCase();
+          email = extractedEmail;
+          // Create person entry for unmatched email if not already in map
+          if (!map.has(extractedEmail)) {
+            // Try to extract a name from the tittel (→/← Subject)
+            const subject = (akt.tittel || "").replace(/^[→←]\s*/, "");
+            map.set(extractedEmail, {
+              email: extractedEmail,
+              navn: extractedEmail,
+              firmanavn: extractedEmail.split("@")[1]?.replace(/\.\w+$/, "") || "",
+              type: "Ukjent",
+              status: "",
+              ansvarlig: "",
+              sistKontaktetDato: akt.dato,
+              sistKontaktetType: akt.type,
+              nesteSteg: "",
+              aktivitetTekster: [subject],
+              kontaktId: null,
+              leadId: null,
+              salgsmulighetId: null,
+              selskapId: null,
+              partnerId: null,
+              inCrm: false,
+            });
+            continue;
+          }
+        }
       }
 
       if (!email) continue;
