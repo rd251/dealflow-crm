@@ -331,46 +331,48 @@ export default function Kontaktstrom() {
       title="Søk"
       subtitle={`${filtered.length} av ${persons.length} personer`}
     >
-      {/* Filters */}
-      <div className="flex flex-wrap items-center gap-3 mb-4">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => handleGmailSync()}
-          disabled={syncing}
-          className="gap-2"
-        >
-          <RefreshCw className={`w-4 h-4 ${syncing ? "animate-spin" : ""}`} />
-          {syncing ? "Synkroniserer..." : "Synk Gmail"}
-        </Button>
-        <div className="relative flex-1 min-w-[200px] max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input placeholder="Søk navn, e-post, selskap..." className="pl-9" value={search} onChange={e => setSearch(e.target.value)} />
+      {/* Sticky filter bar */}
+      <div className="sticky top-0 z-10 bg-background pb-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleGmailSync()}
+            disabled={syncing}
+            className="gap-2"
+          >
+            <RefreshCw className={`w-4 h-4 ${syncing ? "animate-spin" : ""}`} />
+            {syncing ? "Synkroniserer..." : "Synk Gmail"}
+          </Button>
+          <div className="relative flex-1 min-w-[200px] max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input placeholder="Søk navn, e-post, selskap..." className="pl-9" value={search} onChange={e => setSearch(e.target.value)} />
+          </div>
+          <Select value={filterType} onValueChange={setFilterType}>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue placeholder="Type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="alle">Alle typer</SelectItem>
+              <SelectItem value="Lead">Lead</SelectItem>
+              <SelectItem value="Salgsmulighet">Salgsmulighet</SelectItem>
+              <SelectItem value="Kunde">Kunde</SelectItem>
+              <SelectItem value="Partner">Partner</SelectItem>
+              <SelectItem value="Ukjent">Ukjent</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={filterAnsvarlig} onValueChange={setFilterAnsvarlig}>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue placeholder="Ansvarlig" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="alle">Alle ansvarlige</SelectItem>
+              {ansvarlige.map(a => (
+                <SelectItem key={a} value={a}>{a}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-        <Select value={filterType} onValueChange={setFilterType}>
-          <SelectTrigger className="w-[160px]">
-            <SelectValue placeholder="Type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="alle">Alle typer</SelectItem>
-            <SelectItem value="Lead">Lead</SelectItem>
-            <SelectItem value="Salgsmulighet">Salgsmulighet</SelectItem>
-            <SelectItem value="Kunde">Kunde</SelectItem>
-            <SelectItem value="Partner">Partner</SelectItem>
-            <SelectItem value="Ukjent">Ukjent</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={filterAnsvarlig} onValueChange={setFilterAnsvarlig}>
-          <SelectTrigger className="w-[160px]">
-            <SelectValue placeholder="Ansvarlig" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="alle">Alle ansvarlige</SelectItem>
-            {ansvarlige.map(a => (
-              <SelectItem key={a} value={a}>{a}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
       </div>
 
       {/* Table */}
