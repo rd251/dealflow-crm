@@ -115,6 +115,7 @@ function AppRoutes() {
                 <Route path="/selskaper" element={<Companies />} />
                 <Route path="/selskaper/:id" element={<CompanyProfile />} />
                 <Route path="/kontakter" element={<Contacts />} />
+                <Route path="/kontaktstrom" element={<Kontaktstrom />} />
                 <Route path="/oppgaver" element={<Tasks />} />
                 <Route path="/kalender" element={<Kalender />} />
                 <Route path="/partnere" element={<Partnere />} />
