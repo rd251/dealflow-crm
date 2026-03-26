@@ -78,27 +78,13 @@ export default function Kontaktstrom() {
   const [syncing, setSyncing] = useState(false);
 
   const fetchEmailContacts = async () => {
-    let allData: any[] = [];
-    let from = 0;
-    const pageSize = 1000;
-    let keepFetching = true;
+    const { data } = await supabase
+      .from("email_contacts")
+      .select("*")
+      .order("last_contacted_at", { ascending: false, nullsFirst: false })
+      .limit(500);
 
-    while (keepFetching) {
-      const { data } = await supabase
-        .from("email_contacts")
-        .select("*")
-        .order("last_contacted_at", { ascending: false, nullsFirst: false })
-        .range(from, from + pageSize - 1);
-
-      const rows = data || [];
-      allData = allData.concat(rows);
-      if (rows.length < pageSize) {
-        keepFetching = false;
-      } else {
-        from += pageSize;
-      }
-    }
-    setEmailContacts(allData);
+    setEmailContacts(data || []);
   };
 
   const handleGmailSync = async (silent = false) => {
