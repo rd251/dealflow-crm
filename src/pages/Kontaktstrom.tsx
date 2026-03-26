@@ -552,14 +552,14 @@ export default function Kontaktstrom() {
               <div className="px-6 py-5 space-y-5">
                 {/* Structured fields – Folk style */}
                 <div className="space-y-4">
-                  <DetailField label="E-post" value={selected.email} icon={<Mail className="w-4 h-4" />} />
+                  <SharedDetailField label="E-post" value={selected.email} icon={<Mail className="w-4 h-4" />} />
 
                   {selected.ansvarlig && (
-                    <DetailField label="Ansvarlig" value={selected.ansvarlig} />
+                    <SharedDetailField label="Ansvarlig" value={selected.ansvarlig} />
                   )}
 
                   {selected.nesteSteg && (
-                    <DetailField label="Neste steg" value={selected.nesteSteg} />
+                    <SharedDetailField label="Neste steg" value={selected.nesteSteg} />
                   )}
                 </div>
 
@@ -569,14 +569,14 @@ export default function Kontaktstrom() {
                 {(selected.totalSent > 0 || selected.totalReceived > 0 || selected.sistKontaktetDato) && (
                   <div className="space-y-4">
                     {(selected.totalSent > 0 || selected.totalReceived > 0) && (
-                      <SharedDetailField
+                      <SharedSharedDetailField
                         label="Totalt interaksjoner"
                         value={`${selected.totalSent + selected.totalReceived}`}
                       />
                     )}
 
                     {selected.sistKontaktetDato && (
-                      <SharedDetailField
+                      <SharedSharedDetailField
                         label="Siste interaksjon"
                         value={`${format(new Date(selected.sistKontaktetDato), "d. MMM yyyy, HH:mm", { locale: nb })}`}
                       />
