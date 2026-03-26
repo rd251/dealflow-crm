@@ -79,7 +79,7 @@ async function fetchMessageDetails(accessToken: string, messageIds: string[], ba
     const batch = messageIds.slice(i, i + batchSize);
     const promises = batch.map(async (msgId) => {
       const res = await fetch(
-        `https://gmail.googleapis.com/gmail/v1/users/me/messages/${msgId}?format=metadata&metadataHeaders=Subject&metadataHeaders=From&metadataHeaders=To&metadataHeaders=Date`,
+        `https://gmail.googleapis.com/gmail/v1/users/me/messages/${msgId}?format=metadata&metadataHeaders=Subject&metadataHeaders=From&metadataHeaders=To&metadataHeaders=Cc&metadataHeaders=Date`,
         { headers: { Authorization: `Bearer ${accessToken}` } }
       );
       if (res.ok) return await res.json() as GmailMessage;
