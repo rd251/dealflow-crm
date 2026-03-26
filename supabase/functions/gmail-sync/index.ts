@@ -71,6 +71,15 @@ function extractEmails(headerValue: string): string[] {
   return (headerValue.match(emailRegex) || []).map(e => e.toLowerCase());
 }
 
+const SYSTEM_EMAIL_PATTERNS = /^(noreply|no-reply|no\.reply|donotreply|do-not-reply|notifications?|alert[s]?|info@|support@|admin@|postmaster@|mailer-daemon|bounce[s]?|feedback@|newsletter|updates?@|billing@|receipts?@|hello@|team@|marketing@|sales@|press@|media@|contact@|webmaster@|hostmaster@|abuse@)/i;
+const SYSTEM_DOMAINS = /\.(google|facebook|linkedin|twitter|github|apple|microsoft|amazon|stripe|paypal|shopify|slack|zoom|calendly|hubspot|mailchimp|sendgrid|intercom|zendesk|atlassian|notion|figma|canva|vercel|netlify|cloudflare)\.(com|io|co|net)$/i;
+
+function isSystemEmail(email: string): boolean {
+  const local = email.split('@')[0];
+  const domain = email.split('@')[1] || '';
+  return SYSTEM_EMAIL_PATTERNS.test(local) || SYSTEM_DOMAINS.test('@' + domain);
+}
+
 // Fetch message details in parallel batches
 async function fetchMessageDetails(accessToken: string, messageIds: string[], batchSize = 20): Promise<GmailMessage[]> {
   const results: GmailMessage[] = [];
@@ -347,11 +356,11 @@ async function syncGmailForUser(supabase: any, connection: any) {
     const isSent = fromEmails.some(e => e === userEmail) || (msg.labelIds || []).includes('SENT');
     const direction = isSent ? 'gmail_sendt' : 'gmail_mottatt';
 
-    // Collect ALL external emails from from, to, and cc
+    // Collect ALL external emails from from, to, and cc (skip system emails)
     const allExternalEmails = new Set<string>();
-    for (const e of fromEmails) { if (e !== userEmail) allExternalEmails.add(e); }
-    for (const e of toEmails) { if (e !== userEmail) allExternalEmails.add(e); }
-    for (const e of ccEmails) { if (e !== userEmail) allExternalEmails.add(e); }
+    for (const e of fromEmails) { if (e !== userEmail && !isSystemEmail(e)) allExternalEmails.add(e); }
+    for (const e of toEmails) { if (e !== userEmail && !isSystemEmail(e)) allExternalEmails.add(e); }
+    for (const e of ccEmails) { if (e !== userEmail && !isSystemEmail(e)) allExternalEmails.add(e); }
 
     const dato = dateStr ? new Date(dateStr).toISOString() : new Date(parseInt(msg.internalDate)).toISOString();
 
