@@ -75,11 +75,28 @@ export default function Kontaktstrom() {
   const [syncing, setSyncing] = useState(false);
 
   const refreshAktiviteter = async () => {
-    const { data } = await supabase
-      .from("aktiviteter")
-      .select("id, type, dato, tittel, beskrivelse, kontakt_id, lead_id, salgsmulighet_id, selskap_id, partner_id, ekstern_provider, aktivitet_kilde")
-      .order("dato", { ascending: false });
-    setAktiviteter(data || []);
+    // Fetch all aktiviteter, paginating past the 1000-row default limit
+    let allData: any[] = [];
+    let from = 0;
+    const pageSize = 1000;
+    let keepFetching = true;
+
+    while (keepFetching) {
+      const { data } = await supabase
+        .from("aktiviteter")
+        .select("id, type, dato, tittel, beskrivelse, kontakt_id, lead_id, salgsmulighet_id, selskap_id, partner_id, ekstern_provider, aktivitet_kilde")
+        .order("dato", { ascending: false })
+        .range(from, from + pageSize - 1);
+      
+      const rows = data || [];
+      allData = allData.concat(rows);
+      if (rows.length < pageSize) {
+        keepFetching = false;
+      } else {
+        from += pageSize;
+      }
+    }
+    setAktiviteter(allData);
   };
 
   const handleGmailSync = async (silent = false) => {
