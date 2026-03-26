@@ -10,6 +10,9 @@ const GOOGLE_CLIENT_SECRET = Deno.env.get('GOOGLE_CLIENT_SECRET')!;
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
+const MAX_MESSAGES = 1000;
+const SYNC_MONTHS_BACK = 6;
+
 async function refreshAccessToken(refreshToken: string): Promise<{ access_token: string; expires_in: number } | null> {
   const res = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
@@ -68,58 +71,98 @@ function extractEmails(headerValue: string): string[] {
   return (headerValue.match(emailRegex) || []).map(e => e.toLowerCase());
 }
 
+// Fetch message details in parallel batches
+async function fetchMessageDetails(accessToken: string, messageIds: string[], batchSize = 20): Promise<GmailMessage[]> {
+  const results: GmailMessage[] = [];
+  
+  for (let i = 0; i < messageIds.length; i += batchSize) {
+    const batch = messageIds.slice(i, i + batchSize);
+    const promises = batch.map(async (msgId) => {
+      const res = await fetch(
+        `https://gmail.googleapis.com/gmail/v1/users/me/messages/${msgId}?format=metadata&metadataHeaders=Subject&metadataHeaders=From&metadataHeaders=To&metadataHeaders=Date`,
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      );
+      if (res.ok) return await res.json() as GmailMessage;
+      return null;
+    });
+    const batchResults = await Promise.all(promises);
+    for (const r of batchResults) {
+      if (r) results.push(r);
+    }
+  }
+  
+  return results;
+}
+
 async function fetchGmailMessages(accessToken: string, historyId?: string | null) {
   const allMessages: GmailMessage[] = [];
 
   if (historyId) {
-    // Incremental sync via history
-    const historyUrl = `https://gmail.googleapis.com/gmail/v1/users/me/history?startHistoryId=${historyId}&historyTypes=messageAdded&maxResults=100`;
-    const res = await fetch(historyUrl, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-
-    if (res.status === 404) {
-      // historyId expired, need full sync
-      return { messages: [], newHistoryId: null, needFullSync: true };
-    }
-
-    if (!res.ok) {
-      const err = await res.text();
-      throw new Error(`Gmail History API error [${res.status}]: ${err}`);
-    }
-
-    const data = await res.json();
+    // Incremental sync via history - paginate through all history
+    let pageToken: string | undefined;
     const messageIds = new Set<string>();
 
-    for (const h of data.history || []) {
-      for (const msg of h.messagesAdded || []) {
-        messageIds.add(msg.message.id);
-      }
-    }
+    do {
+      const params = new URLSearchParams({
+        startHistoryId: historyId,
+        historyTypes: 'messageAdded',
+        maxResults: '500',
+      });
+      if (pageToken) params.set('pageToken', pageToken);
 
-    // Fetch full message details
-    for (const msgId of messageIds) {
-      const msgRes = await fetch(
-        `https://gmail.googleapis.com/gmail/v1/users/me/messages/${msgId}?format=metadata&metadataHeaders=Subject&metadataHeaders=From&metadataHeaders=To&metadataHeaders=Date`,
+      const res = await fetch(
+        `https://gmail.googleapis.com/gmail/v1/users/me/history?${params.toString()}`,
         { headers: { Authorization: `Bearer ${accessToken}` } }
       );
-      if (msgRes.ok) {
-        allMessages.push(await msgRes.json());
+
+      if (res.status === 404) {
+        return { messages: [], newHistoryId: null, needFullSync: true };
       }
+
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(`Gmail History API error [${res.status}]: ${err}`);
+      }
+
+      const data = await res.json();
+      for (const h of data.history || []) {
+        for (const msg of h.messagesAdded || []) {
+          messageIds.add(msg.message.id);
+        }
+      }
+      pageToken = data.nextPageToken;
+    } while (pageToken && messageIds.size < MAX_MESSAGES);
+
+    // Fetch full message details in parallel batches
+    const details = await fetchMessageDetails(accessToken, Array.from(messageIds));
+    allMessages.push(...details);
+
+    // Get historyId
+    const profileRes = await fetch(
+      'https://gmail.googleapis.com/gmail/v1/users/me/profile',
+      { headers: { Authorization: `Bearer ${accessToken}` } }
+    );
+    let newHistoryId: string | null = null;
+    if (profileRes.ok) {
+      const profile = await profileRes.json();
+      newHistoryId = profile.historyId;
     }
 
-    return { messages: allMessages, newHistoryId: data.historyId, needFullSync: false };
+    return { messages: allMessages, newHistoryId, needFullSync: false };
   }
 
-  // Full sync: fetch recent messages (last 30 days)
-  const after = Math.floor((Date.now() - 30 * 86400000) / 1000);
+  // Full sync: fetch messages going back SYNC_MONTHS_BACK months
+  const afterDate = new Date();
+  afterDate.setMonth(afterDate.getMonth() - SYNC_MONTHS_BACK);
+  const after = Math.floor(afterDate.getTime() / 1000);
+  
   let pageToken: string | undefined;
   const messageIds: string[] = [];
 
   do {
     const params = new URLSearchParams({
       q: `after:${after}`,
-      maxResults: '100',
+      maxResults: '500',
     });
     if (pageToken) params.set('pageToken', pageToken);
 
@@ -138,18 +181,15 @@ async function fetchGmailMessages(accessToken: string, historyId?: string | null
       messageIds.push(msg.id);
     }
     pageToken = data.nextPageToken;
-  } while (pageToken && messageIds.length < 500);
+    console.log(`Fetched ${messageIds.length} message IDs so far...`);
+  } while (pageToken && messageIds.length < MAX_MESSAGES);
 
-  // Fetch message details in batches
-  for (const msgId of messageIds) {
-    const msgRes = await fetch(
-      `https://gmail.googleapis.com/gmail/v1/users/me/messages/${msgId}?format=metadata&metadataHeaders=Subject&metadataHeaders=From&metadataHeaders=To&metadataHeaders=Date`,
-      { headers: { Authorization: `Bearer ${accessToken}` } }
-    );
-    if (msgRes.ok) {
-      allMessages.push(await msgRes.json());
-    }
-  }
+  console.log(`Total message IDs to fetch: ${messageIds.length}`);
+
+  // Fetch message details in parallel batches
+  const details = await fetchMessageDetails(accessToken, messageIds);
+  allMessages.push(...details);
+  console.log(`Fetched ${allMessages.length} message details`);
 
   // Get current historyId from profile
   const profileRes = await fetch(
@@ -259,10 +299,24 @@ async function syncGmailForUser(supabase: any, connection: any) {
     }
   }
 
+  // Get existing ekstern_ids to skip already-synced messages
+  const { data: existingAktiviteter } = await supabase
+    .from('aktiviteter')
+    .select('ekstern_id')
+    .eq('ekstern_provider', 'gmail')
+    .not('ekstern_id', 'is', null);
+  
+  const existingIds = new Set((existingAktiviteter || []).map((a: any) => a.ekstern_id));
+
   let synced = 0;
+  const insertBatch: any[] = [];
 
   for (const msg of result.messages) {
     const eksternId = msg.id;
+    
+    // Skip already synced
+    if (existingIds.has(eksternId)) continue;
+
     const subject = getHeader(msg, 'Subject') || '(Uten emne)';
     const from = getHeader(msg, 'From');
     const to = getHeader(msg, 'To');
@@ -282,6 +336,7 @@ async function syncGmailForUser(supabase: any, connection: any) {
     let selskapId: string | null = null;
     let leadId: string | null = null;
     let salgsmulighetId: string | null = null;
+    let matchedEmail = relevantEmails[0] || '';
 
     for (const email of relevantEmails) {
       const kontakt = emailToKontakt.get(email);
@@ -289,24 +344,25 @@ async function syncGmailForUser(supabase: any, connection: any) {
         kontaktId = kontakt.id;
         selskapId = kontakt.selskap_id;
         salgsmulighetId = kontaktToSalgsmulighet.get(kontakt.id) || null;
+        matchedEmail = email;
         break;
       }
       const lead = emailToLead.get(email);
       if (lead) {
         leadId = lead;
+        matchedEmail = email;
         break;
       }
     }
 
-    // Skip emails that don't match any CRM entity
-    if (!kontaktId && !leadId) continue;
-
+    // Store the external email in beskrivelse so frontend can extract unmatched contacts
+    const emailInfo = matchedEmail && matchedEmail !== userEmail ? matchedEmail : '';
     const dato = dateStr ? new Date(dateStr).toISOString() : new Date(parseInt(msg.internalDate)).toISOString();
 
     const aktivitetData: Record<string, any> = {
       type: 'E-post',
       tittel: `${isSent ? '→' : '←'} ${subject}`,
-      beskrivelse: snippet,
+      beskrivelse: emailInfo ? `[${emailInfo}] ${snippet}` : snippet,
       dato,
       ekstern_id: eksternId,
       ekstern_provider: 'gmail',
@@ -317,20 +373,21 @@ async function syncGmailForUser(supabase: any, connection: any) {
       salgsmulighet_id: salgsmulighetId,
     };
 
-    // Upsert
-    const { data: existing } = await supabase
-      .from('aktiviteter')
-      .select('id')
-      .eq('ekstern_id', eksternId)
-      .eq('ekstern_provider', 'gmail')
-      .maybeSingle();
-
-    if (existing) {
-      await supabase.from('aktiviteter').update(aktivitetData).eq('id', existing.id);
-    } else {
-      await supabase.from('aktiviteter').insert(aktivitetData);
-    }
+    insertBatch.push(aktivitetData);
     synced++;
+  }
+
+  // Batch insert new aktiviteter
+  if (insertBatch.length > 0) {
+    // Insert in chunks of 100
+    for (let i = 0; i < insertBatch.length; i += 100) {
+      const chunk = insertBatch.slice(i, i + 100);
+      const { error: insertError } = await supabase.from('aktiviteter').insert(chunk);
+      if (insertError) {
+        console.error(`Insert batch error at ${i}:`, insertError);
+      }
+    }
+    console.log(`Inserted ${insertBatch.length} new aktiviteter`);
   }
 
   // Update connection
