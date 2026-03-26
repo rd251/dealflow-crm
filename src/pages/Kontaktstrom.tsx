@@ -363,7 +363,7 @@ export default function Kontaktstrom() {
 
   return (
     <PageShell
-      title="Kontaktstrøm"
+      title="Søk"
       subtitle={`${filtered.length} av ${persons.length} personer`}
     >
       {/* Filters */}
