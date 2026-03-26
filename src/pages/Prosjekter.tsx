@@ -136,8 +136,7 @@ export default function Prosjekter() {
             </>
           ),
         } : undefined}
-      >
-      </DetailPanelShell>
+      />
     </PageShell>
   );
 }
