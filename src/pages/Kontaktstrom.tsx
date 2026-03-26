@@ -71,6 +71,34 @@ export default function Kontaktstrom() {
   const [filterAnsvarlig, setFilterAnsvarlig] = useState<string>("alle");
   const [selected, setSelected] = useState<KontaktStromPerson | null>(null);
   const [creatingLead, setCreatingLead] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+
+  const handleGmailSync = async () => {
+    setSyncing(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Du må være logget inn for å synkronisere");
+        return;
+      }
+      const res = await supabase.functions.invoke("gmail-sync", {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (res.error) throw res.error;
+      toast.success("Gmail-synkronisering fullført");
+      // Refresh data
+      const { data } = await supabase
+        .from("aktiviteter")
+        .select("id, type, dato, tittel, kontakt_id, lead_id, salgsmulighet_id, selskap_id, partner_id, ekstern_provider, aktivitet_kilde")
+        .order("dato", { ascending: false });
+      setAktiviteter(data || []);
+      refresh();
+    } catch (e: any) {
+      toast.error("Synkronisering feilet: " + (e.message || "Ukjent feil"));
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   // Fetch all aktiviteter for last-activity matching
   useEffect(() => {
