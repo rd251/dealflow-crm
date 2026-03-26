@@ -337,7 +337,6 @@ export default function Leads() {
           };
         })() : undefined}
       />
-      </DetailPanelShell>
     </PageShell>
   );
 }
