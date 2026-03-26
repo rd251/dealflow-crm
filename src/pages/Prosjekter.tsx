@@ -88,37 +88,52 @@ export default function Prosjekter() {
         </div>
       )}
 
-      <Sheet open={!!currentP} onOpenChange={open => !open && setSelectedP(null)}>
-        <SheetContent className="w-full sm:w-[400px] sm:max-w-[500px] overflow-y-auto">
-          <SheetHeader><SheetTitle>{currentP?.prosjektnavn}</SheetTitle></SheetHeader>
-          {currentP && (
-            <div className="mt-6 space-y-4 text-sm">
-              <div className="grid grid-cols-2 gap-3">
-                <div><span className="text-muted-foreground block text-xs">Selskap</span><span className="cursor-pointer hover:text-primary hover:underline" onClick={() => navigate(`/selskaper/${currentP.selskap_id}`)}>{getSelskapNavn(currentP.selskap_id)}</span></div>
-                <div><span className="text-muted-foreground block text-xs">Status</span>{currentP.status}</div>
-                <div><span className="text-muted-foreground block text-xs">Startdato</span>{currentP.startdato || "–"}</div>
-                <div><span className="text-muted-foreground block text-xs">Go-live</span>{currentP.forventet_go_live || "–"}</div>
-                <div><span className="text-muted-foreground block text-xs">Go-live dato</span>{currentP.go_live_dato || "–"}</div>
-                <div><span className="text-muted-foreground block text-xs">Oppstart</span>{currentP.oppstartskostnad.toLocaleString("no-NO")} NOK</div>
-                <div><span className="text-muted-foreground block text-xs">Fakturert</span>{currentP.oppstart_fakturert ? "Ja" : "Nei"}</div>
-                <div><span className="text-muted-foreground block text-xs">Betalt</span>{currentP.oppstart_betalt ? "Ja" : "Nei"}</div>
-                <div><span className="text-muted-foreground block text-xs">Integrasjon</span>{currentP.integrasjon}</div>
-              </div>
-              {currentP.status !== "Live" && (
-                <Button size="sm" className="bg-success hover:bg-success/90 text-success-foreground" onClick={() => { settProsjektLive(currentP.id); setSelectedP(null); }}>
-                  <Rocket className="w-3.5 h-3.5 mr-1" />Sett som Live
-                </Button>
-              )}
+      <DetailPanelShell
+        open={!!currentP}
+        onClose={() => setSelectedP(null)}
+        title={currentP?.prosjektnavn || ""}
+        subtitle={currentP ? getSelskapNavn(currentP.selskap_id) : undefined}
+        badges={currentP ? (
+          <Badge variant="secondary" className="text-xs">{currentP.status}</Badge>
+        ) : undefined}
+        actions={currentP && currentP.status !== "Live" ? (
+          <Button size="sm" className="bg-success hover:bg-success/90 text-success-foreground" onClick={() => { settProsjektLive(currentP.id); setSelectedP(null); }}>
+            <Rocket className="w-3.5 h-3.5 mr-1.5" />Sett som Live
+          </Button>
+        ) : undefined}
+      >
+        {currentP && (
+          <>
+            <DetailSection title="Prosjektdetaljer">
+              <DetailStatGrid>
+                <DetailField label="Selskap">
+                  <span className="text-sm cursor-pointer hover:text-primary hover:underline" onClick={() => navigate(`/selskaper/${currentP.selskap_id}`)}>{getSelskapNavn(currentP.selskap_id)}</span>
+                </DetailField>
+                <DetailField label="Status" value={currentP.status} />
+                <DetailField label="Startdato" value={currentP.startdato || "–"} />
+                <DetailField label="Forventet go-live" value={currentP.forventet_go_live || "–"} />
+                <DetailField label="Go-live dato" value={currentP.go_live_dato || "–"} />
+                <DetailField label="Integrasjon" value={currentP.integrasjon} />
+              </DetailStatGrid>
+            </DetailSection>
 
-              <div className="border-t pt-4">
-                <InlineTaskForm selskap_id={currentP.selskap_id} salgsmulighet_id={currentP.salgsmulighet_id} />
-              </div>
+            <DetailDivider />
 
-              <ActivityLog prosjekt_id={currentP.id} />
-            </div>
-          )}
-        </SheetContent>
-      </Sheet>
+            <DetailSection title="Økonomi">
+              <DetailStatGrid>
+                <DetailStatCard label="Oppstart" value={`${currentP.oppstartskostnad.toLocaleString("no-NO")} NOK`} />
+                <DetailStatCard label="Fakturert / Betalt" value={`${currentP.oppstart_fakturert ? "✓" : "✗"} / ${currentP.oppstart_betalt ? "✓" : "✗"}`} />
+              </DetailStatGrid>
+            </DetailSection>
+
+            <DetailDivider />
+
+            <InlineTaskForm selskap_id={currentP.selskap_id} salgsmulighet_id={currentP.salgsmulighet_id} />
+
+            <ActivityLog prosjekt_id={currentP.id} />
+          </>
+        )}
+      </DetailPanelShell>
     </PageShell>
   );
 }
