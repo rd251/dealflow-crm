@@ -311,6 +311,21 @@ async function syncGmailForUser(supabase: any, connection: any) {
   let synced = 0;
   const insertBatch: any[] = [];
 
+  // Collect email_contacts updates: email -> { sent, received, lastDate, lastType, name }
+  const emailContactUpdates = new Map<string, {
+    sent: number;
+    received: number;
+    lastDate: string;
+    lastType: string;
+    displayName: string;
+    allEmails: Set<string>;
+    kontaktId: string | null;
+    leadId: string | null;
+    salgsmulighetId: string | null;
+    selskapId: string | null;
+    partnerId: string | null;
+  }>();
+
   for (const msg of result.messages) {
     const eksternId = msg.id;
     
@@ -333,18 +348,94 @@ async function syncGmailForUser(supabase: any, connection: any) {
     const direction = isSent ? 'gmail_sendt' : 'gmail_mottatt';
 
     // Collect ALL external emails from from, to, and cc
-    const allEmails = new Set<string>();
-    for (const e of fromEmails) { if (e !== userEmail) allEmails.add(e); }
-    for (const e of toEmails) { if (e !== userEmail) allEmails.add(e); }
-    for (const e of ccEmails) { if (e !== userEmail) allEmails.add(e); }
+    const allExternalEmails = new Set<string>();
+    for (const e of fromEmails) { if (e !== userEmail) allExternalEmails.add(e); }
+    for (const e of toEmails) { if (e !== userEmail) allExternalEmails.add(e); }
+    for (const e of ccEmails) { if (e !== userEmail) allExternalEmails.add(e); }
 
-    // Find matching kontakt (primary match for linking)
+    const dato = dateStr ? new Date(dateStr).toISOString() : new Date(parseInt(msg.internalDate)).toISOString();
+
+    // Extract display name from From header for received emails
+    let fromDisplayName = '';
+    if (!isSent && from) {
+      const nameMatch = from.match(/^"?([^"<]+)"?\s*</);
+      if (nameMatch) fromDisplayName = nameMatch[1].trim();
+    }
+
+    // Update email_contacts tracking for each external email
+    for (const email of allExternalEmails) {
+      const existing = emailContactUpdates.get(email);
+      if (existing) {
+        if (isSent) existing.sent++; else existing.received++;
+        if (new Date(dato) > new Date(existing.lastDate)) {
+          existing.lastDate = dato;
+          existing.lastType = 'E-post';
+        }
+        // Merge all associated emails from the same thread
+        for (const e of allExternalEmails) existing.allEmails.add(e);
+      } else {
+        // Determine CRM links for this email
+        let kontaktId: string | null = null;
+        let selskapId: string | null = null;
+        let leadId: string | null = null;
+        let salgsmulighetId: string | null = null;
+        let partnerId: string | null = null;
+
+        const kontakt = emailToKontakt.get(email);
+        if (kontakt) {
+          kontaktId = kontakt.id;
+          selskapId = kontakt.selskap_id;
+          salgsmulighetId = kontaktToSalgsmulighet.get(kontakt.id) || null;
+        }
+        const lead = emailToLead.get(email);
+        if (lead) leadId = lead;
+
+        // Check partners
+        for (const p of allPartnere || []) {
+          if (p.e_post && p.e_post.toLowerCase() === email) {
+            partnerId = p.id;
+            if (!selskapId) selskapId = p.selskap_id || null;
+            break;
+          }
+        }
+
+        // Check salgsmuligheter directly
+        for (const s of salgsmuligheter || []) {
+          if (s.e_post && s.e_post.toLowerCase() === email) {
+            salgsmulighetId = s.id;
+            break;
+          }
+        }
+
+        // Get display name: prefer From header name for received, otherwise email
+        let displayName = email;
+        if (!isSent && fromDisplayName && fromEmails.includes(email)) {
+          displayName = fromDisplayName;
+        }
+
+        emailContactUpdates.set(email, {
+          sent: isSent ? 1 : 0,
+          received: isSent ? 0 : 1,
+          lastDate: dato,
+          lastType: 'E-post',
+          displayName,
+          allEmails: new Set(allExternalEmails),
+          kontaktId,
+          leadId,
+          salgsmulighetId,
+          selskapId,
+          partnerId,
+        });
+      }
+    }
+
+    // Find primary match for aktiviteter linking
     let kontaktId: string | null = null;
     let selskapId: string | null = null;
     let leadId: string | null = null;
     let salgsmulighetId: string | null = null;
 
-    for (const email of allEmails) {
+    for (const email of allExternalEmails) {
       const kontakt = emailToKontakt.get(email);
       if (kontakt) {
         kontaktId = kontakt.id;
@@ -353,16 +444,11 @@ async function syncGmailForUser(supabase: any, connection: any) {
         break;
       }
       const lead = emailToLead.get(email);
-      if (lead) {
-        leadId = lead;
-        break;
-      }
+      if (lead) { leadId = lead; break; }
     }
 
-    // Store ALL external emails in beskrivelse so Kontaktstrøm can extract them
-    const emailList = Array.from(allEmails);
+    const emailList = Array.from(allExternalEmails);
     const emailTags = emailList.map(e => `[${e}]`).join('');
-    const dato = dateStr ? new Date(dateStr).toISOString() : new Date(parseInt(msg.internalDate)).toISOString();
 
     const aktivitetData: Record<string, any> = {
       type: 'E-post',
@@ -384,7 +470,6 @@ async function syncGmailForUser(supabase: any, connection: any) {
 
   // Batch insert new aktiviteter
   if (insertBatch.length > 0) {
-    // Insert in chunks of 100
     for (let i = 0; i < insertBatch.length; i += 100) {
       const chunk = insertBatch.slice(i, i + 100);
       const { error: insertError } = await supabase.from('aktiviteter').insert(chunk);
@@ -393,6 +478,78 @@ async function syncGmailForUser(supabase: any, connection: any) {
       }
     }
     console.log(`Inserted ${insertBatch.length} new aktiviteter`);
+  }
+
+  // Upsert email_contacts
+  if (emailContactUpdates.size > 0) {
+    // Get existing email_contacts for this user to merge counts
+    const { data: existingContacts } = await supabase
+      .from('email_contacts')
+      .select('primary_email, total_emails_sent, total_emails_received, all_emails, display_name, first_seen_at')
+      .eq('user_id', connection.user_id);
+
+    const existingMap = new Map<string, any>();
+    for (const ec of existingContacts || []) {
+      existingMap.set(ec.primary_email, ec);
+    }
+
+    const upsertBatch: any[] = [];
+    for (const [email, data] of emailContactUpdates) {
+      const existing = existingMap.get(email);
+      const mergedAllEmails = Array.from(data.allEmails);
+      if (existing?.all_emails) {
+        for (const e of existing.all_emails) {
+          if (!mergedAllEmails.includes(e)) mergedAllEmails.push(e);
+        }
+      }
+
+      // Prefer CRM name over email-as-name
+      let displayName = data.displayName;
+      // Look up kontakt name
+      const kontakt = emailToKontakt.get(email);
+      if (kontakt) {
+        const k = (kontakter || []).find((kk: any) => kk.id === kontakt.id);
+        if (k?.navn) displayName = k.navn;
+      }
+      // Look up lead name
+      if (displayName === email) {
+        const lead = emailToLead.get(email);
+        if (lead) {
+          const l = (leads || []).find((ll: any) => ll.id === lead);
+          if (l?.kontaktperson) displayName = l.kontaktperson;
+        }
+      }
+
+      upsertBatch.push({
+        primary_email: email,
+        all_emails: mergedAllEmails,
+        display_name: existing?.display_name && existing.display_name !== email ? existing.display_name : displayName,
+        domain: email.split('@')[1] || '',
+        last_contacted_at: data.lastDate,
+        last_activity_type: data.lastType,
+        total_emails_sent: (existing?.total_emails_sent || 0) + data.sent,
+        total_emails_received: (existing?.total_emails_received || 0) + data.received,
+        first_seen_at: existing?.first_seen_at || data.lastDate,
+        kontakt_id: data.kontaktId,
+        lead_id: data.leadId,
+        salgsmulighet_id: data.salgsmulighetId,
+        selskap_id: data.selskapId,
+        partner_id: data.partnerId,
+        user_id: connection.user_id,
+      });
+    }
+
+    // Upsert in chunks
+    for (let i = 0; i < upsertBatch.length; i += 100) {
+      const chunk = upsertBatch.slice(i, i + 100);
+      const { error: upsertError } = await supabase
+        .from('email_contacts')
+        .upsert(chunk, { onConflict: 'primary_email,user_id' });
+      if (upsertError) {
+        console.error(`email_contacts upsert error at ${i}:`, upsertError);
+      }
+    }
+    console.log(`Upserted ${upsertBatch.length} email_contacts`);
   }
 
   // Update connection
