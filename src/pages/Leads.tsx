@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import DetailPanelShell, { DetailSection, DetailField, DetailDivider } from "@/components/DetailPanelShell";
 import { Plus, Search, ArrowRightCircle, Trash2, Users2, Upload } from "lucide-react";
 import { Lead, LeadStatus, LeadKilde } from "@/data/crm-data";
 import { Badge } from "@/components/ui/badge";
@@ -225,72 +226,88 @@ export default function Leads() {
         </div>
       )}
 
-      <Sheet open={!!currentLead} onOpenChange={(open) => !open && setSelectedLead(null)}>
-        <SheetContent className="w-full sm:w-[400px] sm:max-w-[500px] overflow-y-auto">
-          <SheetHeader><SheetTitle>{currentLead?.firmanavn}</SheetTitle></SheetHeader>
-          {currentLead && (() => {
-            const updateField = (field: string, value: any) => {
-              const today = new Date().toISOString().split("T")[0];
-              updateLeads(prev => prev.map(l =>
-                l.id === currentLead.id ? { ...l, [field]: value, sist_aktivitet: today } : l
-              ));
-            };
-            return (
-            <div className="mt-6 space-y-4 text-sm">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <span className="text-muted-foreground block text-xs mb-1">Firmanavn</span>
-                  <Input value={currentLead.firmanavn} onChange={e => updateField("firmanavn", e.target.value)} className="h-8 text-sm" />
+      <DetailPanelShell
+        open={!!currentLead}
+        onClose={() => setSelectedLead(null)}
+        title={currentLead?.firmanavn || ""}
+        subtitle={currentLead?.kontaktperson || undefined}
+        badges={currentLead ? (
+          <>
+            <Badge className={`text-xs ${statusColors[currentLead.status]}`}>{currentLead.status}</Badge>
+            <Badge variant="secondary" className="text-xs">{currentLead.kilde}</Badge>
+          </>
+        ) : undefined}
+        actions={currentLead && currentLead.status !== "Konvertert til salg" && currentLead.status !== "Konvertert til partner" && currentLead.status !== "Ikke aktuelt" ? (
+          <>
+            <Button size="sm" onClick={() => { konverterLead(currentLead.id); setSelectedLead(null); }}>
+              <ArrowRightCircle className="w-4 h-4 mr-1.5" />Til salg
+            </Button>
+            <Button size="sm" variant="secondary" onClick={() => { konverterTilPartner(currentLead.id); setSelectedLead(null); }}>
+              <Users2 className="w-4 h-4 mr-1.5" />Til partner
+            </Button>
+          </>
+        ) : undefined}
+      >
+        {currentLead && (() => {
+          const updateField = (field: string, value: any) => {
+            const today = new Date().toISOString().split("T")[0];
+            updateLeads(prev => prev.map(l =>
+              l.id === currentLead.id ? { ...l, [field]: value, sist_aktivitet: today } : l
+            ));
+          };
+          return (
+            <>
+              <DetailSection title="Kontaktinformasjon">
+                <div className="grid grid-cols-2 gap-3">
+                  <DetailField label="Firmanavn">
+                    <Input value={currentLead.firmanavn} onChange={e => updateField("firmanavn", e.target.value)} className="h-8 text-sm" />
+                  </DetailField>
+                  <DetailField label="Kontaktperson">
+                    <Input value={currentLead.kontaktperson} onChange={e => updateField("kontaktperson", e.target.value)} className="h-8 text-sm" />
+                  </DetailField>
+                  <DetailField label="E-post">
+                    <Input value={currentLead.e_post} onChange={e => updateField("e_post", e.target.value)} className="h-8 text-sm" />
+                  </DetailField>
+                  <DetailField label="Telefon">
+                    <Input value={currentLead.telefon} onChange={e => updateField("telefon", e.target.value)} className="h-8 text-sm" />
+                  </DetailField>
                 </div>
-                <div>
-                  <span className="text-muted-foreground block text-xs mb-1">Kontaktperson</span>
-                  <Input value={currentLead.kontaktperson} onChange={e => updateField("kontaktperson", e.target.value)} className="h-8 text-sm" />
-                </div>
-                <div>
-                  <span className="text-muted-foreground block text-xs mb-1">E-post</span>
-                  <Input value={currentLead.e_post} onChange={e => updateField("e_post", e.target.value)} className="h-8 text-sm" />
-                </div>
-                <div>
-                  <span className="text-muted-foreground block text-xs mb-1">Telefon</span>
-                  <Input value={currentLead.telefon} onChange={e => updateField("telefon", e.target.value)} className="h-8 text-sm" />
-                </div>
-                <div>
-                  <span className="text-muted-foreground block text-xs mb-1">Kilde</span>
-                  <select className="w-full border rounded-lg px-3 py-1.5 text-sm bg-background h-8" value={currentLead.kilde}
-                    onChange={e => updateField("kilde", e.target.value)}>
-                    {kildeOptions.map(k => <option key={k} value={k}>{k}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <span className="text-muted-foreground block text-xs mb-1">Status</span>
-                  <select className={`w-full border rounded-lg px-3 py-1.5 text-sm bg-background h-8 ${statusColors[currentLead.status]}`}
-                    value={currentLead.status}
-                    onChange={e => updateField("status", e.target.value)}
-                    disabled={currentLead.status === "Konvertert til salg" || currentLead.status === "Konvertert til partner"}>
-                    {statusOptions.map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <span className="text-muted-foreground block text-xs mb-1">Ansvarlig</span>
-                  <Input value={currentLead.ansvarlig} onChange={e => updateField("ansvarlig", e.target.value)} className="h-8 text-sm" />
-                </div>
-                <div>
-                  <span className="text-muted-foreground block text-xs mb-1">Opprettet</span>
-                  <span className="text-sm font-mono">{currentLead.opprettet_dato}</span>
-                </div>
-              </div>
-              <div>
-                <span className="text-muted-foreground block text-xs mb-1">Neste steg</span>
-                <Input value={currentLead.neste_steg} onChange={e => updateField("neste_steg", e.target.value)} className="h-8 text-sm" />
-              </div>
-              <div>
-                <span className="text-muted-foreground block text-xs mb-1">Notater</span>
-                <Textarea value={currentLead.notater} onChange={e => updateField("notater", e.target.value)} rows={3} />
-              </div>
+              </DetailSection>
 
-              <div className="border-t pt-4">
-                <InlineTaskForm lead_id={currentLead.id} selskap_id="" />
-              </div>
+              <DetailDivider />
+
+              <DetailSection title="Detaljer">
+                <div className="grid grid-cols-2 gap-3">
+                  <DetailField label="Kilde">
+                    <select className="w-full border rounded-lg px-3 py-1.5 text-sm bg-background h-8" value={currentLead.kilde}
+                      onChange={e => updateField("kilde", e.target.value)}>
+                      {kildeOptions.map(k => <option key={k} value={k}>{k}</option>)}
+                    </select>
+                  </DetailField>
+                  <DetailField label="Status">
+                    <select className={`w-full border rounded-lg px-3 py-1.5 text-sm bg-background h-8 ${statusColors[currentLead.status]}`}
+                      value={currentLead.status}
+                      onChange={e => updateField("status", e.target.value)}
+                      disabled={currentLead.status === "Konvertert til salg" || currentLead.status === "Konvertert til partner"}>
+                      {statusOptions.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </DetailField>
+                  <DetailField label="Ansvarlig">
+                    <Input value={currentLead.ansvarlig} onChange={e => updateField("ansvarlig", e.target.value)} className="h-8 text-sm" />
+                  </DetailField>
+                  <DetailField label="Opprettet" value={currentLead.opprettet_dato} />
+                </div>
+                <DetailField label="Neste steg">
+                  <Input value={currentLead.neste_steg} onChange={e => updateField("neste_steg", e.target.value)} className="h-8 text-sm" />
+                </DetailField>
+                <DetailField label="Notater">
+                  <Textarea value={currentLead.notater} onChange={e => updateField("notater", e.target.value)} rows={3} />
+                </DetailField>
+              </DetailSection>
+
+              <DetailDivider />
+
+              <InlineTaskForm lead_id={currentLead.id} selskap_id="" />
 
               <ActivityLog lead_id={currentLead.id} onActivityLogged={() => {
                 updateLeads(prev => prev.map(l => l.id === currentLead.id ? { ...l, sist_aktivitet: new Date().toISOString().split("T")[0] } : l));
@@ -302,27 +319,18 @@ export default function Leads() {
                 </div>
               )}
 
-              {currentLead.status !== "Konvertert til salg" && currentLead.status !== "Konvertert til partner" && currentLead.status !== "Ikke aktuelt" && (
-                <div className="flex gap-2">
-                  <Button size="sm" className="flex-1" onClick={() => { konverterLead(currentLead.id); setSelectedLead(null); }}>
-                    <ArrowRightCircle className="w-4 h-4 mr-1" /> Til salg
-                  </Button>
-                  <Button size="sm" variant="secondary" className="flex-1" onClick={() => { konverterTilPartner(currentLead.id); setSelectedLead(null); }}>
-                    <Users2 className="w-4 h-4 mr-1" /> Til partner
-                  </Button>
-                </div>
-              )}
+              <DetailDivider />
+
               <Button size="sm" variant="destructive" className="w-full" onClick={() => {
                 updateLeads(prev => prev.filter(l => l.id !== currentLead.id));
                 setSelectedLead(null);
               }}>
                 <Trash2 className="w-4 h-4 mr-1" /> Slett lead
               </Button>
-            </div>
-            );
-          })()}
-        </SheetContent>
-      </Sheet>
+            </>
+          );
+        })()}
+      </DetailPanelShell>
     </PageShell>
   );
 }

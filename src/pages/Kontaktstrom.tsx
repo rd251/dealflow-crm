@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import DetailPanelShell, { DetailSection, DetailField as SharedDetailField, DetailDivider, DetailStatGrid, DetailStatCard } from "@/components/DetailPanelShell";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, UserPlus, Mail, Phone, Calendar, MessageSquare, Building2, ExternalLink, Clock, RefreshCw } from "lucide-react";
 import { format, formatDistanceToNow, isAfter } from "date-fns";
@@ -61,17 +62,7 @@ function formatAktivitetDato(dato: string | null) {
   return formatDistanceToNow(d, { addSuffix: true, locale: nb });
 }
 
-function DetailField({ label, value, icon }: { label: string; value: string; icon?: React.ReactNode }) {
-  return (
-    <div className="space-y-1">
-      <div className="text-xs font-medium text-muted-foreground">{label}</div>
-      <div className="flex items-center gap-2 text-sm">
-        {icon && <span className="text-muted-foreground">{icon}</span>}
-        <span>{value}</span>
-      </div>
-    </div>
-  );
-}
+// Using shared DetailField from DetailPanelShell
 
 export default function Kontaktstrom() {
   const navigate = useNavigate();
@@ -480,161 +471,131 @@ export default function Kontaktstrom() {
         </table>
       </div>
 
-      {/* Detail panel – Folk-inspired */}
-      <Sheet open={!!selected} onOpenChange={open => !open && setSelected(null)}>
-        <SheetContent className="w-full sm:w-[440px] sm:max-w-[500px] overflow-y-auto p-0">
-          <SheetHeader className="sr-only">
-            <SheetTitle>{selected?.navn || selected?.email}</SheetTitle>
-          </SheetHeader>
-          {selected && (
-            <div className="flex flex-col">
-              {/* Hero header */}
-              <div className="px-6 pt-10 pb-5 border-b">
-                <div className="flex items-start gap-3">
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-lg shrink-0">
-                    {(selected.navn || selected.email).charAt(0).toUpperCase()}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <h2 className="text-xl font-semibold tracking-tight truncate">{selected.navn || selected.email}</h2>
-                    {selected.firmanavn && (
-                      <div className="flex items-center gap-1.5 mt-0.5">
-                        <Building2 className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                        {selected.selskapId ? (
-                          <span
-                            className="text-sm text-primary hover:underline cursor-pointer truncate"
-                            onClick={() => { navigate(`/selskaper/${selected.selskapId}`); setSelected(null); }}
-                          >
-                            {selected.firmanavn}
-                          </span>
-                        ) : (
-                          <span className="text-sm text-muted-foreground truncate">{selected.firmanavn}</span>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
+      <DetailPanelShell
+        open={!!selected}
+        onClose={() => setSelected(null)}
+        title={selected?.navn || selected?.email || ""}
+        subtitle={selected?.firmanavn && selected?.selskapId ? undefined : selected?.firmanavn || undefined}
+        badges={selected ? (
+          <>
+            <Badge variant="secondary" className={`text-xs ${TYPE_COLORS[selected.type]}`}>
+              {selected.type}
+            </Badge>
+            {selected.status && (
+              <Badge variant="outline" className="text-xs">{selected.status}</Badge>
+            )}
+            {selected.inCrm ? (
+              <Badge variant="outline" className="text-xs bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400">
+                I CRM
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="text-xs">Ikke i CRM</Badge>
+            )}
+          </>
+        ) : undefined}
+        actions={selected ? (
+          <>
+            {(!selected.inCrm || (!selected.leadId && !selected.salgsmulighetId && selected.type === "Ukjent")) && (
+              <Button size="sm" onClick={() => handleCreateLead(selected)} disabled={creatingLead}>
+                <UserPlus className="w-4 h-4 mr-1.5" />
+                {creatingLead ? "Oppretter..." : "Opprett lead"}
+              </Button>
+            )}
+            {selected.leadId && (
+              <Button size="sm" variant="outline" onClick={() => { navigate("/leads"); setSelected(null); }}>
+                <ExternalLink className="w-4 h-4 mr-1.5" />Lead
+              </Button>
+            )}
+            {selected.salgsmulighetId && (
+              <Button size="sm" variant="outline" onClick={() => { navigate("/salgsmuligheter"); setSelected(null); }}>
+                <ExternalLink className="w-4 h-4 mr-1.5" />Salgsmulighet
+              </Button>
+            )}
+            {selected.partnerId && (
+              <Button size="sm" variant="outline" onClick={() => { navigate(`/partnere/${selected.partnerId}`); setSelected(null); }}>
+                <ExternalLink className="w-4 h-4 mr-1.5" />Partner
+              </Button>
+            )}
+          </>
+        ) : undefined}
+      >
+        {selected && (
+          <>
+            {selected.firmanavn && selected.selskapId && (
+              <SharedDetailField label="Selskap">
+                <span
+                  className="text-sm text-primary hover:underline cursor-pointer"
+                  onClick={() => { navigate(`/selskaper/${selected.selskapId}`); setSelected(null); }}
+                >
+                  {selected.firmanavn}
+                </span>
+              </SharedDetailField>
+            )}
 
-                {/* Badges row */}
-                <div className="flex flex-wrap items-center gap-1.5 mt-4">
-                  <Badge variant="secondary" className={`text-xs ${TYPE_COLORS[selected.type]}`}>
-                    {selected.type}
-                  </Badge>
-                  {selected.status && (
-                    <Badge variant="outline" className="text-xs">{selected.status}</Badge>
+            <DetailSection title="Kontaktdetaljer">
+              <SharedDetailField label="E-post" value={selected.email} />
+              {selected.ansvarlig && (
+                <SharedDetailField label="Ansvarlig" value={selected.ansvarlig} />
+              )}
+              {selected.nesteSteg && (
+                <SharedDetailField label="Neste steg" value={selected.nesteSteg} />
+              )}
+            </DetailSection>
+
+            <DetailDivider />
+
+            {/* Interaction stats */}
+            {(selected.totalSent > 0 || selected.totalReceived > 0 || selected.sistKontaktetDato) && (
+              <>
+                <DetailSection title="Interaksjoner">
+                  {(selected.totalSent > 0 || selected.totalReceived > 0) && (
+                    <SharedDetailField
+                      label="Totalt interaksjoner"
+                      value={`${selected.totalSent + selected.totalReceived}`}
+                    />
                   )}
-                  {selected.inCrm ? (
-                    <Badge variant="outline" className="text-xs bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400">
-                      I CRM
-                    </Badge>
-                  ) : (
-                    <Badge variant="outline" className="text-xs">Ikke i CRM</Badge>
+                  {selected.sistKontaktetDato && (
+                    <SharedDetailField
+                      label="Siste interaksjon"
+                      value={format(new Date(selected.sistKontaktetDato), "d. MMM yyyy, HH:mm", { locale: nb })}
+                    />
                   )}
-                </div>
-
-                {/* Quick actions */}
-                <div className="flex flex-wrap gap-2 mt-4">
-                  {(!selected.inCrm || (!selected.leadId && !selected.salgsmulighetId && selected.type === "Ukjent")) && (
-                    <Button size="sm" onClick={() => handleCreateLead(selected)} disabled={creatingLead}>
-                      <UserPlus className="w-4 h-4 mr-1.5" />
-                      {creatingLead ? "Oppretter..." : "Opprett lead"}
-                    </Button>
+                  {(selected.totalSent > 0 || selected.totalReceived > 0) && (
+                    <DetailStatGrid>
+                      <DetailStatCard label="Sendt" value={selected.totalSent} />
+                      <DetailStatCard label="Mottatt" value={selected.totalReceived} />
+                    </DetailStatGrid>
                   )}
-                  {selected.leadId && (
-                    <Button size="sm" variant="outline" onClick={() => { navigate("/leads"); setSelected(null); }}>
-                      <ExternalLink className="w-4 h-4 mr-1.5" />Lead
-                    </Button>
-                  )}
-                  {selected.salgsmulighetId && (
-                    <Button size="sm" variant="outline" onClick={() => { navigate("/salgsmuligheter"); setSelected(null); }}>
-                      <ExternalLink className="w-4 h-4 mr-1.5" />Salgsmulighet
-                    </Button>
-                  )}
-                  {selected.partnerId && (
-                    <Button size="sm" variant="outline" onClick={() => { navigate(`/partnere/${selected.partnerId}`); setSelected(null); }}>
-                      <ExternalLink className="w-4 h-4 mr-1.5" />Partner
-                    </Button>
-                  )}
-                </div>
-              </div>
+                </DetailSection>
+                <DetailDivider />
+              </>
+            )}
 
-              {/* Details section */}
-              <div className="px-6 py-5 space-y-5">
-                {/* Structured fields – Folk style */}
-                <div className="space-y-4">
-                  <DetailField label="E-post" value={selected.email} icon={<Mail className="w-4 h-4" />} />
+            {/* Company linker */}
+            <CompanyLinker
+              email={selected.email}
+              kontaktId={selected.kontaktId}
+              currentSelskapId={selected.selskapId}
+              personNavn={selected.navn}
+              onLinked={() => {
+                fetchEmailContacts();
+                refresh();
+                setSelected(null);
+              }}
+            />
 
-                  {selected.ansvarlig && (
-                    <DetailField label="Ansvarlig" value={selected.ansvarlig} />
-                  )}
+            <DetailDivider />
 
-                  {selected.nesteSteg && (
-                    <DetailField label="Neste steg" value={selected.nesteSteg} />
-                  )}
-                </div>
-
-                <div className="border-t" />
-
-                {/* Interaction stats */}
-                {(selected.totalSent > 0 || selected.totalReceived > 0 || selected.sistKontaktetDato) && (
-                  <div className="space-y-4">
-                    {(selected.totalSent > 0 || selected.totalReceived > 0) && (
-                      <DetailField
-                        label="Totalt interaksjoner"
-                        value={`${selected.totalSent + selected.totalReceived}`}
-                      />
-                    )}
-
-                    {selected.sistKontaktetDato && (
-                      <DetailField
-                        label="Siste interaksjon"
-                        value={`${format(new Date(selected.sistKontaktetDato), "d. MMM yyyy, HH:mm", { locale: nb })}`}
-                      />
-                    )}
-
-                    {(selected.totalSent > 0 || selected.totalReceived > 0) && (
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="rounded-lg border bg-muted/30 p-3 text-center">
-                          <div className="text-lg font-semibold">{selected.totalSent}</div>
-                          <div className="text-xs text-muted-foreground">Sendt</div>
-                        </div>
-                        <div className="rounded-lg border bg-muted/30 p-3 text-center">
-                          <div className="text-lg font-semibold">{selected.totalReceived}</div>
-                          <div className="text-xs text-muted-foreground">Mottatt</div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                <div className="border-t" />
-
-                {/* Company linker */}
-                <CompanyLinker
-                  email={selected.email}
-                  kontaktId={selected.kontaktId}
-                  currentSelskapId={selected.selskapId}
-                  personNavn={selected.navn}
-                  onLinked={() => {
-                    fetchEmailContacts();
-                    refresh();
-                    setSelected(null);
-                  }}
-                />
-
-                <div className="border-t" />
-
-                {/* Activity log */}
-                {selected.kontaktId && (
-                  <ActivityLog kontakt_id={selected.kontaktId} />
-                )}
-                {selected.leadId && !selected.kontaktId && (
-                  <ActivityLog lead_id={selected.leadId} />
-                )}
-              </div>
-            </div>
-          )}
-        </SheetContent>
-      </Sheet>
+            {/* Activity log */}
+            {selected.kontaktId && (
+              <ActivityLog kontakt_id={selected.kontaktId} />
+            )}
+            {selected.leadId && !selected.kontaktId && (
+              <ActivityLog lead_id={selected.leadId} />
+            )}
+          </>
+        )}
+      </DetailPanelShell>
     </PageShell>
   );
 }

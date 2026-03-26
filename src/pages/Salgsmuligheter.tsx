@@ -8,8 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import DetailPanelShell, { DetailSection, DetailField, DetailDivider, DetailStatGrid, DetailStatCard } from "@/components/DetailPanelShell";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, GripVertical, Trophy, XCircle, Trash2, Mail, Phone, User, Briefcase } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Salgsmulighet, SalgsmulighetStatus, Tapsaarsak, beregnTotalKontraktsverdi, beregnVektetPipeline } from "@/data/crm-data";
 import InlineTaskForm from "@/components/InlineTaskForm";
 import ActivityLog from "@/components/ActivityLog";
@@ -233,76 +235,85 @@ export default function Salgsmuligheter() {
         </TabsContent>
       </Tabs>
 
-      {/* Detail drawer */}
-      <Sheet open={!!currentSm} onOpenChange={open => !open && setSelectedSm(null)}>
-        <SheetContent className="w-full sm:w-[400px] sm:max-w-[540px] overflow-y-auto">
-          <SheetHeader><SheetTitle>{currentSm?.navn}</SheetTitle></SheetHeader>
-          {currentSm && (() => {
-            const updateField = (field: string, value: any) => {
-              const today = new Date().toISOString().split("T")[0];
-              updateSalgsmuligheter(prev => prev.map(s =>
-                s.id === currentSm.id ? { ...s, [field]: value, sist_aktivitet: today } : s
-              ));
-            };
-            const arr = currentSm.forventet_mrr * 12;
-            const slaArr = (currentSm.sla || 0) * 12;
-            const totalKontraktsverdi = beregnTotalKontraktsverdi(currentSm);
-            const vektetVerdi = beregnVektetPipeline(currentSm);
+      <DetailPanelShell
+        open={!!currentSm}
+        onClose={() => setSelectedSm(null)}
+        title={currentSm?.navn || ""}
+        subtitle={currentSm ? getSelskapNavn(currentSm.selskap_id) : undefined}
+        badges={currentSm ? (
+          <>
+            <Badge variant="secondary" className="text-xs">{currentSm.status}</Badge>
+            {currentSm.sannsynlighet != null && <Badge variant="outline" className="text-xs">{currentSm.sannsynlighet}%</Badge>}
+          </>
+        ) : undefined}
+        actions={currentSm && openStatuses.includes(currentSm.status as any) ? (
+          <>
+            <Button size="sm" className="bg-success hover:bg-success/90 text-success-foreground" onClick={() => { vinnSalgsmulighet(currentSm.id); setSelectedSm(null); }}>
+              <Trophy className="w-3.5 h-3.5 mr-1.5" />Vunnet
+            </Button>
+            <Button size="sm" variant="destructive" onClick={() => { setSelectedSm(null); setLossDialog(currentSm.id); }}>
+              <XCircle className="w-3.5 h-3.5 mr-1.5" />Tapt
+            </Button>
+          </>
+        ) : undefined}
+      >
+        {currentSm && (() => {
+          const updateField = (field: string, value: any) => {
+            const today = new Date().toISOString().split("T")[0];
+            updateSalgsmuligheter(prev => prev.map(s =>
+              s.id === currentSm.id ? { ...s, [field]: value, sist_aktivitet: today } : s
+            ));
+          };
+          const arr = currentSm.forventet_mrr * 12;
+          const slaArr = (currentSm.sla || 0) * 12;
+          const totalKontraktsverdi = beregnTotalKontraktsverdi(currentSm);
+          const vektetVerdi = beregnVektetPipeline(currentSm);
 
-            return (
-              <div className="mt-6 space-y-4 text-sm">
-                <Field label="Selskap" value={<span className="cursor-pointer hover:text-primary hover:underline" onClick={() => navigate(`/selskaper/${currentSm.selskap_id}`)}>{getSelskapNavn(currentSm.selskap_id)}</span>} />
-
-                {/* Kontaktinformasjon */}
-                <div className="space-y-2">
-                  <span className="text-muted-foreground block text-xs font-medium uppercase tracking-wide">Kontaktinformasjon</span>
-                  <div className="space-y-2 bg-muted/30 rounded-lg p-3">
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <span className="text-muted-foreground block text-xs mb-1 flex items-center gap-1"><User className="w-3 h-3" />Kontaktperson</span>
-                        <Input value={currentSm.kontaktperson} onChange={e => updateField("kontaktperson", e.target.value)} className="h-8 text-sm" placeholder="Navn" />
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground block text-xs mb-1 flex items-center gap-1"><Briefcase className="w-3 h-3" />Rolle</span>
-                        <Input value={currentSm.rolle_i_firma} onChange={e => updateField("rolle_i_firma", e.target.value)} className="h-8 text-sm" placeholder="Rolle" />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <span className="text-muted-foreground block text-xs mb-1 flex items-center gap-1"><Mail className="w-3 h-3" />E-post</span>
-                        <Input value={currentSm.e_post} onChange={e => updateField("e_post", e.target.value)} className="h-8 text-sm" placeholder="E-post" />
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground block text-xs mb-1 flex items-center gap-1"><Phone className="w-3 h-3" />Telefon</span>
-                        <Input value={currentSm.telefon} onChange={e => updateField("telefon", e.target.value)} className="h-8 text-sm" placeholder="Telefon" />
-                      </div>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground block text-xs mb-1">Koble til kontakt</span>
-                      <select className="w-full border rounded-lg px-3 py-1.5 text-xs bg-background"
-                        value={currentSm.kontakt_id}
-                        onChange={e => {
-                          const kontakt = kontakter.find(k => k.id === e.target.value);
-                          if (kontakt) {
-                            updateField("kontakt_id", kontakt.id);
-                            updateField("kontaktperson", kontakt.navn);
-                            updateField("e_post", kontakt.e_post);
-                            updateField("telefon", kontakt.telefon);
-                            updateField("rolle_i_firma", kontakt.rolle);
-                          } else {
-                            updateField("kontakt_id", "");
-                          }
-                        }}>
-                        <option value="">Ingen koblet kontakt</option>
-                        {kontakter.map(k => <option key={k.id} value={k.id}>{k.navn}</option>)}
-                      </select>
-                    </div>
-                  </div>
+          return (
+            <>
+              <DetailSection title="Kontaktinformasjon">
+                <div className="grid grid-cols-2 gap-3">
+                  <DetailField label="Kontaktperson">
+                    <Input value={currentSm.kontaktperson} onChange={e => updateField("kontaktperson", e.target.value)} className="h-8 text-sm" />
+                  </DetailField>
+                  <DetailField label="Rolle">
+                    <Input value={currentSm.rolle_i_firma} onChange={e => updateField("rolle_i_firma", e.target.value)} className="h-8 text-sm" />
+                  </DetailField>
+                  <DetailField label="E-post">
+                    <Input value={currentSm.e_post} onChange={e => updateField("e_post", e.target.value)} className="h-8 text-sm" />
+                  </DetailField>
+                  <DetailField label="Telefon">
+                    <Input value={currentSm.telefon} onChange={e => updateField("telefon", e.target.value)} className="h-8 text-sm" />
+                  </DetailField>
                 </div>
+                <DetailField label="Koble til kontakt">
+                  <select className="w-full border rounded-lg px-3 py-1.5 text-xs bg-background"
+                    value={currentSm.kontakt_id}
+                    onChange={e => {
+                      const kontakt = kontakter.find(k => k.id === e.target.value);
+                      if (kontakt) {
+                        updateField("kontakt_id", kontakt.id);
+                        updateField("kontaktperson", kontakt.navn);
+                        updateField("e_post", kontakt.e_post);
+                        updateField("telefon", kontakt.telefon);
+                        updateField("rolle_i_firma", kontakt.rolle);
+                      } else {
+                        updateField("kontakt_id", "");
+                      }
+                    }}>
+                    <option value="">Ingen koblet kontakt</option>
+                    {kontakter.map(k => <option key={k.id} value={k.id}>{k.navn}</option>)}
+                  </select>
+                </DetailField>
+              </DetailSection>
 
-                {/* Status */}
-                <div>
-                  <span className="text-muted-foreground block text-xs mb-1">Status</span>
+              <DetailDivider />
+
+              <DetailSection title="Salgsdetaljer">
+                <DetailField label="Selskap">
+                  <span className="text-sm cursor-pointer hover:text-primary hover:underline" onClick={() => navigate(`/selskaper/${currentSm.selskap_id}`)}>{getSelskapNavn(currentSm.selskap_id)}</span>
+                </DetailField>
+                <DetailField label="Status">
                   <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background"
                     value={currentSm.status}
                     onChange={e => {
@@ -313,104 +324,83 @@ export default function Salgsmuligheter() {
                     }}>
                     {[...openStatuses, "Vunnet", "Tapt"].map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
-                </div>
-
-                {/* Editable number fields */}
+                </DetailField>
                 <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <span className="text-muted-foreground block text-xs mb-1">Forventet MRR</span>
-                    <Input type="number" value={currentSm.forventet_mrr || ""} onChange={e => updateField("forventet_mrr", Number(e.target.value))} />
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground block text-xs mb-1">SLA</span>
-                    <Input type="number" value={currentSm.sla || ""} onChange={e => updateField("sla", Number(e.target.value))} />
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground block text-xs mb-1">Oppstartskostnad</span>
-                    <Input type="number" value={currentSm.oppstartskostnad || ""} onChange={e => updateField("oppstartskostnad", Number(e.target.value))} />
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground block text-xs mb-1">Kontraktslengde (mnd)</span>
-                    <Input type="number" value={currentSm.kontraktslengde_mnd || ""} onChange={e => updateField("kontraktslengde_mnd", Number(e.target.value))} />
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground block text-xs mb-1">Sannsynlighet %</span>
-                    <Input type="number" min={0} max={100} value={currentSm.sannsynlighet || ""} onChange={e => updateField("sannsynlighet", Number(e.target.value))} />
-                  </div>
+                  <DetailField label="Forventet MRR">
+                    <Input type="number" value={currentSm.forventet_mrr || ""} onChange={e => updateField("forventet_mrr", Number(e.target.value))} className="h-8 text-sm" />
+                  </DetailField>
+                  <DetailField label="SLA">
+                    <Input type="number" value={currentSm.sla || ""} onChange={e => updateField("sla", Number(e.target.value))} className="h-8 text-sm" />
+                  </DetailField>
+                  <DetailField label="Oppstartskostnad">
+                    <Input type="number" value={currentSm.oppstartskostnad || ""} onChange={e => updateField("oppstartskostnad", Number(e.target.value))} className="h-8 text-sm" />
+                  </DetailField>
+                  <DetailField label="Kontraktslengde (mnd)">
+                    <Input type="number" value={currentSm.kontraktslengde_mnd || ""} onChange={e => updateField("kontraktslengde_mnd", Number(e.target.value))} className="h-8 text-sm" />
+                  </DetailField>
+                  <DetailField label="Sannsynlighet %">
+                    <Input type="number" min={0} max={100} value={currentSm.sannsynlighet || ""} onChange={e => updateField("sannsynlighet", Number(e.target.value))} className="h-8 text-sm" />
+                  </DetailField>
+                  <DetailField label="Forventet lukkedato">
+                    <Input type="date" value={currentSm.forventet_lukkedato} onChange={e => updateField("forventet_lukkedato", e.target.value)} className="h-8 text-sm" />
+                  </DetailField>
                 </div>
+              </DetailSection>
 
-                <div>
-                  <span className="text-muted-foreground block text-xs mb-1">Forventet lukkedato</span>
-                  <Input type="date" value={currentSm.forventet_lukkedato} onChange={e => updateField("forventet_lukkedato", e.target.value)} />
+              <DetailDivider />
+
+              <DetailSection title="Beregnede verdier">
+                <DetailStatGrid>
+                  <DetailStatCard label="ARR" value={`${arr.toLocaleString("no-NO")}`} />
+                  <DetailStatCard label="SLA (årlig)" value={`${slaArr.toLocaleString("no-NO")}`} />
+                  <DetailStatCard label="Kontraktsverdi" value={`${totalKontraktsverdi.toLocaleString("no-NO")}`} />
+                  <DetailStatCard label="Vektet verdi" value={`${vektetVerdi.toLocaleString("no-NO")}`} />
+                </DetailStatGrid>
+              </DetailSection>
+
+              <DetailDivider />
+
+              <DetailField label="Use case">
+                <Input value={currentSm.use_case} onChange={e => updateField("use_case", e.target.value)} className="h-8 text-sm" />
+              </DetailField>
+              <DetailField label="Neste steg">
+                <Input value={currentSm.neste_steg} onChange={e => updateField("neste_steg", e.target.value)} className="h-8 text-sm" />
+              </DetailField>
+              <DetailField label="Notater">
+                <Textarea value={currentSm.notater} onChange={e => updateField("notater", e.target.value)} rows={3} />
+              </DetailField>
+
+              {currentSm.status === "Tapt" && currentSm.tapsaarsak && (
+                <div className="p-3 bg-destructive/10 rounded-lg text-destructive text-xs">
+                  <strong>Tapsårsak:</strong> {currentSm.tapsaarsak} · {currentSm.tapt_dato}
                 </div>
-
-                <div>
-                  <span className="text-muted-foreground block text-xs mb-1">Use case</span>
-                  <Input value={currentSm.use_case} onChange={e => updateField("use_case", e.target.value)} className="h-8 text-sm" />
+              )}
+              {currentSm.status === "Vunnet" && (
+                <div className="p-3 bg-success/10 rounded-lg text-success text-xs">
+                  <strong>Vunnet:</strong> {currentSm.vunnet_dato}
                 </div>
+              )}
 
-                <div>
-                  <span className="text-muted-foreground block text-xs mb-1">Neste steg</span>
-                  <Input value={currentSm.neste_steg} onChange={e => updateField("neste_steg", e.target.value)} />
-                </div>
+              <DetailDivider />
 
-                <div>
-                  <span className="text-muted-foreground block text-xs mb-1">Notater</span>
-                  <Textarea value={currentSm.notater} onChange={e => updateField("notater", e.target.value)} rows={3} />
-                </div>
+              <InlineTaskForm salgsmulighet_id={currentSm.id} selskap_id={currentSm.selskap_id} />
 
-                {/* Calculated fields */}
-                <div className="bg-muted/50 rounded-lg p-3 space-y-2">
-                  <h4 className="font-semibold text-xs text-muted-foreground uppercase tracking-wide">Beregnede verdier</h4>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <Field label="ARR" value={`${arr.toLocaleString("no-NO")} NOK`} />
-                    <Field label="SLA (årlig)" value={`${slaArr.toLocaleString("no-NO")} NOK`} />
-                    <Field label="Total kontraktsverdi" value={`${totalKontraktsverdi.toLocaleString("no-NO")} NOK`} />
-                    <Field label="Vektet pipelineverdi" value={`${vektetVerdi.toLocaleString("no-NO")} NOK`} />
-                  </div>
-                </div>
+              <ActivityLog salgsmulighet_id={currentSm.id} onActivityLogged={() => {
+                updateSalgsmuligheter(prev => prev.map(s => s.id === currentSm.id ? { ...s, sist_aktivitet: new Date().toISOString().split("T")[0] } : s));
+              }} />
 
-                {currentSm.status === "Tapt" && currentSm.tapsaarsak && (
-                  <div className="p-3 bg-destructive/10 rounded-lg text-destructive text-xs">
-                    <strong>Tapsårsak:</strong> {currentSm.tapsaarsak} · {currentSm.tapt_dato}
-                  </div>
-                )}
-                {currentSm.status === "Vunnet" && (
-                  <div className="p-3 bg-success/10 rounded-lg text-success text-xs">
-                    <strong>Vunnet:</strong> {currentSm.vunnet_dato}
-                  </div>
-                )}
-                <div className="border-t pt-4">
-                  <InlineTaskForm salgsmulighet_id={currentSm.id} selskap_id={currentSm.selskap_id} />
-                </div>
+              <DetailDivider />
 
-                <ActivityLog salgsmulighet_id={currentSm.id} onActivityLogged={() => {
-                  updateSalgsmuligheter(prev => prev.map(s => s.id === currentSm.id ? { ...s, sist_aktivitet: new Date().toISOString().split("T")[0] } : s));
-                }} />
-
-                <div className="flex gap-2 pt-2 flex-wrap">
-                  {openStatuses.includes(currentSm.status as any) && (
-                    <>
-                      <Button size="sm" className="bg-success hover:bg-success/90 text-success-foreground" onClick={() => { vinnSalgsmulighet(currentSm.id); setSelectedSm(null); }}>
-                        <Trophy className="w-3.5 h-3.5 mr-1" />Vunnet
-                      </Button>
-                      <Button size="sm" variant="destructive" onClick={() => { setSelectedSm(null); setLossDialog(currentSm.id); }}>
-                        <XCircle className="w-3.5 h-3.5 mr-1" />Tapt
-                      </Button>
-                    </>
-                  )}
-                  <Button size="sm" variant="outline" className="text-destructive hover:bg-destructive/10 ml-auto" onClick={() => {
-                    updateSalgsmuligheter(prev => prev.filter(s => s.id !== currentSm.id));
-                    setSelectedSm(null);
-                  }}>
-                    <Trash2 className="w-3.5 h-3.5 mr-1" />Slett
-                  </Button>
-                </div>
-              </div>
-            );
-          })()}
-        </SheetContent>
-      </Sheet>
+              <Button size="sm" variant="outline" className="w-full text-destructive hover:bg-destructive/10" onClick={() => {
+                updateSalgsmuligheter(prev => prev.filter(s => s.id !== currentSm.id));
+                setSelectedSm(null);
+              }}>
+                <Trash2 className="w-3.5 h-3.5 mr-1" />Slett
+              </Button>
+            </>
+          );
+        })()}
+      </DetailPanelShell>
     </PageShell>
   );
 }
