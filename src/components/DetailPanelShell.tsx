@@ -1,5 +1,6 @@
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
 
 interface DetailPanelShellProps {
   open: boolean;
@@ -9,8 +10,22 @@ interface DetailPanelShellProps {
   initials?: string;
   badges?: ReactNode;
   actions?: ReactNode;
-  children: ReactNode;
+  /** Legacy: flat children (no tabs). Use tabContent instead for tabbed layout. */
+  children?: ReactNode;
+  /** Tabbed content: { detaljer, interaksjoner, notater } */
+  tabContent?: {
+    detaljer?: ReactNode;
+    interaksjoner?: ReactNode;
+    notater?: ReactNode;
+  };
 }
+
+const TAB_KEYS = ["detaljer", "interaksjoner", "notater"] as const;
+const TAB_LABELS: Record<(typeof TAB_KEYS)[number], string> = {
+  detaljer: "Detaljer",
+  interaksjoner: "Interaksjoner",
+  notater: "Notater",
+};
 
 export default function DetailPanelShell({
   open,
@@ -21,7 +36,16 @@ export default function DetailPanelShell({
   badges,
   actions,
   children,
+  tabContent,
 }: DetailPanelShellProps) {
+  const [activeTab, setActiveTab] = useState<(typeof TAB_KEYS)[number]>("detaljer");
+
+  const useTabs = !!tabContent;
+  // Only show tabs that have content
+  const visibleTabs = useTabs
+    ? TAB_KEYS.filter(k => tabContent![k])
+    : [];
+
   return (
     <Sheet open={open} onOpenChange={o => !o && onClose()}>
       <SheetContent className="w-full sm:w-[440px] sm:max-w-[540px] overflow-y-auto p-0">
@@ -53,9 +77,32 @@ export default function DetailPanelShell({
             )}
           </div>
 
+          {/* Tabs bar */}
+          {useTabs && visibleTabs.length > 1 && (
+            <div className="border-b px-6 flex gap-0">
+              {visibleTabs.map(key => (
+                <button
+                  key={key}
+                  onClick={() => setActiveTab(key)}
+                  className={cn(
+                    "px-4 py-2.5 text-sm font-medium transition-colors relative",
+                    activeTab === key
+                      ? "text-foreground"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {TAB_LABELS[key]}
+                  {activeTab === key && (
+                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-t" />
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
+
           {/* Content sections */}
           <div className="px-6 py-5 space-y-5">
-            {children}
+            {useTabs ? tabContent![activeTab] : children}
           </div>
         </div>
       </SheetContent>
