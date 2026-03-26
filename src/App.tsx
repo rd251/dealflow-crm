@@ -21,6 +21,7 @@ import PartnerPipeline from "./pages/PartnerPipeline";
 import CompanyProfile from "./pages/CompanyProfile";
 import Admin from "./pages/Admin";
 import Aktiviteter from "./pages/Aktiviteter";
+import Kontaktstrom from "./pages/Kontaktstrom";
 import Rapporter from "./pages/Rapporter";
 import Kalender from "./pages/Kalender";
 import Innstillinger from "./pages/Innstillinger";
@@ -114,6 +115,7 @@ function AppRoutes() {
                 <Route path="/selskaper" element={<Companies />} />
                 <Route path="/selskaper/:id" element={<CompanyProfile />} />
                 <Route path="/kontakter" element={<Contacts />} />
+                <Route path="/kontaktstrom" element={<Kontaktstrom />} />
                 <Route path="/oppgaver" element={<Tasks />} />
                 <Route path="/kalender" element={<Kalender />} />
                 <Route path="/partnere" element={<Partnere />} />
