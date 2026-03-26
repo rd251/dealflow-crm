@@ -546,6 +546,7 @@ export default function Kontaktstrom() {
                   setSelected(null);
                 }}
               />
+              <div className="flex flex-wrap gap-2">
                 {!selected.inCrm || (!selected.leadId && !selected.salgsmulighetId && selected.type === "Ukjent") ? (
                   <Button size="sm" onClick={() => handleCreateLead(selected)} disabled={creatingLead}>
                     <UserPlus className="w-4 h-4 mr-1" />
