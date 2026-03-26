@@ -26,6 +26,7 @@ interface KontaktStromPerson {
   sistKontaktetDato: string | null;
   sistKontaktetType: string;
   nesteSteg: string;
+  aktivitetTekster: string[];
   // CRM refs
   kontaktId: string | null;
   leadId: string | null;
@@ -89,7 +90,7 @@ export default function Kontaktstrom() {
       // Refresh data
       const { data } = await supabase
         .from("aktiviteter")
-        .select("id, type, dato, tittel, kontakt_id, lead_id, salgsmulighet_id, selskap_id, partner_id, ekstern_provider, aktivitet_kilde")
+        .select("id, type, dato, tittel, beskrivelse, kontakt_id, lead_id, salgsmulighet_id, selskap_id, partner_id, ekstern_provider, aktivitet_kilde")
         .order("dato", { ascending: false });
       setAktiviteter(data || []);
       refresh();
@@ -105,7 +106,7 @@ export default function Kontaktstrom() {
     async function fetchAktiviteter() {
       const { data } = await supabase
         .from("aktiviteter")
-        .select("id, type, dato, tittel, kontakt_id, lead_id, salgsmulighet_id, selskap_id, partner_id, ekstern_provider, aktivitet_kilde")
+        .select("id, type, dato, tittel, beskrivelse, kontakt_id, lead_id, salgsmulighet_id, selskap_id, partner_id, ekstern_provider, aktivitet_kilde")
         .order("dato", { ascending: false });
       setAktiviteter(data || []);
     }
@@ -179,6 +180,7 @@ export default function Kontaktstrom() {
         sistKontaktetDato: null,
         sistKontaktetType: "",
         nesteSteg,
+        aktivitetTekster: [],
         kontaktId: k.id,
         leadId: lead?.id || null,
         salgsmulighetId: sm?.id || null,
@@ -202,6 +204,7 @@ export default function Kontaktstrom() {
         ansvarlig: l.ansvarlig,
         sistKontaktetDato: null,
         sistKontaktetType: "",
+        aktivitetTekster: [],
         nesteSteg: l.neste_steg,
         kontaktId: null,
         leadId: l.id,
@@ -227,6 +230,7 @@ export default function Kontaktstrom() {
         sistKontaktetDato: null,
         sistKontaktetType: "",
         nesteSteg: s.neste_steg,
+        aktivitetTekster: [],
         kontaktId: s.kontakt_id || null,
         leadId: null,
         salgsmulighetId: s.id,
@@ -251,6 +255,7 @@ export default function Kontaktstrom() {
         sistKontaktetDato: null,
         sistKontaktetType: "",
         nesteSteg: "",
+        aktivitetTekster: [],
         kontaktId: null,
         leadId: null,
         salgsmulighetId: null,
@@ -285,7 +290,10 @@ export default function Kontaktstrom() {
 
       const person = map.get(email);
       if (person) {
-        // Only update if this is more recent
+        // Collect aktivitet text for search
+        const txt = (akt.tittel || akt.beskrivelse || "").trim();
+        if (txt) person.aktivitetTekster.push(txt);
+        // Only update sist kontaktet if this is more recent
         if (!person.sistKontaktetDato || new Date(akt.dato) > new Date(person.sistKontaktetDato)) {
           person.sistKontaktetDato = akt.dato;
           person.sistKontaktetType = akt.type;
@@ -317,7 +325,8 @@ export default function Kontaktstrom() {
     return persons.filter(p => {
       if (search) {
         const q = search.toLowerCase();
-        if (!p.navn.toLowerCase().includes(q) && !p.email.includes(q) && !p.firmanavn.toLowerCase().includes(q)) return false;
+        const matchesAktivitet = p.aktivitetTekster.some(t => t.toLowerCase().includes(q));
+        if (!p.navn.toLowerCase().includes(q) && !p.email.includes(q) && !p.firmanavn.toLowerCase().includes(q) && !matchesAktivitet) return false;
       }
       if (filterType !== "alle" && p.type !== filterType) return false;
       if (filterAnsvarlig !== "alle" && p.ansvarlig !== filterAnsvarlig) return false;
@@ -351,7 +360,7 @@ export default function Kontaktstrom() {
 
   return (
     <PageShell
-      title="Søk"
+      title="Kontaktstrøm"
       subtitle={`${filtered.length} av ${persons.length} personer`}
     >
       {/* Filters */}
