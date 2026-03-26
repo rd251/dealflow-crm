@@ -518,84 +518,86 @@ export default function Kontaktstrom() {
             )}
           </>
         ) : undefined}
-      >
-        {selected && (
-          <>
-            {selected.firmanavn && selected.selskapId && (
-              <SharedDetailField label="Selskap">
-                <span
-                  className="text-sm text-primary hover:underline cursor-pointer"
-                  onClick={() => { navigate(`/selskaper/${selected.selskapId}`); setSelected(null); }}
-                >
-                  {selected.firmanavn}
-                </span>
-              </SharedDetailField>
-            )}
-
-            <DetailSection title="Kontaktdetaljer">
-              <SharedDetailField label="E-post" value={selected.email} />
-              {selected.ansvarlig && (
-                <SharedDetailField label="Ansvarlig" value={selected.ansvarlig} />
+        tabContent={selected ? {
+          detaljer: (
+            <>
+              {selected.firmanavn && selected.selskapId && (
+                <SharedDetailField label="Selskap">
+                  <span
+                    className="text-sm text-primary hover:underline cursor-pointer"
+                    onClick={() => { navigate(`/selskaper/${selected.selskapId}`); setSelected(null); }}
+                  >
+                    {selected.firmanavn}
+                  </span>
+                </SharedDetailField>
               )}
-              {selected.nesteSteg && (
-                <SharedDetailField label="Neste steg" value={selected.nesteSteg} />
+
+              <DetailSection title="Kontaktdetaljer">
+                <SharedDetailField label="E-post" value={selected.email} />
+                {selected.ansvarlig && (
+                  <SharedDetailField label="Ansvarlig" value={selected.ansvarlig} />
+                )}
+                {selected.nesteSteg && (
+                  <SharedDetailField label="Neste steg" value={selected.nesteSteg} />
+                )}
+              </DetailSection>
+
+              <DetailDivider />
+
+              {(selected.totalSent > 0 || selected.totalReceived > 0 || selected.sistKontaktetDato) && (
+                <>
+                  <DetailSection title="E-poststatistikk">
+                    {(selected.totalSent > 0 || selected.totalReceived > 0) && (
+                      <SharedDetailField
+                        label="Totalt interaksjoner"
+                        value={`${selected.totalSent + selected.totalReceived}`}
+                      />
+                    )}
+                    {selected.sistKontaktetDato && (
+                      <SharedDetailField
+                        label="Siste interaksjon"
+                        value={format(new Date(selected.sistKontaktetDato), "d. MMM yyyy, HH:mm", { locale: nb })}
+                      />
+                    )}
+                    {(selected.totalSent > 0 || selected.totalReceived > 0) && (
+                      <DetailStatGrid>
+                        <DetailStatCard label="Sendt" value={selected.totalSent} />
+                        <DetailStatCard label="Mottatt" value={selected.totalReceived} />
+                      </DetailStatGrid>
+                    )}
+                  </DetailSection>
+                  <DetailDivider />
+                </>
               )}
-            </DetailSection>
 
-            <DetailDivider />
-
-            {/* Interaction stats */}
-            {(selected.totalSent > 0 || selected.totalReceived > 0 || selected.sistKontaktetDato) && (
-              <>
-                <DetailSection title="Interaksjoner">
-                  {(selected.totalSent > 0 || selected.totalReceived > 0) && (
-                    <SharedDetailField
-                      label="Totalt interaksjoner"
-                      value={`${selected.totalSent + selected.totalReceived}`}
-                    />
-                  )}
-                  {selected.sistKontaktetDato && (
-                    <SharedDetailField
-                      label="Siste interaksjon"
-                      value={format(new Date(selected.sistKontaktetDato), "d. MMM yyyy, HH:mm", { locale: nb })}
-                    />
-                  )}
-                  {(selected.totalSent > 0 || selected.totalReceived > 0) && (
-                    <DetailStatGrid>
-                      <DetailStatCard label="Sendt" value={selected.totalSent} />
-                      <DetailStatCard label="Mottatt" value={selected.totalReceived} />
-                    </DetailStatGrid>
-                  )}
-                </DetailSection>
-                <DetailDivider />
-              </>
-            )}
-
-            {/* Company linker */}
-            <CompanyLinker
-              email={selected.email}
-              kontaktId={selected.kontaktId}
-              currentSelskapId={selected.selskapId}
-              personNavn={selected.navn}
-              onLinked={() => {
-                fetchEmailContacts();
-                refresh();
-                setSelected(null);
-              }}
-            />
-
-            <DetailDivider />
-
-            {/* Activity log */}
-            {selected.kontaktId && (
-              <ActivityLog kontakt_id={selected.kontaktId} />
-            )}
-            {selected.leadId && !selected.kontaktId && (
-              <ActivityLog lead_id={selected.leadId} />
-            )}
-          </>
-        )}
-      </DetailPanelShell>
+              <CompanyLinker
+                email={selected.email}
+                kontaktId={selected.kontaktId}
+                currentSelskapId={selected.selskapId}
+                personNavn={selected.navn}
+                onLinked={() => {
+                  fetchEmailContacts();
+                  refresh();
+                  setSelected(null);
+                }}
+              />
+            </>
+          ),
+          interaksjoner: (
+            <>
+              {selected.kontaktId && (
+                <ActivityLog kontakt_id={selected.kontaktId} />
+              )}
+              {selected.leadId && !selected.kontaktId && (
+                <ActivityLog lead_id={selected.leadId} />
+              )}
+              {!selected.kontaktId && !selected.leadId && (
+                <p className="text-sm text-muted-foreground text-center py-8">Ingen interaksjoner registrert</p>
+              )}
+            </>
+          ),
+        } : undefined}
+      />
     </PageShell>
   );
 }
