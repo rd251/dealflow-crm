@@ -365,7 +365,7 @@ export default function Kontaktstrom() {
         <Button
           variant="outline"
           size="sm"
-          onClick={handleGmailSync}
+          onClick={() => handleGmailSync()}
           disabled={syncing}
           className="gap-2"
         >
