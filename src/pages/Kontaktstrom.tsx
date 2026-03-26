@@ -360,7 +360,7 @@ export default function Kontaktstrom() {
 
   return (
     <PageShell
-      title="Søk"
+      title="Kontaktstrøm"
       subtitle={`${filtered.length} av ${persons.length} personer`}
     >
       {/* Filters */}
