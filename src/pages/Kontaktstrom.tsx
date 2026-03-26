@@ -315,7 +315,7 @@ export default function Kontaktstrom() {
   return (
     <PageShell
       title="Søk"
-      subtitle={`${filtered.length} av ${persons.length} personer`}
+      subtitle={`${persons.length} personer`}
     >
       {/* Sticky filter bar */}
       <div className="sticky top-0 z-10 bg-background pb-4">
