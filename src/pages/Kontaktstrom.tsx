@@ -309,6 +309,10 @@ export default function Kontaktstrom() {
         email = kontaktIdToEmail.get(akt.kontakt_id)!;
       } else if (akt.lead_id && leadIdToEmail.has(akt.lead_id)) {
         email = leadIdToEmail.get(akt.lead_id)!;
+      } else if (akt.salgsmulighet_id && smIdToEmail.has(akt.salgsmulighet_id)) {
+        email = smIdToEmail.get(akt.salgsmulighet_id)!;
+      } else if (akt.partner_id && partnerIdToEmail.has(akt.partner_id)) {
+        email = partnerIdToEmail.get(akt.partner_id)!;
       } else if (akt.ekstern_provider === "gmail" && akt.beskrivelse) {
         // Extract email from beskrivelse format: [email@example.com] snippet
         const match = akt.beskrivelse.match(/^\[([^\]]+)\]/);
