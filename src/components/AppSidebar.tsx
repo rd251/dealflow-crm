@@ -9,7 +9,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { to: "/kontaktstrom", icon: Search, label: "Kontaktstrøm" },
+  { to: "/kontaktstrom", icon: Search, label: "Søk" },
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
   { to: "/leads", icon: UserPlus, label: "Leads" },
   { to: "/salgsmuligheter", icon: Handshake, label: "Salgsmuligheter" },

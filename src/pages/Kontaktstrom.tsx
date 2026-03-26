@@ -74,43 +74,40 @@ export default function Kontaktstrom() {
   const [creatingLead, setCreatingLead] = useState(false);
   const [syncing, setSyncing] = useState(false);
 
-  const handleGmailSync = async () => {
+  const refreshAktiviteter = async () => {
+    const { data } = await supabase
+      .from("aktiviteter")
+      .select("id, type, dato, tittel, beskrivelse, kontakt_id, lead_id, salgsmulighet_id, selskap_id, partner_id, ekstern_provider, aktivitet_kilde")
+      .order("dato", { ascending: false });
+    setAktiviteter(data || []);
+  };
+
+  const handleGmailSync = async (silent = false) => {
     setSyncing(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        toast.error("Du må være logget inn for å synkronisere");
+        if (!silent) toast.error("Du må være logget inn for å synkronisere");
         return;
       }
       const res = await supabase.functions.invoke("gmail-sync", {
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
       if (res.error) throw res.error;
-      toast.success("Gmail-synkronisering fullført");
-      // Refresh data
-      const { data } = await supabase
-        .from("aktiviteter")
-        .select("id, type, dato, tittel, beskrivelse, kontakt_id, lead_id, salgsmulighet_id, selskap_id, partner_id, ekstern_provider, aktivitet_kilde")
-        .order("dato", { ascending: false });
-      setAktiviteter(data || []);
+      if (!silent) toast.success("Gmail-synkronisering fullført");
+      await refreshAktiviteter();
       refresh();
     } catch (e: any) {
-      toast.error("Synkronisering feilet: " + (e.message || "Ukjent feil"));
+      if (!silent) toast.error("Synkronisering feilet: " + (e.message || "Ukjent feil"));
     } finally {
       setSyncing(false);
     }
   };
 
-  // Fetch all aktiviteter for last-activity matching
+  // Fetch aktiviteter and auto-sync Gmail on mount
   useEffect(() => {
-    async function fetchAktiviteter() {
-      const { data } = await supabase
-        .from("aktiviteter")
-        .select("id, type, dato, tittel, beskrivelse, kontakt_id, lead_id, salgsmulighet_id, selskap_id, partner_id, ekstern_provider, aktivitet_kilde")
-        .order("dato", { ascending: false });
-      setAktiviteter(data || []);
-    }
-    fetchAktiviteter();
+    refreshAktiviteter();
+    handleGmailSync(true);
   }, []);
 
   // Build unified list
@@ -360,7 +357,7 @@ export default function Kontaktstrom() {
 
   return (
     <PageShell
-      title="Kontaktstrøm"
+      title="Søk"
       subtitle={`${filtered.length} av ${persons.length} personer`}
     >
       {/* Filters */}
@@ -368,7 +365,7 @@ export default function Kontaktstrom() {
         <Button
           variant="outline"
           size="sm"
-          onClick={handleGmailSync}
+          onClick={() => handleGmailSync()}
           disabled={syncing}
           className="gap-2"
         >
