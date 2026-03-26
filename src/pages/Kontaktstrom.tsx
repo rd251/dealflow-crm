@@ -534,7 +534,18 @@ export default function Kontaktstrom() {
                 )}
               </div>
 
-              <div className="flex flex-wrap gap-2">
+              {/* Company linker */}
+              <CompanyLinker
+                email={selected.email}
+                kontaktId={selected.kontaktId}
+                currentSelskapId={selected.selskapId}
+                personNavn={selected.navn}
+                onLinked={() => {
+                  fetchEmailContacts();
+                  refresh();
+                  setSelected(null);
+                }}
+              />
                 {!selected.inCrm || (!selected.leadId && !selected.salgsmulighetId && selected.type === "Ukjent") ? (
                   <Button size="sm" onClick={() => handleCreateLead(selected)} disabled={creatingLead}>
                     <UserPlus className="w-4 h-4 mr-1" />
