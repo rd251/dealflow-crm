@@ -103,38 +103,40 @@ export default function Prosjekter() {
             <Rocket className="w-3.5 h-3.5 mr-1.5" />Sett som Live
           </Button>
         ) : undefined}
+        tabContent={currentP ? {
+          detaljer: (
+            <>
+              <DetailSection title="Prosjektdetaljer">
+                <DetailStatGrid>
+                  <DetailField label="Selskap">
+                    <span className="text-sm cursor-pointer hover:text-primary hover:underline" onClick={() => navigate(`/selskaper/${currentP.selskap_id}`)}>{getSelskapNavn(currentP.selskap_id)}</span>
+                  </DetailField>
+                  <DetailField label="Status" value={currentP.status} />
+                  <DetailField label="Startdato" value={currentP.startdato || "–"} />
+                  <DetailField label="Forventet go-live" value={currentP.forventet_go_live || "–"} />
+                  <DetailField label="Go-live dato" value={currentP.go_live_dato || "–"} />
+                  <DetailField label="Integrasjon" value={currentP.integrasjon} />
+                </DetailStatGrid>
+              </DetailSection>
+
+              <DetailDivider />
+
+              <DetailSection title="Økonomi">
+                <DetailStatGrid>
+                  <DetailStatCard label="Oppstart" value={`${currentP.oppstartskostnad.toLocaleString("no-NO")} NOK`} />
+                  <DetailStatCard label="Fakturert / Betalt" value={`${currentP.oppstart_fakturert ? "✓" : "✗"} / ${currentP.oppstart_betalt ? "✓" : "✗"}`} />
+                </DetailStatGrid>
+              </DetailSection>
+            </>
+          ),
+          interaksjoner: (
+            <>
+              <InlineTaskForm selskap_id={currentP.selskap_id} salgsmulighet_id={currentP.salgsmulighet_id} />
+              <ActivityLog prosjekt_id={currentP.id} />
+            </>
+          ),
+        } : undefined}
       >
-        {currentP && (
-          <>
-            <DetailSection title="Prosjektdetaljer">
-              <DetailStatGrid>
-                <DetailField label="Selskap">
-                  <span className="text-sm cursor-pointer hover:text-primary hover:underline" onClick={() => navigate(`/selskaper/${currentP.selskap_id}`)}>{getSelskapNavn(currentP.selskap_id)}</span>
-                </DetailField>
-                <DetailField label="Status" value={currentP.status} />
-                <DetailField label="Startdato" value={currentP.startdato || "–"} />
-                <DetailField label="Forventet go-live" value={currentP.forventet_go_live || "–"} />
-                <DetailField label="Go-live dato" value={currentP.go_live_dato || "–"} />
-                <DetailField label="Integrasjon" value={currentP.integrasjon} />
-              </DetailStatGrid>
-            </DetailSection>
-
-            <DetailDivider />
-
-            <DetailSection title="Økonomi">
-              <DetailStatGrid>
-                <DetailStatCard label="Oppstart" value={`${currentP.oppstartskostnad.toLocaleString("no-NO")} NOK`} />
-                <DetailStatCard label="Fakturert / Betalt" value={`${currentP.oppstart_fakturert ? "✓" : "✗"} / ${currentP.oppstart_betalt ? "✓" : "✗"}`} />
-              </DetailStatGrid>
-            </DetailSection>
-
-            <DetailDivider />
-
-            <InlineTaskForm selskap_id={currentP.selskap_id} salgsmulighet_id={currentP.salgsmulighet_id} />
-
-            <ActivityLog prosjekt_id={currentP.id} />
-          </>
-        )}
       </DetailPanelShell>
     </PageShell>
   );

@@ -195,70 +195,71 @@ export default function Partnere() {
             <Badge variant="secondary" className="text-xs">{currentPartner.partnertype}</Badge>
           </>
         ) : undefined}
-      >
-        {currentPartner && (() => {
+        tabContent={currentPartner ? (() => {
           const updateField = (field: string, value: any) => {
             const today = new Date().toISOString().split("T")[0];
             updatePartnere(prev => prev.map(p =>
               p.id === currentPartner.id ? { ...p, [field]: value, sist_aktivitet: today } : p
             ));
           };
-          return (
-            <>
-              <DetailSection title="Partnerdetaljer">
-                <div className="grid grid-cols-2 gap-3">
-                  <DetailField label="Partnernavn">
-                    <Input value={currentPartner.partnernavn} onChange={e => updateField("partnernavn", e.target.value)} className="h-8 text-sm" />
-                  </DetailField>
-                  <DetailField label="Partnertype">
-                    <select className="w-full border rounded-lg px-3 py-1.5 text-sm bg-background h-8" value={currentPartner.partnertype} onChange={e => updateField("partnertype", e.target.value)}>
-                      {partnertypeOptions.map(t => <option key={t} value={t}>{t}</option>)}
-                    </select>
-                  </DetailField>
-                  <DetailField label="Status">
-                    <select className={`w-full border rounded-lg px-3 py-1.5 text-sm bg-background h-8 ${statusColors[currentPartner.partnerstatus]}`} value={currentPartner.partnerstatus} onChange={e => updateField("partnerstatus", e.target.value)}>
-                      {partnerstatusOptions.map(s => <option key={s} value={s}>{s}</option>)}
-                    </select>
-                  </DetailField>
-                  <DetailField label="Ansvarlig">
-                    <Input value={currentPartner.ansvarlig} onChange={e => updateField("ansvarlig", e.target.value)} className="h-8 text-sm" />
-                  </DetailField>
-                </div>
-              </DetailSection>
+          return {
+            detaljer: (
+              <>
+                <DetailSection title="Partnerdetaljer">
+                  <div className="grid grid-cols-2 gap-3">
+                    <DetailField label="Partnernavn">
+                      <Input value={currentPartner.partnernavn} onChange={e => updateField("partnernavn", e.target.value)} className="h-8 text-sm" />
+                    </DetailField>
+                    <DetailField label="Partnertype">
+                      <select className="w-full border rounded-lg px-3 py-1.5 text-sm bg-background h-8" value={currentPartner.partnertype} onChange={e => updateField("partnertype", e.target.value)}>
+                        {partnertypeOptions.map(t => <option key={t} value={t}>{t}</option>)}
+                      </select>
+                    </DetailField>
+                    <DetailField label="Status">
+                      <select className={`w-full border rounded-lg px-3 py-1.5 text-sm bg-background h-8 ${statusColors[currentPartner.partnerstatus]}`} value={currentPartner.partnerstatus} onChange={e => updateField("partnerstatus", e.target.value)}>
+                        {partnerstatusOptions.map(s => <option key={s} value={s}>{s}</option>)}
+                      </select>
+                    </DetailField>
+                    <DetailField label="Ansvarlig">
+                      <Input value={currentPartner.ansvarlig} onChange={e => updateField("ansvarlig", e.target.value)} className="h-8 text-sm" />
+                    </DetailField>
+                  </div>
+                </DetailSection>
 
-              <DetailDivider />
+                <DetailDivider />
 
-              <DetailSection title="Provisjon">
-                <div className="grid grid-cols-2 gap-3">
-                  <DetailField label="Provisjonstype">
-                    <select className="w-full border rounded-lg px-3 py-1.5 text-sm bg-background h-8" value={currentPartner.provisjonstype} onChange={e => updateField("provisjonstype", e.target.value)}>
-                      <option value="">Velg...</option>
-                      {provisjonstypeOptions.map(t => <option key={t} value={t}>{t}</option>)}
-                    </select>
-                  </DetailField>
-                  <DetailField label="Provisjon %">
-                    <Input type="number" value={currentPartner.provisjonsprosent || ""} onChange={e => updateField("provisjonsprosent", Number(e.target.value))} className="h-8 text-sm" />
-                  </DetailField>
-                </div>
-              </DetailSection>
+                <DetailSection title="Provisjon">
+                  <div className="grid grid-cols-2 gap-3">
+                    <DetailField label="Provisjonstype">
+                      <select className="w-full border rounded-lg px-3 py-1.5 text-sm bg-background h-8" value={currentPartner.provisjonstype} onChange={e => updateField("provisjonstype", e.target.value)}>
+                        <option value="">Velg...</option>
+                        {provisjonstypeOptions.map(t => <option key={t} value={t}>{t}</option>)}
+                      </select>
+                    </DetailField>
+                    <DetailField label="Provisjon %">
+                      <Input type="number" value={currentPartner.provisjonsprosent || ""} onChange={e => updateField("provisjonsprosent", Number(e.target.value))} className="h-8 text-sm" />
+                    </DetailField>
+                  </div>
+                </DetailSection>
 
-              <DetailDivider />
+                <DetailDivider />
 
+                <Button size="sm" variant="destructive" className="w-full" onClick={() => {
+                  updatePartnere(prev => prev.filter(p => p.id !== currentPartner.id));
+                  setSelectedPartner(null);
+                }}>
+                  <Trash2 className="w-4 h-4 mr-1" /> Slett partner
+                </Button>
+              </>
+            ),
+            notater: (
               <DetailField label="Notater">
-                <Textarea value={currentPartner.notater} onChange={e => updateField("notater", e.target.value)} rows={3} />
+                <Textarea value={currentPartner.notater} onChange={e => updateField("notater", e.target.value)} rows={6} />
               </DetailField>
-
-              <DetailDivider />
-
-              <Button size="sm" variant="destructive" className="w-full" onClick={() => {
-                updatePartnere(prev => prev.filter(p => p.id !== currentPartner.id));
-                setSelectedPartner(null);
-              }}>
-                <Trash2 className="w-4 h-4 mr-1" /> Slett partner
-              </Button>
-            </>
-          );
-        })()}
+            ),
+          };
+        })() : undefined}
+      >
       </DetailPanelShell>
     </PageShell>
   );
