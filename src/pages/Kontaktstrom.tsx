@@ -289,6 +289,14 @@ export default function Kontaktstrom() {
     for (const l of leads) {
       if (l.e_post) leadIdToEmail.set(l.id, l.e_post.toLowerCase());
     }
+    const smIdToEmail = new Map<string, string>();
+    for (const s of salgsmuligheter) {
+      if (s.e_post) smIdToEmail.set(s.id, s.e_post.toLowerCase());
+    }
+    const partnerIdToEmail = new Map<string, string>();
+    for (const p of partnere) {
+      if (p.e_post) partnerIdToEmail.set(p.id, p.e_post.toLowerCase());
+    }
 
     // For each aktivitet, find the email and update sist kontaktet
     // Also extract unmatched email contacts from gmail aktiviteter
@@ -301,6 +309,10 @@ export default function Kontaktstrom() {
         email = kontaktIdToEmail.get(akt.kontakt_id)!;
       } else if (akt.lead_id && leadIdToEmail.has(akt.lead_id)) {
         email = leadIdToEmail.get(akt.lead_id)!;
+      } else if (akt.salgsmulighet_id && smIdToEmail.has(akt.salgsmulighet_id)) {
+        email = smIdToEmail.get(akt.salgsmulighet_id)!;
+      } else if (akt.partner_id && partnerIdToEmail.has(akt.partner_id)) {
+        email = partnerIdToEmail.get(akt.partner_id)!;
       } else if (akt.ekstern_provider === "gmail" && akt.beskrivelse) {
         // Extract email from beskrivelse format: [email@example.com] snippet
         const match = akt.beskrivelse.match(/^\[([^\]]+)\]/);
