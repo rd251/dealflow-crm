@@ -362,8 +362,8 @@ export default function Kontaktstrom() {
       {/* Table */}
       <div className="bg-card border rounded-xl overflow-hidden">
         <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b bg-muted/50">
+          <thead className="sticky top-[105px] sm:top-[113px] z-[5]">
+            <tr className="border-b bg-muted">
               <th className="text-left px-4 py-3 font-medium">Navn</th>
               {!isMobile && <th className="text-left px-4 py-3 font-medium">Selskap</th>}
               {!isMobile && <th className="text-left px-4 py-3 font-medium">E-post</th>}
