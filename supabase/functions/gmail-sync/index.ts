@@ -356,11 +356,11 @@ async function syncGmailForUser(supabase: any, connection: any) {
     const isSent = fromEmails.some(e => e === userEmail) || (msg.labelIds || []).includes('SENT');
     const direction = isSent ? 'gmail_sendt' : 'gmail_mottatt';
 
-    // Collect ALL external emails from from, to, and cc
+    // Collect ALL external emails from from, to, and cc (skip system emails)
     const allExternalEmails = new Set<string>();
-    for (const e of fromEmails) { if (e !== userEmail) allExternalEmails.add(e); }
-    for (const e of toEmails) { if (e !== userEmail) allExternalEmails.add(e); }
-    for (const e of ccEmails) { if (e !== userEmail) allExternalEmails.add(e); }
+    for (const e of fromEmails) { if (e !== userEmail && !isSystemEmail(e)) allExternalEmails.add(e); }
+    for (const e of toEmails) { if (e !== userEmail && !isSystemEmail(e)) allExternalEmails.add(e); }
+    for (const e of ccEmails) { if (e !== userEmail && !isSystemEmail(e)) allExternalEmails.add(e); }
 
     const dato = dateStr ? new Date(dateStr).toISOString() : new Date(parseInt(msg.internalDate)).toISOString();
 
