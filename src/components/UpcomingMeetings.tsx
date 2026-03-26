@@ -34,9 +34,14 @@ export default function UpcomingMeetings() {
   const [entityNames, setEntityNames] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    const now = new Date().toISOString();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const dayAfterTomorrow = new Date(today);
+    dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 2);
+    const fromDate = today.toISOString();
+    const toDate = dayAfterTomorrow.toISOString();
     fetch(
-      `${API_URL}/aktiviteter?dato=gte.${now}&order=dato.asc&limit=8&select=id,type,tittel,beskrivelse,dato,start_tid,slutt_tid,selskap_id,lead_id,salgsmulighet_id,partner_id,kontakt_id`,
+      `${API_URL}/aktiviteter?dato=gte.${fromDate}&dato=lt.${toDate}&order=dato.asc,start_tid.asc&limit=20&select=id,type,tittel,beskrivelse,dato,start_tid,slutt_tid,selskap_id,lead_id,salgsmulighet_id,partner_id,kontakt_id`,
       { headers: API_HEADERS }
     )
       .then(r => r.ok ? r.json() : [])
