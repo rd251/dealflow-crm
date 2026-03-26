@@ -79,7 +79,7 @@ async function fetchMessageDetails(accessToken: string, messageIds: string[], ba
     const batch = messageIds.slice(i, i + batchSize);
     const promises = batch.map(async (msgId) => {
       const res = await fetch(
-        `https://gmail.googleapis.com/gmail/v1/users/me/messages/${msgId}?format=metadata&metadataHeaders=Subject&metadataHeaders=From&metadataHeaders=To&metadataHeaders=Date`,
+        `https://gmail.googleapis.com/gmail/v1/users/me/messages/${msgId}?format=metadata&metadataHeaders=Subject&metadataHeaders=From&metadataHeaders=To&metadataHeaders=Cc&metadataHeaders=Date`,
         { headers: { Authorization: `Bearer ${accessToken}` } }
       );
       if (res.ok) return await res.json() as GmailMessage;
@@ -320,49 +320,54 @@ async function syncGmailForUser(supabase: any, connection: any) {
     const subject = getHeader(msg, 'Subject') || '(Uten emne)';
     const from = getHeader(msg, 'From');
     const to = getHeader(msg, 'To');
+    const cc = getHeader(msg, 'Cc');
     const dateStr = getHeader(msg, 'Date');
     const snippet = msg.snippet || '';
 
     const fromEmails = extractEmails(from);
     const toEmails = extractEmails(to);
+    const ccEmails = extractEmails(cc);
 
     // Determine direction
     const isSent = fromEmails.some(e => e === userEmail) || (msg.labelIds || []).includes('SENT');
     const direction = isSent ? 'gmail_sendt' : 'gmail_mottatt';
 
-    // Find matching kontakt
-    const relevantEmails = isSent ? toEmails : fromEmails;
+    // Collect ALL external emails from from, to, and cc
+    const allEmails = new Set<string>();
+    for (const e of fromEmails) { if (e !== userEmail) allEmails.add(e); }
+    for (const e of toEmails) { if (e !== userEmail) allEmails.add(e); }
+    for (const e of ccEmails) { if (e !== userEmail) allEmails.add(e); }
+
+    // Find matching kontakt (primary match for linking)
     let kontaktId: string | null = null;
     let selskapId: string | null = null;
     let leadId: string | null = null;
     let salgsmulighetId: string | null = null;
-    let matchedEmail = relevantEmails[0] || '';
 
-    for (const email of relevantEmails) {
+    for (const email of allEmails) {
       const kontakt = emailToKontakt.get(email);
       if (kontakt) {
         kontaktId = kontakt.id;
         selskapId = kontakt.selskap_id;
         salgsmulighetId = kontaktToSalgsmulighet.get(kontakt.id) || null;
-        matchedEmail = email;
         break;
       }
       const lead = emailToLead.get(email);
       if (lead) {
         leadId = lead;
-        matchedEmail = email;
         break;
       }
     }
 
-    // Store the external email in beskrivelse so frontend can extract unmatched contacts
-    const emailInfo = matchedEmail && matchedEmail !== userEmail ? matchedEmail : '';
+    // Store ALL external emails in beskrivelse so Kontaktstrøm can extract them
+    const emailList = Array.from(allEmails);
+    const emailTags = emailList.map(e => `[${e}]`).join('');
     const dato = dateStr ? new Date(dateStr).toISOString() : new Date(parseInt(msg.internalDate)).toISOString();
 
     const aktivitetData: Record<string, any> = {
       type: 'E-post',
       tittel: `${isSent ? '→' : '←'} ${subject}`,
-      beskrivelse: emailInfo ? `[${emailInfo}] ${snippet}` : snippet,
+      beskrivelse: emailTags ? `${emailTags} ${snippet}` : snippet,
       dato,
       ekstern_id: eksternId,
       ekstern_provider: 'gmail',

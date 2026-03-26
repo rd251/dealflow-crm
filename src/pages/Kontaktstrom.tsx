@@ -314,35 +314,48 @@ export default function Kontaktstrom() {
       } else if (akt.partner_id && partnerIdToEmail.has(akt.partner_id)) {
         email = partnerIdToEmail.get(akt.partner_id)!;
       } else if (akt.ekstern_provider === "gmail" && akt.beskrivelse) {
-        // Extract email from beskrivelse format: [email@example.com] snippet
-        const match = akt.beskrivelse.match(/^\[([^\]]+)\]/);
-        if (match) {
-          const extractedEmail = match[1].toLowerCase();
-          email = extractedEmail;
-          // Create person entry for unmatched email if not already in map
-          if (!map.has(extractedEmail)) {
-            // Try to extract a name from the tittel (→/← Subject)
-            const subject = (akt.tittel || "").replace(/^[→←]\s*/, "");
-            map.set(extractedEmail, {
-              email: extractedEmail,
-              navn: extractedEmail,
-              firmanavn: extractedEmail.split("@")[1]?.replace(/\.\w+$/, "") || "",
-              type: "Ukjent",
-              status: "",
-              ansvarlig: "",
-              sistKontaktetDato: akt.dato,
-              sistKontaktetType: akt.type,
-              nesteSteg: "",
-              aktivitetTekster: [subject],
-              kontaktId: null,
-              leadId: null,
-              salgsmulighetId: null,
-              selskapId: null,
-              partnerId: null,
-              inCrm: false,
-            });
-            continue;
+        // Extract ALL emails from beskrivelse format: [email1@ex.com][email2@ex.com] snippet
+        const bracketMatches = akt.beskrivelse.match(/\[([^\]]+@[^\]]+)\]/g);
+        if (bracketMatches) {
+          const extractedEmails = bracketMatches.map((m: string) => m.slice(1, -1).toLowerCase());
+          const subject = (akt.tittel || "").replace(/^[→←]\s*/, "");
+          
+          for (const extractedEmail of extractedEmails) {
+            if (!map.has(extractedEmail)) {
+              map.set(extractedEmail, {
+                email: extractedEmail,
+                navn: extractedEmail,
+                firmanavn: extractedEmail.split("@")[1]?.replace(/\.\w+$/, "") || "",
+                type: "Ukjent",
+                status: "",
+                ansvarlig: "",
+                sistKontaktetDato: akt.dato,
+                sistKontaktetType: akt.type,
+                nesteSteg: "",
+                aktivitetTekster: [subject],
+                kontaktId: null,
+                leadId: null,
+                salgsmulighetId: null,
+                selskapId: null,
+                partnerId: null,
+                inCrm: false,
+              });
+            }
+            // Also update sist kontaktet for already-known emails
+            const person = map.get(extractedEmail);
+            if (person) {
+              const txt = (akt.tittel || akt.beskrivelse || "").trim();
+              if (txt) person.aktivitetTekster.push(txt);
+              if (!person.sistKontaktetDato || new Date(akt.dato) > new Date(person.sistKontaktetDato)) {
+                person.sistKontaktetDato = akt.dato;
+                person.sistKontaktetType = akt.type;
+              }
+            }
           }
+          // Set email to first one for the matched-kontakt flow below
+          email = extractedEmails[0];
+          // Skip the generic update below since we already handled all emails
+          continue;
         }
       }
 
