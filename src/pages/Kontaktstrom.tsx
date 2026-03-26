@@ -317,8 +317,8 @@ export default function Kontaktstrom() {
       title="Søk"
       subtitle={`${persons.length} personer`}
     >
-      {/* Sticky filter bar */}
-      <div className="sticky top-0 z-10 bg-background pb-4">
+      {/* Sticky filter bar - offset below PageShell header */}
+      <div className="sticky top-[61px] sm:top-[69px] z-10 bg-background pt-4 pb-4 -mt-4"  >
         <div className="flex flex-wrap items-center gap-3">
           <Button
             variant="outline"
