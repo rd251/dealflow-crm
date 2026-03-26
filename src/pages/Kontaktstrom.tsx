@@ -230,6 +230,7 @@ export default function Kontaktstrom() {
         sistKontaktetDato: null,
         sistKontaktetType: "",
         nesteSteg: s.neste_steg,
+        aktivitetTekster: [],
         kontaktId: s.kontakt_id || null,
         leadId: null,
         salgsmulighetId: s.id,
