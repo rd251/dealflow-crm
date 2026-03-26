@@ -382,35 +382,85 @@ export default function Contacts() {
         badges={currentKontakt?.rolle ? (
           <Badge variant="secondary" className="text-xs">{currentKontakt.rolle}</Badge>
         ) : undefined}
-      >
-        {currentKontakt && (
-          <>
-            <DetailSection title="Navn">
-              <Input
-                value={currentKontakt.navn}
-                onChange={e => {
-                  updateKontakter(prev => prev.map(k => k.id === currentKontakt.id ? { ...k, navn: e.target.value } : k));
-                }}
-                className="text-base font-medium h-auto"
-                placeholder="Navn"
+        tabContent={currentKontakt ? {
+          detaljer: (
+            <>
+              <DetailSection title="Navn">
+                <Input
+                  value={currentKontakt.navn}
+                  onChange={e => {
+                    updateKontakter(prev => prev.map(k => k.id === currentKontakt.id ? { ...k, navn: e.target.value } : k));
+                  }}
+                  className="text-base font-medium h-auto"
+                  placeholder="Navn"
+                />
+              </DetailSection>
+
+              <DetailDivider />
+
+              <EditableField label="E-post" value={currentKontakt.e_post} onChange={v => updateKontakter(prev => prev.map(k => k.id === currentKontakt.id ? { ...k, e_post: v } : k))} icon={<Mail className="w-4 h-4 text-muted-foreground shrink-0" />} type="email" />
+              <EditableField label="Telefon" value={currentKontakt.telefon} onChange={v => updateKontakter(prev => prev.map(k => k.id === currentKontakt.id ? { ...k, telefon: v } : k))} icon={<Phone className="w-4 h-4 text-muted-foreground shrink-0" />} type="tel" />
+              <EditableField label="LinkedIn" value={currentKontakt.linkedin} onChange={v => updateKontakter(prev => prev.map(k => k.id === currentKontakt.id ? { ...k, linkedin: v } : k))} icon={<Linkedin className="w-4 h-4 text-muted-foreground shrink-0" />} placeholder="https://linkedin.com/in/..." />
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <span className="text-muted-foreground text-xs">Selskap</span>
+                  <select
+                    className="w-full border rounded-md px-2 py-1.5 text-sm bg-background h-8"
+                    value={currentKontakt.selskap_id}
+                    onChange={e => updateKontakter(prev => prev.map(k => k.id === currentKontakt.id ? { ...k, selskap_id: e.target.value } : k))}
+                  >
+                    <option value="">Ingen</option>
+                    {selskaper.map(s => <option key={s.id} value={s.id}>{s.firmanavn}</option>)}
+                  </select>
+                  {currentKontakt.selskap_id && (
+                    <span className="text-xs text-primary cursor-pointer hover:underline" onClick={() => navigate(`/selskaper/${currentKontakt.selskap_id}`)}>
+                      Gå til selskapsprofil →
+                    </span>
+                  )}
+                </div>
+                <EditableField label="Rolle" value={currentKontakt.rolle} onChange={v => updateKontakter(prev => prev.map(k => k.id === currentKontakt.id ? { ...k, rolle: v } : k))} />
+              </div>
+
+              {relatedDeals.length > 0 && (
+                <>
+                  <Separator />
+                  <div>
+                    <span className="text-muted-foreground block text-xs mb-2">Relaterte salgsmuligheter</span>
+                    <div className="space-y-1.5">
+                      {relatedDeals.map(d => (
+                        <div key={d.id} className="p-2 bg-muted/50 rounded-lg text-xs">
+                          <span className="font-medium">{d.navn}</span> · {d.status} · {d.forventet_mrr.toLocaleString("no-NO")} MRR
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              <Separator />
+
+              <Button variant="destructive" size="sm" className="w-full" onClick={() => handleDeleteClick(currentKontakt)}>
+                <Trash2 className="w-4 h-4 mr-2" />Slett kontakt
+              </Button>
+            </>
+          ),
+          interaksjoner: (
+            <ActivityLog kontakt_id={currentKontakt.id} />
+          ),
+          notater: (
+            <div className="space-y-1">
+              <span className="text-muted-foreground text-xs">Notater</span>
+              <Textarea
+                value={currentKontakt.notater}
+                onChange={e => updateKontakter(prev => prev.map(k => k.id === currentKontakt.id ? { ...k, notater: e.target.value } : k))}
+                placeholder="Legg til notater..."
+                className="text-sm min-h-[120px]"
               />
-            </DetailSection>
-
-            <DetailDivider />
-
-            <ContactDetailPanel
-              kontakt={currentKontakt}
-              selskaper={selskaper}
-              salgsmuligheter={relatedDeals}
-              onUpdate={(field, value) => {
-                updateKontakter(prev => prev.map(k => k.id === currentKontakt.id ? { ...k, [field]: value } : k));
-              }}
-              onNavigate={navigate}
-              onDelete={() => handleDeleteClick(currentKontakt)}
-            />
-          </>
-        )}
-      </DetailPanelShell>
+            </div>
+          ),
+        } : undefined}
+      />
     </PageShell>
   );
 }

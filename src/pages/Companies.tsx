@@ -387,119 +387,119 @@ export default function Companies() {
             )}
           </>
         ) : undefined}
-      >
-        {currentSelskap && (() => {
+        tabContent={currentSelskap ? (() => {
           const updateField = (field: string, value: any) => {
             const today = new Date().toISOString().split("T")[0];
             updateSelskaper(prev => prev.map(s =>
               s.id === currentSelskap.id ? { ...s, [field]: value, sist_aktivitet: today } : s
             ));
           };
+          return {
+            detaljer: (
+              <>
+                <DetailSection title="Selskapsinformasjon">
+                  <div className="grid grid-cols-2 gap-3">
+                    <DetailField label="Firmanavn">
+                      <Input value={currentSelskap.firmanavn} onChange={e => updateField("firmanavn", e.target.value)} className="h-8 text-sm" />
+                    </DetailField>
+                    <DetailField label="Bransje">
+                      <Input value={currentSelskap.bransje} onChange={e => updateField("bransje", e.target.value)} className="h-8 text-sm" />
+                    </DetailField>
+                    <DetailField label="Kundeansvarlig">
+                      <Input value={currentSelskap.kundeansvarlig} onChange={e => updateField("kundeansvarlig", e.target.value)} className="h-8 text-sm" />
+                    </DetailField>
+                    <DetailField label="Kundestatus">
+                      <select className={`w-full border rounded-lg px-3 py-1.5 text-sm bg-background ${kundestatusColors[currentSelskap.kundestatus]}`}
+                        value={currentSelskap.kundestatus}
+                        onChange={e => {
+                          const val = e.target.value as Kundestatus;
+                          if (val === "Kansellert") {
+                            changeKundestatus(currentSelskap.id, val);
+                          } else {
+                            updateField("kundestatus", val);
+                            if (val === "Live") updateField("live_status", true);
+                            else if (val !== "Pilot") updateField("live_status", false);
+                          }
+                        }}>
+                        {kundestatuser.map(k => <option key={k} value={k}>{k}</option>)}
+                      </select>
+                    </DetailField>
+                  </div>
+                </DetailSection>
 
-          return (
-            <>
-              <DetailSection title="Selskapsinformasjon">
-                <div className="grid grid-cols-2 gap-3">
-                  <DetailField label="Firmanavn">
-                    <Input value={currentSelskap.firmanavn} onChange={e => updateField("firmanavn", e.target.value)} className="h-8 text-sm" />
-                  </DetailField>
-                  <DetailField label="Bransje">
-                    <Input value={currentSelskap.bransje} onChange={e => updateField("bransje", e.target.value)} className="h-8 text-sm" />
-                  </DetailField>
-                  <DetailField label="Kundeansvarlig">
-                    <Input value={currentSelskap.kundeansvarlig} onChange={e => updateField("kundeansvarlig", e.target.value)} className="h-8 text-sm" />
-                  </DetailField>
-                  <DetailField label="Kundestatus">
-                    <select className={`w-full border rounded-lg px-3 py-1.5 text-sm bg-background ${kundestatusColors[currentSelskap.kundestatus]}`}
-                      value={currentSelskap.kundestatus}
-                      onChange={e => {
-                        const val = e.target.value as Kundestatus;
-                        if (val === "Kansellert") {
-                          changeKundestatus(currentSelskap.id, val);
-                        } else {
-                          updateField("kundestatus", val);
-                          if (val === "Live") updateField("live_status", true);
-                          else if (val !== "Pilot") updateField("live_status", false);
-                        }
-                      }}>
-                      {kundestatuser.map(k => <option key={k} value={k}>{k}</option>)}
-                    </select>
-                  </DetailField>
-                </div>
-              </DetailSection>
+                <DetailDivider />
 
-              <DetailDivider />
+                <DetailSection title="Status & Onboarding">
+                  <div className="grid grid-cols-2 gap-3">
+                    <DetailField label="Live">
+                      <Switch checked={currentSelskap.live_status} onCheckedChange={v => toggleLive(currentSelskap.id, v)} />
+                    </DetailField>
+                    <DetailField label="Onboarding">
+                      <select className="w-full border rounded-lg px-3 py-1.5 text-sm bg-background" value={currentSelskap.onboarding_status}
+                        onChange={e => updateField("onboarding_status", e.target.value)}>
+                        {(["Ikke startet", "Pågår", "Venter på kunde", "Klar for live", "Ferdig"] as OnboardingStatus[]).map(o => <option key={o} value={o}>{o}</option>)}
+                      </select>
+                    </DetailField>
+                    <DetailField label="Kundetilstand">
+                      <select className={`w-full border rounded-lg px-3 py-1.5 text-sm bg-background ${tilstandColors[currentSelskap.kundetilstand]}`}
+                        value={currentSelskap.kundetilstand} onChange={e => updateField("kundetilstand", e.target.value)}>
+                        {(["Bra", "Usikker", "Risiko"] as Kundetilstand[]).map(t => <option key={t} value={t}>{t}</option>)}
+                      </select>
+                    </DetailField>
+                  </div>
+                </DetailSection>
 
-              <DetailSection title="Status & Onboarding">
-                <div className="grid grid-cols-2 gap-3">
-                  <DetailField label="Live">
-                    <Switch checked={currentSelskap.live_status} onCheckedChange={v => toggleLive(currentSelskap.id, v)} />
-                  </DetailField>
-                  <DetailField label="Onboarding">
-                    <select className="w-full border rounded-lg px-3 py-1.5 text-sm bg-background" value={currentSelskap.onboarding_status}
-                      onChange={e => updateField("onboarding_status", e.target.value)}>
-                      {(["Ikke startet", "Pågår", "Venter på kunde", "Klar for live", "Ferdig"] as OnboardingStatus[]).map(o => <option key={o} value={o}>{o}</option>)}
-                    </select>
-                  </DetailField>
-                  <DetailField label="Kundetilstand">
-                    <select className={`w-full border rounded-lg px-3 py-1.5 text-sm bg-background ${tilstandColors[currentSelskap.kundetilstand]}`}
-                      value={currentSelskap.kundetilstand} onChange={e => updateField("kundetilstand", e.target.value)}>
-                      {(["Bra", "Usikker", "Risiko"] as Kundetilstand[]).map(t => <option key={t} value={t}>{t}</option>)}
-                    </select>
-                  </DetailField>
-                </div>
-              </DetailSection>
+                <DetailDivider />
 
-              <DetailDivider />
+                <DetailSection title="Økonomi">
+                  <DetailStatGrid>
+                    <DetailStatCard label="MRR" value={`${(currentSelskap.mrr || 0).toLocaleString("no-NO")} NOK`} />
+                    <DetailStatCard label="ARR" value={`${(currentSelskap.mrr * 12).toLocaleString("no-NO")} NOK`} />
+                  </DetailStatGrid>
+                  <div className="grid grid-cols-2 gap-3">
+                    <DetailField label="MRR">
+                      <Input type="number" value={currentSelskap.mrr || ""} onChange={e => {
+                        const mrr = Number(e.target.value);
+                        updateSelskaper(prev => prev.map(s => s.id === currentSelskap.id ? { ...s, mrr, arr: mrr * 12, sist_aktivitet: new Date().toISOString().split("T")[0] } : s));
+                      }} className="h-8 text-sm" />
+                    </DetailField>
+                    <DetailField label="Oppstartskostnad">
+                      <Input type="number" value={currentSelskap.oppstartskostnad || ""} onChange={e => updateField("oppstartskostnad", Number(e.target.value))} className="h-8 text-sm" />
+                    </DetailField>
+                    <DetailField label="Lukkedato">
+                      <Input type="date" value={currentSelskap.lukkedato} onChange={e => updateField("lukkedato", e.target.value)} className="h-8 text-sm" />
+                    </DetailField>
+                    <DetailField label="Go-live dato">
+                      <Input type="date" value={currentSelskap.go_live_dato} onChange={e => updateField("go_live_dato", e.target.value)} className="h-8 text-sm" />
+                    </DetailField>
+                  </div>
+                </DetailSection>
 
-              <DetailSection title="Økonomi">
-                <DetailStatGrid>
-                  <DetailStatCard label="MRR" value={`${(currentSelskap.mrr || 0).toLocaleString("no-NO")} NOK`} />
-                  <DetailStatCard label="ARR" value={`${(currentSelskap.mrr * 12).toLocaleString("no-NO")} NOK`} />
-                </DetailStatGrid>
-                <div className="grid grid-cols-2 gap-3">
-                  <DetailField label="MRR">
-                    <Input type="number" value={currentSelskap.mrr || ""} onChange={e => {
-                      const mrr = Number(e.target.value);
-                      updateSelskaper(prev => prev.map(s => s.id === currentSelskap.id ? { ...s, mrr, arr: mrr * 12, sist_aktivitet: new Date().toISOString().split("T")[0] } : s));
-                    }} className="h-8 text-sm" />
-                  </DetailField>
-                  <DetailField label="Oppstartskostnad">
-                    <Input type="number" value={currentSelskap.oppstartskostnad || ""} onChange={e => updateField("oppstartskostnad", Number(e.target.value))} className="h-8 text-sm" />
-                  </DetailField>
-                  <DetailField label="Lukkedato">
-                    <Input type="date" value={currentSelskap.lukkedato} onChange={e => updateField("lukkedato", e.target.value)} className="h-8 text-sm" />
-                  </DetailField>
-                  <DetailField label="Go-live dato">
-                    <Input type="date" value={currentSelskap.go_live_dato} onChange={e => updateField("go_live_dato", e.target.value)} className="h-8 text-sm" />
-                  </DetailField>
-                </div>
-              </DetailSection>
+                <DetailDivider />
 
-              <DetailDivider />
+                <DetailField label="Neste steg">
+                  <Input value={currentSelskap.neste_steg} onChange={e => updateField("neste_steg", e.target.value)} className="h-8 text-sm" />
+                </DetailField>
 
-              <DetailField label="Neste steg">
-                <Input value={currentSelskap.neste_steg} onChange={e => updateField("neste_steg", e.target.value)} className="h-8 text-sm" />
-              </DetailField>
-
-              <DetailField label="Notater">
-                <Textarea value={currentSelskap.notater} onChange={e => updateField("notater", e.target.value)} rows={3} />
-              </DetailField>
-
-              {currentSelskap.kundestatus === "Kansellert" && (
-                <div className="p-3 bg-destructive/10 rounded-lg text-destructive text-xs">
-                  <strong>Kansellert:</strong> {currentSelskap.kansellert_dato} – {currentSelskap.kanselleringsaarsak}
-                  {currentSelskap.kanselleringsnotat && <p className="mt-1">{currentSelskap.kanselleringsnotat}</p>}
-                </div>
-              )}
-
-              <DetailDivider />
-
+                {currentSelskap.kundestatus === "Kansellert" && (
+                  <div className="p-3 bg-destructive/10 rounded-lg text-destructive text-xs">
+                    <strong>Kansellert:</strong> {currentSelskap.kansellert_dato} – {currentSelskap.kanselleringsaarsak}
+                    {currentSelskap.kanselleringsnotat && <p className="mt-1">{currentSelskap.kanselleringsnotat}</p>}
+                  </div>
+                )}
+              </>
+            ),
+            interaksjoner: (
               <InlineTaskForm selskap_id={currentSelskap.id} />
-            </>
-          );
-        })()}
-      </DetailPanelShell>
+            ),
+            notater: (
+              <DetailField label="Notater">
+                <Textarea value={currentSelskap.notater} onChange={e => updateField("notater", e.target.value)} rows={6} />
+              </DetailField>
+            ),
+          };
+        })() : undefined}
+      />
     </PageShell>
   );
 }
