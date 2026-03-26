@@ -26,6 +26,7 @@ interface KontaktStromPerson {
   sistKontaktetDato: string | null;
   sistKontaktetType: string;
   nesteSteg: string;
+  aktivitetTekster: string[];
   // CRM refs
   kontaktId: string | null;
   leadId: string | null;
