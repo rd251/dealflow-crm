@@ -166,6 +166,39 @@ async function fetchGmailMessages(accessToken: string, historyId?: string | null
 }
 
 async function syncGmailForUser(supabase: any, connection: any) {
+  // Auto-create kontakter from partners that have e_post but no matching kontakt
+  const { data: allPartnere } = await supabase
+    .from('partnere')
+    .select('id, partnernavn, kontaktperson, e_post, selskap_id')
+    .neq('e_post', '')
+    .not('e_post', 'is', null);
+
+  if (allPartnere && allPartnere.length > 0) {
+    const { data: eksisterendeKontakter } = await supabase
+      .from('kontakter')
+      .select('e_post');
+
+    const eksisterendeEmails = new Set(
+      (eksisterendeKontakter || [])
+        .filter((k: any) => k.e_post)
+        .map((k: any) => k.e_post.toLowerCase())
+    );
+
+    for (const partner of allPartnere) {
+      if (partner.e_post && !eksisterendeEmails.has(partner.e_post.toLowerCase())) {
+        const kontaktNavn = partner.kontaktperson || partner.partnernavn;
+        await supabase.from('kontakter').insert({
+          navn: kontaktNavn,
+          e_post: partner.e_post,
+          selskap_id: partner.selskap_id || null,
+          notater: `Auto-opprettet fra partner: ${partner.partnernavn}`,
+        });
+        eksisterendeEmails.add(partner.e_post.toLowerCase());
+        console.log(`Auto-created kontakt for partner ${partner.partnernavn} (${partner.e_post})`);
+      }
+    }
+  }
+
   if (!connection.gmail_sync_enabled) {
     return { synced: 0, error: null };
   }
