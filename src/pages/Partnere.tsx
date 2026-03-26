@@ -141,6 +141,7 @@ export default function Partnere() {
             <thead>
               <tr className="border-b bg-muted/50">
                 <th className="text-left px-4 py-3 font-medium">Partnernavn</th>
+                <th className="text-left px-4 py-3 font-medium">Selskap</th>
                 <th className="text-left px-4 py-3 font-medium">Type</th>
                 <th className="text-left px-4 py-3 font-medium">Kontaktperson</th>
                 <th className="text-left px-4 py-3 font-medium">Status</th>
@@ -158,6 +159,12 @@ export default function Partnere() {
                 return (
                   <tr key={partner.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => navigate(`/partnere/${partner.id}`)}>
                     <td className="px-4 py-3 font-medium">{partner.partnernavn}</td>
+                    <td className="px-4 py-3">{(() => {
+                      const selskap = selskaper.find(s => s.id === partner.selskap_id);
+                      return selskap ? (
+                        <button className="text-primary hover:underline text-sm" onClick={e => { e.stopPropagation(); navigate(`/selskaper/${selskap.id}`); }}>{selskap.firmanavn}</button>
+                      ) : <span className="text-muted-foreground text-xs">—</span>;
+                    })()}</td>
                     <td className="px-4 py-3"><Badge variant="secondary" className="text-xs">{partner.partnertype}</Badge></td>
                     <td className="px-4 py-3 text-muted-foreground">{partner.kontaktperson}</td>
                     <td className="px-4 py-3"><Badge className={`text-xs ${statusColors[partner.partnerstatus]}`}>{partner.partnerstatus}</Badge></td>
