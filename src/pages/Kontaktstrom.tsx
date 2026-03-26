@@ -14,6 +14,7 @@ import { format, formatDistanceToNow, isAfter } from "date-fns";
 import { nb } from "date-fns/locale";
 import { toast } from "sonner";
 import ActivityLog from "@/components/ActivityLog";
+import CompanyLinker from "@/components/CompanyLinker";
 
 interface KontaktStromPerson {
   email: string;
