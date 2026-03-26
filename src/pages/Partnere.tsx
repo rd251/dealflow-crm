@@ -58,7 +58,7 @@ export default function Partnere() {
       kontaktperson: form.kontaktperson || "", e_post: form.e_post || "", telefon: form.telefon || "",
       partnerstatus: form.partnerstatus as Partnerstatus || "Under onboarding",
       pipeline_status: "Ny partnermulighet", ansvarlig: form.ansvarlig || "",
-      provisjonsprosent: 0, provisjonstype: "", selskap_id: "",
+      provisjonsprosent: 0, provisjonstype: "", selskap_id: form.selskap_id || "",
       opprettet_dato: today, sist_aktivitet: today, notater: form.notater || "",
     };
     updatePartnere(prev => [...prev, nyPartner]);
