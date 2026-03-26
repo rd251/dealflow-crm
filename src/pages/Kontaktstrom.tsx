@@ -552,7 +552,7 @@ export default function Kontaktstrom() {
               <div className="px-6 py-5 space-y-5">
                 {/* Structured fields – Folk style */}
                 <div className="space-y-4">
-                  <SharedDetailField label="E-post" value={selected.email} icon={<Mail className="w-4 h-4" />} />
+                  <SharedDetailField label="E-post" value={selected.email} />
 
                   {selected.ansvarlig && (
                     <SharedDetailField label="Ansvarlig" value={selected.ansvarlig} />
