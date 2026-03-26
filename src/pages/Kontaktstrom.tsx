@@ -325,7 +325,8 @@ export default function Kontaktstrom() {
     return persons.filter(p => {
       if (search) {
         const q = search.toLowerCase();
-        if (!p.navn.toLowerCase().includes(q) && !p.email.includes(q) && !p.firmanavn.toLowerCase().includes(q)) return false;
+        const matchesAktivitet = p.aktivitetTekster.some(t => t.toLowerCase().includes(q));
+        if (!p.navn.toLowerCase().includes(q) && !p.email.includes(q) && !p.firmanavn.toLowerCase().includes(q) && !matchesAktivitet) return false;
       }
       if (filterType !== "alle" && p.type !== filterType) return false;
       if (filterAnsvarlig !== "alle" && p.ansvarlig !== filterAnsvarlig) return false;
