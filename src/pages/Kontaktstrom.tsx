@@ -62,17 +62,7 @@ function formatAktivitetDato(dato: string | null) {
   return formatDistanceToNow(d, { addSuffix: true, locale: nb });
 }
 
-function DetailField({ label, value, icon }: { label: string; value: string; icon?: React.ReactNode }) {
-  return (
-    <div className="space-y-1">
-      <div className="text-xs font-medium text-muted-foreground">{label}</div>
-      <div className="flex items-center gap-2 text-sm">
-        {icon && <span className="text-muted-foreground">{icon}</span>}
-        <span>{value}</span>
-      </div>
-    </div>
-  );
-}
+// Using shared DetailField from DetailPanelShell
 
 export default function Kontaktstrom() {
   const navigate = useNavigate();
