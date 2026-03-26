@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import { nb } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 import { typeIcons, typeColors, AktivitetType } from "@/components/ActivityLog";
+import { useNavigate } from "react-router-dom";
 
 const API_URL = import.meta.env.VITE_SUPABASE_URL + '/rest/v1';
 const API_HEADERS = {
@@ -28,6 +29,7 @@ interface UpcomingItem {
 }
 
 export default function UpcomingMeetings() {
+  const navigate = useNavigate();
   const [items, setItems] = useState<UpcomingItem[]>([]);
   const [entityNames, setEntityNames] = useState<Record<string, string>>({});
 
@@ -91,12 +93,12 @@ export default function UpcomingMeetings() {
       .catch(() => {});
   }, []);
 
-  const getEntityLabel = (item: UpcomingItem): string | null => {
-    if (item.selskap_id && entityNames[item.selskap_id]) return entityNames[item.selskap_id];
-    if (item.lead_id && entityNames[item.lead_id]) return entityNames[item.lead_id];
-    if (item.salgsmulighet_id && entityNames[item.salgsmulighet_id]) return entityNames[item.salgsmulighet_id];
-    if (item.partner_id && entityNames[item.partner_id]) return entityNames[item.partner_id];
-    if (item.kontakt_id && entityNames[item.kontakt_id]) return entityNames[item.kontakt_id];
+  const getEntityInfo = (item: UpcomingItem): { name: string; path: string } | null => {
+    if (item.selskap_id && entityNames[item.selskap_id]) return { name: entityNames[item.selskap_id], path: `/selskaper/${item.selskap_id}` };
+    if (item.lead_id && entityNames[item.lead_id]) return { name: entityNames[item.lead_id], path: `/leads` };
+    if (item.salgsmulighet_id && entityNames[item.salgsmulighet_id]) return { name: entityNames[item.salgsmulighet_id], path: `/salgsmuligheter` };
+    if (item.partner_id && entityNames[item.partner_id]) return { name: entityNames[item.partner_id], path: `/partnere/${item.partner_id}` };
+    if (item.kontakt_id && entityNames[item.kontakt_id]) return { name: entityNames[item.kontakt_id], path: `/kontakter` };
     return null;
   };
 
@@ -114,7 +116,7 @@ export default function UpcomingMeetings() {
           const Icon = typeIcons[item.type] || CalendarDays;
           const colorClass = typeColors[item.type] || "text-muted-foreground bg-muted";
           const date = new Date(item.start_tid || item.dato);
-          const entity = getEntityLabel(item);
+          const entity = getEntityInfo(item);
 
           return (
             <div key={item.id} className="flex items-start gap-3 p-2.5 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors">
@@ -127,10 +129,13 @@ export default function UpcomingMeetings() {
                 </p>
                 <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                   {entity && (
-                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); navigate(entity.path); }}
+                      className="text-xs text-primary hover:underline flex items-center gap-1"
+                    >
                       <Building2 className="w-3 h-3" />
-                      {entity}
-                    </span>
+                      {entity.name}
+                    </button>
                   )}
                   <span className="text-xs text-muted-foreground flex items-center gap-1">
                     <CalendarDays className="w-3 h-3" />
