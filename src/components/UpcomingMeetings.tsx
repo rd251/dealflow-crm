@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { CalendarDays, Clock, Users } from "lucide-react";
+import { CalendarDays, Clock, Building2 } from "lucide-react";
 import { format } from "date-fns";
 import { nb } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
@@ -20,21 +20,85 @@ interface UpcomingItem {
   dato: string;
   start_tid: string | null;
   slutt_tid: string | null;
+  selskap_id: string | null;
+  lead_id: string | null;
+  salgsmulighet_id: string | null;
+  partner_id: string | null;
+  kontakt_id: string | null;
 }
 
 export default function UpcomingMeetings() {
   const [items, setItems] = useState<UpcomingItem[]>([]);
+  const [entityNames, setEntityNames] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const now = new Date().toISOString();
     fetch(
-      `${API_URL}/aktiviteter?dato=gte.${now}&order=dato.asc&limit=8&select=id,type,tittel,beskrivelse,dato,start_tid,slutt_tid`,
+      `${API_URL}/aktiviteter?dato=gte.${now}&order=dato.asc&limit=8&select=id,type,tittel,beskrivelse,dato,start_tid,slutt_tid,selskap_id,lead_id,salgsmulighet_id,partner_id,kontakt_id`,
       { headers: API_HEADERS }
     )
       .then(r => r.ok ? r.json() : [])
-      .then(setItems)
+      .then((data: UpcomingItem[]) => {
+        setItems(data);
+        // Collect entity IDs to resolve names
+        const selskapIds = [...new Set(data.map(d => d.selskap_id).filter(Boolean))] as string[];
+        const leadIds = [...new Set(data.map(d => d.lead_id).filter(Boolean))] as string[];
+        const salgsIds = [...new Set(data.map(d => d.salgsmulighet_id).filter(Boolean))] as string[];
+        const partnerIds = [...new Set(data.map(d => d.partner_id).filter(Boolean))] as string[];
+        const kontaktIds = [...new Set(data.map(d => d.kontakt_id).filter(Boolean))] as string[];
+
+        const fetches: Promise<void>[] = [];
+        const names: Record<string, string> = {};
+
+        if (selskapIds.length) {
+          fetches.push(
+            fetch(`${API_URL}/selskaper?id=in.(${selskapIds.join(",")})&select=id,firmanavn`, { headers: API_HEADERS })
+              .then(r => r.ok ? r.json() : [])
+              .then((rows: any[]) => rows.forEach(r => { names[r.id] = r.firmanavn; }))
+          );
+        }
+        if (leadIds.length) {
+          fetches.push(
+            fetch(`${API_URL}/leads?id=in.(${leadIds.join(",")})&select=id,firmanavn`, { headers: API_HEADERS })
+              .then(r => r.ok ? r.json() : [])
+              .then((rows: any[]) => rows.forEach(r => { names[r.id] = r.firmanavn; }))
+          );
+        }
+        if (salgsIds.length) {
+          fetches.push(
+            fetch(`${API_URL}/salgsmuligheter?id=in.(${salgsIds.join(",")})&select=id,navn`, { headers: API_HEADERS })
+              .then(r => r.ok ? r.json() : [])
+              .then((rows: any[]) => rows.forEach(r => { names[r.id] = r.navn; }))
+          );
+        }
+        if (partnerIds.length) {
+          fetches.push(
+            fetch(`${API_URL}/partnere?id=in.(${partnerIds.join(",")})&select=id,partnernavn`, { headers: API_HEADERS })
+              .then(r => r.ok ? r.json() : [])
+              .then((rows: any[]) => rows.forEach(r => { names[r.id] = r.partnernavn; }))
+          );
+        }
+        if (kontaktIds.length) {
+          fetches.push(
+            fetch(`${API_URL}/kontakter?id=in.(${kontaktIds.join(",")})&select=id,navn`, { headers: API_HEADERS })
+              .then(r => r.ok ? r.json() : [])
+              .then((rows: any[]) => rows.forEach(r => { names[r.id] = r.navn; }))
+          );
+        }
+
+        Promise.all(fetches).then(() => setEntityNames(names));
+      })
       .catch(() => {});
   }, []);
+
+  const getEntityLabel = (item: UpcomingItem): string | null => {
+    if (item.selskap_id && entityNames[item.selskap_id]) return entityNames[item.selskap_id];
+    if (item.lead_id && entityNames[item.lead_id]) return entityNames[item.lead_id];
+    if (item.salgsmulighet_id && entityNames[item.salgsmulighet_id]) return entityNames[item.salgsmulighet_id];
+    if (item.partner_id && entityNames[item.partner_id]) return entityNames[item.partner_id];
+    if (item.kontakt_id && entityNames[item.kontakt_id]) return entityNames[item.kontakt_id];
+    return null;
+  };
 
   if (items.length === 0) return null;
 
@@ -50,6 +114,7 @@ export default function UpcomingMeetings() {
           const Icon = typeIcons[item.type] || CalendarDays;
           const colorClass = typeColors[item.type] || "text-muted-foreground bg-muted";
           const date = new Date(item.start_tid || item.dato);
+          const entity = getEntityLabel(item);
 
           return (
             <div key={item.id} className="flex items-start gap-3 p-2.5 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors">
@@ -61,6 +126,12 @@ export default function UpcomingMeetings() {
                   {item.tittel || item.beskrivelse || item.type}
                 </p>
                 <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                  {entity && (
+                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Building2 className="w-3 h-3" />
+                      {entity}
+                    </span>
+                  )}
                   <span className="text-xs text-muted-foreground flex items-center gap-1">
                     <CalendarDays className="w-3 h-3" />
                     {format(date, "EEE d. MMM", { locale: nb })}
