@@ -316,9 +316,7 @@ export default function Kontaktstrom() {
     <PageShell
       title="Søk"
       subtitle={`${persons.length} personer`}
-    >
-      {/* Sticky filter bar - offset below PageShell header */}
-      <div className="sticky top-[61px] sm:top-[69px] z-10 bg-background pt-4 pb-4 -mt-4"  >
+      actions={
         <div className="flex flex-wrap items-center gap-3">
           <Button
             variant="outline"
@@ -330,12 +328,12 @@ export default function Kontaktstrom() {
             <RefreshCw className={`w-4 h-4 ${syncing ? "animate-spin" : ""}`} />
             {syncing ? "Synkroniserer..." : "Synk Gmail"}
           </Button>
-          <div className="relative flex-1 min-w-[200px] max-w-sm">
+          <div className="relative min-w-[200px] max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input placeholder="Søk navn, e-post, selskap..." className="pl-9" value={search} onChange={e => setSearch(e.target.value)} />
           </div>
           <Select value={filterType} onValueChange={setFilterType}>
-            <SelectTrigger className="w-[160px]">
+            <SelectTrigger className="w-[140px]">
               <SelectValue placeholder="Type" />
             </SelectTrigger>
             <SelectContent>
@@ -348,7 +346,7 @@ export default function Kontaktstrom() {
             </SelectContent>
           </Select>
           <Select value={filterAnsvarlig} onValueChange={setFilterAnsvarlig}>
-            <SelectTrigger className="w-[160px]">
+            <SelectTrigger className="w-[140px]">
               <SelectValue placeholder="Ansvarlig" />
             </SelectTrigger>
             <SelectContent>
@@ -359,8 +357,8 @@ export default function Kontaktstrom() {
             </SelectContent>
           </Select>
         </div>
-      </div>
-
+      }
+    >
       {/* Table */}
       <div className="bg-card border rounded-xl overflow-hidden">
         <table className="w-full text-sm">
