@@ -290,7 +290,10 @@ export default function Kontaktstrom() {
 
       const person = map.get(email);
       if (person) {
-        // Only update if this is more recent
+        // Collect aktivitet text for search
+        const txt = (akt.tittel || akt.beskrivelse || "").trim();
+        if (txt) person.aktivitetTekster.push(txt);
+        // Only update sist kontaktet if this is more recent
         if (!person.sistKontaktetDato || new Date(akt.dato) > new Date(person.sistKontaktetDato)) {
           person.sistKontaktetDato = akt.dato;
           person.sistKontaktetType = akt.type;
