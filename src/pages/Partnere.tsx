@@ -95,6 +95,13 @@ export default function Partnere() {
                 </select>
               </div>
               <Input placeholder="Ansvarlig" value={form.ansvarlig} onChange={e => setForm(f => ({ ...f, ansvarlig: e.target.value }))} />
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">Koble til selskap</label>
+                <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background" value={form.selskap_id || ""} onChange={e => setForm(f => ({ ...f, selskap_id: e.target.value }))}>
+                  <option value="">Ingen selskap</option>
+                  {selskaper.map(s => <option key={s.id} value={s.id}>{s.firmanavn}</option>)}
+                </select>
+              </div>
               <Textarea placeholder="Notater" value={form.notater} onChange={e => setForm(f => ({ ...f, notater: e.target.value }))} />
               <Button onClick={addPartner} className="w-full" disabled={!form.partnernavn}>Opprett partner</Button>
             </div>
