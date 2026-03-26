@@ -374,25 +374,30 @@ export default function Contacts() {
         </DialogContent>
       </Dialog>
 
-      <Sheet open={!!currentKontakt} onOpenChange={open => !open && setSelected(null)}>
-        <SheetContent className="w-full sm:w-[400px] sm:max-w-[500px] overflow-y-auto">
-          <SheetHeader>
-            <SheetTitle className="sr-only">{currentKontakt?.navn || "Kontakt"}</SheetTitle>
-          </SheetHeader>
-          <div className="space-y-1 mt-2">
-            <span className="text-muted-foreground text-xs">Navn</span>
-            <Input
-              value={currentKontakt?.navn || ""}
-              onChange={e => {
-                if (currentKontakt) {
+      <DetailPanelShell
+        open={!!currentKontakt}
+        onClose={() => setSelected(null)}
+        title={currentKontakt?.navn || ""}
+        subtitle={currentKontakt?.selskap_id ? getSelskapNavn(currentKontakt.selskap_id) : undefined}
+        badges={currentKontakt?.rolle ? (
+          <Badge variant="secondary" className="text-xs">{currentKontakt.rolle}</Badge>
+        ) : undefined}
+      >
+        {currentKontakt && (
+          <>
+            <DetailSection title="Navn">
+              <Input
+                value={currentKontakt.navn}
+                onChange={e => {
                   updateKontakter(prev => prev.map(k => k.id === currentKontakt.id ? { ...k, navn: e.target.value } : k));
-                }
-              }}
-              className="text-lg font-semibold h-auto"
-              placeholder="Navn"
-            />
-          </div>
-          {currentKontakt && (
+                }}
+                className="text-base font-medium h-auto"
+                placeholder="Navn"
+              />
+            </DetailSection>
+
+            <DetailDivider />
+
             <ContactDetailPanel
               kontakt={currentKontakt}
               selskaper={selskaper}
@@ -403,9 +408,9 @@ export default function Contacts() {
               onNavigate={navigate}
               onDelete={() => handleDeleteClick(currentKontakt)}
             />
-          )}
-        </SheetContent>
-      </Sheet>
+          </>
+        )}
+      </DetailPanelShell>
     </PageShell>
   );
 }
