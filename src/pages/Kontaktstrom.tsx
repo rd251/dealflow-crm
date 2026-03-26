@@ -569,14 +569,14 @@ export default function Kontaktstrom() {
                 {(selected.totalSent > 0 || selected.totalReceived > 0 || selected.sistKontaktetDato) && (
                   <div className="space-y-4">
                     {(selected.totalSent > 0 || selected.totalReceived > 0) && (
-                      <SharedSharedDetailField
+                      <SharedDetailField
                         label="Totalt interaksjoner"
                         value={`${selected.totalSent + selected.totalReceived}`}
                       />
                     )}
 
                     {selected.sistKontaktetDato && (
-                      <SharedSharedDetailField
+                      <SharedDetailField
                         label="Siste interaksjon"
                         value={`${format(new Date(selected.sistKontaktetDato), "d. MMM yyyy, HH:mm", { locale: nb })}`}
                       />
