@@ -126,6 +126,69 @@ export type Database = {
           },
         ]
       }
+      email_contacts: {
+        Row: {
+          all_emails: string[]
+          created_at: string
+          display_name: string
+          domain: string
+          first_seen_at: string
+          id: string
+          kontakt_id: string | null
+          last_activity_type: string | null
+          last_contacted_at: string | null
+          lead_id: string | null
+          partner_id: string | null
+          primary_email: string
+          salgsmulighet_id: string | null
+          selskap_id: string | null
+          total_emails_received: number
+          total_emails_sent: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          all_emails?: string[]
+          created_at?: string
+          display_name?: string
+          domain?: string
+          first_seen_at?: string
+          id?: string
+          kontakt_id?: string | null
+          last_activity_type?: string | null
+          last_contacted_at?: string | null
+          lead_id?: string | null
+          partner_id?: string | null
+          primary_email: string
+          salgsmulighet_id?: string | null
+          selskap_id?: string | null
+          total_emails_received?: number
+          total_emails_sent?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          all_emails?: string[]
+          created_at?: string
+          display_name?: string
+          domain?: string
+          first_seen_at?: string
+          id?: string
+          kontakt_id?: string | null
+          last_activity_type?: string | null
+          last_contacted_at?: string | null
+          lead_id?: string | null
+          partner_id?: string | null
+          primary_email?: string
+          salgsmulighet_id?: string | null
+          selskap_id?: string | null
+          total_emails_received?: number
+          total_emails_sent?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       google_calendar_connections: {
         Row: {
           access_token: string
