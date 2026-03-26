@@ -273,26 +273,38 @@ export default function Contacts() {
           return { success, errors };
         }}
       />
-      <div className="mb-4 relative max-w-sm">
+      <div className={`mb-4 relative ${isMobile ? "w-full" : "max-w-sm"}`}>
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input placeholder="Søk kontakter..." className="pl-9" value={search} onChange={e => setSearch(e.target.value)} />
       </div>
 
       {/* Mobile: card layout */}
       {isMobile ? (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {filtered.map(k => (
-            <div key={k.id} className="bg-card border rounded-xl p-4 space-y-2">
-              <div className="flex items-center justify-between">
-                <p className="font-semibold text-sm cursor-pointer" onClick={() => setSelected(k)}>{k.navn}</p>
+            <div
+              key={k.id}
+              className="bg-card border rounded-xl p-3 active:bg-muted/40 transition-colors"
+              onClick={() => setSelected(k)}
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold text-sm truncate">{k.navn}</p>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <span
+                      className="text-xs text-primary truncate"
+                      onClick={e => { e.stopPropagation(); if (k.selskap_id) navigate(`/selskaper/${k.selskap_id}`); }}
+                    >
+                      {getSelskapNavn(k.selskap_id)}
+                    </span>
+                    {k.rolle && <span className="text-xs text-muted-foreground">· {k.rolle}</span>}
+                  </div>
+                </div>
                 <ContactMenu kontakt={k} onEdit={() => setSelected(k)} />
               </div>
-              <p className="text-xs text-muted-foreground cursor-pointer" onClick={() => navigate(`/selskaper/${k.selskap_id}`)}>
-                {getSelskapNavn(k.selskap_id)}
-              </p>
-              <div className="flex items-center gap-3 text-xs text-muted-foreground">
+              <div className="flex items-center gap-3 text-xs text-muted-foreground mt-2">
                 {k.e_post && <span className="flex items-center gap-1 truncate"><Mail className="w-3 h-3 shrink-0" />{k.e_post}</span>}
-                {k.telefon && <span className="flex items-center gap-1"><Phone className="w-3 h-3 shrink-0" />{k.telefon}</span>}
+                {k.telefon && <span className="flex items-center gap-1 whitespace-nowrap"><Phone className="w-3 h-3 shrink-0" />{k.telefon}</span>}
               </div>
             </div>
           ))}
