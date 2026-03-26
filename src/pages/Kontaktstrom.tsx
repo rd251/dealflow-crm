@@ -14,6 +14,7 @@ import { format, formatDistanceToNow, isAfter } from "date-fns";
 import { nb } from "date-fns/locale";
 import { toast } from "sonner";
 import ActivityLog from "@/components/ActivityLog";
+import CompanyLinker from "@/components/CompanyLinker";
 
 interface KontaktStromPerson {
   email: string;
@@ -533,6 +534,18 @@ export default function Kontaktstrom() {
                 )}
               </div>
 
+              {/* Company linker */}
+              <CompanyLinker
+                email={selected.email}
+                kontaktId={selected.kontaktId}
+                currentSelskapId={selected.selskapId}
+                personNavn={selected.navn}
+                onLinked={() => {
+                  fetchEmailContacts();
+                  refresh();
+                  setSelected(null);
+                }}
+              />
               <div className="flex flex-wrap gap-2">
                 {!selected.inCrm || (!selected.leadId && !selected.salgsmulighetId && selected.type === "Ukjent") ? (
                   <Button size="sm" onClick={() => handleCreateLead(selected)} disabled={creatingLead}>
