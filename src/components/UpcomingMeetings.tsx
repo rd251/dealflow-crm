@@ -20,6 +20,11 @@ interface UpcomingItem {
   dato: string;
   start_tid: string | null;
   slutt_tid: string | null;
+  selskap_id: string | null;
+  lead_id: string | null;
+  salgsmulighet_id: string | null;
+  partner_id: string | null;
+  kontakt_id: string | null;
 }
 
 export default function UpcomingMeetings() {
