@@ -360,7 +360,7 @@ export default function Kontaktstrom() {
       }
     >
       {/* Table */}
-      <div className="bg-card border rounded-xl overflow-x-auto">
+      <div className="bg-card border rounded-xl overflow-auto max-h-[calc(100vh-180px)]">
         <table className="w-full text-sm">
           <thead className="sticky top-0 z-[5]">
             <tr className="bg-muted border-b">
