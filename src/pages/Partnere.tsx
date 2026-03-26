@@ -259,8 +259,7 @@ export default function Partnere() {
             ),
           };
         })() : undefined}
-      >
-      </DetailPanelShell>
+      />
     </PageShell>
   );
 }
