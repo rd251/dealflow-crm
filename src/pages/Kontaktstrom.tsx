@@ -204,6 +204,7 @@ export default function Kontaktstrom() {
         ansvarlig: l.ansvarlig,
         sistKontaktetDato: null,
         sistKontaktetType: "",
+        aktivitetTekster: [],
         nesteSteg: l.neste_steg,
         kontaktId: null,
         leadId: l.id,
