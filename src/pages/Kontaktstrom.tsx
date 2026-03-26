@@ -255,6 +255,7 @@ export default function Kontaktstrom() {
         sistKontaktetDato: null,
         sistKontaktetType: "",
         nesteSteg: "",
+        aktivitetTekster: [],
         kontaktId: null,
         leadId: null,
         salgsmulighetId: null,
