@@ -29,6 +29,7 @@ interface UpcomingItem {
 }
 
 export default function UpcomingMeetings() {
+  const navigate = useNavigate();
   const [items, setItems] = useState<UpcomingItem[]>([]);
   const [entityNames, setEntityNames] = useState<Record<string, string>>({});
 
