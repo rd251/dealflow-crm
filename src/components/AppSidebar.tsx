@@ -9,13 +9,13 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
+  { to: "/kontaktstrom", icon: Search, label: "Søk" },
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
   { to: "/leads", icon: UserPlus, label: "Leads" },
   { to: "/salgsmuligheter", icon: Handshake, label: "Salgsmuligheter" },
   { to: "/prosjekter", icon: FolderKanban, label: "Prosjekter" },
   { to: "/selskaper", icon: Building2, label: "Kundeforhold" },
   { to: "/kontakter", icon: Users, label: "Kontakter" },
-  { to: "/kontaktstrom", icon: Radio, label: "Kontaktstrøm" },
   { to: "/oppgaver", icon: ListTodo, label: "Oppgaver" },
   { to: "/kalender", icon: CalendarDays, label: "Kalender" },
   { to: "/partnere", icon: Users2, label: "Partnere" },
