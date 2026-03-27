@@ -262,16 +262,16 @@ export default function Leads() {
                 <DetailSection title="Kontaktinformasjon">
                   <div className="grid grid-cols-2 gap-3">
                     <DetailField label="Firmanavn">
-                      <Input value={currentLead.firmanavn} onChange={e => updateField("firmanavn", e.target.value)} className="h-8 text-sm" />
+                      <Input value={currentLead.firmanavn} onChange={e => updateField("firmanavn", e.target.value)} className="h-8 text-sm" readOnly={!canEdit} />
                     </DetailField>
                     <DetailField label="Kontaktperson">
-                      <Input value={currentLead.kontaktperson} onChange={e => updateField("kontaktperson", e.target.value)} className="h-8 text-sm" />
+                      <Input value={currentLead.kontaktperson} onChange={e => updateField("kontaktperson", e.target.value)} className="h-8 text-sm" readOnly={!canEdit} />
                     </DetailField>
                     <DetailField label="E-post">
-                      <Input value={currentLead.e_post} onChange={e => updateField("e_post", e.target.value)} className="h-8 text-sm" />
+                      <Input value={currentLead.e_post} onChange={e => updateField("e_post", e.target.value)} className="h-8 text-sm" readOnly={!canEdit} />
                     </DetailField>
                     <DetailField label="Telefon">
-                      <Input value={currentLead.telefon} onChange={e => updateField("telefon", e.target.value)} className="h-8 text-sm" />
+                      <Input value={currentLead.telefon} onChange={e => updateField("telefon", e.target.value)} className="h-8 text-sm" readOnly={!canEdit} />
                     </DetailField>
                   </div>
                 </DetailSection>
@@ -282,7 +282,7 @@ export default function Leads() {
                   <div className="grid grid-cols-2 gap-3">
                     <DetailField label="Kilde">
                       <select className="w-full border rounded-lg px-3 py-1.5 text-sm bg-background h-8" value={currentLead.kilde}
-                        onChange={e => updateField("kilde", e.target.value)}>
+                        onChange={e => updateField("kilde", e.target.value)} disabled={!canEdit}>
                         {kildeOptions.map(k => <option key={k} value={k}>{k}</option>)}
                       </select>
                     </DetailField>
@@ -290,20 +290,20 @@ export default function Leads() {
                       <select className={`w-full border rounded-lg px-3 py-1.5 text-sm bg-background h-8 ${statusColors[currentLead.status]}`}
                         value={currentLead.status}
                         onChange={e => updateField("status", e.target.value)}
-                        disabled={currentLead.status === "Konvertert til salg" || currentLead.status === "Konvertert til partner"}>
+                        disabled={!canEdit || currentLead.status === "Konvertert til salg" || currentLead.status === "Konvertert til partner"}>
                         {statusOptions.map(s => <option key={s} value={s}>{s}</option>)}
                       </select>
                     </DetailField>
                     <DetailField label="Ansvarlig">
-                      <Input value={currentLead.ansvarlig} onChange={e => updateField("ansvarlig", e.target.value)} className="h-8 text-sm" />
+                      <Input value={currentLead.ansvarlig} onChange={e => updateField("ansvarlig", e.target.value)} className="h-8 text-sm" readOnly={!canEdit} />
                     </DetailField>
                     <DetailField label="Opprettet" value={currentLead.opprettet_dato} />
                   </div>
                   <DetailField label="Neste steg">
-                    <Input value={currentLead.neste_steg} onChange={e => updateField("neste_steg", e.target.value)} className="h-8 text-sm" />
+                    <Input value={currentLead.neste_steg} onChange={e => updateField("neste_steg", e.target.value)} className="h-8 text-sm" readOnly={!canEdit} />
                   </DetailField>
                   <DetailField label="Use case">
-                    <Input value={currentLead.use_case} onChange={e => updateField("use_case", e.target.value)} className="h-8 text-sm" />
+                    <Input value={currentLead.use_case} onChange={e => updateField("use_case", e.target.value)} className="h-8 text-sm" readOnly={!canEdit} />
                   </DetailField>
                 </DetailSection>
 
@@ -313,14 +313,17 @@ export default function Leads() {
                   </div>
                 )}
 
-                <DetailDivider />
-
-                <Button size="sm" variant="destructive" className="w-full" onClick={() => {
-                  updateLeads(prev => prev.filter(l => l.id !== currentLead.id));
-                  setSelectedLead(null);
-                }}>
-                  <Trash2 className="w-4 h-4 mr-1" /> Slett lead
-                </Button>
+                {canEdit && (
+                  <>
+                    <DetailDivider />
+                    <Button size="sm" variant="destructive" className="w-full" onClick={() => {
+                      updateLeads(prev => prev.filter(l => l.id !== currentLead.id));
+                      setSelectedLead(null);
+                    }}>
+                      <Trash2 className="w-4 h-4 mr-1" /> Slett lead
+                    </Button>
+                  </>
+                )}
               </>
             ),
             interaksjoner: (
