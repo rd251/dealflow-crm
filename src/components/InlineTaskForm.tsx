@@ -4,7 +4,11 @@ import { Input } from "@/components/ui/input";
 import { Plus, ListTodo, Clock, CheckCircle2 } from "lucide-react";
 import { Oppgave, Prioritet, OppgaveStatus } from "@/data/crm-data";
 import { useCrmStore } from "@/hooks/use-crm-store";
+import { useAuth } from "@/hooks/use-auth";
+import { useProfiles } from "@/hooks/use-profiles";
+import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 
 const prioritetColors: Record<Prioritet, string> = {
   "Lav": "bg-muted text-muted-foreground",
