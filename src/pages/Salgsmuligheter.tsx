@@ -92,7 +92,7 @@ export default function Salgsmuligheter() {
     <PageShell
       title="Salgsmuligheter"
       subtitle={`${openDeals.length} åpne muligheter`}
-      actions={
+      actions={canEdit ? (
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button size="sm"><Plus className="w-4 h-4 mr-1" />{!isMobile && "Ny mulighet"}</Button>
@@ -129,7 +129,7 @@ export default function Salgsmuligheter() {
             </div>
           </DialogContent>
         </Dialog>
-      }
+      ) : undefined}
     >
       {/* Loss reason dialog */}
       <Dialog open={!!lossDialog} onOpenChange={open => !open && setLossDialog(null)}>
