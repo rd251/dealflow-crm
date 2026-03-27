@@ -25,7 +25,7 @@ const statusOptions: OppgaveStatus[] = ["Åpen", "Pågår", "Ferdig"];
 
 export default function Tasks() {
   const isMobile = useIsMobile();
-  const { user } = useAuth();
+  const { user, canEdit } = useAuth();
   const { profiles } = useProfiles();
   const { oppgaver, selskaper, updateOppgaver, generateId } = useCrmStore();
   const [dialogOpen, setDialogOpen] = useState(false);
