@@ -28,6 +28,7 @@ const statusColors: Record<Partnerstatus, string> = {
 export default function Partnere() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { canEdit } = useAuth();
   const { partnere, updatePartnere, selskaper, salgsmuligheter, generateId } = useCrmStore();
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);

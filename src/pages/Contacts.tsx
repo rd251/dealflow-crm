@@ -115,6 +115,7 @@ function ContactDetailPanel({ kontakt, selskaper, salgsmuligheter, onUpdate, onN
 export default function Contacts() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { canEdit } = useAuth();
   const { kontakter, selskaper, salgsmuligheter, updateKontakter, updateSalgsmuligheter, generateId, refresh } = useCrmStore();
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Kontakt | null>(null);
