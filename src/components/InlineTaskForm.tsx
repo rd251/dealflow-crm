@@ -4,7 +4,11 @@ import { Input } from "@/components/ui/input";
 import { Plus, ListTodo, Clock, CheckCircle2 } from "lucide-react";
 import { Oppgave, Prioritet, OppgaveStatus } from "@/data/crm-data";
 import { useCrmStore } from "@/hooks/use-crm-store";
+import { useAuth } from "@/hooks/use-auth";
+import { useProfiles } from "@/hooks/use-profiles";
+import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 
 const prioritetColors: Record<Prioritet, string> = {
   "Lav": "bg-muted text-muted-foreground",
@@ -20,10 +24,13 @@ interface InlineTaskFormProps {
 
 export default function InlineTaskForm({ lead_id = "", selskap_id = "", salgsmulighet_id = "" }: InlineTaskFormProps) {
   const { oppgaver, updateOppgaver, generateId } = useCrmStore();
+  const { user } = useAuth();
+  const { profiles } = useProfiles();
   const [showForm, setShowForm] = useState(false);
   const [oppgave, setOppgave] = useState("");
   const [frist, setFrist] = useState("");
   const [prioritet, setPrioritet] = useState<Prioritet>("Medium");
+  const [ansvarlig, setAnsvarlig] = useState("");
 
   const today = new Date().toISOString().split("T")[0];
 
@@ -33,17 +40,35 @@ export default function InlineTaskForm({ lead_id = "", selskap_id = "", salgsmul
     (!lead_id && !salgsmulighet_id && selskap_id && o.selskap_id === selskap_id)
   );
 
-  const addTask = () => {
+  const addTask = async () => {
     if (!oppgave.trim()) return;
     const id = generateId("O", oppgaver);
     const ny: Oppgave = {
       id, oppgave, lead_id, selskap_id, salgsmulighet_id,
-      ansvarlig: "", frist, prioritet, status: "Åpen", paaminnelse: true, notater: "",
+      ansvarlig, frist, prioritet, status: "Åpen", paaminnelse: true, notater: "",
     };
     updateOppgaver(prev => [...prev, ny]);
+
+    // Send notification if delegated
+    if (ansvarlig && user && ansvarlig !== user.id) {
+      const senderProfile = profiles.find(p => p.user_id === user.id);
+      const senderName = senderProfile?.display_name || user.email || "Noen";
+      await supabase.from("varsler").insert({
+        user_id: ansvarlig,
+        type: "oppgave_delegert",
+        tittel: "Ny oppgave tildelt deg",
+        beskrivelse: `${senderName} har tildelt deg oppgaven: "${oppgave}"`,
+        fra_user_id: user.id,
+        lenke: "/oppgaver",
+      });
+      const assignee = profiles.find(p => p.user_id === ansvarlig);
+      toast.success(`Oppgave delegert til ${assignee?.display_name || "bruker"}`);
+    }
+
     setOppgave("");
     setFrist("");
     setPrioritet("Medium");
+    setAnsvarlig("");
     setShowForm(false);
   };
 
@@ -73,6 +98,16 @@ export default function InlineTaskForm({ lead_id = "", selskap_id = "", salgsmul
               <option value="Lav">Lav</option>
               <option value="Medium">Medium</option>
               <option value="Høy">Høy</option>
+            </select>
+          </div>
+          <div className="flex gap-2">
+            <select className="border rounded-md px-2 py-1 text-xs bg-background h-8 flex-1" value={ansvarlig} onChange={e => setAnsvarlig(e.target.value)}>
+              <option value="">Velg ansvarlig</option>
+              {profiles.map(p => (
+                <option key={p.user_id} value={p.user_id}>
+                  {p.display_name}{p.user_id === user?.id ? " (deg)" : ""}
+                </option>
+              ))}
             </select>
             <Button size="sm" className="h-8 text-xs" onClick={addTask} disabled={!oppgave.trim()}>Legg til</Button>
           </div>
