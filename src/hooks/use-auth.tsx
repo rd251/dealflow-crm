@@ -85,7 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (!session?.user) {
         console.info(`[Auth] Session ikke funnet (${source})`);
-        setState({ user: null, session: null, role: null, loading: false, isAdmin: false });
+        setState({ user: null, session: null, role: null, loading: false, isAdmin: false, isViewer: false, canEdit: true });
         return;
       }
 
