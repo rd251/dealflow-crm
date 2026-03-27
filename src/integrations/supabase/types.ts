@@ -904,7 +904,7 @@ export type Database = {
         | "SMS"
         | "Møte"
         | "Notat"
-      app_role: "admin" | "user"
+      app_role: "admin" | "user" | "viewer"
       integrasjon:
         | "Ingen"
         | "GastroPlanner"
@@ -1117,7 +1117,7 @@ export const Constants = {
         "Møte",
         "Notat",
       ],
-      app_role: ["admin", "user"],
+      app_role: ["admin", "user", "viewer"],
       integrasjon: [
         "Ingen",
         "GastroPlanner",
