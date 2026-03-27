@@ -406,7 +406,7 @@ export default function Salgsmuligheter() {
             ),
             notater: (
               <DetailField label="Notater">
-                <Textarea value={currentSm.notater} onChange={e => updateField("notater", e.target.value)} rows={6} />
+                <Textarea value={currentSm.notater} onChange={e => updateField("notater", e.target.value)} rows={6} readOnly={!canEdit} />
               </DetailField>
             ),
           };
