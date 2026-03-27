@@ -119,7 +119,7 @@ export default function Companies() {
     <PageShell
       title="Kundeforhold"
       subtitle={`${filtered.length} selskaper · ${selskaper.filter(s => s.kundestatus === "Live").length} live`}
-      actions={
+      actions={canEdit ? (
         <div className="flex gap-2">
         <Button size="sm" variant="outline" onClick={() => setImportOpen(true)}><Upload className="w-4 h-4 mr-1" />{!isMobile && "Importer"}</Button>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -137,7 +137,7 @@ export default function Companies() {
           </DialogContent>
         </Dialog>
         </div>
-      }
+      ) : undefined}
     >
       <DataImportDialog
         open={importOpen}

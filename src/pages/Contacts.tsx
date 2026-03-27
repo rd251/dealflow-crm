@@ -221,7 +221,7 @@ export default function Contacts() {
     <PageShell
       title="Kontakter"
       subtitle={`${kontakter.length} kontakter`}
-      actions={
+      actions={canEdit ? (
         <div className="flex gap-2">
         <Button size="sm" variant="outline" onClick={() => setImportOpen(true)}><Upload className="w-4 h-4 mr-1" />{!isMobile && "Importer"}</Button>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -242,12 +242,12 @@ export default function Contacts() {
                 <Input placeholder="Telefon" value={form.telefon} onChange={e => setForm(f => ({ ...f, telefon: e.target.value }))} />
               </div>
               <Input placeholder="LinkedIn URL" value={form.linkedin} onChange={e => setForm(f => ({ ...f, linkedin: e.target.value }))} />
-              <Button onClick={addKontakt} className="w-full" disabled={!form.navn}>Opprett kontakt</Button>
+              <Button onClick={addKontakt} className="w-full" disabled={!form.namn}>Opprett kontakt</Button>
             </div>
           </DialogContent>
         </Dialog>
         </div>
-      }
+      ) : undefined}
     >
       <DataImportDialog
         open={importOpen}

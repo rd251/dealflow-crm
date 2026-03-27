@@ -248,7 +248,7 @@ export default function Salgsmuligheter() {
             {currentSm.sannsynlighet != null && <Badge variant="outline" className="text-xs">{currentSm.sannsynlighet}%</Badge>}
           </>
         ) : undefined}
-        actions={currentSm && openStatuses.includes(currentSm.status as any) ? (
+        actions={canEdit && currentSm && openStatuses.includes(currentSm.status as any) ? (
           <>
             <Button size="sm" className="bg-success hover:bg-success/90 text-success-foreground" onClick={() => { vinnSalgsmulighet(currentSm.id); setSelectedSm(null); }}>
               <Trophy className="w-3.5 h-3.5 mr-1.5" />Vunnet

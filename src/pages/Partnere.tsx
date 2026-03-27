@@ -75,7 +75,7 @@ export default function Partnere() {
     <PageShell
       title="Partnere"
       subtitle={`${partnere.filter(p => p.partnerstatus === "Aktiv").length} aktive partnere`}
-      actions={
+      actions={canEdit ? (
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button size="sm"><Plus className="w-4 h-4 mr-1" />{!isMobile && "Ny partner"}</Button>
@@ -110,7 +110,7 @@ export default function Partnere() {
             </div>
           </DialogContent>
         </Dialog>
-      }
+      ) : undefined}
     >
       <div className="mb-4 relative max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
