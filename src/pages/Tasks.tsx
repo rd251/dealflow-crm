@@ -123,7 +123,7 @@ export default function Tasks() {
     <PageShell
       title="Oppgaver"
       subtitle={`${oppgaver.filter(o => o.status !== "Ferdig").length} åpne · ${forfalte.length} forfalte`}
-      actions={
+      actions={canEdit ? (
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button size="sm"><Plus className="w-4 h-4 mr-1" />{!isMobile && "Ny oppgave"}</Button>
@@ -155,7 +155,7 @@ export default function Tasks() {
             </div>
           </DialogContent>
         </Dialog>
-      }
+      ) : undefined}
     >
       <div className="flex gap-2 mb-4 flex-wrap">
         {([["alle", "Alle"], ["forfalte", `Forfalte (${forfalte.length})`], ["idag", `I dag (${idagOppgaver.length})`], ["uke", `Uke (${ukeOppgaver.length})`]] as const).map(([key, label]) => (
