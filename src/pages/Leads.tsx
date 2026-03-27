@@ -239,7 +239,7 @@ export default function Leads() {
             <Badge variant="secondary" className="text-xs">{currentLead.kilde}</Badge>
           </>
         ) : undefined}
-        actions={currentLead && currentLead.status !== "Konvertert til salg" && currentLead.status !== "Konvertert til partner" && currentLead.status !== "Ikke aktuelt" ? (
+        actions={canEdit && currentLead && currentLead.status !== "Konvertert til salg" && currentLead.status !== "Konvertert til partner" && currentLead.status !== "Ikke aktuelt" ? (
           <>
             <Button size="sm" onClick={() => { konverterLead(currentLead.id); setSelectedLead(null); }}>
               <ArrowRightCircle className="w-4 h-4 mr-1.5" />Til salg
