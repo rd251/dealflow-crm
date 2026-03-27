@@ -56,7 +56,10 @@ function SidebarNav({ onNavigate, isAdmin }: { onNavigate?: () => void; isAdmin:
       </nav>
       {user && (
         <div className="px-3 pb-2">
-          <div className="px-3 py-2 text-xs text-sidebar-foreground/60 truncate">{user.email}</div>
+          <div className="px-3 py-2 flex items-center justify-between">
+            <span className="text-xs text-sidebar-foreground/60 truncate">{user.email}</span>
+            <NotificationBell />
+          </div>
           <button
             onClick={() => { signOut(); onNavigate?.(); }}
             className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors w-full"
