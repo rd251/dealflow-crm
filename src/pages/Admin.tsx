@@ -30,7 +30,7 @@ export default function Admin() {
     const { data: profiles } = await supabase.from("profiles").select("user_id, display_name, email");
     const { data: roles } = await supabase.from("user_roles").select("user_id, role");
     if (profiles && roles) {
-      const roleMap = new Map(roles.map(r => [r.user_id, r.role as "admin" | "user"]));
+      const roleMap = new Map(roles.map(r => [r.user_id, r.role as "admin" | "user" | "viewer"]));
       setMembers(profiles.map(p => ({
         user_id: p.user_id,
         display_name: p.display_name,
