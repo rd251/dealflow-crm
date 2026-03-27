@@ -497,7 +497,7 @@ export default function Companies() {
             ),
             notater: (
               <DetailField label="Notater">
-                <Textarea value={currentSelskap.notater} onChange={e => updateField("notater", e.target.value)} rows={6} />
+                <Textarea value={currentSelskap.notater} onChange={e => updateField("notater", e.target.value)} rows={6} readOnly={!canEdit} />
               </DetailField>
             ),
           };
