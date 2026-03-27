@@ -360,8 +360,7 @@ export default function Dashboard() {
                           className="text-xs h-7 shrink-0 hidden sm:flex"
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (m.selskap_id) navigate(`/selskaper/${m.selskap_id}`);
-                            else navigate("/aktiviteter");
+                            setPrepMeeting(m);
                           }}
                         >
                           Prep møte
