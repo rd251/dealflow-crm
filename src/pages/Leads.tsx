@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import PageShell from "@/components/PageShell";
 import { useCrmStore } from "@/hooks/use-crm-store";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -32,18 +33,37 @@ const statusColors: Record<LeadStatus, string> = {
 export default function Leads() {
   const isMobile = useIsMobile();
   const { canEdit } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { leads, updateLeads, konverterLead, konverterTilPartner, generateId } = useCrmStore();
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [form, setForm] = useState<Partial<Lead>>({ firmanavn: "", kontaktperson: "", e_post: "", telefon: "", kilde: "Nettside", status: "Ny", ansvarlig: "", neste_steg: "", notater: "", rolle_i_firma: "", use_case: "" });
+  const [filterUtenOppfolging, setFilterUtenOppfolging] = useState(false);
 
-  const filtered = leads.filter(l =>
-    l.status !== "Konvertert til salg" && l.status !== "Konvertert til partner" &&
-    (l.firmanavn.toLowerCase().includes(search.toLowerCase()) ||
-    l.kontaktperson.toLowerCase().includes(search.toLowerCase()))
-  );
+  // Pick up filter from query param
+  useEffect(() => {
+    if (searchParams.get("filter") === "uten-oppfolging") {
+      setFilterUtenOppfolging(true);
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams]);
+
+  const now = new Date();
+
+  const filtered = leads.filter(l => {
+    if (l.status === "Konvertert til salg" || l.status === "Konvertert til partner") return false;
+    if (filterUtenOppfolging) {
+      const cutoff = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      if (l.status === "Ikke aktuelt") return false;
+      if (l.sist_aktivitet && new Date(l.sist_aktivitet) >= cutoff) return false;
+    }
+    return (
+      l.firmanavn.toLowerCase().includes(search.toLowerCase()) ||
+      l.kontaktperson.toLowerCase().includes(search.toLowerCase())
+    );
+  });
 
   const addLead = () => {
     const today = new Date().toISOString().split("T")[0];
@@ -141,9 +161,16 @@ export default function Leads() {
           return { success, errors };
         }}
       />
-      <div className="mb-4 relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input placeholder="Søk leads..." className="pl-9" value={search} onChange={e => setSearch(e.target.value)} />
+      <div className="mb-4 flex items-center gap-2">
+        <div className="relative max-w-sm flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input placeholder="Søk leads..." className="pl-9" value={search} onChange={e => setSearch(e.target.value)} />
+        </div>
+        {filterUtenOppfolging && (
+          <Badge variant="secondary" className="gap-1 cursor-pointer hover:bg-destructive/10" onClick={() => setFilterUtenOppfolging(false)}>
+            Uten oppfølging ✕
+          </Badge>
+        )}
       </div>
 
       {/* Mobile: card layout */}
