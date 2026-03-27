@@ -13,6 +13,7 @@ import {
   AlertTriangle, CalendarDays, PhoneOff, Target, Clock, Building2,
   DollarSign, TrendingUp, PieChart, BarChart3, ChevronRight,
 } from "lucide-react";
+import MeetingPrepPanel from "@/components/MeetingPrepPanel";
 
 const API_URL = import.meta.env.VITE_SUPABASE_URL + "/rest/v1";
 const API_HEADERS = {
@@ -30,6 +31,8 @@ interface MeetingItem {
   slutt_tid: string | null;
   selskap_id: string | null;
   salgsmulighet_id: string | null;
+  ekstern_id: string | null;
+  ekstern_provider: string | null;
 }
 
 export default function Dashboard() {
@@ -44,6 +47,7 @@ export default function Dashboard() {
   // ─── MEETINGS STATE ───
   const [meetings, setMeetings] = useState<MeetingItem[]>([]);
   const [entityNames, setEntityNames] = useState<Record<string, string>>({});
+  const [prepMeeting, setPrepMeeting] = useState<MeetingItem | null>(null);
 
   useEffect(() => {
     const todayStart = new Date();
@@ -52,7 +56,7 @@ export default function Dashboard() {
     weekEnd.setDate(weekEnd.getDate() + 7);
 
     fetch(
-      `${API_URL}/aktiviteter?type=eq.Møte&dato=gte.${todayStart.toISOString()}&dato=lt.${weekEnd.toISOString()}&order=dato.asc,start_tid.asc&limit=20&select=id,tittel,beskrivelse,dato,start_tid,slutt_tid,selskap_id,salgsmulighet_id`,
+      `${API_URL}/aktiviteter?type=eq.Møte&dato=gte.${todayStart.toISOString()}&dato=lt.${weekEnd.toISOString()}&order=dato.asc,start_tid.asc&limit=20&select=id,tittel,beskrivelse,dato,start_tid,slutt_tid,selskap_id,salgsmulighet_id,ekstern_id,ekstern_provider`,
       { headers: API_HEADERS }
     )
       .then((r) => (r.ok ? r.json() : []))
@@ -356,8 +360,7 @@ export default function Dashboard() {
                           className="text-xs h-7 shrink-0 hidden sm:flex"
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (m.selskap_id) navigate(`/selskaper/${m.selskap_id}`);
-                            else navigate("/aktiviteter");
+                            setPrepMeeting(m);
                           }}
                         >
                           Prep møte
@@ -409,8 +412,7 @@ export default function Dashboard() {
                           className="text-xs h-7 shrink-0 hidden sm:flex"
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (m.selskap_id) navigate(`/selskaper/${m.selskap_id}`);
-                            else navigate("/aktiviteter");
+                            setPrepMeeting(m);
                           }}
                         >
                           Prep møte
@@ -424,6 +426,11 @@ export default function Dashboard() {
           </div>
         )}
       </div>
+      <MeetingPrepPanel
+        meeting={prepMeeting}
+        open={!!prepMeeting}
+        onOpenChange={(open) => { if (!open) setPrepMeeting(null); }}
+      />
     </PageShell>
   );
 }
