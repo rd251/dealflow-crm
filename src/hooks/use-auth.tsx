@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
 
-type AppRole = "admin" | "user";
+type AppRole = "admin" | "user" | "viewer";
 
 interface AuthState {
   user: User | null;
@@ -10,6 +10,8 @@ interface AuthState {
   role: AppRole | null;
   loading: boolean;
   isAdmin: boolean;
+  isViewer: boolean;
+  canEdit: boolean;
 }
 
 interface AuthContextType extends AuthState {
