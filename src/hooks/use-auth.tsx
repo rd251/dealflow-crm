@@ -55,6 +55,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     role: null,
     loading: true,
     isAdmin: false,
+    isViewer: false,
+    canEdit: true,
   });
 
   const fetchRole = async (userId: string): Promise<AppRole> => {
