@@ -3,6 +3,7 @@ import { format } from "date-fns";
 import PageShell from "@/components/PageShell";
 import { useCrmStore } from "@/hooks/use-crm-store";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -43,6 +44,7 @@ const tilstandColors: Record<Kundetilstand, string> = {
 export default function Companies() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { canEdit } = useAuth();
   const { selskaper, salgsmuligheter, prosjekter, updateSelskaper, kansellerSelskap, slettSelskap, konverterSelskapTilPartner, angreTilSalgsmulighet, generateId } = useCrmStore();
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -117,7 +119,7 @@ export default function Companies() {
     <PageShell
       title="Kundeforhold"
       subtitle={`${filtered.length} selskaper · ${selskaper.filter(s => s.kundestatus === "Live").length} live`}
-      actions={
+      actions={canEdit ? (
         <div className="flex gap-2">
         <Button size="sm" variant="outline" onClick={() => setImportOpen(true)}><Upload className="w-4 h-4 mr-1" />{!isMobile && "Importer"}</Button>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -135,7 +137,7 @@ export default function Companies() {
           </DialogContent>
         </Dialog>
         </div>
-      }
+      ) : undefined}
     >
       <DataImportDialog
         open={importOpen}

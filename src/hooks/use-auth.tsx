@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
 
-type AppRole = "admin" | "user";
+type AppRole = "admin" | "user" | "viewer";
 
 interface AuthState {
   user: User | null;
@@ -10,6 +10,8 @@ interface AuthState {
   role: AppRole | null;
   loading: boolean;
   isAdmin: boolean;
+  isViewer: boolean;
+  canEdit: boolean;
 }
 
 interface AuthContextType extends AuthState {
@@ -53,6 +55,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     role: null,
     loading: true,
     isAdmin: false,
+    isViewer: false,
+    canEdit: true,
   });
 
   const fetchRole = async (userId: string): Promise<AppRole> => {
@@ -81,7 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (!session?.user) {
         console.info(`[Auth] Session ikke funnet (${source})`);
-        setState({ user: null, session: null, role: null, loading: false, isAdmin: false });
+        setState({ user: null, session: null, role: null, loading: false, isAdmin: false, isViewer: false, canEdit: true });
         return;
       }
 
@@ -96,6 +100,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         role,
         loading: false,
         isAdmin: role === "admin",
+        isViewer: role === "viewer",
+        canEdit: role !== "viewer",
       });
     };
 

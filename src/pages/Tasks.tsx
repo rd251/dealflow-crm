@@ -25,7 +25,7 @@ const statusOptions: OppgaveStatus[] = ["Åpen", "Pågår", "Ferdig"];
 
 export default function Tasks() {
   const isMobile = useIsMobile();
-  const { user } = useAuth();
+  const { user, canEdit } = useAuth();
   const { profiles } = useProfiles();
   const { oppgaver, selskaper, updateOppgaver, generateId } = useCrmStore();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -123,7 +123,7 @@ export default function Tasks() {
     <PageShell
       title="Oppgaver"
       subtitle={`${oppgaver.filter(o => o.status !== "Ferdig").length} åpne · ${forfalte.length} forfalte`}
-      actions={
+      actions={canEdit ? (
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button size="sm"><Plus className="w-4 h-4 mr-1" />{!isMobile && "Ny oppgave"}</Button>
@@ -155,7 +155,7 @@ export default function Tasks() {
             </div>
           </DialogContent>
         </Dialog>
-      }
+      ) : undefined}
     >
       <div className="flex gap-2 mb-4 flex-wrap">
         {([["alle", "Alle"], ["forfalte", `Forfalte (${forfalte.length})`], ["idag", `I dag (${idagOppgaver.length})`], ["uke", `Uke (${ukeOppgaver.length})`]] as const).map(([key, label]) => (
@@ -170,7 +170,7 @@ export default function Tasks() {
           const ansvarligNavn = task.ansvarlig ? getProfileName(task.ansvarlig) : null;
           return (
             <div key={task.id} className={`bg-card border rounded-xl p-4 flex items-center gap-3 animate-slide-in transition-opacity ${task.status === "Ferdig" ? "opacity-50" : ""}`}>
-              <Checkbox checked={task.status === "Ferdig"} onCheckedChange={() => changeStatus(task.id, task.status === "Ferdig" ? "Åpen" : "Ferdig")} className="shrink-0" />
+              <Checkbox checked={task.status === "Ferdig"} onCheckedChange={() => canEdit && changeStatus(task.id, task.status === "Ferdig" ? "Åpen" : "Ferdig")} className="shrink-0" disabled={!canEdit} />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <p className={`font-medium text-sm ${task.status === "Ferdig" ? "line-through" : ""}`}>{task.oppgave}</p>
@@ -179,9 +179,13 @@ export default function Tasks() {
                 </div>
                 <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground flex-wrap">
                   <span onClick={e => e.stopPropagation()}>
-                    <select className="text-xs border-0 bg-transparent cursor-pointer" value={task.status} onChange={e => changeStatus(task.id, e.target.value as OppgaveStatus)}>
-                      {statusOptions.map(s => <option key={s}>{s}</option>)}
-                    </select>
+                    {canEdit ? (
+                      <select className="text-xs border-0 bg-transparent cursor-pointer" value={task.status} onChange={e => changeStatus(task.id, e.target.value as OppgaveStatus)}>
+                        {statusOptions.map(s => <option key={s}>{s}</option>)}
+                      </select>
+                    ) : (
+                      <span className="text-xs">{task.status}</span>
+                    )}
                   </span>
                   {task.frist && (
                     <span className={`flex items-center gap-1 ${isOverdue ? "text-destructive font-medium" : ""}`}>
@@ -191,20 +195,24 @@ export default function Tasks() {
                     </span>
                   )}
                   {selskap && <span className="truncate">· {selskap.firmanavn}</span>}
-                  <span className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
-                    <select
-                      className="text-xs border-0 bg-transparent cursor-pointer"
-                      value={task.ansvarlig}
-                      onChange={e => changeAnsvarlig(task.id, e.target.value)}
-                    >
-                      <option value="">Ikke tildelt</option>
-                      {profiles.map(p => (
-                        <option key={p.user_id} value={p.user_id}>
-                          {p.display_name}{p.user_id === user?.id ? " (deg)" : ""}
-                        </option>
-                      ))}
-                    </select>
-                  </span>
+                  {canEdit ? (
+                    <span className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
+                      <select
+                        className="text-xs border-0 bg-transparent cursor-pointer"
+                        value={task.ansvarlig}
+                        onChange={e => changeAnsvarlig(task.id, e.target.value)}
+                      >
+                        <option value="">Ikke tildelt</option>
+                        {profiles.map(p => (
+                          <option key={p.user_id} value={p.user_id}>
+                            {p.display_name}{p.user_id === user?.id ? " (deg)" : ""}
+                          </option>
+                        ))}
+                      </select>
+                    </span>
+                  ) : ansvarligNavn ? (
+                    <span className="text-xs">· {ansvarligNavn}</span>
+                  ) : null}
                 </div>
               </div>
               {ansvarligNavn && (

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import PageShell from "@/components/PageShell";
 import { useCrmStore } from "@/hooks/use-crm-store";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -32,6 +33,7 @@ const statusColors: Record<SalgsmulighetStatus, string> = {
 export default function Salgsmuligheter() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { canEdit } = useAuth();
   const { salgsmuligheter, selskaper, kontakter, updateSalgsmuligheter, updateKontakter, vinnSalgsmulighet, tapSalgsmulighet, generateId } = useCrmStore();
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [dragOverStage, setDragOverStage] = useState<string | null>(null);
@@ -90,7 +92,7 @@ export default function Salgsmuligheter() {
     <PageShell
       title="Salgsmuligheter"
       subtitle={`${openDeals.length} åpne muligheter`}
-      actions={
+      actions={canEdit ? (
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button size="sm"><Plus className="w-4 h-4 mr-1" />{!isMobile && "Ny mulighet"}</Button>
@@ -127,7 +129,7 @@ export default function Salgsmuligheter() {
             </div>
           </DialogContent>
         </Dialog>
-      }
+      ) : undefined}
     >
       {/* Loss reason dialog */}
       <Dialog open={!!lossDialog} onOpenChange={open => !open && setLossDialog(null)}>
@@ -246,7 +248,7 @@ export default function Salgsmuligheter() {
             {currentSm.sannsynlighet != null && <Badge variant="outline" className="text-xs">{currentSm.sannsynlighet}%</Badge>}
           </>
         ) : undefined}
-        actions={currentSm && openStatuses.includes(currentSm.status as any) ? (
+        actions={canEdit && currentSm && openStatuses.includes(currentSm.status as any) ? (
           <>
             <Button size="sm" className="bg-success hover:bg-success/90 text-success-foreground" onClick={() => { vinnSalgsmulighet(currentSm.id); setSelectedSm(null); }}>
               <Trophy className="w-3.5 h-3.5 mr-1.5" />Vunnet

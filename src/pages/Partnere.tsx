@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import PageShell from "@/components/PageShell";
 import { useCrmStore } from "@/hooks/use-crm-store";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -27,6 +28,7 @@ const statusColors: Record<Partnerstatus, string> = {
 export default function Partnere() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { canEdit } = useAuth();
   const { partnere, updatePartnere, selskaper, salgsmuligheter, generateId } = useCrmStore();
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -73,7 +75,7 @@ export default function Partnere() {
     <PageShell
       title="Partnere"
       subtitle={`${partnere.filter(p => p.partnerstatus === "Aktiv").length} aktive partnere`}
-      actions={
+      actions={canEdit ? (
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button size="sm"><Plus className="w-4 h-4 mr-1" />{!isMobile && "Ny partner"}</Button>
@@ -108,7 +110,7 @@ export default function Partnere() {
             </div>
           </DialogContent>
         </Dialog>
-      }
+      ) : undefined}
     >
       <div className="mb-4 relative max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />

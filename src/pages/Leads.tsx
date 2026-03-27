@@ -2,6 +2,7 @@ import { useState } from "react";
 import PageShell from "@/components/PageShell";
 import { useCrmStore } from "@/hooks/use-crm-store";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -30,6 +31,7 @@ const statusColors: Record<LeadStatus, string> = {
 
 export default function Leads() {
   const isMobile = useIsMobile();
+  const { canEdit } = useAuth();
   const { leads, updateLeads, konverterLead, konverterTilPartner, generateId } = useCrmStore();
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -68,7 +70,7 @@ export default function Leads() {
     <PageShell
       title="Leads"
       subtitle={`${leads.filter(l => l.status !== "Konvertert til salg" && l.status !== "Konvertert til partner" && l.status !== "Ikke aktuelt").length} aktive leads`}
-      actions={
+      actions={canEdit ? (
         <div className="flex gap-2">
         <Button size="sm" variant="outline" onClick={() => setImportOpen(true)}><Upload className="w-4 h-4 mr-1" />{!isMobile && "Importer"}</Button>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -101,7 +103,7 @@ export default function Leads() {
           </DialogContent>
         </Dialog>
         </div>
-      }
+      ) : undefined}
     >
       <DataImportDialog
         open={importOpen}
@@ -237,7 +239,7 @@ export default function Leads() {
             <Badge variant="secondary" className="text-xs">{currentLead.kilde}</Badge>
           </>
         ) : undefined}
-        actions={currentLead && currentLead.status !== "Konvertert til salg" && currentLead.status !== "Konvertert til partner" && currentLead.status !== "Ikke aktuelt" ? (
+        actions={canEdit && currentLead && currentLead.status !== "Konvertert til salg" && currentLead.status !== "Konvertert til partner" && currentLead.status !== "Ikke aktuelt" ? (
           <>
             <Button size="sm" onClick={() => { konverterLead(currentLead.id); setSelectedLead(null); }}>
               <ArrowRightCircle className="w-4 h-4 mr-1.5" />Til salg

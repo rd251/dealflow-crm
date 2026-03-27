@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import PageShell from "@/components/PageShell";
 import { useCrmStore } from "@/hooks/use-crm-store";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
@@ -114,6 +115,7 @@ function ContactDetailPanel({ kontakt, selskaper, salgsmuligheter, onUpdate, onN
 export default function Contacts() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { canEdit } = useAuth();
   const { kontakter, selskaper, salgsmuligheter, updateKontakter, updateSalgsmuligheter, generateId, refresh } = useCrmStore();
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Kontakt | null>(null);
@@ -219,7 +221,7 @@ export default function Contacts() {
     <PageShell
       title="Kontakter"
       subtitle={`${kontakter.length} kontakter`}
-      actions={
+      actions={canEdit ? (
         <div className="flex gap-2">
         <Button size="sm" variant="outline" onClick={() => setImportOpen(true)}><Upload className="w-4 h-4 mr-1" />{!isMobile && "Importer"}</Button>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -245,7 +247,7 @@ export default function Contacts() {
           </DialogContent>
         </Dialog>
         </div>
-      }
+      ) : undefined}
     >
       <DataImportDialog
         open={importOpen}

@@ -14,7 +14,7 @@ interface TeamMember {
   user_id: string;
   display_name: string;
   email: string;
-  role: "admin" | "user";
+  role: "admin" | "user" | "viewer";
 }
 
 export default function Admin() {
@@ -30,7 +30,7 @@ export default function Admin() {
     const { data: profiles } = await supabase.from("profiles").select("user_id, display_name, email");
     const { data: roles } = await supabase.from("user_roles").select("user_id, role");
     if (profiles && roles) {
-      const roleMap = new Map(roles.map(r => [r.user_id, r.role as "admin" | "user"]));
+      const roleMap = new Map(roles.map(r => [r.user_id, r.role as "admin" | "user" | "viewer"]));
       setMembers(profiles.map(p => ({
         user_id: p.user_id,
         display_name: p.display_name,
@@ -56,8 +56,10 @@ export default function Admin() {
     setLoading(false);
   };
 
-  const toggleRole = async (userId: string, currentRole: "admin" | "user") => {
-    const newRole = currentRole === "admin" ? "user" : "admin";
+  const cycleRole = async (userId: string, currentRole: "admin" | "user" | "viewer") => {
+    const order: Array<"admin" | "user" | "viewer"> = ["admin", "user", "viewer"];
+    const nextIdx = (order.indexOf(currentRole) + 1) % order.length;
+    const newRole = order[nextIdx];
     await supabase.from("user_roles").update({ role: newRole }).eq("user_id", userId);
     fetchMembers();
   };
@@ -116,8 +118,12 @@ export default function Admin() {
               <p className="font-medium text-sm truncate">{m.display_name}</p>
               <p className="text-xs text-muted-foreground truncate">{m.email}</p>
             </div>
-            <Badge variant={m.role === "admin" ? "default" : "secondary"} className="text-xs cursor-pointer" onClick={() => toggleRole(m.user_id, m.role)}>
-              {m.role === "admin" ? "Admin" : "Bruker"}
+            <Badge
+              variant={m.role === "admin" ? "default" : m.role === "viewer" ? "outline" : "secondary"}
+              className="text-xs cursor-pointer"
+              onClick={() => cycleRole(m.user_id, m.role)}
+            >
+              {m.role === "admin" ? "Admin" : m.role === "viewer" ? "Viewer" : "Bruker"}
             </Badge>
             {m.user_id !== user?.id && (
               <AlertDialog>
