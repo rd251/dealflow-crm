@@ -836,6 +836,53 @@ export type Database = {
         }
         Relationships: []
       }
+      varsler: {
+        Row: {
+          beskrivelse: string
+          created_at: string
+          fra_user_id: string | null
+          id: string
+          lenke: string | null
+          lest: boolean
+          oppgave_id: string | null
+          tittel: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          beskrivelse?: string
+          created_at?: string
+          fra_user_id?: string | null
+          id?: string
+          lenke?: string | null
+          lest?: boolean
+          oppgave_id?: string | null
+          tittel: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          beskrivelse?: string
+          created_at?: string
+          fra_user_id?: string | null
+          id?: string
+          lenke?: string | null
+          lest?: boolean
+          oppgave_id?: string | null
+          tittel?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "varsler_oppgave_id_fkey"
+            columns: ["oppgave_id"]
+            isOneToOne: false
+            referencedRelation: "oppgaver"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
