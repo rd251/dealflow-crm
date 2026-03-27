@@ -4,10 +4,9 @@ import UpcomingMeetings from "@/components/UpcomingMeetings";
 import StatCard from "@/components/StatCard";
 import { useCrmStore } from "@/hooks/use-crm-store";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { DollarSign, TrendingUp, Users, Target, AlertTriangle, BarChart3, ArrowUpRight, ArrowDownRight, Zap, Trophy, XCircle, UserMinus, ListTodo, Clock, CheckCircle2, Activity, ExternalLink, Users2, Handshake, Rocket } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, LineChart, Line, CartesianGrid, PieChart, Pie } from "recharts";
+import { DollarSign, TrendingUp, Users, BarChart3, ListTodo, Clock, Activity, AlertTriangle } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, CartesianGrid } from "recharts";
 import { beregnTotalKontraktsverdi } from "@/data/crm-data";
-import { Shield } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 const prioritetBadge: Record<string, string> = {
@@ -19,57 +18,20 @@ const prioritetBadge: Record<string, string> = {
 export default function Dashboard() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const { selskaper, salgsmuligheter, leads, oppgaver, prosjekter, partnere } = useCrmStore();
+  const { selskaper, salgsmuligheter, leads, oppgaver, prosjekter } = useCrmStore();
 
   const now = new Date();
-  const thisMonth = (d: string) => {
-    if (!d) return false;
-    const dt = new Date(d);
-    return dt.getMonth() === now.getMonth() && dt.getFullYear() === now.getFullYear();
-  };
-  const today = new Date().toISOString().split("T")[0];
+  const today = now.toISOString().split("T")[0];
 
-  // MRR & ARR
+  // Core metrics
   const liveSelskaper = selskaper.filter(s => s.kundestatus === "Live");
   const totalMRR = liveSelskaper.reduce((sum, s) => sum + s.mrr, 0);
   const arr = totalMRR * 12;
   const aktiveKunder = liveSelskaper.length;
 
-  // SLA
-  const openSmAll = salgsmuligheter.filter(s => s.status !== "Tapt");
-  const totalSLA = openSmAll.reduce((sum, s) => sum + (s.sla || 0), 0);
-  const slArr = totalSLA * 12;
-
-  // Ny MRR
-  const nyMRR = selskaper.filter(s => thisMonth(s.go_live_dato)).reduce((sum, s) => sum + s.mrr, 0);
-
-  // Tapt MRR
-  const kansellerteIMnd = selskaper.filter(s => s.kundestatus === "Kansellert" && thisMonth(s.kansellert_dato));
-  const taptMRR = kansellerteIMnd.reduce((sum, s) => sum + s.mrr, 0);
-  const nettoMRR = nyMRR - taptMRR;
-
-  // Leads
-  const nyeLeads = leads.filter(l => thisMonth(l.opprettet_dato)).length;
-  const kvalifiserteLeads = leads.filter(l => (l.status === "Kvalifisert" || l.status === "Konvertert til salg") && thisMonth(l.sist_aktivitet)).length;
-
   // Pipeline
   const openSm = salgsmuligheter.filter(s => s.status !== "Vunnet" && s.status !== "Tapt");
   const aapenPipeline = openSm.reduce((sum, s) => sum + beregnTotalKontraktsverdi(s), 0);
-
-  // Won / Lost
-  const vunnetIMnd = salgsmuligheter.filter(s => s.status === "Vunnet" && thisMonth(s.vunnet_dato));
-  const taptIMnd = salgsmuligheter.filter(s => s.status === "Tapt" && thisMonth(s.tapt_dato));
-  const winRate = (vunnetIMnd.length + taptIMnd.length) > 0
-    ? Math.round((vunnetIMnd.length / (vunnetIMnd.length + taptIMnd.length)) * 100) : 0;
-
-  // Oppstartskostnader
-  const oppstartVunnetMnd = vunnetIMnd.reduce((sum, s) => sum + (s.oppstartskostnad || 0), 0);
-  const oppstartPipeline = openSm.reduce((sum, s) => sum + (s.oppstartskostnad || 0), 0);
-
-  // Churn
-  const kansellerteKunder = kansellerteIMnd.length;
-  const mrrStartManed = totalMRR + taptMRR;
-  const churnRate = mrrStartManed > 0 ? ((taptMRR / mrrStartManed) * 100).toFixed(1) : "0";
 
   // Overdue tasks
   const forfaltOppgaver = oppgaver.filter(o => o.status !== "Ferdig" && o.frist && o.frist < today).length;
@@ -81,14 +43,6 @@ export default function Dashboard() {
     status: s.length > 12 ? s.substring(0, 12) + "…" : s,
     verdi: openSm.filter(sm => sm.status === s).reduce((sum, sm) => sum + beregnTotalKontraktsverdi(sm), 0),
   }));
-
-  // Cancellation reasons
-  const allCancelled = selskaper.filter(s => s.kundestatus === "Kansellert" && s.kanselleringsaarsak);
-  const cancelReasons = ["Pris", "Lav bruk", "Teknisk utfordring", "Manglende verdi", "Byttet leverandør", "Midlertidig stopp", "Annet"];
-  const cancelData = cancelReasons.map(r => ({
-    aarsak: r.length > 12 ? r.substring(0, 12) + "…" : r,
-    antall: allCancelled.filter(s => s.kanselleringsaarsak === r).length,
-  })).filter(d => d.antall > 0);
 
   const nok = (v: number) => v.toLocaleString("no-NO");
 
@@ -103,7 +57,7 @@ export default function Dashboard() {
     .slice(0, isMobile ? 5 : 8);
 
   // Activity feed
-  type ActivityItem = { dato: string; tekst: string; type: "lead" | "deal" | "prosjekt" | "selskap" | "oppgave"; route: string };
+  type ActivityItem = { dato: string; tekst: string; type: "lead" | "deal" | "prosjekt" | "selskap"; route: string };
   const activityItems: ActivityItem[] = [];
 
   leads.forEach(l => {
@@ -132,7 +86,6 @@ export default function Dashboard() {
     deal: "bg-emerald-500",
     prosjekt: "bg-violet-500",
     selskap: "bg-amber-500",
-    oppgave: "bg-rose-500",
   };
 
   const formatDate = (d: string) => {
@@ -145,97 +98,31 @@ export default function Dashboard() {
   const isToday = (frist: string) => frist === today;
 
   return (
-    <PageShell title="Dashboard" subtitle="Snakk CRM – SaaS-metrikker og salgsoversikt" actions={
+    <PageShell title="Dashboard" subtitle="Oversikt og daglige oppgaver" actions={
       <button onClick={() => navigate("/rapporter")} className="flex items-center gap-1.5 text-sm text-primary hover:underline font-medium">
         <BarChart3 className="w-4 h-4" /> Rapporter
       </button>
     }>
-      {/* Row 1: MRR, ARR, Active */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-4">
-        <StatCard label="Totalt MRR" value={`${nok(totalMRR)} NOK`} icon={<DollarSign className="w-5 h-5" />} />
+      {/* KPI row */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4 mb-6">
+        <StatCard label="MRR" value={`${nok(totalMRR)} NOK`} icon={<DollarSign className="w-5 h-5" />} />
         <StatCard label="ARR" value={`${nok(arr)} NOK`} icon={<TrendingUp className="w-5 h-5" />} />
-        <StatCard label="SLA (mnd)" value={`${nok(totalSLA)} NOK`} icon={<Shield className="w-5 h-5" />} trend={!isMobile ? `ARR: ${nok(slArr)} NOK` : undefined} />
         <StatCard label="Aktive kunder" value={aktiveKunder} icon={<Users className="w-5 h-5" />} />
-      </div>
-
-      {/* Row 2: New MRR, Lost MRR, Net */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mb-4">
-        <StatCard label="Ny MRR" value={`${nok(nyMRR)} NOK`} icon={<ArrowUpRight className="w-5 h-5" />} />
-        <StatCard label="Tapt MRR" value={`${nok(taptMRR)} NOK`} icon={<ArrowDownRight className="w-5 h-5" />} />
-        <StatCard label="Netto MRR" value={`${nettoMRR >= 0 ? "+" : ""}${nok(nettoMRR)} NOK`} icon={<Zap className="w-5 h-5" />} className={isMobile ? "col-span-2" : ""} />
-      </div>
-
-      {/* Row 3: Leads & Pipeline */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mb-4">
-        <StatCard label="Nye leads" value={nyeLeads} icon={<Target className="w-5 h-5" />} />
-        <StatCard label="Kvalifiserte" value={kvalifiserteLeads} icon={<Target className="w-5 h-5" />} />
-        <StatCard label="Åpen pipeline" value={`${nok(aapenPipeline)} NOK`} icon={<BarChart3 className="w-5 h-5" />} className={isMobile ? "col-span-2" : ""} />
-      </div>
-
-      {/* Row 3b: Oppstartskostnader */}
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-4">
-        <StatCard label="Oppstart denne mnd" value={`${nok(oppstartVunnetMnd)} NOK`} icon={<Rocket className="w-5 h-5" />} trend={`${vunnetIMnd.length} vunnet`} />
-        <StatCard label="Oppstart i pipeline" value={`${nok(oppstartPipeline)} NOK`} icon={<Rocket className="w-5 h-5" />} trend={`${openSm.length} åpne`} />
-      </div>
-
-      {/* Oppstartskostnader per måned */}
-      {(() => {
-        const monthNames = ["Jan", "Feb", "Mar", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Des"];
-        const oppstartByMonth: { mnd: string; vunnet: number; pipeline: number }[] = [];
-        for (let i = 5; i >= 0; i--) {
-          const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-          const m = d.getMonth();
-          const y = d.getFullYear();
-          const vunnetInMonth = salgsmuligheter.filter(s => s.status === "Vunnet" && s.vunnet_dato && new Date(s.vunnet_dato).getMonth() === m && new Date(s.vunnet_dato).getFullYear() === y);
-          const vunnetSum = vunnetInMonth.reduce((sum, s) => sum + (s.oppstartskostnad || 0), 0);
-          oppstartByMonth.push({
-            mnd: `${monthNames[m]} ${y.toString().slice(2)}`,
-            vunnet: vunnetSum,
-            pipeline: 0,
-          });
-        }
-        // Add current pipeline value to last month
-        if (oppstartByMonth.length > 0) {
-          oppstartByMonth[oppstartByMonth.length - 1].pipeline = oppstartPipeline;
-        }
-        const hasData = oppstartByMonth.some(d => d.vunnet > 0 || d.pipeline > 0);
-
-        return hasData ? (
-          <div className="bg-card border rounded-xl p-4 sm:p-6 mb-4">
-            <h2 className="text-base sm:text-lg font-semibold mb-4">Oppstartskostnader per måned</h2>
-            <ResponsiveContainer width="100%" height={isMobile ? 200 : 260}>
-              <BarChart data={oppstartByMonth}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="mnd" tick={{ fontSize: isMobile ? 9 : 11 }} />
-                <YAxis tick={{ fontSize: 11 }} tickFormatter={v => `${(v / 1000).toFixed(0)}k`} />
-                <Tooltip formatter={(value: number, name: string) => [`${nok(value)} NOK`, name === "vunnet" ? "Vunnet" : "Pipeline"]} contentStyle={{ borderRadius: "8px", fontSize: "13px" }} />
-                <Bar dataKey="vunnet" name="vunnet" fill="hsl(142, 71%, 45%)" radius={[6, 6, 0, 0]} stackId="a" />
-                <Bar dataKey="pipeline" name="pipeline" fill="hsl(38, 92%, 50%)" radius={[6, 6, 0, 0]} stackId="a" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        ) : null;
-      })()}
-
-      {/* Row 4: Won/Lost/Win rate */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mb-4">
-        <StatCard label="Vunnet" value={vunnetIMnd.length} icon={<Trophy className="w-5 h-5" />} />
-        <StatCard label="Tapt" value={taptIMnd.length} icon={<XCircle className="w-5 h-5" />} />
-        <StatCard label="Win rate" value={`${winRate}%`} icon={<Target className="w-5 h-5" />} trend={!isMobile ? `${vunnetIMnd.length} vunnet / ${vunnetIMnd.length + taptIMnd.length} avsluttet` : undefined} className={isMobile ? "col-span-2" : ""} />
-      </div>
-
-      {/* Row 5: Churn */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
-        <StatCard label="Kansellerte" value={kansellerteKunder} icon={<UserMinus className="w-5 h-5" />} />
-        <StatCard label="Churn-rate" value={`${churnRate}%`} icon={<AlertTriangle className="w-5 h-5" />} />
-        <StatCard label="Forfalte oppgaver" value={forfaltOppgaver} icon={<AlertTriangle className="w-5 h-5" />} trend={forfaltOppgaver > 0 ? "Handling kreves" : "Alt på stell"} className={isMobile ? "col-span-2" : ""} />
+        <StatCard label="Åpen pipeline" value={`${nok(aapenPipeline)} NOK`} icon={<BarChart3 className="w-5 h-5" />} />
+        <StatCard
+          label="Forfalte oppgaver"
+          value={forfaltOppgaver}
+          icon={<AlertTriangle className="w-5 h-5" />}
+          trend={forfaltOppgaver > 0 ? "Handling kreves" : "Alt på stell"}
+          className={isMobile ? "col-span-2" : ""}
+        />
       </div>
 
       {/* Upcoming meetings & activities */}
       <UpcomingMeetings />
 
-      {/* Tasks & Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
+      {/* Tasks & Activity feed */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6">
         {/* Upcoming tasks */}
         <div className="bg-card border rounded-xl p-4 sm:p-6">
           <div className="flex items-center gap-2 mb-4">
@@ -315,149 +202,20 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Partner Section */}
-      {partnere.length > 0 && (() => {
-        const aktivePartnere = partnere.filter(p => p.partnerstatus === "Aktiv");
-        const partnerKunder = selskaper.filter(s => s.partner_id && s.kundestatus === "Live");
-        const partnerMrr = partnerKunder.reduce((sum, s) => sum + s.mrr, 0);
-        const partnerArr = partnerMrr * 12;
-        const partnerAndelMrr = totalMRR > 0 ? ((partnerMrr / totalMRR) * 100).toFixed(1) : "0";
-
-        // Partner type distribution
-        const partnerTypeData = ["Provisjonspartner", "Integrasjonspartner", "Salgspartner", "Strategisk partner"].map(t => ({
-          type: t.replace("partner", ""),
-          antall: partnere.filter(p => p.partnertype === t).length,
-        })).filter(d => d.antall > 0);
-        const typeColors = ["hsl(220, 70%, 55%)", "hsl(142, 71%, 45%)", "hsl(38, 92%, 50%)", "hsl(262, 60%, 55%)"];
-
-        // Top partners by MRR
-        const topPartnere = partnere.map(p => {
-          const kunder = selskaper.filter(s => s.partner_id === p.id && s.kundestatus === "Live");
-          const mrr = kunder.reduce((sum, s) => sum + s.mrr, 0);
-          return { navn: p.partnernavn.length > 15 ? p.partnernavn.substring(0, 15) + "…" : p.partnernavn, mrr };
-        }).sort((a, b) => b.mrr - a.mrr).slice(0, 10).filter(p => p.mrr > 0);
-
-        return (
-          <>
-            <div className="flex items-center gap-2 mb-4 mt-2">
-              <Users2 className="w-5 h-5 text-primary" />
-              <h2 className="text-lg font-semibold">Partnere</h2>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4 mb-6">
-              <StatCard label="Partnere" value={partnere.length} icon={<Users2 className="w-5 h-5" />} />
-              <StatCard label="MRR fra partnere" value={`${nok(partnerMrr)} NOK`} icon={<DollarSign className="w-5 h-5" />} />
-              <StatCard label="ARR fra partnere" value={`${nok(partnerArr)} NOK`} icon={<TrendingUp className="w-5 h-5" />} />
-              <StatCard label="Kunder via partner" value={partnerKunder.length} icon={<Users className="w-5 h-5" />} />
-              <StatCard label="Andel av MRR" value={`${partnerAndelMrr}%`} icon={<Handshake className="w-5 h-5" />} className={isMobile ? "col-span-2" : ""} />
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6">
-              {partnerTypeData.length > 0 && (
-                <div className="bg-card border rounded-xl p-4 sm:p-6">
-                  <h2 className="text-base sm:text-lg font-semibold mb-4">Partnere etter type</h2>
-                  <ResponsiveContainer width="100%" height={isMobile ? 200 : 260}>
-                    <BarChart data={partnerTypeData}>
-                      <XAxis dataKey="type" tick={{ fontSize: isMobile ? 9 : 11 }} />
-                      <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
-                      <Tooltip contentStyle={{ borderRadius: "8px", fontSize: "13px" }} />
-                      <Bar dataKey="antall" radius={[6, 6, 0, 0]}>
-                        {partnerTypeData.map((_, i) => <Cell key={i} fill={typeColors[i % typeColors.length]} />)}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              )}
-
-              {topPartnere.length > 0 && (
-                <div className="bg-card border rounded-xl p-4 sm:p-6">
-                  <h2 className="text-base sm:text-lg font-semibold mb-4">Topp partnere etter MRR</h2>
-                  <ResponsiveContainer width="100%" height={isMobile ? 200 : 260}>
-                    <BarChart data={topPartnere} layout="vertical">
-                      <XAxis type="number" tick={{ fontSize: 11 }} tickFormatter={v => `${(v / 1000).toFixed(0)}k`} />
-                      <YAxis type="category" dataKey="navn" tick={{ fontSize: isMobile ? 9 : 11 }} width={isMobile ? 80 : 120} />
-                      <Tooltip formatter={(value: number) => [`${nok(value)} NOK`, "MRR"]} contentStyle={{ borderRadius: "8px", fontSize: "13px" }} />
-                      <Bar dataKey="mrr" fill="hsl(3, 76%, 48%)" radius={[0, 6, 6, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              )}
-            </div>
-          </>
-        );
-      })()}
-
-      {/* Monthly closed customers */}
-      {(() => {
-        const monthNames = ["Jan", "Feb", "Mar", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Des"];
-        const closedByMonth: { mnd: string; antall: number; mrr: number }[] = [];
-        for (let i = 5; i >= 0; i--) {
-          const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-          const m = d.getMonth();
-          const y = d.getFullYear();
-          const closed = selskaper.filter(s => {
-            if (!s.lukkedato) return false;
-            const dt = new Date(s.lukkedato);
-            return dt.getMonth() === m && dt.getFullYear() === y;
-          });
-          closedByMonth.push({
-            mnd: `${monthNames[m]} ${y.toString().slice(2)}`,
-            antall: closed.length,
-            mrr: closed.reduce((sum, s) => sum + s.mrr, 0),
-          });
-        }
-        const hasData = closedByMonth.some(d => d.antall > 0);
-
-        return hasData ? (
-          <div className="bg-card border rounded-xl p-4 sm:p-6 mb-6">
-            <h2 className="text-base sm:text-lg font-semibold mb-4">Lukkede kunder per måned</h2>
-            <ResponsiveContainer width="100%" height={isMobile ? 200 : 260}>
-              <BarChart data={closedByMonth}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="mnd" tick={{ fontSize: isMobile ? 9 : 11 }} />
-                <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
-                <Tooltip
-                  formatter={(value: number, name: string) => [
-                    name === "antall" ? value : `${nok(value)} NOK`,
-                    name === "antall" ? "Kunder" : "MRR"
-                  ]}
-                  contentStyle={{ borderRadius: "8px", fontSize: "13px" }}
-                />
-                <Bar dataKey="antall" name="antall" fill="hsl(220, 70%, 55%)" radius={[6, 6, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        ) : null;
-      })()}
-
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        <div className="bg-card border rounded-xl p-4 sm:p-6">
-          <h2 className="text-base sm:text-lg font-semibold mb-4">Pipeline per status</h2>
-          <ResponsiveContainer width="100%" height={isMobile ? 200 : 260}>
-            <BarChart data={pipelineData}>
-              <XAxis dataKey="status" tick={{ fontSize: isMobile ? 9 : 11 }} />
-              <YAxis tick={{ fontSize: 11 }} tickFormatter={v => `${(v / 1000).toFixed(0)}k`} />
-              <Tooltip formatter={(value: number) => [`${nok(value)} NOK`, "Verdi"]} contentStyle={{ borderRadius: "8px", fontSize: "13px" }} />
-              <Bar dataKey="verdi" radius={[6, 6, 0, 0]}>
-                {pipelineData.map((_, i) => <Cell key={i} fill={pipelineColors[i % pipelineColors.length]} />)}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        {cancelData.length > 0 && (
-          <div className="bg-card border rounded-xl p-4 sm:p-6">
-            <h2 className="text-base sm:text-lg font-semibold mb-4">Kanselleringsårsaker</h2>
-            <ResponsiveContainer width="100%" height={isMobile ? 200 : 260}>
-              <BarChart data={cancelData} layout="vertical">
-                <XAxis type="number" tick={{ fontSize: 11 }} />
-                <YAxis type="category" dataKey="aarsak" tick={{ fontSize: isMobile ? 9 : 11 }} width={isMobile ? 70 : 100} />
-                <Tooltip contentStyle={{ borderRadius: "8px", fontSize: "13px" }} />
-                <Bar dataKey="antall" fill="hsl(0, 72%, 51%)" radius={[0, 6, 6, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        )}
+      {/* Pipeline chart */}
+      <div className="bg-card border rounded-xl p-4 sm:p-6">
+        <h2 className="text-base sm:text-lg font-semibold mb-4">Pipeline per status</h2>
+        <ResponsiveContainer width="100%" height={isMobile ? 200 : 260}>
+          <BarChart data={pipelineData}>
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+            <XAxis dataKey="status" tick={{ fontSize: isMobile ? 9 : 11 }} />
+            <YAxis tick={{ fontSize: 11 }} tickFormatter={v => `${(v / 1000).toFixed(0)}k`} />
+            <Tooltip formatter={(value: number) => [`${nok(value)} NOK`, "Verdi"]} contentStyle={{ borderRadius: "8px", fontSize: "13px" }} />
+            <Bar dataKey="verdi" radius={[6, 6, 0, 0]}>
+              {pipelineData.map((_, i) => <Cell key={i} fill={pipelineColors[i % pipelineColors.length]} />)}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
       </div>
     </PageShell>
   );
