@@ -426,6 +426,11 @@ export default function Dashboard() {
           </div>
         )}
       </div>
+      <MeetingPrepPanel
+        meeting={prepMeeting}
+        open={!!prepMeeting}
+        onOpenChange={(open) => { if (!open) setPrepMeeting(null); }}
+      />
     </PageShell>
   );
 }
