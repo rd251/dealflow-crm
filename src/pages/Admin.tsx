@@ -56,8 +56,10 @@ export default function Admin() {
     setLoading(false);
   };
 
-  const toggleRole = async (userId: string, currentRole: "admin" | "user") => {
-    const newRole = currentRole === "admin" ? "user" : "admin";
+  const cycleRole = async (userId: string, currentRole: "admin" | "user" | "viewer") => {
+    const order: Array<"admin" | "user" | "viewer"> = ["admin", "user", "viewer"];
+    const nextIdx = (order.indexOf(currentRole) + 1) % order.length;
+    const newRole = order[nextIdx];
     await supabase.from("user_roles").update({ role: newRole }).eq("user_id", userId);
     fetchMembers();
   };
