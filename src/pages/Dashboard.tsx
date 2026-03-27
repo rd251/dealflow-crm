@@ -13,6 +13,7 @@ import {
   AlertTriangle, CalendarDays, PhoneOff, Target, Clock, Building2,
   DollarSign, TrendingUp, PieChart, BarChart3, ChevronRight,
 } from "lucide-react";
+import MeetingPrepPanel from "@/components/MeetingPrepPanel";
 
 const API_URL = import.meta.env.VITE_SUPABASE_URL + "/rest/v1";
 const API_HEADERS = {
