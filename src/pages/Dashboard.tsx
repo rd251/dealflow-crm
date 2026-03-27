@@ -35,7 +35,7 @@ interface MeetingItem {
 export default function Dashboard() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const { selskaper, salgsmuligheter, leads, aktiviteter } = useCrmStore();
+  const { selskaper, salgsmuligheter, leads } = useCrmStore();
 
   const now = new Date();
   const today = now.toISOString().split("T")[0];
