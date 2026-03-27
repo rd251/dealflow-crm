@@ -343,7 +343,7 @@ export default function Companies() {
                     </select>
                   </td>
                   <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
-                    <Switch checked={s.live_status} onCheckedChange={v => toggleLive(s.id, v)} />
+                    <Switch checked={s.live_status} onCheckedChange={v => toggleLive(s.id, v)} disabled={!canEdit} />
                   </td>
                   <td className="px-4 py-3">
                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${tilstandColors[s.kundetilstand]}`}>{s.kundetilstand}</span>
