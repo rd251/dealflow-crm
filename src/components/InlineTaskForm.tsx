@@ -45,12 +45,30 @@ export default function InlineTaskForm({ lead_id = "", selskap_id = "", salgsmul
     const id = generateId("O", oppgaver);
     const ny: Oppgave = {
       id, oppgave, lead_id, selskap_id, salgsmulighet_id,
-      ansvarlig: "", frist, prioritet, status: "Åpen", paaminnelse: true, notater: "",
+      ansvarlig, frist, prioritet, status: "Åpen", paaminnelse: true, notater: "",
     };
     updateOppgaver(prev => [...prev, ny]);
+
+    // Send notification if delegated
+    if (ansvarlig && user && ansvarlig !== user.id) {
+      const senderProfile = profiles.find(p => p.user_id === user.id);
+      const senderName = senderProfile?.display_name || user.email || "Noen";
+      await supabase.from("varsler").insert({
+        user_id: ansvarlig,
+        type: "oppgave_delegert",
+        tittel: "Ny oppgave tildelt deg",
+        beskrivelse: `${senderName} har tildelt deg oppgaven: "${oppgave}"`,
+        fra_user_id: user.id,
+        lenke: "/oppgaver",
+      });
+      const assignee = profiles.find(p => p.user_id === ansvarlig);
+      toast.success(`Oppgave delegert til ${assignee?.display_name || "bruker"}`);
+    }
+
     setOppgave("");
     setFrist("");
     setPrioritet("Medium");
+    setAnsvarlig("");
     setShowForm(false);
   };
 
