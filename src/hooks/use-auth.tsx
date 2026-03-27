@@ -100,6 +100,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         role,
         loading: false,
         isAdmin: role === "admin",
+        isViewer: role === "viewer",
+        canEdit: role !== "viewer",
       });
     };
 
