@@ -195,20 +195,24 @@ export default function Tasks() {
                     </span>
                   )}
                   {selskap && <span className="truncate">· {selskap.firmanavn}</span>}
-                  <span className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
-                    <select
-                      className="text-xs border-0 bg-transparent cursor-pointer"
-                      value={task.ansvarlig}
-                      onChange={e => changeAnsvarlig(task.id, e.target.value)}
-                    >
-                      <option value="">Ikke tildelt</option>
-                      {profiles.map(p => (
-                        <option key={p.user_id} value={p.user_id}>
-                          {p.display_name}{p.user_id === user?.id ? " (deg)" : ""}
-                        </option>
-                      ))}
-                    </select>
-                  </span>
+                  {canEdit ? (
+                    <span className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
+                      <select
+                        className="text-xs border-0 bg-transparent cursor-pointer"
+                        value={task.ansvarlig}
+                        onChange={e => changeAnsvarlig(task.id, e.target.value)}
+                      >
+                        <option value="">Ikke tildelt</option>
+                        {profiles.map(p => (
+                          <option key={p.user_id} value={p.user_id}>
+                            {p.display_name}{p.user_id === user?.id ? " (deg)" : ""}
+                          </option>
+                        ))}
+                      </select>
+                    </span>
+                  ) : ansvarligNavn ? (
+                    <span className="text-xs">· {ansvarligNavn}</span>
+                  ) : null}
                 </div>
               </div>
               {ansvarligNavn && (

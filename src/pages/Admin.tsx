@@ -118,8 +118,12 @@ export default function Admin() {
               <p className="font-medium text-sm truncate">{m.display_name}</p>
               <p className="text-xs text-muted-foreground truncate">{m.email}</p>
             </div>
-            <Badge variant={m.role === "admin" ? "default" : "secondary"} className="text-xs cursor-pointer" onClick={() => toggleRole(m.user_id, m.role)}>
-              {m.role === "admin" ? "Admin" : "Bruker"}
+            <Badge
+              variant={m.role === "admin" ? "default" : m.role === "viewer" ? "outline" : "secondary"}
+              className="text-xs cursor-pointer"
+              onClick={() => cycleRole(m.user_id, m.role)}
+            >
+              {m.role === "admin" ? "Admin" : m.role === "viewer" ? "Viewer" : "Bruker"}
             </Badge>
             {m.user_id !== user?.id && (
               <AlertDialog>
