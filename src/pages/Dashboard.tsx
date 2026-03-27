@@ -220,7 +220,7 @@ export default function Dashboard() {
             label="Salg uten aktivitet"
             count={smUtenAktivitet.length}
             color={smUtenAktivitet.length > 0 ? "text-amber-600" : "text-muted-foreground"}
-            onClick={() => navigate("/salgsmuligheter")}
+                      onClick={() => navigate(`/salgsmuligheter?open=${sm.id}`)}
           />
           <FocusCard
             icon={<CalendarDays className="w-5 h-5" />}
