@@ -103,7 +103,7 @@ export default function Leads() {
           </DialogContent>
         </Dialog>
         </div>
-      }
+      ) : undefined}
     >
       <DataImportDialog
         open={importOpen}
