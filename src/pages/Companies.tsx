@@ -290,6 +290,7 @@ export default function Companies() {
                   <span className="font-mono">MRR: {s.mrr.toLocaleString("no-NO")}</span>
                   <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${tilstandColors[s.kundetilstand]}`}>{s.kundetilstand}</span>
                 </div>
+                {canEdit && (
                 <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
                   <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => setRevertDialog(s.id)}>
                     <Undo2 className="w-3 h-3" /> Angre
@@ -302,6 +303,7 @@ export default function Companies() {
                   </Button>
                   <ChevronRight className="w-3.5 h-3.5 text-muted-foreground ml-auto" />
                 </div>
+                )}
               </div>
             );
           })}
@@ -323,7 +325,7 @@ export default function Companies() {
                 <th className="text-right px-4 py-3 font-medium">Oppstart</th>
                 <th className="text-left px-4 py-3 font-medium">Lukkedato</th>
                 <th className="text-left px-4 py-3 font-medium">Sist aktivitet</th>
-                <th className="text-right px-4 py-3 font-medium">Handlinger</th>
+                {canEdit && <th className="text-right px-4 py-3 font-medium">Handlinger</th>}
               </tr>
             </thead>
             <tbody>
@@ -336,12 +338,12 @@ export default function Companies() {
                   <td className="px-4 py-3 text-muted-foreground">{s.bransje || "–"}</td>
                   <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                     <select className={`text-xs px-2 py-1 rounded-full font-medium border-0 cursor-pointer ${kundestatusColors[s.kundestatus]}`}
-                      value={s.kundestatus} onChange={e => changeKundestatus(s.id, e.target.value as Kundestatus)}>
+                      value={s.kundestatus} onChange={e => changeKundestatus(s.id, e.target.value as Kundestatus)} disabled={!canEdit}>
                       {kundestatuser.map(k => <option key={k} value={k}>{k}</option>)}
                     </select>
                   </td>
                   <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
-                    <Switch checked={s.live_status} onCheckedChange={v => toggleLive(s.id, v)} />
+                    <Switch checked={s.live_status} onCheckedChange={v => toggleLive(s.id, v)} disabled={!canEdit} />
                   </td>
                   <td className="px-4 py-3">
                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${tilstandColors[s.kundetilstand]}`}>{s.kundetilstand}</span>
@@ -352,6 +354,7 @@ export default function Companies() {
                   <td className="px-4 py-3 text-right font-mono">{s.oppstartskostnad.toLocaleString("no-NO")}</td>
                   <td className="px-4 py-3 text-muted-foreground text-xs font-mono">{s.lukkedato || "–"}</td>
                   <td className="px-4 py-3"><LastActivityBadge selskap_id={s.id} sist_aktivitet={s.sist_aktivitet} /></td>
+                  {canEdit && (
                   <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
                     <div className="flex gap-1 justify-end">
                       <Button variant="ghost" size="icon" className="h-7 w-7" title="Angre til salgsmulighet" onClick={() => setRevertDialog(s.id)}>
@@ -365,6 +368,7 @@ export default function Companies() {
                       </Button>
                     </div>
                   </td>
+                  )}
                 </tr>
                 );
               })}
@@ -402,17 +406,18 @@ export default function Companies() {
                 <DetailSection title="Selskapsinformasjon">
                   <div className="grid grid-cols-2 gap-3">
                     <DetailField label="Firmanavn">
-                      <Input value={currentSelskap.firmanavn} onChange={e => updateField("firmanavn", e.target.value)} className="h-8 text-sm" />
+                      <Input value={currentSelskap.firmanavn} onChange={e => updateField("firmanavn", e.target.value)} className="h-8 text-sm" readOnly={!canEdit} />
                     </DetailField>
                     <DetailField label="Bransje">
-                      <Input value={currentSelskap.bransje} onChange={e => updateField("bransje", e.target.value)} className="h-8 text-sm" />
+                      <Input value={currentSelskap.bransje} onChange={e => updateField("bransje", e.target.value)} className="h-8 text-sm" readOnly={!canEdit} />
                     </DetailField>
                     <DetailField label="Kundeansvarlig">
-                      <Input value={currentSelskap.kundeansvarlig} onChange={e => updateField("kundeansvarlig", e.target.value)} className="h-8 text-sm" />
+                      <Input value={currentSelskap.kundeansvarlig} onChange={e => updateField("kundeansvarlig", e.target.value)} className="h-8 text-sm" readOnly={!canEdit} />
                     </DetailField>
                     <DetailField label="Kundestatus">
                       <select className={`w-full border rounded-lg px-3 py-1.5 text-sm bg-background ${kundestatusColors[currentSelskap.kundestatus]}`}
                         value={currentSelskap.kundestatus}
+                        disabled={!canEdit}
                         onChange={e => {
                           const val = e.target.value as Kundestatus;
                           if (val === "Kansellert") {
@@ -434,17 +439,17 @@ export default function Companies() {
                 <DetailSection title="Status & Onboarding">
                   <div className="grid grid-cols-2 gap-3">
                     <DetailField label="Live">
-                      <Switch checked={currentSelskap.live_status} onCheckedChange={v => toggleLive(currentSelskap.id, v)} />
+                      <Switch checked={currentSelskap.live_status} onCheckedChange={v => toggleLive(currentSelskap.id, v)} disabled={!canEdit} />
                     </DetailField>
                     <DetailField label="Onboarding">
                       <select className="w-full border rounded-lg px-3 py-1.5 text-sm bg-background" value={currentSelskap.onboarding_status}
-                        onChange={e => updateField("onboarding_status", e.target.value)}>
+                        onChange={e => updateField("onboarding_status", e.target.value)} disabled={!canEdit}>
                         {(["Ikke startet", "Pågår", "Venter på kunde", "Klar for live", "Ferdig"] as OnboardingStatus[]).map(o => <option key={o} value={o}>{o}</option>)}
                       </select>
                     </DetailField>
                     <DetailField label="Kundetilstand">
                       <select className={`w-full border rounded-lg px-3 py-1.5 text-sm bg-background ${tilstandColors[currentSelskap.kundetilstand]}`}
-                        value={currentSelskap.kundetilstand} onChange={e => updateField("kundetilstand", e.target.value)}>
+                        value={currentSelskap.kundetilstand} onChange={e => updateField("kundetilstand", e.target.value)} disabled={!canEdit}>
                         {(["Bra", "Usikker", "Risiko"] as Kundetilstand[]).map(t => <option key={t} value={t}>{t}</option>)}
                       </select>
                     </DetailField>
@@ -463,16 +468,16 @@ export default function Companies() {
                       <Input type="number" value={currentSelskap.mrr || ""} onChange={e => {
                         const mrr = Number(e.target.value);
                         updateSelskaper(prev => prev.map(s => s.id === currentSelskap.id ? { ...s, mrr, arr: mrr * 12, sist_aktivitet: new Date().toISOString().split("T")[0] } : s));
-                      }} className="h-8 text-sm" />
+                      }} className="h-8 text-sm" readOnly={!canEdit} />
                     </DetailField>
                     <DetailField label="Oppstartskostnad">
-                      <Input type="number" value={currentSelskap.oppstartskostnad || ""} onChange={e => updateField("oppstartskostnad", Number(e.target.value))} className="h-8 text-sm" />
+                      <Input type="number" value={currentSelskap.oppstartskostnad || ""} onChange={e => updateField("oppstartskostnad", Number(e.target.value))} className="h-8 text-sm" readOnly={!canEdit} />
                     </DetailField>
                     <DetailField label="Lukkedato">
-                      <Input type="date" value={currentSelskap.lukkedato} onChange={e => updateField("lukkedato", e.target.value)} className="h-8 text-sm" />
+                      <Input type="date" value={currentSelskap.lukkedato} onChange={e => updateField("lukkedato", e.target.value)} className="h-8 text-sm" readOnly={!canEdit} />
                     </DetailField>
                     <DetailField label="Go-live dato">
-                      <Input type="date" value={currentSelskap.go_live_dato} onChange={e => updateField("go_live_dato", e.target.value)} className="h-8 text-sm" />
+                      <Input type="date" value={currentSelskap.go_live_dato} onChange={e => updateField("go_live_dato", e.target.value)} className="h-8 text-sm" readOnly={!canEdit} />
                     </DetailField>
                   </div>
                 </DetailSection>
@@ -480,7 +485,7 @@ export default function Companies() {
                 <DetailDivider />
 
                 <DetailField label="Neste steg">
-                  <Input value={currentSelskap.neste_steg} onChange={e => updateField("neste_steg", e.target.value)} className="h-8 text-sm" />
+                  <Input value={currentSelskap.neste_steg} onChange={e => updateField("neste_steg", e.target.value)} className="h-8 text-sm" readOnly={!canEdit} />
                 </DetailField>
 
                 {currentSelskap.kundestatus === "Kansellert" && (
@@ -496,7 +501,7 @@ export default function Companies() {
             ),
             notater: (
               <DetailField label="Notater">
-                <Textarea value={currentSelskap.notater} onChange={e => updateField("notater", e.target.value)} rows={6} />
+                <Textarea value={currentSelskap.notater} onChange={e => updateField("notater", e.target.value)} rows={6} readOnly={!canEdit} />
               </DetailField>
             ),
           };

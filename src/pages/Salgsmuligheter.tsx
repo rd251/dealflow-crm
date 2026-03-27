@@ -276,37 +276,41 @@ export default function Salgsmuligheter() {
                 <DetailSection title="Kontaktinformasjon">
                   <div className="grid grid-cols-2 gap-3">
                     <DetailField label="Kontaktperson">
-                      <Input value={currentSm.kontaktperson} onChange={e => updateField("kontaktperson", e.target.value)} className="h-8 text-sm" />
+                      <Input value={currentSm.kontaktperson} onChange={e => updateField("kontaktperson", e.target.value)} className="h-8 text-sm" readOnly={!canEdit} />
                     </DetailField>
                     <DetailField label="Rolle">
-                      <Input value={currentSm.rolle_i_firma} onChange={e => updateField("rolle_i_firma", e.target.value)} className="h-8 text-sm" />
+                      <Input value={currentSm.rolle_i_firma} onChange={e => updateField("rolle_i_firma", e.target.value)} className="h-8 text-sm" readOnly={!canEdit} />
                     </DetailField>
                     <DetailField label="E-post">
-                      <Input value={currentSm.e_post} onChange={e => updateField("e_post", e.target.value)} className="h-8 text-sm" />
+                      <Input value={currentSm.e_post} onChange={e => updateField("e_post", e.target.value)} className="h-8 text-sm" readOnly={!canEdit} />
                     </DetailField>
                     <DetailField label="Telefon">
-                      <Input value={currentSm.telefon} onChange={e => updateField("telefon", e.target.value)} className="h-8 text-sm" />
+                      <Input value={currentSm.telefon} onChange={e => updateField("telefon", e.target.value)} className="h-8 text-sm" readOnly={!canEdit} />
                     </DetailField>
                   </div>
-                  <DetailField label="Koble til kontakt">
-                    <select className="w-full border rounded-lg px-3 py-1.5 text-xs bg-background"
-                      value={currentSm.kontakt_id}
-                      onChange={e => {
-                        const kontakt = kontakter.find(k => k.id === e.target.value);
-                        if (kontakt) {
-                          updateField("kontakt_id", kontakt.id);
-                          updateField("kontaktperson", kontakt.navn);
-                          updateField("e_post", kontakt.e_post);
-                          updateField("telefon", kontakt.telefon);
-                          updateField("rolle_i_firma", kontakt.rolle);
-                        } else {
-                          updateField("kontakt_id", "");
-                        }
-                      }}>
-                      <option value="">Ingen koblet kontakt</option>
-                      {kontakter.map(k => <option key={k.id} value={k.id}>{k.navn}</option>)}
-                    </select>
-                  </DetailField>
+                  {canEdit ? (
+                    <DetailField label="Koble til kontakt">
+                      <select className="w-full border rounded-lg px-3 py-1.5 text-xs bg-background"
+                        value={currentSm.kontakt_id}
+                        onChange={e => {
+                          const kontakt = kontakter.find(k => k.id === e.target.value);
+                          if (kontakt) {
+                            updateField("kontakt_id", kontakt.id);
+                            updateField("kontaktperson", kontakt.navn);
+                            updateField("e_post", kontakt.e_post);
+                            updateField("telefon", kontakt.telefon);
+                            updateField("rolle_i_firma", kontakt.rolle);
+                          } else {
+                            updateField("kontakt_id", "");
+                          }
+                        }}>
+                        <option value="">Ingen koblet kontakt</option>
+                        {kontakter.map(k => <option key={k.id} value={k.id}>{k.navn}</option>)}
+                      </select>
+                    </DetailField>
+                  ) : currentSm.kontakt_id ? (
+                    <DetailField label="Koblet kontakt" value={kontakter.find(k => k.id === currentSm.kontakt_id)?.navn || "–"} />
+                  ) : null}
                 </DetailSection>
 
                 <DetailDivider />
@@ -318,6 +322,7 @@ export default function Salgsmuligheter() {
                   <DetailField label="Status">
                     <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background"
                       value={currentSm.status}
+                      disabled={!canEdit}
                       onChange={e => {
                         const newStatus = e.target.value as SalgsmulighetStatus;
                         if (newStatus === "Vunnet") { vinnSalgsmulighet(currentSm.id); setSelectedSm(null); }
@@ -329,22 +334,22 @@ export default function Salgsmuligheter() {
                   </DetailField>
                   <div className="grid grid-cols-2 gap-3">
                     <DetailField label="Forventet MRR">
-                      <Input type="number" value={currentSm.forventet_mrr || ""} onChange={e => updateField("forventet_mrr", Number(e.target.value))} className="h-8 text-sm" />
+                      <Input type="number" value={currentSm.forventet_mrr || ""} onChange={e => updateField("forventet_mrr", Number(e.target.value))} className="h-8 text-sm" readOnly={!canEdit} />
                     </DetailField>
                     <DetailField label="SLA">
-                      <Input type="number" value={currentSm.sla || ""} onChange={e => updateField("sla", Number(e.target.value))} className="h-8 text-sm" />
+                      <Input type="number" value={currentSm.sla || ""} onChange={e => updateField("sla", Number(e.target.value))} className="h-8 text-sm" readOnly={!canEdit} />
                     </DetailField>
                     <DetailField label="Oppstartskostnad">
-                      <Input type="number" value={currentSm.oppstartskostnad || ""} onChange={e => updateField("oppstartskostnad", Number(e.target.value))} className="h-8 text-sm" />
+                      <Input type="number" value={currentSm.oppstartskostnad || ""} onChange={e => updateField("oppstartskostnad", Number(e.target.value))} className="h-8 text-sm" readOnly={!canEdit} />
                     </DetailField>
                     <DetailField label="Kontraktslengde (mnd)">
-                      <Input type="number" value={currentSm.kontraktslengde_mnd || ""} onChange={e => updateField("kontraktslengde_mnd", Number(e.target.value))} className="h-8 text-sm" />
+                      <Input type="number" value={currentSm.kontraktslengde_mnd || ""} onChange={e => updateField("kontraktslengde_mnd", Number(e.target.value))} className="h-8 text-sm" readOnly={!canEdit} />
                     </DetailField>
                     <DetailField label="Sannsynlighet %">
-                      <Input type="number" min={0} max={100} value={currentSm.sannsynlighet || ""} onChange={e => updateField("sannsynlighet", Number(e.target.value))} className="h-8 text-sm" />
+                      <Input type="number" min={0} max={100} value={currentSm.sannsynlighet || ""} onChange={e => updateField("sannsynlighet", Number(e.target.value))} className="h-8 text-sm" readOnly={!canEdit} />
                     </DetailField>
                     <DetailField label="Forventet lukkedato">
-                      <Input type="date" value={currentSm.forventet_lukkedato} onChange={e => updateField("forventet_lukkedato", e.target.value)} className="h-8 text-sm" />
+                      <Input type="date" value={currentSm.forventet_lukkedato} onChange={e => updateField("forventet_lukkedato", e.target.value)} className="h-8 text-sm" readOnly={!canEdit} />
                     </DetailField>
                   </div>
                 </DetailSection>
@@ -361,10 +366,10 @@ export default function Salgsmuligheter() {
                 </DetailSection>
 
                 <DetailField label="Use case">
-                  <Input value={currentSm.use_case} onChange={e => updateField("use_case", e.target.value)} className="h-8 text-sm" />
+                  <Input value={currentSm.use_case} onChange={e => updateField("use_case", e.target.value)} className="h-8 text-sm" readOnly={!canEdit} />
                 </DetailField>
                 <DetailField label="Neste steg">
-                  <Input value={currentSm.neste_steg} onChange={e => updateField("neste_steg", e.target.value)} className="h-8 text-sm" />
+                  <Input value={currentSm.neste_steg} onChange={e => updateField("neste_steg", e.target.value)} className="h-8 text-sm" readOnly={!canEdit} />
                 </DetailField>
 
                 {currentSm.status === "Tapt" && currentSm.tapsaarsak && (
@@ -378,14 +383,17 @@ export default function Salgsmuligheter() {
                   </div>
                 )}
 
-                <DetailDivider />
-
-                <Button size="sm" variant="outline" className="w-full text-destructive hover:bg-destructive/10" onClick={() => {
-                  updateSalgsmuligheter(prev => prev.filter(s => s.id !== currentSm.id));
-                  setSelectedSm(null);
-                }}>
-                  <Trash2 className="w-3.5 h-3.5 mr-1" />Slett
-                </Button>
+                {canEdit && (
+                  <>
+                    <DetailDivider />
+                    <Button size="sm" variant="outline" className="w-full text-destructive hover:bg-destructive/10" onClick={() => {
+                      updateSalgsmuligheter(prev => prev.filter(s => s.id !== currentSm.id));
+                      setSelectedSm(null);
+                    }}>
+                      <Trash2 className="w-3.5 h-3.5 mr-1" />Slett
+                    </Button>
+                  </>
+                )}
               </>
             ),
             interaksjoner: (
@@ -398,7 +406,7 @@ export default function Salgsmuligheter() {
             ),
             notater: (
               <DetailField label="Notater">
-                <Textarea value={currentSm.notater} onChange={e => updateField("notater", e.target.value)} rows={6} />
+                <Textarea value={currentSm.notater} onChange={e => updateField("notater", e.target.value)} rows={6} readOnly={!canEdit} />
               </DetailField>
             ),
           };
