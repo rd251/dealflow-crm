@@ -220,7 +220,7 @@ export default function Dashboard() {
             label="Salg uten aktivitet"
             count={smUtenAktivitet.length}
             color={smUtenAktivitet.length > 0 ? "text-amber-600" : "text-muted-foreground"}
-            onClick={() => navigate("/salgsmuligheter")}
+                      onClick={() => navigate("/salgsmuligheter")}
           />
           <FocusCard
             icon={<CalendarDays className="w-5 h-5" />}
@@ -273,7 +273,7 @@ export default function Dashboard() {
                   return (
                     <tr
                       key={sm.id}
-                      onClick={() => navigate("/salgsmuligheter")}
+                      onClick={() => navigate(`/salgsmuligheter?open=${sm.id}`)}
                       className="border-b last:border-0 hover:bg-muted/30 cursor-pointer transition-colors"
                     >
                       <td className="px-4 py-3 font-medium truncate max-w-[160px]">{sm.selskapNavn}</td>
