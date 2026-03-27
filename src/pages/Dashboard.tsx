@@ -47,6 +47,7 @@ export default function Dashboard() {
   // ─── MEETINGS STATE ───
   const [meetings, setMeetings] = useState<MeetingItem[]>([]);
   const [entityNames, setEntityNames] = useState<Record<string, string>>({});
+  const [prepMeeting, setPrepMeeting] = useState<MeetingItem | null>(null);
 
   useEffect(() => {
     const todayStart = new Date();
