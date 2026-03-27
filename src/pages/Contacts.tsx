@@ -242,7 +242,7 @@ export default function Contacts() {
                 <Input placeholder="Telefon" value={form.telefon} onChange={e => setForm(f => ({ ...f, telefon: e.target.value }))} />
               </div>
               <Input placeholder="LinkedIn URL" value={form.linkedin} onChange={e => setForm(f => ({ ...f, linkedin: e.target.value }))} />
-              <Button onClick={addKontakt} className="w-full" disabled={!form.namn}>Opprett kontakt</Button>
+              <Button onClick={addKontakt} className="w-full" disabled={!form.navn}>Opprett kontakt</Button>
             </div>
           </DialogContent>
         </Dialog>
