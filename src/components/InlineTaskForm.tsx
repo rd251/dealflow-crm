@@ -24,10 +24,13 @@ interface InlineTaskFormProps {
 
 export default function InlineTaskForm({ lead_id = "", selskap_id = "", salgsmulighet_id = "" }: InlineTaskFormProps) {
   const { oppgaver, updateOppgaver, generateId } = useCrmStore();
+  const { user } = useAuth();
+  const { profiles } = useProfiles();
   const [showForm, setShowForm] = useState(false);
   const [oppgave, setOppgave] = useState("");
   const [frist, setFrist] = useState("");
   const [prioritet, setPrioritet] = useState<Prioritet>("Medium");
+  const [ansvarlig, setAnsvarlig] = useState("");
 
   const today = new Date().toISOString().split("T")[0];
 
