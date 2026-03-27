@@ -336,7 +336,7 @@ export default function Leads() {
             ),
             notater: (
               <DetailField label="Notater">
-                <Textarea value={currentLead.notater} onChange={e => updateField("notater", e.target.value)} rows={6} />
+                <Textarea value={currentLead.notater} onChange={e => updateField("notater", e.target.value)} rows={6} readOnly={!canEdit} />
               </DetailField>
             ),
           };
