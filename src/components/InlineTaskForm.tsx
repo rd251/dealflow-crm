@@ -40,7 +40,7 @@ export default function InlineTaskForm({ lead_id = "", selskap_id = "", salgsmul
     (!lead_id && !salgsmulighet_id && selskap_id && o.selskap_id === selskap_id)
   );
 
-  const addTask = () => {
+  const addTask = async () => {
     if (!oppgave.trim()) return;
     const id = generateId("O", oppgaver);
     const ny: Oppgave = {
