@@ -44,10 +44,36 @@ export default function Tasks() {
   const idagOppgaver = oppgaver.filter(o => o.status !== "Ferdig" && o.frist === today);
   const ukeOppgaver = oppgaver.filter(o => o.status !== "Ferdig" && o.frist >= today && o.frist <= weekEnd);
 
-  let visibleTasks = oppgaver;
-  if (filter === "forfalte") visibleTasks = forfalte;
-  else if (filter === "idag") visibleTasks = idagOppgaver;
-  else if (filter === "uke") visibleTasks = ukeOppgaver;
+  const prioritetOrder: Record<Prioritet, number> = { "Høy": 0, "Medium": 1, "Lav": 2 };
+
+  const sortTasks = (tasks: Oppgave[]) => {
+    return [...tasks].sort((a, b) => {
+      // Ferdige alltid sist
+      if (a.status === "Ferdig" && b.status !== "Ferdig") return 1;
+      if (a.status !== "Ferdig" && b.status === "Ferdig") return -1;
+      if (a.status === "Ferdig" && b.status === "Ferdig") return 0;
+
+      // Forfalte først
+      const aOverdue = a.frist && a.frist < today ? 1 : 0;
+      const bOverdue = b.frist && b.frist < today ? 1 : 0;
+      if (aOverdue !== bOverdue) return bOverdue - aOverdue;
+
+      // Deretter prioritet
+      const pDiff = prioritetOrder[a.prioritet] - prioritetOrder[b.prioritet];
+      if (pDiff !== 0) return pDiff;
+
+      // Deretter frist (tidligst først, uten frist sist)
+      if (a.frist && b.frist) return a.frist.localeCompare(b.frist);
+      if (a.frist) return -1;
+      if (b.frist) return 1;
+      return 0;
+    });
+  };
+
+  let visibleTasks = sortTasks(oppgaver);
+  if (filter === "forfalte") visibleTasks = sortTasks(forfalte);
+  else if (filter === "idag") visibleTasks = sortTasks(idagOppgaver);
+  else if (filter === "uke") visibleTasks = sortTasks(ukeOppgaver);
 
   return (
     <PageShell
