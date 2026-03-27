@@ -4,6 +4,7 @@ import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/use-auth";
+import NotificationBell from "@/components/NotificationBell";
 import logo from "@/assets/logo-white.svg";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
