@@ -110,6 +110,14 @@ export default function Tasks() {
 
   const getProfileName = (userId: string) => profiles.find(p => p.user_id === userId)?.display_name;
 
+  const avatarColors = ["bg-primary", "bg-chart-1", "bg-chart-2", "bg-chart-3", "bg-chart-4", "bg-chart-5"];
+  const getAvatarColor = (userId: string) => {
+    let hash = 0;
+    for (let i = 0; i < userId.length; i++) hash = userId.charCodeAt(i) + ((hash << 5) - hash);
+    return avatarColors[Math.abs(hash) % avatarColors.length];
+  };
+  const getInitials = (name: string) => name.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase();
+
   return (
     <TooltipProvider>
     <PageShell
