@@ -338,7 +338,7 @@ export default function Companies() {
                   <td className="px-4 py-3 text-muted-foreground">{s.bransje || "–"}</td>
                   <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                     <select className={`text-xs px-2 py-1 rounded-full font-medium border-0 cursor-pointer ${kundestatusColors[s.kundestatus]}`}
-                      value={s.kundestatus} onChange={e => changeKundestatus(s.id, e.target.value as Kundestatus)}>
+                      value={s.kundestatus} onChange={e => changeKundestatus(s.id, e.target.value as Kundestatus)} disabled={!canEdit}>
                       {kundestatuser.map(k => <option key={k} value={k}>{k}</option>)}
                     </select>
                   </td>
