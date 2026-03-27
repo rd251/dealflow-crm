@@ -14,7 +14,7 @@ interface TeamMember {
   user_id: string;
   display_name: string;
   email: string;
-  role: "admin" | "user";
+  role: "admin" | "user" | "viewer";
 }
 
 export default function Admin() {
