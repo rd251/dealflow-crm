@@ -213,7 +213,7 @@ export default function Dashboard() {
             label="Leads uten oppfølging"
             count={leadsUtenOppfolging.length}
             color={leadsUtenOppfolging.length > 0 ? "text-destructive" : "text-muted-foreground"}
-            onClick={() => navigate("/leads")}
+            onClick={() => navigate("/leads?filter=uten-oppfolging")}
           />
           <FocusCard
             icon={<AlertTriangle className="w-5 h-5" />}

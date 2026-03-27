@@ -33,18 +33,37 @@ const statusColors: Record<LeadStatus, string> = {
 export default function Leads() {
   const isMobile = useIsMobile();
   const { canEdit } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { leads, updateLeads, konverterLead, konverterTilPartner, generateId } = useCrmStore();
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [form, setForm] = useState<Partial<Lead>>({ firmanavn: "", kontaktperson: "", e_post: "", telefon: "", kilde: "Nettside", status: "Ny", ansvarlig: "", neste_steg: "", notater: "", rolle_i_firma: "", use_case: "" });
+  const [filterUtenOppfolging, setFilterUtenOppfolging] = useState(false);
 
-  const filtered = leads.filter(l =>
-    l.status !== "Konvertert til salg" && l.status !== "Konvertert til partner" &&
-    (l.firmanavn.toLowerCase().includes(search.toLowerCase()) ||
-    l.kontaktperson.toLowerCase().includes(search.toLowerCase()))
-  );
+  // Pick up filter from query param
+  useEffect(() => {
+    if (searchParams.get("filter") === "uten-oppfolging") {
+      setFilterUtenOppfolging(true);
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams]);
+
+  const now = new Date();
+
+  const filtered = leads.filter(l => {
+    if (l.status === "Konvertert til salg" || l.status === "Konvertert til partner") return false;
+    if (filterUtenOppfolging) {
+      const cutoff = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      if (l.status === "Ikke aktuelt") return false;
+      if (l.sist_aktivitet && new Date(l.sist_aktivitet) >= cutoff) return false;
+    }
+    return (
+      l.firmanavn.toLowerCase().includes(search.toLowerCase()) ||
+      l.kontaktperson.toLowerCase().includes(search.toLowerCase())
+    );
+  });
 
   const addLead = () => {
     const today = new Date().toISOString().split("T")[0];
