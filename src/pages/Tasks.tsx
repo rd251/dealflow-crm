@@ -10,7 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Bell, BellOff, Calendar, AlertTriangle, User } from "lucide-react";
+import { Plus, Bell, BellOff, Calendar, AlertTriangle } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { Oppgave, OppgaveStatus, Prioritet } from "@/data/crm-data";
 import { toast } from "sonner";
 
@@ -109,7 +110,16 @@ export default function Tasks() {
 
   const getProfileName = (userId: string) => profiles.find(p => p.user_id === userId)?.display_name;
 
+  const avatarColors = ["bg-primary", "bg-chart-1", "bg-chart-2", "bg-chart-3", "bg-chart-4", "bg-chart-5"];
+  const getAvatarColor = (userId: string) => {
+    let hash = 0;
+    for (let i = 0; i < userId.length; i++) hash = userId.charCodeAt(i) + ((hash << 5) - hash);
+    return avatarColors[Math.abs(hash) % avatarColors.length];
+  };
+  const getInitials = (name: string) => name.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase();
+
   return (
+    <TooltipProvider>
     <PageShell
       title="Oppgaver"
       subtitle={`${oppgaver.filter(o => o.status !== "Ferdig").length} åpne · ${forfalte.length} forfalte`}
@@ -159,8 +169,8 @@ export default function Tasks() {
           const selskap = selskaper.find(s => s.id === task.selskap_id);
           const ansvarligNavn = task.ansvarlig ? getProfileName(task.ansvarlig) : null;
           return (
-            <div key={task.id} className={`bg-card border rounded-xl p-4 flex items-start gap-3 animate-slide-in transition-opacity ${task.status === "Ferdig" ? "opacity-50" : ""}`}>
-              <Checkbox checked={task.status === "Ferdig"} onCheckedChange={() => changeStatus(task.id, task.status === "Ferdig" ? "Åpen" : "Ferdig")} className="mt-0.5" />
+            <div key={task.id} className={`bg-card border rounded-xl p-4 flex items-center gap-3 animate-slide-in transition-opacity ${task.status === "Ferdig" ? "opacity-50" : ""}`}>
+              <Checkbox checked={task.status === "Ferdig"} onCheckedChange={() => changeStatus(task.id, task.status === "Ferdig" ? "Åpen" : "Ferdig")} className="shrink-0" />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <p className={`font-medium text-sm ${task.status === "Ferdig" ? "line-through" : ""}`}>{task.oppgave}</p>
@@ -182,7 +192,6 @@ export default function Tasks() {
                   )}
                   {selskap && <span className="truncate">· {selskap.firmanavn}</span>}
                   <span className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
-                    <User className="w-3 h-3" />
                     <select
                       className="text-xs border-0 bg-transparent cursor-pointer"
                       value={task.ansvarlig}
@@ -198,6 +207,16 @@ export default function Tasks() {
                   </span>
                 </div>
               </div>
+              {ansvarligNavn && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-primary-foreground shrink-0 ${getAvatarColor(task.ansvarlig)}`}>
+                      {getInitials(ansvarligNavn)}
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="left" className="text-xs">{ansvarligNavn}</TooltipContent>
+                </Tooltip>
+              )}
             </div>
           );
         })}
@@ -206,5 +225,6 @@ export default function Tasks() {
         )}
       </div>
     </PageShell>
+    </TooltipProvider>
   );
 }
