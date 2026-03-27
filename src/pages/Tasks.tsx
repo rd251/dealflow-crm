@@ -111,6 +111,7 @@ export default function Tasks() {
   const getProfileName = (userId: string) => profiles.find(p => p.user_id === userId)?.display_name;
 
   return (
+    <TooltipProvider>
     <PageShell
       title="Oppgaver"
       subtitle={`${oppgaver.filter(o => o.status !== "Ferdig").length} åpne · ${forfalte.length} forfalte`}
