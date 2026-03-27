@@ -99,6 +99,16 @@ export default function InlineTaskForm({ lead_id = "", selskap_id = "", salgsmul
               <option value="Medium">Medium</option>
               <option value="Høy">Høy</option>
             </select>
+          </div>
+          <div className="flex gap-2">
+            <select className="border rounded-md px-2 py-1 text-xs bg-background h-8 flex-1" value={ansvarlig} onChange={e => setAnsvarlig(e.target.value)}>
+              <option value="">Velg ansvarlig</option>
+              {profiles.map(p => (
+                <option key={p.user_id} value={p.user_id}>
+                  {p.display_name}{p.user_id === user?.id ? " (deg)" : ""}
+                </option>
+              ))}
+            </select>
             <Button size="sm" className="h-8 text-xs" onClick={addTask} disabled={!oppgave.trim()}>Legg til</Button>
           </div>
         </div>
