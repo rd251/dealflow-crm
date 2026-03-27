@@ -170,7 +170,7 @@ export default function Tasks() {
           const ansvarligNavn = task.ansvarlig ? getProfileName(task.ansvarlig) : null;
           return (
             <div key={task.id} className={`bg-card border rounded-xl p-4 flex items-center gap-3 animate-slide-in transition-opacity ${task.status === "Ferdig" ? "opacity-50" : ""}`}>
-              <Checkbox checked={task.status === "Ferdig"} onCheckedChange={() => changeStatus(task.id, task.status === "Ferdig" ? "Åpen" : "Ferdig")} className="shrink-0" />
+              <Checkbox checked={task.status === "Ferdig"} onCheckedChange={() => canEdit && changeStatus(task.id, task.status === "Ferdig" ? "Åpen" : "Ferdig")} className="shrink-0" disabled={!canEdit} />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <p className={`font-medium text-sm ${task.status === "Ferdig" ? "line-through" : ""}`}>{task.oppgave}</p>
