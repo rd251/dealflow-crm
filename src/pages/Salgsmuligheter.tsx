@@ -33,6 +33,7 @@ const statusColors: Record<SalgsmulighetStatus, string> = {
 
 export default function Salgsmuligheter() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const isMobile = useIsMobile();
   const { canEdit } = useAuth();
   const { salgsmuligheter, selskaper, kontakter, updateSalgsmuligheter, updateKontakter, vinnSalgsmulighet, tapSalgsmulighet, generateId } = useCrmStore();
@@ -43,6 +44,18 @@ export default function Salgsmuligheter() {
   const [lossReason, setLossReason] = useState<Tapsaarsak>("Pris");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({ navn: "", selskap_id: "", kontakt_id: "", forventet_mrr: 0, sla: 0, oppstartskostnad: 0, kontraktslengde_mnd: 12, sannsynlighet: 50, forventet_lukkedato: "", neste_steg: "", rolle_i_firma: "", use_case: "", kontaktperson: "", e_post: "", telefon: "" });
+
+  // Auto-open detail panel from query param
+  useEffect(() => {
+    const openId = searchParams.get("open");
+    if (openId && salgsmuligheter.length > 0) {
+      const found = salgsmuligheter.find(s => s.id === openId);
+      if (found) {
+        setSelectedSm(found);
+        setSearchParams({}, { replace: true });
+      }
+    }
+  }, [searchParams, salgsmuligheter]);
 
   const getSelskapNavn = (id: string) => selskaper.find(s => s.id === id)?.firmanavn || "–";
 
