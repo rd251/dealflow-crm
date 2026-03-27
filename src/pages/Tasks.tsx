@@ -179,9 +179,13 @@ export default function Tasks() {
                 </div>
                 <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground flex-wrap">
                   <span onClick={e => e.stopPropagation()}>
-                    <select className="text-xs border-0 bg-transparent cursor-pointer" value={task.status} onChange={e => changeStatus(task.id, e.target.value as OppgaveStatus)}>
-                      {statusOptions.map(s => <option key={s}>{s}</option>)}
-                    </select>
+                    {canEdit ? (
+                      <select className="text-xs border-0 bg-transparent cursor-pointer" value={task.status} onChange={e => changeStatus(task.id, e.target.value as OppgaveStatus)}>
+                        {statusOptions.map(s => <option key={s}>{s}</option>)}
+                      </select>
+                    ) : (
+                      <span className="text-xs">{task.status}</span>
+                    )}
                   </span>
                   {task.frist && (
                     <span className={`flex items-center gap-1 ${isOverdue ? "text-destructive font-medium" : ""}`}>
