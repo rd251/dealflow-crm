@@ -40,6 +40,7 @@ Deno.serve(async (req) => {
 
     const context = [
       meetingTitle ? `Møtetittel: ${meetingTitle}` : "",
+      meetingDate ? `Møtedato: ${meetingDate}` : "",
       selskapNavn ? `Selskap: ${selskapNavn}` : "",
       smNavn ? `Salgsmulighet: ${smNavn}` : "",
       smStatus ? `Status: ${smStatus}` : "",
