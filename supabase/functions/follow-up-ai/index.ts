@@ -45,7 +45,7 @@ Referer til siste kontakt naturlig. Avslutt med et konkret forslag til neste ste
 
 Svar KUN med selve meldingsteksten, ingen JSON eller annen formatering.`;
 
-    const res = await fetch("https://api.lovable.dev/v1/chat/completions", {
+    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
