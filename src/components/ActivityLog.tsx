@@ -105,8 +105,9 @@ export default function ActivityLog(props: ActivityLogProps) {
     if (props.partner_id) filters.push(`partner_id=eq.${props.partner_id}`);
     if (props.prosjekt_id) filters.push(`prosjekt_id=eq.${props.prosjekt_id}`);
     if (props.kontakt_id) filters.push(`kontakt_id=eq.${props.kontakt_id}`);
+    if (props.email) filters.push(`beskrivelse=ilike.*${encodeURIComponent(props.email)}*`);
     return filters.join("&");
-  }, [props.lead_id, props.salgsmulighet_id, props.selskap_id, props.partner_id, props.prosjekt_id, props.kontakt_id]);
+  }, [props.lead_id, props.salgsmulighet_id, props.selskap_id, props.partner_id, props.prosjekt_id, props.kontakt_id, props.email]);
 
   const fetchAktiviteter = useCallback(async () => {
     const filter = buildFilter();
