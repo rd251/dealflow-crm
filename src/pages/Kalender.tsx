@@ -727,7 +727,7 @@ export default function Kalender() {
                         return (
                         <div
                           key={event.id}
-                          className="absolute"
+                          className="absolute z-10"
                           style={{
                             top: `${event.start.getMinutes()}px`,
                             height: `${getEventHeight(event)}px`,
