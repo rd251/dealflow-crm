@@ -166,14 +166,8 @@ export default function Kalender() {
   useEffect(() => {
     Promise.all([
       fetch(`${API_URL}/selskaper?select=id,firmanavn&order=firmanavn`, { headers: API_HEADERS }).then(r => r.ok ? r.json() : []),
-      fetch(`${API_URL}/salgsmuligheter?select=id,navn,status&order=navn`, { headers: API_HEADERS }).then(r => r.ok ? r.json() : []),
-      fetch(`${API_URL}/leads?select=id,firmanavn,status&order=firmanavn`, { headers: API_HEADERS }).then(r => r.ok ? r.json() : []),
-      fetch(`${API_URL}/partnere?select=id,partnernavn,partnertype&order=partnernavn`, { headers: API_HEADERS }).then(r => r.ok ? r.json() : []),
-    ]).then(([s, sm, l, p]) => {
+    ]).then(([s]) => {
       setSelskapListe(s);
-      setSalgsmulighetListe(sm);
-      setLeadListe(l);
-      setPartnerListe(p);
     }).catch(() => {});
   }, []);
 
