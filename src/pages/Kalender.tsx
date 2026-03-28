@@ -12,7 +12,7 @@ import { ChevronLeft, ChevronRight, Clock, Users, CalendarDays, ListTodo, Pencil
 import { format, startOfWeek, startOfMonth, addDays, addWeeks, subWeeks, addMonths, subMonths, isSameDay, getDaysInMonth, getDay } from "date-fns";
 import { nb } from "date-fns/locale";
 import MeetingFields from "@/components/MeetingFields";
-import EntityLinkPicker from "@/components/EntityLinkPicker";
+
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
