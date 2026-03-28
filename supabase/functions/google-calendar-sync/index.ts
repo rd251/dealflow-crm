@@ -111,6 +111,33 @@ async function matchDeltakere(supabase: any, attendees: any[]): Promise<string[]
   return (kontakter || []).map((k: any) => k.id);
 }
 
+async function matchSelskapByTitle(supabase: any, title: string): Promise<string | null> {
+  if (!title || title.length < 3) return null;
+  const titleLower = title.toLowerCase();
+
+  // Skip generic/personal titles
+  const skipPatterns = ['hjemme', 'ferie', 'lunsj', 'lunch', 'privat', 'ledig', 'busy'];
+  if (skipPatterns.some(p => titleLower === p)) return null;
+
+  const { data: selskaper } = await supabase
+    .from('selskaper')
+    .select('id, firmanavn');
+
+  if (!selskaper || selskaper.length === 0) return null;
+
+  // Sort by name length descending to match longest (most specific) name first
+  const sorted = selskaper.sort((a: any, b: any) => b.firmanavn.length - a.firmanavn.length);
+
+  for (const s of sorted) {
+    if (s.firmanavn.length < 4) continue; // skip very short names like "Test"
+    if (titleLower.includes(s.firmanavn.toLowerCase())) {
+      return s.id;
+    }
+  }
+
+  return null;
+}
+
 async function syncForUser(supabase: any, connection: any) {
   const accessToken = await getValidAccessToken(supabase, connection);
   if (!accessToken) {
@@ -121,7 +148,6 @@ async function syncForUser(supabase: any, connection: any) {
   let result = await fetchCalendarEvents(accessToken, connection.sync_token);
 
   if (result.needFullSync) {
-    // Re-sync without syncToken
     result = await fetchCalendarEvents(accessToken, null);
   }
 
@@ -132,7 +158,6 @@ async function syncForUser(supabase: any, connection: any) {
     const cancelled = event.status === 'cancelled';
 
     if (cancelled) {
-      // Delete from CRM
       await supabase
         .from('aktiviteter')
         .delete()
@@ -148,8 +173,9 @@ async function syncForUser(supabase: any, connection: any) {
 
     const deltakere = await matchDeltakere(supabase, event.attendees || []);
 
-    // Find matching kontakt by first attendee email
+    // Find matching kontakt and selskap by first attendee email
     let kontaktId: string | null = null;
+    let selskapIdFromKontakt: string | null = null;
     if (event.attendees) {
       const externalAttendees = event.attendees.filter((a: any) => !a.self);
       if (externalAttendees.length > 0) {
@@ -160,13 +186,18 @@ async function syncForUser(supabase: any, connection: any) {
           .maybeSingle();
         if (kontakt) {
           kontaktId = kontakt.id;
+          selskapIdFromKontakt = kontakt.selskap_id || null;
         }
       }
     }
 
+    // Match selskap by meeting title if not found via kontakt
+    const meetingTitle = event.summary || '';
+    const selskapId = selskapIdFromKontakt || await matchSelskapByTitle(supabase, meetingTitle);
+
     const aktivitetData = {
       type: 'Møte' as const,
-      tittel: event.summary || 'Google Calendar-møte',
+      tittel: meetingTitle || 'Google Calendar-møte',
       beskrivelse: event.description || '',
       dato: new Date(startDt).toISOString(),
       start_tid: new Date(startDt).toISOString(),
@@ -176,6 +207,7 @@ async function syncForUser(supabase: any, connection: any) {
       aktivitet_kilde: 'google_calendar',
       deltakere: deltakere.length > 0 ? deltakere : [],
       kontakt_id: kontaktId,
+      selskap_id: selskapId,
     };
 
     // Upsert: check if exists
