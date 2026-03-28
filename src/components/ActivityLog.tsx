@@ -76,6 +76,7 @@ interface ActivityLogProps {
   partner_id?: string;
   prosjekt_id?: string;
   kontakt_id?: string;
+  email?: string;
   onActivityLogged?: () => void;
   kontaktListe?: KontaktOption[];
 }
