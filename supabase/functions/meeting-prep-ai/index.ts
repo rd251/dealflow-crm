@@ -32,11 +32,14 @@ Deno.serve(async (req) => {
       });
     }
 
-    const activityList = activities
-      .map((a: any) => `- ${a.type} (${a.dato}): ${a.tittel || a.beskrivelse || "Ingen tittel"}`)
-      .join("\n");
+    const activityList = hasActivities
+      ? activities
+          .map((a: any) => `- ${a.type} (${a.dato}): ${a.tittel || a.beskrivelse || "Ingen tittel"}`)
+          .join("\n")
+      : "Ingen tidligere aktiviteter registrert.";
 
     const context = [
+      meetingTitle ? `Møtetittel: ${meetingTitle}` : "",
       selskapNavn ? `Selskap: ${selskapNavn}` : "",
       smNavn ? `Salgsmulighet: ${smNavn}` : "",
       smStatus ? `Status: ${smStatus}` : "",
@@ -46,8 +49,8 @@ Deno.serve(async (req) => {
       .join("\n");
 
     const prompt = `Du er en CRM-assistent for et norsk SaaS-selskap. Basert på informasjonen nedenfor, gi:
-1. En kort oppsummering (2-3 setninger) av hva som har skjedd med denne kunden/muligheten
-2. Én konkret anbefalt neste handling (f.eks. "Send tilbud", "Book oppfølgingsmøte", "Ring for å avklare innvendinger")
+1. En kort oppsummering (2-3 setninger) av hva som har skjedd med denne kunden/muligheten, eller hva møtet handler om
+2. Én konkret anbefalt neste handling (f.eks. "Send tilbud", "Book oppfølgingsmøte", "Ring for å avklare innvendinger", "Forbered agenda")
 
 Kontekst:
 ${context}
