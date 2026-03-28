@@ -730,7 +730,7 @@ export default function Kalender() {
                           className="absolute"
                           style={{
                             top: `${event.start.getMinutes()}px`,
-                            height: `${Math.min(getEventHeight(event), 60 - event.start.getMinutes())}px`,
+                            height: `${getEventHeight(event)}px`,
                             left: `${leftPct}%`,
                             width: `${widthPct}%`,
                             paddingLeft: '1px',
