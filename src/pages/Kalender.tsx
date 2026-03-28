@@ -8,11 +8,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { ChevronLeft, ChevronRight, Clock, Users, CalendarDays, ListTodo, Pencil, Trash2, GripVertical, Check, X, Building2, Briefcase, UserCircle, Mail, Phone, ExternalLink, Handshake, RefreshCw, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Clock, Users, CalendarDays, ListTodo, Pencil, Trash2, GripVertical, Check, X, Building2, ExternalLink, RefreshCw, Loader2 } from "lucide-react";
 import { format, startOfWeek, startOfMonth, addDays, addWeeks, subWeeks, addMonths, subMonths, isSameDay, getDaysInMonth, getDay } from "date-fns";
 import { nb } from "date-fns/locale";
 import MeetingFields from "@/components/MeetingFields";
-import EntityLinkPicker from "@/components/EntityLinkPicker";
+
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
@@ -104,16 +104,9 @@ export default function Kalender() {
 
   // Linked entity details for drawer
   const [linkedSelskap, setLinkedSelskap] = useState<any>(null);
-  const [linkedKontakt, setLinkedKontakt] = useState<any>(null);
-  const [linkedSalgsmulighet, setLinkedSalgsmulighet] = useState<any>(null);
-  const [linkedLead, setLinkedLead] = useState<any>(null);
-  const [linkedPartner, setLinkedPartner] = useState<any>(null);
 
-  // Entity lists for linking
+  // Entity lists for linking (selskap only for display)
   const [selskapListe, setSelskapListe] = useState<{ id: string; firmanavn: string }[]>([]);
-  const [salgsmulighetListe, setSalgsmulighetListe] = useState<{ id: string; navn: string; status: string }[]>([]);
-  const [leadListe, setLeadListe] = useState<{ id: string; firmanavn: string; status: string }[]>([]);
-  const [partnerListe, setPartnerListe] = useState<{ id: string; partnernavn: string; partnertype: string | null }[]>([]);
 
   // Create meeting dialog
   const [createOpen, setCreateOpen] = useState(false);
@@ -123,11 +116,6 @@ export default function Kalender() {
   const [newMeetingSluttTid, setNewMeetingSluttTid] = useState("10:00");
   const [newMeetingBeskrivelse, setNewMeetingBeskrivelse] = useState("");
   const [newMeetingDeltakere, setNewMeetingDeltakere] = useState<string[]>([]);
-  const [newMeetingSelskapId, setNewMeetingSelskapId] = useState<string | null>(null);
-  const [newMeetingKontaktId, setNewMeetingKontaktId] = useState<string | null>(null);
-  const [newMeetingSalgsmulighetId, setNewMeetingSalgsmulighetId] = useState<string | null>(null);
-  const [newMeetingLeadId, setNewMeetingLeadId] = useState<string | null>(null);
-  const [newMeetingPartnerId, setNewMeetingPartnerId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   // Drag state
@@ -178,14 +166,8 @@ export default function Kalender() {
   useEffect(() => {
     Promise.all([
       fetch(`${API_URL}/selskaper?select=id,firmanavn&order=firmanavn`, { headers: API_HEADERS }).then(r => r.ok ? r.json() : []),
-      fetch(`${API_URL}/salgsmuligheter?select=id,navn,status&order=navn`, { headers: API_HEADERS }).then(r => r.ok ? r.json() : []),
-      fetch(`${API_URL}/leads?select=id,firmanavn,status&order=firmanavn`, { headers: API_HEADERS }).then(r => r.ok ? r.json() : []),
-      fetch(`${API_URL}/partnere?select=id,partnernavn,partnertype&order=partnernavn`, { headers: API_HEADERS }).then(r => r.ok ? r.json() : []),
-    ]).then(([s, sm, l, p]) => {
+    ]).then(([s]) => {
       setSelskapListe(s);
-      setSalgsmulighetListe(sm);
-      setLeadListe(l);
-      setPartnerListe(p);
     }).catch(() => {});
   }, []);
 
@@ -369,66 +351,13 @@ export default function Kalender() {
   // Fetch linked entity details
   const fetchLinkedEntities = useCallback(async (raw: any) => {
     setLinkedSelskap(null);
-    setLinkedKontakt(null);
-    setLinkedSalgsmulighet(null);
-    setLinkedLead(null);
-    setLinkedPartner(null);
-
-    const fetches: Promise<void>[] = [];
 
     if (raw.selskap_id) {
-      fetches.push(
-        fetch(`${API_URL}/selskaper?id=eq.${raw.selskap_id}&select=id,firmanavn,kundestatus,bransje`, { headers: API_HEADERS })
-          .then(r => r.ok ? r.json() : []).then(d => { if (d[0]) setLinkedSelskap(d[0]); })
-      );
+      fetch(`${API_URL}/selskaper?id=eq.${raw.selskap_id}&select=id,firmanavn,kundestatus,bransje`, { headers: API_HEADERS })
+        .then(r => r.ok ? r.json() : []).then(d => { if (d[0]) setLinkedSelskap(d[0]); });
     }
-    if (raw.kontakt_id) {
-      fetches.push(
-        fetch(`${API_URL}/kontakter?id=eq.${raw.kontakt_id}&select=id,navn,rolle,e_post,telefon`, { headers: API_HEADERS })
-          .then(r => r.ok ? r.json() : []).then(d => { if (d[0]) setLinkedKontakt(d[0]); })
-      );
-    }
-    if (raw.salgsmulighet_id) {
-      fetches.push(
-        fetch(`${API_URL}/salgsmuligheter?id=eq.${raw.salgsmulighet_id}&select=id,navn,status,forventet_mrr`, { headers: API_HEADERS })
-          .then(r => r.ok ? r.json() : []).then(d => { if (d[0]) setLinkedSalgsmulighet(d[0]); })
-      );
-    }
-    if (raw.lead_id) {
-      fetches.push(
-        fetch(`${API_URL}/leads?id=eq.${raw.lead_id}&select=id,firmanavn,status,kontaktperson`, { headers: API_HEADERS })
-          .then(r => r.ok ? r.json() : []).then(d => { if (d[0]) setLinkedLead(d[0]); })
-      );
-    }
-    if (raw.partner_id) {
-      fetches.push(
-        fetch(`${API_URL}/partnere?id=eq.${raw.partner_id}&select=id,partnernavn,partnertype,partnerstatus`, { headers: API_HEADERS })
-          .then(r => r.ok ? r.json() : []).then(d => { if (d[0]) setLinkedPartner(d[0]); })
-      );
-    }
-
-    await Promise.all(fetches);
   }, []);
 
-  // Link/unlink an entity
-  const handleLinkEntity = async (field: string, entityId: string | null) => {
-    if (!selectedEvent) return;
-    const table = selectedEvent.type === "task" ? "oppgaver" : "aktiviteter";
-    try {
-      await fetch(`${API_URL}/${table}?id=eq.${selectedEvent.id}`, {
-        method: 'PATCH',
-        headers: { ...API_HEADERS, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ [field]: entityId }),
-      });
-      // Update raw and re-fetch linked entities
-      const updatedRaw = { ...selectedEvent.raw, [field]: entityId };
-      setSelectedEvent({ ...selectedEvent, raw: updatedRaw });
-      fetchLinkedEntities(updatedRaw);
-      await fetchEvents();
-    } catch (e) {
-      console.error("Error linking entity:", e);
-    }
-  };
 
   // Event click -> open drawer
   const handleEventClick = (event: CalendarEvent) => {
@@ -510,11 +439,6 @@ export default function Kalender() {
     setNewMeetingTittel("");
     setNewMeetingBeskrivelse("");
     setNewMeetingDeltakere([]);
-    setNewMeetingSelskapId(null);
-    setNewMeetingKontaktId(null);
-    setNewMeetingSalgsmulighetId(null);
-    setNewMeetingLeadId(null);
-    setNewMeetingPartnerId(null);
     setCreateOpen(true);
   };
 
@@ -532,11 +456,6 @@ export default function Kalender() {
           start_tid: `${newMeetingDato}T${newMeetingStartTid}:00`,
           slutt_tid: `${newMeetingDato}T${newMeetingSluttTid}:00`,
           deltakere: newMeetingDeltakere,
-          selskap_id: newMeetingSelskapId,
-          kontakt_id: newMeetingKontaktId,
-          salgsmulighet_id: newMeetingSalgsmulighetId,
-          lead_id: newMeetingLeadId,
-          partner_id: newMeetingPartnerId,
           user_id: user?.id || null,
         }),
       });
@@ -856,11 +775,6 @@ export default function Kalender() {
                     setNewMeetingTittel("");
                     setNewMeetingBeskrivelse("");
                     setNewMeetingDeltakere([]);
-                    setNewMeetingSelskapId(null);
-                    setNewMeetingKontaktId(null);
-                    setNewMeetingSalgsmulighetId(null);
-                    setNewMeetingLeadId(null);
-                    setNewMeetingPartnerId(null);
                     setCreateOpen(true);
                   }}
                 >
@@ -970,167 +884,21 @@ export default function Kalender() {
                 {selectedEvent.type === "meeting" ? "Møte" : selectedEvent.type === "task" ? "Oppgave" : "Aktivitet"}
               </Badge>
 
-              {/* Tilknyttet info */}
-              <div className="space-y-3 pt-3 border-t">
-                <h4 className="text-xs font-semibold uppercase text-muted-foreground tracking-wide">Tilknyttet informasjon</h4>
-
-                {/* Selskap */}
-                <div className="rounded-lg border p-3 space-y-1.5">
-                  <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+              {/* Auto-linked selskap (read-only) */}
+              {linkedSelskap && (
+                <div className="pt-3 border-t">
+                  <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground mb-1">
                     <Building2 className="w-3.5 h-3.5" /> Selskap
                   </div>
-                  {linkedSelskap ? (
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        className="text-sm font-medium text-primary hover:underline flex items-center gap-1 flex-1"
-                        onClick={() => { setDrawerOpen(false); navigate(`/kundeforhold/${linkedSelskap.id}`); }}
-                      >
-                        {linkedSelskap.firmanavn}
-                        <ExternalLink className="w-3 h-3" />
-                      </button>
-                      <Button variant="ghost" size="icon" className="h-5 w-5 shrink-0" onClick={() => handleLinkEntity('selskap_id', null)}>
-                        <X className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  ) : (
-                    <EntityLinkPicker
-                      options={selskapListe.map(s => ({ id: s.id, label: s.firmanavn }))}
-                      value={null}
-                      onChange={(id) => handleLinkEntity('selskap_id', id)}
-                      placeholder="Søk selskap..."
-                    />
-                  )}
+                  <button
+                    className="text-sm font-medium text-primary hover:underline flex items-center gap-1"
+                    onClick={() => { setDrawerOpen(false); navigate(`/kundeforhold/${linkedSelskap.id}`); }}
+                  >
+                    {linkedSelskap.firmanavn}
+                    <ExternalLink className="w-3 h-3" />
+                  </button>
                 </div>
-
-                {/* Kontaktperson */}
-                <div className="rounded-lg border p-3 space-y-1.5">
-                  <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                    <UserCircle className="w-3.5 h-3.5" /> Kontaktperson
-                  </div>
-                  {linkedKontakt ? (
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <p className="text-sm font-medium flex-1">{linkedKontakt.navn}</p>
-                        <Button variant="ghost" size="icon" className="h-5 w-5 shrink-0" onClick={() => handleLinkEntity('kontakt_id', null)}>
-                          <X className="w-3 h-3" />
-                        </Button>
-                      </div>
-                      {linkedKontakt.rolle && <p className="text-xs text-muted-foreground">{linkedKontakt.rolle}</p>}
-                      {linkedKontakt.e_post && (
-                        <a href={`mailto:${linkedKontakt.e_post}`} className="text-xs text-primary hover:underline flex items-center gap-1">
-                          <Mail className="w-3 h-3" /> {linkedKontakt.e_post}
-                        </a>
-                      )}
-                      {linkedKontakt.telefon && (
-                        <a href={`tel:${linkedKontakt.telefon}`} className="text-xs text-primary hover:underline flex items-center gap-1">
-                          <Phone className="w-3 h-3" /> {linkedKontakt.telefon}
-                        </a>
-                      )}
-                    </div>
-                  ) : (
-                    <EntityLinkPicker
-                      options={kontaktListe.map(k => ({ id: k.id, label: k.navn }))}
-                      value={null}
-                      onChange={(id) => handleLinkEntity('kontakt_id', id)}
-                      placeholder="Søk kontakt..."
-                    />
-                  )}
-                </div>
-
-                {/* Salgsmulighet */}
-                <div className="rounded-lg border p-3 space-y-1.5">
-                  <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                    <Briefcase className="w-3.5 h-3.5" /> Salgsmulighet
-                  </div>
-                  {linkedSalgsmulighet ? (
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <p className="text-sm font-medium flex-1">{linkedSalgsmulighet.navn}</p>
-                        <Button variant="ghost" size="icon" className="h-5 w-5 shrink-0" onClick={() => handleLinkEntity('salgsmulighet_id', null)}>
-                          <X className="w-3 h-3" />
-                        </Button>
-                      </div>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <Badge variant="outline" className="text-[10px]">{linkedSalgsmulighet.status}</Badge>
-                        {linkedSalgsmulighet.forventet_mrr > 0 && (
-                          <span className="text-[10px] text-muted-foreground">{linkedSalgsmulighet.forventet_mrr.toLocaleString("nb-NO")} kr/mnd</span>
-                        )}
-                      </div>
-                    </div>
-                  ) : (
-                    <EntityLinkPicker
-                      options={salgsmulighetListe.map(s => ({ id: s.id, label: s.navn, sublabel: s.status }))}
-                      value={null}
-                      onChange={(id) => handleLinkEntity('salgsmulighet_id', id)}
-                      placeholder="Søk salgsmulighet..."
-                    />
-                  )}
-                </div>
-
-                {/* Lead */}
-                <div className="rounded-lg border p-3 space-y-1.5">
-                  <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                    <Users className="w-3.5 h-3.5" /> Lead
-                  </div>
-                  {linkedLead ? (
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <p className="text-sm font-medium flex-1">{linkedLead.firmanavn}</p>
-                        <Button variant="ghost" size="icon" className="h-5 w-5 shrink-0" onClick={() => handleLinkEntity('lead_id', null)}>
-                          <X className="w-3 h-3" />
-                        </Button>
-                      </div>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <Badge variant="outline" className="text-[10px]">{linkedLead.status}</Badge>
-                        {linkedLead.kontaktperson && (
-                          <span className="text-[10px] text-muted-foreground">{linkedLead.kontaktperson}</span>
-                        )}
-                      </div>
-                    </div>
-                  ) : (
-                    <EntityLinkPicker
-                      options={leadListe.map(l => ({ id: l.id, label: l.firmanavn, sublabel: l.status }))}
-                      value={null}
-                      onChange={(id) => handleLinkEntity('lead_id', id)}
-                      placeholder="Søk lead..."
-                    />
-                  )}
-                </div>
-
-                {/* Partner */}
-                <div className="rounded-lg border p-3 space-y-1.5">
-                  <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                    <Handshake className="w-3.5 h-3.5" /> Partner
-                  </div>
-                  {linkedPartner ? (
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          className="text-sm font-medium text-primary hover:underline flex items-center gap-1 flex-1"
-                          onClick={() => { setDrawerOpen(false); navigate(`/partnere/${linkedPartner.id}`); }}
-                        >
-                          {linkedPartner.partnernavn}
-                          <ExternalLink className="w-3 h-3" />
-                        </button>
-                        <Button variant="ghost" size="icon" className="h-5 w-5 shrink-0" onClick={() => handleLinkEntity('partner_id', null)}>
-                          <X className="w-3 h-3" />
-                        </Button>
-                      </div>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        {linkedPartner.partnertype && <Badge variant="outline" className="text-[10px]">{linkedPartner.partnertype}</Badge>}
-                        {linkedPartner.partnerstatus && <Badge variant="outline" className="text-[10px]">{linkedPartner.partnerstatus}</Badge>}
-                      </div>
-                    </div>
-                  ) : (
-                    <EntityLinkPicker
-                      options={partnerListe.map(p => ({ id: p.id, label: p.partnernavn, sublabel: p.partnertype || undefined }))}
-                      value={null}
-                      onChange={(id) => handleLinkEntity('partner_id', id)}
-                      placeholder="Søk partner..."
-                    />
-                  )}
-                </div>
-              </div>
+              )}
 
               <div className="flex gap-2 pt-4 border-t">
                 <Button variant="outline" size="sm" className="gap-1.5" onClick={startEditing}>
@@ -1228,56 +996,6 @@ export default function Kalender() {
               onChange={e => setNewMeetingBeskrivelse(e.target.value)}
               rows={3}
             />
-            <div className="space-y-2 border rounded-lg p-3 bg-muted/30">
-              <p className="text-xs font-medium text-muted-foreground">Tilknytninger</p>
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <p className="text-[10px] text-muted-foreground mb-1 flex items-center gap-1"><Building2 className="w-3 h-3" /> Selskap</p>
-                  <EntityLinkPicker
-                    options={selskapListe.map(s => ({ id: s.id, label: s.firmanavn }))}
-                    value={newMeetingSelskapId}
-                    onChange={setNewMeetingSelskapId}
-                    placeholder="Søk selskap..."
-                  />
-                </div>
-                <div>
-                  <p className="text-[10px] text-muted-foreground mb-1 flex items-center gap-1"><UserCircle className="w-3 h-3" /> Kontakt</p>
-                  <EntityLinkPicker
-                    options={kontaktListe.map(k => ({ id: k.id, label: k.navn }))}
-                    value={newMeetingKontaktId}
-                    onChange={setNewMeetingKontaktId}
-                    placeholder="Søk kontakt..."
-                  />
-                </div>
-                <div>
-                  <p className="text-[10px] text-muted-foreground mb-1 flex items-center gap-1"><Briefcase className="w-3 h-3" /> Salgsmulighet</p>
-                  <EntityLinkPicker
-                    options={salgsmulighetListe.map(s => ({ id: s.id, label: s.navn, sublabel: s.status }))}
-                    value={newMeetingSalgsmulighetId}
-                    onChange={setNewMeetingSalgsmulighetId}
-                    placeholder="Søk salgsmulighet..."
-                  />
-                </div>
-                <div>
-                  <p className="text-[10px] text-muted-foreground mb-1 flex items-center gap-1"><ExternalLink className="w-3 h-3" /> Lead</p>
-                  <EntityLinkPicker
-                    options={leadListe.map(l => ({ id: l.id, label: l.firmanavn, sublabel: l.status }))}
-                    value={newMeetingLeadId}
-                    onChange={setNewMeetingLeadId}
-                    placeholder="Søk lead..."
-                  />
-                </div>
-                <div>
-                  <p className="text-[10px] text-muted-foreground mb-1 flex items-center gap-1"><Handshake className="w-3 h-3" /> Partner</p>
-                  <EntityLinkPicker
-                    options={partnerListe.map(p => ({ id: p.id, label: p.partnernavn, sublabel: p.partnertype || undefined }))}
-                    value={newMeetingPartnerId}
-                    onChange={setNewMeetingPartnerId}
-                    placeholder="Søk partner..."
-                  />
-                </div>
-              </div>
-            </div>
             <Button onClick={handleCreateMeeting} className="w-full" disabled={!newMeetingTittel.trim() || saving}>
               {saving ? "Oppretter..." : "Opprett møte"}
             </Button>
