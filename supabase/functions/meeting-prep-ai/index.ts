@@ -12,9 +12,12 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { activities, selskapNavn, smNavn, smStatus, smNesteSteg } = await req.json();
+    const { activities, selskapNavn, smNavn, smStatus, smNesteSteg, meetingTitle } = await req.json();
 
-    if (!activities || !Array.isArray(activities) || activities.length === 0) {
+    const hasActivities = activities && Array.isArray(activities) && activities.length > 0;
+    const hasContext = selskapNavn || smNavn || meetingTitle;
+
+    if (!hasActivities && !hasContext) {
       return new Response(
         JSON.stringify({ summary: "Ingen aktiviteter å oppsummere.", nextAction: "Planlegg første kontakt." }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
