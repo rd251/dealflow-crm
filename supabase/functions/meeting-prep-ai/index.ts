@@ -54,7 +54,7 @@ ${activityList}
 
 Svar som JSON med feltene "summary" (string) og "nextAction" (string). Kun JSON, ingen annen tekst.`;
 
-    const res = await fetch("https://api.lovable.dev/v1/chat/completions", {
+    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
