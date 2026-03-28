@@ -566,7 +566,7 @@ export default function Kalender() {
         draggable={event.type === "meeting"}
         onDragStart={(e) => handleDragStart(e, event)}
         onDragEnd={handleDragEnd}
-        className={`rounded px-1.5 py-0.5 text-[10px] leading-tight border-l-2 overflow-hidden cursor-pointer hover:opacity-80 transition-opacity ${event.color} ${
+        className={`rounded px-1.5 py-0.5 text-[10px] leading-tight border-l-2 overflow-hidden cursor-pointer hover:opacity-80 transition-opacity h-full ${event.color} ${
           event.type === "meeting" ? "cursor-grab active:cursor-grabbing" : ""
         } ${dragEvent?.id === event.id ? "opacity-40" : ""}`}
       >
