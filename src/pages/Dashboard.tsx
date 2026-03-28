@@ -14,6 +14,8 @@ import {
   DollarSign, TrendingUp, PieChart, BarChart3, ChevronRight,
 } from "lucide-react";
 import MeetingPrepPanel from "@/components/MeetingPrepPanel";
+import FollowUpSection from "@/components/FollowUpSection";
+import { useFollowUps } from "@/hooks/use-follow-ups";
 
 const API_URL = import.meta.env.VITE_SUPABASE_URL + "/rest/v1";
 const API_HEADERS = {
@@ -41,6 +43,7 @@ export default function Dashboard() {
   const { selskaper, salgsmuligheter, leads } = useCrmStore();
 
   const now = new Date();
+  const { followUps, loading: followUpsLoading, dismiss: dismissFollowUp } = useFollowUps(leads, salgsmuligheter, selskaper);
   const today = now.toISOString().split("T")[0];
   const nok = (v: number) => v.toLocaleString("no-NO");
 
@@ -242,6 +245,9 @@ export default function Dashboard() {
           />
         </div>
       </div>
+
+      {/* ─── SECTION: OPPFØLGING ─── */}
+      <FollowUpSection items={followUps} loading={followUpsLoading} onDismiss={dismissFollowUp} />
 
       {/* ─── SECTION 2: NESTE STEG ─── */}
       <div className="bg-card border rounded-xl mb-6 overflow-hidden">
