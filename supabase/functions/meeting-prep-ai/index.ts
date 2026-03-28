@@ -48,9 +48,15 @@ Deno.serve(async (req) => {
       .filter(Boolean)
       .join("\n");
 
-    const prompt = `Du er en CRM-assistent for et norsk SaaS-selskap. Basert på informasjonen nedenfor, gi:
-1. En kort oppsummering (2-3 setninger) av hva som har skjedd med denne kunden/muligheten, eller hva møtet handler om
-2. Én konkret anbefalt neste handling (f.eks. "Send tilbud", "Book oppfølgingsmøte", "Ring for å avklare innvendinger", "Forbered agenda")
+    const today = new Date().toISOString().split("T")[0];
+
+    const prompt = `Du er en CRM-assistent for et norsk SaaS-selskap. Dagens dato er ${today}.
+
+VIKTIG: Hvis møtedatoen er i fremtiden (etter ${today}), har møtet IKKE skjedd ennå. Bruk fremtidsform ("skal ha", "planlagt", "kommende"). Hvis møtedatoen er i fortiden, bruk fortidsform.
+
+Basert på informasjonen nedenfor, gi:
+1. En kort oppsummering (2-3 setninger) av konteksten rundt dette møtet og hva som har skjedd med kunden så langt
+2. Én konkret anbefalt neste handling (f.eks. "Forbered agenda", "Send tilbud", "Book oppfølgingsmøte")
 
 Kontekst:
 ${context}
