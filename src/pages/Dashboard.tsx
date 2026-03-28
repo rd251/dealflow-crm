@@ -43,6 +43,7 @@ export default function Dashboard() {
   const { selskaper, salgsmuligheter, leads } = useCrmStore();
 
   const now = new Date();
+  const { followUps, loading: followUpsLoading, dismiss: dismissFollowUp } = useFollowUps(leads, salgsmuligheter, selskaper);
   const today = now.toISOString().split("T")[0];
   const nok = (v: number) => v.toLocaleString("no-NO");
 
