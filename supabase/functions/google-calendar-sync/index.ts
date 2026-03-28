@@ -167,6 +167,11 @@ async function syncForUser(supabase: any, connection: any) {
       continue;
     }
 
+    // Skip personal/non-business calendar entries
+    const summary = (event.summary || '').trim().toLowerCase();
+    const skipTitles = ['hjemme', 'ferie', 'privat', 'ledig', 'busy', 'lunch', 'lunsj'];
+    if (skipTitles.includes(summary)) continue;
+
     const startDt = event.start?.dateTime || event.start?.date;
     const endDt = event.end?.dateTime || event.end?.date;
     if (!startDt) continue;
