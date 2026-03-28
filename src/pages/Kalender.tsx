@@ -351,45 +351,11 @@ export default function Kalender() {
   // Fetch linked entity details
   const fetchLinkedEntities = useCallback(async (raw: any) => {
     setLinkedSelskap(null);
-    setLinkedKontakt(null);
-    setLinkedSalgsmulighet(null);
-    setLinkedLead(null);
-    setLinkedPartner(null);
-
-    const fetches: Promise<void>[] = [];
 
     if (raw.selskap_id) {
-      fetches.push(
-        fetch(`${API_URL}/selskaper?id=eq.${raw.selskap_id}&select=id,firmanavn,kundestatus,bransje`, { headers: API_HEADERS })
-          .then(r => r.ok ? r.json() : []).then(d => { if (d[0]) setLinkedSelskap(d[0]); })
-      );
+      fetch(`${API_URL}/selskaper?id=eq.${raw.selskap_id}&select=id,firmanavn,kundestatus,bransje`, { headers: API_HEADERS })
+        .then(r => r.ok ? r.json() : []).then(d => { if (d[0]) setLinkedSelskap(d[0]); });
     }
-    if (raw.kontakt_id) {
-      fetches.push(
-        fetch(`${API_URL}/kontakter?id=eq.${raw.kontakt_id}&select=id,navn,rolle,e_post,telefon`, { headers: API_HEADERS })
-          .then(r => r.ok ? r.json() : []).then(d => { if (d[0]) setLinkedKontakt(d[0]); })
-      );
-    }
-    if (raw.salgsmulighet_id) {
-      fetches.push(
-        fetch(`${API_URL}/salgsmuligheter?id=eq.${raw.salgsmulighet_id}&select=id,navn,status,forventet_mrr`, { headers: API_HEADERS })
-          .then(r => r.ok ? r.json() : []).then(d => { if (d[0]) setLinkedSalgsmulighet(d[0]); })
-      );
-    }
-    if (raw.lead_id) {
-      fetches.push(
-        fetch(`${API_URL}/leads?id=eq.${raw.lead_id}&select=id,firmanavn,status,kontaktperson`, { headers: API_HEADERS })
-          .then(r => r.ok ? r.json() : []).then(d => { if (d[0]) setLinkedLead(d[0]); })
-      );
-    }
-    if (raw.partner_id) {
-      fetches.push(
-        fetch(`${API_URL}/partnere?id=eq.${raw.partner_id}&select=id,partnernavn,partnertype,partnerstatus`, { headers: API_HEADERS })
-          .then(r => r.ok ? r.json() : []).then(d => { if (d[0]) setLinkedPartner(d[0]); })
-      );
-    }
-
-    await Promise.all(fetches);
   }, []);
 
   // Link/unlink an entity
