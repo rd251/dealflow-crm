@@ -12,7 +12,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { activities, selskapNavn, smNavn, smStatus, smNesteSteg, meetingTitle } = await req.json();
+    const { activities, selskapNavn, smNavn, smStatus, smNesteSteg, meetingTitle, meetingDate } = await req.json();
 
     const hasActivities = activities && Array.isArray(activities) && activities.length > 0;
     const hasContext = selskapNavn || smNavn || meetingTitle;
