@@ -186,20 +186,23 @@ async function syncForUser(supabase: any, connection: any) {
 
     const deltakere = await matchDeltakere(supabase, event.attendees || []);
 
-    // Find matching kontakt and selskap by first attendee email
+    // Find matching kontakt and selskap by attendee emails (try all until match)
     let kontaktId: string | null = null;
     let selskapIdFromKontakt: string | null = null;
     if (event.attendees) {
       const externalAttendees = event.attendees.filter((a: any) => !a.self);
-      if (externalAttendees.length > 0) {
+      for (const attendee of externalAttendees) {
+        const email = attendee.email?.toLowerCase();
+        if (!email) continue;
         const { data: kontakt } = await supabase
           .from('kontakter')
           .select('id, selskap_id')
-          .eq('e_post', externalAttendees[0].email?.toLowerCase())
+          .eq('e_post', email)
           .maybeSingle();
         if (kontakt) {
           kontaktId = kontakt.id;
           selskapIdFromKontakt = kontakt.selskap_id || null;
+          break;
         }
       }
     }
