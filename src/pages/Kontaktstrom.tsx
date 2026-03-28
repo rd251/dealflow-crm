@@ -578,7 +578,7 @@ export default function Kontaktstrom() {
                 <ActivityLog lead_id={selected.leadId} />
               )}
               {!selected.kontaktId && !selected.leadId && (
-                <p className="text-sm text-muted-foreground text-center py-8">Ingen interaksjoner registrert</p>
+                <ActivityLog email={selected.email} />
               )}
             </>
           ),
