@@ -246,6 +246,9 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* ─── SECTION: OPPFØLGING ─── */}
+      <FollowUpSection items={followUps} loading={followUpsLoading} onDismiss={dismissFollowUp} />
+
       {/* ─── SECTION 2: NESTE STEG ─── */}
       <div className="bg-card border rounded-xl mb-6 overflow-hidden">
         <div className="px-4 sm:px-6 py-4 border-b flex items-center justify-between">
