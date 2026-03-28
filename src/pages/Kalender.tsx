@@ -731,7 +731,6 @@ export default function Kalender() {
       <div className="flex items-center gap-4 mb-3 text-[11px]">
         <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-amber-500" /> Møter</span>
         <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-violet-500" /> Oppgaver</span>
-        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-sky-500" /> Aktiviteter</span>
         {viewMode === "week" && <span className="text-muted-foreground ml-2">Dra møter for å flytte</span>}
       </div>
 
