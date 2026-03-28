@@ -677,7 +677,7 @@ export default function Kalender() {
   };
 
   return (
-    <PageShell title="Kalender" subtitle="Oversikt over møter, oppgaver og aktiviteter">
+    <PageShell title="Kalender" subtitle="Oversikt over møter og oppgaver">
       {/* Navigation bar */}
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
         <div className="flex items-center gap-2">
