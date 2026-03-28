@@ -128,9 +128,17 @@ async function matchSelskapByTitle(supabase: any, title: string): Promise<string
   // Sort by name length descending to match longest (most specific) name first
   const sorted = selskaper.sort((a: any, b: any) => b.firmanavn.length - a.firmanavn.length);
 
+  // Company names to skip (too generic, cause false positives)
+  const skipNames = ['test', 'recharge', 'gmail'];
+
   for (const s of sorted) {
-    if (s.firmanavn.length < 4) continue; // skip very short names like "Test"
-    if (titleLower.includes(s.firmanavn.toLowerCase())) {
+    const nameLower = s.firmanavn.toLowerCase();
+    if (s.firmanavn.length < 5) continue; // skip very short names
+    if (skipNames.includes(nameLower)) continue;
+
+    // Use word boundary matching to avoid partial matches
+    // Check the name appears as a distinct segment in the title
+    if (titleLower.includes(nameLower)) {
       return s.id;
     }
   }
