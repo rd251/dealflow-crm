@@ -160,10 +160,8 @@ export default function MeetingPrepPanel({ meeting, open, onOpenChange }: Props)
 
     Promise.all(fetches).then(() => {
       setLoading(false);
-      // Trigger AI summary
-      if (actData.length > 0) {
-        fetchAiSummary(actData, selskapData, smData);
-      }
+      // Trigger AI summary – even without activities, use meeting title/description
+      fetchAiSummary(actData, selskapData, smData);
     });
   }, [meeting, open]);
 
@@ -177,6 +175,7 @@ export default function MeetingPrepPanel({ meeting, open, onOpenChange }: Props)
           smNavn: sm?.navn || null,
           smStatus: sm?.status || null,
           smNesteSteg: sm?.neste_steg || null,
+          meetingTitle: meeting?.tittel || meeting?.beskrivelse || null,
         },
       });
       if (!error && data) {
