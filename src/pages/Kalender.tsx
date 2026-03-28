@@ -282,21 +282,7 @@ export default function Kalender() {
         });
       }
 
-      const activitiesRes = await fetch(
-        `${API_URL}/aktiviteter?type=neq.Møte&dato=gte.${from}&dato=lte.${to}&select=id,type,beskrivelse,dato,kontakt_id,selskap_id,lead_id,salgsmulighet_id,user_id`,
-        { headers: API_HEADERS }
-      );
-      if (activitiesRes.ok) {
-        const activities = await activitiesRes.json();
-        activities.forEach((a: any) => {
-          allEvents.push({
-            id: a.id, title: `${a.type}: ${a.beskrivelse}`.substring(0, 50), description: a.beskrivelse || "",
-            start: new Date(a.dato), type: "activity", color: ACTIVITY_COLOR, raw: a,
-            kontaktNavn: a.kontakt_id ? kontakter[a.kontakt_id] : undefined,
-            ownerUserId: a.user_id,
-          });
-        });
-      }
+      // Activities excluded from calendar view
 
       setEvents(allEvents);
     } catch (e) {
@@ -691,7 +677,7 @@ export default function Kalender() {
   };
 
   return (
-    <PageShell title="Kalender" subtitle="Oversikt over møter, oppgaver og aktiviteter">
+    <PageShell title="Kalender" subtitle="Oversikt over møter og oppgaver">
       {/* Navigation bar */}
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
         <div className="flex items-center gap-2">
@@ -745,7 +731,6 @@ export default function Kalender() {
       <div className="flex items-center gap-4 mb-3 text-[11px]">
         <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-amber-500" /> Møter</span>
         <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-violet-500" /> Oppgaver</span>
-        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-sky-500" /> Aktiviteter</span>
         {viewMode === "week" && <span className="text-muted-foreground ml-2">Dra møter for å flytte</span>}
       </div>
 
