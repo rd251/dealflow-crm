@@ -104,16 +104,9 @@ export default function Kalender() {
 
   // Linked entity details for drawer
   const [linkedSelskap, setLinkedSelskap] = useState<any>(null);
-  const [linkedKontakt, setLinkedKontakt] = useState<any>(null);
-  const [linkedSalgsmulighet, setLinkedSalgsmulighet] = useState<any>(null);
-  const [linkedLead, setLinkedLead] = useState<any>(null);
-  const [linkedPartner, setLinkedPartner] = useState<any>(null);
 
-  // Entity lists for linking
+  // Entity lists for linking (selskap only for display)
   const [selskapListe, setSelskapListe] = useState<{ id: string; firmanavn: string }[]>([]);
-  const [salgsmulighetListe, setSalgsmulighetListe] = useState<{ id: string; navn: string; status: string }[]>([]);
-  const [leadListe, setLeadListe] = useState<{ id: string; firmanavn: string; status: string }[]>([]);
-  const [partnerListe, setPartnerListe] = useState<{ id: string; partnernavn: string; partnertype: string | null }[]>([]);
 
   // Create meeting dialog
   const [createOpen, setCreateOpen] = useState(false);
