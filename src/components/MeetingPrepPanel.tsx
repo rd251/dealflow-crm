@@ -175,6 +175,7 @@ export default function MeetingPrepPanel({ meeting, open, onOpenChange }: Props)
           smNavn: sm?.navn || null,
           smStatus: sm?.status || null,
           smNesteSteg: sm?.neste_steg || null,
+          meetingTitle: meeting?.tittel || meeting?.beskrivelse || null,
         },
       });
       if (!error && data) {
