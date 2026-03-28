@@ -1,0 +1,1 @@
+DELETE FROM aktiviteter WHERE LOWER(tittel) = 'hjemme';
