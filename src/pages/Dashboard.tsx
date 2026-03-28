@@ -14,6 +14,8 @@ import {
   DollarSign, TrendingUp, PieChart, BarChart3, ChevronRight,
 } from "lucide-react";
 import MeetingPrepPanel from "@/components/MeetingPrepPanel";
+import FollowUpSection from "@/components/FollowUpSection";
+import { useFollowUps } from "@/hooks/use-follow-ups";
 
 const API_URL = import.meta.env.VITE_SUPABASE_URL + "/rest/v1";
 const API_HEADERS = {
