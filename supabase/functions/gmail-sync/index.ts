@@ -561,6 +561,78 @@ async function syncGmailForUser(supabase: any, connection: any) {
     console.log(`Upserted ${upsertBatch.length} email_contacts`);
   }
 
+  // --- Link orphaned aktiviteter to CRM entities ---
+  // Find gmail aktiviteter with no kontakt_id, lead_id, or selskap_id
+  const { data: orphaned } = await supabase
+    .from('aktiviteter')
+    .select('id, beskrivelse')
+    .eq('ekstern_provider', 'gmail')
+    .is('kontakt_id', null)
+    .is('lead_id', null)
+    .is('selskap_id', null)
+    .limit(500);
+
+  if (orphaned && orphaned.length > 0) {
+    // Re-fetch fresh kontakter/leads maps (may have changed since last sync or via CRM)
+    const { data: freshKontakter } = await supabase.from('kontakter').select('id, e_post, selskap_id');
+    const freshEmailToKontakt = new Map<string, { id: string; selskap_id: string | null }>();
+    for (const k of freshKontakter || []) {
+      if (k.e_post) freshEmailToKontakt.set(k.e_post.toLowerCase(), { id: k.id, selskap_id: k.selskap_id });
+    }
+
+    const { data: freshLeads } = await supabase.from('leads').select('id, e_post');
+    const freshEmailToLead = new Map<string, string>();
+    for (const l of freshLeads || []) {
+      if (l.e_post) freshEmailToLead.set(l.e_post.toLowerCase(), l.id);
+    }
+
+    const { data: freshSm } = await supabase.from('salgsmuligheter').select('id, e_post, kontakt_id');
+    const freshKontaktToSm = new Map<string, string>();
+    for (const s of freshSm || []) {
+      if (s.kontakt_id) freshKontaktToSm.set(s.kontakt_id, s.id);
+      if (s.e_post) {
+        const k = freshEmailToKontakt.get(s.e_post.toLowerCase());
+        if (k) freshKontaktToSm.set(k.id, s.id);
+      }
+    }
+
+    let linkedCount = 0;
+    for (const akt of orphaned) {
+      // Extract emails from [email] tags in beskrivelse
+      const emailMatches = akt.beskrivelse.match(/\[([^\]]+@[^\]]+)\]/g);
+      if (!emailMatches) continue;
+
+      const emails = emailMatches.map((m: string) => m.slice(1, -1).toLowerCase());
+
+      let updateData: Record<string, any> | null = null;
+      for (const email of emails) {
+        const kontakt = freshEmailToKontakt.get(email);
+        if (kontakt) {
+          updateData = {
+            kontakt_id: kontakt.id,
+            selskap_id: kontakt.selskap_id,
+            salgsmulighet_id: freshKontaktToSm.get(kontakt.id) || null,
+          };
+          break;
+        }
+        const leadId = freshEmailToLead.get(email);
+        if (leadId) {
+          updateData = { lead_id: leadId };
+          break;
+        }
+      }
+
+      if (updateData) {
+        await supabase.from('aktiviteter').update(updateData).eq('id', akt.id);
+        linkedCount++;
+      }
+    }
+
+    if (linkedCount > 0) {
+      console.log(`Linked ${linkedCount} orphaned aktiviteter to CRM entities`);
+    }
+  }
+
   // Update connection
   const updateData: Record<string, any> = { gmail_last_synced_at: new Date().toISOString() };
   if (result.newHistoryId) updateData.gmail_history_id = result.newHistoryId;
