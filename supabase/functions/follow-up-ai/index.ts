@@ -10,7 +10,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { type, navn, selskapNavn, sistAktivitetType, anbefalHandling, hoursInactive, entityType } = await req.json();
+    const { type, navn, kontaktperson, selskapNavn, sistAktivitetType, anbefalHandling, hoursInactive, entityType } = await req.json();
 
     const apiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!apiKey) {
