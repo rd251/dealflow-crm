@@ -185,6 +185,7 @@ export function useFollowUps(
         entityId,
         entityType,
         navn: entityType === "salgsmulighet" ? entity.navn : (entity.kontaktperson || entity.firmanavn),
+        kontaktperson: entity.kontaktperson || null,
         selskapNavn: entityType === "salgsmulighet" ? getSelskapNavn(entity.selskap_id) : entity.firmanavn,
         sistAktivitet: meeting.dato,
         sistAktivitetType: "Møte",
