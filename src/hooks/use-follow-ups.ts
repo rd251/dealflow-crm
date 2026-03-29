@@ -107,6 +107,7 @@ export function useFollowUps(
         entityId: lead.id,
         entityType: "lead",
         navn: lead.kontaktperson || lead.firmanavn,
+        kontaktperson: lead.kontaktperson || null,
         selskapNavn: lead.firmanavn,
         sistAktivitet: lead.sist_aktivitet,
         sistAktivitetType: lastAct?.type || null,
