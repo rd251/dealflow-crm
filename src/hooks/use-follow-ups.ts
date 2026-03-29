@@ -17,6 +17,7 @@ export interface FollowUpItem {
   entityId: string;
   entityType: "lead" | "salgsmulighet";
   navn: string;
+  kontaktperson: string | null;
   selskapNavn: string;
   sistAktivitet: string | null;
   sistAktivitetType: string | null;
