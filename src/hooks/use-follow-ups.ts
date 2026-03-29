@@ -17,6 +17,7 @@ export interface FollowUpItem {
   entityId: string;
   entityType: "lead" | "salgsmulighet";
   navn: string;
+  kontaktperson: string | null;
   selskapNavn: string;
   sistAktivitet: string | null;
   sistAktivitetType: string | null;
@@ -106,6 +107,7 @@ export function useFollowUps(
         entityId: lead.id,
         entityType: "lead",
         navn: lead.kontaktperson || lead.firmanavn,
+        kontaktperson: lead.kontaktperson || null,
         selskapNavn: lead.firmanavn,
         sistAktivitet: lead.sist_aktivitet,
         sistAktivitetType: lastAct?.type || null,
@@ -137,6 +139,7 @@ export function useFollowUps(
         entityId: sm.id,
         entityType: "salgsmulighet",
         navn: sm.navn,
+        kontaktperson: sm.kontaktperson || null,
         selskapNavn: getSelskapNavn(sm.selskap_id),
         sistAktivitet: sm.sist_aktivitet,
         sistAktivitetType: lastAct?.type || null,
@@ -182,6 +185,7 @@ export function useFollowUps(
         entityId,
         entityType,
         navn: entityType === "salgsmulighet" ? entity.navn : (entity.kontaktperson || entity.firmanavn),
+        kontaktperson: entity.kontaktperson || null,
         selskapNavn: entityType === "salgsmulighet" ? getSelskapNavn(entity.selskap_id) : entity.firmanavn,
         sistAktivitet: meeting.dato,
         sistAktivitetType: "Møte",
@@ -224,6 +228,7 @@ export function useFollowUps(
         entityId,
         entityType,
         navn: entityType === "salgsmulighet" ? entity.navn : (entity.kontaktperson || entity.firmanavn),
+        kontaktperson: entity.kontaktperson || null,
         selskapNavn: entityType === "salgsmulighet" ? getSelskapNavn(entity.selskap_id) : entity.firmanavn,
         sistAktivitet: email.dato,
         sistAktivitetType: "E-post",

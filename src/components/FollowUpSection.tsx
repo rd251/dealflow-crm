@@ -67,6 +67,7 @@ export default function FollowUpSection({ items, loading, onDismiss }: FollowUpS
         body: {
           type: item.type,
           navn: item.navn,
+          kontaktperson: item.kontaktperson,
           selskapNavn: item.selskapNavn,
           sistAktivitetType: item.sistAktivitetType,
           anbefalHandling: item.anbefalHandling,
