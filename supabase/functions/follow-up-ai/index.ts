@@ -29,10 +29,13 @@ Deno.serve(async (req) => {
 
     const daysInactive = Math.floor(hoursInactive / 24);
 
+    const contactName = kontaktperson || navn;
+
     const prompt = `Du er en norsk salgsassistent. Generer en kort, profesjonell oppfølgingsmelding.
 
 Kontekst:
-- Kontaktperson/mulighet: ${navn}
+- Kontaktperson: ${contactName}
+- Salgsmulighet/lead: ${navn}
 - Selskap: ${selskapNavn}
 - Situasjon: ${typeDesc[type] || "Trenger oppfølging"}
 - Siste aktivitet: ${sistAktivitetType || "Ukjent"} (${daysInactive} dager siden)
@@ -40,6 +43,7 @@ Kontekst:
 - Type: ${entityType === "lead" ? "Lead" : "Salgsmulighet"}
 
 Skriv en kort, vennlig og profesjonell e-post/melding på norsk (3-5 setninger). 
+Adresser meldingen til kontaktpersonen (${contactName}) med "Hei ${contactName.split(' ')[0]},".
 Ikke bruk for formelle hilsener. Vær direkte men høflig.
 Referer til siste kontakt naturlig. Avslutt med et konkret forslag til neste steg.
 
