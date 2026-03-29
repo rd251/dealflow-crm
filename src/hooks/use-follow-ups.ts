@@ -139,6 +139,7 @@ export function useFollowUps(
         entityId: sm.id,
         entityType: "salgsmulighet",
         navn: sm.navn,
+        kontaktperson: sm.kontaktperson || null,
         selskapNavn: getSelskapNavn(sm.selskap_id),
         sistAktivitet: sm.sist_aktivitet,
         sistAktivitetType: lastAct?.type || null,
