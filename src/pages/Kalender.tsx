@@ -586,9 +586,11 @@ export default function Kalender() {
             </Tooltip>
           )}
         </div>
-        {!compact && event.kontaktNavn && (
-          <span className="truncate block opacity-70 flex items-center gap-0.5">
-            <Users className="w-2.5 h-2.5 inline shrink-0" /> {event.kontaktNavn}
+        {!compact && (
+          <span className="truncate block opacity-70 text-[9px]">
+            {format(event.start, "HH:mm")}
+            {event.end ? `–${format(event.end, "HH:mm")}` : ""}
+            {event.kontaktNavn && <> · <Users className="w-2.5 h-2.5 inline shrink-0" /> {event.kontaktNavn}</>}
           </span>
         )}
       </div>
