@@ -27,6 +27,7 @@ import Kalender from "./pages/Kalender";
 import Innstillinger from "./pages/Innstillinger";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
+import Unsubscribe from "./pages/Unsubscribe";
 
 const queryClient = new QueryClient();
 
@@ -100,6 +101,7 @@ function AppRoutes() {
     <Routes>
       <Route path="/login" element={<LoginRoute />} />
       <Route path="/~oauth" element={<OAuthCallbackRoute />} />
+      <Route path="/unsubscribe" element={<Unsubscribe />} />
       <Route
         path="/*"
         element={
