@@ -822,7 +822,7 @@ function useCrmStoreInternal() {
     const today = new Date().toISOString().split("T")[0];
     // Find linked salgsmuligheter that were won for this selskap
     const vunnetSm = salgsmuligheter.filter(sm => sm.selskap_id === selskapId && sm.status === "Vunnet");
-    // Reopen them back to "Forhandling"
+    // Reopen them back to "Beslutning"
     if (vunnetSm.length > 0) {
       updateSalgsmuligheter(prev => prev.map(sm =>
         sm.selskap_id === selskapId && sm.status === "Vunnet"

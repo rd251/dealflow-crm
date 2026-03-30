@@ -268,11 +268,11 @@ function getLeadAction(lead: any, lastAct: any): string {
 }
 
 function getSmAction(sm: any, lastAct: any): string {
-  if (sm.status === "Ny mulighet") return "Book første møte";
-  if (sm.status === "Møte booket") return "Forbered og gjennomfør møte";
-  if (sm.status === "Demo gjennomført") return "Send tilbud";
+  if (sm.status === "Møte booket") return "Avklar behov med kunden";
+  if (sm.status === "Behov avklart") return "Presenter løsning";
+  if (sm.status === "Løsning presentert") return "Send tilbud";
   if (sm.status === "Tilbud sendt") return "Følg opp tilbud";
-  if (sm.status === "Forhandling") return "Lukk avtalen";
+  if (sm.status === "Beslutning") return "Lukk avtalen";
   if (!lastAct) return "Ta kontakt";
   return "Send oppfølging";
 }
