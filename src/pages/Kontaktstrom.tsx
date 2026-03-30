@@ -132,6 +132,40 @@ export default function Kontaktstrom() {
       return "Kontakt";
     };
 
+    // Smart match helpers
+    const findSelskapByDomain = (email: string): { id: string; firmanavn: string } | null => {
+      const domain = email.split("@")[1] || "";
+      const domainBase = domain.split(".")[0] || "";
+      if (!domainBase || domainBase.length < 2) return null;
+      const q = domainBase.toLowerCase();
+      const match = selskaper.find(s => s.firmanavn.toLowerCase().includes(q));
+      return match ? { id: match.id, firmanavn: match.firmanavn } : null;
+    };
+
+    const findSelskapByName = (firmanavn: string): { id: string; firmanavn: string } | null => {
+      if (!firmanavn || firmanavn.length < 2) return null;
+      const q = firmanavn.toLowerCase();
+      const match = selskaper.find(s => s.firmanavn.toLowerCase() === q);
+      return match ? { id: match.id, firmanavn: match.firmanavn } : null;
+    };
+
+    const findKontaktByNameAndCompany = (navn: string, firmanavn: string) => {
+      if (!navn || !firmanavn) return null;
+      const nLow = navn.toLowerCase();
+      const fLow = firmanavn.toLowerCase();
+      return kontakter.find(k => {
+        if (k.navn.toLowerCase() !== nLow || !k.selskap_id) return false;
+        const s = selskaper.find(s => s.id === k.selskap_id);
+        return s && s.firmanavn.toLowerCase() === fLow;
+      }) || null;
+    };
+
+    const resolveConnectionStatus = (selskapId: string | null, suggestedId: string | null): KontaktStromPerson["connectionStatus"] => {
+      if (selskapId) return "linked";
+      if (suggestedId) return "suggested";
+      return "unlinked";
+    };
+
     // 1. Add CRM kontakter
     for (const k of kontakter) {
       if (!k.e_post) continue;
