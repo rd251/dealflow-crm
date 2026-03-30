@@ -269,7 +269,17 @@ export default function Salgsmuligheter() {
                               {/* Row 2: Deal name */}
                               <p className="font-semibold text-sm truncate mt-0.5">{deal.navn}</p>
 
-                              {/* Row 3: Activity signal + ansvarlig */}
+                              {/* Row 3: Neste steg or warning */}
+                              {missingNeste ? (
+                                <div className="flex items-center gap-1 mt-1 text-destructive">
+                                  <AlertTriangle className="w-3 h-3 shrink-0" />
+                                  <span className="text-[10px] font-medium">Neste steg mangler!</span>
+                                </div>
+                              ) : (
+                                <p className="text-[10px] text-muted-foreground mt-1 truncate">→ {deal.neste_steg}</p>
+                              )}
+
+                              {/* Row 4: Activity signal + ansvarlig */}
                               <div className="flex items-center justify-between gap-2 mt-1.5">
                                 <div className="flex items-center gap-1.5">
                                   <div className={`w-2 h-2 rounded-full ${signal.color}`} />
@@ -281,16 +291,6 @@ export default function Salgsmuligheter() {
                                   </span>
                                 )}
                               </div>
-
-                              {/* Row 4: Neste steg or warning */}
-                              {missingNeste ? (
-                                <div className="flex items-center gap-1 mt-1.5 text-destructive">
-                                  <AlertTriangle className="w-3 h-3 shrink-0" />
-                                  <span className="text-[10px] font-medium">Neste steg mangler!</span>
-                                </div>
-                              ) : (
-                                <p className="text-[10px] text-muted-foreground mt-1.5 truncate">→ {deal.neste_steg}</p>
-                              )}
 
                               {isBlocked && (
                                 <p className="text-[10px] text-destructive mt-1 font-medium">⛔ Fyll inn neste steg før flytting</p>
