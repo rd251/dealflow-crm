@@ -324,74 +324,75 @@ export default function Leads() {
           };
           return {
             detaljer: (
-              <>
-                <DetailSection title="Kontaktinformasjon">
-                  <div className="grid grid-cols-2 gap-3">
-                    <DetailField label="Firmanavn">
-                      <Input value={currentLead.firmanavn} onChange={e => updateField("firmanavn", e.target.value)} className="h-8 text-sm" readOnly={!canEdit || currentIsLocked} />
-                    </DetailField>
-                    <DetailField label="Kontaktperson">
-                      <Input value={currentLead.kontaktperson} onChange={e => updateField("kontaktperson", e.target.value)} className="h-8 text-sm" readOnly={!canEdit || currentIsLocked} />
-                    </DetailField>
-                    <DetailField label="E-post">
-                      <Input value={currentLead.e_post} onChange={e => updateField("e_post", e.target.value)} className="h-8 text-sm" readOnly={!canEdit || currentIsLocked} />
-                    </DetailField>
-                    <DetailField label="Telefon">
-                      <Input value={currentLead.telefon} onChange={e => updateField("telefon", e.target.value)} className="h-8 text-sm" readOnly={!canEdit || currentIsLocked} />
-                    </DetailField>
-                  </div>
-                </DetailSection>
+              <div className="space-y-3">
+                {/* Neste steg – prominent at top */}
+                <div className={`rounded-lg border p-3 ${!currentLead.neste_steg ? "border-warning bg-warning/5" : "bg-muted/30"}`}>
+                  <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Neste steg</label>
+                  <Input value={currentLead.neste_steg} onChange={e => updateField("neste_steg", e.target.value)} className="h-7 text-xs mt-1 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0" placeholder="Hva er neste steg?" readOnly={!canEdit || currentIsLocked} />
+                  {!currentLead.neste_steg && <p className="text-[10px] text-warning mt-0.5">⚠ Mangler neste steg</p>}
+                </div>
 
-                <DetailDivider />
-
-                <DetailSection title="Detaljer">
-                  <div className="grid grid-cols-2 gap-3">
-                    <DetailField label="Kilde">
-                      <select className="w-full border rounded-lg px-3 py-1.5 text-sm bg-background h-8" value={currentLead.kilde}
-                        onChange={e => updateField("kilde", e.target.value)} disabled={!canEdit || currentIsLocked}>
-                        {kildeOptions.map(k => <option key={k} value={k}>{k}</option>)}
-                      </select>
-                    </DetailField>
-                    <DetailField label="Status">
-                      <select className={`w-full border rounded-lg px-3 py-1.5 text-sm bg-background h-8 ${statusColors[currentLead.status] || ""}`}
-                        value={currentLead.status}
-                        onChange={e => updateField("status", e.target.value)}
-                        disabled={!canEdit || currentIsLocked}>
-                        {statusOptions.map(s => <option key={s} value={s}>{s}</option>)}
-                      </select>
-                    </DetailField>
-                    <DetailField label="Ansvarlig">
-                      <Input value={currentLead.ansvarlig} onChange={e => updateField("ansvarlig", e.target.value)} className="h-8 text-sm" readOnly={!canEdit || currentIsLocked} />
-                    </DetailField>
-                    <DetailField label="Opprettet" value={currentLead.opprettet_dato} />
+                {/* Compact key info */}
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="text-xs"><span className="text-muted-foreground">Kilde</span>
+                    <select className="w-full border rounded px-2 py-1 text-xs bg-background h-7 mt-0.5" value={currentLead.kilde}
+                      onChange={e => updateField("kilde", e.target.value)} disabled={!canEdit || currentIsLocked}>
+                      {kildeOptions.map(k => <option key={k} value={k}>{k}</option>)}
+                    </select>
                   </div>
-                  <DetailField label="Neste steg">
-                    <Input value={currentLead.neste_steg} onChange={e => updateField("neste_steg", e.target.value)} className="h-8 text-sm" readOnly={!canEdit || currentIsLocked} />
-                  </DetailField>
-                  <DetailField label="Use case">
-                    <Input value={currentLead.use_case} onChange={e => updateField("use_case", e.target.value)} className="h-8 text-sm" readOnly={!canEdit || currentIsLocked} />
-                  </DetailField>
-                </DetailSection>
+                  <div className="text-xs"><span className="text-muted-foreground">Status</span>
+                    <select className={`w-full border rounded px-2 py-1 text-xs bg-background h-7 mt-0.5 ${statusColors[currentLead.status] || ""}`}
+                      value={currentLead.status} onChange={e => updateField("status", e.target.value)} disabled={!canEdit || currentIsLocked}>
+                      {statusOptions.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </div>
+                  <div className="text-xs"><span className="text-muted-foreground">Ansvarlig</span>
+                    <Input value={currentLead.ansvarlig} onChange={e => updateField("ansvarlig", e.target.value)} className="h-7 text-xs mt-0.5" readOnly={!canEdit || currentIsLocked} />
+                  </div>
+                  <div className="text-xs"><span className="text-muted-foreground">Opprettet</span>
+                    <div className="h-7 flex items-center text-xs text-muted-foreground mt-0.5">{currentLead.opprettet_dato || "–"}</div>
+                  </div>
+                </div>
+
+                <div className="border-t" />
+
+                {/* Contact info – compact */}
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="text-xs"><span className="text-muted-foreground">Firmanavn</span>
+                    <Input value={currentLead.firmanavn} onChange={e => updateField("firmanavn", e.target.value)} className="h-7 text-xs mt-0.5" readOnly={!canEdit || currentIsLocked} />
+                  </div>
+                  <div className="text-xs"><span className="text-muted-foreground">Kontaktperson</span>
+                    <Input value={currentLead.kontaktperson} onChange={e => updateField("kontaktperson", e.target.value)} className="h-7 text-xs mt-0.5" readOnly={!canEdit || currentIsLocked} />
+                  </div>
+                  <div className="text-xs"><span className="text-muted-foreground">E-post</span>
+                    <Input value={currentLead.e_post} onChange={e => updateField("e_post", e.target.value)} className="h-7 text-xs mt-0.5" readOnly={!canEdit || currentIsLocked} />
+                  </div>
+                  <div className="text-xs"><span className="text-muted-foreground">Telefon</span>
+                    <Input value={currentLead.telefon} onChange={e => updateField("telefon", e.target.value)} className="h-7 text-xs mt-0.5" readOnly={!canEdit || currentIsLocked} />
+                  </div>
+                </div>
+
+                {/* Use case */}
+                <div className="text-xs"><span className="text-muted-foreground">Use case</span>
+                  <Input value={currentLead.use_case} onChange={e => updateField("use_case", e.target.value)} className="h-7 text-xs mt-0.5" readOnly={!canEdit || currentIsLocked} />
+                </div>
 
                 {currentLead.konvertert_til && (
-                  <div className={`p-3 rounded-lg text-xs font-medium flex items-center gap-2 ${currentLead.konvertert_til === "salg" ? "bg-success/10 text-success" : "bg-primary/10 text-primary"}`}>
+                  <div className={`p-2.5 rounded-lg text-xs font-medium flex items-center gap-2 ${currentLead.konvertert_til === "salg" ? "bg-success/10 text-success" : "bg-primary/10 text-primary"}`}>
                     <Lock className="w-3.5 h-3.5" />
                     Konvertert til {currentLead.konvertert_til === "salg" ? "salgsmulighet" : "partner"} · {currentLead.konvertert_dato}
                   </div>
                 )}
 
                 {canEdit && !currentIsLocked && (
-                  <>
-                    <DetailDivider />
-                    <Button size="sm" variant="destructive" className="w-full" onClick={() => {
-                      updateLeads(prev => prev.filter(l => l.id !== currentLead.id));
-                      setSelectedLead(null);
-                    }}>
-                      <Trash2 className="w-4 h-4 mr-1" /> Slett lead
-                    </Button>
-                  </>
+                  <Button size="sm" variant="ghost" className="w-full text-xs text-destructive hover:text-destructive h-8" onClick={() => {
+                    updateLeads(prev => prev.filter(l => l.id !== currentLead.id));
+                    setSelectedLead(null);
+                  }}>
+                    <Trash2 className="w-3.5 h-3.5 mr-1" /> Slett lead
+                  </Button>
                 )}
-              </>
+              </div>
             ),
             interaksjoner: (
               <>
