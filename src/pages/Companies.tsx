@@ -237,6 +237,40 @@ export default function Companies() {
         </DialogContent>
       </Dialog>
 
+      {/* ─── KPI ─── */}
+      {(() => {
+        const nok = (n: number) => n.toLocaleString("nb-NO", { maximumFractionDigits: 0 }) + " NOK";
+        const liveSelskaper = selskaper.filter(s => s.kundestatus === "Live");
+        const totalMRR = liveSelskaper.reduce((sum, s) => sum + s.mrr, 0);
+        const openSm = salgsmuligheter.filter(s => s.status !== "Vunnet" && s.status !== "Tapt");
+        const pipelineVerdi = openSm.reduce((sum, s) => sum + beregnTotalKontraktsverdi(s), 0);
+        const allClosed = salgsmuligheter.filter(s => s.status === "Vunnet" || s.status === "Tapt");
+        const wonCount = salgsmuligheter.filter(s => s.status === "Vunnet").length;
+        const winRate = allClosed.length > 0 ? Math.round((wonCount / allClosed.length) * 100) : 0;
+        const kansellert = selskaper.filter(s => s.kundestatus === "Kansellert").length;
+        const totalKunder = selskaper.filter(s => ["Live", "Kansellert"].includes(s.kundestatus)).length;
+        const churnRate = totalKunder > 0 ? Math.round((kansellert / totalKunder) * 100) : 0;
+        const kpis = [
+          { label: "MRR", value: nok(totalMRR), icon: <DollarSign className="w-4 h-4" /> },
+          { label: "Pipeline", value: nok(pipelineVerdi), icon: <TrendingUp className="w-4 h-4" /> },
+          { label: "Win rate", value: `${winRate}%`, icon: <Target className="w-4 h-4" /> },
+          { label: "Churn", value: `${churnRate}%`, icon: <PieChart className="w-4 h-4" /> },
+        ];
+        return (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+            {kpis.map(kpi => (
+              <div key={kpi.label} className="bg-card border rounded-xl px-4 py-3 flex items-center gap-3">
+                <div className="text-muted-foreground">{kpi.icon}</div>
+                <div>
+                  <p className="text-xs text-muted-foreground">{kpi.label}</p>
+                  <p className="text-lg font-bold tracking-tight">{kpi.value}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        );
+      })()}
+
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <div className="relative max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
