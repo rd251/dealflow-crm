@@ -195,6 +195,7 @@ export default function Partnere() {
                 <th className="text-right px-4 py-3 font-medium">Avtaler</th>
                 <th className="text-left px-4 py-3 font-medium">Sist aktivitet</th>
                 <th className="text-left px-4 py-3 font-medium">Opprettet</th>
+                {canEdit && <th className="px-2 py-3"></th>}
               </tr>
             </thead>
             <tbody>
