@@ -202,19 +202,6 @@ export default function Dashboard() {
   );
 
 
-  // ─── SECTION 4: KPI ───
-  const liveSelskaper = selskaper.filter((s) => s.kundestatus === "Live");
-  const totalMRR = liveSelskaper.reduce((sum, s) => sum + s.mrr, 0);
-  const openSm = salgsmuligheter.filter((s) => s.status !== "Vunnet" && s.status !== "Tapt");
-  const pipelineVerdi = openSm.reduce((sum, s) => sum + beregnTotalKontraktsverdi(s), 0);
-
-  const allClosed = salgsmuligheter.filter((s) => s.status === "Vunnet" || s.status === "Tapt");
-  const wonCount = salgsmuligheter.filter((s) => s.status === "Vunnet").length;
-  const winRate = allClosed.length > 0 ? Math.round((wonCount / allClosed.length) * 100) : 0;
-
-  const kansellert = selskaper.filter((s) => s.kundestatus === "Kansellert").length;
-  const totalKunder = selskaper.filter((s) => ["Live", "Kansellert"].includes(s.kundestatus)).length;
-  const churnRate = totalKunder > 0 ? Math.round((kansellert / totalKunder) * 100) : 0;
 
   const formatDaysAgo = (dateStr: string) => {
     if (!dateStr) return "Aldri";
@@ -237,23 +224,6 @@ export default function Dashboard() {
         </button>
       }
     >
-      {/* ─── SECTION 4: KPI MINIMAL ─── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-        {[
-          { label: "MRR", value: `${nok(totalMRR)}`, icon: <DollarSign className="w-4 h-4" /> },
-          { label: "Pipeline", value: `${nok(pipelineVerdi)}`, icon: <TrendingUp className="w-4 h-4" /> },
-          { label: "Win rate", value: `${winRate}%`, icon: <Target className="w-4 h-4" /> },
-          { label: "Churn", value: `${churnRate}%`, icon: <PieChart className="w-4 h-4" /> },
-        ].map((kpi) => (
-          <div key={kpi.label} className="bg-card border rounded-xl px-4 py-3 flex items-center gap-3">
-            <div className="text-muted-foreground">{kpi.icon}</div>
-            <div>
-              <p className="text-xs text-muted-foreground">{kpi.label}</p>
-              <p className="text-lg font-bold tracking-tight">{kpi.value}</p>
-            </div>
-          </div>
-        ))}
-      </div>
 
       {/* ─── SECTION 1: FOKUS I DAG ─── */}
       <div className="mb-6">
