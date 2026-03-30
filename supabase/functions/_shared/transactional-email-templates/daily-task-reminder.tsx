@@ -1,12 +1,13 @@
 import * as React from 'npm:react@18.3.1'
 import {
-  Body, Container, Head, Heading, Html, Preview, Text, Button, Section, Hr,
+  Body, Container, Head, Heading, Html, Preview, Text, Button, Section, Hr, Img,
 } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 
 const SITE_NAME = "Snakk"
 const BRAND_RED = '#da291c'
 const BRAND_DARK = '#1a1917'
+const LOGO_URL = 'https://tchmujgzcklwgptocbno.supabase.co/storage/v1/object/public/email-assets/snakk-logo.png'
 
 interface TaskItem {
   oppgave: string
@@ -43,7 +44,7 @@ const DailyTaskReminderEmail = ({
         <Container style={container}>
           {/* Header with Snakk branding */}
           <Section style={headerSection}>
-            <Text style={logoText}>✦ snakk</Text>
+            <Img src={LOGO_URL} alt="Snakk" width="140" height="auto" style={logoImg} />
           </Section>
 
           {/* Main content */}
@@ -110,7 +111,7 @@ const DailyTaskReminderEmail = ({
 
           {/* Footer */}
           <Section style={footerSection}>
-            <Text style={footerLogo}>✦ snakk</Text>
+            <Img src={LOGO_URL} alt="Snakk" width="80" height="auto" style={{ margin: '0 auto 8px' }} />
             <Text style={footerText}>Snakk CRM</Text>
             <Text style={footerCopy}>©2026 Snakk. Alle rettigheter reservert.</Text>
           </Section>
@@ -150,7 +151,7 @@ export const template = {
 const main: React.CSSProperties = { backgroundColor: '#f5f4f2', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }
 const container: React.CSSProperties = { maxWidth: '580px', margin: '0 auto' }
 const headerSection: React.CSSProperties = { backgroundColor: BRAND_DARK, padding: '28px 0', textAlign: 'center', borderRadius: '8px 8px 0 0' }
-const logoText: React.CSSProperties = { color: '#ffffff', fontSize: '26px', fontWeight: 700, margin: '0', letterSpacing: '-0.5px' }
+const logoImg: React.CSSProperties = { margin: '0 auto', display: 'block' }
 const contentSection: React.CSSProperties = { backgroundColor: '#ffffff', padding: '32px 40px' }
 const h1: React.CSSProperties = { fontSize: '24px', fontWeight: 700, color: BRAND_DARK, margin: '0 0 8px' }
 const summaryText: React.CSSProperties = { fontSize: '15px', color: '#555555', lineHeight: '1.5', margin: '0 0 24px' }
@@ -190,6 +191,5 @@ const assigneeBadge: React.CSSProperties = {
   verticalAlign: 'middle',
 }
 const footerSection: React.CSSProperties = { padding: '24px 40px', textAlign: 'center', borderRadius: '0 0 8px 8px' }
-const footerLogo: React.CSSProperties = { fontSize: '18px', fontWeight: 700, color: '#999999', margin: '0 0 4px' }
 const footerText: React.CSSProperties = { fontSize: '13px', color: '#999999', margin: '0 0 4px' }
 const footerCopy: React.CSSProperties = { fontSize: '12px', color: '#bbbbbb', margin: '8px 0 0' }
