@@ -342,6 +342,10 @@ export default function Salgsmuligheter() {
         open={!!currentSm}
         onClose={() => setSelectedSm(null)}
         title={currentSm?.navn || ""}
+        onTitleChange={canEdit && currentSm ? (value) => {
+          const today = new Date().toISOString().split("T")[0];
+          updateSalgsmuligheter(prev => prev.map(s => s.id === currentSm.id ? { ...s, navn: value, sist_aktivitet: today } : s));
+        } : undefined}
         subtitle={currentSm ? getSelskapNavn(currentSm.selskap_id) : undefined}
         badges={currentSm ? (
           <>
