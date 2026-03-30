@@ -200,6 +200,37 @@ export default function Salgsmuligheter() {
         </TabsList>
 
         <TabsContent value="pipeline">
+          {/* Pipeline summary panel */}
+          {(() => {
+            const totalPipeline = openDeals.reduce((s, d) => s + beregnTotalKontraktsverdi(d), 0);
+            const totalVektet = openDeals.reduce((s, d) => s + beregnVektetPipeline(d), 0);
+            const nearClosing = openDeals.filter(d => d.status === "Tilbud sendt" || d.status === "Beslutning");
+            const nearClosingValue = nearClosing.reduce((s, d) => s + beregnTotalKontraktsverdi(d), 0);
+            return (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+                <div className="bg-card border rounded-lg p-3">
+                  <p className="text-xs text-muted-foreground font-medium">Total pipeline</p>
+                  <p className="text-lg font-bold tracking-tight">{nok(totalPipeline)} kr</p>
+                  <p className="text-[11px] text-muted-foreground">{openDeals.length} åpne deals</p>
+                </div>
+                <div className="bg-card border rounded-lg p-3">
+                  <p className="text-xs text-muted-foreground font-medium">Vektet verdi</p>
+                  <p className="text-lg font-bold tracking-tight">{nok(totalVektet)} kr</p>
+                  <p className="text-[11px] text-muted-foreground">justert for sannsynlighet</p>
+                </div>
+                <div className="bg-card border rounded-lg p-3">
+                  <p className="text-xs text-muted-foreground font-medium">Nær closing</p>
+                  <p className="text-lg font-bold tracking-tight">{nearClosing.length} deals</p>
+                  <p className="text-[11px] text-muted-foreground">{nok(nearClosingValue)} kr i verdi</p>
+                </div>
+                <div className="bg-card border rounded-lg p-3">
+                  <p className="text-xs text-muted-foreground font-medium">Snitt MRR</p>
+                  <p className="text-lg font-bold tracking-tight">{nok(openDeals.length ? Math.round(openDeals.reduce((s, d) => s + d.forventet_mrr, 0) / openDeals.length) : 0)} kr</p>
+                  <p className="text-[11px] text-muted-foreground">per deal</p>
+                </div>
+              </div>
+            );
+          })()}
           <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-4 scrollbar-thin items-start">
             {openStatuses.map(stage => {
               const stageDeals = sortDeals(openDeals.filter(d => d.status === stage));
