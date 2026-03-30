@@ -735,6 +735,20 @@ export default function Kontaktstrom() {
                   setSelected(null);
                 }}
               />
+
+              <DetailDivider />
+
+              <DealSuggestions
+                selskapId={selected.selskapId || selected.suggestedSelskapId}
+                kontaktId={selected.kontaktId}
+                email={selected.email}
+                currentSalgsmulighetId={selected.salgsmulighetId}
+                onLinked={() => {
+                  fetchEmailContacts();
+                  refresh();
+                  setSelected(null);
+                }}
+              />
             </>
           ),
           interaksjoner: (
