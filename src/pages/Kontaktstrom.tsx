@@ -36,6 +36,9 @@ interface KontaktStromPerson {
   selskapId: string | null;
   partnerId: string | null;
   inCrm: boolean;
+  suggestedSelskapId: string | null;
+  suggestedSelskapNavn: string;
+  connectionStatus: "linked" | "suggested" | "unlinked";
 }
 
 const TYPE_COLORS: Record<string, string> = {
