@@ -125,7 +125,7 @@ export default function Kontaktstrom() {
       const selskap = selskaper.find(s => s.id === selskapId);
       if (!selskap) return "Ukjent";
       if (selskap.kundestatus === "Live" || selskap.kundestatus === "Pilot") return "Kunde";
-      return "Ukjent";
+      return "Kontakt";
     };
 
     // 1. Add CRM kontakter
