@@ -63,7 +63,7 @@ export default function PartnerProfile() {
   const liveKunder = partnerKunder.filter(s => s.kundestatus === "Live");
   const partnerAvtaler = salgsmuligheter.filter(s => s.partner_id === id);
   const aktiveAvtaler = partnerAvtaler.filter(a => a.status !== "Tapt");
-  const partnerKontakter = kontakter.filter(k => k.selskap_id === partner.selskap_id);
+  const partnerKontakter = kontakter.filter(k => partner.selskap_id && k.selskap_id === partner.selskap_id);
 
   // KPIs
   const antallKunder = partnerKunder.length;
