@@ -91,7 +91,7 @@ Deno.serve(async (req) => {
       .map(t => ({
         oppgave: t.oppgave,
         frist: formatDate(t.frist!),
-        ansvarlig: t.ansvarlig,
+        ansvarlig: (t.ansvarlig && nameMap.get(t.ansvarlig)) || t.ansvarlig,
         prioritet: t.prioritet,
       }))
 
@@ -100,7 +100,7 @@ Deno.serve(async (req) => {
       .map(t => ({
         oppgave: t.oppgave,
         frist: formatDate(t.frist!),
-        ansvarlig: t.ansvarlig,
+        ansvarlig: (t.ansvarlig && nameMap.get(t.ansvarlig)) || t.ansvarlig,
         prioritet: t.prioritet,
       }))
 

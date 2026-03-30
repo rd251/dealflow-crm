@@ -487,7 +487,7 @@ export default function Dashboard() {
                           </span>
                         )}
                         {o.ansvarlig && (
-                          <span className="text-xs text-muted-foreground">· {o.ansvarlig}</span>
+                          <span className="text-xs text-muted-foreground">· {profileMap.get(o.ansvarlig) || o.ansvarlig}</span>
                         )}
                         {o.prioritet && (
                           <Badge variant="outline" className={`text-[10px] ${prioritetColor}`}>
