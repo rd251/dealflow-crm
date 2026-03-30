@@ -16,6 +16,7 @@ import { nb } from "date-fns/locale";
 import { toast } from "sonner";
 import ActivityLog from "@/components/ActivityLog";
 import CompanyLinker from "@/components/CompanyLinker";
+import DealSuggestions from "@/components/DealSuggestions";
 
 interface KontaktStromPerson {
   email: string;
@@ -35,6 +36,9 @@ interface KontaktStromPerson {
   selskapId: string | null;
   partnerId: string | null;
   inCrm: boolean;
+  suggestedSelskapId: string | null;
+  suggestedSelskapNavn: string;
+  connectionStatus: "linked" | "suggested" | "unlinked";
 }
 
 const TYPE_COLORS: Record<string, string> = {
@@ -128,6 +132,40 @@ export default function Kontaktstrom() {
       return "Kontakt";
     };
 
+    // Smart match helpers
+    const findSelskapByDomain = (email: string): { id: string; firmanavn: string } | null => {
+      const domain = email.split("@")[1] || "";
+      const domainBase = domain.split(".")[0] || "";
+      if (!domainBase || domainBase.length < 2) return null;
+      const q = domainBase.toLowerCase();
+      const match = selskaper.find(s => s.firmanavn.toLowerCase().includes(q));
+      return match ? { id: match.id, firmanavn: match.firmanavn } : null;
+    };
+
+    const findSelskapByName = (firmanavn: string): { id: string; firmanavn: string } | null => {
+      if (!firmanavn || firmanavn.length < 2) return null;
+      const q = firmanavn.toLowerCase();
+      const match = selskaper.find(s => s.firmanavn.toLowerCase() === q);
+      return match ? { id: match.id, firmanavn: match.firmanavn } : null;
+    };
+
+    const findKontaktByNameAndCompany = (navn: string, firmanavn: string) => {
+      if (!navn || !firmanavn) return null;
+      const nLow = navn.toLowerCase();
+      const fLow = firmanavn.toLowerCase();
+      return kontakter.find(k => {
+        if (k.navn.toLowerCase() !== nLow || !k.selskap_id) return false;
+        const s = selskaper.find(s => s.id === k.selskap_id);
+        return s && s.firmanavn.toLowerCase() === fLow;
+      }) || null;
+    };
+
+    const resolveConnectionStatus = (selskapId: string | null, suggestedId: string | null): KontaktStromPerson["connectionStatus"] => {
+      if (selskapId) return "linked";
+      if (suggestedId) return "suggested";
+      return "unlinked";
+    };
+
     // 1. Add CRM kontakter
     for (const k of kontakter) {
       if (!k.e_post) continue;
@@ -149,6 +187,8 @@ export default function Kontaktstrom() {
         if (selskapType === "Kunde") { type = "Kunde"; status = getSelskapStatus(k.selskap_id); }
       }
 
+      const resolvedSelskapId = k.selskap_id || sm?.selskap_id || null;
+      const suggested = !resolvedSelskapId ? findSelskapByDomain(email) : null;
       map.set(email, {
         email,
         navn: k.navn,
@@ -162,9 +202,12 @@ export default function Kontaktstrom() {
         kontaktId: k.id,
         leadId: lead?.id || null,
         salgsmulighetId: sm?.id || null,
-        selskapId: k.selskap_id || sm?.selskap_id || null,
+        selskapId: resolvedSelskapId,
         partnerId: partner?.id || null,
         inCrm: true,
+        suggestedSelskapId: suggested?.id || null,
+        suggestedSelskapNavn: suggested?.firmanavn || "",
+        connectionStatus: resolveConnectionStatus(resolvedSelskapId, suggested?.id || null),
       });
     }
 
@@ -173,6 +216,7 @@ export default function Kontaktstrom() {
       if (!l.e_post) continue;
       const email = l.e_post.toLowerCase();
       if (map.has(email)) continue;
+      const sugL = findSelskapByName(l.firmanavn) || findSelskapByDomain(email);
       map.set(email, {
         email, navn: l.kontaktperson || l.firmanavn, firmanavn: l.firmanavn,
         type: "Lead", status: l.status, ansvarlig: l.ansvarlig,
@@ -180,6 +224,8 @@ export default function Kontaktstrom() {
         nesteSteg: l.neste_steg, totalSent: 0, totalReceived: 0,
         kontaktId: null, leadId: l.id, salgsmulighetId: null,
         selskapId: null, partnerId: null, inCrm: true,
+        suggestedSelskapId: sugL?.id || null, suggestedSelskapNavn: sugL?.firmanavn || "",
+        connectionStatus: resolveConnectionStatus(null, sugL?.id || null),
       });
     }
 
@@ -196,6 +242,8 @@ export default function Kontaktstrom() {
         nesteSteg: s.neste_steg, totalSent: 0, totalReceived: 0,
         kontaktId: s.kontakt_id || null, leadId: null, salgsmulighetId: s.id,
         selskapId: s.selskap_id || null, partnerId: null, inCrm: true,
+        suggestedSelskapId: null, suggestedSelskapNavn: "",
+        connectionStatus: resolveConnectionStatus(s.selskap_id || null, null),
       });
     }
 
@@ -211,6 +259,8 @@ export default function Kontaktstrom() {
         nesteSteg: "", totalSent: 0, totalReceived: 0,
         kontaktId: null, leadId: null, salgsmulighetId: null,
         selskapId: p.selskap_id || null, partnerId: p.id, inCrm: true,
+        suggestedSelskapId: null, suggestedSelskapNavn: "",
+        connectionStatus: resolveConnectionStatus(p.selskap_id || null, null),
       });
     }
 
@@ -239,22 +289,71 @@ export default function Kontaktstrom() {
         existing.totalSent += ec.total_emails_sent || 0;
         existing.totalReceived += ec.total_emails_received || 0;
       } else {
-        // New person from Gmail, not in CRM — resolve type from linked IDs
+        // New person from Gmail, not in CRM — smart matching
         let ecType: KontaktStromPerson["type"] = "Ukjent";
         let ecStatus = "";
         let ecAnsvarlig = "";
         let ecNesteSteg = "";
         let ecFirmanavn = ec.domain || "";
         let ecSelskapId = ec.selskap_id || null;
+        let ecKontaktId = ec.kontakt_id || null;
+        let ecSuggestedSelskapId: string | null = null;
+        let ecSuggestedSelskapNavn = "";
 
-        // Resolve kontakt -> selskap link
-        if (ec.kontakt_id) {
+        // Step 1: Exact email match against kontakter
+        const kontaktByEmail = kontakter.find(k => k.e_post?.toLowerCase() === email);
+        if (kontaktByEmail) {
+          ecKontaktId = kontaktByEmail.id;
+          if (kontaktByEmail.selskap_id) {
+            ecSelskapId = kontaktByEmail.selskap_id;
+            ecType = getTypeFromSelskap(kontaktByEmail.selskap_id);
+            ecStatus = getSelskapStatus(kontaktByEmail.selskap_id);
+            ecFirmanavn = getSelskapNavn(kontaktByEmail.selskap_id) || ecFirmanavn;
+          } else {
+            ecType = "Kontakt";
+          }
+        }
+
+        // Step 2: Name + company match (if no kontakt found)
+        if (!ecKontaktId && ec.display_name && ecFirmanavn) {
+          const nameCompanyMatch = findKontaktByNameAndCompany(ec.display_name, ecFirmanavn);
+          if (nameCompanyMatch) {
+            ecKontaktId = nameCompanyMatch.id;
+            if (nameCompanyMatch.selskap_id) {
+              ecSelskapId = nameCompanyMatch.selskap_id;
+              ecType = getTypeFromSelskap(nameCompanyMatch.selskap_id);
+              ecStatus = getSelskapStatus(nameCompanyMatch.selskap_id);
+              ecFirmanavn = getSelskapNavn(nameCompanyMatch.selskap_id) || ecFirmanavn;
+            }
+          }
+        }
+
+        // Step 3: Company name match (suggest selskap)
+        if (!ecSelskapId && ecFirmanavn) {
+          const selskapByName = findSelskapByName(ecFirmanavn);
+          if (selskapByName) {
+            ecSuggestedSelskapId = selskapByName.id;
+            ecSuggestedSelskapNavn = selskapByName.firmanavn;
+          }
+        }
+
+        // Step 4: Domain fallback (suggest selskap)
+        if (!ecSelskapId && !ecSuggestedSelskapId) {
+          const selskapByDomain = findSelskapByDomain(email);
+          if (selskapByDomain) {
+            ecSuggestedSelskapId = selskapByDomain.id;
+            ecSuggestedSelskapNavn = selskapByDomain.firmanavn;
+          }
+        }
+
+        // Resolve kontakt -> selskap link (existing logic for linked IDs)
+        if (ec.kontakt_id && !ecKontaktId) {
           const kontakt = kontakter.find(k => k.id === ec.kontakt_id);
           if (kontakt) {
+            ecKontaktId = kontakt.id;
             if (kontakt.selskap_id) {
               ecSelskapId = kontakt.selskap_id;
-              const selskapType = getTypeFromSelskap(kontakt.selskap_id);
-              ecType = selskapType;
+              ecType = getTypeFromSelskap(kontakt.selskap_id);
               ecStatus = getSelskapStatus(kontakt.selskap_id);
               ecFirmanavn = getSelskapNavn(kontakt.selskap_id) || ecFirmanavn;
             } else {
@@ -297,12 +396,15 @@ export default function Kontaktstrom() {
           nesteSteg: ecNesteSteg,
           totalSent: ec.total_emails_sent || 0,
           totalReceived: ec.total_emails_received || 0,
-          kontaktId: ec.kontakt_id || null,
+          kontaktId: ecKontaktId,
           leadId: ec.lead_id || null,
           salgsmulighetId: ec.salgsmulighet_id || null,
           selskapId: ecSelskapId || null,
           partnerId: ec.partner_id || null,
-          inCrm: !!(ec.kontakt_id || ec.lead_id || ec.salgsmulighet_id || ec.partner_id),
+          inCrm: !!(ecKontaktId || ec.lead_id || ec.salgsmulighet_id || ec.partner_id),
+          suggestedSelskapId: ecSuggestedSelskapId,
+          suggestedSelskapNavn: ecSuggestedSelskapNavn,
+          connectionStatus: resolveConnectionStatus(ecSelskapId, ecSuggestedSelskapId),
         });
       }
     }
@@ -419,7 +521,7 @@ export default function Kontaktstrom() {
               {!isMobile && <th className="text-left px-4 py-3 font-medium">Status</th>}
               {!isMobile && <th className="text-left px-4 py-3 font-medium">E-poster</th>}
               <th className="text-left px-4 py-3 font-medium">Sist kontaktet</th>
-              {!isMobile && <th className="text-left px-4 py-3 font-medium">I CRM</th>}
+              {!isMobile && <th className="text-left px-4 py-3 font-medium">Kobling</th>}
             </tr>
           </thead>
           <tbody>
@@ -446,6 +548,10 @@ export default function Kontaktstrom() {
                           onClick={e => { e.stopPropagation(); navigate(`/selskaper/${p.selskapId}`); }}
                         >
                           {p.firmanavn}
+                        </span>
+                      ) : p.suggestedSelskapId ? (
+                        <span className="text-xs italic text-muted-foreground">
+                          {p.suggestedSelskapNavn} <span className="opacity-60">(forslag)</span>
                         </span>
                       ) : (
                         p.firmanavn || "–"
@@ -486,13 +592,17 @@ export default function Kontaktstrom() {
                   </td>
                   {!isMobile && (
                     <td className="px-4 py-3">
-                      {p.inCrm ? (
+                      {p.connectionStatus === "linked" ? (
                         <Badge variant="outline" className="text-xs bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800">
-                          Ja
+                          Koblet
+                        </Badge>
+                      ) : p.connectionStatus === "suggested" ? (
+                        <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800">
+                          Foreslått
                         </Badge>
                       ) : (
                         <Badge variant="outline" className="text-xs bg-muted text-muted-foreground">
-                          Nei
+                          Ikke koblet
                         </Badge>
                       )}
                     </td>
@@ -502,7 +612,7 @@ export default function Kontaktstrom() {
             })}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={7} className="text-center text-sm text-muted-foreground py-12">
+                <td colSpan={8} className="text-center text-sm text-muted-foreground py-12">
                   Ingen personer funnet
                 </td>
               </tr>
@@ -524,12 +634,16 @@ export default function Kontaktstrom() {
             {selected.status && (
               <Badge variant="outline" className="text-xs">{selected.status}</Badge>
             )}
-            {selected.inCrm ? (
+            {selected.connectionStatus === "linked" ? (
               <Badge variant="outline" className="text-xs bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400">
-                I CRM
+                Koblet
+              </Badge>
+            ) : selected.connectionStatus === "suggested" ? (
+              <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400">
+                Foreslått selskap
               </Badge>
             ) : (
-              <Badge variant="outline" className="text-xs">Ikke i CRM</Badge>
+              <Badge variant="outline" className="text-xs">Ikke koblet</Badge>
             )}
           </>
         ) : undefined}
@@ -615,6 +729,20 @@ export default function Kontaktstrom() {
                 kontaktId={selected.kontaktId}
                 currentSelskapId={selected.selskapId}
                 personNavn={selected.navn}
+                onLinked={() => {
+                  fetchEmailContacts();
+                  refresh();
+                  setSelected(null);
+                }}
+              />
+
+              <DetailDivider />
+
+              <DealSuggestions
+                selskapId={selected.selskapId || selected.suggestedSelskapId}
+                kontaktId={selected.kontaktId}
+                email={selected.email}
+                currentSalgsmulighetId={selected.salgsmulighetId}
                 onLinked={() => {
                   fetchEmailContacts();
                   refresh();
