@@ -143,7 +143,12 @@ export default function FollowUpSection({ items, loading, onDismiss }: FollowUpS
               {/* Main content */}
               <div className="flex-1 min-w-0 cursor-pointer" onClick={() => handleNavigate(item)}>
                 <div className="flex items-center gap-2">
-                  <p className="text-sm font-medium truncate">{item.navn}</p>
+                  <p className="text-sm font-medium truncate">
+                    {item.navn}
+                    {item.kontaktperson && item.kontaktperson !== item.navn && (
+                      <span className="text-muted-foreground font-normal"> · {item.kontaktperson}</span>
+                    )}
+                  </p>
                   <Badge variant="outline" className={`text-[10px] shrink-0 ${typeColor[item.type]}`}>
                     {typeLabel[item.type]}
                   </Badge>
