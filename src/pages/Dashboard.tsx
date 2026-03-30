@@ -385,7 +385,6 @@ export default function Dashboard() {
                   </p>
                   <div className="space-y-2">
                     {todayMeetings.map((m) => {
-                      const status = getMeetingStatus(m);
                       return (
                         <div key={m.id} className="flex items-center gap-3 p-3 rounded-lg border bg-muted/20 hover:bg-muted/40 transition-colors">
                           <div className="flex-1 min-w-0">
