@@ -11,11 +11,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   AlertTriangle, CalendarDays, PhoneOff, Target, Clock, Building2,
-  DollarSign, TrendingUp, PieChart, BarChart3, ChevronRight,
+  DollarSign, TrendingUp, PieChart, BarChart3, ChevronRight, ListTodo, Activity, CheckCircle2,
 } from "lucide-react";
 import MeetingPrepPanel from "@/components/MeetingPrepPanel";
 import FollowUpSection from "@/components/FollowUpSection";
 import { useFollowUps } from "@/hooks/use-follow-ups";
+import { supabase } from "@/integrations/supabase/client";
+import { Tables } from "@/integrations/supabase/types";
 
 const API_URL = import.meta.env.VITE_SUPABASE_URL + "/rest/v1";
 const API_HEADERS = {
