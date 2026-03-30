@@ -55,6 +55,7 @@ export default function Dashboard() {
   const [prepMeeting, setPrepMeeting] = useState<MeetingItem | null>(null);
   const [oppgaver, setOppgaver] = useState<Tables<"oppgaver">[]>([]);
   const [aktiviteter, setAktiviteter] = useState<Tables<"aktiviteter">[]>([]);
+  const [activityNames, setActivityNames] = useState<Record<string, string>>({});
 
   useEffect(() => {
     // Fetch upcoming tasks
