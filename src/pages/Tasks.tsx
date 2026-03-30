@@ -82,6 +82,34 @@ export default function Tasks() {
     }
   };
 
+  const openEdit = (task: Oppgave) => {
+    setEditingTask({ ...task });
+    setEditDialogOpen(true);
+  };
+
+  const saveEdit = async () => {
+    if (!editingTask) return;
+    const oldTask = oppgaver.find(o => o.id === editingTask.id);
+    updateOppgaver(prev => prev.map(o => o.id === editingTask.id ? editingTask : o));
+    setEditDialogOpen(false);
+    // Notify if reassigned
+    if (oldTask && editingTask.ansvarlig && editingTask.ansvarlig !== oldTask.ansvarlig && editingTask.ansvarlig !== user?.id) {
+      await sendNotification(editingTask.ansvarlig, editingTask.oppgave);
+      const assignee = profiles.find(p => p.user_id === editingTask.ansvarlig);
+      toast.success(`Oppgave delegert til ${assignee?.display_name || "bruker"}`);
+    } else {
+      toast.success("Oppgave oppdatert");
+    }
+    setEditingTask(null);
+  };
+
+  const deleteTask = (id: string) => {
+    updateOppgaver(prev => prev.filter(o => o.id !== id));
+    setEditDialogOpen(false);
+    setEditingTask(null);
+    toast.success("Oppgave slettet");
+  };
+
   const forfalte = oppgaver.filter(o => o.status !== "Ferdig" && o.frist && o.frist < today);
   const idagOppgaver = oppgaver.filter(o => o.status !== "Ferdig" && o.frist === today);
   const ukeOppgaver = oppgaver.filter(o => o.status !== "Ferdig" && o.frist >= today && o.frist <= weekEnd);
