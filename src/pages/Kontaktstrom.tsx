@@ -521,7 +521,7 @@ export default function Kontaktstrom() {
               {!isMobile && <th className="text-left px-4 py-3 font-medium">Status</th>}
               {!isMobile && <th className="text-left px-4 py-3 font-medium">E-poster</th>}
               <th className="text-left px-4 py-3 font-medium">Sist kontaktet</th>
-              {!isMobile && <th className="text-left px-4 py-3 font-medium">I CRM</th>}
+              {!isMobile && <th className="text-left px-4 py-3 font-medium">Kobling</th>}
             </tr>
           </thead>
           <tbody>
