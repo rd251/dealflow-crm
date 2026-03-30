@@ -201,17 +201,6 @@ export default function Dashboard() {
     [meetings]
   );
 
-  const getMeetingStatus = (m: MeetingItem) => {
-    // Check if selskap has recent activity
-    if (m.selskap_id) {
-      const selskap = selskaper.find((s) => s.id === m.selskap_id);
-      if (selskap?.sist_aktivitet) {
-        const days = differenceInDays(now, new Date(selskap.sist_aktivitet));
-        if (days <= 3) return { label: "Klar", color: "bg-emerald-500/10 text-emerald-600 border-emerald-200" };
-      }
-    }
-    return { label: "Trenger oppfølging", color: "bg-amber-500/10 text-amber-600 border-amber-200" };
-  };
 
   // ─── SECTION 4: KPI ───
   const liveSelskaper = selskaper.filter((s) => s.kundestatus === "Live");
@@ -396,7 +385,6 @@ export default function Dashboard() {
                   </p>
                   <div className="space-y-2">
                     {todayMeetings.map((m) => {
-                      const status = getMeetingStatus(m);
                       return (
                         <div key={m.id} className="flex items-center gap-3 p-3 rounded-lg border bg-muted/20 hover:bg-muted/40 transition-colors">
                           <div className="flex-1 min-w-0">
@@ -417,9 +405,6 @@ export default function Dashboard() {
                               )}
                             </div>
                           </div>
-                          <Badge variant="outline" className={`text-[10px] shrink-0 ${status.color}`}>
-                            {status.label}
-                          </Badge>
                           <Button
                             variant="outline"
                             size="sm"
@@ -440,7 +425,6 @@ export default function Dashboard() {
                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Kommende</p>
                   <div className="space-y-2">
                     {upcomingMeetings.map((m) => {
-                      const status = getMeetingStatus(m);
                       const meetDate = new Date(m.dato);
                       return (
                         <div key={m.id} className="flex items-center gap-3 p-3 rounded-lg border bg-muted/20 hover:bg-muted/40 transition-colors">
@@ -466,9 +450,6 @@ export default function Dashboard() {
                               )}
                             </div>
                           </div>
-                          <Badge variant="outline" className={`text-[10px] shrink-0 ${status.color}`}>
-                            {status.label}
-                          </Badge>
                           <Button
                             variant="outline"
                             size="sm"
