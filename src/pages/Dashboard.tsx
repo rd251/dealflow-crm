@@ -348,6 +348,21 @@ export default function Dashboard() {
                             {formatDaysAgo(sm.sist_aktivitet)}
                           </span>
                         </td>
+                        <td className="px-4 py-2.5 hidden md:table-cell">
+                          {sm.neste_steg ? (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/salgsmuligheter?open=${sm.id}`);
+                              }}
+                              className="text-xs font-medium text-primary hover:underline truncate max-w-[140px] block text-left"
+                            >
+                              {sm.neste_steg}
+                            </button>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
+                        </td>
                       </tr>
                     );
                   })
