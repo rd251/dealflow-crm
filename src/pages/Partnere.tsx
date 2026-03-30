@@ -38,6 +38,13 @@ export default function Partnere() {
     partnernavn: "", partnertype: "Salgspartner", kontaktperson: "", e_post: "", telefon: "",
     partnerstatus: "Under onboarding", ansvarlig: "", notater: "",
   });
+  const [deleteTarget, setDeleteTarget] = useState<Partner | null>(null);
+
+  const handleDelete = (partner: Partner) => {
+    updatePartnere(prev => prev.filter(p => p.id !== partner.id));
+    setDeleteTarget(null);
+    if (selectedPartner?.id === partner.id) setSelectedPartner(null);
+  };
 
   const filtered = partnere.filter(p =>
     p.partnernavn.toLowerCase().includes(search.toLowerCase()) ||
