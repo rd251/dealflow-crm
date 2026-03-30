@@ -549,6 +549,10 @@ export default function Kontaktstrom() {
                         >
                           {p.firmanavn}
                         </span>
+                      ) : p.suggestedSelskapId ? (
+                        <span className="text-xs italic text-muted-foreground">
+                          {p.suggestedSelskapNavn} <span className="opacity-60">(forslag)</span>
+                        </span>
                       ) : (
                         p.firmanavn || "–"
                       )}
