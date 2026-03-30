@@ -32,6 +32,7 @@ export default function DetailPanelShell({
   open,
   onClose,
   title,
+  onTitleChange,
   subtitle,
   initials,
   badges,
