@@ -389,6 +389,7 @@ export default function Kontaktstrom() {
               <SelectItem value="Salgsmulighet">Salgsmulighet</SelectItem>
               <SelectItem value="Kunde">Kunde</SelectItem>
               <SelectItem value="Partner">Partner</SelectItem>
+              <SelectItem value="Kontakt">Kontakt</SelectItem>
               <SelectItem value="Ukjent">Ukjent</SelectItem>
             </SelectContent>
           </Select>
