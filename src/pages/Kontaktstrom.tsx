@@ -259,6 +259,8 @@ export default function Kontaktstrom() {
         nesteSteg: "", totalSent: 0, totalReceived: 0,
         kontaktId: null, leadId: null, salgsmulighetId: null,
         selskapId: p.selskap_id || null, partnerId: p.id, inCrm: true,
+        suggestedSelskapId: null, suggestedSelskapNavn: "",
+        connectionStatus: resolveConnectionStatus(p.selskap_id || null, null),
       });
     }
 
