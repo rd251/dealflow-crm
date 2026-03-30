@@ -256,6 +256,11 @@ export default function Companies() {
           .reduce((sum, s) => sum + s.mrr, 0);
         const nettoMRR = nyMRR - taptMRR;
 
+        // Ikke-live MRR/ARR (Pilot, Pause etc.)
+        const ikkeLiveSelskaper = selskaper.filter(s => s.kundestatus !== "Live" && s.kundestatus !== "Kansellert" && s.kundestatus !== "Ikke kunde");
+        const ikkeLiveMRR = ikkeLiveSelskaper.reduce((sum, s) => sum + s.mrr, 0);
+        const ikkeLiveARR = ikkeLiveMRR * 12;
+
         const openSm = salgsmuligheter.filter(s => s.status !== "Vunnet" && s.status !== "Tapt");
         const pipelineVerdi = openSm.reduce((sum, s) => sum + beregnTotalKontraktsverdi(s), 0);
         const allClosed = salgsmuligheter.filter(s => s.status === "Vunnet" || s.status === "Tapt");
@@ -269,12 +274,14 @@ export default function Companies() {
           { label: "ARR", value: nok(totalARR), icon: <BarChart3 className="w-4 h-4" /> },
           { label: "Netto MRR", value: `${nettoMRR >= 0 ? "" : "−"}${nok(Math.abs(nettoMRR))}`, icon: nettoMRR >= 0 ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" /> },
           { label: "Aktive kunder", value: `${aktiveKunder}`, icon: <Users className="w-4 h-4" /> },
+          { label: "Ikke-live MRR", value: nok(ikkeLiveMRR), icon: <DollarSign className="w-4 h-4" /> },
+          { label: "Ikke-live ARR", value: nok(ikkeLiveARR), icon: <BarChart3 className="w-4 h-4" /> },
           { label: "Pipeline", value: nok(pipelineVerdi), icon: <TrendingUp className="w-4 h-4" /> },
           { label: "Win rate", value: `${winRate}%`, icon: <Target className="w-4 h-4" /> },
           { label: "Churn", value: `${churnRate}%`, icon: <PieChart className="w-4 h-4" /> },
         ];
         return (
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 mb-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
             {kpis.map(kpi => (
               <div key={kpi.label} className="bg-card border rounded-xl px-4 py-3 flex items-center gap-3">
                 <div className="text-muted-foreground">{kpi.icon}</div>
