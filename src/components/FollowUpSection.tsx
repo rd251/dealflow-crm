@@ -115,7 +115,9 @@ export default function FollowUpSection({ items, loading, onDismiss }: FollowUpS
 
   if (items.length === 0) return null;
 
-  const displayed = items.slice(0, 10);
+  const [showAll, setShowAll] = useState(false);
+  const displayed = showAll ? items : items.slice(0, 10);
+  const remaining = items.length - 10;
 
   return (
     <>
