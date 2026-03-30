@@ -634,12 +634,16 @@ export default function Kontaktstrom() {
             {selected.status && (
               <Badge variant="outline" className="text-xs">{selected.status}</Badge>
             )}
-            {selected.inCrm ? (
+            {selected.connectionStatus === "linked" ? (
               <Badge variant="outline" className="text-xs bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400">
-                I CRM
+                Koblet
+              </Badge>
+            ) : selected.connectionStatus === "suggested" ? (
+              <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400">
+                Foreslått selskap
               </Badge>
             ) : (
-              <Badge variant="outline" className="text-xs">Ikke i CRM</Badge>
+              <Badge variant="outline" className="text-xs">Ikke koblet</Badge>
             )}
           </>
         ) : undefined}
