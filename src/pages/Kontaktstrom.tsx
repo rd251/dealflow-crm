@@ -462,6 +462,11 @@ export default function Kontaktstrom() {
                   </td>
                   {!isMobile && (
                     <td className="px-4 py-3 text-xs text-muted-foreground">
+                      {p.status || "–"}
+                    </td>
+                  )}
+                  {!isMobile && (
+                    <td className="px-4 py-3 text-xs text-muted-foreground">
                       {totalEmails > 0 ? (
                         <span title={`${p.totalSent} sendt, ${p.totalReceived} mottatt`}>
                           ↑{p.totalSent} ↓{p.totalReceived}
