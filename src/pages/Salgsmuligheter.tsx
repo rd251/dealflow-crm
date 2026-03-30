@@ -552,7 +552,7 @@ function DealList({ deals, getSelskapNavn, onSelect, label, onNavigateSelskap, i
         {deals.map(d => (
           <div key={d.id} className="bg-card border rounded-xl p-4 space-y-1" onClick={() => onSelect(d)}>
             <div className="flex items-center justify-between">
-              <p className="font-semibold text-sm truncate">{d.navn}</p>
+              <p className="font-semibold text-sm truncate">{d.kontaktperson || d.navn}</p>
               <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium shrink-0 ${d.status === "Vunnet" ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>{d.status}</span>
             </div>
             <p className="text-xs text-muted-foreground" onClick={e => { e.stopPropagation(); onNavigateSelskap?.(d.selskap_id); }}>{getSelskapNavn(d.selskap_id)}</p>
