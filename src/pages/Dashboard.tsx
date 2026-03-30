@@ -54,8 +54,7 @@ export default function Dashboard() {
   const [entityNames, setEntityNames] = useState<Record<string, string>>({});
   const [prepMeeting, setPrepMeeting] = useState<MeetingItem | null>(null);
   const [oppgaver, setOppgaver] = useState<Tables<"oppgaver">[]>([]);
-  const [aktiviteter, setAktiviteter] = useState<Tables<"aktiviteter">[]>([]);
-  const [activityNames, setActivityNames] = useState<Record<string, string>>({});
+  const [crmEvents, setCrmEvents] = useState<Array<{ id: string; label: string; date: string; color: string }>>([]);
 
   useEffect(() => {
     // Fetch upcoming tasks
