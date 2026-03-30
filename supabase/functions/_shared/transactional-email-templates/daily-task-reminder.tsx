@@ -191,6 +191,5 @@ const assigneeBadge: React.CSSProperties = {
   verticalAlign: 'middle',
 }
 const footerSection: React.CSSProperties = { padding: '24px 40px', textAlign: 'center', borderRadius: '0 0 8px 8px' }
-const footerLogo: React.CSSProperties = { fontSize: '18px', fontWeight: 700, color: '#999999', margin: '0 0 4px' }
 const footerText: React.CSSProperties = { fontSize: '13px', color: '#999999', margin: '0 0 4px' }
 const footerCopy: React.CSSProperties = { fontSize: '12px', color: '#bbbbbb', margin: '8px 0 0' }
