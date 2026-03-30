@@ -7,6 +7,7 @@ import type { TemplateEntry } from './registry.ts'
 const SITE_NAME = "Snakk"
 const BRAND_RED = '#da291c'
 const BRAND_DARK = '#1a1917'
+const LOGO_URL = 'https://tchmujgzcklwgptocbno.supabase.co/storage/v1/object/public/email-assets/snakk-logo.png'
 
 interface TaskItem {
   oppgave: string
