@@ -1052,6 +1052,26 @@ export default function Kalender() {
           selskap_id={selectedEvent.raw?.selskap_id || null}
         />
       )}
+
+      {/* Meeting Prep Panel */}
+      {selectedEvent?.type === "meeting" && (
+        <MeetingPrepPanel
+          meeting={{
+            id: selectedEvent.id,
+            tittel: selectedEvent.title,
+            beskrivelse: selectedEvent.description,
+            dato: selectedEvent.start.toISOString(),
+            start_tid: selectedEvent.start.toISOString(),
+            slutt_tid: selectedEvent.end?.toISOString() || null,
+            selskap_id: selectedEvent.raw?.selskap_id || null,
+            salgsmulighet_id: selectedEvent.raw?.salgsmulighet_id || null,
+            ekstern_id: selectedEvent.raw?.ekstern_id || null,
+            ekstern_provider: selectedEvent.raw?.ekstern_provider || null,
+          }}
+          open={prepPanelOpen}
+          onOpenChange={setPrepPanelOpen}
+        />
+      )}
     </PageShell>
   );
 }
