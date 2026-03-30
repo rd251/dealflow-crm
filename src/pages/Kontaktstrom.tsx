@@ -300,7 +300,7 @@ export default function Kontaktstrom() {
           kontaktId: ec.kontakt_id || null,
           leadId: ec.lead_id || null,
           salgsmulighetId: ec.salgsmulighet_id || null,
-          selskapId: ec.selskap_id || null,
+          selskapId: ecSelskapId || null,
           partnerId: ec.partner_id || null,
           inCrm: !!(ec.kontakt_id || ec.lead_id || ec.salgsmulighet_id || ec.partner_id),
         });
