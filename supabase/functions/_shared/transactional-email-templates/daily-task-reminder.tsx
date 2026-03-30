@@ -1,10 +1,12 @@
 import * as React from 'npm:react@18.3.1'
 import {
-  Body, Container, Head, Heading, Html, Preview, Text, Button, Section, Hr, Link, Img,
+  Body, Container, Head, Heading, Html, Preview, Text, Button, Section, Hr,
 } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 
 const SITE_NAME = "Snakk"
+const BRAND_RED = '#da291c'
+const BRAND_DARK = '#1a1917'
 
 interface TaskItem {
   oppgave: string
@@ -39,16 +41,16 @@ const DailyTaskReminderEmail = ({
       <Preview>{previewText}</Preview>
       <Body style={main}>
         <Container style={container}>
-          {/* Header */}
+          {/* Header with Snakk branding */}
           <Section style={headerSection}>
-            <Text style={logoText}>Snakk</Text>
+            <Text style={logoText}>✦ snakk</Text>
           </Section>
 
           {/* Main content */}
           <Section style={contentSection}>
             <Heading style={h1}>Hei {displayName},</Heading>
             <Text style={summaryText}>
-              Du har <strong>{totalTasks} oppgave{totalTasks !== 1 ? 'r' : ''}</strong> som trenger oppmerksomhet.
+              Du har <strong style={{ color: BRAND_DARK }}>{totalTasks} {overdueCount > 0 ? 'forfalte ' : ''}oppgave{totalTasks !== 1 ? 'r' : ''}</strong>.
             </Text>
 
             <Button style={ctaButton} href={`${appUrl}/oppgaver`}>
@@ -63,18 +65,19 @@ const DailyTaskReminderEmail = ({
                 <Heading as="h2" style={sectionHeading}>Forfalt</Heading>
                 {overdueTasks.map((task, i) => (
                   <Section key={i} style={taskCard}>
-                    <Text style={taskName}>○&nbsp;&nbsp;{task.oppgave}</Text>
-                    <Section style={taskMeta}>
-                      <Text style={taskDate}>📅 {task.frist || 'Ingen frist'}</Text>
+                    <Text style={taskName}>
+                      <span style={taskCircle}>○</span>&nbsp;&nbsp;{task.oppgave}
+                    </Text>
+                    <Text style={taskMetaLine}>
+                      <span style={taskDateOverdue}>📅 {task.frist || 'Ingen frist'}</span>
                       {task.ansvarlig && (
-                        <Text style={taskAssignee}>
-                          <span style={assigneeBadge}>
-                            {task.ansvarlig.charAt(0).toUpperCase()}
-                          </span>
-                          &nbsp;Tildelt {task.ansvarlig}
-                        </Text>
+                        <>
+                          &nbsp;&nbsp;
+                          <span style={assigneeBadge}>{task.ansvarlig.charAt(0).toUpperCase()}</span>
+                          <span style={taskAssigneeText}>&nbsp;Tildelt {task.ansvarlig}</span>
+                        </>
                       )}
-                    </Section>
+                    </Text>
                   </Section>
                 ))}
               </>
@@ -86,18 +89,19 @@ const DailyTaskReminderEmail = ({
                 <Heading as="h2" style={sectionHeading}>I dag</Heading>
                 {todayTasks.map((task, i) => (
                   <Section key={i} style={taskCard}>
-                    <Text style={taskName}>○&nbsp;&nbsp;{task.oppgave}</Text>
-                    <Section style={taskMeta}>
-                      <Text style={taskDate}>📅 {task.frist || 'Ingen frist'}</Text>
+                    <Text style={taskName}>
+                      <span style={taskCircle}>○</span>&nbsp;&nbsp;{task.oppgave}
+                    </Text>
+                    <Text style={taskMetaLine}>
+                      <span style={taskDateToday}>📅 {task.frist || 'Ingen frist'}</span>
                       {task.ansvarlig && (
-                        <Text style={taskAssignee}>
-                          <span style={assigneeBadge}>
-                            {task.ansvarlig.charAt(0).toUpperCase()}
-                          </span>
-                          &nbsp;Tildelt {task.ansvarlig}
-                        </Text>
+                        <>
+                          &nbsp;&nbsp;
+                          <span style={assigneeBadge}>{task.ansvarlig.charAt(0).toUpperCase()}</span>
+                          <span style={taskAssigneeText}>&nbsp;Tildelt {task.ansvarlig}</span>
+                        </>
                       )}
-                    </Section>
+                    </Text>
                   </Section>
                 ))}
               </>
@@ -106,7 +110,7 @@ const DailyTaskReminderEmail = ({
 
           {/* Footer */}
           <Section style={footerSection}>
-            <Text style={footerLogo}>Snakk</Text>
+            <Text style={footerLogo}>✦ snakk</Text>
             <Text style={footerText}>Snakk CRM</Text>
             <Text style={footerCopy}>©2026 Snakk. Alle rettigheter reservert.</Text>
           </Section>
@@ -132,58 +136,60 @@ export const template = {
     overdueCount: 2,
     todayCount: 1,
     overdueTasks: [
-      { oppgave: 'Ring han', frist: 'February 17, 2026', ansvarlig: 'Robin Sæter Diallo', prioritet: 'Høy' },
-      { oppgave: 'Følg opp', frist: 'February 17, 2026', ansvarlig: 'Robin Sæter Diallo', prioritet: 'Medium' },
+      { oppgave: 'Ring han', frist: '17. februar 2026', ansvarlig: 'Robin Sæter Diallo', prioritet: 'Høy' },
+      { oppgave: 'Følg opp', frist: '17. februar 2026', ansvarlig: 'Robin Sæter Diallo', prioritet: 'Medium' },
     ],
     todayTasks: [
-      { oppgave: 'Send tilbud til Acme Corp', frist: 'March 30, 2026', ansvarlig: 'Robin Sæter Diallo', prioritet: 'Høy' },
+      { oppgave: 'Send tilbud til Acme Corp', frist: '30. mars 2026', ansvarlig: 'Robin Sæter Diallo', prioritet: 'Høy' },
     ],
     appUrl: 'https://snakk-ai-crm.lovable.app',
   },
 } satisfies TemplateEntry
 
-// Styles
-const main = { backgroundColor: '#f4f4f5', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }
-const container = { maxWidth: '580px', margin: '0 auto' }
-const headerSection = { backgroundColor: '#1a1a1a', padding: '28px 0', textAlign: 'center' as const, borderRadius: '8px 8px 0 0' }
-const logoText = { color: '#ffffff', fontSize: '24px', fontWeight: '700' as const, margin: '0', letterSpacing: '-0.5px' }
-const contentSection = { backgroundColor: '#ffffff', padding: '32px 40px' }
-const h1 = { fontSize: '24px', fontWeight: '700' as const, color: '#111111', margin: '0 0 8px' }
-const summaryText = { fontSize: '15px', color: '#555555', lineHeight: '1.5', margin: '0 0 24px' }
-const ctaButton = {
-  backgroundColor: '#3b82f6',
+// Styles — Snakk brand: red #da291c, dark #1a1917, warm white backgrounds
+const main: React.CSSProperties = { backgroundColor: '#f5f4f2', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }
+const container: React.CSSProperties = { maxWidth: '580px', margin: '0 auto' }
+const headerSection: React.CSSProperties = { backgroundColor: BRAND_DARK, padding: '28px 0', textAlign: 'center', borderRadius: '8px 8px 0 0' }
+const logoText: React.CSSProperties = { color: '#ffffff', fontSize: '26px', fontWeight: 700, margin: '0', letterSpacing: '-0.5px' }
+const contentSection: React.CSSProperties = { backgroundColor: '#ffffff', padding: '32px 40px' }
+const h1: React.CSSProperties = { fontSize: '24px', fontWeight: 700, color: BRAND_DARK, margin: '0 0 8px' }
+const summaryText: React.CSSProperties = { fontSize: '15px', color: '#555555', lineHeight: '1.5', margin: '0 0 24px' }
+const ctaButton: React.CSSProperties = {
+  backgroundColor: BRAND_RED,
   color: '#ffffff',
   padding: '14px 32px',
   borderRadius: '8px',
   fontSize: '15px',
-  fontWeight: '600' as const,
+  fontWeight: 600,
   textDecoration: 'none',
-  display: 'inline-block' as const,
-  textAlign: 'center' as const,
+  display: 'block',
+  textAlign: 'center',
   width: '100%',
-  boxSizing: 'border-box' as const,
+  boxSizing: 'border-box',
 }
-const divider = { borderColor: '#e5e5e5', margin: '28px 0' }
-const sectionHeading = { fontSize: '14px', fontWeight: '700' as const, color: '#111111', margin: '0 0 16px', textTransform: 'uppercase' as const, letterSpacing: '0.5px' }
-const taskCard = { padding: '16px 0', borderBottom: '1px solid #f0f0f0' }
-const taskName = { fontSize: '15px', color: '#111111', margin: '0 0 8px', fontWeight: '500' as const }
-const taskMeta = { display: 'flex' as const, gap: '16px', alignItems: 'center' as const }
-const taskDate = { fontSize: '13px', color: '#dc2626', margin: '0', display: 'inline' as const }
-const taskAssignee = { fontSize: '13px', color: '#666666', margin: '0 0 0 8px', display: 'inline' as const }
-const assigneeBadge = {
-  display: 'inline-block' as const,
+const divider: React.CSSProperties = { borderColor: '#e8e6e3', margin: '28px 0' }
+const sectionHeading: React.CSSProperties = { fontSize: '13px', fontWeight: 700, color: BRAND_DARK, margin: '0 0 16px', textTransform: 'uppercase', letterSpacing: '0.5px' }
+const taskCard: React.CSSProperties = { padding: '16px 0', borderBottom: '1px solid #f0eeec' }
+const taskCircle: React.CSSProperties = { color: '#cccccc', fontSize: '16px' }
+const taskName: React.CSSProperties = { fontSize: '15px', color: BRAND_DARK, margin: '0 0 8px', fontWeight: 500 }
+const taskMetaLine: React.CSSProperties = { fontSize: '13px', color: '#666666', margin: '0' }
+const taskDateOverdue: React.CSSProperties = { color: BRAND_RED, fontSize: '13px' }
+const taskDateToday: React.CSSProperties = { color: '#666666', fontSize: '13px' }
+const taskAssigneeText: React.CSSProperties = { fontSize: '13px', color: '#666666' }
+const assigneeBadge: React.CSSProperties = {
+  display: 'inline-block',
   width: '20px',
   height: '20px',
   borderRadius: '50%',
-  backgroundColor: '#7c3aed',
+  backgroundColor: BRAND_RED,
   color: '#ffffff',
   fontSize: '11px',
-  fontWeight: '600' as const,
+  fontWeight: 600,
   lineHeight: '20px',
-  textAlign: 'center' as const,
-  verticalAlign: 'middle' as const,
+  textAlign: 'center',
+  verticalAlign: 'middle',
 }
-const footerSection = { padding: '24px 40px', textAlign: 'center' as const, borderRadius: '0 0 8px 8px' }
-const footerLogo = { fontSize: '18px', fontWeight: '700' as const, color: '#999999', margin: '0 0 4px' }
-const footerText = { fontSize: '13px', color: '#999999', margin: '0 0 4px' }
-const footerCopy = { fontSize: '12px', color: '#bbbbbb', margin: '8px 0 0' }
+const footerSection: React.CSSProperties = { padding: '24px 40px', textAlign: 'center', borderRadius: '0 0 8px 8px' }
+const footerLogo: React.CSSProperties = { fontSize: '18px', fontWeight: 700, color: '#999999', margin: '0 0 4px' }
+const footerText: React.CSSProperties = { fontSize: '13px', color: '#999999', margin: '0 0 4px' }
+const footerCopy: React.CSSProperties = { fontSize: '12px', color: '#bbbbbb', margin: '8px 0 0' }
