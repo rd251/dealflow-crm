@@ -30,6 +30,7 @@ export default function FollowUpSection({ items, loading, onDismiss }: FollowUpS
   const [generatedMessage, setGeneratedMessage] = useState("");
   const [generating, setGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showAll, setShowAll] = useState(false);
 
   const typeLabel: Record<string, string> = {
     lead_stale: "Lead inaktiv",
