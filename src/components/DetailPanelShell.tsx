@@ -6,6 +6,7 @@ interface DetailPanelShellProps {
   open: boolean;
   onClose: () => void;
   title: string;
+  onTitleChange?: (value: string) => void;
   subtitle?: string;
   initials?: string;
   badges?: ReactNode;
