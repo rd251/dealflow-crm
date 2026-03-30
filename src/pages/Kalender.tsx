@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import PageShell from "@/components/PageShell";
+import PostMeetingDialog from "@/components/PostMeetingDialog";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
@@ -90,6 +91,8 @@ export default function Kalender() {
     }
   }, [searchParams]);
 
+
+  const [postMeetingOpen, setPostMeetingOpen] = useState(false);
 
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -902,6 +905,20 @@ export default function Kalender() {
                 </div>
               )}
 
+              {/* Post-meeting button for past meetings */}
+              {selectedEvent.type === "meeting" && selectedEvent.start < new Date() && (
+                <div className="pt-3 border-t">
+                  <Button
+                    variant="destructive"
+                    className="w-full gap-2"
+                    onClick={() => setPostMeetingOpen(true)}
+                  >
+                    <Check className="w-4 h-4" />
+                    Møtet er ferdig – logg resultat
+                  </Button>
+                </div>
+              )}
+
               <div className="flex gap-2 pt-4 border-t">
                 <Button variant="outline" size="sm" className="gap-1.5" onClick={startEditing}>
                   <Pencil className="w-3.5 h-3.5" /> Rediger
@@ -1004,6 +1021,22 @@ export default function Kalender() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Post-meeting dialog */}
+      {selectedEvent?.type === "meeting" && (
+        <PostMeetingDialog
+          open={postMeetingOpen}
+          onOpenChange={(open) => {
+            setPostMeetingOpen(open);
+            if (!open) {
+              fetchEvents();
+            }
+          }}
+          meetingTitle={selectedEvent.title}
+          salgsmulighet_id={selectedEvent.raw?.salgsmulighet_id || null}
+          selskap_id={selectedEvent.raw?.selskap_id || null}
+        />
+      )}
     </PageShell>
   );
 }
