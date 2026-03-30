@@ -90,7 +90,7 @@ export function useFollowUps(
 
     // 1. Leads uten aktivitet siste 48 timer
     leads.forEach((lead) => {
-      if (lead.status === "Ikke aktuelt" || lead.status === "Konvertert til salg" || lead.status === "Konvertert til partner") return;
+      if (lead.status === "Ikke aktuelt" || lead.konvertert_til) return;
 
       const hoursInactive = lead.sist_aktivitet
         ? differenceInHours(now, new Date(lead.sist_aktivitet))
