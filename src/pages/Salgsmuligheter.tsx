@@ -568,7 +568,7 @@ function DealList({ deals, getSelskapNavn, onSelect, label, onNavigateSelskap, i
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b bg-muted/50">
-            <th className="text-left px-4 py-3 font-medium">Navn</th>
+            <th className="text-left px-4 py-3 font-medium">Kontaktperson</th>
             <th className="text-left px-4 py-3 font-medium">Selskap</th>
             <th className="text-left px-4 py-3 font-medium">Status</th>
             <th className="text-right px-4 py-3 font-medium">MRR</th>
