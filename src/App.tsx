@@ -27,6 +27,7 @@ import Kalender from "./pages/Kalender";
 import Innstillinger from "./pages/Innstillinger";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
+import Unsubscribe from "./pages/Unsubscribe";
 
 const queryClient = new QueryClient();
 
