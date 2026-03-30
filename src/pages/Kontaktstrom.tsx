@@ -21,7 +21,7 @@ interface KontaktStromPerson {
   email: string;
   navn: string;
   firmanavn: string;
-  type: "Lead" | "Salgsmulighet" | "Kunde" | "Partner" | "Ukjent";
+  type: "Lead" | "Salgsmulighet" | "Kunde" | "Partner" | "Kontakt" | "Ukjent";
   status: string;
   ansvarlig: string;
   sistKontaktetDato: string | null;
@@ -42,6 +42,7 @@ const TYPE_COLORS: Record<string, string> = {
   Salgsmulighet: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
   Kunde: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300",
   Partner: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
+  Kontakt: "bg-sky-100 text-sky-800 dark:bg-sky-900/30 dark:text-sky-300",
   Ukjent: "bg-muted text-muted-foreground",
 };
 
@@ -124,7 +125,7 @@ export default function Kontaktstrom() {
       const selskap = selskaper.find(s => s.id === selskapId);
       if (!selskap) return "Ukjent";
       if (selskap.kundestatus === "Live" || selskap.kundestatus === "Pilot") return "Kunde";
-      return "Ukjent";
+      return "Kontakt";
     };
 
     // 1. Add CRM kontakter
@@ -135,16 +136,17 @@ export default function Kontaktstrom() {
       const sm = salgsmuligheter.find(s => s.e_post?.toLowerCase() === email || s.kontakt_id === k.id);
       const partner = partnere.find(p => p.e_post?.toLowerCase() === email);
 
-      let type: KontaktStromPerson["type"] = "Ukjent";
-      let status = "";
+      let type: KontaktStromPerson["type"] = k.selskap_id ? getTypeFromSelskap(k.selskap_id) : "Ukjent";
+      let status = k.selskap_id ? getSelskapStatus(k.selskap_id) : "";
       let ansvarlig = "";
       let nesteSteg = "";
 
       if (sm) { type = "Salgsmulighet"; status = sm.status; ansvarlig = sm.ansvarlig; nesteSteg = sm.neste_steg; }
       if (lead) { type = "Lead"; status = lead.status; ansvarlig = lead.ansvarlig; nesteSteg = lead.neste_steg; }
       if (partner) { type = "Partner"; status = partner.partnerstatus; ansvarlig = partner.ansvarlig; }
-      if (k.selskap_id && getTypeFromSelskap(k.selskap_id) === "Kunde") {
-        type = "Kunde"; status = getSelskapStatus(k.selskap_id);
+      if (k.selskap_id) {
+        const selskapType = getTypeFromSelskap(k.selskap_id);
+        if (selskapType === "Kunde") { type = "Kunde"; status = getSelskapStatus(k.selskap_id); }
       }
 
       map.set(email, {
@@ -243,6 +245,23 @@ export default function Kontaktstrom() {
         let ecAnsvarlig = "";
         let ecNesteSteg = "";
         let ecFirmanavn = ec.domain || "";
+        let ecSelskapId = ec.selskap_id || null;
+
+        // Resolve kontakt -> selskap link
+        if (ec.kontakt_id) {
+          const kontakt = kontakter.find(k => k.id === ec.kontakt_id);
+          if (kontakt) {
+            if (kontakt.selskap_id) {
+              ecSelskapId = kontakt.selskap_id;
+              const selskapType = getTypeFromSelskap(kontakt.selskap_id);
+              ecType = selskapType;
+              ecStatus = getSelskapStatus(kontakt.selskap_id);
+              ecFirmanavn = getSelskapNavn(kontakt.selskap_id) || ecFirmanavn;
+            } else {
+              ecType = "Kontakt";
+            }
+          }
+        }
 
         if (ec.partner_id) {
           const partner = partnere.find(p => p.id === ec.partner_id);
@@ -256,8 +275,8 @@ export default function Kontaktstrom() {
           const lead = leads.find(l => l.id === ec.lead_id);
           if (lead) { ecType = "Lead"; ecStatus = lead.status || ""; ecAnsvarlig = lead.ansvarlig || ""; ecNesteSteg = lead.neste_steg || ""; ecFirmanavn = lead.firmanavn || ecFirmanavn; }
         }
-        if (ec.selskap_id) {
-          const selskap = selskaper.find(s => s.id === ec.selskap_id);
+        if (ecSelskapId) {
+          const selskap = selskaper.find(s => s.id === ecSelskapId);
           if (selskap) {
             ecFirmanavn = selskap.firmanavn || ecFirmanavn;
             if (selskap.kundestatus === "Live" || selskap.kundestatus === "Pilot") {
@@ -281,7 +300,7 @@ export default function Kontaktstrom() {
           kontaktId: ec.kontakt_id || null,
           leadId: ec.lead_id || null,
           salgsmulighetId: ec.salgsmulighet_id || null,
-          selskapId: ec.selskap_id || null,
+          selskapId: ecSelskapId || null,
           partnerId: ec.partner_id || null,
           inCrm: !!(ec.kontakt_id || ec.lead_id || ec.salgsmulighet_id || ec.partner_id),
         });
@@ -370,6 +389,7 @@ export default function Kontaktstrom() {
               <SelectItem value="Salgsmulighet">Salgsmulighet</SelectItem>
               <SelectItem value="Kunde">Kunde</SelectItem>
               <SelectItem value="Partner">Partner</SelectItem>
+              <SelectItem value="Kontakt">Kontakt</SelectItem>
               <SelectItem value="Ukjent">Ukjent</SelectItem>
             </SelectContent>
           </Select>
