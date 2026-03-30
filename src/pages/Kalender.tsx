@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import PageShell from "@/components/PageShell";
 import PostMeetingDialog from "@/components/PostMeetingDialog";
+import MeetingPrepPanel from "@/components/MeetingPrepPanel";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
@@ -9,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { ChevronLeft, ChevronRight, Clock, Users, CalendarDays, ListTodo, Pencil, Trash2, GripVertical, Check, X, Building2, ExternalLink, RefreshCw, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Clock, Users, CalendarDays, ListTodo, Pencil, Trash2, GripVertical, Check, X, Building2, ExternalLink, RefreshCw, Loader2, Sparkles } from "lucide-react";
 import { format, startOfWeek, startOfMonth, addDays, addWeeks, subWeeks, addMonths, subMonths, isSameDay, getDaysInMonth, getDay } from "date-fns";
 import { nb } from "date-fns/locale";
 import MeetingFields from "@/components/MeetingFields";
@@ -93,6 +94,7 @@ export default function Kalender() {
 
 
   const [postMeetingOpen, setPostMeetingOpen] = useState(false);
+  const [prepPanelOpen, setPrepPanelOpen] = useState(false);
 
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -905,6 +907,19 @@ export default function Kalender() {
                 </div>
               )}
 
+              {/* Prep meeting button for future meetings */}
+              {selectedEvent.type === "meeting" && selectedEvent.start >= new Date() && (
+                <div className="pt-3 border-t">
+                  <Button
+                    className="w-full gap-2"
+                    onClick={() => { setDrawerOpen(false); setPrepPanelOpen(true); }}
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    Prep møte
+                  </Button>
+                </div>
+              )}
+
               {/* Post-meeting button for past meetings */}
               {selectedEvent.type === "meeting" && selectedEvent.start < new Date() && (
                 <div className="pt-3 border-t">
@@ -1035,6 +1050,26 @@ export default function Kalender() {
           meetingTitle={selectedEvent.title}
           salgsmulighet_id={selectedEvent.raw?.salgsmulighet_id || null}
           selskap_id={selectedEvent.raw?.selskap_id || null}
+        />
+      )}
+
+      {/* Meeting Prep Panel */}
+      {selectedEvent?.type === "meeting" && (
+        <MeetingPrepPanel
+          meeting={{
+            id: selectedEvent.id,
+            tittel: selectedEvent.title,
+            beskrivelse: selectedEvent.description,
+            dato: selectedEvent.start.toISOString(),
+            start_tid: selectedEvent.start.toISOString(),
+            slutt_tid: selectedEvent.end?.toISOString() || null,
+            selskap_id: selectedEvent.raw?.selskap_id || null,
+            salgsmulighet_id: selectedEvent.raw?.salgsmulighet_id || null,
+            ekstern_id: selectedEvent.raw?.ekstern_id || null,
+            ekstern_provider: selectedEvent.raw?.ekstern_provider || null,
+          }}
+          open={prepPanelOpen}
+          onOpenChange={setPrepPanelOpen}
         />
       )}
     </PageShell>
