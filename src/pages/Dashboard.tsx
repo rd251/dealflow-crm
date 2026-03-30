@@ -57,49 +57,54 @@ export default function Dashboard() {
   const [crmEvents, setCrmEvents] = useState<Array<{ id: string; label: string; date: string; color: string }>>([]);
 
   useEffect(() => {
-    // Fetch upcoming tasks
-    supabase
-      .from("oppgaver")
-      .select("*")
-      .neq("status", "Ferdig")
-      .order("frist", { ascending: true, nullsFirst: false })
-      .limit(8)
-      .then(({ data }) => { if (data) setOppgaver(data); });
+    const fetchDashboardData = async () => {
+      // Fetch upcoming tasks
+      supabase
+        .from("oppgaver")
+        .select("*")
+        .neq("status", "Ferdig")
+        .order("frist", { ascending: true, nullsFirst: false })
+        .limit(8)
+        .then(({ data }) => { if (data) setOppgaver(data); });
 
-    // Fetch recent activities (exclude meetings – shown in Møter section)
-    supabase
-      .from("aktiviteter")
-      .select("*")
-      .neq("type", "Møte")
-      .order("dato", { ascending: false })
-      .limit(10)
-      .then(({ data }) => {
-        if (data) {
-          setAktiviteter(data);
-          // Resolve selskap names for activities
-          const actSelskapIds = [...new Set(data.map(a => a.selskap_id).filter(Boolean))] as string[];
-          const actLeadIds = [...new Set(data.map(a => a.lead_id).filter(Boolean))] as string[];
-          const actSmIds = [...new Set(data.map(a => a.salgsmulighet_id).filter(Boolean))] as string[];
-          const fetches: Array<Promise<void> | PromiseLike<void>> = [];
-          const names: Record<string, string> = {};
-          if (actSelskapIds.length)
-            fetches.push(
-              supabase.from("selskaper").select("id,firmanavn").in("id", actSelskapIds)
-                .then(({ data: rows }) => rows?.forEach(r => names[r.id] = r.firmanavn))
-            );
-          if (actLeadIds.length)
-            fetches.push(
-              supabase.from("leads").select("id,firmanavn").in("id", actLeadIds)
-                .then(({ data: rows }) => rows?.forEach(r => names[r.id] = r.firmanavn))
-            );
-          if (actSmIds.length)
-            fetches.push(
-              supabase.from("salgsmuligheter").select("id,navn").in("id", actSmIds)
-                .then(({ data: rows }) => rows?.forEach(r => names[r.id] = r.navn))
-            );
-          Promise.all(fetches).then(() => setActivityNames(names));
+      // Fetch CRM events: recent leads + salgsmuligheter status changes
+      const events: Array<{ id: string; label: string; date: string; color: string }> = [];
+
+      const [leadsRes, smRes] = await Promise.all([
+        supabase.from("leads").select("id,firmanavn,status,created_at").order("created_at", { ascending: false }).limit(20),
+        supabase.from("salgsmuligheter").select("id,navn,status,created_at,vunnet_dato,tapt_dato").order("created_at", { ascending: false }).limit(20),
+      ]);
+
+      if (leadsRes.data) {
+        for (const l of leadsRes.data) {
+          if (l.status === "Konvertert til salg") {
+            events.push({ id: `l-conv-${l.id}`, label: `Konvertert til salg: ${l.firmanavn}`, date: l.created_at, color: "bg-emerald-500" });
+          } else if (l.status === "Konvertert til partner") {
+            events.push({ id: `l-convp-${l.id}`, label: `Konvertert til partner: ${l.firmanavn}`, date: l.created_at, color: "bg-violet-500" });
+          } else if (l.status === "Ikke aktuelt") {
+            events.push({ id: `l-ia-${l.id}`, label: `Ikke aktuelt: ${l.firmanavn}`, date: l.created_at, color: "bg-muted-foreground" });
+          } else {
+            events.push({ id: `l-new-${l.id}`, label: `Nytt lead: ${l.firmanavn}`, date: l.created_at, color: "bg-primary" });
+          }
         }
-      });
+      }
+
+      if (smRes.data) {
+        for (const s of smRes.data) {
+          if (s.status === "Vunnet") {
+            events.push({ id: `sm-won-${s.id}`, label: `Vunnet: ${s.navn}`, date: s.vunnet_dato || s.created_at, color: "bg-emerald-500" });
+          } else if (s.status === "Tapt") {
+            events.push({ id: `sm-lost-${s.id}`, label: `Tapt: ${s.navn}`, date: s.tapt_dato || s.created_at, color: "bg-destructive" });
+          } else {
+            events.push({ id: `sm-new-${s.id}`, label: `Ny salgsmulighet: ${s.navn}`, date: s.created_at, color: "bg-amber-500" });
+          }
+        }
+      }
+
+      events.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      setCrmEvents(events.slice(0, 12));
+    };
+    fetchDashboardData();
   }, []);
 
   useEffect(() => {
