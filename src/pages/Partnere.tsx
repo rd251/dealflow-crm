@@ -112,6 +112,39 @@ export default function Partnere() {
         </Dialog>
       ) : undefined}
     >
+      {/* ─── KPI ─── */}
+      {(() => {
+        const nok = (n: number) => n.toLocaleString("nb-NO", { maximumFractionDigits: 0 }) + " NOK";
+        const totalPartnere = partnere.length;
+        const aktivePartnere = partnere.filter(p => p.partnerstatus === "Aktiv").length;
+        const partnerKunder = selskaper.filter(s => s.partner_id && partnere.some(p => p.id === s.partner_id) && s.kundestatus === "Live");
+        const partnerMRR = partnerKunder.reduce((sum, s) => sum + s.mrr, 0);
+        const partnerARR = partnerMRR * 12;
+        const totalLiveMRR = selskaper.filter(s => s.kundestatus === "Live").reduce((sum, s) => sum + s.mrr, 0);
+        const andelMRR = totalLiveMRR > 0 ? ((partnerMRR / totalLiveMRR) * 100).toFixed(1) : "0.0";
+        const kpis = [
+          { label: "Partnere", value: `${totalPartnere}`, icon: <Users className="w-4 h-4" />, sub: `${aktivePartnere} aktive` },
+          { label: "MRR fra partnere", value: nok(partnerMRR), icon: <DollarSign className="w-4 h-4" /> },
+          { label: "ARR fra partnere", value: nok(partnerARR), icon: <BarChart3 className="w-4 h-4" /> },
+          { label: "Kunder via partner", value: `${partnerKunder.length}`, icon: <Users className="w-4 h-4" /> },
+          { label: "Andel av MRR", value: `${andelMRR}%`, icon: <Percent className="w-4 h-4" /> },
+        ];
+        return (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
+            {kpis.map(kpi => (
+              <div key={kpi.label} className="bg-card border rounded-xl px-4 py-3 flex items-center gap-3">
+                <div className="text-muted-foreground">{kpi.icon}</div>
+                <div>
+                  <p className="text-xs text-muted-foreground">{kpi.label}</p>
+                  <p className="text-lg font-bold tracking-tight">{kpi.value}</p>
+                  {(kpi as any).sub && <p className="text-[10px] text-muted-foreground">{(kpi as any).sub}</p>}
+                </div>
+              </div>
+            ))}
+          </div>
+        );
+      })()}
+
       <div className="mb-4 relative max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input placeholder="Søk partnere..." className="pl-9" value={search} onChange={e => setSearch(e.target.value)} />
