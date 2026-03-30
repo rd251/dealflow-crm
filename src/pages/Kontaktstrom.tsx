@@ -237,17 +237,45 @@ export default function Kontaktstrom() {
         existing.totalSent += ec.total_emails_sent || 0;
         existing.totalReceived += ec.total_emails_received || 0;
       } else {
-        // New person from Gmail, not in CRM
+        // New person from Gmail, not in CRM — resolve type from linked IDs
+        let ecType: KontaktStromPerson["type"] = "Ukjent";
+        let ecStatus = "";
+        let ecAnsvarlig = "";
+        let ecNesteSteg = "";
+        let ecFirmanavn = ec.domain || "";
+
+        if (ec.partner_id) {
+          const partner = partnere.find(p => p.id === ec.partner_id);
+          if (partner) { ecType = "Partner"; ecStatus = partner.partnerstatus || ""; ecAnsvarlig = partner.ansvarlig || ""; ecFirmanavn = partner.partnernavn || ecFirmanavn; }
+        }
+        if (ec.salgsmulighet_id) {
+          const sm = salgsmuligheter.find(s => s.id === ec.salgsmulighet_id);
+          if (sm) { ecType = "Salgsmulighet"; ecStatus = sm.status || ""; ecAnsvarlig = sm.ansvarlig || ""; ecNesteSteg = sm.neste_steg || ""; ecFirmanavn = sm.selskap_id ? (selskaper.find(s => s.id === sm.selskap_id)?.firmanavn || ecFirmanavn) : ecFirmanavn; }
+        }
+        if (ec.lead_id) {
+          const lead = leads.find(l => l.id === ec.lead_id);
+          if (lead) { ecType = "Lead"; ecStatus = lead.status || ""; ecAnsvarlig = lead.ansvarlig || ""; ecNesteSteg = lead.neste_steg || ""; ecFirmanavn = lead.firmanavn || ecFirmanavn; }
+        }
+        if (ec.selskap_id) {
+          const selskap = selskaper.find(s => s.id === ec.selskap_id);
+          if (selskap) {
+            ecFirmanavn = selskap.firmanavn || ecFirmanavn;
+            if (selskap.kundestatus === "Live" || selskap.kundestatus === "Pilot") {
+              ecType = "Kunde"; ecStatus = selskap.kundestatus;
+            }
+          }
+        }
+
         map.set(email, {
           email,
           navn: ec.display_name || email,
-          firmanavn: ec.domain || "",
-          type: "Ukjent",
-          status: "",
-          ansvarlig: "",
+          firmanavn: ecFirmanavn,
+          type: ecType,
+          status: ecStatus,
+          ansvarlig: ecAnsvarlig,
           sistKontaktetDato: ec.last_contacted_at,
           sistKontaktetType: ec.last_activity_type || "E-post",
-          nesteSteg: "",
+          nesteSteg: ecNesteSteg,
           totalSent: ec.total_emails_sent || 0,
           totalReceived: ec.total_emails_received || 0,
           kontaktId: ec.kontakt_id || null,
@@ -255,7 +283,7 @@ export default function Kontaktstrom() {
           salgsmulighetId: ec.salgsmulighet_id || null,
           selskapId: ec.selskap_id || null,
           partnerId: ec.partner_id || null,
-          inCrm: false,
+          inCrm: !!(ec.kontakt_id || ec.lead_id || ec.salgsmulighet_id || ec.partner_id),
         });
       }
     }
