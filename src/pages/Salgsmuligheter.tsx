@@ -397,23 +397,33 @@ export default function Salgsmuligheter() {
                   </div>
                   {canEdit ? (
                     <DetailField label="Koble til kontakt">
-                      <select className="w-full border rounded-lg px-3 py-1.5 text-xs bg-background"
-                        value={currentSm.kontakt_id}
-                        onChange={e => {
-                          const kontakt = kontakter.find(k => k.id === e.target.value);
-                          if (kontakt) {
-                            updateField("kontakt_id", kontakt.id);
-                            updateField("kontaktperson", kontakt.navn);
-                            updateField("e_post", kontakt.e_post);
-                            updateField("telefon", kontakt.telefon);
-                            updateField("rolle_i_firma", kontakt.rolle);
+                      <EntityLinkPicker
+                        options={(() => {
+                          const sameCompany = kontakter
+                            .filter(k => currentSm.selskap_id && k.selskap_id === currentSm.selskap_id)
+                            .map(k => ({ id: k.id, label: k.navn, sublabel: k.e_post || k.rolle || undefined }));
+                          const others = kontakter
+                            .filter(k => !currentSm.selskap_id || k.selskap_id !== currentSm.selskap_id)
+                            .map(k => ({ id: k.id, label: k.navn, sublabel: k.e_post || k.rolle || undefined }));
+                          return [...sameCompany, ...others];
+                        })()}
+                        value={currentSm.kontakt_id || null}
+                        onChange={(id) => {
+                          if (id) {
+                            const kontakt = kontakter.find(k => k.id === id);
+                            if (kontakt) {
+                              updateField("kontakt_id", kontakt.id);
+                              updateField("kontaktperson", kontakt.navn);
+                              updateField("e_post", kontakt.e_post);
+                              updateField("telefon", kontakt.telefon);
+                              updateField("rolle_i_firma", kontakt.rolle);
+                            }
                           } else {
                             updateField("kontakt_id", "");
                           }
-                        }}>
-                        <option value="">Ingen koblet kontakt</option>
-                        {kontakter.map(k => <option key={k.id} value={k.id}>{k.navn}</option>)}
-                      </select>
+                        }}
+                        placeholder="Søk kontakter..."
+                      />
                     </DetailField>
                   ) : currentSm.kontakt_id ? (
                     <DetailField label="Koblet kontakt" value={kontakter.find(k => k.id === currentSm.kontakt_id)?.navn || "–"} />
