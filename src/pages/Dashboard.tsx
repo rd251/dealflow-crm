@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   AlertTriangle, CalendarDays, PhoneOff, Target, Clock, Building2,
-  DollarSign, TrendingUp, PieChart, BarChart3, ChevronRight, ListTodo, Activity, CheckCircle2,
+  BarChart3, ChevronRight, ListTodo, Activity, CheckCircle2,
 } from "lucide-react";
 import MeetingPrepPanel from "@/components/MeetingPrepPanel";
 import FollowUpSection from "@/components/FollowUpSection";
