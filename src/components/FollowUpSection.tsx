@@ -205,9 +205,12 @@ export default function FollowUpSection({ items, loading, onDismiss }: FollowUpS
 
         {items.length > 10 && (
           <div className="px-4 py-2 border-t text-center">
-            <span className="text-xs text-muted-foreground">
-              +{items.length - 10} flere oppfølginger
-            </span>
+            <button
+              onClick={() => setShowAll(!showAll)}
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            >
+              {showAll ? "Vis færre" : `+${remaining} flere oppfølginger`}
+            </button>
           </div>
         )}
       </div>
