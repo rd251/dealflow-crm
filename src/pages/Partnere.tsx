@@ -239,53 +239,85 @@ export default function Partnere() {
           };
           return {
             detaljer: (
-              <>
-                <DetailSection title="Partnerdetaljer">
-                  <div className="grid grid-cols-2 gap-3">
-                    <DetailField label="Partnernavn">
-                      <Input value={currentPartner.partnernavn} onChange={e => updateField("partnernavn", e.target.value)} className="h-8 text-sm" />
-                    </DetailField>
-                    <DetailField label="Partnertype">
-                      <select className="w-full border rounded-lg px-3 py-1.5 text-sm bg-background h-8" value={currentPartner.partnertype} onChange={e => updateField("partnertype", e.target.value)}>
-                        {partnertypeOptions.map(t => <option key={t} value={t}>{t}</option>)}
-                      </select>
-                    </DetailField>
-                    <DetailField label="Status">
-                      <select className={`w-full border rounded-lg px-3 py-1.5 text-sm bg-background h-8 ${statusColors[currentPartner.partnerstatus]}`} value={currentPartner.partnerstatus} onChange={e => updateField("partnerstatus", e.target.value)}>
-                        {partnerstatusOptions.map(s => <option key={s} value={s}>{s}</option>)}
-                      </select>
-                    </DetailField>
-                    <DetailField label="Ansvarlig">
-                      <Input value={currentPartner.ansvarlig} onChange={e => updateField("ansvarlig", e.target.value)} className="h-8 text-sm" />
-                    </DetailField>
+              <div className="space-y-3">
+                {/* Compact key metrics */}
+                {(() => {
+                  const stats = getPartnerStats(currentPartner.id);
+                  return (
+                    <div className="grid grid-cols-4 gap-2">
+                      {[
+                        { label: "Kunder", value: stats.antallKunder },
+                        { label: "MRR", value: stats.totalMrr.toLocaleString("no-NO") },
+                        { label: "ARR", value: stats.totalArr.toLocaleString("no-NO") },
+                        { label: "Avtaler", value: stats.antallAktiveAvtaler },
+                      ].map(m => (
+                        <div key={m.label} className="rounded-lg bg-muted/40 p-2 text-center">
+                          <div className="text-sm font-semibold">{m.value}</div>
+                          <div className="text-[10px] text-muted-foreground">{m.label}</div>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
+
+                {/* Partner details – compact grid */}
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="text-xs"><span className="text-muted-foreground">Partnernavn</span>
+                    <Input value={currentPartner.partnernavn} onChange={e => updateField("partnernavn", e.target.value)} className="h-7 text-xs mt-0.5" />
                   </div>
-                </DetailSection>
-
-                <DetailDivider />
-
-                <DetailSection title="Provisjon">
-                  <div className="grid grid-cols-2 gap-3">
-                    <DetailField label="Provisjonstype">
-                      <select className="w-full border rounded-lg px-3 py-1.5 text-sm bg-background h-8" value={currentPartner.provisjonstype} onChange={e => updateField("provisjonstype", e.target.value)}>
-                        <option value="">Velg...</option>
-                        {provisjonstypeOptions.map(t => <option key={t} value={t}>{t}</option>)}
-                      </select>
-                    </DetailField>
-                    <DetailField label="Provisjon %">
-                      <Input type="number" value={currentPartner.provisjonsprosent || ""} onChange={e => updateField("provisjonsprosent", Number(e.target.value))} className="h-8 text-sm" />
-                    </DetailField>
+                  <div className="text-xs"><span className="text-muted-foreground">Partnertype</span>
+                    <select className="w-full border rounded px-2 py-1 text-xs bg-background h-7 mt-0.5" value={currentPartner.partnertype} onChange={e => updateField("partnertype", e.target.value)}>
+                      {partnertypeOptions.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
                   </div>
-                </DetailSection>
+                  <div className="text-xs"><span className="text-muted-foreground">Status</span>
+                    <select className={`w-full border rounded px-2 py-1 text-xs bg-background h-7 mt-0.5 ${statusColors[currentPartner.partnerstatus]}`} value={currentPartner.partnerstatus} onChange={e => updateField("partnerstatus", e.target.value)}>
+                      {partnerstatusOptions.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </div>
+                  <div className="text-xs"><span className="text-muted-foreground">Ansvarlig</span>
+                    <Input value={currentPartner.ansvarlig} onChange={e => updateField("ansvarlig", e.target.value)} className="h-7 text-xs mt-0.5" />
+                  </div>
+                </div>
 
-                <DetailDivider />
+                <div className="border-t" />
 
-                <Button size="sm" variant="destructive" className="w-full" onClick={() => {
+                {/* Provisjon – compact */}
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="text-xs"><span className="text-muted-foreground">Provisjonstype</span>
+                    <select className="w-full border rounded px-2 py-1 text-xs bg-background h-7 mt-0.5" value={currentPartner.provisjonstype} onChange={e => updateField("provisjonstype", e.target.value)}>
+                      <option value="">Velg...</option>
+                      {provisjonstypeOptions.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </div>
+                  <div className="text-xs"><span className="text-muted-foreground">Provisjon %</span>
+                    <Input type="number" value={currentPartner.provisjonsprosent || ""} onChange={e => updateField("provisjonsprosent", Number(e.target.value))} className="h-7 text-xs mt-0.5" />
+                  </div>
+                </div>
+
+                {/* Contact info */}
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="text-xs"><span className="text-muted-foreground">Kontaktperson</span>
+                    <Input value={currentPartner.kontaktperson} onChange={e => updateField("kontaktperson", e.target.value)} className="h-7 text-xs mt-0.5" />
+                  </div>
+                  <div className="text-xs"><span className="text-muted-foreground">E-post</span>
+                    <Input value={currentPartner.e_post} onChange={e => updateField("e_post", e.target.value)} className="h-7 text-xs mt-0.5" />
+                  </div>
+                  <div className="text-xs"><span className="text-muted-foreground">Telefon</span>
+                    <Input value={currentPartner.telefon} onChange={e => updateField("telefon", e.target.value)} className="h-7 text-xs mt-0.5" />
+                  </div>
+                  <div className="text-xs"><span className="text-muted-foreground">Opprettet</span>
+                    <div className="h-7 flex items-center text-xs text-muted-foreground mt-0.5">{currentPartner.opprettet_dato || "–"}</div>
+                  </div>
+                </div>
+
+                <Button size="sm" variant="ghost" className="w-full text-xs text-destructive hover:text-destructive h-8" onClick={() => {
                   updatePartnere(prev => prev.filter(p => p.id !== currentPartner.id));
                   setSelectedPartner(null);
                 }}>
-                  <Trash2 className="w-4 h-4 mr-1" /> Slett partner
+                  <Trash2 className="w-3.5 h-3.5 mr-1" /> Slett partner
                 </Button>
-              </>
+              </div>
             ),
             notater: (
               <DetailField label="Notater">
