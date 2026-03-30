@@ -416,6 +416,7 @@ export default function Kontaktstrom() {
               {!isMobile && <th className="text-left px-4 py-3 font-medium">Selskap</th>}
               {!isMobile && <th className="text-left px-4 py-3 font-medium">E-post</th>}
               <th className="text-left px-4 py-3 font-medium">Type</th>
+              {!isMobile && <th className="text-left px-4 py-3 font-medium">Status</th>}
               {!isMobile && <th className="text-left px-4 py-3 font-medium">E-poster</th>}
               <th className="text-left px-4 py-3 font-medium">Sist kontaktet</th>
               {!isMobile && <th className="text-left px-4 py-3 font-medium">I CRM</th>}
@@ -459,6 +460,11 @@ export default function Kontaktstrom() {
                       {p.type}
                     </Badge>
                   </td>
+                  {!isMobile && (
+                    <td className="px-4 py-3 text-xs text-muted-foreground">
+                      {p.status || "–"}
+                    </td>
+                  )}
                   {!isMobile && (
                     <td className="px-4 py-3 text-xs text-muted-foreground">
                       {totalEmails > 0 ? (
