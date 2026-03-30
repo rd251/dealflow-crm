@@ -493,7 +493,15 @@ export default function Dashboard() {
                     onClick={() => navigate("/oppgaver")}
                     className="px-4 sm:px-6 py-3 flex items-start gap-3 hover:bg-muted/30 cursor-pointer transition-colors"
                   >
-                    <CheckCircle2 className={`w-4 h-4 mt-0.5 shrink-0 ${prioritetColor}`} />
+                    <button
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        await supabase.from("oppgaver").update({ status: "Ferdig" }).eq("id", o.id);
+                        setOppgaver((prev) => prev.filter((t) => t.id !== o.id));
+                      }}
+                      className="mt-0.5 shrink-0 w-4 h-4 rounded-full border-2 border-muted-foreground/40 hover:border-primary hover:bg-primary/10 transition-colors"
+                      title="Merk som ferdig"
+                    />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{o.oppgave}</p>
                       <div className="flex items-center gap-2 mt-0.5 flex-wrap">
