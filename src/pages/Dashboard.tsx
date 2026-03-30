@@ -77,10 +77,8 @@ export default function Dashboard() {
 
       if (leadsRes.data) {
         for (const l of leadsRes.data) {
-          if (l.status === "Konvertert til salg") {
-            events.push({ id: `l-conv-${l.id}`, label: `Konvertert til salg: ${l.firmanavn}`, date: l.created_at, color: "bg-emerald-500" });
-          } else if (l.status === "Konvertert til partner") {
-            events.push({ id: `l-convp-${l.id}`, label: `Konvertert til partner: ${l.firmanavn}`, date: l.created_at, color: "bg-violet-500" });
+          if (l.status === "Konvertert til salg" || l.status === "Konvertert til partner") {
+            events.push({ id: `l-conv-${l.id}`, label: `Konvertert: ${l.firmanavn}`, date: l.created_at, color: "bg-emerald-500" });
           } else if (l.status === "Ikke aktuelt") {
             events.push({ id: `l-ia-${l.id}`, label: `Ikke aktuelt: ${l.firmanavn}`, date: l.created_at, color: "bg-muted-foreground" });
           } else {
@@ -145,7 +143,7 @@ export default function Dashboard() {
   const leadsUtenOppfolging = useMemo(() => {
     const cutoff = new Date(now.getTime() - 24 * 60 * 60 * 1000);
     return leads.filter((l) => {
-      if (l.status === "Ikke aktuelt" || l.status === "Konvertert til salg" || l.status === "Konvertert til partner") return false;
+      if (l.status === "Ikke aktuelt" || l.konvertert_til) return false;
       if (!l.sist_aktivitet) return true;
       return new Date(l.sist_aktivitet) < cutoff;
     });

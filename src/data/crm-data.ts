@@ -26,6 +26,8 @@ export type Kilde = "Direkte salg" | "Partner" | "Inbound" | "Outbound";
 
 // ============ INTERFACES ============
 
+export type KonvertertTil = "" | "salg" | "partner";
+
 export interface Lead {
   id: string;
   firmanavn: string;
@@ -40,6 +42,7 @@ export interface Lead {
   opprettet_dato: string;
   sist_aktivitet: string;
   konvertert_dato: string;
+  konvertert_til: KonvertertTil;
   rolle_i_firma: string;
   use_case: string;
 }
@@ -258,9 +261,9 @@ export const initialSalgsmuligheter: Salgsmulighet[] = [
 ];
 
 export const initialLeads: Lead[] = [
-  { id: "L-0001", firmanavn: "Eger Group", kontaktperson: "Nina Enger", e_post: "nina@egergroup.no", telefon: "+47 902 11 222", kilde: "LinkedIn", status: "Ny", ansvarlig: "", neste_steg: "Første kontakt", notater: "", opprettet_dato: "2026-03-08", sist_aktivitet: today, konvertert_dato: "", rolle_i_firma: "", use_case: "" },
-  { id: "L-0002", firmanavn: "Fjord Tech AS", kontaktperson: "Anders Fjord", e_post: "anders@fjordtech.no", telefon: "+47 902 33 444", kilde: "Nettside", status: "Kontaktet", ansvarlig: "", neste_steg: "Sende info", notater: "Interessert i support agent", opprettet_dato: "2026-03-05", sist_aktivitet: today, konvertert_dato: "", rolle_i_firma: "", use_case: "" },
-  { id: "L-0003", firmanavn: "Bergen Eiendom AS", kontaktperson: "Lise Berg", e_post: "lise@bergeneiendom.no", telefon: "+47 902 55 666", kilde: "Referanse", status: "Kvalifisert", ansvarlig: "", neste_steg: "Booke demo", notater: "Henvist fra Defigo", opprettet_dato: "2026-03-02", sist_aktivitet: today, konvertert_dato: "", rolle_i_firma: "", use_case: "" },
+  { id: "L-0001", firmanavn: "Eger Group", kontaktperson: "Nina Enger", e_post: "nina@egergroup.no", telefon: "+47 902 11 222", kilde: "LinkedIn", status: "Ny", ansvarlig: "", neste_steg: "Første kontakt", notater: "", opprettet_dato: "2026-03-08", sist_aktivitet: today, konvertert_dato: "", konvertert_til: "", rolle_i_firma: "", use_case: "" },
+  { id: "L-0002", firmanavn: "Fjord Tech AS", kontaktperson: "Anders Fjord", e_post: "anders@fjordtech.no", telefon: "+47 902 33 444", kilde: "Nettside", status: "Kontaktet", ansvarlig: "", neste_steg: "Sende info", notater: "Interessert i support agent", opprettet_dato: "2026-03-05", sist_aktivitet: today, konvertert_dato: "", konvertert_til: "", rolle_i_firma: "", use_case: "" },
+  { id: "L-0003", firmanavn: "Bergen Eiendom AS", kontaktperson: "Lise Berg", e_post: "lise@bergeneiendom.no", telefon: "+47 902 55 666", kilde: "Referanse", status: "Kvalifisert", ansvarlig: "", neste_steg: "Booke demo", notater: "Henvist fra Defigo", opprettet_dato: "2026-03-02", sist_aktivitet: today, konvertert_dato: "", konvertert_til: "", rolle_i_firma: "", use_case: "" },
 ];
 
 export const initialProsjekter: Prosjekt[] = [];

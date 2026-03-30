@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import {
-  Lead, Salgsmulighet, Prosjekt, Selskap, Kontakt, Oppgave, Partner,
+  Lead, LeadStatus, Salgsmulighet, Prosjekt, Selskap, Kontakt, Oppgave, Partner,
 } from "@/data/crm-data";
 
 // Map DB row to app type (handle nulls)
@@ -14,7 +14,8 @@ function rowToLead(r: any): Lead {
     e_post: r.e_post || "", telefon: r.telefon || "", kilde: r.kilde || "Annet",
     status: r.status || "Ny", ansvarlig: r.ansvarlig || "", neste_steg: r.neste_steg || "",
     notater: r.notater || "", opprettet_dato: r.opprettet_dato || "", sist_aktivitet: r.sist_aktivitet || "",
-    konvertert_dato: r.konvertert_dato || "", rolle_i_firma: r.rolle_i_firma || "", use_case: r.use_case || "",
+    konvertert_dato: r.konvertert_dato || "", konvertert_til: r.konvertert_til || "",
+    rolle_i_firma: r.rolle_i_firma || "", use_case: r.use_case || "",
   };
 }
 function rowToSelskap(r: any): Selskap {
@@ -723,7 +724,7 @@ function useCrmStoreInternal() {
     updateSalgsmuligheter(prev => [...prev, nySm]);
 
     updateLeads(prev => prev.map(l =>
-      l.id === leadId ? { ...l, status: "Konvertert til salg" as const, konvertert_dato: today, sist_aktivitet: today } : l
+      l.id === leadId ? { ...l, status: "Kvalifisert" as LeadStatus, konvertert_til: "salg" as const, konvertert_dato: today, sist_aktivitet: today } : l
     ));
   }, [leads, selskaper, kontakter, updateLeads, updateSalgsmuligheter, updateSelskaper, updateKontakter]);
 
@@ -744,7 +745,7 @@ function useCrmStoreInternal() {
     updatePartnere(prev => [...prev, nyPartner]);
 
     updateLeads(prev => prev.map(l =>
-      l.id === leadId ? { ...l, status: "Konvertert til partner" as const, konvertert_dato: today, sist_aktivitet: today } : l
+      l.id === leadId ? { ...l, status: "Kvalifisert" as LeadStatus, konvertert_til: "partner" as const, konvertert_dato: today, sist_aktivitet: today } : l
     ));
   }, [leads, updateLeads, updatePartnere]);
 

@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import DetailPanelShell, { DetailSection, DetailField, DetailDivider } from "@/components/DetailPanelShell";
-import { Plus, Search, ArrowRightCircle, Trash2, Users2, Upload } from "lucide-react";
+import { Plus, Search, ArrowRightCircle, Trash2, Users2, Upload, Lock } from "lucide-react";
 import { Lead, LeadStatus, LeadKilde } from "@/data/crm-data";
 import { Badge } from "@/components/ui/badge";
 import InlineTaskForm from "@/components/InlineTaskForm";
@@ -18,10 +18,11 @@ import ActivityLog from "@/components/ActivityLog";
 import LastActivityBadge from "@/components/LastActivityBadge";
 import DataImportDialog from "@/components/DataImportDialog";
 
-const statusOptions: LeadStatus[] = ["Ny", "Kontaktet", "Kvalifisert", "Ikke aktuelt", "Konvertert til salg", "Konvertert til partner"];
+// Only user-selectable statuses – no conversion statuses in dropdown
+const statusOptions: LeadStatus[] = ["Ny", "Kontaktet", "Kvalifisert", "Ikke aktuelt"];
 const kildeOptions: LeadKilde[] = ["Nettside", "LinkedIn", "Partner", "Referanse", "Kald outbound", "E-post", "Telefon", "Annet"];
 
-const statusColors: Record<LeadStatus, string> = {
+const statusColors: Record<string, string> = {
   "Ny": "bg-stage-new-lead/10 text-stage-new-lead",
   "Kontaktet": "bg-stage-contacted/10 text-stage-contacted",
   "Kvalifisert": "bg-stage-qualified/10 text-stage-qualified",
@@ -52,11 +53,14 @@ export default function Leads() {
 
   const now = new Date();
 
+  // Helper: is a lead converted (locked)?
+  const isConverted = (l: Lead) => !!l.konvertert_til;
+
   const filtered = leads.filter(l => {
-    if (l.status === "Konvertert til salg" || l.status === "Konvertert til partner") return false;
+    // Don't hide converted leads – show them with badge instead
     if (filterUtenOppfolging) {
       const cutoff = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-      if (l.status === "Ikke aktuelt") return false;
+      if (l.status === "Ikke aktuelt" || isConverted(l)) return false;
       if (l.sist_aktivitet && new Date(l.sist_aktivitet) >= cutoff) return false;
     }
     return (
@@ -73,6 +77,7 @@ export default function Leads() {
       e_post: form.e_post || "", telefon: form.telefon || "", kilde: form.kilde as LeadKilde || "Annet",
       status: "Ny", ansvarlig: form.ansvarlig || "", neste_steg: form.neste_steg || "",
       notater: form.notater || "", opprettet_dato: today, sist_aktivitet: today, konvertert_dato: "",
+      konvertert_til: "",
       rolle_i_firma: form.rolle_i_firma || "", use_case: form.use_case || "",
     };
     updateLeads(prev => [...prev, newLead]);
@@ -85,11 +90,23 @@ export default function Leads() {
   };
 
   const currentLead = selectedLead ? leads.find(l => l.id === selectedLead.id) || selectedLead : null;
+  const currentIsLocked = currentLead ? isConverted(currentLead) : false;
+
+  const conversionBadge = (lead: Lead) => {
+    if (!lead.konvertert_til) return null;
+    const isSalg = lead.konvertert_til === "salg";
+    return (
+      <Badge className={`text-[10px] gap-0.5 ${isSalg ? "bg-success/10 text-success" : "bg-primary/10 text-primary"}`}>
+        <Lock className="w-3 h-3" />
+        {isSalg ? "→ Salg" : "→ Partner"}
+      </Badge>
+    );
+  };
 
   return (
     <PageShell
       title="Leads"
-      subtitle={`${leads.filter(l => l.status !== "Konvertert til salg" && l.status !== "Konvertert til partner" && l.status !== "Ikke aktuelt").length} aktive leads`}
+      subtitle={`${leads.filter(l => !isConverted(l) && l.status !== "Ikke aktuelt").length} aktive leads`}
       actions={canEdit ? (
         <div className="flex gap-2">
         <Button size="sm" variant="outline" onClick={() => setImportOpen(true)}><Upload className="w-4 h-4 mr-1" />{!isMobile && "Importer"}</Button>
@@ -149,6 +166,7 @@ export default function Leads() {
                 opprettet_dato: today,
                 sist_aktivitet: today,
                 konvertert_dato: "",
+                konvertert_til: "",
                 rolle_i_firma: String(row.rolle_i_firma || ""),
                 use_case: String(row.use_case || ""),
               });
@@ -176,29 +194,35 @@ export default function Leads() {
       {/* Mobile: card layout */}
       {isMobile ? (
         <div className="space-y-3">
-          {filtered.map(lead => (
-            <div key={lead.id} className="bg-card border rounded-xl p-4 space-y-2" onClick={() => setSelectedLead(lead)}>
-              <div className="flex items-center justify-between">
-                <p className="font-semibold text-sm truncate">{lead.firmanavn}</p>
-                <Badge className={`text-[10px] shrink-0 ${statusColors[lead.status]}`}>{lead.status}</Badge>
-              </div>
-              <p className="text-xs text-muted-foreground">{lead.kontaktperson}</p>
-              <div className="flex items-center justify-between">
-                <Badge variant="secondary" className="text-[10px]">{lead.kilde}</Badge>
-                {lead.neste_steg && <span className="text-[10px] text-muted-foreground truncate ml-2">→ {lead.neste_steg}</span>}
-              </div>
-              {lead.status !== "Konvertert til salg" && lead.status !== "Konvertert til partner" && lead.status !== "Ikke aktuelt" && (
-                <div className="flex gap-1 mt-1">
-                  <Button size="sm" variant="ghost" className="text-xs gap-1 flex-1" onClick={e => { e.stopPropagation(); konverterLead(lead.id); }}>
-                    <ArrowRightCircle className="w-3.5 h-3.5" />Salg
-                  </Button>
-                  <Button size="sm" variant="ghost" className="text-xs gap-1 flex-1" onClick={e => { e.stopPropagation(); konverterTilPartner(lead.id); }}>
-                    <Users2 className="w-3.5 h-3.5" />Partner
-                  </Button>
+          {filtered.map(lead => {
+            const locked = isConverted(lead);
+            return (
+              <div key={lead.id} className={`bg-card border rounded-xl p-4 space-y-2 ${locked ? "opacity-80" : ""}`} onClick={() => setSelectedLead(lead)}>
+                <div className="flex items-center justify-between gap-2">
+                  <p className="font-semibold text-sm truncate">{lead.firmanavn}</p>
+                  <div className="flex items-center gap-1 shrink-0">
+                    {conversionBadge(lead)}
+                    <Badge className={`text-[10px] ${statusColors[lead.status] || ""}`}>{lead.status}</Badge>
+                  </div>
                 </div>
-              )}
-            </div>
-          ))}
+                <p className="text-xs text-muted-foreground">{lead.kontaktperson}</p>
+                <div className="flex items-center justify-between">
+                  <Badge variant="secondary" className="text-[10px]">{lead.kilde}</Badge>
+                  {lead.neste_steg && <span className="text-[10px] text-muted-foreground truncate ml-2">→ {lead.neste_steg}</span>}
+                </div>
+                {!locked && lead.status !== "Ikke aktuelt" && (
+                  <div className="flex gap-1 mt-1">
+                    <Button size="sm" variant="ghost" className="text-xs gap-1 flex-1" onClick={e => { e.stopPropagation(); konverterLead(lead.id); }}>
+                      <ArrowRightCircle className="w-3.5 h-3.5" />Salg
+                    </Button>
+                    <Button size="sm" variant="ghost" className="text-xs gap-1 flex-1" onClick={e => { e.stopPropagation(); konverterTilPartner(lead.id); }}>
+                      <Users2 className="w-3.5 h-3.5" />Partner
+                    </Button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
           {filtered.length === 0 && <p className="text-center text-sm text-muted-foreground py-8">Ingen leads å vise</p>}
         </div>
       ) : (
@@ -218,38 +242,46 @@ export default function Leads() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map(lead => (
-                <tr key={lead.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => setSelectedLead(lead)}>
-                  <td className="px-4 py-3 font-medium">{lead.firmanavn}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{lead.kontaktperson}</td>
-                  <td className="px-4 py-3"><Badge variant="secondary" className="text-xs">{lead.kilde}</Badge></td>
-                  <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
-                    <select
-                      className={`text-xs px-2 py-1 rounded-full font-medium border-0 cursor-pointer ${statusColors[lead.status]}`}
-                      value={lead.status}
-                      onChange={e => changeStatus(lead.id, e.target.value as LeadStatus)}
-                    disabled={lead.status === "Konvertert til salg" || lead.status === "Konvertert til partner"}
-                    >
-                      {statusOptions.map(s => <option key={s} value={s}>{s}</option>)}
-                    </select>
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground text-xs">{lead.neste_steg}</td>
-                  <td className="px-4 py-3"><LastActivityBadge lead_id={lead.id} sist_aktivitet={lead.sist_aktivitet} /></td>
-                  <td className="px-4 py-3 text-muted-foreground text-xs font-mono">{lead.opprettet_dato}</td>
-                  <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
-                    {lead.status !== "Konvertert til salg" && lead.status !== "Konvertert til partner" && lead.status !== "Ikke aktuelt" && (
-                      <div className="flex gap-1">
-                        <Button size="sm" variant="ghost" className="text-xs gap-1" onClick={() => konverterLead(lead.id)}>
-                          <ArrowRightCircle className="w-3.5 h-3.5" />Salg
-                        </Button>
-                        <Button size="sm" variant="ghost" className="text-xs gap-1" onClick={() => konverterTilPartner(lead.id)}>
-                          <Users2 className="w-3.5 h-3.5" />Partner
-                        </Button>
+              {filtered.map(lead => {
+                const locked = isConverted(lead);
+                return (
+                  <tr key={lead.id} className={`border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer ${locked ? "opacity-70" : ""}`} onClick={() => setSelectedLead(lead)}>
+                    <td className="px-4 py-3 font-medium">{lead.firmanavn}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{lead.kontaktperson}</td>
+                    <td className="px-4 py-3"><Badge variant="secondary" className="text-xs">{lead.kilde}</Badge></td>
+                    <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
+                      <div className="flex items-center gap-1.5">
+                        {locked ? (
+                          conversionBadge(lead)
+                        ) : (
+                          <select
+                            className={`text-xs px-2 py-1 rounded-full font-medium border-0 cursor-pointer ${statusColors[lead.status] || ""}`}
+                            value={lead.status}
+                            onChange={e => changeStatus(lead.id, e.target.value as LeadStatus)}
+                          >
+                            {statusOptions.map(s => <option key={s} value={s}>{s}</option>)}
+                          </select>
+                        )}
                       </div>
-                    )}
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground text-xs">{lead.neste_steg}</td>
+                    <td className="px-4 py-3"><LastActivityBadge lead_id={lead.id} sist_aktivitet={lead.sist_aktivitet} /></td>
+                    <td className="px-4 py-3 text-muted-foreground text-xs font-mono">{lead.opprettet_dato}</td>
+                    <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
+                      {!locked && lead.status !== "Ikke aktuelt" && (
+                        <div className="flex gap-1">
+                          <Button size="sm" variant="ghost" className="text-xs gap-1" onClick={() => konverterLead(lead.id)}>
+                            <ArrowRightCircle className="w-3.5 h-3.5" />Salg
+                          </Button>
+                          <Button size="sm" variant="ghost" className="text-xs gap-1" onClick={() => konverterTilPartner(lead.id)}>
+                            <Users2 className="w-3.5 h-3.5" />Partner
+                          </Button>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -262,11 +294,17 @@ export default function Leads() {
         subtitle={currentLead?.kontaktperson || undefined}
         badges={currentLead ? (
           <>
-            <Badge className={`text-xs ${statusColors[currentLead.status]}`}>{currentLead.status}</Badge>
+            <Badge className={`text-xs ${statusColors[currentLead.status] || ""}`}>{currentLead.status}</Badge>
+            {currentLead.konvertert_til && (
+              <Badge className={`text-xs gap-0.5 ${currentLead.konvertert_til === "salg" ? "bg-success/10 text-success" : "bg-primary/10 text-primary"}`}>
+                <Lock className="w-3 h-3" />
+                {currentLead.konvertert_til === "salg" ? "Konvertert → Salg" : "Konvertert → Partner"}
+              </Badge>
+            )}
             <Badge variant="secondary" className="text-xs">{currentLead.kilde}</Badge>
           </>
         ) : undefined}
-        actions={canEdit && currentLead && currentLead.status !== "Konvertert til salg" && currentLead.status !== "Konvertert til partner" && currentLead.status !== "Ikke aktuelt" ? (
+        actions={canEdit && currentLead && !currentIsLocked && currentLead.status !== "Ikke aktuelt" ? (
           <>
             <Button size="sm" onClick={() => { konverterLead(currentLead.id); setSelectedLead(null); }}>
               <ArrowRightCircle className="w-4 h-4 mr-1.5" />Til salg
@@ -278,6 +316,7 @@ export default function Leads() {
         ) : undefined}
         tabContent={currentLead ? (() => {
           const updateField = (field: string, value: any) => {
+            if (currentIsLocked) return;
             const today = new Date().toISOString().split("T")[0];
             updateLeads(prev => prev.map(l =>
               l.id === currentLead.id ? { ...l, [field]: value, sist_aktivitet: today } : l
@@ -289,16 +328,16 @@ export default function Leads() {
                 <DetailSection title="Kontaktinformasjon">
                   <div className="grid grid-cols-2 gap-3">
                     <DetailField label="Firmanavn">
-                      <Input value={currentLead.firmanavn} onChange={e => updateField("firmanavn", e.target.value)} className="h-8 text-sm" readOnly={!canEdit} />
+                      <Input value={currentLead.firmanavn} onChange={e => updateField("firmanavn", e.target.value)} className="h-8 text-sm" readOnly={!canEdit || currentIsLocked} />
                     </DetailField>
                     <DetailField label="Kontaktperson">
-                      <Input value={currentLead.kontaktperson} onChange={e => updateField("kontaktperson", e.target.value)} className="h-8 text-sm" readOnly={!canEdit} />
+                      <Input value={currentLead.kontaktperson} onChange={e => updateField("kontaktperson", e.target.value)} className="h-8 text-sm" readOnly={!canEdit || currentIsLocked} />
                     </DetailField>
                     <DetailField label="E-post">
-                      <Input value={currentLead.e_post} onChange={e => updateField("e_post", e.target.value)} className="h-8 text-sm" readOnly={!canEdit} />
+                      <Input value={currentLead.e_post} onChange={e => updateField("e_post", e.target.value)} className="h-8 text-sm" readOnly={!canEdit || currentIsLocked} />
                     </DetailField>
                     <DetailField label="Telefon">
-                      <Input value={currentLead.telefon} onChange={e => updateField("telefon", e.target.value)} className="h-8 text-sm" readOnly={!canEdit} />
+                      <Input value={currentLead.telefon} onChange={e => updateField("telefon", e.target.value)} className="h-8 text-sm" readOnly={!canEdit || currentIsLocked} />
                     </DetailField>
                   </div>
                 </DetailSection>
@@ -309,38 +348,39 @@ export default function Leads() {
                   <div className="grid grid-cols-2 gap-3">
                     <DetailField label="Kilde">
                       <select className="w-full border rounded-lg px-3 py-1.5 text-sm bg-background h-8" value={currentLead.kilde}
-                        onChange={e => updateField("kilde", e.target.value)} disabled={!canEdit}>
+                        onChange={e => updateField("kilde", e.target.value)} disabled={!canEdit || currentIsLocked}>
                         {kildeOptions.map(k => <option key={k} value={k}>{k}</option>)}
                       </select>
                     </DetailField>
                     <DetailField label="Status">
-                      <select className={`w-full border rounded-lg px-3 py-1.5 text-sm bg-background h-8 ${statusColors[currentLead.status]}`}
+                      <select className={`w-full border rounded-lg px-3 py-1.5 text-sm bg-background h-8 ${statusColors[currentLead.status] || ""}`}
                         value={currentLead.status}
                         onChange={e => updateField("status", e.target.value)}
-                        disabled={!canEdit || currentLead.status === "Konvertert til salg" || currentLead.status === "Konvertert til partner"}>
+                        disabled={!canEdit || currentIsLocked}>
                         {statusOptions.map(s => <option key={s} value={s}>{s}</option>)}
                       </select>
                     </DetailField>
                     <DetailField label="Ansvarlig">
-                      <Input value={currentLead.ansvarlig} onChange={e => updateField("ansvarlig", e.target.value)} className="h-8 text-sm" readOnly={!canEdit} />
+                      <Input value={currentLead.ansvarlig} onChange={e => updateField("ansvarlig", e.target.value)} className="h-8 text-sm" readOnly={!canEdit || currentIsLocked} />
                     </DetailField>
                     <DetailField label="Opprettet" value={currentLead.opprettet_dato} />
                   </div>
                   <DetailField label="Neste steg">
-                    <Input value={currentLead.neste_steg} onChange={e => updateField("neste_steg", e.target.value)} className="h-8 text-sm" readOnly={!canEdit} />
+                    <Input value={currentLead.neste_steg} onChange={e => updateField("neste_steg", e.target.value)} className="h-8 text-sm" readOnly={!canEdit || currentIsLocked} />
                   </DetailField>
                   <DetailField label="Use case">
-                    <Input value={currentLead.use_case} onChange={e => updateField("use_case", e.target.value)} className="h-8 text-sm" readOnly={!canEdit} />
+                    <Input value={currentLead.use_case} onChange={e => updateField("use_case", e.target.value)} className="h-8 text-sm" readOnly={!canEdit || currentIsLocked} />
                   </DetailField>
                 </DetailSection>
 
-                {currentLead.konvertert_dato && (
-                  <div className="p-3 bg-success/10 rounded-lg text-success text-xs font-medium">
-                    Konvertert {currentLead.konvertert_dato}
+                {currentLead.konvertert_til && (
+                  <div className={`p-3 rounded-lg text-xs font-medium flex items-center gap-2 ${currentLead.konvertert_til === "salg" ? "bg-success/10 text-success" : "bg-primary/10 text-primary"}`}>
+                    <Lock className="w-3.5 h-3.5" />
+                    Konvertert til {currentLead.konvertert_til === "salg" ? "salgsmulighet" : "partner"} · {currentLead.konvertert_dato}
                   </div>
                 )}
 
-                {canEdit && (
+                {canEdit && !currentIsLocked && (
                   <>
                     <DetailDivider />
                     <Button size="sm" variant="destructive" className="w-full" onClick={() => {
@@ -363,7 +403,7 @@ export default function Leads() {
             ),
             notater: (
               <DetailField label="Notater">
-                <Textarea value={currentLead.notater} onChange={e => updateField("notater", e.target.value)} rows={6} readOnly={!canEdit} />
+                <Textarea value={currentLead.notater} onChange={e => updateField("notater", e.target.value)} rows={6} readOnly={!canEdit || currentIsLocked} />
               </DetailField>
             ),
           };
