@@ -26,6 +26,8 @@ export type Kilde = "Direkte salg" | "Partner" | "Inbound" | "Outbound";
 
 // ============ INTERFACES ============
 
+export type KonvertertTil = "" | "salg" | "partner";
+
 export interface Lead {
   id: string;
   firmanavn: string;
@@ -40,6 +42,7 @@ export interface Lead {
   opprettet_dato: string;
   sist_aktivitet: string;
   konvertert_dato: string;
+  konvertert_til: KonvertertTil;
   rolle_i_firma: string;
   use_case: string;
 }
