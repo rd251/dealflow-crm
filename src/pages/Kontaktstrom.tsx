@@ -289,22 +289,71 @@ export default function Kontaktstrom() {
         existing.totalSent += ec.total_emails_sent || 0;
         existing.totalReceived += ec.total_emails_received || 0;
       } else {
-        // New person from Gmail, not in CRM — resolve type from linked IDs
+        // New person from Gmail, not in CRM — smart matching
         let ecType: KontaktStromPerson["type"] = "Ukjent";
         let ecStatus = "";
         let ecAnsvarlig = "";
         let ecNesteSteg = "";
         let ecFirmanavn = ec.domain || "";
         let ecSelskapId = ec.selskap_id || null;
+        let ecKontaktId = ec.kontakt_id || null;
+        let ecSuggestedSelskapId: string | null = null;
+        let ecSuggestedSelskapNavn = "";
 
-        // Resolve kontakt -> selskap link
-        if (ec.kontakt_id) {
+        // Step 1: Exact email match against kontakter
+        const kontaktByEmail = kontakter.find(k => k.e_post?.toLowerCase() === email);
+        if (kontaktByEmail) {
+          ecKontaktId = kontaktByEmail.id;
+          if (kontaktByEmail.selskap_id) {
+            ecSelskapId = kontaktByEmail.selskap_id;
+            ecType = getTypeFromSelskap(kontaktByEmail.selskap_id);
+            ecStatus = getSelskapStatus(kontaktByEmail.selskap_id);
+            ecFirmanavn = getSelskapNavn(kontaktByEmail.selskap_id) || ecFirmanavn;
+          } else {
+            ecType = "Kontakt";
+          }
+        }
+
+        // Step 2: Name + company match (if no kontakt found)
+        if (!ecKontaktId && ec.display_name && ecFirmanavn) {
+          const nameCompanyMatch = findKontaktByNameAndCompany(ec.display_name, ecFirmanavn);
+          if (nameCompanyMatch) {
+            ecKontaktId = nameCompanyMatch.id;
+            if (nameCompanyMatch.selskap_id) {
+              ecSelskapId = nameCompanyMatch.selskap_id;
+              ecType = getTypeFromSelskap(nameCompanyMatch.selskap_id);
+              ecStatus = getSelskapStatus(nameCompanyMatch.selskap_id);
+              ecFirmanavn = getSelskapNavn(nameCompanyMatch.selskap_id) || ecFirmanavn;
+            }
+          }
+        }
+
+        // Step 3: Company name match (suggest selskap)
+        if (!ecSelskapId && ecFirmanavn) {
+          const selskapByName = findSelskapByName(ecFirmanavn);
+          if (selskapByName) {
+            ecSuggestedSelskapId = selskapByName.id;
+            ecSuggestedSelskapNavn = selskapByName.firmanavn;
+          }
+        }
+
+        // Step 4: Domain fallback (suggest selskap)
+        if (!ecSelskapId && !ecSuggestedSelskapId) {
+          const selskapByDomain = findSelskapByDomain(email);
+          if (selskapByDomain) {
+            ecSuggestedSelskapId = selskapByDomain.id;
+            ecSuggestedSelskapNavn = selskapByDomain.firmanavn;
+          }
+        }
+
+        // Resolve kontakt -> selskap link (existing logic for linked IDs)
+        if (ec.kontakt_id && !ecKontaktId) {
           const kontakt = kontakter.find(k => k.id === ec.kontakt_id);
           if (kontakt) {
+            ecKontaktId = kontakt.id;
             if (kontakt.selskap_id) {
               ecSelskapId = kontakt.selskap_id;
-              const selskapType = getTypeFromSelskap(kontakt.selskap_id);
-              ecType = selskapType;
+              ecType = getTypeFromSelskap(kontakt.selskap_id);
               ecStatus = getSelskapStatus(kontakt.selskap_id);
               ecFirmanavn = getSelskapNavn(kontakt.selskap_id) || ecFirmanavn;
             } else {
@@ -347,12 +396,15 @@ export default function Kontaktstrom() {
           nesteSteg: ecNesteSteg,
           totalSent: ec.total_emails_sent || 0,
           totalReceived: ec.total_emails_received || 0,
-          kontaktId: ec.kontakt_id || null,
+          kontaktId: ecKontaktId,
           leadId: ec.lead_id || null,
           salgsmulighetId: ec.salgsmulighet_id || null,
           selskapId: ecSelskapId || null,
           partnerId: ec.partner_id || null,
-          inCrm: !!(ec.kontakt_id || ec.lead_id || ec.salgsmulighet_id || ec.partner_id),
+          inCrm: !!(ecKontaktId || ec.lead_id || ec.salgsmulighet_id || ec.partner_id),
+          suggestedSelskapId: ecSuggestedSelskapId,
+          suggestedSelskapNavn: ecSuggestedSelskapNavn,
+          connectionStatus: resolveConnectionStatus(ecSelskapId, ecSuggestedSelskapId),
         });
       }
     }
