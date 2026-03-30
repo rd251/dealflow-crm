@@ -327,10 +327,7 @@ export default function Partnere() {
                   </div>
                 </div>
 
-                <Button size="sm" variant="ghost" className="w-full text-xs text-destructive hover:text-destructive h-8" onClick={() => {
-                  updatePartnere(prev => prev.filter(p => p.id !== currentPartner.id));
-                  setSelectedPartner(null);
-                }}>
+                <Button size="sm" variant="ghost" className="w-full text-xs text-destructive hover:text-destructive h-8" onClick={() => setDeleteTarget(currentPartner)}>
                   <Trash2 className="w-3.5 h-3.5 mr-1" /> Slett partner
                 </Button>
               </div>
