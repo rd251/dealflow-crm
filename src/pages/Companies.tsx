@@ -14,7 +14,7 @@ import { Switch } from "@/components/ui/switch";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
-import { Plus, Search, Building2, ChevronRight, CalendarIcon, X, Upload, Trash2, ArrowRightLeft, Undo2, DollarSign, TrendingUp, Target, PieChart, Users, BarChart3, ArrowDownRight, ArrowUpRight } from "lucide-react";
+import { Plus, Search, Building2, ChevronRight, CalendarIcon, X, Upload, Trash2, ArrowRightLeft, Undo2, DollarSign, TrendingUp, Target, PieChart, Users, BarChart3, ArrowDownRight, ArrowUpRight, Trophy, XCircle, UserMinus, AlertTriangle } from "lucide-react";
 import { beregnTotalKontraktsverdi } from "@/data/crm-data";
 import { useNavigate } from "react-router-dom";
 import InlineTaskForm from "@/components/InlineTaskForm";
@@ -266,9 +266,15 @@ export default function Companies() {
         const allClosed = salgsmuligheter.filter(s => s.status === "Vunnet" || s.status === "Tapt");
         const wonCount = salgsmuligheter.filter(s => s.status === "Vunnet").length;
         const winRate = allClosed.length > 0 ? Math.round((wonCount / allClosed.length) * 100) : 0;
-        const kansellert = selskaper.filter(s => s.kundestatus === "Kansellert").length;
+        const kansellertCount = selskaper.filter(s => s.kundestatus === "Kansellert").length;
         const totalKunder = selskaper.filter(s => ["Live", "Kansellert"].includes(s.kundestatus)).length;
-        const churnRate = totalKunder > 0 ? Math.round((kansellert / totalKunder) * 100) : 0;
+        const churnRate = totalKunder > 0 ? Math.round((kansellertCount / totalKunder) * 100) : 0;
+
+        // Denne måneden
+        const vunnetDenneMnd = salgsmuligheter.filter(s => s.status === "Vunnet" && s.vunnet_dato && new Date(s.vunnet_dato) >= monthStart).length;
+        const taptDenneMnd = salgsmuligheter.filter(s => s.status === "Tapt" && s.tapt_dato && new Date(s.tapt_dato) >= monthStart).length;
+        const kansellertDenneMnd = selskaper.filter(s => s.kundestatus === "Kansellert" && s.kansellert_dato && new Date(s.kansellert_dato) >= monthStart).length;
+
         const kpis = [
           { label: "MRR", value: nok(totalMRR), icon: <DollarSign className="w-4 h-4" /> },
           { label: "ARR", value: nok(totalARR), icon: <BarChart3 className="w-4 h-4" /> },
@@ -277,17 +283,21 @@ export default function Companies() {
           { label: "Ikke-live MRR", value: nok(ikkeLiveMRR), icon: <DollarSign className="w-4 h-4" /> },
           { label: "Ikke-live ARR", value: nok(ikkeLiveARR), icon: <BarChart3 className="w-4 h-4" /> },
           { label: "Pipeline", value: nok(pipelineVerdi), icon: <TrendingUp className="w-4 h-4" /> },
-          { label: "Win rate", value: `${winRate}%`, icon: <Target className="w-4 h-4" /> },
-          { label: "Churn", value: `${churnRate}%`, icon: <PieChart className="w-4 h-4" /> },
+          { label: "Win rate", value: `${winRate}%`, icon: <Target className="w-4 h-4" />, sub: `${wonCount} av ${allClosed.length}` },
+          { label: "Churn", value: `${churnRate}%`, icon: <PieChart className="w-4 h-4" />, sub: `${kansellertCount} kansellert` },
+          { label: "Vunnet", value: `${wonCount}`, icon: <Trophy className="w-4 h-4" />, sub: `${vunnetDenneMnd} denne mnd` },
+          { label: "Tapt", value: `${salgsmuligheter.filter(s => s.status === "Tapt").length}`, icon: <XCircle className="w-4 h-4" />, sub: `${taptDenneMnd} denne mnd` },
+          { label: "Kansellerte", value: `${kansellertCount}`, icon: <UserMinus className="w-4 h-4" />, sub: `${kansellertDenneMnd} denne mnd` },
         ];
         return (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-6">
             {kpis.map(kpi => (
               <div key={kpi.label} className="bg-card border rounded-xl px-4 py-3 flex items-center gap-3">
                 <div className="text-muted-foreground">{kpi.icon}</div>
                 <div>
                   <p className="text-xs text-muted-foreground">{kpi.label}</p>
                   <p className="text-lg font-bold tracking-tight">{kpi.value}</p>
+                  {(kpi as any).sub && <p className="text-[10px] text-muted-foreground">{(kpi as any).sub}</p>}
                 </div>
               </div>
             ))}
