@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { differenceInHours, differenceInDays, format } from "date-fns";
 import { nb } from "date-fns/locale";
