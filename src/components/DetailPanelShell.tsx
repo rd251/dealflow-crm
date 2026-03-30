@@ -6,6 +6,7 @@ interface DetailPanelShellProps {
   open: boolean;
   onClose: () => void;
   title: string;
+  onTitleChange?: (value: string) => void;
   subtitle?: string;
   initials?: string;
   badges?: ReactNode;
@@ -31,6 +32,7 @@ export default function DetailPanelShell({
   open,
   onClose,
   title,
+  onTitleChange,
   subtitle,
   initials,
   badges,
@@ -61,7 +63,15 @@ export default function DetailPanelShell({
                 {initials || title.charAt(0).toUpperCase()}
               </div>
               <div className="min-w-0 flex-1">
-                <h2 className="text-xl font-semibold tracking-tight truncate">{title}</h2>
+                {onTitleChange ? (
+                  <input
+                    className="text-xl font-semibold tracking-tight truncate bg-transparent border-none outline-none focus:ring-1 focus:ring-primary/30 rounded px-0 w-full"
+                    value={title}
+                    onChange={e => onTitleChange(e.target.value)}
+                  />
+                ) : (
+                  <h2 className="text-xl font-semibold tracking-tight truncate">{title}</h2>
+                )}
                 {subtitle && (
                   <p className="text-sm text-muted-foreground truncate mt-0.5">{subtitle}</p>
                 )}
