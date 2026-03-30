@@ -245,6 +245,23 @@ export default function Kontaktstrom() {
         let ecAnsvarlig = "";
         let ecNesteSteg = "";
         let ecFirmanavn = ec.domain || "";
+        let ecSelskapId = ec.selskap_id || null;
+
+        // Resolve kontakt -> selskap link
+        if (ec.kontakt_id) {
+          const kontakt = kontakter.find(k => k.id === ec.kontakt_id);
+          if (kontakt) {
+            if (kontakt.selskap_id) {
+              ecSelskapId = kontakt.selskap_id;
+              const selskapType = getTypeFromSelskap(kontakt.selskap_id);
+              ecType = selskapType;
+              ecStatus = getSelskapStatus(kontakt.selskap_id);
+              ecFirmanavn = getSelskapNavn(kontakt.selskap_id) || ecFirmanavn;
+            } else {
+              ecType = "Kontakt";
+            }
+          }
+        }
 
         if (ec.partner_id) {
           const partner = partnere.find(p => p.id === ec.partner_id);
@@ -258,8 +275,8 @@ export default function Kontaktstrom() {
           const lead = leads.find(l => l.id === ec.lead_id);
           if (lead) { ecType = "Lead"; ecStatus = lead.status || ""; ecAnsvarlig = lead.ansvarlig || ""; ecNesteSteg = lead.neste_steg || ""; ecFirmanavn = lead.firmanavn || ecFirmanavn; }
         }
-        if (ec.selskap_id) {
-          const selskap = selskaper.find(s => s.id === ec.selskap_id);
+        if (ecSelskapId) {
+          const selskap = selskaper.find(s => s.id === ecSelskapId);
           if (selskap) {
             ecFirmanavn = selskap.firmanavn || ecFirmanavn;
             if (selskap.kundestatus === "Live" || selskap.kundestatus === "Pilot") {
