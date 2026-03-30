@@ -241,7 +241,21 @@ export default function Companies() {
       {(() => {
         const nok = (n: number) => n.toLocaleString("nb-NO", { maximumFractionDigits: 0 }) + " NOK";
         const liveSelskaper = selskaper.filter(s => s.kundestatus === "Live");
+        const aktiveKunder = liveSelskaper.length;
         const totalMRR = liveSelskaper.reduce((sum, s) => sum + s.mrr, 0);
+        const totalARR = totalMRR * 12;
+
+        // Netto MRR: new MRR this month minus lost MRR this month
+        const now = new Date();
+        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        const nyMRR = selskaper
+          .filter(s => s.kundestatus === "Live" && s.lukkedato && new Date(s.lukkedato) >= monthStart)
+          .reduce((sum, s) => sum + s.mrr, 0);
+        const taptMRR = selskaper
+          .filter(s => s.kundestatus === "Kansellert" && s.kansellert_dato && new Date(s.kansellert_dato) >= monthStart)
+          .reduce((sum, s) => sum + s.mrr, 0);
+        const nettoMRR = nyMRR - taptMRR;
+
         const openSm = salgsmuligheter.filter(s => s.status !== "Vunnet" && s.status !== "Tapt");
         const pipelineVerdi = openSm.reduce((sum, s) => sum + beregnTotalKontraktsverdi(s), 0);
         const allClosed = salgsmuligheter.filter(s => s.status === "Vunnet" || s.status === "Tapt");
@@ -252,12 +266,15 @@ export default function Companies() {
         const churnRate = totalKunder > 0 ? Math.round((kansellert / totalKunder) * 100) : 0;
         const kpis = [
           { label: "MRR", value: nok(totalMRR), icon: <DollarSign className="w-4 h-4" /> },
+          { label: "ARR", value: nok(totalARR), icon: <BarChart3 className="w-4 h-4" /> },
+          { label: "Netto MRR", value: `${nettoMRR >= 0 ? "" : "−"}${nok(Math.abs(nettoMRR))}`, icon: nettoMRR >= 0 ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" /> },
+          { label: "Aktive kunder", value: `${aktiveKunder}`, icon: <Users className="w-4 h-4" /> },
           { label: "Pipeline", value: nok(pipelineVerdi), icon: <TrendingUp className="w-4 h-4" /> },
           { label: "Win rate", value: `${winRate}%`, icon: <Target className="w-4 h-4" /> },
           { label: "Churn", value: `${churnRate}%`, icon: <PieChart className="w-4 h-4" /> },
         ];
         return (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 mb-6">
             {kpis.map(kpi => (
               <div key={kpi.label} className="bg-card border rounded-xl px-4 py-3 flex items-center gap-3">
                 <div className="text-muted-foreground">{kpi.icon}</div>
