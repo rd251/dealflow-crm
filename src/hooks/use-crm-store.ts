@@ -393,6 +393,7 @@ function useCrmStoreInternal() {
   const updateProsjekter = useCallback((fn: (prev: Prosjekt[]) => Prosjekt[]) => {
     const prev = prosjekterRef.current;
     const next = fn(prev);
+    prosjekterRef.current = next;
     setProsjekter(next);
     prosjekterSyncQueueRef.current = prosjekterSyncQueueRef.current
       .then(() => syncProsjekter(prev, next))
@@ -402,6 +403,7 @@ function useCrmStoreInternal() {
   const updateOppgaver = useCallback((fn: (prev: Oppgave[]) => Oppgave[]) => {
     const prev = oppgaverRef.current;
     const next = fn(prev);
+    oppgaverRef.current = next;
     setOppgaver(next);
     oppgaverSyncQueueRef.current = oppgaverSyncQueueRef.current
       .then(() => syncOppgaver(prev, next))
@@ -411,6 +413,7 @@ function useCrmStoreInternal() {
   const updatePartnere = useCallback((fn: (prev: Partner[]) => Partner[]) => {
     const prev = partnereRef.current;
     const next = fn(prev);
+    partnereRef.current = next;
     setPartnere(next);
     partnereSyncQueueRef.current = partnereSyncQueueRef.current
       .then(() => syncPartnere(prev, next))
