@@ -380,64 +380,44 @@ export default function Salgsmuligheter() {
           return {
             detaljer: (
               <>
-                <DetailSection title="Kontaktinformasjon">
-                  <div className="grid grid-cols-2 gap-3">
-                    <DetailField label="Kontaktperson">
-                      <Input value={currentSm.kontaktperson} onChange={e => updateField("kontaktperson", e.target.value)} className="h-8 text-sm" readOnly={!canEdit} />
-                    </DetailField>
-                    <DetailField label="Rolle">
-                      <Input value={currentSm.rolle_i_firma} onChange={e => updateField("rolle_i_firma", e.target.value)} className="h-8 text-sm" readOnly={!canEdit} />
-                    </DetailField>
-                    <DetailField label="E-post">
-                      <Input value={currentSm.e_post} onChange={e => updateField("e_post", e.target.value)} className="h-8 text-sm" readOnly={!canEdit} />
-                    </DetailField>
-                    <DetailField label="Telefon">
-                      <Input value={currentSm.telefon} onChange={e => updateField("telefon", e.target.value)} className="h-8 text-sm" readOnly={!canEdit} />
-                    </DetailField>
+                {/* Neste steg – always visible at top */}
+                <div className="rounded-lg border p-3 space-y-1">
+                  <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Neste steg</label>
+                  <Input value={currentSm.neste_steg} onChange={e => updateField("neste_steg", e.target.value)} className={`h-8 text-sm ${!currentSm.neste_steg?.trim() ? "border-destructive ring-1 ring-destructive/30" : ""}`} readOnly={!canEdit} placeholder="Hva er neste steg?" />
+                  {!currentSm.neste_steg?.trim() && (
+                    <p className="text-[10px] text-destructive flex items-center gap-1"><AlertTriangle className="w-3 h-3" />Obligatorisk</p>
+                  )}
+                </div>
+
+                {/* Compact key metrics row */}
+                <div className="grid grid-cols-4 gap-2">
+                  <div className="text-center p-2 rounded-lg bg-muted/50">
+                    <p className="text-xs font-bold">{nok(arr)}</p>
+                    <p className="text-[10px] text-muted-foreground">ARR</p>
                   </div>
-                  {canEdit ? (
-                    <DetailField label="Koble til kontakt">
-                      <EntityLinkPicker
-                        options={(() => {
-                          const sameCompany = kontakter
-                            .filter(k => currentSm.selskap_id && k.selskap_id === currentSm.selskap_id)
-                            .map(k => ({ id: k.id, label: k.navn, sublabel: k.e_post || k.rolle || undefined }));
-                          const others = kontakter
-                            .filter(k => !currentSm.selskap_id || k.selskap_id !== currentSm.selskap_id)
-                            .map(k => ({ id: k.id, label: k.navn, sublabel: k.e_post || k.rolle || undefined }));
-                          return [...sameCompany, ...others];
-                        })()}
-                        value={currentSm.kontakt_id || null}
-                        onChange={(id) => {
-                          if (id) {
-                            const kontakt = kontakter.find(k => k.id === id);
-                            if (kontakt) {
-                              updateField("kontakt_id", kontakt.id);
-                              updateField("kontaktperson", kontakt.navn);
-                              updateField("e_post", kontakt.e_post);
-                              updateField("telefon", kontakt.telefon);
-                              updateField("rolle_i_firma", kontakt.rolle);
-                            }
-                          } else {
-                            updateField("kontakt_id", "");
-                          }
-                        }}
-                        placeholder="Søk kontakter..."
-                      />
-                    </DetailField>
-                  ) : currentSm.kontakt_id ? (
-                    <DetailField label="Koblet kontakt" value={kontakter.find(k => k.id === currentSm.kontakt_id)?.navn || "–"} />
-                  ) : null}
-                </DetailSection>
+                  <div className="text-center p-2 rounded-lg bg-muted/50">
+                    <p className="text-xs font-bold">{nok(slaArr)}</p>
+                    <p className="text-[10px] text-muted-foreground">SLA</p>
+                  </div>
+                  <div className="text-center p-2 rounded-lg bg-muted/50">
+                    <p className="text-xs font-bold">{nok(totalKontraktsverdi)}</p>
+                    <p className="text-[10px] text-muted-foreground">Kontrakt</p>
+                  </div>
+                  <div className="text-center p-2 rounded-lg bg-muted/50">
+                    <p className="text-xs font-bold">{nok(vektetVerdi)}</p>
+                    <p className="text-[10px] text-muted-foreground">Vektet</p>
+                  </div>
+                </div>
 
-                <DetailDivider />
-
-                <DetailSection title="Salgsdetaljer">
-                  <DetailField label="Selskap">
-                    <span className="text-sm cursor-pointer hover:text-primary hover:underline" onClick={() => navigate(`/selskaper/${currentSm.selskap_id}`)}>{getSelskapNavn(currentSm.selskap_id)}</span>
-                  </DetailField>
+                {/* Sales details – compact inline grid */}
+                <div className="space-y-2">
+                  <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Salgsdetaljer</p>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground text-xs">Selskap</span>
+                    <span className="cursor-pointer hover:text-primary hover:underline text-xs font-medium" onClick={() => navigate(`/selskaper/${currentSm.selskap_id}`)}>{getSelskapNavn(currentSm.selskap_id)}</span>
+                  </div>
                   <DetailField label="Status">
-                    <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background"
+                    <select className="w-full border rounded-lg px-3 py-1.5 text-sm bg-background"
                       value={currentSm.status}
                       disabled={!canEdit}
                       onChange={e => {
@@ -449,72 +429,97 @@ export default function Salgsmuligheter() {
                       {[...openStatuses, "Vunnet", "Tapt"].map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
                   </DetailField>
-                  <div className="grid grid-cols-2 gap-3">
-                    <DetailField label="Forventet MRR">
-                      <Input type="number" value={currentSm.forventet_mrr || ""} onChange={e => updateField("forventet_mrr", Number(e.target.value))} className="h-8 text-sm" readOnly={!canEdit} />
+                  <div className="grid grid-cols-2 gap-2">
+                    <DetailField label="MRR">
+                      <Input type="number" value={currentSm.forventet_mrr || ""} onChange={e => updateField("forventet_mrr", Number(e.target.value))} className="h-7 text-xs" readOnly={!canEdit} />
                     </DetailField>
                     <DetailField label="SLA">
-                      <Input type="number" value={currentSm.sla || ""} onChange={e => updateField("sla", Number(e.target.value))} className="h-8 text-sm" readOnly={!canEdit} />
+                      <Input type="number" value={currentSm.sla || ""} onChange={e => updateField("sla", Number(e.target.value))} className="h-7 text-xs" readOnly={!canEdit} />
                     </DetailField>
-                    <DetailField label="Oppstartskostnad">
-                      <Input type="number" value={currentSm.oppstartskostnad || ""} onChange={e => updateField("oppstartskostnad", Number(e.target.value))} className="h-8 text-sm" readOnly={!canEdit} />
+                    <DetailField label="Oppstart">
+                      <Input type="number" value={currentSm.oppstartskostnad || ""} onChange={e => updateField("oppstartskostnad", Number(e.target.value))} className="h-7 text-xs" readOnly={!canEdit} />
                     </DetailField>
-                    <DetailField label="Kontraktslengde (mnd)">
-                      <Input type="number" value={currentSm.kontraktslengde_mnd || ""} onChange={e => updateField("kontraktslengde_mnd", Number(e.target.value))} className="h-8 text-sm" readOnly={!canEdit} />
+                    <DetailField label="Mnd">
+                      <Input type="number" value={currentSm.kontraktslengde_mnd || ""} onChange={e => updateField("kontraktslengde_mnd", Number(e.target.value))} className="h-7 text-xs" readOnly={!canEdit} />
                     </DetailField>
-                    <DetailField label="Sannsynlighet %">
-                      <Input type="number" min={0} max={100} value={currentSm.sannsynlighet || ""} onChange={e => updateField("sannsynlighet", Number(e.target.value))} className="h-8 text-sm" readOnly={!canEdit} />
+                    <DetailField label="Sannsynlighet">
+                      <Input type="number" min={0} max={100} value={currentSm.sannsynlighet || ""} onChange={e => updateField("sannsynlighet", Number(e.target.value))} className="h-7 text-xs" readOnly={!canEdit} />
                     </DetailField>
-                    <DetailField label="Forventet lukkedato">
-                      <Input type="date" value={currentSm.forventet_lukkedato} onChange={e => updateField("forventet_lukkedato", e.target.value)} className="h-8 text-sm" readOnly={!canEdit} />
+                    <DetailField label="Lukkedato">
+                      <Input type="date" value={currentSm.forventet_lukkedato} onChange={e => updateField("forventet_lukkedato", e.target.value)} className="h-7 text-xs" readOnly={!canEdit} />
                     </DetailField>
                   </div>
-                </DetailSection>
+                  <DetailField label="Use case">
+                    <Input value={currentSm.use_case} onChange={e => updateField("use_case", e.target.value)} className="h-7 text-xs" readOnly={!canEdit} />
+                  </DetailField>
+                </div>
 
-                <DetailDivider />
-
-                <DetailSection title="Beregnede verdier">
-                  <DetailStatGrid>
-                    <DetailStatCard label="ARR" value={`${nok(arr)}`} />
-                    <DetailStatCard label="SLA (årlig)" value={`${nok(slaArr)}`} />
-                    <DetailStatCard label="Kontraktsverdi" value={`${nok(totalKontraktsverdi)}`} />
-                    <DetailStatCard label="Vektet verdi" value={`${nok(vektetVerdi)}`} />
-                  </DetailStatGrid>
-                </DetailSection>
-
-                <DetailField label="Use case">
-                  <Input value={currentSm.use_case} onChange={e => updateField("use_case", e.target.value)} className="h-8 text-sm" readOnly={!canEdit} />
-                </DetailField>
-                <DetailField label="Neste steg *">
-                  <div className="relative">
-                    <Input value={currentSm.neste_steg} onChange={e => updateField("neste_steg", e.target.value)} className={`h-8 text-sm ${!currentSm.neste_steg?.trim() ? "border-destructive ring-1 ring-destructive/30" : ""}`} readOnly={!canEdit} placeholder="Obligatorisk – hva er neste steg?" />
-                    {!currentSm.neste_steg?.trim() && (
-                      <p className="text-[10px] text-destructive mt-1 flex items-center gap-1"><AlertTriangle className="w-3 h-3" />Neste steg er obligatorisk</p>
-                    )}
+                {/* Kontakt – compact */}
+                <div className="space-y-2">
+                  <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Kontakt</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <DetailField label="Kontaktperson">
+                      <Input value={currentSm.kontaktperson} onChange={e => updateField("kontaktperson", e.target.value)} className="h-7 text-xs" readOnly={!canEdit} />
+                    </DetailField>
+                    <DetailField label="Rolle">
+                      <Input value={currentSm.rolle_i_firma} onChange={e => updateField("rolle_i_firma", e.target.value)} className="h-7 text-xs" readOnly={!canEdit} />
+                    </DetailField>
+                    <DetailField label="E-post">
+                      <Input value={currentSm.e_post} onChange={e => updateField("e_post", e.target.value)} className="h-7 text-xs" readOnly={!canEdit} />
+                    </DetailField>
+                    <DetailField label="Telefon">
+                      <Input value={currentSm.telefon} onChange={e => updateField("telefon", e.target.value)} className="h-7 text-xs" readOnly={!canEdit} />
+                    </DetailField>
                   </div>
-                </DetailField>
+                  {canEdit && (
+                    <EntityLinkPicker
+                      options={(() => {
+                        const sameCompany = kontakter
+                          .filter(k => currentSm.selskap_id && k.selskap_id === currentSm.selskap_id)
+                          .map(k => ({ id: k.id, label: k.navn, sublabel: k.e_post || k.rolle || undefined }));
+                        const others = kontakter
+                          .filter(k => !currentSm.selskap_id || k.selskap_id !== currentSm.selskap_id)
+                          .map(k => ({ id: k.id, label: k.navn, sublabel: k.e_post || k.rolle || undefined }));
+                        return [...sameCompany, ...others];
+                      })()}
+                      value={currentSm.kontakt_id || null}
+                      onChange={(id) => {
+                        if (id) {
+                          const kontakt = kontakter.find(k => k.id === id);
+                          if (kontakt) {
+                            updateField("kontakt_id", kontakt.id);
+                            updateField("kontaktperson", kontakt.navn);
+                            updateField("e_post", kontakt.e_post);
+                            updateField("telefon", kontakt.telefon);
+                            updateField("rolle_i_firma", kontakt.rolle);
+                          }
+                        } else {
+                          updateField("kontakt_id", "");
+                        }
+                      }}
+                      placeholder="Koble til kontakt..."
+                    />
+                  )}
+                </div>
 
                 {currentSm.status === "Tapt" && currentSm.tapsaarsak && (
-                  <div className="p-3 bg-destructive/10 rounded-lg text-destructive text-xs">
+                  <div className="p-2 bg-destructive/10 rounded-lg text-destructive text-xs">
                     <strong>Tapsårsak:</strong> {currentSm.tapsaarsak} · {currentSm.tapt_dato}
                   </div>
                 )}
                 {currentSm.status === "Vunnet" && (
-                  <div className="p-3 bg-success/10 rounded-lg text-success text-xs">
+                  <div className="p-2 bg-success/10 rounded-lg text-success text-xs">
                     <strong>Vunnet:</strong> {currentSm.vunnet_dato}
                   </div>
                 )}
 
                 {canEdit && (
-                  <>
-                    <DetailDivider />
-                    <Button size="sm" variant="outline" className="w-full text-destructive hover:bg-destructive/10" onClick={() => {
-                      updateSalgsmuligheter(prev => prev.filter(s => s.id !== currentSm.id));
-                      setSelectedSm(null);
-                    }}>
-                      <Trash2 className="w-3.5 h-3.5 mr-1" />Slett
-                    </Button>
-                  </>
+                  <Button size="sm" variant="ghost" className="w-full text-destructive hover:bg-destructive/10 text-xs" onClick={() => {
+                    updateSalgsmuligheter(prev => prev.filter(s => s.id !== currentSm.id));
+                    setSelectedSm(null);
+                  }}>
+                    <Trash2 className="w-3 h-3 mr-1" />Slett
+                  </Button>
                 )}
               </>
             ),
