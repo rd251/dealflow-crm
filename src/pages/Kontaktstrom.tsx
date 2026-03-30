@@ -187,6 +187,8 @@ export default function Kontaktstrom() {
         if (selskapType === "Kunde") { type = "Kunde"; status = getSelskapStatus(k.selskap_id); }
       }
 
+      const resolvedSelskapId = k.selskap_id || sm?.selskap_id || null;
+      const suggested = !resolvedSelskapId ? findSelskapByDomain(email) : null;
       map.set(email, {
         email,
         navn: k.navn,
@@ -200,9 +202,12 @@ export default function Kontaktstrom() {
         kontaktId: k.id,
         leadId: lead?.id || null,
         salgsmulighetId: sm?.id || null,
-        selskapId: k.selskap_id || sm?.selskap_id || null,
+        selskapId: resolvedSelskapId,
         partnerId: partner?.id || null,
         inCrm: true,
+        suggestedSelskapId: suggested?.id || null,
+        suggestedSelskapNavn: suggested?.firmanavn || "",
+        connectionStatus: resolveConnectionStatus(resolvedSelskapId, suggested?.id || null),
       });
     }
 
