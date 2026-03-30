@@ -53,6 +53,27 @@ export default function Dashboard() {
   const [meetings, setMeetings] = useState<MeetingItem[]>([]);
   const [entityNames, setEntityNames] = useState<Record<string, string>>({});
   const [prepMeeting, setPrepMeeting] = useState<MeetingItem | null>(null);
+  const [oppgaver, setOppgaver] = useState<Tables<"oppgaver">[]>([]);
+  const [aktiviteter, setAktiviteter] = useState<Tables<"aktiviteter">[]>([]);
+
+  useEffect(() => {
+    // Fetch upcoming tasks
+    supabase
+      .from("oppgaver")
+      .select("*")
+      .neq("status", "Ferdig")
+      .order("frist", { ascending: true, nullsFirst: false })
+      .limit(8)
+      .then(({ data }) => { if (data) setOppgaver(data); });
+
+    // Fetch recent activities
+    supabase
+      .from("aktiviteter")
+      .select("*")
+      .order("dato", { ascending: false })
+      .limit(8)
+      .then(({ data }) => { if (data) setAktiviteter(data); });
+  }, []);
 
   useEffect(() => {
     const todayStart = new Date();
