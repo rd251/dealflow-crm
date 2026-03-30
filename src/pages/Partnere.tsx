@@ -219,6 +219,13 @@ export default function Partnere() {
                     <td className="px-4 py-3 text-right">{stats.antallAktiveAvtaler}</td>
                     <td className="px-4 py-3"><LastActivityBadge partner_id={partner.id} sist_aktivitet={partner.sist_aktivitet} /></td>
                     <td className="px-4 py-3 text-muted-foreground text-xs font-mono">{partner.opprettet_dato}</td>
+                    {canEdit && (
+                      <td className="px-2 py-3">
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={e => { e.stopPropagation(); setDeleteTarget(partner); }}>
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </td>
+                    )}
                   </tr>
                 );
               })}
