@@ -38,11 +38,11 @@ const tilstandColors: Record<Kundetilstand, string> = {
 };
 
 const smStatusColors: Record<SalgsmulighetStatus, string> = {
-  "Ny mulighet": "bg-stage-new-lead/10 text-stage-new-lead",
   "Møte booket": "bg-stage-contacted/10 text-stage-contacted",
-  "Demo gjennomført": "bg-stage-demo/10 text-stage-demo",
+  "Behov avklart": "bg-stage-qualified/10 text-stage-qualified",
+  "Løsning presentert": "bg-stage-demo/10 text-stage-demo",
   "Tilbud sendt": "bg-stage-proposal/10 text-stage-proposal",
-  "Forhandling": "bg-stage-qualified/10 text-stage-qualified",
+  "Beslutning": "bg-stage-negotiation/10 text-stage-negotiation",
   "Vunnet": "bg-success/10 text-success",
   "Tapt": "bg-destructive/10 text-destructive",
 };

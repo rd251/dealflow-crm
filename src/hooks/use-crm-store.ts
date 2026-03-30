@@ -41,7 +41,7 @@ function rowToKontakt(r: any): Kontakt {
 function rowToSalgsmulighet(r: any): Salgsmulighet {
   return {
     id: r.id, navn: r.navn, selskap_id: r.selskap_id || "", kontakt_id: r.kontakt_id || "",
-    ansvarlig: r.ansvarlig || "", status: r.status || "Ny mulighet",
+    ansvarlig: r.ansvarlig || "", status: r.status || "Møte booket",
     forventet_mrr: Number(r.forventet_mrr) || 0, sla: Number(r.sla) || 0,
     oppstartskostnad: Number(r.oppstartskostnad) || 0, kontraktslengde_mnd: r.kontraktslengde_mnd || 12,
     sannsynlighet: r.sannsynlighet || 50, forventet_lukkedato: r.forventet_lukkedato || "",
@@ -713,7 +713,7 @@ function useCrmStoreInternal() {
     const smId = crypto.randomUUID();
     const nySm: Salgsmulighet = {
       id: smId, navn: lead.firmanavn, selskap_id: selskapId, kontakt_id: kontaktId || "",
-      ansvarlig: lead.ansvarlig, status: "Ny mulighet", forventet_mrr: 0, sla: 0, oppstartskostnad: 0,
+      ansvarlig: lead.ansvarlig, status: "Møte booket", forventet_mrr: 0, sla: 0, oppstartskostnad: 0,
       kontraktslengde_mnd: 12, sannsynlighet: 50, forventet_lukkedato: "", vunnet_dato: "",
       tapt_dato: "", tapsaarsak: "", neste_steg: lead.neste_steg, notater: lead.notater,
       opprettet_dato: today, sist_aktivitet: today,
@@ -822,11 +822,11 @@ function useCrmStoreInternal() {
     const today = new Date().toISOString().split("T")[0];
     // Find linked salgsmuligheter that were won for this selskap
     const vunnetSm = salgsmuligheter.filter(sm => sm.selskap_id === selskapId && sm.status === "Vunnet");
-    // Reopen them back to "Forhandling"
+    // Reopen them back to "Beslutning"
     if (vunnetSm.length > 0) {
       updateSalgsmuligheter(prev => prev.map(sm =>
         sm.selskap_id === selskapId && sm.status === "Vunnet"
-          ? { ...sm, status: "Forhandling" as const, vunnet_dato: "", sist_aktivitet: today }
+          ? { ...sm, status: "Beslutning" as const, vunnet_dato: "", sist_aktivitet: today }
           : sm
       ));
     }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import PageShell from "@/components/PageShell";
 import { useCrmStore } from "@/hooks/use-crm-store";
@@ -8,27 +8,47 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import DetailPanelShell, { DetailSection, DetailField, DetailDivider, DetailStatGrid, DetailStatCard } from "@/components/DetailPanelShell";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, GripVertical, Trophy, XCircle, Trash2, Mail, Phone, User, Briefcase } from "lucide-react";
+import { Plus, GripVertical, Trophy, XCircle, Trash2, Phone, User, AlertTriangle, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Salgsmulighet, SalgsmulighetStatus, Tapsaarsak, beregnTotalKontraktsverdi, beregnVektetPipeline } from "@/data/crm-data";
 import InlineTaskForm from "@/components/InlineTaskForm";
 import ActivityLog from "@/components/ActivityLog";
 
-const openStatuses: SalgsmulighetStatus[] = ["Ny mulighet", "Møte booket", "Demo gjennomført", "Tilbud sendt", "Forhandling"];
+const openStatuses: SalgsmulighetStatus[] = ["Møte booket", "Behov avklart", "Løsning presentert", "Tilbud sendt", "Beslutning"];
 const tapsaarsaker: Tapsaarsak[] = ["Pris", "Ikke riktig timing", "Valgte annen leverandør", "Ikke behov", "Teknisk / integrasjon", "Annet"];
 
 const statusColors: Record<SalgsmulighetStatus, string> = {
-  "Ny mulighet": "bg-stage-new-lead",
   "Møte booket": "bg-stage-contacted",
-  "Demo gjennomført": "bg-stage-demo",
+  "Behov avklart": "bg-stage-qualified",
+  "Løsning presentert": "bg-stage-demo",
   "Tilbud sendt": "bg-stage-proposal",
-  "Forhandling": "bg-stage-negotiation",
+  "Beslutning": "bg-stage-negotiation",
   "Vunnet": "bg-stage-won",
   "Tapt": "bg-stage-lost",
 };
+
+// Activity signal: days since last activity
+function activitySignal(sist_aktivitet: string): { color: string; border: string; label: string } {
+  if (!sist_aktivitet) return { color: "bg-destructive", border: "border-l-destructive", label: ">3 dager" };
+  const days = Math.floor((Date.now() - new Date(sist_aktivitet).getTime()) / (1000 * 60 * 60 * 24));
+  if (days > 3) return { color: "bg-destructive", border: "border-l-destructive", label: `${days}d` };
+  if (days >= 1) return { color: "bg-warning", border: "border-l-warning", label: `${days}d` };
+  return { color: "bg-success", border: "border-l-success", label: "i dag" };
+}
+
+// Sort deals: least recent activity first, then highest value
+function sortDeals(deals: Salgsmulighet[]): Salgsmulighet[] {
+  return [...deals].sort((a, b) => {
+    // Primary: least recent activity first (oldest first)
+    const dateA = a.sist_aktivitet ? new Date(a.sist_aktivitet).getTime() : 0;
+    const dateB = b.sist_aktivitet ? new Date(b.sist_aktivitet).getTime() : 0;
+    if (dateA !== dateB) return dateA - dateB;
+    // Secondary: highest value first
+    return b.forventet_mrr - a.forventet_mrr;
+  });
+}
 
 export default function Salgsmuligheter() {
   const navigate = useNavigate();
@@ -42,9 +62,9 @@ export default function Salgsmuligheter() {
   const [lossDialog, setLossDialog] = useState<string | null>(null);
   const [lossReason, setLossReason] = useState<Tapsaarsak>("Pris");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [moveBlockedId, setMoveBlockedId] = useState<string | null>(null);
   const [form, setForm] = useState({ navn: "", selskap_id: "", kontakt_id: "", forventet_mrr: 0, sla: 0, oppstartskostnad: 0, kontraktslengde_mnd: 12, sannsynlighet: 50, forventet_lukkedato: "", neste_steg: "", rolle_i_firma: "", use_case: "", kontaktperson: "", e_post: "", telefon: "" });
 
-  // Auto-open detail panel from query param
   useEffect(() => {
     const openId = searchParams.get("open");
     if (openId && salgsmuligheter.length > 0) {
@@ -62,6 +82,18 @@ export default function Salgsmuligheter() {
     e.preventDefault();
     setDragOverStage(null);
     if (!draggedId) return;
+
+    // Block move if neste_steg is empty (for open stages)
+    if (stage !== "Vunnet" && stage !== "Tapt") {
+      const deal = salgsmuligheter.find(s => s.id === draggedId);
+      if (deal && !deal.neste_steg?.trim()) {
+        setMoveBlockedId(draggedId);
+        setTimeout(() => setMoveBlockedId(null), 2500);
+        setDraggedId(null);
+        return;
+      }
+    }
+
     if (stage === "Vunnet") { vinnSalgsmulighet(draggedId); }
     else if (stage === "Tapt") { setLossDialog(draggedId); }
     else {
@@ -77,7 +109,7 @@ export default function Salgsmuligheter() {
     const id = generateId("SM", salgsmuligheter);
     const nySm: Salgsmulighet = {
       id, navn: form.navn, selskap_id: form.selskap_id, kontakt_id: form.kontakt_id,
-      ansvarlig: "", status: "Ny mulighet", forventet_mrr: form.forventet_mrr, sla: form.sla,
+      ansvarlig: "", status: "Møte booket", forventet_mrr: form.forventet_mrr, sla: form.sla,
       oppstartskostnad: form.oppstartskostnad, kontraktslengde_mnd: form.kontraktslengde_mnd,
       sannsynlighet: form.sannsynlighet, forventet_lukkedato: form.forventet_lukkedato,
       vunnet_dato: "", tapt_dato: "", tapsaarsak: "", neste_steg: form.neste_steg, notater: "",
@@ -101,10 +133,12 @@ export default function Salgsmuligheter() {
 
   const currentSm = selectedSm ? salgsmuligheter.find(s => s.id === selectedSm.id) || selectedSm : null;
 
+  const nok = (v: number) => v.toLocaleString("no-NO");
+
   return (
     <PageShell
       title="Salgsmuligheter"
-      subtitle={`${openDeals.length} åpne muligheter`}
+      subtitle={`${openDeals.length} åpne · ${nok(openDeals.reduce((s, d) => s + d.forventet_mrr, 0))} MRR i pipeline`}
       actions={canEdit ? (
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
@@ -128,7 +162,7 @@ export default function Salgsmuligheter() {
                 <Input type="number" placeholder="Sannsynlighet %" value={form.sannsynlighet || ""} onChange={e => setForm(f => ({ ...f, sannsynlighet: Number(e.target.value) }))} />
               </div>
               <Input type="date" placeholder="Forventet lukkedato" value={form.forventet_lukkedato} onChange={e => setForm(f => ({ ...f, forventet_lukkedato: e.target.value }))} />
-              <Input placeholder="Neste steg" value={form.neste_steg} onChange={e => setForm(f => ({ ...f, neste_steg: e.target.value }))} />
+              <Input placeholder="Neste steg *" value={form.neste_steg} onChange={e => setForm(f => ({ ...f, neste_steg: e.target.value }))} />
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Input placeholder="Kontaktperson" value={form.kontaktperson} onChange={e => setForm(f => ({ ...f, kontaktperson: e.target.value }))} />
                 <Input placeholder="E-post" value={form.e_post} onChange={e => setForm(f => ({ ...f, e_post: e.target.value }))} />
@@ -138,7 +172,7 @@ export default function Salgsmuligheter() {
                 <Input placeholder="Rolle i firma" value={form.rolle_i_firma} onChange={e => setForm(f => ({ ...f, rolle_i_firma: e.target.value }))} />
               </div>
               <Input placeholder="Use case" value={form.use_case} onChange={e => setForm(f => ({ ...f, use_case: e.target.value }))} />
-              <Button onClick={addSm} className="w-full" disabled={!form.navn || !form.selskap_id}>Opprett</Button>
+              <Button onClick={addSm} className="w-full" disabled={!form.navn || !form.neste_steg}>Opprett</Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -168,50 +202,72 @@ export default function Salgsmuligheter() {
         <TabsContent value="pipeline">
           <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-4 scrollbar-thin items-start">
             {openStatuses.map(stage => {
-              const stageDeals = openDeals.filter(d => d.status === stage);
-              const stageValue = stageDeals.reduce((s, d) => s + beregnTotalKontraktsverdi(d), 0);
+              const stageDeals = sortDeals(openDeals.filter(d => d.status === stage));
+              const stageMrr = stageDeals.reduce((s, d) => s + d.forventet_mrr, 0);
               return (
-                <div key={stage} className={`${isMobile ? "min-w-[240px] w-[240px]" : "min-w-[280px] w-[280px]"} flex-shrink-0 flex flex-col rounded-xl p-2 -m-2 transition-colors ${dragOverStage === stage ? "bg-primary/10 ring-2 ring-primary/30" : ""}`}
+                <div key={stage} className={`${isMobile ? "min-w-[260px] w-[260px]" : "min-w-[290px] w-[290px]"} flex-shrink-0 flex flex-col rounded-xl p-2 -m-2 transition-colors ${dragOverStage === stage ? "bg-primary/10 ring-2 ring-primary/30" : ""}`}
                   onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; setDragOverStage(stage); }}
                   onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOverStage(null); }}
                   onDragEnd={() => { setDragOverStage(null); setDraggedId(null); }}
                   onDrop={e => handleDrop(e, stage)}>
-                  <div className="mb-3 flex items-center gap-2">
+                  <div className="mb-2 flex items-center gap-2">
                     <div className={`w-2.5 h-2.5 rounded-full ${statusColors[stage]}`} />
                     <h3 className="font-semibold text-xs sm:text-sm">{stage}</h3>
                     <span className="text-xs text-muted-foreground ml-auto">{stageDeals.length}</span>
                   </div>
-                  <p className="text-xs text-muted-foreground mb-3 font-mono">{stageValue.toLocaleString("no-NO")} NOK</p>
-                  <div className="space-y-2.5 max-h-[calc(75vh-80px)] overflow-y-auto pr-1 scrollbar-thin">
-                    {stageDeals.map(deal => (
-                      <div key={deal.id} draggable onDragStart={e => { setDraggedId(deal.id); e.dataTransfer.effectAllowed = "move"; }}
-                        onClick={() => setSelectedSm(deal)}
-                        className="bg-card border rounded-lg p-3 sm:p-3.5 cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow group">
-                        <div className="flex items-start gap-2">
-                          {!isMobile && <GripVertical className="w-4 h-4 text-muted-foreground/40 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity" />}
-                          <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-sm truncate">{deal.navn}</p>
-                            <p className="text-xs text-muted-foreground mt-0.5 truncate cursor-pointer hover:text-primary hover:underline" onClick={e => { e.stopPropagation(); navigate(`/selskaper/${deal.selskap_id}`); }}>{getSelskapNavn(deal.selskap_id)}</p>
-                            {(() => {
-                              const contactName = deal.kontaktperson || kontakter.find(k => k.id === deal.kontakt_id)?.navn;
-                              const contactPhone = deal.telefon || kontakter.find(k => k.id === deal.kontakt_id)?.telefon;
-                              return contactName ? (
-                                <div className="flex items-center gap-2 mt-1.5 text-[11px] text-muted-foreground">
-                                  <span className="flex items-center gap-1 truncate"><User className="w-3 h-3 shrink-0" />{contactName}</span>
-                                  {contactPhone && <span className="flex items-center gap-1 shrink-0"><Phone className="w-3 h-3" />{contactPhone}</span>}
+                  <p className="text-[11px] text-muted-foreground mb-3 font-mono">{nok(stageMrr)} MRR</p>
+                  <div className="space-y-2 max-h-[calc(75vh-80px)] overflow-y-auto pr-1 scrollbar-thin">
+                    {stageDeals.map(deal => {
+                      const signal = activitySignal(deal.sist_aktivitet);
+                      const missingNeste = !deal.neste_steg?.trim();
+                      const isBlocked = moveBlockedId === deal.id;
+                      return (
+                        <div key={deal.id} draggable onDragStart={e => { setDraggedId(deal.id); e.dataTransfer.effectAllowed = "move"; }}
+                          onClick={() => setSelectedSm(deal)}
+                          className={`bg-card border rounded-lg p-3 cursor-grab active:cursor-grabbing hover:shadow-md transition-all group border-l-[3px] ${signal.border} ${isBlocked ? "ring-2 ring-destructive animate-pulse" : ""}`}>
+                          <div className="flex items-start gap-2">
+                            {!isMobile && <GripVertical className="w-4 h-4 text-muted-foreground/40 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />}
+                            <div className="flex-1 min-w-0">
+                              {/* Row 1: Company + MRR */}
+                              <div className="flex items-center justify-between gap-2">
+                                <p className="text-xs text-muted-foreground truncate cursor-pointer hover:text-primary hover:underline" onClick={e => { e.stopPropagation(); navigate(`/selskaper/${deal.selskap_id}`); }}>{getSelskapNavn(deal.selskap_id)}</p>
+                                <span className="text-xs font-mono font-bold shrink-0">{nok(deal.forventet_mrr)}</span>
+                              </div>
+
+                              {/* Row 2: Deal name */}
+                              <p className="font-semibold text-sm truncate mt-0.5">{deal.navn}</p>
+
+                              {/* Row 3: Activity signal + ansvarlig */}
+                              <div className="flex items-center justify-between gap-2 mt-1.5">
+                                <div className="flex items-center gap-1.5">
+                                  <div className={`w-2 h-2 rounded-full ${signal.color}`} />
+                                  <span className="text-[10px] text-muted-foreground">{signal.label}</span>
                                 </div>
-                              ) : null;
-                            })()}
-                            <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                              <span className="text-xs font-mono font-semibold">{deal.forventet_mrr.toLocaleString("no-NO")} MRR</span>
-                              {(deal.sla || 0) > 0 && <span className="text-[10px] text-muted-foreground">SLA: {deal.sla.toLocaleString("no-NO")}</span>}
-                              <span className="text-[10px] text-muted-foreground">{deal.sannsynlighet}%</span>
+                                {deal.ansvarlig && (
+                                  <span className="text-[10px] text-muted-foreground truncate flex items-center gap-1">
+                                    <User className="w-3 h-3 shrink-0" />{deal.ansvarlig}
+                                  </span>
+                                )}
+                              </div>
+
+                              {/* Row 4: Neste steg or warning */}
+                              {missingNeste ? (
+                                <div className="flex items-center gap-1 mt-1.5 text-destructive">
+                                  <AlertTriangle className="w-3 h-3 shrink-0" />
+                                  <span className="text-[10px] font-medium">Neste steg mangler!</span>
+                                </div>
+                              ) : (
+                                <p className="text-[10px] text-muted-foreground mt-1.5 truncate">→ {deal.neste_steg}</p>
+                              )}
+
+                              {isBlocked && (
+                                <p className="text-[10px] text-destructive mt-1 font-medium">⛔ Fyll inn neste steg før flytting</p>
+                              )}
                             </div>
-                            {deal.neste_steg && <p className="text-[10px] text-muted-foreground mt-1 truncate">→ {deal.neste_steg}</p>}
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                     {stageDeals.length === 0 && (
                       <div className="border-2 border-dashed rounded-lg p-6 text-center text-xs text-muted-foreground">Dra hit</div>
                     )}
@@ -259,6 +315,12 @@ export default function Salgsmuligheter() {
           <>
             <Badge variant="secondary" className="text-xs">{currentSm.status}</Badge>
             {currentSm.sannsynlighet != null && <Badge variant="outline" className="text-xs">{currentSm.sannsynlighet}%</Badge>}
+            {(() => {
+              const sig = activitySignal(currentSm.sist_aktivitet);
+              return <Badge className={`text-[10px] gap-1 ${sig.color === "bg-destructive" ? "bg-destructive/10 text-destructive" : sig.color === "bg-warning" ? "bg-warning/10 text-warning" : "bg-success/10 text-success"}`}>
+                <Clock className="w-3 h-3" />{sig.label}
+              </Badge>;
+            })()}
           </>
         ) : undefined}
         actions={canEdit && currentSm && openStatuses.includes(currentSm.status as any) ? (
@@ -371,18 +433,23 @@ export default function Salgsmuligheter() {
 
                 <DetailSection title="Beregnede verdier">
                   <DetailStatGrid>
-                    <DetailStatCard label="ARR" value={`${arr.toLocaleString("no-NO")}`} />
-                    <DetailStatCard label="SLA (årlig)" value={`${slaArr.toLocaleString("no-NO")}`} />
-                    <DetailStatCard label="Kontraktsverdi" value={`${totalKontraktsverdi.toLocaleString("no-NO")}`} />
-                    <DetailStatCard label="Vektet verdi" value={`${vektetVerdi.toLocaleString("no-NO")}`} />
+                    <DetailStatCard label="ARR" value={`${nok(arr)}`} />
+                    <DetailStatCard label="SLA (årlig)" value={`${nok(slaArr)}`} />
+                    <DetailStatCard label="Kontraktsverdi" value={`${nok(totalKontraktsverdi)}`} />
+                    <DetailStatCard label="Vektet verdi" value={`${nok(vektetVerdi)}`} />
                   </DetailStatGrid>
                 </DetailSection>
 
                 <DetailField label="Use case">
                   <Input value={currentSm.use_case} onChange={e => updateField("use_case", e.target.value)} className="h-8 text-sm" readOnly={!canEdit} />
                 </DetailField>
-                <DetailField label="Neste steg">
-                  <Input value={currentSm.neste_steg} onChange={e => updateField("neste_steg", e.target.value)} className="h-8 text-sm" readOnly={!canEdit} />
+                <DetailField label="Neste steg *">
+                  <div className="relative">
+                    <Input value={currentSm.neste_steg} onChange={e => updateField("neste_steg", e.target.value)} className={`h-8 text-sm ${!currentSm.neste_steg?.trim() ? "border-destructive ring-1 ring-destructive/30" : ""}`} readOnly={!canEdit} placeholder="Obligatorisk – hva er neste steg?" />
+                    {!currentSm.neste_steg?.trim() && (
+                      <p className="text-[10px] text-destructive mt-1 flex items-center gap-1"><AlertTriangle className="w-3 h-3" />Neste steg er obligatorisk</p>
+                    )}
+                  </div>
                 </DetailField>
 
                 {currentSm.status === "Tapt" && currentSm.tapsaarsak && (
@@ -426,16 +493,6 @@ export default function Salgsmuligheter() {
         })() : undefined}
       />
     </PageShell>
-  );
-}
-
-function Field({ label, value, badge }: { label: string; value: React.ReactNode; badge?: string }) {
-  return (
-    <div>
-      <span className="text-muted-foreground block text-xs">{label}</span>
-      {badge ? <span className={`inline-block mt-0.5 w-2 h-2 rounded-full ${badge} mr-1.5`} /> : null}
-      <span className="text-sm">{value}</span>
-    </div>
   );
 }
 

@@ -58,10 +58,10 @@ export default function PostMeetingDialog({ open, onOpenChange, meetingTitle, sa
             .single();
           if (sm) {
             const stageAdvance: Record<string, string> = {
-              "Ny mulighet": "Møte booket",
-              "Møte booket": "Demo gjennomført",
-              "Demo gjennomført": "Tilbud sendt",
-              "Tilbud sendt": "Forhandling",
+              "Møte booket": "Behov avklart",
+              "Behov avklart": "Løsning presentert",
+              "Løsning presentert": "Tilbud sendt",
+              "Tilbud sendt": "Beslutning",
             };
             const next = stageAdvance[sm.status || ""];
             if (next) updates.status = next;
