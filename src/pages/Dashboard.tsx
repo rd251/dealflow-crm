@@ -533,21 +533,29 @@ export default function Dashboard() {
             <p className="px-4 py-8 text-center text-muted-foreground text-sm">Ingen aktiviteter</p>
           ) : (
             <div className="divide-y">
-              {aktiviteter.map((a) => (
-                <div
-                  key={a.id}
-                  onClick={() => navigate("/aktiviteter")}
-                  className="px-4 sm:px-6 py-3 flex items-start gap-3 hover:bg-muted/30 cursor-pointer transition-colors"
-                >
-                  <Badge variant="outline" className="text-[10px] shrink-0 mt-0.5">{a.type}</Badge>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{a.tittel || a.beskrivelse || "Aktivitet"}</p>
-                    <span className="text-xs text-muted-foreground">
-                      {formatDaysAgo(a.dato)}
-                    </span>
+              {aktiviteter.map((a) => {
+                const entityName = a.lead_id ? activityNames[a.lead_id]
+                  : a.selskap_id ? activityNames[a.selskap_id]
+                  : a.salgsmulighet_id ? activityNames[a.salgsmulighet_id]
+                  : null;
+                const label = a.tittel || a.beskrivelse || "Aktivitet";
+                const displayText = entityName ? `${label}: ${entityName}` : label;
+                return (
+                  <div
+                    key={a.id}
+                    onClick={() => navigate("/aktiviteter")}
+                    className="px-4 sm:px-6 py-3 flex items-start gap-3 hover:bg-muted/30 cursor-pointer transition-colors"
+                  >
+                    <div className="w-2.5 h-2.5 rounded-full bg-primary shrink-0 mt-1.5" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{displayText}</p>
+                      <span className="text-xs text-muted-foreground">
+                        {format(new Date(a.dato), "d. MMMM", { locale: nb })}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
