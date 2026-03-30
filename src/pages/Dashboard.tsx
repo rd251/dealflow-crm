@@ -47,6 +47,12 @@ export default function Dashboard() {
 
   const now = new Date();
   const { followUps, loading: followUpsLoading, dismiss: dismissFollowUp } = useFollowUps(leads, salgsmuligheter, selskaper);
+  const { profiles } = useProfiles();
+  const profileMap = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const p of profiles) map.set(p.user_id, p.display_name);
+    return map;
+  }, [profiles]);
   const today = now.toISOString().split("T")[0];
   const nok = (v: number) => v.toLocaleString("no-NO");
 
