@@ -281,7 +281,7 @@ export default function Companies() {
           { label: "Churn", value: `${churnRate}%`, icon: <PieChart className="w-4 h-4" /> },
         ];
         return (
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 mb-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
             {kpis.map(kpi => (
               <div key={kpi.label} className="bg-card border rounded-xl px-4 py-3 flex items-center gap-3">
                 <div className="text-muted-foreground">{kpi.icon}</div>
