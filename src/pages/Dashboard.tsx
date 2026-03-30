@@ -318,12 +318,13 @@ export default function Dashboard() {
                   <th className="text-left px-4 py-2.5 font-medium text-muted-foreground text-xs">Salgsmulighet</th>
                   <th className="text-right px-4 py-2.5 font-medium text-muted-foreground text-xs hidden sm:table-cell">MRR</th>
                   <th className="text-left px-4 py-2.5 font-medium text-muted-foreground text-xs">Sist aktiv</th>
+                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground text-xs hidden md:table-cell">Neste steg</th>
                 </tr>
               </thead>
               <tbody>
                 {nesteStegListe.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">
+                    <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
                       Ingen åpne salgsmuligheter
                     </td>
                   </tr>
@@ -346,6 +347,21 @@ export default function Dashboard() {
                           <span className={`text-xs font-medium ${isStale ? "text-destructive" : "text-muted-foreground"}`}>
                             {formatDaysAgo(sm.sist_aktivitet)}
                           </span>
+                        </td>
+                        <td className="px-4 py-2.5 hidden md:table-cell">
+                          {sm.neste_steg ? (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/salgsmuligheter?open=${sm.id}`);
+                              }}
+                              className="text-xs font-medium text-primary hover:underline truncate max-w-[140px] block text-left"
+                            >
+                              {sm.neste_steg}
+                            </button>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
                         </td>
                       </tr>
                     );
