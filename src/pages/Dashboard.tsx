@@ -11,11 +11,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   AlertTriangle, CalendarDays, PhoneOff, Target, Clock, Building2,
-  DollarSign, TrendingUp, PieChart, BarChart3, ChevronRight,
+  DollarSign, TrendingUp, PieChart, BarChart3, ChevronRight, ListTodo, Activity, CheckCircle2,
 } from "lucide-react";
 import MeetingPrepPanel from "@/components/MeetingPrepPanel";
 import FollowUpSection from "@/components/FollowUpSection";
 import { useFollowUps } from "@/hooks/use-follow-ups";
+import { supabase } from "@/integrations/supabase/client";
+import { Tables } from "@/integrations/supabase/types";
 
 const API_URL = import.meta.env.VITE_SUPABASE_URL + "/rest/v1";
 const API_HEADERS = {
@@ -51,6 +53,27 @@ export default function Dashboard() {
   const [meetings, setMeetings] = useState<MeetingItem[]>([]);
   const [entityNames, setEntityNames] = useState<Record<string, string>>({});
   const [prepMeeting, setPrepMeeting] = useState<MeetingItem | null>(null);
+  const [oppgaver, setOppgaver] = useState<Tables<"oppgaver">[]>([]);
+  const [aktiviteter, setAktiviteter] = useState<Tables<"aktiviteter">[]>([]);
+
+  useEffect(() => {
+    // Fetch upcoming tasks
+    supabase
+      .from("oppgaver")
+      .select("*")
+      .neq("status", "Ferdig")
+      .order("frist", { ascending: true, nullsFirst: false })
+      .limit(8)
+      .then(({ data }) => { if (data) setOppgaver(data); });
+
+    // Fetch recent activities
+    supabase
+      .from("aktiviteter")
+      .select("*")
+      .order("dato", { ascending: false })
+      .limit(8)
+      .then(({ data }) => { if (data) setAktiviteter(data); });
+  }, []);
 
   useEffect(() => {
     const todayStart = new Date();
@@ -249,189 +272,259 @@ export default function Dashboard() {
       {/* ─── SECTION: OPPFØLGING ─── */}
       <FollowUpSection items={followUps} loading={followUpsLoading} onDismiss={dismissFollowUp} />
 
-      {/* ─── SECTION 2: NESTE STEG ─── */}
-      <div className="bg-card border rounded-xl mb-6 overflow-hidden">
-        <div className="px-4 sm:px-6 py-4 border-b flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Neste steg</h2>
-          <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={() => navigate("/salgsmuligheter")}>
-            Se alle <ChevronRight className="w-3 h-3" />
-          </Button>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b bg-muted/30">
-                <th className="text-left px-4 py-2.5 font-medium text-muted-foreground text-xs">Selskap</th>
-                <th className="text-left px-4 py-2.5 font-medium text-muted-foreground text-xs">Salgsmulighet</th>
-                <th className="text-right px-4 py-2.5 font-medium text-muted-foreground text-xs hidden sm:table-cell">MRR</th>
-                <th className="text-left px-4 py-2.5 font-medium text-muted-foreground text-xs hidden md:table-cell">Neste steg</th>
-                <th className="text-left px-4 py-2.5 font-medium text-muted-foreground text-xs">Sist aktiv</th>
-                <th className="text-left px-4 py-2.5 font-medium text-muted-foreground text-xs hidden lg:table-cell">Ansvarlig</th>
-              </tr>
-            </thead>
-            <tbody>
-              {nesteStegListe.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
-                    Ingen åpne salgsmuligheter
-                  </td>
-                </tr>
-              ) : (
-                nesteStegListe.map((sm) => {
-                  const daysAgo = sm.sist_aktivitet ? differenceInDays(now, new Date(sm.sist_aktivitet)) : 999;
-                  const isStale = daysAgo >= 3;
-                  return (
-                    <tr
-                      key={sm.id}
-                      onClick={() => navigate(`/salgsmuligheter?open=${sm.id}`)}
-                      className="border-b last:border-0 hover:bg-muted/30 cursor-pointer transition-colors"
-                    >
-                      <td className="px-4 py-3 font-medium truncate max-w-[160px]">{sm.selskapNavn}</td>
-                      <td className="px-4 py-3 truncate max-w-[160px]">{sm.navn}</td>
-                      <td className="px-4 py-3 text-right tabular-nums hidden sm:table-cell">
-                        {nok(sm.forventet_mrr)}
-                      </td>
-                      <td className="px-4 py-3 truncate max-w-[180px] hidden md:table-cell text-muted-foreground">
-                        {sm.neste_steg || "—"}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={`text-xs font-medium ${isStale ? "text-destructive" : "text-muted-foreground"}`}>
-                          {formatDaysAgo(sm.sist_aktivitet)}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 truncate max-w-[120px] text-muted-foreground hidden lg:table-cell">
-                        {sm.ansvarlig || "—"}
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* ─── SECTION 3: MØTER ─── */}
-      <div className="bg-card border rounded-xl overflow-hidden">
-        <div className="px-4 sm:px-6 py-4 border-b flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Møter</h2>
-          <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={() => navigate("/kalender")}>
-            Kalender <ChevronRight className="w-3 h-3" />
-          </Button>
-        </div>
-
-        {meetings.length === 0 ? (
-          <p className="px-4 py-8 text-center text-muted-foreground text-sm">Ingen kommende møter</p>
-        ) : (
-          <div className="divide-y">
-            {todayMeetings.length > 0 && (
-              <div className="px-4 sm:px-6 py-3">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-                  I dag – {format(now, "EEEE d. MMMM", { locale: nb })}
-                </p>
-                <div className="space-y-2">
-                  {todayMeetings.map((m) => {
-                    const status = getMeetingStatus(m);
-                    return (
-                      <div key={m.id} className="flex items-center gap-3 p-3 rounded-lg border bg-muted/20 hover:bg-muted/40 transition-colors">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{m.tittel || m.beskrivelse || "Møte"}</p>
-                          <div className="flex items-center gap-2 mt-1 flex-wrap">
-                            {m.selskap_id && entityNames[m.selskap_id] && (
-                              <span className="text-xs text-muted-foreground flex items-center gap-1">
-                                <Building2 className="w-3 h-3" />
-                                {entityNames[m.selskap_id]}
-                              </span>
-                            )}
-                            {m.salgsmulighet_id && entityNames[m.salgsmulighet_id] && (
-                              <span className="text-xs text-primary">
-                                → {entityNames[m.salgsmulighet_id]}
-                              </span>
-                            )}
-                            {m.start_tid && (
-                              <span className="text-xs text-muted-foreground flex items-center gap-1">
-                                <Clock className="w-3 h-3" />
-                                {format(new Date(m.start_tid), "HH:mm")}
-                                {m.slutt_tid && ` – ${format(new Date(m.slutt_tid), "HH:mm")}`}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        <Badge variant="outline" className={`text-[10px] shrink-0 ${status.color}`}>
-                          {status.label}
-                        </Badge>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-xs h-7 shrink-0 hidden sm:flex"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setPrepMeeting(m);
-                          }}
-                        >
-                          Prep møte
-                        </Button>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {upcomingMeetings.length > 0 && (
-              <div className="px-4 sm:px-6 py-3">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Kommende</p>
-                <div className="space-y-2">
-                  {upcomingMeetings.map((m) => {
-                    const status = getMeetingStatus(m);
-                    const meetDate = new Date(m.dato);
-                    return (
-                      <div key={m.id} className="flex items-center gap-3 p-3 rounded-lg border bg-muted/20 hover:bg-muted/40 transition-colors">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{m.tittel || m.beskrivelse || "Møte"}</p>
-                          <div className="flex items-center gap-2 mt-1 flex-wrap">
-                            {m.selskap_id && entityNames[m.selskap_id] && (
-                              <span className="text-xs text-muted-foreground flex items-center gap-1">
-                                <Building2 className="w-3 h-3" />
-                                {entityNames[m.selskap_id]}
-                              </span>
-                            )}
-                            <span className="text-xs text-muted-foreground">
-                              {isTomorrow(meetDate)
-                                ? "I morgen"
-                                : format(meetDate, "EEEE d. MMM", { locale: nb })}
-                            </span>
-                            {m.start_tid && (
-                              <span className="text-xs text-muted-foreground flex items-center gap-1">
-                                <Clock className="w-3 h-3" />
-                                {format(new Date(m.start_tid), "HH:mm")}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        <Badge variant="outline" className={`text-[10px] shrink-0 ${status.color}`}>
-                          {status.label}
-                        </Badge>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-xs h-7 shrink-0 hidden sm:flex"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setPrepMeeting(m);
-                          }}
-                        >
-                          Prep møte
-                        </Button>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
+      {/* ─── TWO-COLUMN LAYOUT ─── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        {/* LEFT: NESTE STEG */}
+        <div className="bg-card border rounded-xl overflow-hidden">
+          <div className="px-4 sm:px-6 py-4 border-b flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Neste steg</h2>
+            <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={() => navigate("/salgsmuligheter")}>
+              Se alle <ChevronRight className="w-3 h-3" />
+            </Button>
           </div>
-        )}
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b bg-muted/30">
+                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground text-xs">Selskap</th>
+                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground text-xs">Salgsmulighet</th>
+                  <th className="text-right px-4 py-2.5 font-medium text-muted-foreground text-xs hidden sm:table-cell">MRR</th>
+                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground text-xs">Sist aktiv</th>
+                </tr>
+              </thead>
+              <tbody>
+                {nesteStegListe.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">
+                      Ingen åpne salgsmuligheter
+                    </td>
+                  </tr>
+                ) : (
+                  nesteStegListe.slice(0, 10).map((sm) => {
+                    const daysAgo = sm.sist_aktivitet ? differenceInDays(now, new Date(sm.sist_aktivitet)) : 999;
+                    const isStale = daysAgo >= 3;
+                    return (
+                      <tr
+                        key={sm.id}
+                        onClick={() => navigate(`/salgsmuligheter?open=${sm.id}`)}
+                        className="border-b last:border-0 hover:bg-muted/30 cursor-pointer transition-colors"
+                      >
+                        <td className="px-4 py-2.5 font-medium truncate max-w-[140px]">{sm.selskapNavn}</td>
+                        <td className="px-4 py-2.5 truncate max-w-[140px]">{sm.navn}</td>
+                        <td className="px-4 py-2.5 text-right tabular-nums hidden sm:table-cell">
+                          {nok(sm.forventet_mrr)}
+                        </td>
+                        <td className="px-4 py-2.5">
+                          <span className={`text-xs font-medium ${isStale ? "text-destructive" : "text-muted-foreground"}`}>
+                            {formatDaysAgo(sm.sist_aktivitet)}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* RIGHT: MØTER */}
+        <div className="bg-card border rounded-xl overflow-hidden">
+          <div className="px-4 sm:px-6 py-4 border-b flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Møter</h2>
+            <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={() => navigate("/kalender")}>
+              Kalender <ChevronRight className="w-3 h-3" />
+            </Button>
+          </div>
+
+          {meetings.length === 0 ? (
+            <p className="px-4 py-8 text-center text-muted-foreground text-sm">Ingen kommende møter</p>
+          ) : (
+            <div className="divide-y">
+              {todayMeetings.length > 0 && (
+                <div className="px-4 sm:px-6 py-3">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                    I dag – {format(now, "EEEE d. MMMM", { locale: nb })}
+                  </p>
+                  <div className="space-y-2">
+                    {todayMeetings.map((m) => {
+                      const status = getMeetingStatus(m);
+                      return (
+                        <div key={m.id} className="flex items-center gap-3 p-3 rounded-lg border bg-muted/20 hover:bg-muted/40 transition-colors">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">{m.tittel || m.beskrivelse || "Møte"}</p>
+                            <div className="flex items-center gap-2 mt-1 flex-wrap">
+                              {m.selskap_id && entityNames[m.selskap_id] && (
+                                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                  <Building2 className="w-3 h-3" />
+                                  {entityNames[m.selskap_id]}
+                                </span>
+                              )}
+                              {m.start_tid && (
+                                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                  <Clock className="w-3 h-3" />
+                                  {format(new Date(m.start_tid), "HH:mm")}
+                                  {m.slutt_tid && ` – ${format(new Date(m.slutt_tid), "HH:mm")}`}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <Badge variant="outline" className={`text-[10px] shrink-0 ${status.color}`}>
+                            {status.label}
+                          </Badge>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-xs h-7 shrink-0 hidden sm:flex"
+                            onClick={(e) => { e.stopPropagation(); setPrepMeeting(m); }}
+                          >
+                            Prep
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {upcomingMeetings.length > 0 && (
+                <div className="px-4 sm:px-6 py-3">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Kommende</p>
+                  <div className="space-y-2">
+                    {upcomingMeetings.map((m) => {
+                      const status = getMeetingStatus(m);
+                      const meetDate = new Date(m.dato);
+                      return (
+                        <div key={m.id} className="flex items-center gap-3 p-3 rounded-lg border bg-muted/20 hover:bg-muted/40 transition-colors">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">{m.tittel || m.beskrivelse || "Møte"}</p>
+                            <div className="flex items-center gap-2 mt-1 flex-wrap">
+                              {m.selskap_id && entityNames[m.selskap_id] && (
+                                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                  <Building2 className="w-3 h-3" />
+                                  {entityNames[m.selskap_id]}
+                                </span>
+                              )}
+                              <span className="text-xs text-muted-foreground">
+                                {isTomorrow(meetDate)
+                                  ? "I morgen"
+                                  : format(meetDate, "EEEE d. MMM", { locale: nb })}
+                              </span>
+                              {m.start_tid && (
+                                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                  <Clock className="w-3 h-3" />
+                                  {format(new Date(m.start_tid), "HH:mm")}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <Badge variant="outline" className={`text-[10px] shrink-0 ${status.color}`}>
+                            {status.label}
+                          </Badge>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-xs h-7 shrink-0 hidden sm:flex"
+                            onClick={(e) => { e.stopPropagation(); setPrepMeeting(m); }}
+                          >
+                            Prep
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
+
+      {/* ─── ROW 2: OPPGAVER + AKTIVITET SIDE-BY-SIDE ─── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        {/* LEFT: KOMMENDE OPPGAVER */}
+        <div className="bg-card border rounded-xl overflow-hidden">
+          <div className="px-4 sm:px-6 py-4 border-b flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+              <ListTodo className="w-4 h-4" /> Kommende oppgaver
+            </h2>
+            <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={() => navigate("/oppgaver")}>
+              Se alle <ChevronRight className="w-3 h-3" />
+            </Button>
+          </div>
+          {oppgaver.length === 0 ? (
+            <p className="px-4 py-8 text-center text-muted-foreground text-sm">Ingen åpne oppgaver</p>
+          ) : (
+            <div className="divide-y">
+              {oppgaver.map((o) => {
+                const isOverdue = o.frist && new Date(o.frist) < now;
+                const prioritetColor = o.prioritet === "Høy" ? "text-destructive" : o.prioritet === "Medium" ? "text-amber-600" : "text-muted-foreground";
+                return (
+                  <div
+                    key={o.id}
+                    onClick={() => navigate("/oppgaver")}
+                    className="px-4 sm:px-6 py-3 flex items-start gap-3 hover:bg-muted/30 cursor-pointer transition-colors"
+                  >
+                    <CheckCircle2 className={`w-4 h-4 mt-0.5 shrink-0 ${prioritetColor}`} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{o.oppgave}</p>
+                      <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                        {o.frist && (
+                          <span className={`text-xs ${isOverdue ? "text-destructive font-medium" : "text-muted-foreground"}`}>
+                            {isOverdue ? "Forfalt: " : ""}{format(new Date(o.frist), "d. MMM", { locale: nb })}
+                          </span>
+                        )}
+                        {o.ansvarlig && (
+                          <span className="text-xs text-muted-foreground">· {o.ansvarlig}</span>
+                        )}
+                        {o.prioritet && (
+                          <Badge variant="outline" className={`text-[10px] ${prioritetColor}`}>
+                            {o.prioritet}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* RIGHT: SISTE AKTIVITET */}
+        <div className="bg-card border rounded-xl overflow-hidden">
+          <div className="px-4 sm:px-6 py-4 border-b flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+              <Activity className="w-4 h-4" /> Siste aktivitet
+            </h2>
+            <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={() => navigate("/aktiviteter")}>
+              Se alle <ChevronRight className="w-3 h-3" />
+            </Button>
+          </div>
+          {aktiviteter.length === 0 ? (
+            <p className="px-4 py-8 text-center text-muted-foreground text-sm">Ingen aktiviteter</p>
+          ) : (
+            <div className="divide-y">
+              {aktiviteter.map((a) => (
+                <div
+                  key={a.id}
+                  onClick={() => navigate("/aktiviteter")}
+                  className="px-4 sm:px-6 py-3 flex items-start gap-3 hover:bg-muted/30 cursor-pointer transition-colors"
+                >
+                  <Badge variant="outline" className="text-[10px] shrink-0 mt-0.5">{a.type}</Badge>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{a.tittel || a.beskrivelse || "Aktivitet"}</p>
+                    <span className="text-xs text-muted-foreground">
+                      {formatDaysAgo(a.dato)}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
       <MeetingPrepPanel
         meeting={prepMeeting}
         open={!!prepMeeting}
