@@ -724,7 +724,7 @@ function useCrmStoreInternal() {
     updateSalgsmuligheter(prev => [...prev, nySm]);
 
     updateLeads(prev => prev.map(l =>
-      l.id === leadId ? { ...l, status: "Konvertert til salg" as const, konvertert_dato: today, sist_aktivitet: today } : l
+      l.id === leadId ? { ...l, status: "Kvalifisert" as LeadStatus, konvertert_til: "salg" as const, konvertert_dato: today, sist_aktivitet: today } : l
     ));
   }, [leads, selskaper, kontakter, updateLeads, updateSalgsmuligheter, updateSelskaper, updateKontakter]);
 
