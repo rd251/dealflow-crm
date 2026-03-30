@@ -216,6 +216,7 @@ export default function Kontaktstrom() {
       if (!l.e_post) continue;
       const email = l.e_post.toLowerCase();
       if (map.has(email)) continue;
+      const sugL = findSelskapByName(l.firmanavn) || findSelskapByDomain(email);
       map.set(email, {
         email, navn: l.kontaktperson || l.firmanavn, firmanavn: l.firmanavn,
         type: "Lead", status: l.status, ansvarlig: l.ansvarlig,
@@ -223,6 +224,8 @@ export default function Kontaktstrom() {
         nesteSteg: l.neste_steg, totalSent: 0, totalReceived: 0,
         kontaktId: null, leadId: l.id, salgsmulighetId: null,
         selskapId: null, partnerId: null, inCrm: true,
+        suggestedSelskapId: sugL?.id || null, suggestedSelskapNavn: sugL?.firmanavn || "",
+        connectionStatus: resolveConnectionStatus(null, sugL?.id || null),
       });
     }
 
