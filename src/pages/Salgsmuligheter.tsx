@@ -552,7 +552,7 @@ function DealList({ deals, getSelskapNavn, onSelect, label, onNavigateSelskap, i
         {deals.map(d => (
           <div key={d.id} className="bg-card border rounded-xl p-4 space-y-1" onClick={() => onSelect(d)}>
             <div className="flex items-center justify-between">
-              <p className="font-semibold text-sm truncate">{d.navn}</p>
+              <p className="font-semibold text-sm truncate">{d.kontaktperson || d.navn}</p>
               <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium shrink-0 ${d.status === "Vunnet" ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>{d.status}</span>
             </div>
             <p className="text-xs text-muted-foreground" onClick={e => { e.stopPropagation(); onNavigateSelskap?.(d.selskap_id); }}>{getSelskapNavn(d.selskap_id)}</p>
@@ -568,7 +568,7 @@ function DealList({ deals, getSelskapNavn, onSelect, label, onNavigateSelskap, i
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b bg-muted/50">
-            <th className="text-left px-4 py-3 font-medium">Navn</th>
+            <th className="text-left px-4 py-3 font-medium">Kontaktperson</th>
             <th className="text-left px-4 py-3 font-medium">Selskap</th>
             <th className="text-left px-4 py-3 font-medium">Status</th>
             <th className="text-right px-4 py-3 font-medium">MRR</th>
@@ -577,7 +577,7 @@ function DealList({ deals, getSelskapNavn, onSelect, label, onNavigateSelskap, i
         <tbody>
           {deals.map(d => (
             <tr key={d.id} className="border-b last:border-0 hover:bg-muted/30 cursor-pointer" onClick={() => onSelect(d)}>
-              <td className="px-4 py-3 font-medium">{d.navn}</td>
+              <td className="px-4 py-3 font-medium">{d.kontaktperson || d.navn}</td>
               <td className="px-4 py-3 text-muted-foreground"><span className="cursor-pointer hover:text-primary hover:underline" onClick={e => { e.stopPropagation(); onNavigateSelskap?.(d.selskap_id); }}>{getSelskapNavn(d.selskap_id)}</span></td>
               <td className="px-4 py-3"><span className={`text-xs px-2 py-0.5 rounded-full font-medium ${d.status === "Vunnet" ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>{d.status}</span></td>
               <td className="px-4 py-3 text-right font-mono">{d.forventet_mrr.toLocaleString("no-NO")}</td>
