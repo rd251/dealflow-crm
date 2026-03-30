@@ -44,7 +44,7 @@ const DailyTaskReminderEmail = ({
         <Container style={container}>
           {/* Header with Snakk branding */}
           <Section style={headerSection}>
-            <Text style={logoText}>✦ snakk</Text>
+            <Img src={LOGO_URL} alt="Snakk" width="140" height="auto" style={logoImg} />
           </Section>
 
           {/* Main content */}
