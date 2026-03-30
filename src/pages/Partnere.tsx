@@ -7,7 +7,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import DetailPanelShell, { DetailSection, DetailField, DetailDivider } from "@/components/DetailPanelShell";
 import { Plus, Search, Trash2, Users, DollarSign, BarChart3, Percent } from "lucide-react";
@@ -37,6 +38,13 @@ export default function Partnere() {
     partnernavn: "", partnertype: "Salgspartner", kontaktperson: "", e_post: "", telefon: "",
     partnerstatus: "Under onboarding", ansvarlig: "", notater: "",
   });
+  const [deleteTarget, setDeleteTarget] = useState<Partner | null>(null);
+
+  const handleDelete = (partner: Partner) => {
+    updatePartnere(prev => prev.filter(p => p.id !== partner.id));
+    setDeleteTarget(null);
+    if (selectedPartner?.id === partner.id) setSelectedPartner(null);
+  };
 
   const filtered = partnere.filter(p =>
     p.partnernavn.toLowerCase().includes(search.toLowerCase()) ||
@@ -187,6 +195,7 @@ export default function Partnere() {
                 <th className="text-right px-4 py-3 font-medium">Avtaler</th>
                 <th className="text-left px-4 py-3 font-medium">Sist aktivitet</th>
                 <th className="text-left px-4 py-3 font-medium">Opprettet</th>
+                {canEdit && <th className="px-2 py-3"></th>}
               </tr>
             </thead>
             <tbody>
@@ -210,6 +219,13 @@ export default function Partnere() {
                     <td className="px-4 py-3 text-right">{stats.antallAktiveAvtaler}</td>
                     <td className="px-4 py-3"><LastActivityBadge partner_id={partner.id} sist_aktivitet={partner.sist_aktivitet} /></td>
                     <td className="px-4 py-3 text-muted-foreground text-xs font-mono">{partner.opprettet_dato}</td>
+                    {canEdit && (
+                      <td className="px-2 py-3">
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={e => { e.stopPropagation(); setDeleteTarget(partner); }}>
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </td>
+                    )}
                   </tr>
                 );
               })}
@@ -311,10 +327,7 @@ export default function Partnere() {
                   </div>
                 </div>
 
-                <Button size="sm" variant="ghost" className="w-full text-xs text-destructive hover:text-destructive h-8" onClick={() => {
-                  updatePartnere(prev => prev.filter(p => p.id !== currentPartner.id));
-                  setSelectedPartner(null);
-                }}>
+                <Button size="sm" variant="ghost" className="w-full text-xs text-destructive hover:text-destructive h-8" onClick={() => setDeleteTarget(currentPartner)}>
                   <Trash2 className="w-3.5 h-3.5 mr-1" /> Slett partner
                 </Button>
               </div>
@@ -327,6 +340,21 @@ export default function Partnere() {
           };
         })() : undefined}
       />
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={open => !open && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Slett partner</AlertDialogTitle>
+            <AlertDialogDescription>
+              Er du sikker på at du vil slette <span className="font-semibold">{deleteTarget?.partnernavn}</span>? Dette kan ikke angres.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Avbryt</AlertDialogCancel>
+            <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => deleteTarget && handleDelete(deleteTarget)}>Slett</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </PageShell>
   );
 }
