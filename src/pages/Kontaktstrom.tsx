@@ -16,6 +16,7 @@ import { nb } from "date-fns/locale";
 import { toast } from "sonner";
 import ActivityLog from "@/components/ActivityLog";
 import CompanyLinker from "@/components/CompanyLinker";
+import DealSuggestions from "@/components/DealSuggestions";
 
 interface KontaktStromPerson {
   email: string;

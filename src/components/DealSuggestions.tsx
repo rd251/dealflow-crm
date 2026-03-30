@@ -28,8 +28,8 @@ export default function DealSuggestions({ selskapId, kontaktId, email, currentSa
       )
       .sort((a, b) => {
         // Prioritize by last activity, then by creation date
-        const dateA = a.sist_aktivitet || a.created_at;
-        const dateB = b.sist_aktivitet || b.created_at;
+        const dateA = a.sist_aktivitet || a.opprettet_dato || "";
+        const dateB = b.sist_aktivitet || b.opprettet_dato || "";
         return new Date(dateB).getTime() - new Date(dateA).getTime();
       });
   }, [selskapId, salgsmuligheter]);
