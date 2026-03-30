@@ -462,7 +462,6 @@ export default function Dashboard() {
                               )}
                             </div>
                           </div>
-                          </Badge>
                           <Button
                             variant="outline"
                             size="sm"
