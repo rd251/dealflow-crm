@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { differenceInHours, differenceInDays, format } from "date-fns";
 import { nb } from "date-fns/locale";
@@ -30,6 +30,7 @@ export default function FollowUpSection({ items, loading, onDismiss }: FollowUpS
   const [generatedMessage, setGeneratedMessage] = useState("");
   const [generating, setGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showAll, setShowAll] = useState(false);
 
   const typeLabel: Record<string, string> = {
     lead_stale: "Lead inaktiv",
@@ -115,7 +116,8 @@ export default function FollowUpSection({ items, loading, onDismiss }: FollowUpS
 
   if (items.length === 0) return null;
 
-  const displayed = items.slice(0, 10);
+  const displayed = showAll ? items : items.slice(0, 10);
+  const remaining = items.length - 10;
 
   return (
     <>
@@ -203,9 +205,12 @@ export default function FollowUpSection({ items, loading, onDismiss }: FollowUpS
 
         {items.length > 10 && (
           <div className="px-4 py-2 border-t text-center">
-            <span className="text-xs text-muted-foreground">
-              +{items.length - 10} flere oppfølginger
-            </span>
+            <button
+              onClick={() => setShowAll(!showAll)}
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            >
+              {showAll ? "Vis færre" : `+${remaining} flere oppfølginger`}
+            </button>
           </div>
         )}
       </div>
