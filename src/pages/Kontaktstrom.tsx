@@ -42,6 +42,7 @@ const TYPE_COLORS: Record<string, string> = {
   Salgsmulighet: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
   Kunde: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300",
   Partner: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
+  Kontakt: "bg-sky-100 text-sky-800 dark:bg-sky-900/30 dark:text-sky-300",
   Ukjent: "bg-muted text-muted-foreground",
 };
 
