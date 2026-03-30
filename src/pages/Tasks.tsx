@@ -199,8 +199,8 @@ export default function Tasks() {
           const selskap = selskaper.find(s => s.id === task.selskap_id);
           const ansvarligNavn = task.ansvarlig ? getProfileName(task.ansvarlig) : null;
           return (
-            <div key={task.id} className={`bg-card border rounded-xl p-4 flex items-center gap-3 animate-slide-in transition-opacity ${task.status === "Ferdig" ? "opacity-50" : ""}`}>
-              <Checkbox checked={task.status === "Ferdig"} onCheckedChange={() => canEdit && changeStatus(task.id, task.status === "Ferdig" ? "Åpen" : "Ferdig")} className="shrink-0" disabled={!canEdit} />
+            <div key={task.id} className={`bg-card border rounded-xl p-4 flex items-center gap-3 animate-slide-in transition-opacity cursor-pointer hover:border-primary/30 ${task.status === "Ferdig" ? "opacity-50" : ""}`} onClick={() => canEdit && openEdit(task)}>
+              <Checkbox checked={task.status === "Ferdig"} onCheckedChange={() => canEdit && changeStatus(task.id, task.status === "Ferdig" ? "Åpen" : "Ferdig")} className="shrink-0" disabled={!canEdit} onClick={e => e.stopPropagation()} />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <p className={`font-medium text-sm ${task.status === "Ferdig" ? "line-through" : ""}`}>{task.oppgave}</p>
@@ -262,6 +262,49 @@ export default function Tasks() {
           <div className="text-center py-16 text-muted-foreground"><p className="text-sm">Ingen oppgaver å vise</p></div>
         )}
       </div>
+
+      {/* Edit dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={o => { setEditDialogOpen(o); if (!o) setEditingTask(null); }}>
+        <DialogContent className="max-w-[95vw] sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><Pencil className="w-4 h-4" />Rediger oppgave</DialogTitle>
+            <DialogDescription>Endre detaljer for oppgaven.</DialogDescription>
+          </DialogHeader>
+          {editingTask && (
+            <div className="space-y-3">
+              <Input placeholder="Oppgave" value={editingTask.oppgave} onChange={e => setEditingTask(t => t ? { ...t, oppgave: e.target.value } : t)} />
+              <div className="grid grid-cols-2 gap-3">
+                <Input type="date" value={editingTask.frist} onChange={e => setEditingTask(t => t ? { ...t, frist: e.target.value } : t)} />
+                <select className="border rounded-lg px-3 py-2 text-sm bg-background" value={editingTask.prioritet} onChange={e => setEditingTask(t => t ? { ...t, prioritet: e.target.value as Prioritet } : t)}>
+                  {(["Lav", "Medium", "Høy"] as Prioritet[]).map(p => <option key={p}>{p}</option>)}
+                </select>
+              </div>
+              <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background" value={editingTask.status} onChange={e => setEditingTask(t => t ? { ...t, status: e.target.value as OppgaveStatus } : t)}>
+                {statusOptions.map(s => <option key={s}>{s}</option>)}
+              </select>
+              <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background" value={editingTask.selskap_id} onChange={e => setEditingTask(t => t ? { ...t, selskap_id: e.target.value } : t)}>
+                <option value="">Knytt til selskap (valgfritt)</option>
+                {selskaper.map(s => <option key={s.id} value={s.id}>{s.firmanavn}</option>)}
+              </select>
+              <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background" value={editingTask.ansvarlig} onChange={e => setEditingTask(t => t ? { ...t, ansvarlig: e.target.value } : t)}>
+                <option value="">Velg ansvarlig (valgfritt)</option>
+                {profiles.map(p => (
+                  <option key={p.user_id} value={p.user_id}>
+                    {p.display_name}{p.user_id === user?.id ? " (deg)" : ""}
+                  </option>
+                ))}
+              </select>
+              <Textarea placeholder="Notater" value={editingTask.notater} onChange={e => setEditingTask(t => t ? { ...t, notater: e.target.value } : t)} />
+              <div className="flex gap-2">
+                <Button onClick={saveEdit} className="flex-1" disabled={!editingTask.oppgave.trim()}>Lagre endringer</Button>
+                <Button variant="destructive" size="icon" onClick={() => deleteTask(editingTask.id)}>
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </PageShell>
     </TooltipProvider>
   );
