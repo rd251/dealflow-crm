@@ -81,7 +81,7 @@ export default function Dashboard() {
           const actSelskapIds = [...new Set(data.map(a => a.selskap_id).filter(Boolean))] as string[];
           const actLeadIds = [...new Set(data.map(a => a.lead_id).filter(Boolean))] as string[];
           const actSmIds = [...new Set(data.map(a => a.salgsmulighet_id).filter(Boolean))] as string[];
-          const fetches: Promise<void>[] = [];
+          const fetches: Array<Promise<void> | PromiseLike<void>> = [];
           const names: Record<string, string> = {};
           if (actSelskapIds.length)
             fetches.push(
