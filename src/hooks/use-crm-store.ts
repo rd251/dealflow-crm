@@ -353,6 +353,7 @@ function useCrmStoreInternal() {
   const updateLeads = useCallback((fn: (prev: Lead[]) => Lead[]) => {
     const prev = leadsRef.current;
     const next = fn(prev);
+    leadsRef.current = next;
     setLeads(next);
     leadsSyncQueueRef.current = leadsSyncQueueRef.current
       .then(() => syncLeads(prev, next))
@@ -362,6 +363,7 @@ function useCrmStoreInternal() {
   const updateSelskaper = useCallback((fn: (prev: Selskap[]) => Selskap[]) => {
     const prev = selskaperRef.current;
     const next = fn(prev);
+    selskaperRef.current = next;
     setSelskaper(next);
     selskaperSyncQueueRef.current = selskaperSyncQueueRef.current
       .then(() => syncSelskaper(prev, next))
@@ -371,6 +373,7 @@ function useCrmStoreInternal() {
   const updateKontakter = useCallback((fn: (prev: Kontakt[]) => Kontakt[]) => {
     const prev = kontakterRef.current;
     const next = fn(prev);
+    kontakterRef.current = next;
     setKontakter(next);
     kontakterSyncQueueRef.current = kontakterSyncQueueRef.current
       .then(() => syncKontakter(prev, next))
@@ -380,6 +383,7 @@ function useCrmStoreInternal() {
   const updateSalgsmuligheter = useCallback((fn: (prev: Salgsmulighet[]) => Salgsmulighet[]) => {
     const prev = salgsmuligheterRef.current;
     const next = fn(prev);
+    salgsmuligheterRef.current = next;
     setSalgsmuligheter(next);
     salgsmuligheterSyncQueueRef.current = salgsmuligheterSyncQueueRef.current
       .then(() => syncSalgsmuligheter(prev, next))
