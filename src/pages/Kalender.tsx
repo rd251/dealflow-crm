@@ -907,6 +907,19 @@ export default function Kalender() {
                 </div>
               )}
 
+              {/* Prep meeting button for future meetings */}
+              {selectedEvent.type === "meeting" && selectedEvent.start >= new Date() && (
+                <div className="pt-3 border-t">
+                  <Button
+                    className="w-full gap-2"
+                    onClick={() => { setDrawerOpen(false); setPrepPanelOpen(true); }}
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    Prep møte
+                  </Button>
+                </div>
+              )}
+
               {/* Post-meeting button for past meetings */}
               {selectedEvent.type === "meeting" && selectedEvent.start < new Date() && (
                 <div className="pt-3 border-t">
