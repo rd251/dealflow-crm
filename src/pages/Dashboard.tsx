@@ -66,13 +66,40 @@ export default function Dashboard() {
       .limit(8)
       .then(({ data }) => { if (data) setOppgaver(data); });
 
-    // Fetch recent activities
+    // Fetch recent activities (exclude meetings – shown in Møter section)
     supabase
       .from("aktiviteter")
       .select("*")
+      .neq("type", "Møte")
       .order("dato", { ascending: false })
-      .limit(8)
-      .then(({ data }) => { if (data) setAktiviteter(data); });
+      .limit(10)
+      .then(({ data }) => {
+        if (data) {
+          setAktiviteter(data);
+          // Resolve selskap names for activities
+          const actSelskapIds = [...new Set(data.map(a => a.selskap_id).filter(Boolean))] as string[];
+          const actLeadIds = [...new Set(data.map(a => a.lead_id).filter(Boolean))] as string[];
+          const actSmIds = [...new Set(data.map(a => a.salgsmulighet_id).filter(Boolean))] as string[];
+          const fetches: Promise<void>[] = [];
+          const names: Record<string, string> = {};
+          if (actSelskapIds.length)
+            fetches.push(
+              supabase.from("selskaper").select("id,firmanavn").in("id", actSelskapIds)
+                .then(({ data: rows }) => rows?.forEach(r => names[r.id] = r.firmanavn))
+            );
+          if (actLeadIds.length)
+            fetches.push(
+              supabase.from("leads").select("id,firmanavn").in("id", actLeadIds)
+                .then(({ data: rows }) => rows?.forEach(r => names[r.id] = r.firmanavn))
+            );
+          if (actSmIds.length)
+            fetches.push(
+              supabase.from("salgsmuligheter").select("id,navn").in("id", actSmIds)
+                .then(({ data: rows }) => rows?.forEach(r => names[r.id] = r.navn))
+            );
+          Promise.all(fetches).then(() => setActivityNames(names));
+        }
+      });
   }, []);
 
   useEffect(() => {
