@@ -1021,6 +1021,22 @@ export default function Kalender() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Post-meeting dialog */}
+      {selectedEvent?.type === "meeting" && (
+        <PostMeetingDialog
+          open={postMeetingOpen}
+          onOpenChange={(open) => {
+            setPostMeetingOpen(open);
+            if (!open) {
+              fetchEvents();
+            }
+          }}
+          meetingTitle={selectedEvent.title}
+          salgsmulighet_id={selectedEvent.raw?.salgsmulighet_id || null}
+          selskap_id={selectedEvent.raw?.selskap_id || null}
+        />
+      )}
     </PageShell>
   );
 }
