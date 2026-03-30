@@ -72,6 +72,8 @@ Deno.serve(async (req) => {
   }
 
   const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || [])
+  // Build a lookup for user_id → display_name (used to resolve ansvarlig UUIDs)
+  const nameMap = new Map(profiles?.map(p => [p.user_id, p.display_name]) || [])
 
   let sentCount = 0
   const errors: string[] = []
