@@ -566,8 +566,9 @@ export default function Dashboard() {
                   key={ev.id}
                   className="px-4 sm:px-6 py-3 flex items-start gap-3 hover:bg-muted/30 cursor-pointer transition-colors"
                   onClick={() => {
-                    if (ev.id.startsWith("l-")) navigate("/leads");
-                    else navigate("/salgsmuligheter");
+                    const entityId = ev.id.replace(/^(l|sm)-[^-]+-/, "");
+                    if (ev.id.startsWith("l-")) navigate(`/leads?open=${entityId}`);
+                    else navigate(`/salgsmuligheter?open=${entityId}`);
                   }}
                 >
                   <div className={`w-2.5 h-2.5 rounded-full ${ev.color} shrink-0 mt-1.5`} />
