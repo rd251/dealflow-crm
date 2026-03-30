@@ -417,9 +417,6 @@ export default function Dashboard() {
                               )}
                             </div>
                           </div>
-                          <Badge variant="outline" className={`text-[10px] shrink-0 ${status.color}`}>
-                            {status.label}
-                          </Badge>
                           <Button
                             variant="outline"
                             size="sm"
@@ -440,7 +437,6 @@ export default function Dashboard() {
                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Kommende</p>
                   <div className="space-y-2">
                     {upcomingMeetings.map((m) => {
-                      const status = getMeetingStatus(m);
                       const meetDate = new Date(m.dato);
                       return (
                         <div key={m.id} className="flex items-center gap-3 p-3 rounded-lg border bg-muted/20 hover:bg-muted/40 transition-colors">
@@ -466,8 +462,6 @@ export default function Dashboard() {
                               )}
                             </div>
                           </div>
-                          <Badge variant="outline" className={`text-[10px] shrink-0 ${status.color}`}>
-                            {status.label}
                           </Badge>
                           <Button
                             variant="outline"
