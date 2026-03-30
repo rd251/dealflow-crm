@@ -136,16 +136,17 @@ export default function Kontaktstrom() {
       const sm = salgsmuligheter.find(s => s.e_post?.toLowerCase() === email || s.kontakt_id === k.id);
       const partner = partnere.find(p => p.e_post?.toLowerCase() === email);
 
-      let type: KontaktStromPerson["type"] = "Ukjent";
-      let status = "";
+      let type: KontaktStromPerson["type"] = k.selskap_id ? getTypeFromSelskap(k.selskap_id) : "Ukjent";
+      let status = k.selskap_id ? getSelskapStatus(k.selskap_id) : "";
       let ansvarlig = "";
       let nesteSteg = "";
 
       if (sm) { type = "Salgsmulighet"; status = sm.status; ansvarlig = sm.ansvarlig; nesteSteg = sm.neste_steg; }
       if (lead) { type = "Lead"; status = lead.status; ansvarlig = lead.ansvarlig; nesteSteg = lead.neste_steg; }
       if (partner) { type = "Partner"; status = partner.partnerstatus; ansvarlig = partner.ansvarlig; }
-      if (k.selskap_id && getTypeFromSelskap(k.selskap_id) === "Kunde") {
-        type = "Kunde"; status = getSelskapStatus(k.selskap_id);
+      if (k.selskap_id) {
+        const selskapType = getTypeFromSelskap(k.selskap_id);
+        if (selskapType === "Kunde") { type = "Kunde"; status = getSelskapStatus(k.selskap_id); }
       }
 
       map.set(email, {
