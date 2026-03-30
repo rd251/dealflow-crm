@@ -242,6 +242,8 @@ export default function Kontaktstrom() {
         nesteSteg: s.neste_steg, totalSent: 0, totalReceived: 0,
         kontaktId: s.kontakt_id || null, leadId: null, salgsmulighetId: s.id,
         selskapId: s.selskap_id || null, partnerId: null, inCrm: true,
+        suggestedSelskapId: null, suggestedSelskapNavn: "",
+        connectionStatus: resolveConnectionStatus(s.selskap_id || null, null),
       });
     }
 
