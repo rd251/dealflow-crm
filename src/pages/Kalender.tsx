@@ -905,6 +905,20 @@ export default function Kalender() {
                 </div>
               )}
 
+              {/* Post-meeting button for past meetings */}
+              {selectedEvent.type === "meeting" && selectedEvent.start < new Date() && (
+                <div className="pt-3 border-t">
+                  <Button
+                    variant="destructive"
+                    className="w-full gap-2"
+                    onClick={() => setPostMeetingOpen(true)}
+                  >
+                    <Check className="w-4 h-4" />
+                    Møtet er ferdig – logg resultat
+                  </Button>
+                </div>
+              )}
+
               <div className="flex gap-2 pt-4 border-t">
                 <Button variant="outline" size="sm" className="gap-1.5" onClick={startEditing}>
                   <Pencil className="w-3.5 h-3.5" /> Rediger
