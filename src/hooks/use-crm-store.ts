@@ -41,7 +41,7 @@ function rowToKontakt(r: any): Kontakt {
 function rowToSalgsmulighet(r: any): Salgsmulighet {
   return {
     id: r.id, navn: r.navn, selskap_id: r.selskap_id || "", kontakt_id: r.kontakt_id || "",
-    ansvarlig: r.ansvarlig || "", status: r.status || "Ny mulighet",
+    ansvarlig: r.ansvarlig || "", status: r.status || "Møte booket",
     forventet_mrr: Number(r.forventet_mrr) || 0, sla: Number(r.sla) || 0,
     oppstartskostnad: Number(r.oppstartskostnad) || 0, kontraktslengde_mnd: r.kontraktslengde_mnd || 12,
     sannsynlighet: r.sannsynlighet || 50, forventet_lukkedato: r.forventet_lukkedato || "",
