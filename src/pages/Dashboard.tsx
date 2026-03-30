@@ -201,17 +201,6 @@ export default function Dashboard() {
     [meetings]
   );
 
-  const getMeetingStatus = (m: MeetingItem) => {
-    // Check if selskap has recent activity
-    if (m.selskap_id) {
-      const selskap = selskaper.find((s) => s.id === m.selskap_id);
-      if (selskap?.sist_aktivitet) {
-        const days = differenceInDays(now, new Date(selskap.sist_aktivitet));
-        if (days <= 3) return { label: "Klar", color: "bg-emerald-500/10 text-emerald-600 border-emerald-200" };
-      }
-    }
-    return { label: "Trenger oppfølging", color: "bg-amber-500/10 text-amber-600 border-amber-200" };
-  };
 
   // ─── SECTION 4: KPI ───
   const liveSelskaper = selskaper.filter((s) => s.kundestatus === "Live");
