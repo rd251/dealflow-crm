@@ -101,6 +101,7 @@ function AppRoutes() {
     <Routes>
       <Route path="/login" element={<LoginRoute />} />
       <Route path="/~oauth" element={<OAuthCallbackRoute />} />
+      <Route path="/unsubscribe" element={<Unsubscribe />} />
       <Route
         path="/*"
         element={
