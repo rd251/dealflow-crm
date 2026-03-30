@@ -94,6 +94,7 @@ export default function Kalender() {
 
 
   const [postMeetingOpen, setPostMeetingOpen] = useState(false);
+  const [prepPanelOpen, setPrepPanelOpen] = useState(false);
 
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
