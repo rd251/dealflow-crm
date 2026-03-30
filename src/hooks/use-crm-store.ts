@@ -826,7 +826,7 @@ function useCrmStoreInternal() {
     if (vunnetSm.length > 0) {
       updateSalgsmuligheter(prev => prev.map(sm =>
         sm.selskap_id === selskapId && sm.status === "Vunnet"
-          ? { ...sm, status: "Forhandling" as const, vunnet_dato: "", sist_aktivitet: today }
+          ? { ...sm, status: "Beslutning" as const, vunnet_dato: "", sist_aktivitet: today }
           : sm
       ));
     }

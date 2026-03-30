@@ -99,7 +99,7 @@ export default function PartnerProfile() {
     const smId = crypto.randomUUID();
     const nySm: Salgsmulighet = {
       id: smId, navn: dealForm.navn, selskap_id: dealForm.selskap_id,
-      kontakt_id: "", ansvarlig: partner.ansvarlig, status: "Ny mulighet",
+      kontakt_id: "", ansvarlig: partner.ansvarlig, status: "Møte booket",
       forventet_mrr: dealForm.forventet_mrr, sla: 0, oppstartskostnad: dealForm.oppstartskostnad,
       kontraktslengde_mnd: 12, sannsynlighet: 50, forventet_lukkedato: "",
       vunnet_dato: "", tapt_dato: "", tapsaarsak: "", neste_steg: "", notater: "",
