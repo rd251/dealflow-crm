@@ -592,13 +592,17 @@ export default function Kontaktstrom() {
                   </td>
                   {!isMobile && (
                     <td className="px-4 py-3">
-                      {p.inCrm ? (
+                      {p.connectionStatus === "linked" ? (
                         <Badge variant="outline" className="text-xs bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800">
-                          Ja
+                          Koblet
+                        </Badge>
+                      ) : p.connectionStatus === "suggested" ? (
+                        <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800">
+                          Foreslått
                         </Badge>
                       ) : (
                         <Badge variant="outline" className="text-xs bg-muted text-muted-foreground">
-                          Nei
+                          Ikke koblet
                         </Badge>
                       )}
                     </td>
