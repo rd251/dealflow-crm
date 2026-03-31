@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   Sparkles, Send, Loader2, ListChecks,
-  ExternalLink, CheckCircle2, ArrowUp,
+  ExternalLink, CheckCircle2, ArrowUp, PhoneCall,
 } from "lucide-react";
 import { toast } from "sonner";
 
