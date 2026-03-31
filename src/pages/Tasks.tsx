@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import PageShell from "@/components/PageShell";
+import PersonSearchPicker from "@/components/PersonSearchPicker";
 import { useCrmStore } from "@/hooks/use-crm-store";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/use-auth";
@@ -194,10 +195,7 @@ export default function Tasks() {
                 <option value="">Knytt til selskap (valgfritt)</option>
                 {selskaper.map(s => <option key={s.id} value={s.id}>{s.firmanavn}</option>)}
               </select>
-              <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background" value={form.kontakt_id} onChange={e => setForm(f => ({ ...f, kontakt_id: e.target.value }))}>
-                <option value="">Knytt til person (valgfritt)</option>
-                {allPersons.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
-              </select>
+              <PersonSearchPicker persons={allPersons} value={form.kontakt_id} onChange={id => setForm(f => ({ ...f, kontakt_id: id }))} />
               <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background" value={form.ansvarlig} onChange={e => setForm(f => ({ ...f, ansvarlig: e.target.value }))}>
                 <option value="">Velg ansvarlig (valgfritt)</option>
                 {profiles.map(p => (
@@ -318,10 +316,7 @@ export default function Tasks() {
                 <option value="">Knytt til selskap (valgfritt)</option>
                 {selskaper.map(s => <option key={s.id} value={s.id}>{s.firmanavn}</option>)}
               </select>
-              <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background" value={editingTask.kontakt_id} onChange={e => setEditingTask(t => t ? { ...t, kontakt_id: e.target.value } : t)}>
-                <option value="">Knytt til person (valgfritt)</option>
-                {allPersons.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
-              </select>
+              <PersonSearchPicker persons={allPersons} value={editingTask.kontakt_id} onChange={id => setEditingTask(t => t ? { ...t, kontakt_id: id } : t)} />
               <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background" value={editingTask.ansvarlig} onChange={e => setEditingTask(t => t ? { ...t, ansvarlig: e.target.value } : t)}>
                 <option value="">Velg ansvarlig (valgfritt)</option>
                 {profiles.map(p => (
