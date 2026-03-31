@@ -348,6 +348,24 @@ LEAD-OPPRETTING REGLER:
 - Bruk firmanavn fra konteksten, eller utled fra e-postdomene (f.eks. daniel@straye.no → "Straye" eller "straye.no")
 - Sett auto_create=true når brukeren eksplisitt ber om å registrere/opprette/legge inn et lead (f.eks. "registrer", "legg inn", "opprett lead for", "lag lead"). Da opprettes leadet automatisk uten bekreftelse.
 
+STATUSOPPDATERING REGLER:
+- Når brukeren ber om å flytte/oppdatere/endre status på en deal eller et lead, generer suggested_status_updates
+- Entity ID MÅ komme fra CRM-konteksten
+- Sett auto_apply=true når brukeren eksplisitt ber om oppdateringen
+- Gyldige statuser for salgsmulighet: Ny mulighet, Møte booket, Demo gjennomført, Behov avklart, Løsning presentert, Tilbud sendt, Forhandling, Beslutning, Vunnet, Tapt
+- Gyldige statuser for lead: Ny, Kontaktet, Kvalifisert, Ikke aktuelt
+
+KONVERTERING REGLER:
+- Når brukeren ber om å konvertere et lead til salgsmulighet/deal, generer suggested_conversions
+- Lead ID MÅ komme fra CRM-konteksten
+- Overfør kontaktperson, e-post, telefon og use_case fra leadet
+- Sett auto_apply=true når brukeren eksplisitt ber om konverteringen
+
+SELSKAPSOPPRETTING REGLER:
+- Når brukeren ber om å opprette/lage et selskap, generer suggested_companies
+- Sjekk at selskapet ikke allerede finnes i konteksten
+- Sett auto_create=true når brukeren eksplisitt ber om det
+
 CRM-DATA:
 `;
 
