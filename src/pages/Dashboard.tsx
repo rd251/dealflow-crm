@@ -240,10 +240,16 @@ export default function Dashboard() {
     oppgaver,
   }), [todayMeetings, followUps, salgsmuligheter, leads, oppgaver, selskaper, entityNames]);
 
+  const { profiles: allProfiles } = useProfiles();
+  const currentUserName = useMemo(() => {
+    const userId = undefined; // will use auth
+    return profiles.length > 0 ? profiles[0]?.display_name?.split(" ")[0] : undefined;
+  }, [profiles]);
+
   return (
     <PageShell
-      title="Dashboard"
-      subtitle="Hva bør du gjøre nå?"
+      title=""
+      subtitle=""
       actions={
         <button
           onClick={() => navigate("/rapporter")}
@@ -254,8 +260,8 @@ export default function Dashboard() {
       }
     >
 
-      {/* ─── AI COMMAND BAR ─── */}
-      <AiCommandBar context={aiContext} />
+      {/* ─── AI COMMAND BAR (includes greeting) ─── */}
+      <AiCommandBar context={aiContext} userName={currentUserName} />
 
       {/* ─── SECTION 1: FOKUS I DAG ─── */}
       <div className="mb-6">

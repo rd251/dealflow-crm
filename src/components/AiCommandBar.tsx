@@ -1,12 +1,12 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  Sparkles, Send, Loader2, ChevronRight, ListChecks,
-  Activity, ExternalLink, CheckCircle2, AlertTriangle,
+  Sparkles, Send, Loader2, ListChecks,
+  ExternalLink, CheckCircle2, ArrowUp,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -37,13 +37,14 @@ interface AiResponse {
 
 interface AiCommandBarProps {
   context: any;
+  userName?: string;
 }
 
 const QUICK_PROMPTS = [
-  "Hva bør jeg gjøre i dag?",
-  "Hvilke deals trenger oppfølging?",
-  "Prep møtene mine i dag",
-  "Top 5 prioriteringer",
+  { icon: "📋", label: "Prep neste møte" },
+  { icon: "🔁", label: "Oppsummer siste samtaler" },
+  { icon: "🎯", label: "Top 5 prioriteringer" },
+  { icon: "📞", label: "Deals som trenger oppfølging" },
 ];
 
 const prioritetColor: Record<string, string> = {
@@ -52,19 +53,18 @@ const prioritetColor: Record<string, string> = {
   "lav": "bg-muted text-muted-foreground border-border",
 };
 
-export default function AiCommandBar({ context }: AiCommandBarProps) {
+export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
   const navigate = useNavigate();
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState<AiResponse | null>(null);
   const [creatingTasks, setCreatingTasks] = useState(false);
   const [createdTaskIds, setCreatedTaskIds] = useState<Set<number>>(new Set());
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSubmit = async (prompt?: string) => {
     const msg = prompt || input.trim();
     if (!msg || loading) return;
-
     setInput("");
     setLoading(true);
     setResponse(null);
@@ -74,14 +74,8 @@ export default function AiCommandBar({ context }: AiCommandBarProps) {
       const { data, error } = await supabase.functions.invoke("ai-command", {
         body: { message: msg, context },
       });
-
       if (error) throw error;
-
-      if (data?.error) {
-        toast.error(data.error);
-        return;
-      }
-
+      if (data?.error) { toast.error(data.error); return; }
       setResponse(data as AiResponse);
     } catch (e: any) {
       console.error("AI command error:", e);
@@ -140,81 +134,90 @@ export default function AiCommandBar({ context }: AiCommandBarProps) {
   const handleNavigate = (item: AiItem) => {
     if (!item.entityId || !item.entityType) return;
     switch (item.entityType) {
-      case "salgsmulighet":
-        navigate(`/salgsmuligheter?open=${item.entityId}`);
-        break;
-      case "lead":
-        navigate(`/leads`);
-        break;
-      case "selskap":
-        navigate(`/selskaper/${item.entityId}`);
-        break;
-      default:
-        break;
+      case "salgsmulighet": navigate(`/salgsmuligheter?open=${item.entityId}`); break;
+      case "lead": navigate(`/leads`); break;
+      case "selskap": navigate(`/selskaper/${item.entityId}`); break;
+    }
+  };
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "God morgen";
+    if (hour < 17) return "God ettermiddag";
+    return "God kveld";
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit();
     }
   };
 
   return (
-    <div className="bg-card border rounded-xl mb-6 overflow-hidden">
-      {/* Header */}
-      <div className="px-4 sm:px-6 py-4 border-b flex items-center gap-2">
-        <Sparkles className="w-4 h-4 text-primary" />
-        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">AI-assistent</h2>
-      </div>
+    <div className="mb-8">
+      {/* Greeting */}
+      <h1 className="text-2xl sm:text-3xl font-semibold text-foreground mb-6">
+        {getGreeting()}{userName ? `, ${userName}` : ""}.
+      </h1>
 
-      {/* Input */}
-      <div className="px-4 sm:px-6 py-4">
+      {/* Input area - Attio style */}
+      <div className="bg-card border rounded-xl overflow-hidden">
         <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSubmit();
-          }}
-          className="flex gap-2"
+          onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}
         >
-          <input
+          <textarea
             ref={inputRef}
-            type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Spør meg om noe... f.eks. «Hva bør jeg gjøre i dag?»"
-            className="flex-1 px-4 py-2.5 rounded-lg border bg-background text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+            onKeyDown={handleKeyDown}
+            placeholder="Spør om noe..."
+            rows={2}
+            className="w-full px-5 pt-4 pb-2 bg-transparent text-sm placeholder:text-muted-foreground resize-none focus:outline-none"
             disabled={loading}
           />
-          <Button type="submit" size="sm" disabled={loading || !input.trim()} className="gap-1.5 h-10 px-4">
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-            Spør
-          </Button>
+          <div className="flex items-center justify-end px-4 pb-3 gap-2">
+            <span className="text-[11px] text-muted-foreground mr-auto">Auto</span>
+            <button
+              type="submit"
+              disabled={loading || !input.trim()}
+              className="w-8 h-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-30 hover:opacity-90 transition-opacity"
+            >
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowUp className="w-4 h-4" />}
+            </button>
+          </div>
         </form>
 
         {/* Quick prompts */}
         {!response && !loading && (
-          <div className="flex flex-wrap gap-2 mt-3">
-            {QUICK_PROMPTS.map((prompt) => (
+          <div className="flex items-center gap-2 px-5 pb-4 overflow-x-auto">
+            {QUICK_PROMPTS.map((p) => (
               <button
-                key={prompt}
-                onClick={() => handleSubmit(prompt)}
-                className="text-xs px-3 py-1.5 rounded-full border bg-muted/50 text-muted-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-all cursor-pointer"
+                key={p.label}
+                onClick={() => handleSubmit(p.label)}
+                className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border bg-background text-muted-foreground hover:text-foreground hover:border-foreground/20 transition-all whitespace-nowrap cursor-pointer"
               >
-                {prompt}
+                <span>{p.icon}</span>
+                {p.label}
               </button>
             ))}
           </div>
         )}
       </div>
 
-      {/* Loading state */}
+      {/* Loading */}
       {loading && (
-        <div className="px-4 sm:px-6 py-8 text-center border-t">
-          <Loader2 className="w-5 h-5 animate-spin mx-auto mb-2 text-primary" />
-          <p className="text-sm text-muted-foreground">Analyserer CRM-data...</p>
+        <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
+          <Loader2 className="w-4 h-4 animate-spin text-primary" />
+          Analyserer CRM-data...
         </div>
       )}
 
       {/* Response */}
       {response && !loading && (
-        <div className="border-t">
+        <div className="mt-4 bg-card border rounded-xl overflow-hidden">
           {/* Summary */}
-          <div className="px-4 sm:px-6 py-4">
+          <div className="px-5 py-4">
             <div className="prose prose-sm max-w-none text-sm text-foreground [&_h1]:text-base [&_h2]:text-sm [&_h3]:text-sm [&_p]:leading-relaxed [&_ul]:my-1 [&_li]:my-0.5">
               <ReactMarkdown>{response.summary}</ReactMarkdown>
             </div>
@@ -223,37 +226,26 @@ export default function AiCommandBar({ context }: AiCommandBarProps) {
           {/* Action items */}
           {response.items.length > 0 && (
             <div className="border-t">
-              <div className="px-4 sm:px-6 py-3 bg-muted/30">
+              <div className="px-5 py-3 bg-muted/30">
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Handlingsliste</p>
               </div>
               <div className="divide-y">
                 {response.items.map((item, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center gap-3 px-4 sm:px-6 py-3 hover:bg-muted/30 transition-colors group"
-                  >
+                  <div key={i} className="flex items-center gap-3 px-5 py-3 hover:bg-muted/30 transition-colors group">
                     <div className={`w-2 h-2 rounded-full shrink-0 ${
                       item.prioritet === "høy" ? "bg-destructive" : item.prioritet === "medium" ? "bg-amber-500" : "bg-muted-foreground"
                     }`} />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <p className="text-sm font-medium truncate">{item.navn}</p>
-                        <Badge variant="outline" className={`text-[10px] shrink-0 ${prioritetColor[item.prioritet]}`}>
-                          {item.prioritet}
-                        </Badge>
+                        <Badge variant="outline" className={`text-[10px] shrink-0 ${prioritetColor[item.prioritet]}`}>{item.prioritet}</Badge>
                       </div>
                       <p className="text-xs text-muted-foreground truncate">{item.selskap}</p>
                       <p className="text-xs text-primary mt-0.5 font-medium">{item.handling}</p>
                     </div>
                     {item.entityId && item.entityType && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-xs gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={() => handleNavigate(item)}
-                      >
-                        <ExternalLink className="w-3 h-3" />
-                        Åpne
+                      <Button variant="ghost" size="sm" className="text-xs gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleNavigate(item)}>
+                        <ExternalLink className="w-3 h-3" /> Åpne
                       </Button>
                     )}
                   </div>
@@ -265,29 +257,20 @@ export default function AiCommandBar({ context }: AiCommandBarProps) {
           {/* Suggested tasks */}
           {response.suggested_tasks.length > 0 && (
             <div className="border-t">
-              <div className="px-4 sm:px-6 py-3 bg-muted/30 flex items-center justify-between">
+              <div className="px-5 py-3 bg-muted/30 flex items-center justify-between">
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Foreslåtte oppgaver</p>
                 <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-xs h-7 gap-1"
+                  variant="outline" size="sm" className="text-xs h-7 gap-1"
                   onClick={handleCreateAllTasks}
                   disabled={creatingTasks || createdTaskIds.size === response.suggested_tasks.length}
                 >
-                  {creatingTasks ? (
-                    <Loader2 className="w-3 h-3 animate-spin" />
-                  ) : (
-                    <ListChecks className="w-3 h-3" />
-                  )}
+                  {creatingTasks ? <Loader2 className="w-3 h-3 animate-spin" /> : <ListChecks className="w-3 h-3" />}
                   {createdTaskIds.size === response.suggested_tasks.length ? "Alle opprettet" : "Opprett alle"}
                 </Button>
               </div>
               <div className="divide-y">
                 {response.suggested_tasks.map((task, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center gap-3 px-4 sm:px-6 py-3 hover:bg-muted/30 transition-colors"
-                  >
+                  <div key={i} className="flex items-center gap-3 px-5 py-3 hover:bg-muted/30 transition-colors">
                     {createdTaskIds.has(i) ? (
                       <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
                     ) : (
@@ -299,21 +282,12 @@ export default function AiCommandBar({ context }: AiCommandBarProps) {
                         <Badge variant="outline" className={`text-[10px] ${
                           task.prioritet === "Høy" ? prioritetColor["høy"] :
                           task.prioritet === "Medium" ? prioritetColor["medium"] : prioritetColor["lav"]
-                        }`}>
-                          {task.prioritet}
-                        </Badge>
-                        {task.frist && (
-                          <span className="text-[10px] text-muted-foreground">Frist: {task.frist}</span>
-                        )}
+                        }`}>{task.prioritet}</Badge>
+                        {task.frist && <span className="text-[10px] text-muted-foreground">Frist: {task.frist}</span>}
                       </div>
                     </div>
                     {!createdTaskIds.has(i) && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-xs h-7 gap-1 shrink-0"
-                        onClick={() => handleCreateTask(task, i)}
-                      >
+                      <Button variant="outline" size="sm" className="text-xs h-7 gap-1 shrink-0" onClick={() => handleCreateTask(task, i)}>
                         Opprett
                       </Button>
                     )}
@@ -324,12 +298,9 @@ export default function AiCommandBar({ context }: AiCommandBarProps) {
           )}
 
           {/* Reset */}
-          <div className="px-4 sm:px-6 py-3 border-t bg-muted/20 flex justify-end">
+          <div className="px-5 py-3 border-t bg-muted/20 flex justify-end">
             <button
-              onClick={() => {
-                setResponse(null);
-                inputRef.current?.focus();
-              }}
+              onClick={() => { setResponse(null); inputRef.current?.focus(); }}
               className="text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
             >
               Nytt spørsmål
