@@ -262,7 +262,7 @@ export default function Salgsmuligheter() {
                             <div className="flex-1 min-w-0">
                               {/* Row 1: Company + MRR */}
                               <div className="flex items-center justify-between gap-2">
-                                <p className="text-xs text-muted-foreground truncate cursor-pointer hover:text-primary hover:underline" onClick={e => { e.stopPropagation(); navigate(`/selskaper/${deal.selskap_id}`); }}>{getSelskapNavn(deal.selskap_id)}</p>
+                                <p className="text-sm font-medium text-foreground truncate cursor-pointer hover:text-primary hover:underline" onClick={e => { e.stopPropagation(); navigate(`/selskaper/${deal.selskap_id}`); }}>{getSelskapNavn(deal.selskap_id)}</p>
                                 <span className="text-xs font-mono font-bold shrink-0">{nok(deal.forventet_mrr)}</span>
                               </div>
 
