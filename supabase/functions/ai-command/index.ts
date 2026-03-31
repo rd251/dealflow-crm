@@ -150,11 +150,12 @@ serve(async (req) => {
         // Fallback to plain text
         return new Response(
           JSON.stringify({
-            summary: data.choices?.[0]?.message?.content || "Beklager, noe gikk galt.",
-            items: [],
-            suggested_tasks: [],
-          }),
-          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        summary: data.choices?.[0]?.message?.content || "Beklager, noe gikk galt.",
+        items: [],
+        suggested_tasks: [],
+        suggested_activities: [],
+      }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
     }
