@@ -232,6 +232,33 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
           }
         }
       }
+
+      // Auto-apply status updates
+      if (aiData.suggested_status_updates?.length) {
+        for (let i = 0; i < aiData.suggested_status_updates.length; i++) {
+          if (aiData.suggested_status_updates[i].auto_apply) {
+            handleApplyStatusUpdate(aiData.suggested_status_updates[i], i);
+          }
+        }
+      }
+
+      // Auto-apply conversions
+      if (aiData.suggested_conversions?.length) {
+        for (let i = 0; i < aiData.suggested_conversions.length; i++) {
+          if (aiData.suggested_conversions[i].auto_apply) {
+            handleApplyConversion(aiData.suggested_conversions[i], i);
+          }
+        }
+      }
+
+      // Auto-create companies
+      if (aiData.suggested_companies?.length) {
+        for (let i = 0; i < aiData.suggested_companies.length; i++) {
+          if (aiData.suggested_companies[i].auto_create) {
+            handleCreateCompany(aiData.suggested_companies[i], i);
+          }
+        }
+      }
     } catch (e: any) {
       console.error("AI command error:", e);
       toast.error("Kunne ikke kontakte AI. Prøv igjen.");
