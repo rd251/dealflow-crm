@@ -102,18 +102,6 @@ export default function Leads() {
   const currentLead = selectedLead ? leads.find(l => l.id === selectedLead.id) || selectedLead : null;
   const currentIsLocked = currentLead ? isConverted(currentLead) : false;
 
-  const conversionBadge = (lead: Lead) => {
-    const type = getConversionType(lead);
-    if (!type) return null;
-    const isSalg = type === "salg";
-    return (
-      <Badge className={`text-[10px] gap-0.5 ${isSalg ? "bg-success/10 text-success" : "bg-primary/10 text-primary"}`}>
-        <Lock className="w-3 h-3" />
-        {isSalg ? "→ Salg" : "→ Partner"}
-      </Badge>
-    );
-  };
-
   return (
     <PageShell
       title="Leads"
