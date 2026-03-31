@@ -280,6 +280,13 @@ export default function Kalender() {
 
   useEffect(() => { fetchEvents(); }, [fetchEvents]);
 
+  // Auto-scroll week view to ~7 AM on mount
+  useEffect(() => {
+    if (viewMode === "week" && weekGridRef.current) {
+      weekGridRef.current.scrollTop = 7 * 60; // scroll to 07:00
+    }
+  }, [viewMode]);
+
   const filteredEvents = useMemo(() => {
     if (userFilter === "all") return events;
     if (userFilter === "mine" && user) return events.filter(e => e.ownerUserId === user.id);
