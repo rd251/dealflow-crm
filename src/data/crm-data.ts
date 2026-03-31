@@ -139,6 +139,7 @@ export interface Oppgave {
   lead_id: string;
   selskap_id: string;
   salgsmulighet_id: string;
+  kontakt_id: string;
   ansvarlig: string;
   frist: string;
   prioritet: Prioritet;

@@ -437,6 +437,7 @@ export type Database = {
           created_at: string
           frist: string | null
           id: string
+          kontakt_id: string | null
           lead_id: string | null
           notater: string | null
           oppgave: string
@@ -453,6 +454,7 @@ export type Database = {
           created_at?: string
           frist?: string | null
           id?: string
+          kontakt_id?: string | null
           lead_id?: string | null
           notater?: string | null
           oppgave: string
@@ -469,6 +471,7 @@ export type Database = {
           created_at?: string
           frist?: string | null
           id?: string
+          kontakt_id?: string | null
           lead_id?: string | null
           notater?: string | null
           oppgave?: string
@@ -481,6 +484,13 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "oppgaver_kontakt_id_fkey"
+            columns: ["kontakt_id"]
+            isOneToOne: false
+            referencedRelation: "kontakter"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "oppgaver_lead_id_fkey"
             columns: ["lead_id"]

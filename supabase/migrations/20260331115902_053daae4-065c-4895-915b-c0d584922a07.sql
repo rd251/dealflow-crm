@@ -1,0 +1,1 @@
+ALTER TABLE public.oppgaver ADD COLUMN kontakt_id uuid REFERENCES public.kontakter(id) ON DELETE SET NULL DEFAULT NULL;
