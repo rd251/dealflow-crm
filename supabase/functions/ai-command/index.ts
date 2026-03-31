@@ -165,6 +165,55 @@ serve(async (req) => {
                     },
                     required: ["tittel", "deltaker_navn", "dato", "start_tid", "slutt_tid"],
                   },
+                  suggested_status_updates: {
+                    type: "array",
+                    description: "Status updates for existing deals or leads. Generate when user asks to move/update/change status of a deal or lead.",
+                    items: {
+                      type: "object",
+                      properties: {
+                        entity_type: { type: "string", enum: ["salgsmulighet", "lead"], description: "Type of entity to update" },
+                        entity_id: { type: "string", description: "ID of the entity to update. MUST come from CRM context." },
+                        entity_name: { type: "string", description: "Name of the entity for display" },
+                        new_status: { type: "string", description: "New status value. For salgsmulighet: Ny mulighet|Møte booket|Demo gjennomført|Behov avklart|Løsning presentert|Tilbud sendt|Forhandling|Beslutning|Vunnet|Tapt. For lead: Ny|Kontaktet|Kvalifisert|Ikke aktuelt" },
+                        neste_steg: { type: "string", description: "Optional next step to set" },
+                        auto_apply: { type: "boolean", description: "Set true when user explicitly asks to update status. Applied automatically." },
+                      },
+                      required: ["entity_type", "entity_id", "entity_name", "new_status"],
+                    },
+                  },
+                  suggested_conversions: {
+                    type: "array",
+                    description: "Convert leads to salgsmuligheter. Generate when user asks to convert a lead to an opportunity/deal.",
+                    items: {
+                      type: "object",
+                      properties: {
+                        lead_id: { type: "string", description: "ID of the lead to convert. MUST come from CRM context." },
+                        lead_name: { type: "string", description: "Lead company name for display" },
+                        navn: { type: "string", description: "Name for the new salgsmulighet" },
+                        forventet_mrr: { type: "number", description: "Expected MRR if mentioned" },
+                        kontaktperson: { type: "string", description: "Contact person from the lead" },
+                        e_post: { type: "string", description: "Email from the lead" },
+                        telefon: { type: "string", description: "Phone from the lead" },
+                        use_case: { type: "string", description: "Use case from the lead" },
+                        auto_apply: { type: "boolean", description: "Set true when user explicitly asks to convert. Applied automatically." },
+                      },
+                      required: ["lead_id", "lead_name", "navn"],
+                    },
+                  },
+                  suggested_companies: {
+                    type: "array",
+                    description: "Companies to create. Generate when user asks to create/add a new company/selskap.",
+                    items: {
+                      type: "object",
+                      properties: {
+                        firmanavn: { type: "string", description: "Company name" },
+                        bransje: { type: "string", description: "Industry/branch if mentioned" },
+                        notater: { type: "string", description: "Notes about the company" },
+                        auto_create: { type: "boolean", description: "Set true when user explicitly asks to create. Created automatically." },
+                      },
+                      required: ["firmanavn"],
+                    },
+                  },
                 },
                 required: ["summary", "items", "suggested_tasks", "suggested_activities", "suggested_emails"],
               },
@@ -299,6 +348,24 @@ LEAD-OPPRETTING REGLER:
 - Bruk firmanavn fra konteksten, eller utled fra e-postdomene (f.eks. daniel@straye.no → "Straye" eller "straye.no")
 - Sett auto_create=true når brukeren eksplisitt ber om å registrere/opprette/legge inn et lead (f.eks. "registrer", "legg inn", "opprett lead for", "lag lead"). Da opprettes leadet automatisk uten bekreftelse.
 
+STATUSOPPDATERING REGLER:
+- Når brukeren ber om å flytte/oppdatere/endre status på en deal eller et lead, generer suggested_status_updates
+- Entity ID MÅ komme fra CRM-konteksten
+- Sett auto_apply=true når brukeren eksplisitt ber om oppdateringen
+- Gyldige statuser for salgsmulighet: Ny mulighet, Møte booket, Demo gjennomført, Behov avklart, Løsning presentert, Tilbud sendt, Forhandling, Beslutning, Vunnet, Tapt
+- Gyldige statuser for lead: Ny, Kontaktet, Kvalifisert, Ikke aktuelt
+
+KONVERTERING REGLER:
+- Når brukeren ber om å konvertere et lead til salgsmulighet/deal, generer suggested_conversions
+- Lead ID MÅ komme fra CRM-konteksten
+- Overfør kontaktperson, e-post, telefon og use_case fra leadet
+- Sett auto_apply=true når brukeren eksplisitt ber om konverteringen
+
+SELSKAPSOPPRETTING REGLER:
+- Når brukeren ber om å opprette/lage et selskap, generer suggested_companies
+- Sjekk at selskapet ikke allerede finnes i konteksten
+- Sett auto_create=true når brukeren eksplisitt ber om det
+
 CRM-DATA:
 `;
 
@@ -344,6 +411,13 @@ CRM-DATA:
     prompt += `\n## Åpne oppgaver (${context.oppgaver.length}):\n`;
     for (const o of context.oppgaver.slice(0, 10)) {
       prompt += `- ${o.oppgave} – frist: ${o.frist || "—"} – prioritet: ${o.prioritet} – status: ${o.status} – id: ${o.id}\n`;
+    }
+  }
+
+  if (context?.selskaper?.length > 0) {
+    prompt += `\n## Selskaper (${context.selskaper.length}):\n`;
+    for (const s of context.selskaper.slice(0, 20)) {
+      prompt += `- ${s.firmanavn} – status: ${s.kundestatus} – id: ${s.id}\n`;
     }
   }
 

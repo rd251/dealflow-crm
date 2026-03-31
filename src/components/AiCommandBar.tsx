@@ -86,6 +86,34 @@ interface SuggestedMeeting {
   salgsmulighet_id?: string;
 }
 
+interface SuggestedStatusUpdate {
+  entity_type: "salgsmulighet" | "lead";
+  entity_id: string;
+  entity_name: string;
+  new_status: string;
+  neste_steg?: string;
+  auto_apply?: boolean;
+}
+
+interface SuggestedConversion {
+  lead_id: string;
+  lead_name: string;
+  navn: string;
+  forventet_mrr?: number;
+  kontaktperson?: string;
+  e_post?: string;
+  telefon?: string;
+  use_case?: string;
+  auto_apply?: boolean;
+}
+
+interface SuggestedCompany {
+  firmanavn: string;
+  bransje?: string;
+  notater?: string;
+  auto_create?: boolean;
+}
+
 interface AiResponse {
   summary: string;
   items: AiItem[];
@@ -94,6 +122,9 @@ interface AiResponse {
   suggested_emails: SuggestedEmail[];
   suggested_leads?: SuggestedLead[];
   suggested_meeting?: SuggestedMeeting;
+  suggested_status_updates?: SuggestedStatusUpdate[];
+  suggested_conversions?: SuggestedConversion[];
+  suggested_companies?: SuggestedCompany[];
 }
 
 interface AiCommandBarProps {
@@ -129,6 +160,9 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
   const [creatingTasks, setCreatingTasks] = useState(false);
   const [createdTaskIds, setCreatedTaskIds] = useState<Set<number>>(new Set());
   const [createdActivityIds, setCreatedActivityIds] = useState<Set<number>>(new Set());
+  const [appliedStatusIds, setAppliedStatusIds] = useState<Set<number>>(new Set());
+  const [appliedConversionIds, setAppliedConversionIds] = useState<Set<number>>(new Set());
+  const [createdCompanyIds, setCreatedCompanyIds] = useState<Set<number>>(new Set());
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   // Email draft states
@@ -155,6 +189,9 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
     setEditingMeeting(null);
     setCreatedMeetingId(null);
     setCreatedLeadIds(new Set());
+    setAppliedStatusIds(new Set());
+    setAppliedConversionIds(new Set());
+    setCreatedCompanyIds(new Set());
 
     try {
       const { data, error } = await supabase.functions.invoke("ai-command", {
@@ -192,6 +229,33 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
           const activity = aiData.suggested_activities[i];
           if (activity.auto_create) {
             handleLogActivity(activity, i);
+          }
+        }
+      }
+
+      // Auto-apply status updates
+      if (aiData.suggested_status_updates?.length) {
+        for (let i = 0; i < aiData.suggested_status_updates.length; i++) {
+          if (aiData.suggested_status_updates[i].auto_apply) {
+            handleApplyStatusUpdate(aiData.suggested_status_updates[i], i);
+          }
+        }
+      }
+
+      // Auto-apply conversions
+      if (aiData.suggested_conversions?.length) {
+        for (let i = 0; i < aiData.suggested_conversions.length; i++) {
+          if (aiData.suggested_conversions[i].auto_apply) {
+            handleApplyConversion(aiData.suggested_conversions[i], i);
+          }
+        }
+      }
+
+      // Auto-create companies
+      if (aiData.suggested_companies?.length) {
+        for (let i = 0; i < aiData.suggested_companies.length; i++) {
+          if (aiData.suggested_companies[i].auto_create) {
+            handleCreateCompany(aiData.suggested_companies[i], i);
           }
         }
       }
@@ -294,6 +358,67 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
       toast.success(`Lead "${lead.firmanavn}" opprettet`);
     } catch {
       toast.error("Kunne ikke opprette lead");
+    }
+  };
+
+  const handleApplyStatusUpdate = async (update: SuggestedStatusUpdate, index: number) => {
+    try {
+      const table = update.entity_type === "salgsmulighet" ? "salgsmuligheter" : "leads";
+      const updateData: any = { status: update.new_status };
+      if (update.neste_steg) updateData.neste_steg = update.neste_steg;
+      if (update.new_status === "Vunnet") updateData.vunnet_dato = new Date().toISOString().split("T")[0];
+      if (update.new_status === "Tapt") updateData.tapt_dato = new Date().toISOString().split("T")[0];
+      
+      const { error } = await supabase.from(table).update(updateData).eq("id", update.entity_id);
+      if (error) throw error;
+      setAppliedStatusIds((prev) => new Set([...prev, index]));
+      toast.success(`Status oppdatert: ${update.entity_name} → ${update.new_status}`);
+    } catch {
+      toast.error("Kunne ikke oppdatere status");
+    }
+  };
+
+  const handleApplyConversion = async (conversion: SuggestedConversion, index: number) => {
+    try {
+      const today = new Date().toISOString().split("T")[0];
+      const { error: smError } = await supabase.from("salgsmuligheter").insert({
+        navn: conversion.navn,
+        kontaktperson: conversion.kontaktperson || "",
+        e_post: conversion.e_post || "",
+        telefon: conversion.telefon || "",
+        use_case: conversion.use_case || "",
+        forventet_mrr: conversion.forventet_mrr || 0,
+        status: "Ny mulighet",
+        opprettet_dato: today,
+        sist_aktivitet: today,
+      });
+      if (smError) throw smError;
+
+      await supabase.from("leads").update({
+        status: "Konvertert til salg" as any,
+        konvertert_dato: today,
+      }).eq("id", conversion.lead_id);
+
+      setAppliedConversionIds((prev) => new Set([...prev, index]));
+      toast.success(`Lead "${conversion.lead_name}" konvertert til salgsmulighet`);
+    } catch {
+      toast.error("Kunne ikke konvertere lead");
+    }
+  };
+
+  const handleCreateCompany = async (company: SuggestedCompany, index: number) => {
+    try {
+      const { error } = await supabase.from("selskaper").insert({
+        firmanavn: company.firmanavn,
+        bransje: company.bransje || "",
+        notater: company.notater || "",
+        kundestatus: "Ikke kunde",
+      });
+      if (error) throw error;
+      setCreatedCompanyIds((prev) => new Set([...prev, index]));
+      toast.success(`Selskap "${company.firmanavn}" opprettet`);
+    } catch {
+      toast.error("Kunne ikke opprette selskap");
     }
   };
 
@@ -808,6 +933,111 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
                       <span className="text-xs text-emerald-600 font-medium shrink-0">Opprettet ✓</span>
                     ) : (
                       <Button variant="outline" size="sm" className="text-xs h-7 gap-1 shrink-0" onClick={() => handleCreateLead(lead, i)}>
+                        Opprett
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Status updates */}
+          {response.suggested_status_updates && response.suggested_status_updates.length > 0 && (
+            <div className="border-t">
+              <div className="px-5 py-3 bg-muted/30 flex items-center gap-2">
+                <ArrowUp className="w-4 h-4 text-primary" />
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Statusoppdateringer</p>
+              </div>
+              <div className="divide-y">
+                {response.suggested_status_updates.map((update, i) => (
+                  <div key={i} className="flex items-center gap-3 px-5 py-3 hover:bg-muted/30 transition-colors">
+                    {appliedStatusIds.has(i) ? (
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                    ) : (
+                      <ArrowUp className="w-4 h-4 text-muted-foreground shrink-0" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{update.entity_name}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {update.entity_type === "salgsmulighet" ? "Salgsmulighet" : "Lead"} → <span className="font-medium">{update.new_status}</span>
+                        {update.neste_steg && <span> · Neste steg: {update.neste_steg}</span>}
+                      </p>
+                    </div>
+                    {appliedStatusIds.has(i) ? (
+                      <span className="text-xs text-emerald-600 font-medium shrink-0">Oppdatert ✓</span>
+                    ) : (
+                      <Button variant="outline" size="sm" className="text-xs h-7 gap-1 shrink-0" onClick={() => handleApplyStatusUpdate(update, i)}>
+                        Oppdater
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Conversions */}
+          {response.suggested_conversions && response.suggested_conversions.length > 0 && (
+            <div className="border-t">
+              <div className="px-5 py-3 bg-muted/30 flex items-center gap-2">
+                <ExternalLink className="w-4 h-4 text-primary" />
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Konverter leads</p>
+              </div>
+              <div className="divide-y">
+                {response.suggested_conversions.map((conv, i) => (
+                  <div key={i} className="flex items-center gap-3 px-5 py-3 hover:bg-muted/30 transition-colors">
+                    {appliedConversionIds.has(i) ? (
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                    ) : (
+                      <ExternalLink className="w-4 h-4 text-muted-foreground shrink-0" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{conv.lead_name} → Salgsmulighet</p>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
+                        {conv.forventet_mrr && <span>MRR: {conv.forventet_mrr} kr</span>}
+                        {conv.kontaktperson && <span>· {conv.kontaktperson}</span>}
+                      </div>
+                    </div>
+                    {appliedConversionIds.has(i) ? (
+                      <span className="text-xs text-emerald-600 font-medium shrink-0">Konvertert ✓</span>
+                    ) : (
+                      <Button variant="outline" size="sm" className="text-xs h-7 gap-1 shrink-0" onClick={() => handleApplyConversion(conv, i)}>
+                        Konverter
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* New companies */}
+          {response.suggested_companies && response.suggested_companies.length > 0 && (
+            <div className="border-t">
+              <div className="px-5 py-3 bg-muted/30 flex items-center gap-2">
+                <Building2 className="w-4 h-4 text-primary" />
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Nye selskaper</p>
+              </div>
+              <div className="divide-y">
+                {response.suggested_companies.map((company, i) => (
+                  <div key={i} className="flex items-center gap-3 px-5 py-3 hover:bg-muted/30 transition-colors">
+                    {createdCompanyIds.has(i) ? (
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                    ) : (
+                      <Building2 className="w-4 h-4 text-muted-foreground shrink-0" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{company.firmanavn}</p>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
+                        {company.bransje && <span>{company.bransje}</span>}
+                        {company.notater && <span>· {company.notater}</span>}
+                      </div>
+                    </div>
+                    {createdCompanyIds.has(i) ? (
+                      <span className="text-xs text-emerald-600 font-medium shrink-0">Opprettet ✓</span>
+                    ) : (
+                      <Button variant="outline" size="sm" className="text-xs h-7 gap-1 shrink-0" onClick={() => handleCreateCompany(company, i)}>
                         Opprett
                       </Button>
                     )}
