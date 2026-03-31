@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import MeetingPrepPanel from "@/components/MeetingPrepPanel";
 import FollowUpSection from "@/components/FollowUpSection";
+import AiCommandBar from "@/components/AiCommandBar";
 import { useFollowUps } from "@/hooks/use-follow-ups";
 import { useProfiles } from "@/hooks/use-profiles";
 import { supabase } from "@/integrations/supabase/client";
@@ -222,6 +223,23 @@ export default function Dashboard() {
     return `${days}d siden`;
   };
 
+  // ─── AI COMMAND CONTEXT ───
+  const aiContext = useMemo(() => ({
+    meetings: todayMeetings.map((m) => ({
+      ...m,
+      selskapNavn: m.selskap_id ? entityNames[m.selskap_id] || "—" : "—",
+    })),
+    followUps,
+    salgsmuligheter: salgsmuligheter
+      .filter((s) => s.status !== "Vunnet" && s.status !== "Tapt")
+      .map((sm) => ({
+        ...sm,
+        selskapNavn: selskaper.find((s) => s.id === sm.selskap_id)?.firmanavn || "—",
+      })),
+    leads: leads.filter((l) => l.status !== "Ikke aktuelt" && l.status !== "Konvertert til salg" && l.status !== "Konvertert til partner"),
+    oppgaver,
+  }), [todayMeetings, followUps, salgsmuligheter, leads, oppgaver, selskaper, entityNames]);
+
   return (
     <PageShell
       title="Dashboard"
@@ -235,6 +253,9 @@ export default function Dashboard() {
         </button>
       }
     >
+
+      {/* ─── AI COMMAND BAR ─── */}
+      <AiCommandBar context={aiContext} />
 
       {/* ─── SECTION 1: FOKUS I DAG ─── */}
       <div className="mb-6">
