@@ -446,6 +446,25 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
     }
   };
 
+  const handleCreateContact = async (contact: SuggestedContact, index: number) => {
+    try {
+      const { error } = await supabase.from("kontakter").insert({
+        navn: contact.navn,
+        e_post: contact.e_post || "",
+        telefon: contact.telefon || "",
+        rolle: contact.rolle || "",
+        selskap_id: contact.selskap_id || null,
+        linkedin: contact.linkedin || "",
+        notater: contact.notater || "",
+      });
+      if (error) throw error;
+      setCreatedContactIds((prev) => new Set([...prev, index]));
+      toast.success(`Kontakt "${contact.navn}" opprettet`);
+    } catch {
+      toast.error("Kunne ikke opprette kontakt");
+    }
+  };
+
   const handleNavigate = (item: AiItem) => {
     if (!item.entityId || !item.entityType) return;
     switch (item.entityType) {
