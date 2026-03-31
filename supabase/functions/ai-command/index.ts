@@ -285,6 +285,14 @@ OPPFØLGINGS-E-POST REGLER:
 - Prioriter: tilbud sendt uten svar > etter møte uten oppfølging > lang inaktivitet
 - Emnelinjen skal være kort og relevant
 
+LEAD-OPPRETTING REGLER:
+- Når brukeren nevner en ny person, selskap eller henvendelse som IKKE finnes i CRM-konteksten, ALLTID generer et suggested_leads-objekt
+- Sjekk alltid om personen/selskapet allerede finnes som lead, kontakt eller selskap i konteksten under
+- Ikke opprett leads for folk som allerede er i systemet
+- Utled kilde fra kontekst: e-post → "E-post", telefon → "Telefon", LinkedIn → "LinkedIn", nettskjema → "Nettside"
+- Inkluder relevant kontekst fra samtalen i notater-feltet
+- Bruk firmanavn fra konteksten, eller utled fra e-postdomene (f.eks. daniel@straye.no → "Straye" eller "straye.no")
+
 CRM-DATA:
 `;
 
