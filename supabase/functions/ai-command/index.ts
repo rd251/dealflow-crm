@@ -102,6 +102,7 @@ serve(async (req) => {
                         selskap_id: { type: "string", description: "ID of related company if applicable" },
                         lead_id: { type: "string", description: "ID of related lead if applicable" },
                         kontakt_id: { type: "string", description: "ID of related contact if applicable" },
+                        auto_create: { type: "boolean", description: "Set to true when the user explicitly asks to log/register an activity (e.g. 'logg aktivitet', 'registrer samtale', 'logg at jeg ringte'). The activity will be logged automatically without confirmation." },
                       },
                       required: ["type", "tittel", "beskrivelse"],
                     },
