@@ -361,6 +361,67 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
     }
   };
 
+  const handleApplyStatusUpdate = async (update: SuggestedStatusUpdate, index: number) => {
+    try {
+      const table = update.entity_type === "salgsmulighet" ? "salgsmuligheter" : "leads";
+      const updateData: any = { status: update.new_status };
+      if (update.neste_steg) updateData.neste_steg = update.neste_steg;
+      if (update.new_status === "Vunnet") updateData.vunnet_dato = new Date().toISOString().split("T")[0];
+      if (update.new_status === "Tapt") updateData.tapt_dato = new Date().toISOString().split("T")[0];
+      
+      const { error } = await supabase.from(table).update(updateData).eq("id", update.entity_id);
+      if (error) throw error;
+      setAppliedStatusIds((prev) => new Set([...prev, index]));
+      toast.success(`Status oppdatert: ${update.entity_name} → ${update.new_status}`);
+    } catch {
+      toast.error("Kunne ikke oppdatere status");
+    }
+  };
+
+  const handleApplyConversion = async (conversion: SuggestedConversion, index: number) => {
+    try {
+      const today = new Date().toISOString().split("T")[0];
+      const { error: smError } = await supabase.from("salgsmuligheter").insert({
+        navn: conversion.navn,
+        kontaktperson: conversion.kontaktperson || "",
+        e_post: conversion.e_post || "",
+        telefon: conversion.telefon || "",
+        use_case: conversion.use_case || "",
+        forventet_mrr: conversion.forventet_mrr || 0,
+        status: "Ny mulighet",
+        opprettet_dato: today,
+        sist_aktivitet: today,
+      });
+      if (smError) throw smError;
+
+      await supabase.from("leads").update({
+        status: "Konvertert til salg" as any,
+        konvertert_dato: today,
+      }).eq("id", conversion.lead_id);
+
+      setAppliedConversionIds((prev) => new Set([...prev, index]));
+      toast.success(`Lead "${conversion.lead_name}" konvertert til salgsmulighet`);
+    } catch {
+      toast.error("Kunne ikke konvertere lead");
+    }
+  };
+
+  const handleCreateCompany = async (company: SuggestedCompany, index: number) => {
+    try {
+      const { error } = await supabase.from("selskaper").insert({
+        firmanavn: company.firmanavn,
+        bransje: company.bransje || "",
+        notater: company.notater || "",
+        kundestatus: "Ikke kunde",
+      });
+      if (error) throw error;
+      setCreatedCompanyIds((prev) => new Set([...prev, index]));
+      toast.success(`Selskap "${company.firmanavn}" opprettet`);
+    } catch {
+      toast.error("Kunne ikke opprette selskap");
+    }
+  };
+
   const handleNavigate = (item: AiItem) => {
     if (!item.entityId || !item.entityType) return;
     switch (item.entityType) {
