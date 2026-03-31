@@ -19,6 +19,9 @@ export interface FollowUpItem {
   navn: string;
   kontaktperson: string | null;
   selskapNavn: string;
+  ePost: string | null;
+  selskapId: string | null;
+  kontaktId: string | null;
   sistAktivitet: string | null;
   sistAktivitetType: string | null;
   anbefalHandling: string;
