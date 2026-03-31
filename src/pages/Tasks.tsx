@@ -225,6 +225,8 @@ export default function Tasks() {
           const selskap = selskaper.find(s => s.id === task.selskap_id);
           const salgsmulighet = salgsmuligheter.find(s => s.id === task.salgsmulighet_id);
           const kontakt = kontakter.find(k => k.id === task.kontakt_id);
+          const emailKontakt = !kontakt && task.kontakt_id ? emailContacts.find(ec => ec.id === task.kontakt_id) : null;
+          const personNavn = kontakt?.navn || emailKontakt?.display_name || emailKontakt?.primary_email || null;
           const ansvarligNavn = task.ansvarlig ? getProfileName(task.ansvarlig) : null;
           return (
             <div key={task.id} className={`bg-card border rounded-xl p-4 flex items-center gap-3 animate-slide-in transition-opacity cursor-pointer hover:border-primary/30 ${task.status === "Ferdig" ? "opacity-50" : ""}`} onClick={() => canEdit && openEdit(task)}>
