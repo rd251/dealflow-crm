@@ -293,6 +293,7 @@ LEAD-OPPRETTING REGLER:
 - Utled kilde fra kontekst: e-post → "E-post", telefon → "Telefon", LinkedIn → "LinkedIn", nettskjema → "Nettside"
 - Inkluder relevant kontekst fra samtalen i notater-feltet
 - Bruk firmanavn fra konteksten, eller utled fra e-postdomene (f.eks. daniel@straye.no → "Straye" eller "straye.no")
+- Sett auto_create=true når brukeren eksplisitt ber om å registrere/opprette/legge inn et lead (f.eks. "registrer", "legg inn", "opprett lead for", "lag lead"). Da opprettes leadet automatisk uten bekreftelse.
 
 CRM-DATA:
 `;
