@@ -37,6 +37,7 @@ interface Aktivitet {
   lead_id: string | null;
   salgsmulighet_id: string | null;
   selskap_id: string | null;
+  aktivitet_kilde: string | null;
 }
 
 export function useFollowUps(
