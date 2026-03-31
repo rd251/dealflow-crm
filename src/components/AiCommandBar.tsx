@@ -68,6 +68,7 @@ interface SuggestedLead {
   notater?: string;
   use_case?: string;
   rolle_i_firma?: string;
+  auto_create?: boolean;
 }
 
 interface SuggestedMeeting {
