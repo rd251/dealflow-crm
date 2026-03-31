@@ -61,14 +61,11 @@ export default function Companies() {
   const [lukkedatoFra, setLukkedatoFra] = useState<Date | undefined>(undefined);
   const [lukkedatoTil, setLukkedatoTil] = useState<Date | undefined>(undefined);
 
-  // Hide selskaper with "Ikke kunde" status unless they have a won salgsmulighet or a project
+  // Only show companies that have an active agreement (not "Ikke kunde")
   const filtered = selskaper.filter(s => {
     if (!s.firmanavn.toLowerCase().includes(search.toLowerCase())) return false;
-    if (s.kundestatus === "Ikke kunde") {
-      const hasWonSm = salgsmuligheter.some(sm => sm.selskap_id === s.id && sm.status === "Vunnet");
-      const hasProject = prosjekter.some(p => p.selskap_id === s.id);
-      if (!hasWonSm && !hasProject) return false;
-    }
+    // Kundeforhold only shows companies with a customer relationship
+    if (s.kundestatus === "Ikke kunde") return false;
     if (lukkedatoFra || lukkedatoTil) {
       if (!s.lukkedato) return false;
       const ld = new Date(s.lukkedato);
