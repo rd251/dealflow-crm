@@ -57,7 +57,7 @@ interface CalendarEvent {
   ownerUserId?: string;
 }
 
-const HOURS = Array.from({ length: 14 }, (_, i) => i + 7);
+const HOURS = Array.from({ length: 24 }, (_, i) => i);
 const MEETING_COLOR = "bg-amber-500/15 border-amber-500 text-amber-800 dark:text-amber-300";
 const TASK_COLOR = "bg-violet-500/15 border-violet-500 text-violet-800 dark:text-violet-300";
 const TASK_HIGH_COLOR = "bg-destructive/15 border-destructive text-destructive";
