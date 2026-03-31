@@ -491,7 +491,14 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
             {QUICK_PROMPTS.map((p) => (
               <button
                 key={p.label}
-                onClick={() => handleSubmit(p.label)}
+                onClick={() => {
+                  if (p.prefill) {
+                    setInput(p.prefill);
+                    setTimeout(() => inputRef.current?.focus(), 50);
+                  } else {
+                    handleSubmit(p.label);
+                  }
+                }}
                 className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border bg-background text-muted-foreground hover:text-foreground hover:border-foreground/20 transition-all whitespace-nowrap cursor-pointer"
               >
                 <span>{p.icon}</span>
