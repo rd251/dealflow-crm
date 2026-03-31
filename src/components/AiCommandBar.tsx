@@ -190,7 +190,7 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
 
         {/* Quick prompts */}
         {!response && !loading && (
-          <div className="flex items-center gap-2 px-5 pb-4 overflow-x-auto">
+          <div className="flex items-center gap-2 px-5 pb-4 flex-wrap">
             {QUICK_PROMPTS.map((p) => (
               <button
                 key={p.label}
