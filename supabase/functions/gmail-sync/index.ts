@@ -438,22 +438,33 @@ async function syncGmailForUser(supabase: any, connection: any) {
       }
     }
 
-    // Find primary match for aktiviteter linking
+    // Find ALL matches for aktiviteter linking (don't break early)
     let kontaktId: string | null = null;
     let selskapId: string | null = null;
     let leadId: string | null = null;
     let salgsmulighetId: string | null = null;
 
     for (const email of allExternalEmails) {
-      const kontakt = emailToKontakt.get(email);
-      if (kontakt) {
-        kontaktId = kontakt.id;
-        selskapId = kontakt.selskap_id;
-        salgsmulighetId = kontaktToSalgsmulighet.get(kontakt.id) || null;
-        break;
+      if (!kontaktId) {
+        const kontakt = emailToKontakt.get(email);
+        if (kontakt) {
+          kontaktId = kontakt.id;
+          selskapId = kontakt.selskap_id;
+          salgsmulighetId = kontaktToSalgsmulighet.get(kontakt.id) || null;
+        }
       }
-      const lead = emailToLead.get(email);
-      if (lead) { leadId = lead; break; }
+      if (!leadId) {
+        const lead = emailToLead.get(email);
+        if (lead) leadId = lead;
+      }
+      if (!salgsmulighetId) {
+        for (const s of salgsmuligheter || []) {
+          if (s.e_post && s.e_post.toLowerCase() === email) {
+            salgsmulighetId = s.id;
+            break;
+          }
+        }
+      }
     }
 
     const emailList = Array.from(allExternalEmails);
