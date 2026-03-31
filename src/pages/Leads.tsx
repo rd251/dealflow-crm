@@ -179,38 +179,20 @@ export default function Leads() {
           return { success, errors };
         }}
       />
-      {/* Tabs */}
-      <div className="mb-4 flex items-center gap-4 border-b">
-        <button
-          className={`pb-2 text-sm font-medium border-b-2 transition-colors ${tab === "aktive" ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}
-          onClick={() => setTab("aktive")}
-        >
-          Aktive ({filtered.length})
-        </button>
-        <button
-          className={`pb-2 text-sm font-medium border-b-2 transition-colors ${tab === "arkiv" ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}
-          onClick={() => setTab("arkiv")}
-        >
-          Arkiv ({archivedLeads.length})
-        </button>
-      </div>
-
       <div className="mb-4 flex items-center gap-2">
         <div className="relative max-w-sm flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input placeholder="Søk leads..." className="pl-9" value={search} onChange={e => setSearch(e.target.value)} />
         </div>
-        {filterUtenOppfolging && tab === "aktive" && (
+        {filterUtenOppfolging && (
           <Badge variant="secondary" className="gap-1 cursor-pointer hover:bg-destructive/10" onClick={() => setFilterUtenOppfolging(false)}>
             Uten oppfølging ✕
           </Badge>
         )}
       </div>
 
-      {tab === "aktive" ? (
-        <>
-          {/* Mobile: card layout */}
-          {isMobile ? (
+      {/* Mobile: card layout */}
+      {isMobile ? (
             <div className="space-y-3">
               {filtered.map(lead => (
                 <div key={lead.id} className="bg-card border rounded-xl p-4 space-y-2" onClick={() => setSelectedLead(lead)}>
