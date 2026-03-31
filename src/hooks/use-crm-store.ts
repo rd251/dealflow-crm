@@ -620,7 +620,8 @@ function useCrmStoreInternal() {
         await dbUpsert("oppgaver", {
           id: item.id, oppgave: item.oppgave, user_id: user?.id ?? null,
           lead_id: emptyToNull(item.lead_id), selskap_id: emptyToNull(item.selskap_id),
-          salgsmulighet_id: emptyToNull(item.salgsmulighet_id), ansvarlig: emptyToNull(item.ansvarlig),
+          salgsmulighet_id: emptyToNull(item.salgsmulighet_id), kontakt_id: emptyToNull(item.kontakt_id),
+          ansvarlig: emptyToNull(item.ansvarlig),
           frist: emptyToNull(item.frist), prioritet: item.prioritet,
           status: item.status, paaminnelse: item.paaminnelse, notater: emptyToNull(item.notater),
         });
