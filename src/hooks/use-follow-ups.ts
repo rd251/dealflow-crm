@@ -8,7 +8,7 @@ const API_HEADERS = {
   "Content-Type": "application/json",
 };
 
-export type FollowUpType = "lead_stale" | "sm_stale" | "post_meeting" | "email_no_reply";
+export type FollowUpType = "lead_stale" | "sm_stale" | "post_meeting" | "email_no_reply" | "email_awaiting_reply" | "email_needs_reply";
 export type FollowUpPriority = "high" | "medium" | "low";
 
 export interface FollowUpItem {
