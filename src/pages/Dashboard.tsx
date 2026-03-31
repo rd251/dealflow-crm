@@ -239,7 +239,8 @@ export default function Dashboard() {
       })),
     leads: leads.filter((l) => l.status !== "Ikke aktuelt" && l.status !== "Konvertert til salg" && l.status !== "Konvertert til partner" && !l.konvertert_til && !l.konvertert_dato),
     oppgaver,
-  }), [todayMeetings, followUps, salgsmuligheter, leads, oppgaver, selskaper, entityNames]);
+    kontakter: kontakter.map((k) => ({ id: k.id, navn: k.navn, e_post: k.e_post, selskap_id: k.selskap_id })),
+  }), [todayMeetings, followUps, salgsmuligheter, leads, oppgaver, selskaper, entityNames, kontakter]);
 
   const { user } = useAuth();
   const currentUserName = useMemo(() => {
