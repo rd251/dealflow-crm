@@ -59,6 +59,17 @@ interface SuggestedEmail {
   prioritet: "høy" | "medium" | "lav";
 }
 
+interface SuggestedLead {
+  firmanavn: string;
+  kontaktperson: string;
+  e_post?: string;
+  telefon?: string;
+  kilde?: string;
+  notater?: string;
+  use_case?: string;
+  rolle_i_firma?: string;
+}
+
 interface SuggestedMeeting {
   tittel: string;
   deltaker_navn: string;
@@ -78,6 +89,7 @@ interface AiResponse {
   suggested_tasks: SuggestedTask[];
   suggested_activities: SuggestedActivity[];
   suggested_emails: SuggestedEmail[];
+  suggested_leads?: SuggestedLead[];
   suggested_meeting?: SuggestedMeeting;
 }
 
