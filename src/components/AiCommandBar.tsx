@@ -165,6 +165,17 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
       setResponse(aiData);
 
       // Auto-create leads flagged with auto_create
+      // Auto-create tasks flagged with auto_create
+      if (aiData.suggested_tasks?.length) {
+        for (let i = 0; i < aiData.suggested_tasks.length; i++) {
+          const task = aiData.suggested_tasks[i];
+          if (task.auto_create) {
+            handleCreateTask(task, i);
+          }
+        }
+      }
+
+      // Auto-create leads flagged with auto_create
       if (aiData.suggested_leads?.length) {
         for (let i = 0; i < aiData.suggested_leads.length; i++) {
           const lead = aiData.suggested_leads[i];
