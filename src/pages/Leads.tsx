@@ -60,26 +60,14 @@ export default function Leads() {
     l.status === "Konvertert til salg" ||
     l.status === "Konvertert til partner";
 
-  // Helper: is a lead archived (converted or "Ikke aktuelt")?
-  const isArchived = (l: Lead) => isConverted(l) || l.status === "Ikke aktuelt";
-
   // Derive conversion type for display when konvertert_til is missing (after reload)
   const getConversionType = (l: Lead): "" | "salg" | "partner" => {
     if (l.konvertert_til) return l.konvertert_til as "salg" | "partner";
     if (l.status === "Konvertert til salg") return "salg";
     if (l.status === "Konvertert til partner") return "partner";
-    // Has konvertert_dato but unknown type – default to salg
     if (l.konvertert_dato) return "salg";
     return "";
   };
-
-  const archivedLeads = useMemo(() => leads.filter(l => {
-    if (!isArchived(l)) return false;
-    return (
-      l.firmanavn.toLowerCase().includes(search.toLowerCase()) ||
-      l.kontaktperson.toLowerCase().includes(search.toLowerCase())
-    );
-  }), [leads, search]);
 
   const filtered = leads.filter(l => {
     // Hide archived leads from the active list
