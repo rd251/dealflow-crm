@@ -189,6 +189,9 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
     setEditingMeeting(null);
     setCreatedMeetingId(null);
     setCreatedLeadIds(new Set());
+    setAppliedStatusIds(new Set());
+    setAppliedConversionIds(new Set());
+    setCreatedCompanyIds(new Set());
 
     try {
       const { data, error } = await supabase.functions.invoke("ai-command", {
