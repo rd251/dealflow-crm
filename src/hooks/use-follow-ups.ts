@@ -54,7 +54,7 @@ export function useFollowUps(
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - 14);
     fetch(
-      `${API_URL}/aktiviteter?dato=gte.${cutoff.toISOString()}&order=dato.desc&limit=500&select=id,type,dato,beskrivelse,tittel,lead_id,salgsmulighet_id,selskap_id`,
+      `${API_URL}/aktiviteter?dato=gte.${cutoff.toISOString()}&order=dato.desc&limit=500&select=id,type,dato,beskrivelse,tittel,lead_id,salgsmulighet_id,selskap_id,aktivitet_kilde`,
       { headers: API_HEADERS }
     )
       .then((r) => (r.ok ? r.json() : []))
