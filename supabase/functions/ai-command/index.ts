@@ -102,6 +102,7 @@ serve(async (req) => {
                         selskap_id: { type: "string", description: "ID of related company if applicable" },
                         lead_id: { type: "string", description: "ID of related lead if applicable" },
                         kontakt_id: { type: "string", description: "ID of related contact if applicable" },
+                        auto_create: { type: "boolean", description: "Set to true when the user explicitly asks to log/register an activity (e.g. 'logg aktivitet', 'registrer samtale', 'logg at jeg ringte'). The activity will be logged automatically without confirmation." },
                       },
                       required: ["type", "tittel", "beskrivelse"],
                     },
@@ -253,6 +254,7 @@ REGLER:
 - Når du foreslår oppgaver, sett alltid realistiske frister (i dag eller innen noen dager)
 - Sett auto_create=true på oppgaver når brukeren eksplisitt ber om å opprette/lage en oppgave (f.eks. "opprett oppgave", "lag oppgave", "legg til oppgave"). Da opprettes oppgaven automatisk uten bekreftelse.
 - Når brukeren nevner samtaler, møter, e-poster eller andre interaksjoner, foreslå å logge disse som aktiviteter
+- Sett auto_create=true på aktiviteter når brukeren eksplisitt ber om å logge/registrere en aktivitet (f.eks. "logg at jeg ringte", "registrer samtale med", "logg møte med"). Da logges aktiviteten automatisk uten bekreftelse.
 - Hold svarene korte og handlingsorienterte
 - Bruk markdown for formatering
 - Alle IDer du refererer til MÅ komme fra konteksten under

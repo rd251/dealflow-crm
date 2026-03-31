@@ -43,6 +43,7 @@ interface SuggestedActivity {
   selskap_id?: string;
   lead_id?: string;
   kontakt_id?: string;
+  auto_create?: boolean;
 }
 
 interface SuggestedEmail {
@@ -181,6 +182,16 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
           const lead = aiData.suggested_leads[i];
           if (lead.auto_create) {
             handleCreateLead(lead, i);
+          }
+        }
+      }
+
+      // Auto-create activities flagged with auto_create
+      if (aiData.suggested_activities?.length) {
+        for (let i = 0; i < aiData.suggested_activities.length; i++) {
+          const activity = aiData.suggested_activities[i];
+          if (activity.auto_create) {
+            handleLogActivity(activity, i);
           }
         }
       }
