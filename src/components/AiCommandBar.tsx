@@ -176,6 +176,7 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
   const [appliedStatusIds, setAppliedStatusIds] = useState<Set<number>>(new Set());
   const [appliedConversionIds, setAppliedConversionIds] = useState<Set<number>>(new Set());
   const [createdCompanyIds, setCreatedCompanyIds] = useState<Set<number>>(new Set());
+  const [createdContactIds, setCreatedContactIds] = useState<Set<number>>(new Set());
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   // Email draft states
