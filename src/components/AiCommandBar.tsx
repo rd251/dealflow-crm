@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   Sparkles, Send, Loader2, ListChecks,
-  ExternalLink, CheckCircle2, ArrowUp,
+  ExternalLink, CheckCircle2, ArrowUp, PhoneCall,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -29,10 +29,21 @@ interface SuggestedTask {
   lead_id?: string;
 }
 
+interface SuggestedActivity {
+  type: "Telefonsamtale" | "E-post" | "LinkedIn-melding" | "SMS" | "Møte" | "Notat";
+  tittel: string;
+  beskrivelse: string;
+  salgsmulighet_id?: string;
+  selskap_id?: string;
+  lead_id?: string;
+  kontakt_id?: string;
+}
+
 interface AiResponse {
   summary: string;
   items: AiItem[];
   suggested_tasks: SuggestedTask[];
+  suggested_activities: SuggestedActivity[];
 }
 
 interface AiCommandBarProps {
@@ -60,6 +71,7 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
   const [response, setResponse] = useState<AiResponse | null>(null);
   const [creatingTasks, setCreatingTasks] = useState(false);
   const [createdTaskIds, setCreatedTaskIds] = useState<Set<number>>(new Set());
+  const [createdActivityIds, setCreatedActivityIds] = useState<Set<number>>(new Set());
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSubmit = async (prompt?: string) => {
@@ -69,6 +81,7 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
     setLoading(true);
     setResponse(null);
     setCreatedTaskIds(new Set());
+    setCreatedActivityIds(new Set());
 
     try {
       const { data, error } = await supabase.functions.invoke("ai-command", {
@@ -129,6 +142,27 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
     }
     setCreatingTasks(false);
     toast.success(`${success} oppgaver opprettet`);
+  };
+
+  const handleLogActivity = async (activity: SuggestedActivity, index: number) => {
+    try {
+      const { error } = await supabase.from("aktiviteter").insert({
+        type: activity.type,
+        tittel: activity.tittel,
+        beskrivelse: activity.beskrivelse,
+        dato: new Date().toISOString(),
+        salgsmulighet_id: activity.salgsmulighet_id || null,
+        selskap_id: activity.selskap_id || null,
+        lead_id: activity.lead_id || null,
+        kontakt_id: activity.kontakt_id || null,
+        aktivitet_kilde: "ai-assistent",
+      });
+      if (error) throw error;
+      setCreatedActivityIds((prev) => new Set([...prev, index]));
+      toast.success("Aktivitet logget");
+    } catch {
+      toast.error("Kunne ikke logge aktivitet");
+    }
   };
 
   const handleNavigate = (item: AiItem) => {
@@ -289,6 +323,36 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
                     {!createdTaskIds.has(i) && (
                       <Button variant="outline" size="sm" className="text-xs h-7 gap-1 shrink-0" onClick={() => handleCreateTask(task, i)}>
                         Opprett
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Suggested activities */}
+          {response.suggested_activities?.length > 0 && (
+            <div className="border-t">
+              <div className="px-5 py-3 bg-muted/30">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Foreslåtte aktiviteter å logge</p>
+              </div>
+              <div className="divide-y">
+                {response.suggested_activities.map((activity, i) => (
+                  <div key={i} className="flex items-center gap-3 px-5 py-3 hover:bg-muted/30 transition-colors">
+                    {createdActivityIds.has(i) ? (
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                    ) : (
+                      <PhoneCall className="w-4 h-4 text-muted-foreground shrink-0" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{activity.tittel}</p>
+                      <p className="text-xs text-muted-foreground truncate">{activity.beskrivelse}</p>
+                      <Badge variant="outline" className="text-[10px] mt-0.5">{activity.type}</Badge>
+                    </div>
+                    {!createdActivityIds.has(i) && (
+                      <Button variant="outline" size="sm" className="text-xs h-7 gap-1 shrink-0" onClick={() => handleLogActivity(activity, i)}>
+                        Logg
                       </Button>
                     )}
                   </div>

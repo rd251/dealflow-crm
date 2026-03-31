@@ -88,8 +88,25 @@ serve(async (req) => {
                       required: ["oppgave", "prioritet"],
                     },
                   },
+                  suggested_activities: {
+                    type: "array",
+                    description: "Activities that can be logged in the CRM. Suggest these when the user mentions calls, emails, meetings or other interactions they have completed or plan to do.",
+                    items: {
+                      type: "object",
+                      properties: {
+                        type: { type: "string", enum: ["Telefonsamtale", "E-post", "LinkedIn-melding", "SMS", "Møte", "Notat"], description: "Type of activity" },
+                        tittel: { type: "string", description: "Short title for the activity" },
+                        beskrivelse: { type: "string", description: "Description of what happened or should be logged" },
+                        salgsmulighet_id: { type: "string", description: "ID of related sales opportunity if applicable" },
+                        selskap_id: { type: "string", description: "ID of related company if applicable" },
+                        lead_id: { type: "string", description: "ID of related lead if applicable" },
+                        kontakt_id: { type: "string", description: "ID of related contact if applicable" },
+                      },
+                      required: ["type", "tittel", "beskrivelse"],
+                    },
+                  },
                 },
-                required: ["summary", "items", "suggested_tasks"],
+                required: ["summary", "items", "suggested_tasks", "suggested_activities"],
               },
             },
           },
@@ -133,11 +150,12 @@ serve(async (req) => {
         // Fallback to plain text
         return new Response(
           JSON.stringify({
-            summary: data.choices?.[0]?.message?.content || "Beklager, noe gikk galt.",
-            items: [],
-            suggested_tasks: [],
-          }),
-          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        summary: data.choices?.[0]?.message?.content || "Beklager, noe gikk galt.",
+        items: [],
+        suggested_tasks: [],
+        suggested_activities: [],
+      }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
     }
@@ -145,10 +163,11 @@ serve(async (req) => {
     // Fallback if no tool call
     return new Response(
       JSON.stringify({
-        summary: data.choices?.[0]?.message?.content || "Beklager, noe gikk galt.",
-        items: [],
-        suggested_tasks: [],
-      }),
+            summary: data.choices?.[0]?.message?.content || "Beklager, noe gikk galt.",
+            items: [],
+            suggested_tasks: [],
+            suggested_activities: [],
+          }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e) {
@@ -171,6 +190,7 @@ REGLER:
 - Prioriter alltid entiteter med manglende/gammel aktivitet
 - Aldri foreslå handlinger på ferdige deals (Vunnet/Tapt)
 - Når du foreslår oppgaver, sett alltid realistiske frister (i dag eller innen noen dager)
+- Når brukeren nevner samtaler, møter, e-poster eller andre interaksjoner, foreslå å logge disse som aktiviteter
 - Hold svarene korte og handlingsorienterte
 - Bruk markdown for formatering
 - Alle IDer du refererer til MÅ komme fra konteksten under
