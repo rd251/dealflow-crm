@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import PageShell from "@/components/PageShell";
 import { useCrmStore } from "@/hooks/use-crm-store";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -33,6 +33,28 @@ export default function Tasks() {
   const [editingTask, setEditingTask] = useState<Oppgave | null>(null);
   const [filter, setFilter] = useState<"alle" | "forfalte" | "idag" | "uke">("alle");
   const [form, setForm] = useState({ oppgave: "", frist: "", prioritet: "Medium" as Prioritet, lead_id: "", selskap_id: "", salgsmulighet_id: "", kontakt_id: "", ansvarlig: "", notater: "" });
+
+  // Fetch email contacts and merge with CRM kontakter for a unified person picker
+  const [emailContacts, setEmailContacts] = useState<{ id: string; display_name: string; primary_email: string }[]>([]);
+  useEffect(() => {
+    supabase.from("email_contacts").select("id, display_name, primary_email").then(({ data }) => {
+      if (data) setEmailContacts(data);
+    });
+  }, []);
+
+  const allPersons = useMemo(() => {
+    const list: { id: string; label: string; type: "kontakt" | "e-post" }[] = [];
+    for (const k of kontakter) {
+      list.push({ id: k.id, label: `${k.navn}${k.rolle ? ` – ${k.rolle}` : ""}`, type: "kontakt" });
+    }
+    const crmEmails = new Set(kontakter.map(k => k.e_post?.toLowerCase()).filter(Boolean));
+    for (const ec of emailContacts) {
+      if (!crmEmails.has(ec.primary_email.toLowerCase())) {
+        list.push({ id: ec.id, label: `${ec.display_name || ec.primary_email} (e-post)`, type: "e-post" });
+      }
+    }
+    return list;
+  }, [kontakter, emailContacts]);
 
   const today = new Date().toISOString().split("T")[0];
   const weekEnd = new Date(Date.now() + 7 * 86400000).toISOString().split("T")[0];
@@ -173,8 +195,8 @@ export default function Tasks() {
                 {selskaper.map(s => <option key={s.id} value={s.id}>{s.firmanavn}</option>)}
               </select>
               <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background" value={form.kontakt_id} onChange={e => setForm(f => ({ ...f, kontakt_id: e.target.value }))}>
-                <option value="">Knytt til kontakt (valgfritt)</option>
-                {kontakter.map(k => <option key={k.id} value={k.id}>{k.navn}{k.rolle ? ` – ${k.rolle}` : ""}</option>)}
+                <option value="">Knytt til person (valgfritt)</option>
+                {allPersons.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
               </select>
               <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background" value={form.ansvarlig} onChange={e => setForm(f => ({ ...f, ansvarlig: e.target.value }))}>
                 <option value="">Velg ansvarlig (valgfritt)</option>
@@ -203,6 +225,8 @@ export default function Tasks() {
           const selskap = selskaper.find(s => s.id === task.selskap_id);
           const salgsmulighet = salgsmuligheter.find(s => s.id === task.salgsmulighet_id);
           const kontakt = kontakter.find(k => k.id === task.kontakt_id);
+          const emailKontakt = !kontakt && task.kontakt_id ? emailContacts.find(ec => ec.id === task.kontakt_id) : null;
+          const personNavn = kontakt?.navn || emailKontakt?.display_name || emailKontakt?.primary_email || null;
           const ansvarligNavn = task.ansvarlig ? getProfileName(task.ansvarlig) : null;
           return (
             <div key={task.id} className={`bg-card border rounded-xl p-4 flex items-center gap-3 animate-slide-in transition-opacity cursor-pointer hover:border-primary/30 ${task.status === "Ferdig" ? "opacity-50" : ""}`} onClick={() => canEdit && openEdit(task)}>
@@ -232,7 +256,7 @@ export default function Tasks() {
                   )}
                   {selskap && <span className="truncate flex items-center gap-0.5"><Building2 className="w-3 h-3" /> {selskap.firmanavn}</span>}
                   {salgsmulighet && <span className="truncate flex items-center gap-0.5"><Target className="w-3 h-3" /> {salgsmulighet.navn}</span>}
-                  {kontakt && <span className="truncate flex items-center gap-0.5"><User className="w-3 h-3" /> {kontakt.navn}</span>}
+                  {personNavn && <span className="truncate flex items-center gap-0.5"><User className="w-3 h-3" /> {personNavn}</span>}
                   {canEdit ? (
                     <span className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
                       <select
@@ -295,8 +319,8 @@ export default function Tasks() {
                 {selskaper.map(s => <option key={s.id} value={s.id}>{s.firmanavn}</option>)}
               </select>
               <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background" value={editingTask.kontakt_id} onChange={e => setEditingTask(t => t ? { ...t, kontakt_id: e.target.value } : t)}>
-                <option value="">Knytt til kontakt (valgfritt)</option>
-                {kontakter.map(k => <option key={k.id} value={k.id}>{k.navn}{k.rolle ? ` – ${k.rolle}` : ""}</option>)}
+                <option value="">Knytt til person (valgfritt)</option>
+                {allPersons.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
               </select>
               <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background" value={editingTask.ansvarlig} onChange={e => setEditingTask(t => t ? { ...t, ansvarlig: e.target.value } : t)}>
                 <option value="">Velg ansvarlig (valgfritt)</option>
