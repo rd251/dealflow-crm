@@ -745,6 +745,43 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
             </div>
           )}
 
+          {/* Suggested leads */}
+          {response.suggested_leads && response.suggested_leads.length > 0 && (
+            <div className="border-t">
+              <div className="px-5 py-3 bg-muted/30 flex items-center gap-2">
+                <Building2 className="w-4 h-4 text-primary" />
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Nye leads å opprette</p>
+              </div>
+              <div className="divide-y">
+                {response.suggested_leads.map((lead, i) => (
+                  <div key={i} className="flex items-center gap-3 px-5 py-3 hover:bg-muted/30 transition-colors">
+                    {createdLeadIds.has(i) ? (
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                    ) : (
+                      <Building2 className="w-4 h-4 text-muted-foreground shrink-0" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{lead.firmanavn}</p>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5 flex-wrap">
+                        {lead.kontaktperson && <span>{lead.kontaktperson}</span>}
+                        {lead.e_post && <span>· {lead.e_post}</span>}
+                        {lead.kilde && <Badge variant="outline" className="text-[10px]">{lead.kilde}</Badge>}
+                      </div>
+                      {lead.notater && <p className="text-xs text-muted-foreground mt-0.5 truncate">{lead.notater}</p>}
+                    </div>
+                    {createdLeadIds.has(i) ? (
+                      <span className="text-xs text-emerald-600 font-medium shrink-0">Opprettet ✓</span>
+                    ) : (
+                      <Button variant="outline" size="sm" className="text-xs h-7 gap-1 shrink-0" onClick={() => handleCreateLead(lead, i)}>
+                        Opprett
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Action items */}
           {response.items.length > 0 && (
             <div className="border-t">
