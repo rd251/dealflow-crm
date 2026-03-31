@@ -34,6 +34,28 @@ export default function Tasks() {
   const [filter, setFilter] = useState<"alle" | "forfalte" | "idag" | "uke">("alle");
   const [form, setForm] = useState({ oppgave: "", frist: "", prioritet: "Medium" as Prioritet, lead_id: "", selskap_id: "", salgsmulighet_id: "", kontakt_id: "", ansvarlig: "", notater: "" });
 
+  // Fetch email contacts and merge with CRM kontakter for a unified person picker
+  const [emailContacts, setEmailContacts] = useState<{ id: string; display_name: string; primary_email: string }[]>([]);
+  useEffect(() => {
+    supabase.from("email_contacts").select("id, display_name, primary_email").then(({ data }) => {
+      if (data) setEmailContacts(data);
+    });
+  }, []);
+
+  const allPersons = useMemo(() => {
+    const list: { id: string; label: string; type: "kontakt" | "e-post" }[] = [];
+    for (const k of kontakter) {
+      list.push({ id: k.id, label: `${k.navn}${k.rolle ? ` – ${k.rolle}` : ""}`, type: "kontakt" });
+    }
+    const crmEmails = new Set(kontakter.map(k => k.e_post?.toLowerCase()).filter(Boolean));
+    for (const ec of emailContacts) {
+      if (!crmEmails.has(ec.primary_email.toLowerCase())) {
+        list.push({ id: ec.id, label: `${ec.display_name || ec.primary_email} (e-post)`, type: "e-post" });
+      }
+    }
+    return list;
+  }, [kontakter, emailContacts]);
+
   const today = new Date().toISOString().split("T")[0];
   const weekEnd = new Date(Date.now() + 7 * 86400000).toISOString().split("T")[0];
 
