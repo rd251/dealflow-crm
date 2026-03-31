@@ -37,6 +37,8 @@ export default function FollowUpSection({ items, loading, onDismiss }: FollowUpS
     sm_stale: "Salg inaktiv",
     post_meeting: "Etter møte",
     email_no_reply: "Ubesvart e-post",
+    email_awaiting_reply: "Venter på svar",
+    email_needs_reply: "Må svare",
   };
 
   const typeColor: Record<string, string> = {
@@ -44,6 +46,8 @@ export default function FollowUpSection({ items, loading, onDismiss }: FollowUpS
     sm_stale: "bg-destructive/10 text-destructive border-destructive/20",
     post_meeting: "bg-primary/10 text-primary border-primary/20",
     email_no_reply: "bg-amber-500/10 text-amber-600 border-amber-200",
+    email_awaiting_reply: "bg-amber-500/10 text-amber-600 border-amber-200",
+    email_needs_reply: "bg-destructive/10 text-destructive border-destructive/20",
   };
 
   const priorityIcon: Record<string, string> = {

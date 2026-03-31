@@ -8,7 +8,7 @@ const API_HEADERS = {
   "Content-Type": "application/json",
 };
 
-export type FollowUpType = "lead_stale" | "sm_stale" | "post_meeting" | "email_no_reply";
+export type FollowUpType = "lead_stale" | "sm_stale" | "post_meeting" | "email_no_reply" | "email_awaiting_reply" | "email_needs_reply";
 export type FollowUpPriority = "high" | "medium" | "low";
 
 export interface FollowUpItem {
@@ -37,6 +37,7 @@ interface Aktivitet {
   lead_id: string | null;
   salgsmulighet_id: string | null;
   selskap_id: string | null;
+  aktivitet_kilde: string | null;
 }
 
 export function useFollowUps(
@@ -53,7 +54,7 @@ export function useFollowUps(
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - 14);
     fetch(
-      `${API_URL}/aktiviteter?dato=gte.${cutoff.toISOString()}&order=dato.desc&limit=500&select=id,type,dato,beskrivelse,tittel,lead_id,salgsmulighet_id,selskap_id`,
+      `${API_URL}/aktiviteter?dato=gte.${cutoff.toISOString()}&order=dato.desc&limit=500&select=id,type,dato,beskrivelse,tittel,lead_id,salgsmulighet_id,selskap_id,aktivitet_kilde`,
       { headers: API_HEADERS }
     )
       .then((r) => (r.ok ? r.json() : []))
@@ -69,6 +70,24 @@ export function useFollowUps(
     const getSelskapNavn = (selskapId: string | null) => {
       if (!selskapId) return "—";
       return selskaper.find((s) => s.id === selskapId)?.firmanavn || "—";
+    };
+
+    // Helper: if a lead has been converted, find the matching salgsmulighet
+    const resolveEntity = (entityId: string, entityType: "lead" | "salgsmulighet"): { id: string; type: "lead" | "salgsmulighet" } => {
+      if (entityType === "lead") {
+        const lead = leads.find((l) => l.id === entityId);
+        if (lead && (lead.status === "Konvertert til salg" || lead.status === "Konvertert til partner")) {
+          const sm = salgsmuligheter.find((s) => s.kontaktperson === lead.kontaktperson && s.navn === lead.firmanavn);
+          if (sm) return { id: sm.id, type: "salgsmulighet" };
+          // Also check by selskap match
+          const selskap = selskaper.find((s) => s.firmanavn === lead.firmanavn);
+          if (selskap) {
+            const smBySelskap = salgsmuligheter.find((s) => s.selskap_id === selskap.id);
+            if (smBySelskap) return { id: smBySelskap.id, type: "salgsmulighet" };
+          }
+        }
+      }
+      return { id: entityId, type: entityType };
     };
 
     const getLastActivity = (entityId: string, entityType: "lead" | "salgsmulighet") => {
@@ -197,16 +216,21 @@ export function useFollowUps(
       });
     });
 
-    // 4. Etter sendt e-post - ingen svar innen 2-3 dager
+    // 4. E-post uten oppfølging – split sendt vs mottatt
     const emailActs = aktiviteter.filter((a) => a.type === "E-post");
     emailActs.forEach((email) => {
       const emailDate = new Date(email.dato);
       const hoursSince = differenceInHours(now, emailDate);
       if (hoursSince < 48 || hoursSince > 168) return;
 
-      const entityId = email.salgsmulighet_id || email.lead_id;
-      const entityType = email.salgsmulighet_id ? "salgsmulighet" : "lead";
+      let entityId = email.salgsmulighet_id || email.lead_id;
+      let entityType: "lead" | "salgsmulighet" = email.salgsmulighet_id ? "salgsmulighet" : "lead";
       if (!entityId) return;
+
+      // Resolve converted leads to their salgsmulighet
+      const resolved = resolveEntity(entityId, entityType);
+      entityId = resolved.id;
+      entityType = resolved.type;
 
       // Check for reply
       const field = entityType === "lead" ? "lead_id" : "salgsmulighet_id";
@@ -214,6 +238,13 @@ export function useFollowUps(
         (a) => a[field] === entityId && new Date(a.dato) > emailDate && a.id !== email.id
       );
       if (reply) return;
+      // Also check original lead_id for replies
+      if (entityId !== email.lead_id && email.lead_id) {
+        const replyOnLead = aktiviteter.find(
+          (a) => a.lead_id === email.lead_id && new Date(a.dato) > emailDate && a.id !== email.id
+        );
+        if (replyOnLead) return;
+      }
       if (items.find((i) => i.entityId === entityId)) return;
 
       const entity = entityType === "salgsmulighet"
@@ -222,9 +253,12 @@ export function useFollowUps(
       if (!entity) return;
       if (entityType === "salgsmulighet" && (entity.status === "Vunnet" || entity.status === "Tapt")) return;
 
+      const isSent = email.aktivitet_kilde === "gmail_sendt";
+      const followUpType: FollowUpType = isSent ? "email_awaiting_reply" : "email_needs_reply";
+
       items.push({
-        id: `email-noreply-${email.id}`,
-        type: "email_no_reply",
+        id: `email-${isSent ? "await" : "reply"}-${email.id}`,
+        type: followUpType,
         entityId,
         entityType,
         navn: entityType === "salgsmulighet" ? entity.navn : (entity.kontaktperson || entity.firmanavn),
@@ -232,9 +266,9 @@ export function useFollowUps(
         selskapNavn: entityType === "salgsmulighet" ? getSelskapNavn(entity.selskap_id) : entity.firmanavn,
         sistAktivitet: email.dato,
         sistAktivitetType: "E-post",
-        anbefalHandling: "Følg opp e-post uten svar",
+        anbefalHandling: isSent ? "Følg opp – venter på svar" : "Svar på e-post",
         verdi: entityType === "salgsmulighet" ? (entity.forventet_mrr || 0) * (entity.kontraktslengde_mnd || 12) : 0,
-        priority: "medium",
+        priority: isSent ? "medium" : "high",
         hoursInactive: hoursSince,
         dismissed: false,
       });
