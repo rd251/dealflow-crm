@@ -18,6 +18,7 @@ import FollowUpSection from "@/components/FollowUpSection";
 import AiCommandBar from "@/components/AiCommandBar";
 import { useFollowUps } from "@/hooks/use-follow-ups";
 import { useProfiles } from "@/hooks/use-profiles";
+import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 
