@@ -246,11 +246,11 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
         kontaktperson: lead.kontaktperson || "",
         e_post: lead.e_post || "",
         telefon: lead.telefon || "",
-        kilde: safeKilde,
+        kilde: safeKilde as any,
         notater: lead.notater || "",
         use_case: lead.use_case || "",
         rolle_i_firma: lead.rolle_i_firma || "",
-        status: "Ny",
+        status: "Ny" as const,
         opprettet_dato: today,
         sist_aktivitet: today,
       });
