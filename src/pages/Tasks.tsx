@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import PageShell from "@/components/PageShell";
+import PersonSearchPicker from "@/components/PersonSearchPicker";
 import { useCrmStore } from "@/hooks/use-crm-store";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/use-auth";
