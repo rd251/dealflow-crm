@@ -114,6 +114,18 @@ interface SuggestedCompany {
   auto_create?: boolean;
 }
 
+interface SuggestedContact {
+  navn: string;
+  e_post?: string;
+  telefon?: string;
+  rolle?: string;
+  selskap_id?: string;
+  selskap_navn?: string;
+  linkedin?: string;
+  notater?: string;
+  auto_create?: boolean;
+}
+
 interface AiResponse {
   summary: string;
   items: AiItem[];
@@ -125,6 +137,7 @@ interface AiResponse {
   suggested_status_updates?: SuggestedStatusUpdate[];
   suggested_conversions?: SuggestedConversion[];
   suggested_companies?: SuggestedCompany[];
+  suggested_contacts?: SuggestedContact[];
 }
 
 interface AiCommandBarProps {
