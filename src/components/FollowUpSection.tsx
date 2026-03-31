@@ -111,6 +111,14 @@ export default function FollowUpSection({ items, loading, onDismiss }: FollowUpS
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
+
+      // Update sist_aktivitet on the entity so it no longer shows as inactive
+      if (messageDialog) {
+        const today = new Date().toISOString().split("T")[0];
+        const table = messageDialog.entityType === "lead" ? "leads" : "salgsmuligheter";
+        await supabase.from(table).update({ sist_aktivitet: today }).eq("id", messageDialog.entityId);
+      }
+
       toast.success("E-post sendt via Gmail!");
       setMessageDialog(null);
       if (messageDialog) onDismiss(messageDialog.id);
