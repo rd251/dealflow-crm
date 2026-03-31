@@ -155,9 +155,9 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
   };
 
   return (
-    <div className="mb-8 max-w-2xl">
+    <div className="mb-8 max-w-3xl mx-auto">
       {/* Greeting */}
-      <h1 className="text-2xl sm:text-3xl font-semibold text-foreground mb-6">
+      <h1 className="text-2xl sm:text-3xl font-semibold text-foreground mb-6 text-center">
         {getGreeting()}{userName ? `, ${userName}` : ""}.
       </h1>
 
