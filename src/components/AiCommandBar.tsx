@@ -43,6 +43,7 @@ interface SuggestedActivity {
   selskap_id?: string;
   lead_id?: string;
   kontakt_id?: string;
+  auto_create?: boolean;
 }
 
 interface SuggestedEmail {
