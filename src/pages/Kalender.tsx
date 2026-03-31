@@ -711,7 +711,7 @@ export default function Kalender() {
             })}
           </div>
 
-          <div className="grid grid-cols-[60px_repeat(7,1fr)] max-h-[600px] overflow-y-auto">
+          <div ref={weekGridRef} className="grid grid-cols-[60px_repeat(7,1fr)] max-h-[600px] overflow-y-auto">
             {/* Hour labels column */}
             <div className="row-span-1">
               {HOURS.map(hour => (
