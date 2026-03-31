@@ -86,6 +86,34 @@ interface SuggestedMeeting {
   salgsmulighet_id?: string;
 }
 
+interface SuggestedStatusUpdate {
+  entity_type: "salgsmulighet" | "lead";
+  entity_id: string;
+  entity_name: string;
+  new_status: string;
+  neste_steg?: string;
+  auto_apply?: boolean;
+}
+
+interface SuggestedConversion {
+  lead_id: string;
+  lead_name: string;
+  navn: string;
+  forventet_mrr?: number;
+  kontaktperson?: string;
+  e_post?: string;
+  telefon?: string;
+  use_case?: string;
+  auto_apply?: boolean;
+}
+
+interface SuggestedCompany {
+  firmanavn: string;
+  bransje?: string;
+  notater?: string;
+  auto_create?: boolean;
+}
+
 interface AiResponse {
   summary: string;
   items: AiItem[];
@@ -94,6 +122,9 @@ interface AiResponse {
   suggested_emails: SuggestedEmail[];
   suggested_leads?: SuggestedLead[];
   suggested_meeting?: SuggestedMeeting;
+  suggested_status_updates?: SuggestedStatusUpdate[];
+  suggested_conversions?: SuggestedConversion[];
+  suggested_companies?: SuggestedCompany[];
 }
 
 interface AiCommandBarProps {
