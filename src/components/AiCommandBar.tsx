@@ -331,6 +331,36 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
             </div>
           )}
 
+          {/* Suggested activities */}
+          {response.suggested_activities?.length > 0 && (
+            <div className="border-t">
+              <div className="px-5 py-3 bg-muted/30">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Foreslåtte aktiviteter å logge</p>
+              </div>
+              <div className="divide-y">
+                {response.suggested_activities.map((activity, i) => (
+                  <div key={i} className="flex items-center gap-3 px-5 py-3 hover:bg-muted/30 transition-colors">
+                    {createdActivityIds.has(i) ? (
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                    ) : (
+                      <PhoneCall className="w-4 h-4 text-muted-foreground shrink-0" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{activity.tittel}</p>
+                      <p className="text-xs text-muted-foreground truncate">{activity.beskrivelse}</p>
+                      <Badge variant="outline" className="text-[10px] mt-0.5">{activity.type}</Badge>
+                    </div>
+                    {!createdActivityIds.has(i) && (
+                      <Button variant="outline" size="sm" className="text-xs h-7 gap-1 shrink-0" onClick={() => handleLogActivity(activity, i)}>
+                        Logg
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Reset */}
           <div className="px-5 py-3 border-t bg-muted/20 flex justify-end">
             <button
