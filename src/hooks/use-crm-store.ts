@@ -633,6 +633,7 @@ function useCrmStoreInternal() {
         await dbUpdate("oppgaver", item.id, {
           oppgave: item.oppgave, lead_id: emptyToNull(item.lead_id),
           selskap_id: emptyToNull(item.selskap_id), salgsmulighet_id: emptyToNull(item.salgsmulighet_id),
+          kontakt_id: emptyToNull(item.kontakt_id),
           ansvarlig: emptyToNull(item.ansvarlig), frist: emptyToNull(item.frist),
           prioritet: item.prioritet, status: item.status,
           paaminnelse: item.paaminnelse, notater: emptyToNull(item.notater),
