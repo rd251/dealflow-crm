@@ -10,8 +10,10 @@ import {
   Sparkles, Send, Loader2, ListChecks,
   ExternalLink, CheckCircle2, ArrowUp, PhoneCall,
   Mail, Pencil, SkipForward, Clock, ListTodo, X,
+  CalendarDays, User, Building2,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/use-auth";
 
 interface AiItem {
   navn: string;
@@ -57,12 +59,26 @@ interface SuggestedEmail {
   prioritet: "høy" | "medium" | "lav";
 }
 
+interface SuggestedMeeting {
+  tittel: string;
+  deltaker_navn: string;
+  deltaker_epost?: string;
+  dato: string;
+  start_tid: string;
+  slutt_tid: string;
+  beskrivelse?: string;
+  kontakt_id?: string;
+  selskap_id?: string;
+  salgsmulighet_id?: string;
+}
+
 interface AiResponse {
   summary: string;
   items: AiItem[];
   suggested_tasks: SuggestedTask[];
   suggested_activities: SuggestedActivity[];
   suggested_emails: SuggestedEmail[];
+  suggested_meeting?: SuggestedMeeting;
 }
 
 interface AiCommandBarProps {
@@ -85,9 +101,11 @@ const prioritetColor: Record<string, string> = {
 };
 
 type EmailState = "pending" | "editing" | "sending" | "sent" | "skipped" | "task_created";
+type MeetingState = "pending" | "editing" | "creating" | "created";
 
 export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState<AiResponse | null>(null);
@@ -100,6 +118,11 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
   const [emailStates, setEmailStates] = useState<Map<number, EmailState>>(new Map());
   const [editingEmails, setEditingEmails] = useState<Map<number, { subject: string; body: string; to: string }>>(new Map());
 
+  // Meeting states
+  const [meetingState, setMeetingState] = useState<MeetingState>("pending");
+  const [editingMeeting, setEditingMeeting] = useState<SuggestedMeeting | null>(null);
+  const [createdMeetingId, setCreatedMeetingId] = useState<string | null>(null);
+
   const handleSubmit = async (prompt?: string) => {
     const msg = prompt || input.trim();
     if (!msg || loading) return;
@@ -110,6 +133,9 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
     setCreatedActivityIds(new Set());
     setEmailStates(new Map());
     setEditingEmails(new Map());
+    setMeetingState("pending");
+    setEditingMeeting(null);
+    setCreatedMeetingId(null);
 
     try {
       const { data, error } = await supabase.functions.invoke("ai-command", {
@@ -286,6 +312,116 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
     }
   };
 
+  // ─── MEETING ACTIONS ───
+  const handleCreateMeeting = async () => {
+    const meeting = editingMeeting || response?.suggested_meeting;
+    if (!meeting) return;
+
+    setMeetingState("creating");
+
+    try {
+      // 1. Contact matching / creation
+      let kontaktId = meeting.kontakt_id || null;
+      let selskapId = meeting.selskap_id || null;
+
+      if (!kontaktId && (meeting.deltaker_epost || meeting.deltaker_navn)) {
+        // Try to find existing contact by email
+        if (meeting.deltaker_epost) {
+          const { data: existingByEmail } = await supabase
+            .from("kontakter")
+            .select("id, selskap_id")
+            .ilike("e_post", meeting.deltaker_epost)
+            .limit(1);
+          if (existingByEmail?.length) {
+            kontaktId = existingByEmail[0].id;
+            selskapId = selskapId || existingByEmail[0].selskap_id;
+          }
+        }
+
+        // Try to find by name if no email match
+        if (!kontaktId && meeting.deltaker_navn) {
+          const { data: existingByName } = await supabase
+            .from("kontakter")
+            .select("id, selskap_id")
+            .ilike("navn", `%${meeting.deltaker_navn}%`)
+            .limit(1);
+          if (existingByName?.length) {
+            kontaktId = existingByName[0].id;
+            selskapId = selskapId || existingByName[0].selskap_id;
+          }
+        }
+
+        // Create new contact if not found
+        if (!kontaktId) {
+          const { data: newContact } = await supabase
+            .from("kontakter")
+            .insert({
+              navn: meeting.deltaker_navn,
+              e_post: meeting.deltaker_epost || "",
+            })
+            .select("id")
+            .single();
+          if (newContact) {
+            kontaktId = newContact.id;
+          }
+        }
+      }
+
+      // 2. Create the meeting as aktivitet
+      const startDateTime = `${meeting.dato}T${meeting.start_tid}:00`;
+      const endDateTime = `${meeting.dato}T${meeting.slutt_tid}:00`;
+
+      const { data: created, error } = await supabase.from("aktiviteter").insert({
+        type: "Møte" as const,
+        tittel: meeting.tittel,
+        beskrivelse: meeting.beskrivelse || "",
+        dato: startDateTime,
+        start_tid: startDateTime,
+        slutt_tid: endDateTime,
+        kontakt_id: kontaktId,
+        selskap_id: selskapId,
+        salgsmulighet_id: meeting.salgsmulighet_id || null,
+        deltakere: kontaktId ? [kontaktId] : [],
+        user_id: user?.id || null,
+        aktivitet_kilde: "ai-assistent",
+      }).select("id").single();
+
+      if (error) throw error;
+
+      // 3. Try to create in Google Calendar if connected
+      try {
+        const { data: gcalConn } = await supabase
+          .from("google_calendar_connections")
+          .select("id")
+          .eq("user_id", user?.id || "")
+          .maybeSingle();
+
+        if (gcalConn) {
+          // Sync will pick it up, or we could call a dedicated function
+          // For now, trigger a sync
+          supabase.functions.invoke("google-calendar-sync").catch(() => {});
+        }
+      } catch {
+        // Google Calendar sync is optional
+      }
+
+      setCreatedMeetingId(created?.id || null);
+      setMeetingState("created");
+      toast.success("Møtet er opprettet!");
+    } catch (e: any) {
+      console.error("Create meeting error:", e);
+      toast.error("Kunne ikke opprette møtet. Prøv igjen.");
+      setMeetingState("pending");
+    }
+  };
+
+  const handleEditMeeting = () => {
+    const meeting = response?.suggested_meeting;
+    if (!meeting) return;
+    setEditingMeeting({ ...meeting });
+    setMeetingState("editing");
+  };
+
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return "God morgen";
@@ -297,6 +433,22 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSubmit();
+    }
+  };
+
+  const formatMeetingDate = (dato: string) => {
+    try {
+      const d = new Date(dato + "T00:00:00");
+      const today = new Date();
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+
+      if (d.toDateString() === today.toDateString()) return "I dag";
+      if (d.toDateString() === tomorrow.toDateString()) return "I morgen";
+
+      return d.toLocaleDateString("no-NO", { weekday: "long", day: "numeric", month: "long" });
+    } catch {
+      return dato;
     }
   };
 
@@ -366,6 +518,182 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
               <ReactMarkdown>{response.summary}</ReactMarkdown>
             </div>
           </div>
+
+          {/* ─── MEETING CONFIRMATION CARD ─── */}
+          {response.suggested_meeting && (
+            <div className="border-t">
+              <div className="px-5 py-3 bg-muted/30 flex items-center gap-2">
+                <CalendarDays className="w-4 h-4 text-primary" />
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Nytt møte</p>
+              </div>
+
+              {meetingState === "created" ? (
+                <div className="px-5 py-4">
+                  <div className="flex items-center gap-3 bg-emerald-50 dark:bg-emerald-950/20 rounded-lg p-4">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
+                        Møtet er opprettet!
+                      </p>
+                      <p className="text-xs text-emerald-600/70 dark:text-emerald-500/70 mt-0.5">
+                        {response.suggested_meeting.tittel} med {response.suggested_meeting.deltaker_navn}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-xs h-7 gap-1"
+                        onClick={() => navigate("/kalender")}
+                      >
+                        <CalendarDays className="w-3 h-3" /> Kalender
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="px-5 py-4">
+                  {meetingState === "editing" && editingMeeting ? (
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-[10px] font-medium text-muted-foreground uppercase">Tittel</label>
+                        <Input
+                          value={editingMeeting.tittel}
+                          onChange={(e) => setEditingMeeting({ ...editingMeeting, tittel: e.target.value })}
+                          className="h-8 text-sm"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-[10px] font-medium text-muted-foreground uppercase">Deltaker</label>
+                          <Input
+                            value={editingMeeting.deltaker_navn}
+                            onChange={(e) => setEditingMeeting({ ...editingMeeting, deltaker_navn: e.target.value })}
+                            className="h-8 text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-medium text-muted-foreground uppercase">E-post</label>
+                          <Input
+                            value={editingMeeting.deltaker_epost || ""}
+                            onChange={(e) => setEditingMeeting({ ...editingMeeting, deltaker_epost: e.target.value })}
+                            placeholder="e-post@eksempel.no"
+                            className="h-8 text-sm"
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-3 gap-3">
+                        <div>
+                          <label className="text-[10px] font-medium text-muted-foreground uppercase">Dato</label>
+                          <Input
+                            type="date"
+                            value={editingMeeting.dato}
+                            onChange={(e) => setEditingMeeting({ ...editingMeeting, dato: e.target.value })}
+                            className="h-8 text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-medium text-muted-foreground uppercase">Start</label>
+                          <Input
+                            type="time"
+                            value={editingMeeting.start_tid}
+                            onChange={(e) => setEditingMeeting({ ...editingMeeting, start_tid: e.target.value })}
+                            className="h-8 text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-medium text-muted-foreground uppercase">Slutt</label>
+                          <Input
+                            type="time"
+                            value={editingMeeting.slutt_tid}
+                            onChange={(e) => setEditingMeeting({ ...editingMeeting, slutt_tid: e.target.value })}
+                            className="h-8 text-sm"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-medium text-muted-foreground uppercase">Beskrivelse</label>
+                        <Textarea
+                          value={editingMeeting.beskrivelse || ""}
+                          onChange={(e) => setEditingMeeting({ ...editingMeeting, beskrivelse: e.target.value })}
+                          rows={2}
+                          className="text-sm"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button size="sm" className="text-xs h-7 gap-1" onClick={handleCreateMeeting}>
+                          <CalendarDays className="w-3 h-3" /> Opprett møte
+                        </Button>
+                        <Button variant="ghost" size="sm" className="text-xs h-7 gap-1" onClick={() => setMeetingState("pending")}>
+                          <X className="w-3 h-3" /> Avbryt
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Meeting preview card */}
+                      <div className="bg-muted/40 rounded-lg p-4 border mb-3">
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <CalendarDays className="w-4 h-4 text-primary shrink-0" />
+                            <p className="text-sm font-semibold">{response.suggested_meeting.tittel}</p>
+                          </div>
+                          <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 ml-6">
+                            <div className="flex items-center gap-1.5">
+                              <User className="w-3 h-3 text-muted-foreground" />
+                              <span className="text-xs">{response.suggested_meeting.deltaker_navn}</span>
+                            </div>
+                            {response.suggested_meeting.deltaker_epost && (
+                              <div className="flex items-center gap-1.5">
+                                <Mail className="w-3 h-3 text-muted-foreground" />
+                                <span className="text-xs text-muted-foreground">{response.suggested_meeting.deltaker_epost}</span>
+                              </div>
+                            )}
+                            <div className="flex items-center gap-1.5">
+                              <CalendarDays className="w-3 h-3 text-muted-foreground" />
+                              <span className="text-xs">{formatMeetingDate(response.suggested_meeting.dato)}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <Clock className="w-3 h-3 text-muted-foreground" />
+                              <span className="text-xs">{response.suggested_meeting.start_tid} – {response.suggested_meeting.slutt_tid}</span>
+                            </div>
+                          </div>
+                          {response.suggested_meeting.beskrivelse && (
+                            <p className="text-xs text-muted-foreground ml-6 mt-1">{response.suggested_meeting.beskrivelse}</p>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          className="text-xs h-7 gap-1"
+                          onClick={handleCreateMeeting}
+                          disabled={meetingState === "creating"}
+                        >
+                          {meetingState === "creating" ? (
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                          ) : (
+                            <CalendarDays className="w-3 h-3" />
+                          )}
+                          {meetingState === "creating" ? "Oppretter..." : "Opprett møte"}
+                        </Button>
+                        <Button variant="outline" size="sm" className="text-xs h-7 gap-1" onClick={handleEditMeeting}>
+                          <Pencil className="w-3 h-3" /> Rediger
+                        </Button>
+                        <Button variant="ghost" size="sm" className="text-xs h-7 gap-1" onClick={() => {
+                          setResponse(prev => prev ? { ...prev, suggested_meeting: undefined } : prev);
+                        }}>
+                          <X className="w-3 h-3" /> Avbryt
+                        </Button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Action items */}
           {response.items.length > 0 && (

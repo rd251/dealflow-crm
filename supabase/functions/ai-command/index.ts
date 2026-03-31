@@ -47,7 +47,7 @@ serve(async (req) => {
             type: "function",
             function: {
               name: "crm_response",
-              description: "Return a structured CRM response with text, action items, and suggested tasks",
+              description: "Return a structured CRM response with text, action items, suggested tasks, and optionally a meeting to create",
               parameters: {
                 type: "object",
                 properties: {
@@ -107,7 +107,7 @@ serve(async (req) => {
                   },
                   suggested_emails: {
                     type: "array",
-                    description: "Follow-up emails that can be sent via Gmail. Generate these when the user asks about follow-ups, what to do today, or asks to write emails. Each email should be personalized based on context.",
+                    description: "Follow-up emails that can be sent via Gmail. Generate these when the user asks about follow-ups, what to do today, or asks to write emails.",
                     items: {
                       type: "object",
                       properties: {
@@ -126,6 +126,23 @@ serve(async (req) => {
                       },
                       required: ["to_name", "subject", "body", "reason", "prioritet"],
                     },
+                  },
+                  suggested_meeting: {
+                    type: "object",
+                    description: "A meeting to create. Generate this ONLY when the user explicitly asks to create/book/schedule a meeting. Parse natural language dates like 'i morgen', 'på fredag', 'neste uke', 'kl 12' etc. into proper ISO dates and times.",
+                    properties: {
+                      tittel: { type: "string", description: "Meeting title / subject" },
+                      deltaker_navn: { type: "string", description: "Name of the person to meet" },
+                      deltaker_epost: { type: "string", description: "Email of the person to meet, if provided" },
+                      dato: { type: "string", description: "Meeting date in YYYY-MM-DD format. Parse Norwegian relative dates: 'i morgen' = tomorrow, 'på fredag' = next friday, 'neste uke' = next monday, etc." },
+                      start_tid: { type: "string", description: "Start time in HH:MM format (24h). Parse 'kl 12' = 12:00, 'kl 14:30' = 14:30, etc." },
+                      slutt_tid: { type: "string", description: "End time in HH:MM format (24h). Default to 30 minutes after start if not specified." },
+                      beskrivelse: { type: "string", description: "Meeting description if provided" },
+                      kontakt_id: { type: "string", description: "ID of existing contact if matched from CRM context" },
+                      selskap_id: { type: "string", description: "ID of related company if contact is linked to a company" },
+                      salgsmulighet_id: { type: "string", description: "ID of related sales opportunity if relevant" },
+                    },
+                    required: ["tittel", "deltaker_navn", "dato", "start_tid", "slutt_tid"],
                   },
                 },
                 required: ["summary", "items", "suggested_tasks", "suggested_activities", "suggested_emails"],
@@ -169,15 +186,15 @@ serve(async (req) => {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       } catch {
-        // Fallback to plain text
         return new Response(
           JSON.stringify({
-        summary: data.choices?.[0]?.message?.content || "Beklager, noe gikk galt.",
-        items: [],
-        suggested_tasks: [],
-        suggested_activities: [],
-      }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            summary: data.choices?.[0]?.message?.content || "Beklager, noe gikk galt.",
+            items: [],
+            suggested_tasks: [],
+            suggested_activities: [],
+            suggested_emails: [],
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
     }
@@ -185,11 +202,12 @@ serve(async (req) => {
     // Fallback if no tool call
     return new Response(
       JSON.stringify({
-            summary: data.choices?.[0]?.message?.content || "Beklager, noe gikk galt.",
-            items: [],
-            suggested_tasks: [],
-            suggested_activities: [],
-          }),
+        summary: data.choices?.[0]?.message?.content || "Beklager, noe gikk galt.",
+        items: [],
+        suggested_tasks: [],
+        suggested_activities: [],
+        suggested_emails: [],
+      }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e) {
@@ -203,9 +221,10 @@ serve(async (req) => {
 
 function buildSystemPrompt(context: any): string {
   const today = new Date().toISOString().split("T")[0];
+  const dayOfWeek = new Date().toLocaleDateString("no-NO", { weekday: "long" });
 
   let prompt = `Du er en AI-assistent for et CRM-system kalt Snakk. Du svarer alltid på norsk.
-Dagens dato er ${today}.
+Dagens dato er ${today} (${dayOfWeek}).
 
 REGLER:
 - Prioriter alltid høy-verdi deals først
@@ -216,6 +235,20 @@ REGLER:
 - Hold svarene korte og handlingsorienterte
 - Bruk markdown for formatering
 - Alle IDer du refererer til MÅ komme fra konteksten under
+
+MØTEBOOKING REGLER:
+- Når brukeren ber om å opprette/booke/lage et møte, generer ALLTID et suggested_meeting-objekt
+- Parse norske datoer korrekt relativt til dagens dato ${today}:
+  - "i morgen" = neste dag
+  - "i dag" = dagens dato
+  - "på mandag/tirsdag/onsdag/torsdag/fredag" = neste forekomst av den ukedagen
+  - "neste uke" = neste mandag
+  - "om to dager" = 2 dager fra nå
+- Parse norske klokkeslett: "kl 12" = 12:00, "klokken 14:30" = 14:30
+- Hvis klokkeslett mangler, IKKE generer suggested_meeting. I stedet, spør brukeren om klokkeslett i summary
+- Hvis slutttid ikke er oppgitt, sett den til 30 minutter etter starttid
+- Sjekk om deltakeren finnes blant kontakter i CRM-konteksten (match på navn eller e-post). Hvis ja, bruk kontakt_id og selskap_id
+- Tittel: Bruk "emne" fra meldingen, eller lag en passende tittel basert på konteksten
 
 OPPFØLGINGS-E-POST REGLER:
 - Når brukeren spør "hva bør jeg gjøre i dag", "deals som trenger oppfølging", "skriv oppfølging" o.l., generer suggested_emails for de viktigste kandidatene
@@ -231,6 +264,13 @@ OPPFØLGINGS-E-POST REGLER:
 
 CRM-DATA:
 `;
+
+  if (context?.kontakter?.length > 0) {
+    prompt += `\n## Kontakter (${context.kontakter.length}):\n`;
+    for (const k of context.kontakter.slice(0, 30)) {
+      prompt += `- ${k.navn}${k.e_post ? ` (${k.e_post})` : ""}${k.selskap_id ? ` – selskap_id: ${k.selskap_id}` : ""} – id: ${k.id}\n`;
+    }
+  }
 
   if (context?.meetings?.length > 0) {
     prompt += `\n## Møter i dag (${context.meetings.length}):\n`;
