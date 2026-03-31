@@ -57,7 +57,7 @@ interface CalendarEvent {
   ownerUserId?: string;
 }
 
-const HOURS = Array.from({ length: 14 }, (_, i) => i + 7);
+const HOURS = Array.from({ length: 24 }, (_, i) => i);
 const MEETING_COLOR = "bg-amber-500/15 border-amber-500 text-amber-800 dark:text-amber-300";
 const TASK_COLOR = "bg-violet-500/15 border-violet-500 text-violet-800 dark:text-violet-300";
 const TASK_HIGH_COLOR = "bg-destructive/15 border-destructive text-destructive";
@@ -126,6 +126,7 @@ export default function Kalender() {
   // Drag state
   const [dragEvent, setDragEvent] = useState<CalendarEvent | null>(null);
   const [dragOverSlot, setDragOverSlot] = useState<{ day: Date; hour: number } | null>(null);
+  const weekGridRef = useRef<HTMLDivElement>(null);
 
   const today = new Date();
 
@@ -278,6 +279,13 @@ export default function Kalender() {
   }, [viewMode, weekDays, monthDays, kontakter]);
 
   useEffect(() => { fetchEvents(); }, [fetchEvents]);
+
+  // Auto-scroll week view to ~7 AM on mount
+  useEffect(() => {
+    if (viewMode === "week" && weekGridRef.current) {
+      weekGridRef.current.scrollTop = 7 * 60; // scroll to 07:00
+    }
+  }, [viewMode]);
 
   const filteredEvents = useMemo(() => {
     if (userFilter === "all") return events;
@@ -703,55 +711,67 @@ export default function Kalender() {
             })}
           </div>
 
-          <div className="grid grid-cols-[60px_repeat(7,1fr)] max-h-[600px] overflow-y-auto">
-            {HOURS.map(hour => {
-              return (
-              <div key={hour} className="contents">
-                <div className="h-[60px] border-b border-r px-1 flex items-start justify-end pt-0.5">
+          <div ref={weekGridRef} className="grid grid-cols-[60px_repeat(7,1fr)] max-h-[600px] overflow-y-auto">
+            {/* Hour labels column */}
+            <div className="row-span-1">
+              {HOURS.map(hour => (
+                <div key={hour} className="h-[60px] border-b border-r px-1 flex items-start justify-end pt-0.5">
                   <span className="text-[10px] text-muted-foreground">{String(hour).padStart(2, "0")}:00</span>
                 </div>
-                {weekDays.map((day, di) => {
-                  const isToday = isSameDay(day, today);
-                  const allDayEvents = getEventsForDay(day);
-                  const dayEvents = allDayEvents.filter(e => e.start.getHours() === hour);
-                  const overlapLayout = getOverlapLayout(allDayEvents);
-                  const isDropTarget = dragOverSlot && isSameDay(dragOverSlot.day, day) && dragOverSlot.hour === hour;
-                  return (
-                    <div
-                      key={di}
-                      className={`h-[60px] border-b border-r last:border-r-0 relative cursor-pointer transition-colors ${
-                        isDropTarget ? "bg-primary/10 ring-1 ring-inset ring-primary/30" : isToday ? "bg-primary/[0.02]" : "hover:bg-muted/30"
-                      }`}
-                      onClick={() => handleSlotClick(day, hour)}
-                      onDragOver={(e) => handleDragOver(e, day, hour)}
-                      onDragLeave={handleDragLeave}
-                      onDrop={(e) => handleDrop(e, day, hour)}
-                    >
-                      {dayEvents.map(event => {
-                        const ol = overlapLayout.get(event.id) || { column: 0, totalColumns: 1 };
-                        const widthPct = 100 / ol.totalColumns;
-                        const leftPct = ol.column * widthPct;
-                        return (
-                        <div
-                          key={event.id}
-                          className="absolute z-10"
-                          style={{
-                            top: `${event.start.getMinutes()}px`,
-                            height: `${getEventHeight(event)}px`,
-                            left: `${leftPct}%`,
-                            width: `${widthPct}%`,
-                            paddingLeft: '1px',
-                            paddingRight: '1px',
-                          }}
-                        >
-                          <EventCard event={event} />
-                        </div>
-                        );
-                      })}
-                    </div>
-                  );
-                })}
-              </div>
+              ))}
+            </div>
+            {/* Day columns with events overlay */}
+            {weekDays.map((day, di) => {
+              const isToday = isSameDay(day, today);
+              const dayEvents = getEventsForDay(day);
+              const overlapLayout = getOverlapLayout(dayEvents);
+              const firstHour = HOURS[0];
+              return (
+                <div key={di} className="relative border-r last:border-r-0" style={{ height: `${HOURS.length * 60}px` }}>
+                  {/* Hour grid lines + click targets */}
+                  {HOURS.map(hour => {
+                    const isDropTarget = dragOverSlot && isSameDay(dragOverSlot.day, day) && dragOverSlot.hour === hour;
+                    return (
+                      <div
+                        key={hour}
+                        className={`h-[60px] border-b cursor-pointer transition-colors ${
+                          isDropTarget ? "bg-primary/10 ring-1 ring-inset ring-primary/30" : isToday ? "bg-primary/[0.02]" : "hover:bg-muted/30"
+                        }`}
+                        onClick={() => handleSlotClick(day, hour)}
+                        onDragOver={(e) => handleDragOver(e, day, hour)}
+                        onDragLeave={handleDragLeave}
+                        onDrop={(e) => handleDrop(e, day, hour)}
+                      />
+                    );
+                  })}
+                  {/* Events overlay */}
+                  {dayEvents.map(event => {
+                    const eventHour = event.start.getHours();
+                    const eventMinute = event.start.getMinutes();
+                    const topPx = (eventHour - firstHour) * 60 + eventMinute;
+                    // Skip events outside visible range
+                    if (topPx < 0 || topPx >= HOURS.length * 60) return null;
+                    const ol = overlapLayout.get(event.id) || { column: 0, totalColumns: 1 };
+                    const widthPct = 100 / ol.totalColumns;
+                    const leftPct = ol.column * widthPct;
+                    return (
+                      <div
+                        key={event.id}
+                        className="absolute z-10"
+                        style={{
+                          top: `${topPx}px`,
+                          height: `${getEventHeight(event)}px`,
+                          left: `${leftPct}%`,
+                          width: `${widthPct}%`,
+                          paddingLeft: '1px',
+                          paddingRight: '1px',
+                        }}
+                      >
+                        <EventCard event={event} />
+                      </div>
+                    );
+                  })}
+                </div>
               );
             })}
           </div>
