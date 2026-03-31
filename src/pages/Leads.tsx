@@ -462,10 +462,10 @@ export default function Leads() {
                   <Input value={currentLead.use_case} onChange={e => updateField("use_case", e.target.value)} className="h-7 text-xs mt-0.5" readOnly={!canEdit || currentIsLocked} />
                 </div>
 
-                {currentLead.konvertert_til && (
-                  <div className={`p-2.5 rounded-lg text-xs font-medium flex items-center gap-2 ${currentLead.konvertert_til === "salg" ? "bg-success/10 text-success" : "bg-primary/10 text-primary"}`}>
+                {getConversionType(currentLead) && (
+                  <div className={`p-2.5 rounded-lg text-xs font-medium flex items-center gap-2 ${getConversionType(currentLead) === "salg" ? "bg-success/10 text-success" : "bg-primary/10 text-primary"}`}>
                     <Lock className="w-3.5 h-3.5" />
-                    Konvertert til {currentLead.konvertert_til === "salg" ? "salgsmulighet" : "partner"} · {currentLead.konvertert_dato}
+                    Konvertert til {getConversionType(currentLead) === "salg" ? "salgsmulighet" : "partner"} · {currentLead.konvertert_dato}
                   </div>
                 )}
 
