@@ -1,0 +1,1 @@
+UPDATE leads SET konvertert_dato = NULL WHERE id = 'f882df86-da68-495e-ad94-5687029af74b';
