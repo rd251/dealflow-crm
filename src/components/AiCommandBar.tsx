@@ -1090,6 +1090,42 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
             </div>
           )}
 
+          {/* New contacts */}
+          {response.suggested_contacts && response.suggested_contacts.length > 0 && (
+            <div className="border-t">
+              <div className="px-5 py-3 bg-muted/30 flex items-center gap-2">
+                <User className="w-4 h-4 text-primary" />
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Nye kontakter</p>
+              </div>
+              <div className="divide-y">
+                {response.suggested_contacts.map((contact, i) => (
+                  <div key={i} className="flex items-center gap-3 px-5 py-3 hover:bg-muted/30 transition-colors">
+                    {createdContactIds.has(i) ? (
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                    ) : (
+                      <User className="w-4 h-4 text-muted-foreground shrink-0" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{contact.navn}</p>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5 flex-wrap">
+                        {contact.selskap_navn && <span className="flex items-center gap-0.5"><Building2 className="w-3 h-3" />{contact.selskap_navn}</span>}
+                        {contact.rolle && <span>· {contact.rolle}</span>}
+                        {contact.e_post && <span>· {contact.e_post}</span>}
+                      </div>
+                    </div>
+                    {createdContactIds.has(i) ? (
+                      <span className="text-xs text-emerald-600 font-medium shrink-0">Opprettet ✓</span>
+                    ) : (
+                      <Button variant="outline" size="sm" className="text-xs h-7 gap-1 shrink-0" onClick={() => handleCreateContact(contact, i)}>
+                        Opprett
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Action items */}
           {response.items.length > 0 && (
             <div className="border-t">
