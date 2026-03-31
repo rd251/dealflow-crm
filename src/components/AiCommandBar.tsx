@@ -68,6 +68,7 @@ interface SuggestedLead {
   notater?: string;
   use_case?: string;
   rolle_i_firma?: string;
+  auto_create?: boolean;
 }
 
 interface SuggestedMeeting {
@@ -159,7 +160,18 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
       });
       if (error) throw error;
       if (data?.error) { toast.error(data.error); return; }
-      setResponse(data as AiResponse);
+      const aiData = data as AiResponse;
+      setResponse(aiData);
+
+      // Auto-create leads flagged with auto_create
+      if (aiData.suggested_leads?.length) {
+        for (let i = 0; i < aiData.suggested_leads.length; i++) {
+          const lead = aiData.suggested_leads[i];
+          if (lead.auto_create) {
+            handleCreateLead(lead, i);
+          }
+        }
+      }
     } catch (e: any) {
       console.error("AI command error:", e);
       toast.error("Kunne ikke kontakte AI. Prøv igjen.");

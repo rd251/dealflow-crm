@@ -141,6 +141,7 @@ serve(async (req) => {
                         notater: { type: "string", description: "Notes about the lead, including context from the conversation" },
                         use_case: { type: "string", description: "Use case if mentioned" },
                         rolle_i_firma: { type: "string", description: "Role in company if mentioned" },
+                        auto_create: { type: "boolean", description: "Set to true when the user explicitly asks to register/create/add the lead (e.g. 'registrer', 'legg inn', 'opprett lead'). When true the lead will be created automatically without user confirmation." },
                       },
                       required: ["firmanavn", "kontaktperson"],
                     },
@@ -292,6 +293,7 @@ LEAD-OPPRETTING REGLER:
 - Utled kilde fra kontekst: e-post → "E-post", telefon → "Telefon", LinkedIn → "LinkedIn", nettskjema → "Nettside"
 - Inkluder relevant kontekst fra samtalen i notater-feltet
 - Bruk firmanavn fra konteksten, eller utled fra e-postdomene (f.eks. daniel@straye.no → "Straye" eller "straye.no")
+- Sett auto_create=true når brukeren eksplisitt ber om å registrere/opprette/legge inn et lead (f.eks. "registrer", "legg inn", "opprett lead for", "lag lead"). Da opprettes leadet automatisk uten bekreftelse.
 
 CRM-DATA:
 `;
