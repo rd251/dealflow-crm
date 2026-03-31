@@ -64,7 +64,7 @@ export default function Tasks() {
       toast.success(`Oppgave delegert til ${assignee?.display_name || "bruker"}`);
     }
 
-    setForm({ oppgave: "", frist: "", prioritet: "Medium", lead_id: "", selskap_id: "", salgsmulighet_id: "", ansvarlig: "", notater: "" });
+    setForm({ oppgave: "", frist: "", prioritet: "Medium", lead_id: "", selskap_id: "", salgsmulighet_id: "", kontakt_id: "", ansvarlig: "", notater: "" });
   };
 
   const changeStatus = (id: string, status: OppgaveStatus) => {
