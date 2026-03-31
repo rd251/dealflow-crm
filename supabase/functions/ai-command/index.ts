@@ -384,6 +384,12 @@ SELSKAPSOPPRETTING REGLER:
 - Sjekk at selskapet ikke allerede finnes i konteksten
 - Sett auto_create=true når brukeren eksplisitt ber om det
 
+KONTAKTOPPRETTING REGLER:
+- Når brukeren ber om å legge til/opprette en kontaktperson, generer suggested_contacts
+- Match selskapsnavnet mot selskaper i CRM-konteksten for å finne riktig selskap_id
+- Sjekk at kontakten ikke allerede finnes blant kontakter i konteksten
+- Sett auto_create=true når brukeren eksplisitt ber om det
+
 CRM-DATA:
 `;
 
