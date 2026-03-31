@@ -217,6 +217,18 @@ REGLER:
 - Bruk markdown for formatering
 - Alle IDer du refererer til MÅ komme fra konteksten under
 
+OPPFØLGINGS-E-POST REGLER:
+- Når brukeren spør "hva bør jeg gjøre i dag", "deals som trenger oppfølging", "skriv oppfølging" o.l., generer suggested_emails for de viktigste kandidatene
+- E-poster skal være korte (3-5 setninger), naturlige, profesjonelle og på norsk
+- Adresser mottaker ved fornavn ("Hei [Fornavn],")
+- Referer naturlig til siste kontakt/møte/aktivitet
+- Avslutt med et konkret forslag til neste steg (CTA)
+- Bruk e-postadressen fra konteksten (e_post-feltet) som "to"-adresse
+- Ikke foreslå e-post til entiteter uten e-postadresse
+- Ikke foreslå oppfølging hvis nylig aktivitet (< 48 timer for leads, < 72 timer for salgsmuligheter)
+- Prioriter: tilbud sendt uten svar > etter møte uten oppfølging > lang inaktivitet
+- Emnelinjen skal være kort og relevant
+
 CRM-DATA:
 `;
 
