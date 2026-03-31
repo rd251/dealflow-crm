@@ -9,10 +9,16 @@ import {
   Head,
   Heading,
   Html,
+  Img,
   Link,
   Preview,
+  Section,
   Text,
 } from 'npm:@react-email/components@0.0.22'
+
+const BRAND_RED = '#da291c'
+const BRAND_DARK = '#1a1917'
+const LOGO_URL = 'https://tchmujgzcklwgptocbno.supabase.co/storage/v1/object/public/email-assets/snakk-logo.png'
 
 interface SignupEmailProps {
   siteName: string
@@ -27,32 +33,36 @@ export const SignupEmail = ({
   recipient,
   confirmationUrl,
 }: SignupEmailProps) => (
-  <Html lang="en" dir="ltr">
+  <Html lang="no" dir="ltr">
     <Head />
-    <Preview>Confirm your email for {siteName}</Preview>
+    <Preview>Bekreft e-posten din for Snakk</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Heading style={h1}>Confirm your email</Heading>
-        <Text style={text}>
-          Thanks for signing up for{' '}
-          <Link href={siteUrl} style={link}>
-            <strong>{siteName}</strong>
-          </Link>
-          !
-        </Text>
-        <Text style={text}>
-          Please confirm your email address (
-          <Link href={`mailto:${recipient}`} style={link}>
-            {recipient}
-          </Link>
-          ) by clicking the button below:
-        </Text>
-        <Button style={button} href={confirmationUrl}>
-          Verify Email
-        </Button>
-        <Text style={footer}>
-          If you didn't create an account, you can safely ignore this email.
-        </Text>
+        <Section style={headerSection}>
+          <Img src={LOGO_URL} alt="Snakk" width="140" height="auto" style={logoImg} />
+        </Section>
+        <Section style={contentSection}>
+          <Heading style={h1}>Bekreft e-posten din</Heading>
+          <Text style={text}>
+            Takk for at du registrerte deg hos{' '}
+            <Link href={siteUrl} style={link}><strong>Snakk</strong></Link>!
+          </Text>
+          <Text style={text}>
+            Vennligst bekreft e-postadressen din (
+            <Link href={`mailto:${recipient}`} style={link}>{recipient}</Link>
+            ) ved å klikke på knappen under:
+          </Text>
+          <Button style={button} href={confirmationUrl}>
+            Bekreft e-post
+          </Button>
+          <Text style={footer}>
+            Hvis du ikke opprettet en konto, kan du trygt ignorere denne e-posten.
+          </Text>
+        </Section>
+        <Section style={footerSection}>
+          <Text style={footerBrand}>Snakk CRM</Text>
+          <Text style={footerCopy}>©2026 Snakk. Alle rettigheter reservert.</Text>
+        </Section>
       </Container>
     </Body>
   </Html>
@@ -60,27 +70,16 @@ export const SignupEmail = ({
 
 export default SignupEmail
 
-const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }
-const container = { padding: '20px 25px' }
-const h1 = {
-  fontSize: '22px',
-  fontWeight: 'bold' as const,
-  color: '#000000',
-  margin: '0 0 20px',
-}
-const text = {
-  fontSize: '14px',
-  color: '#55575d',
-  lineHeight: '1.5',
-  margin: '0 0 25px',
-}
-const link = { color: 'inherit', textDecoration: 'underline' }
-const button = {
-  backgroundColor: '#000000',
-  color: '#ffffff',
-  fontSize: '14px',
-  borderRadius: '8px',
-  padding: '12px 20px',
-  textDecoration: 'none',
-}
-const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
+const main: React.CSSProperties = { backgroundColor: '#f5f4f2', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }
+const container: React.CSSProperties = { maxWidth: '580px', margin: '0 auto' }
+const headerSection: React.CSSProperties = { backgroundColor: BRAND_DARK, padding: '28px 0', textAlign: 'center', borderRadius: '8px 8px 0 0' }
+const logoImg: React.CSSProperties = { margin: '0 auto', display: 'block' }
+const contentSection: React.CSSProperties = { backgroundColor: '#ffffff', padding: '32px 40px' }
+const h1: React.CSSProperties = { fontSize: '24px', fontWeight: 700, color: BRAND_DARK, margin: '0 0 16px' }
+const text: React.CSSProperties = { fontSize: '15px', color: '#555555', lineHeight: '1.5', margin: '0 0 20px' }
+const link: React.CSSProperties = { color: 'inherit', textDecoration: 'underline' }
+const button: React.CSSProperties = { backgroundColor: BRAND_RED, color: '#ffffff', padding: '14px 32px', borderRadius: '12px', fontSize: '15px', fontWeight: 600, textDecoration: 'none', display: 'block', textAlign: 'center', width: '100%', boxSizing: 'border-box' }
+const footer: React.CSSProperties = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
+const footerSection: React.CSSProperties = { padding: '24px 40px', textAlign: 'center', borderRadius: '0 0 8px 8px' }
+const footerBrand: React.CSSProperties = { fontSize: '13px', color: '#999999', margin: '0 0 4px' }
+const footerCopy: React.CSSProperties = { fontSize: '12px', color: '#bbbbbb', margin: '0' }

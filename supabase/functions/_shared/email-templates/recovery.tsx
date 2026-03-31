@@ -9,36 +9,46 @@ import {
   Head,
   Heading,
   Html,
+  Img,
   Preview,
+  Section,
   Text,
 } from 'npm:@react-email/components@0.0.22'
+
+const BRAND_RED = '#da291c'
+const BRAND_DARK = '#1a1917'
+const LOGO_URL = 'https://tchmujgzcklwgptocbno.supabase.co/storage/v1/object/public/email-assets/snakk-logo.png'
 
 interface RecoveryEmailProps {
   siteName: string
   confirmationUrl: string
 }
 
-export const RecoveryEmail = ({
-  siteName,
-  confirmationUrl,
-}: RecoveryEmailProps) => (
-  <Html lang="en" dir="ltr">
+export const RecoveryEmail = ({ siteName, confirmationUrl }: RecoveryEmailProps) => (
+  <Html lang="no" dir="ltr">
     <Head />
-    <Preview>Reset your password for {siteName}</Preview>
+    <Preview>Tilbakestill passordet ditt for Snakk</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Heading style={h1}>Reset your password</Heading>
-        <Text style={text}>
-          We received a request to reset your password for {siteName}. Click
-          the button below to choose a new password.
-        </Text>
-        <Button style={button} href={confirmationUrl}>
-          Reset Password
-        </Button>
-        <Text style={footer}>
-          If you didn't request a password reset, you can safely ignore this
-          email. Your password will not be changed.
-        </Text>
+        <Section style={headerSection}>
+          <Img src={LOGO_URL} alt="Snakk" width="140" height="auto" style={logoImg} />
+        </Section>
+        <Section style={contentSection}>
+          <Heading style={h1}>Tilbakestill passordet</Heading>
+          <Text style={text}>
+            Vi mottok en forespørsel om å tilbakestille passordet ditt for Snakk. Klikk på knappen under for å velge et nytt passord.
+          </Text>
+          <Button style={button} href={confirmationUrl}>
+            Tilbakestill passord
+          </Button>
+          <Text style={footer}>
+            Hvis du ikke ba om dette, kan du trygt ignorere denne e-posten. Passordet ditt vil ikke bli endret.
+          </Text>
+        </Section>
+        <Section style={footerSection}>
+          <Text style={footerBrand}>Snakk CRM</Text>
+          <Text style={footerCopy}>©2026 Snakk. Alle rettigheter reservert.</Text>
+        </Section>
       </Container>
     </Body>
   </Html>
@@ -46,26 +56,15 @@ export const RecoveryEmail = ({
 
 export default RecoveryEmail
 
-const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }
-const container = { padding: '20px 25px' }
-const h1 = {
-  fontSize: '22px',
-  fontWeight: 'bold' as const,
-  color: '#000000',
-  margin: '0 0 20px',
-}
-const text = {
-  fontSize: '14px',
-  color: '#55575d',
-  lineHeight: '1.5',
-  margin: '0 0 25px',
-}
-const button = {
-  backgroundColor: '#000000',
-  color: '#ffffff',
-  fontSize: '14px',
-  borderRadius: '8px',
-  padding: '12px 20px',
-  textDecoration: 'none',
-}
-const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
+const main: React.CSSProperties = { backgroundColor: '#f5f4f2', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }
+const container: React.CSSProperties = { maxWidth: '580px', margin: '0 auto' }
+const headerSection: React.CSSProperties = { backgroundColor: BRAND_DARK, padding: '28px 0', textAlign: 'center', borderRadius: '8px 8px 0 0' }
+const logoImg: React.CSSProperties = { margin: '0 auto', display: 'block' }
+const contentSection: React.CSSProperties = { backgroundColor: '#ffffff', padding: '32px 40px' }
+const h1: React.CSSProperties = { fontSize: '24px', fontWeight: 700, color: BRAND_DARK, margin: '0 0 16px' }
+const text: React.CSSProperties = { fontSize: '15px', color: '#555555', lineHeight: '1.5', margin: '0 0 20px' }
+const button: React.CSSProperties = { backgroundColor: BRAND_RED, color: '#ffffff', padding: '14px 32px', borderRadius: '12px', fontSize: '15px', fontWeight: 600, textDecoration: 'none', display: 'block', textAlign: 'center', width: '100%', boxSizing: 'border-box' }
+const footer: React.CSSProperties = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
+const footerSection: React.CSSProperties = { padding: '24px 40px', textAlign: 'center', borderRadius: '0 0 8px 8px' }
+const footerBrand: React.CSSProperties = { fontSize: '13px', color: '#999999', margin: '0 0 4px' }
+const footerCopy: React.CSSProperties = { fontSize: '12px', color: '#bbbbbb', margin: '0' }
