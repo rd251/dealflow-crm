@@ -141,6 +141,7 @@ serve(async (req) => {
                         notater: { type: "string", description: "Notes about the lead, including context from the conversation" },
                         use_case: { type: "string", description: "Use case if mentioned" },
                         rolle_i_firma: { type: "string", description: "Role in company if mentioned" },
+                        auto_create: { type: "boolean", description: "Set to true when the user explicitly asks to register/create/add the lead (e.g. 'registrer', 'legg inn', 'opprett lead'). When true the lead will be created automatically without user confirmation." },
                       },
                       required: ["firmanavn", "kontaktperson"],
                     },
