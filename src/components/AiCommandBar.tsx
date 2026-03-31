@@ -185,6 +185,16 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
           }
         }
       }
+
+      // Auto-create activities flagged with auto_create
+      if (aiData.suggested_activities?.length) {
+        for (let i = 0; i < aiData.suggested_activities.length; i++) {
+          const activity = aiData.suggested_activities[i];
+          if (activity.auto_create) {
+            handleLogActivity(activity, i);
+          }
+        }
+      }
     } catch (e: any) {
       console.error("AI command error:", e);
       toast.error("Kunne ikke kontakte AI. Prøv igjen.");
