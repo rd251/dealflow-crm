@@ -13,6 +13,7 @@ import Leads from "./pages/Leads";
 import Salgsmuligheter from "./pages/Salgsmuligheter";
 import Prosjekter from "./pages/Prosjekter";
 import Companies from "./pages/Companies";
+import AlleSelskaper from "./pages/AlleSelskaper";
 import Contacts from "./pages/Contacts";
 import Tasks from "./pages/Tasks";
 import Partnere from "./pages/Partnere";
