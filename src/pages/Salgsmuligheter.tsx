@@ -213,6 +213,13 @@ export default function Salgsmuligheter() {
         </TabsList>
 
         <TabsContent value="pipeline">
+          {filterUtenAktivitet && (
+            <div className="mb-3">
+              <Badge variant="secondary" className="gap-1 cursor-pointer hover:bg-destructive/10" onClick={() => setFilterUtenAktivitet(false)}>
+                Uten aktivitet ✕
+              </Badge>
+            </div>
+          )}
           {/* Pipeline summary panel */}
           {(() => {
             const totalPipeline = openDeals.reduce((s, d) => s + beregnTotalKontraktsverdi(d), 0);
