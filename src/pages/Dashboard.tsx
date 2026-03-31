@@ -158,7 +158,7 @@ export default function Dashboard() {
   const leadsUtenOppfolging = useMemo(() => {
     const cutoff = new Date(now.getTime() - 24 * 60 * 60 * 1000);
     return leads.filter((l) => {
-      if (l.status === "Ikke aktuelt" || l.konvertert_til) return false;
+      if (l.status === "Ikke aktuelt" || l.konvertert_til || l.konvertert_dato || l.status === "Konvertert til salg" || l.status === "Konvertert til partner") return false;
       if (!l.sist_aktivitet) return true;
       return new Date(l.sist_aktivitet) < cutoff;
     });
@@ -237,7 +237,7 @@ export default function Dashboard() {
         ...sm,
         selskapNavn: selskaper.find((s) => s.id === sm.selskap_id)?.firmanavn || "—",
       })),
-    leads: leads.filter((l) => l.status !== "Ikke aktuelt" && l.status !== "Konvertert til salg" && l.status !== "Konvertert til partner"),
+    leads: leads.filter((l) => l.status !== "Ikke aktuelt" && l.status !== "Konvertert til salg" && l.status !== "Konvertert til partner" && !l.konvertert_til && !l.konvertert_dato),
     oppgaver,
   }), [todayMeetings, followUps, salgsmuligheter, leads, oppgaver, selskaper, entityNames]);
 
