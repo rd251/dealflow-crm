@@ -84,6 +84,7 @@ serve(async (req) => {
                         salgsmulighet_id: { type: "string", description: "ID of related sales opportunity" },
                         selskap_id: { type: "string", description: "ID of related company" },
                         lead_id: { type: "string", description: "ID of related lead" },
+                        auto_create: { type: "boolean", description: "Set to true when the user explicitly asks to create a task (e.g. 'opprett oppgave', 'lag oppgave', 'legg til oppgave'). The task will be created automatically without confirmation." },
                       },
                       required: ["oppgave", "prioritet"],
                     },
