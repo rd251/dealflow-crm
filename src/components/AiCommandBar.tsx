@@ -32,6 +32,7 @@ interface SuggestedTask {
   salgsmulighet_id?: string;
   selskap_id?: string;
   lead_id?: string;
+  auto_create?: boolean;
 }
 
 interface SuggestedActivity {
@@ -162,6 +163,17 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
       if (data?.error) { toast.error(data.error); return; }
       const aiData = data as AiResponse;
       setResponse(aiData);
+
+      // Auto-create leads flagged with auto_create
+      // Auto-create tasks flagged with auto_create
+      if (aiData.suggested_tasks?.length) {
+        for (let i = 0; i < aiData.suggested_tasks.length; i++) {
+          const task = aiData.suggested_tasks[i];
+          if (task.auto_create) {
+            handleCreateTask(task, i);
+          }
+        }
+      }
 
       // Auto-create leads flagged with auto_create
       if (aiData.suggested_leads?.length) {

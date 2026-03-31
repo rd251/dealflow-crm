@@ -84,6 +84,7 @@ serve(async (req) => {
                         salgsmulighet_id: { type: "string", description: "ID of related sales opportunity" },
                         selskap_id: { type: "string", description: "ID of related company" },
                         lead_id: { type: "string", description: "ID of related lead" },
+                        auto_create: { type: "boolean", description: "Set to true when the user explicitly asks to create a task (e.g. 'opprett oppgave', 'lag oppgave', 'legg til oppgave'). The task will be created automatically without confirmation." },
                       },
                       required: ["oppgave", "prioritet"],
                     },
@@ -250,6 +251,7 @@ REGLER:
 - Prioriter alltid entiteter med manglende/gammel aktivitet
 - Aldri foreslå handlinger på ferdige deals (Vunnet/Tapt)
 - Når du foreslår oppgaver, sett alltid realistiske frister (i dag eller innen noen dager)
+- Sett auto_create=true på oppgaver når brukeren eksplisitt ber om å opprette/lage en oppgave (f.eks. "opprett oppgave", "lag oppgave", "legg til oppgave"). Da opprettes oppgaven automatisk uten bekreftelse.
 - Når brukeren nevner samtaler, møter, e-poster eller andre interaksjoner, foreslå å logge disse som aktiviteter
 - Hold svarene korte og handlingsorienterte
 - Bruk markdown for formatering
