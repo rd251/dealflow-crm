@@ -165,7 +165,7 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
     }
   };
 
-
+  const handleNavigate = (item: AiItem) => {
     if (!item.entityId || !item.entityType) return;
     switch (item.entityType) {
       case "salgsmulighet": navigate(`/salgsmuligheter?open=${item.entityId}`); break;
