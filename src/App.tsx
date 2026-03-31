@@ -13,6 +13,7 @@ import Leads from "./pages/Leads";
 import Salgsmuligheter from "./pages/Salgsmuligheter";
 import Prosjekter from "./pages/Prosjekter";
 import Companies from "./pages/Companies";
+import AlleSelskaper from "./pages/AlleSelskaper";
 import Contacts from "./pages/Contacts";
 import Tasks from "./pages/Tasks";
 import Partnere from "./pages/Partnere";
@@ -115,6 +116,7 @@ function AppRoutes() {
                 <Route path="/salgsmuligheter" element={<Salgsmuligheter />} />
                 <Route path="/prosjekter" element={<Prosjekter />} />
                 <Route path="/selskaper" element={<Companies />} />
+                <Route path="/alle-selskaper" element={<AlleSelskaper />} />
                 <Route path="/selskaper/:id" element={<CompanyProfile />} />
                 <Route path="/kontakter" element={<Contacts />} />
                 <Route path="/kontaktstrom" element={<Kontaktstrom />} />

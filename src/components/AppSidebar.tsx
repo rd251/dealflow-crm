@@ -16,6 +16,7 @@ const navItems = [
   { to: "/salgsmuligheter", icon: Handshake, label: "Salgsmuligheter" },
   { to: "/prosjekter", icon: FolderKanban, label: "Prosjekter" },
   { to: "/selskaper", icon: Building2, label: "Kundeforhold" },
+  { to: "/alle-selskaper", icon: Building2, label: "Selskaper" },
   { to: "/kontakter", icon: Users, label: "Kontakter" },
   { to: "/oppgaver", icon: ListTodo, label: "Oppgaver" },
   { to: "/kalender", icon: CalendarDays, label: "Kalender" },
