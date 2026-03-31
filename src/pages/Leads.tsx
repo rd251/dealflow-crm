@@ -269,63 +269,9 @@ export default function Leads() {
                   ))}
                 </tbody>
               </table>
-              {filtered.length === 0 && <p className="text-center text-sm text-muted-foreground py-8">Ingen aktive leads</p>}
+              {filtered.length === 0 && <p className="text-center text-sm text-muted-foreground py-8">Ingen leads funnet</p>}
             </div>
           )}
-        </>
-      ) : (
-        /* Archive tab */
-        <div className="bg-card border rounded-xl overflow-hidden">
-          {isMobile ? (
-            <div className="space-y-3 p-3">
-              {archivedLeads.map(lead => (
-                <div key={lead.id} className="bg-muted/30 border rounded-xl p-4 space-y-2 opacity-80" onClick={() => setSelectedLead(lead)}>
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="font-semibold text-sm truncate">{lead.firmanavn}</p>
-                    <div className="flex items-center gap-1 shrink-0">
-                      {conversionBadge(lead)}
-                      {lead.status === "Ikke aktuelt" && <Badge className="text-[10px] bg-muted text-muted-foreground">Ikke aktuelt</Badge>}
-                    </div>
-                  </div>
-                  <p className="text-xs text-muted-foreground">{lead.kontaktperson}</p>
-                </div>
-              ))}
-              {archivedLeads.length === 0 && <p className="text-center text-sm text-muted-foreground py-8">Ingen arkiverte leads</p>}
-            </div>
-          ) : (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b bg-muted/50">
-                  <th className="text-left px-4 py-3 font-medium">Firma</th>
-                  <th className="text-left px-4 py-3 font-medium">Kontaktperson</th>
-                  <th className="text-left px-4 py-3 font-medium">Kilde</th>
-                  <th className="text-left px-4 py-3 font-medium">Status</th>
-                  <th className="text-left px-4 py-3 font-medium">Konvertert dato</th>
-                  <th className="text-left px-4 py-3 font-medium">Opprettet</th>
-                </tr>
-              </thead>
-              <tbody>
-                {archivedLeads.map(lead => (
-                  <tr key={lead.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer opacity-70" onClick={() => setSelectedLead(lead)}>
-                    <td className="px-4 py-3 font-medium">{lead.firmanavn}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{lead.kontaktperson}</td>
-                    <td className="px-4 py-3"><Badge variant="secondary" className="text-xs">{lead.kilde}</Badge></td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-1.5">
-                        {conversionBadge(lead)}
-                        {lead.status === "Ikke aktuelt" && <Badge className="text-[10px] bg-muted text-muted-foreground">Ikke aktuelt</Badge>}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground text-xs font-mono">{lead.konvertert_dato || "–"}</td>
-                    <td className="px-4 py-3 text-muted-foreground text-xs font-mono">{lead.opprettet_dato}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-          {archivedLeads.length === 0 && !isMobile && <p className="text-center text-sm text-muted-foreground py-8">Ingen arkiverte leads</p>}
-        </div>
-      )}
 
       <DetailPanelShell
         open={!!currentLead}
