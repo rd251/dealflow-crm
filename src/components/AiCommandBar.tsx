@@ -71,6 +71,7 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
   const [response, setResponse] = useState<AiResponse | null>(null);
   const [creatingTasks, setCreatingTasks] = useState(false);
   const [createdTaskIds, setCreatedTaskIds] = useState<Set<number>>(new Set());
+  const [createdActivityIds, setCreatedActivityIds] = useState<Set<number>>(new Set());
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSubmit = async (prompt?: string) => {
