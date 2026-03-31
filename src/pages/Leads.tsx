@@ -69,9 +69,6 @@ export default function Leads() {
     return "";
   };
 
-  const filtered = leads.filter(l => {
-    // Hide archived leads from the active list
-    if (isArchived(l)) return false;
     if (filterUtenOppfolging) {
       const cutoff = new Date(now.getTime() - 24 * 60 * 60 * 1000);
       if (l.sist_aktivitet && new Date(l.sist_aktivitet) >= cutoff) return false;
