@@ -136,6 +136,7 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
   const [meetingState, setMeetingState] = useState<MeetingState>("pending");
   const [editingMeeting, setEditingMeeting] = useState<SuggestedMeeting | null>(null);
   const [createdMeetingId, setCreatedMeetingId] = useState<string | null>(null);
+  const [createdLeadIds, setCreatedLeadIds] = useState<Set<number>>(new Set());
 
   const handleSubmit = async (prompt?: string) => {
     const msg = prompt || input.trim();
