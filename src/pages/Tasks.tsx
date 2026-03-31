@@ -317,8 +317,8 @@ export default function Tasks() {
                 {selskaper.map(s => <option key={s.id} value={s.id}>{s.firmanavn}</option>)}
               </select>
               <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background" value={editingTask.kontakt_id} onChange={e => setEditingTask(t => t ? { ...t, kontakt_id: e.target.value } : t)}>
-                <option value="">Knytt til kontakt (valgfritt)</option>
-                {kontakter.map(k => <option key={k.id} value={k.id}>{k.navn}{k.rolle ? ` – ${k.rolle}` : ""}</option>)}
+                <option value="">Knytt til person (valgfritt)</option>
+                {allPersons.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
               </select>
               <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background" value={editingTask.ansvarlig} onChange={e => setEditingTask(t => t ? { ...t, ansvarlig: e.target.value } : t)}>
                 <option value="">Velg ansvarlig (valgfritt)</option>
