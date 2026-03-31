@@ -241,11 +241,12 @@ export default function Dashboard() {
     oppgaver,
   }), [todayMeetings, followUps, salgsmuligheter, leads, oppgaver, selskaper, entityNames]);
 
-  const { profiles: allProfiles } = useProfiles();
+  const { user } = useAuth();
   const currentUserName = useMemo(() => {
-    const userId = undefined; // will use auth
-    return profiles.length > 0 ? profiles[0]?.display_name?.split(" ")[0] : undefined;
-  }, [profiles]);
+    if (!user) return undefined;
+    const profile = profiles.find((p) => p.user_id === user.id);
+    return profile?.display_name?.split(" ")[0];
+  }, [profiles, user]);
 
   return (
     <PageShell
