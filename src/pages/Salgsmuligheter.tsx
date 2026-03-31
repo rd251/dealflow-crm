@@ -65,6 +65,7 @@ export default function Salgsmuligheter() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [moveBlockedId, setMoveBlockedId] = useState<string | null>(null);
   const [form, setForm] = useState({ navn: "", selskap_id: "", kontakt_id: "", forventet_mrr: 0, sla: 0, oppstartskostnad: 0, kontraktslengde_mnd: 12, sannsynlighet: 50, forventet_lukkedato: "", neste_steg: "", rolle_i_firma: "", use_case: "", kontaktperson: "", e_post: "", telefon: "" });
+  const [filterUtenAktivitet, setFilterUtenAktivitet] = useState(false);
 
   useEffect(() => {
     const openId = searchParams.get("open");
@@ -74,6 +75,10 @@ export default function Salgsmuligheter() {
         setSelectedSm(found);
         setSearchParams({}, { replace: true });
       }
+    }
+    if (searchParams.get("filter") === "uten-aktivitet") {
+      setFilterUtenAktivitet(true);
+      setSearchParams({}, { replace: true });
     }
   }, [searchParams, salgsmuligheter]);
 
