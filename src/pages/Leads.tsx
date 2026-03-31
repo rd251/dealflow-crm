@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import PageShell from "@/components/PageShell";
 import { useCrmStore } from "@/hooks/use-crm-store";
@@ -42,6 +42,7 @@ export default function Leads() {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [form, setForm] = useState<Partial<Lead>>({ firmanavn: "", kontaktperson: "", e_post: "", telefon: "", kilde: "Nettside", status: "Ny", ansvarlig: "", neste_steg: "", notater: "", rolle_i_firma: "", use_case: "" });
   const [filterUtenOppfolging, setFilterUtenOppfolging] = useState(false);
+  const [tab, setTab] = useState<"aktive" | "arkiv">("aktive");
 
   // Pick up filter from query param
   useEffect(() => {
@@ -53,15 +54,39 @@ export default function Leads() {
 
   const now = new Date();
 
-  // Helper: is a lead converted (locked)?
-  const isConverted = (l: Lead) => !!l.konvertert_til;
+  // Helper: is a lead converted (locked)? Also check konvertert_dato for DB-persisted state
+  const isConverted = (l: Lead) =>
+    !!l.konvertert_til ||
+    !!l.konvertert_dato ||
+    l.status === "Konvertert til salg" ||
+    l.status === "Konvertert til partner";
+
+  // Helper: is a lead archived (converted or "Ikke aktuelt")?
+  const isArchived = (l: Lead) => isConverted(l) || l.status === "Ikke aktuelt";
+
+  // Derive conversion type for display when konvertert_til is missing (after reload)
+  const getConversionType = (l: Lead): "" | "salg" | "partner" => {
+    if (l.konvertert_til) return l.konvertert_til as "salg" | "partner";
+    if (l.status === "Konvertert til salg") return "salg";
+    if (l.status === "Konvertert til partner") return "partner";
+    // Has konvertert_dato but unknown type – default to salg
+    if (l.konvertert_dato) return "salg";
+    return "";
+  };
+
+  const archivedLeads = useMemo(() => leads.filter(l => {
+    if (!isArchived(l)) return false;
+    return (
+      l.firmanavn.toLowerCase().includes(search.toLowerCase()) ||
+      l.kontaktperson.toLowerCase().includes(search.toLowerCase())
+    );
+  }), [leads, search]);
 
   const filtered = leads.filter(l => {
-    // Hide converted leads from the active list
-    if (isConverted(l)) return false;
+    // Hide archived leads from the active list
+    if (isArchived(l)) return false;
     if (filterUtenOppfolging) {
       const cutoff = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-      if (l.status === "Ikke aktuelt") return false;
       if (l.sist_aktivitet && new Date(l.sist_aktivitet) >= cutoff) return false;
     }
     return (
@@ -94,8 +119,9 @@ export default function Leads() {
   const currentIsLocked = currentLead ? isConverted(currentLead) : false;
 
   const conversionBadge = (lead: Lead) => {
-    if (!lead.konvertert_til) return null;
-    const isSalg = lead.konvertert_til === "salg";
+    const type = getConversionType(lead);
+    if (!type) return null;
+    const isSalg = type === "salg";
     return (
       <Badge className={`text-[10px] gap-0.5 ${isSalg ? "bg-success/10 text-success" : "bg-primary/10 text-primary"}`}>
         <Lock className="w-3 h-3" />
@@ -180,111 +206,169 @@ export default function Leads() {
           return { success, errors };
         }}
       />
+      {/* Tabs */}
+      <div className="mb-4 flex items-center gap-4 border-b">
+        <button
+          className={`pb-2 text-sm font-medium border-b-2 transition-colors ${tab === "aktive" ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+          onClick={() => setTab("aktive")}
+        >
+          Aktive ({filtered.length})
+        </button>
+        <button
+          className={`pb-2 text-sm font-medium border-b-2 transition-colors ${tab === "arkiv" ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+          onClick={() => setTab("arkiv")}
+        >
+          Arkiv ({archivedLeads.length})
+        </button>
+      </div>
+
       <div className="mb-4 flex items-center gap-2">
         <div className="relative max-w-sm flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input placeholder="Søk leads..." className="pl-9" value={search} onChange={e => setSearch(e.target.value)} />
         </div>
-        {filterUtenOppfolging && (
+        {filterUtenOppfolging && tab === "aktive" && (
           <Badge variant="secondary" className="gap-1 cursor-pointer hover:bg-destructive/10" onClick={() => setFilterUtenOppfolging(false)}>
             Uten oppfølging ✕
           </Badge>
         )}
       </div>
 
-      {/* Mobile: card layout */}
-      {isMobile ? (
-        <div className="space-y-3">
-          {filtered.map(lead => {
-            const locked = isConverted(lead);
-            return (
-              <div key={lead.id} className={`bg-card border rounded-xl p-4 space-y-2 ${locked ? "opacity-80" : ""}`} onClick={() => setSelectedLead(lead)}>
-                <div className="flex items-center justify-between gap-2">
-                  <p className="font-semibold text-sm truncate">{lead.firmanavn}</p>
-                  <div className="flex items-center gap-1 shrink-0">
-                    {conversionBadge(lead)}
+      {tab === "aktive" ? (
+        <>
+          {/* Mobile: card layout */}
+          {isMobile ? (
+            <div className="space-y-3">
+              {filtered.map(lead => (
+                <div key={lead.id} className="bg-card border rounded-xl p-4 space-y-2" onClick={() => setSelectedLead(lead)}>
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="font-semibold text-sm truncate">{lead.firmanavn}</p>
                     <Badge className={`text-[10px] ${statusColors[lead.status] || ""}`}>{lead.status}</Badge>
                   </div>
-                </div>
-                <p className="text-xs text-muted-foreground">{lead.kontaktperson}</p>
-                <div className="flex items-center justify-between">
-                  <Badge variant="secondary" className="text-[10px]">{lead.kilde}</Badge>
-                  {lead.neste_steg && <span className="text-[10px] text-muted-foreground truncate ml-2">→ {lead.neste_steg}</span>}
-                </div>
-                {!locked && lead.status !== "Ikke aktuelt" && (
-                  <div className="flex gap-1 mt-1">
-                    <Button size="sm" variant="ghost" className="text-xs gap-1 flex-1" onClick={e => { e.stopPropagation(); konverterLead(lead.id); }}>
-                      <ArrowRightCircle className="w-3.5 h-3.5" />Salg
-                    </Button>
-                    <Button size="sm" variant="ghost" className="text-xs gap-1 flex-1" onClick={e => { e.stopPropagation(); konverterTilPartner(lead.id); }}>
-                      <Users2 className="w-3.5 h-3.5" />Partner
-                    </Button>
+                  <p className="text-xs text-muted-foreground">{lead.kontaktperson}</p>
+                  <div className="flex items-center justify-between">
+                    <Badge variant="secondary" className="text-[10px]">{lead.kilde}</Badge>
+                    {lead.neste_steg && <span className="text-[10px] text-muted-foreground truncate ml-2">→ {lead.neste_steg}</span>}
                   </div>
-                )}
-              </div>
-            );
-          })}
-          {filtered.length === 0 && <p className="text-center text-sm text-muted-foreground py-8">Ingen leads å vise</p>}
-        </div>
+                  {lead.status !== "Ikke aktuelt" && (
+                    <div className="flex gap-1 mt-1">
+                      <Button size="sm" variant="ghost" className="text-xs gap-1 flex-1" onClick={e => { e.stopPropagation(); konverterLead(lead.id); }}>
+                        <ArrowRightCircle className="w-3.5 h-3.5" />Salg
+                      </Button>
+                      <Button size="sm" variant="ghost" className="text-xs gap-1 flex-1" onClick={e => { e.stopPropagation(); konverterTilPartner(lead.id); }}>
+                        <Users2 className="w-3.5 h-3.5" />Partner
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              ))}
+              {filtered.length === 0 && <p className="text-center text-sm text-muted-foreground py-8">Ingen aktive leads</p>}
+            </div>
+          ) : (
+            /* Desktop: table layout */
+            <div className="bg-card border rounded-xl overflow-hidden">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b bg-muted/50">
+                    <th className="text-left px-4 py-3 font-medium">Firma</th>
+                    <th className="text-left px-4 py-3 font-medium">Kontaktperson</th>
+                    <th className="text-left px-4 py-3 font-medium">Kilde</th>
+                    <th className="text-left px-4 py-3 font-medium">Status</th>
+                    <th className="text-left px-4 py-3 font-medium">Neste steg</th>
+                    <th className="text-left px-4 py-3 font-medium">Sist aktivitet</th>
+                    <th className="text-left px-4 py-3 font-medium">Opprettet</th>
+                    <th className="text-right px-4 py-3 font-medium">Handling</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map(lead => (
+                    <tr key={lead.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => setSelectedLead(lead)}>
+                      <td className="px-4 py-3 font-medium">{lead.firmanavn}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{lead.kontaktperson}</td>
+                      <td className="px-4 py-3"><Badge variant="secondary" className="text-xs">{lead.kilde}</Badge></td>
+                      <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
+                        <select
+                          className={`text-xs px-2 py-1 rounded-full font-medium border-0 cursor-pointer ${statusColors[lead.status] || ""}`}
+                          value={lead.status}
+                          onChange={e => changeStatus(lead.id, e.target.value as LeadStatus)}
+                        >
+                          {statusOptions.map(s => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground text-xs">{lead.neste_steg}</td>
+                      <td className="px-4 py-3"><LastActivityBadge lead_id={lead.id} sist_aktivitet={lead.sist_aktivitet} /></td>
+                      <td className="px-4 py-3 text-muted-foreground text-xs font-mono">{lead.opprettet_dato}</td>
+                      <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
+                        {lead.status !== "Ikke aktuelt" && (
+                          <div className="flex gap-1">
+                            <Button size="sm" variant="ghost" className="text-xs gap-1" onClick={() => konverterLead(lead.id)}>
+                              <ArrowRightCircle className="w-3.5 h-3.5" />Salg
+                            </Button>
+                            <Button size="sm" variant="ghost" className="text-xs gap-1" onClick={() => konverterTilPartner(lead.id)}>
+                              <Users2 className="w-3.5 h-3.5" />Partner
+                            </Button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {filtered.length === 0 && <p className="text-center text-sm text-muted-foreground py-8">Ingen aktive leads</p>}
+            </div>
+          )}
+        </>
       ) : (
-        /* Desktop: table layout */
+        /* Archive tab */
         <div className="bg-card border rounded-xl overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b bg-muted/50">
-                <th className="text-left px-4 py-3 font-medium">Firma</th>
-                <th className="text-left px-4 py-3 font-medium">Kontaktperson</th>
-                <th className="text-left px-4 py-3 font-medium">Kilde</th>
-                <th className="text-left px-4 py-3 font-medium">Status</th>
-                <th className="text-left px-4 py-3 font-medium">Neste steg</th>
-                <th className="text-left px-4 py-3 font-medium">Sist aktivitet</th>
-                <th className="text-left px-4 py-3 font-medium">Opprettet</th>
-                <th className="text-right px-4 py-3 font-medium">Handling</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map(lead => {
-                const locked = isConverted(lead);
-                return (
-                  <tr key={lead.id} className={`border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer ${locked ? "opacity-70" : ""}`} onClick={() => setSelectedLead(lead)}>
+          {isMobile ? (
+            <div className="space-y-3 p-3">
+              {archivedLeads.map(lead => (
+                <div key={lead.id} className="bg-muted/30 border rounded-xl p-4 space-y-2 opacity-80" onClick={() => setSelectedLead(lead)}>
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="font-semibold text-sm truncate">{lead.firmanavn}</p>
+                    <div className="flex items-center gap-1 shrink-0">
+                      {conversionBadge(lead)}
+                      {lead.status === "Ikke aktuelt" && <Badge className="text-[10px] bg-muted text-muted-foreground">Ikke aktuelt</Badge>}
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground">{lead.kontaktperson}</p>
+                </div>
+              ))}
+              {archivedLeads.length === 0 && <p className="text-center text-sm text-muted-foreground py-8">Ingen arkiverte leads</p>}
+            </div>
+          ) : (
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b bg-muted/50">
+                  <th className="text-left px-4 py-3 font-medium">Firma</th>
+                  <th className="text-left px-4 py-3 font-medium">Kontaktperson</th>
+                  <th className="text-left px-4 py-3 font-medium">Kilde</th>
+                  <th className="text-left px-4 py-3 font-medium">Status</th>
+                  <th className="text-left px-4 py-3 font-medium">Konvertert dato</th>
+                  <th className="text-left px-4 py-3 font-medium">Opprettet</th>
+                </tr>
+              </thead>
+              <tbody>
+                {archivedLeads.map(lead => (
+                  <tr key={lead.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer opacity-70" onClick={() => setSelectedLead(lead)}>
                     <td className="px-4 py-3 font-medium">{lead.firmanavn}</td>
                     <td className="px-4 py-3 text-muted-foreground">{lead.kontaktperson}</td>
                     <td className="px-4 py-3"><Badge variant="secondary" className="text-xs">{lead.kilde}</Badge></td>
-                    <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
+                    <td className="px-4 py-3">
                       <div className="flex items-center gap-1.5">
-                        {locked ? (
-                          conversionBadge(lead)
-                        ) : (
-                          <select
-                            className={`text-xs px-2 py-1 rounded-full font-medium border-0 cursor-pointer ${statusColors[lead.status] || ""}`}
-                            value={lead.status}
-                            onChange={e => changeStatus(lead.id, e.target.value as LeadStatus)}
-                          >
-                            {statusOptions.map(s => <option key={s} value={s}>{s}</option>)}
-                          </select>
-                        )}
+                        {conversionBadge(lead)}
+                        {lead.status === "Ikke aktuelt" && <Badge className="text-[10px] bg-muted text-muted-foreground">Ikke aktuelt</Badge>}
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground text-xs">{lead.neste_steg}</td>
-                    <td className="px-4 py-3"><LastActivityBadge lead_id={lead.id} sist_aktivitet={lead.sist_aktivitet} /></td>
+                    <td className="px-4 py-3 text-muted-foreground text-xs font-mono">{lead.konvertert_dato || "–"}</td>
                     <td className="px-4 py-3 text-muted-foreground text-xs font-mono">{lead.opprettet_dato}</td>
-                    <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
-                      {!locked && lead.status !== "Ikke aktuelt" && (
-                        <div className="flex gap-1">
-                          <Button size="sm" variant="ghost" className="text-xs gap-1" onClick={() => konverterLead(lead.id)}>
-                            <ArrowRightCircle className="w-3.5 h-3.5" />Salg
-                          </Button>
-                          <Button size="sm" variant="ghost" className="text-xs gap-1" onClick={() => konverterTilPartner(lead.id)}>
-                            <Users2 className="w-3.5 h-3.5" />Partner
-                          </Button>
-                        </div>
-                      )}
-                    </td>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                ))}
+              </tbody>
+            </table>
+          )}
+          {archivedLeads.length === 0 && !isMobile && <p className="text-center text-sm text-muted-foreground py-8">Ingen arkiverte leads</p>}
         </div>
       )}
 
@@ -296,10 +380,10 @@ export default function Leads() {
         badges={currentLead ? (
           <>
             <Badge className={`text-xs ${statusColors[currentLead.status] || ""}`}>{currentLead.status}</Badge>
-            {currentLead.konvertert_til && (
-              <Badge className={`text-xs gap-0.5 ${currentLead.konvertert_til === "salg" ? "bg-success/10 text-success" : "bg-primary/10 text-primary"}`}>
+            {getConversionType(currentLead) && (
+              <Badge className={`text-xs gap-0.5 ${getConversionType(currentLead) === "salg" ? "bg-success/10 text-success" : "bg-primary/10 text-primary"}`}>
                 <Lock className="w-3 h-3" />
-                {currentLead.konvertert_til === "salg" ? "Konvertert → Salg" : "Konvertert → Partner"}
+                {getConversionType(currentLead) === "salg" ? "Konvertert → Salg" : "Konvertert → Partner"}
               </Badge>
             )}
             <Badge variant="secondary" className="text-xs">{currentLead.kilde}</Badge>
@@ -378,10 +462,10 @@ export default function Leads() {
                   <Input value={currentLead.use_case} onChange={e => updateField("use_case", e.target.value)} className="h-7 text-xs mt-0.5" readOnly={!canEdit || currentIsLocked} />
                 </div>
 
-                {currentLead.konvertert_til && (
-                  <div className={`p-2.5 rounded-lg text-xs font-medium flex items-center gap-2 ${currentLead.konvertert_til === "salg" ? "bg-success/10 text-success" : "bg-primary/10 text-primary"}`}>
+                {getConversionType(currentLead) && (
+                  <div className={`p-2.5 rounded-lg text-xs font-medium flex items-center gap-2 ${getConversionType(currentLead) === "salg" ? "bg-success/10 text-success" : "bg-primary/10 text-primary"}`}>
                     <Lock className="w-3.5 h-3.5" />
-                    Konvertert til {currentLead.konvertert_til === "salg" ? "salgsmulighet" : "partner"} · {currentLead.konvertert_dato}
+                    Konvertert til {getConversionType(currentLead) === "salg" ? "salgsmulighet" : "partner"} · {currentLead.konvertert_dato}
                   </div>
                 )}
 
