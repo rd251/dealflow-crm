@@ -114,6 +114,18 @@ interface SuggestedCompany {
   auto_create?: boolean;
 }
 
+interface SuggestedContact {
+  navn: string;
+  e_post?: string;
+  telefon?: string;
+  rolle?: string;
+  selskap_id?: string;
+  selskap_navn?: string;
+  linkedin?: string;
+  notater?: string;
+  auto_create?: boolean;
+}
+
 interface AiResponse {
   summary: string;
   items: AiItem[];
@@ -125,6 +137,7 @@ interface AiResponse {
   suggested_status_updates?: SuggestedStatusUpdate[];
   suggested_conversions?: SuggestedConversion[];
   suggested_companies?: SuggestedCompany[];
+  suggested_contacts?: SuggestedContact[];
 }
 
 interface AiCommandBarProps {
@@ -163,6 +176,7 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
   const [appliedStatusIds, setAppliedStatusIds] = useState<Set<number>>(new Set());
   const [appliedConversionIds, setAppliedConversionIds] = useState<Set<number>>(new Set());
   const [createdCompanyIds, setCreatedCompanyIds] = useState<Set<number>>(new Set());
+  const [createdContactIds, setCreatedContactIds] = useState<Set<number>>(new Set());
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   // Email draft states
@@ -192,6 +206,7 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
     setAppliedStatusIds(new Set());
     setAppliedConversionIds(new Set());
     setCreatedCompanyIds(new Set());
+    setCreatedContactIds(new Set());
 
     try {
       const { data, error } = await supabase.functions.invoke("ai-command", {
@@ -256,6 +271,15 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
         for (let i = 0; i < aiData.suggested_companies.length; i++) {
           if (aiData.suggested_companies[i].auto_create) {
             handleCreateCompany(aiData.suggested_companies[i], i);
+          }
+        }
+      }
+
+      // Auto-create contacts
+      if (aiData.suggested_contacts?.length) {
+        for (let i = 0; i < aiData.suggested_contacts.length; i++) {
+          if (aiData.suggested_contacts[i].auto_create) {
+            handleCreateContact(aiData.suggested_contacts[i], i);
           }
         }
       }
@@ -419,6 +443,25 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
       toast.success(`Selskap "${company.firmanavn}" opprettet`);
     } catch {
       toast.error("Kunne ikke opprette selskap");
+    }
+  };
+
+  const handleCreateContact = async (contact: SuggestedContact, index: number) => {
+    try {
+      const { error } = await supabase.from("kontakter").insert({
+        navn: contact.navn,
+        e_post: contact.e_post || "",
+        telefon: contact.telefon || "",
+        rolle: contact.rolle || "",
+        selskap_id: contact.selskap_id || null,
+        linkedin: contact.linkedin || "",
+        notater: contact.notater || "",
+      });
+      if (error) throw error;
+      setCreatedContactIds((prev) => new Set([...prev, index]));
+      toast.success(`Kontakt "${contact.navn}" opprettet`);
+    } catch {
+      toast.error("Kunne ikke opprette kontakt");
     }
   };
 
@@ -1038,6 +1081,42 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
                       <span className="text-xs text-emerald-600 font-medium shrink-0">Opprettet ✓</span>
                     ) : (
                       <Button variant="outline" size="sm" className="text-xs h-7 gap-1 shrink-0" onClick={() => handleCreateCompany(company, i)}>
+                        Opprett
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* New contacts */}
+          {response.suggested_contacts && response.suggested_contacts.length > 0 && (
+            <div className="border-t">
+              <div className="px-5 py-3 bg-muted/30 flex items-center gap-2">
+                <User className="w-4 h-4 text-primary" />
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Nye kontakter</p>
+              </div>
+              <div className="divide-y">
+                {response.suggested_contacts.map((contact, i) => (
+                  <div key={i} className="flex items-center gap-3 px-5 py-3 hover:bg-muted/30 transition-colors">
+                    {createdContactIds.has(i) ? (
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                    ) : (
+                      <User className="w-4 h-4 text-muted-foreground shrink-0" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{contact.navn}</p>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5 flex-wrap">
+                        {contact.selskap_navn && <span className="flex items-center gap-0.5"><Building2 className="w-3 h-3" />{contact.selskap_navn}</span>}
+                        {contact.rolle && <span>· {contact.rolle}</span>}
+                        {contact.e_post && <span>· {contact.e_post}</span>}
+                      </div>
+                    </div>
+                    {createdContactIds.has(i) ? (
+                      <span className="text-xs text-emerald-600 font-medium shrink-0">Opprettet ✓</span>
+                    ) : (
+                      <Button variant="outline" size="sm" className="text-xs h-7 gap-1 shrink-0" onClick={() => handleCreateContact(contact, i)}>
                         Opprett
                       </Button>
                     )}

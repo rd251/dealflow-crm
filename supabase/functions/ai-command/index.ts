@@ -214,6 +214,24 @@ serve(async (req) => {
                       required: ["firmanavn"],
                     },
                   },
+                  suggested_contacts: {
+                    type: "array",
+                    description: "Contacts to create in the CRM. Generate when user asks to add/create a contact person.",
+                    items: {
+                      type: "object",
+                      properties: {
+                        navn: { type: "string", description: "Full name of the contact" },
+                        e_post: { type: "string", description: "Email address if provided" },
+                        telefon: { type: "string", description: "Phone number if provided" },
+                        rolle: { type: "string", description: "Role/title if mentioned" },
+                        selskap_id: { type: "string", description: "ID of the company to link to. MUST come from CRM context (selskaper list)." },
+                        selskap_navn: { type: "string", description: "Company name for display" },
+                        linkedin: { type: "string", description: "LinkedIn URL if provided" },
+                        notater: { type: "string", description: "Notes about the contact" },
+                        auto_create: { type: "boolean", description: "Set true when user explicitly asks to create/add a contact. Created automatically." },
+                      },
+                      required: ["navn"],
+                    },
                 },
                 required: ["summary", "items", "suggested_tasks", "suggested_activities", "suggested_emails"],
               },
@@ -364,6 +382,12 @@ KONVERTERING REGLER:
 SELSKAPSOPPRETTING REGLER:
 - Når brukeren ber om å opprette/lage et selskap, generer suggested_companies
 - Sjekk at selskapet ikke allerede finnes i konteksten
+- Sett auto_create=true når brukeren eksplisitt ber om det
+
+KONTAKTOPPRETTING REGLER:
+- Når brukeren ber om å legge til/opprette en kontaktperson, generer suggested_contacts
+- Match selskapsnavnet mot selskaper i CRM-konteksten for å finne riktig selskap_id
+- Sjekk at kontakten ikke allerede finnes blant kontakter i konteksten
 - Sett auto_create=true når brukeren eksplisitt ber om det
 
 CRM-DATA:
