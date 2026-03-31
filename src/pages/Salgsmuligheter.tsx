@@ -65,6 +65,7 @@ export default function Salgsmuligheter() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [moveBlockedId, setMoveBlockedId] = useState<string | null>(null);
   const [form, setForm] = useState({ navn: "", selskap_id: "", kontakt_id: "", forventet_mrr: 0, sla: 0, oppstartskostnad: 0, kontraktslengde_mnd: 12, sannsynlighet: 50, forventet_lukkedato: "", neste_steg: "", rolle_i_firma: "", use_case: "", kontaktperson: "", e_post: "", telefon: "" });
+  const [filterUtenAktivitet, setFilterUtenAktivitet] = useState(false);
 
   useEffect(() => {
     const openId = searchParams.get("open");
@@ -74,6 +75,10 @@ export default function Salgsmuligheter() {
         setSelectedSm(found);
         setSearchParams({}, { replace: true });
       }
+    }
+    if (searchParams.get("filter") === "uten-aktivitet") {
+      setFilterUtenAktivitet(true);
+      setSearchParams({}, { replace: true });
     }
   }, [searchParams, salgsmuligheter]);
 
@@ -127,7 +132,14 @@ export default function Salgsmuligheter() {
   const now = new Date();
   const thisMonth = (d: string) => { const dt = new Date(d); return dt.getMonth() === now.getMonth() && dt.getFullYear() === now.getFullYear(); };
 
-  const openDeals = salgsmuligheter.filter(s => openStatuses.includes(s.status));
+  const openDeals = salgsmuligheter.filter(s => {
+    if (!openStatuses.includes(s.status)) return false;
+    if (filterUtenAktivitet) {
+      const cutoff = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
+      if (s.sist_aktivitet && new Date(s.sist_aktivitet) >= cutoff) return false;
+    }
+    return true;
+  });
   const wonThisMonth = salgsmuligheter.filter(s => s.status === "Vunnet" && thisMonth(s.vunnet_dato));
   const lostThisMonth = salgsmuligheter.filter(s => s.status === "Tapt" && thisMonth(s.tapt_dato));
   const allClosed = salgsmuligheter.filter(s => s.status === "Vunnet" || s.status === "Tapt");
@@ -201,6 +213,13 @@ export default function Salgsmuligheter() {
         </TabsList>
 
         <TabsContent value="pipeline">
+          {filterUtenAktivitet && (
+            <div className="mb-3">
+              <Badge variant="secondary" className="gap-1 cursor-pointer hover:bg-destructive/10" onClick={() => setFilterUtenAktivitet(false)}>
+                Uten aktivitet ✕
+              </Badge>
+            </div>
+          )}
           {/* Pipeline summary panel */}
           {(() => {
             const totalPipeline = openDeals.reduce((s, d) => s + beregnTotalKontraktsverdi(d), 0);
