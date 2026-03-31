@@ -144,7 +144,28 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
     toast.success(`${success} oppgaver opprettet`);
   };
 
-  const handleNavigate = (item: AiItem) => {
+  const handleLogActivity = async (activity: SuggestedActivity, index: number) => {
+    try {
+      const { error } = await supabase.from("aktiviteter").insert({
+        type: activity.type,
+        tittel: activity.tittel,
+        beskrivelse: activity.beskrivelse,
+        dato: new Date().toISOString(),
+        salgsmulighet_id: activity.salgsmulighet_id || null,
+        selskap_id: activity.selskap_id || null,
+        lead_id: activity.lead_id || null,
+        kontakt_id: activity.kontakt_id || null,
+        aktivitet_kilde: "ai-assistent",
+      });
+      if (error) throw error;
+      setCreatedActivityIds((prev) => new Set([...prev, index]));
+      toast.success("Aktivitet logget");
+    } catch {
+      toast.error("Kunne ikke logge aktivitet");
+    }
+  };
+
+
     if (!item.entityId || !item.entityType) return;
     switch (item.entityType) {
       case "salgsmulighet": navigate(`/salgsmuligheter?open=${item.entityId}`); break;
