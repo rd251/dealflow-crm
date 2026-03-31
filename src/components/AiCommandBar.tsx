@@ -4,9 +4,12 @@ import ReactMarkdown from "react-markdown";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import {
   Sparkles, Send, Loader2, ListChecks,
   ExternalLink, CheckCircle2, ArrowUp, PhoneCall,
+  Mail, Pencil, SkipForward, Clock, ListTodo, X,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -39,11 +42,27 @@ interface SuggestedActivity {
   kontakt_id?: string;
 }
 
+interface SuggestedEmail {
+  to?: string;
+  to_name: string;
+  subject: string;
+  body: string;
+  reason: string;
+  entity_id?: string;
+  entity_type?: "salgsmulighet" | "lead";
+  entity_name?: string;
+  selskap_id?: string;
+  selskap_navn?: string;
+  kontakt_id?: string;
+  prioritet: "høy" | "medium" | "lav";
+}
+
 interface AiResponse {
   summary: string;
   items: AiItem[];
   suggested_tasks: SuggestedTask[];
   suggested_activities: SuggestedActivity[];
+  suggested_emails: SuggestedEmail[];
 }
 
 interface AiCommandBarProps {
@@ -56,6 +75,7 @@ const QUICK_PROMPTS = [
   { icon: "🔁", label: "Oppsummer siste samtaler" },
   { icon: "🎯", label: "Top 5 prioriteringer" },
   { icon: "📞", label: "Deals som trenger oppfølging" },
+  { icon: "✉️", label: "Skriv oppfølging til disse" },
 ];
 
 const prioritetColor: Record<string, string> = {
@@ -63,6 +83,8 @@ const prioritetColor: Record<string, string> = {
   "medium": "bg-amber-500/10 text-amber-600 border-amber-200",
   "lav": "bg-muted text-muted-foreground border-border",
 };
+
+type EmailState = "pending" | "editing" | "sending" | "sent" | "skipped" | "task_created";
 
 export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
   const navigate = useNavigate();
@@ -74,6 +96,10 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
   const [createdActivityIds, setCreatedActivityIds] = useState<Set<number>>(new Set());
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
+  // Email draft states
+  const [emailStates, setEmailStates] = useState<Map<number, EmailState>>(new Map());
+  const [editingEmails, setEditingEmails] = useState<Map<number, { subject: string; body: string; to: string }>>(new Map());
+
   const handleSubmit = async (prompt?: string) => {
     const msg = prompt || input.trim();
     if (!msg || loading) return;
@@ -82,6 +108,8 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
     setResponse(null);
     setCreatedTaskIds(new Set());
     setCreatedActivityIds(new Set());
+    setEmailStates(new Map());
+    setEditingEmails(new Map());
 
     try {
       const { data, error } = await supabase.functions.invoke("ai-command", {
@@ -174,6 +202,90 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
     }
   };
 
+  // ─── EMAIL ACTIONS ───
+  const setEmailState = (index: number, state: EmailState) => {
+    setEmailStates((prev) => new Map(prev).set(index, state));
+  };
+
+  const handleEditEmail = (index: number, email: SuggestedEmail) => {
+    setEditingEmails((prev) => new Map(prev).set(index, {
+      subject: email.subject,
+      body: email.body,
+      to: email.to || "",
+    }));
+    setEmailState(index, "editing");
+  };
+
+  const handleCancelEdit = (index: number) => {
+    setEditingEmails((prev) => {
+      const next = new Map(prev);
+      next.delete(index);
+      return next;
+    });
+    setEmailState(index, "pending");
+  };
+
+  const handleSendEmail = async (index: number, email: SuggestedEmail) => {
+    const edited = editingEmails.get(index);
+    const to = edited?.to || email.to;
+    const subject = edited?.subject || email.subject;
+    const body = edited?.body || email.body;
+
+    if (!to) {
+      toast.error("Mangler e-postadresse. Klikk Rediger for å legge til.");
+      return;
+    }
+
+    setEmailState(index, "sending");
+
+    try {
+      const { data, error } = await supabase.functions.invoke("gmail-send", {
+        body: {
+          to,
+          subject,
+          body,
+          entity_id: email.entity_id || null,
+          entity_type: email.entity_type || null,
+          selskap_id: email.selskap_id || null,
+          kontakt_id: email.kontakt_id || null,
+        },
+      });
+
+      if (error) throw error;
+      if (data?.error) {
+        toast.error(data.error);
+        setEmailState(index, "pending");
+        return;
+      }
+
+      setEmailState(index, "sent");
+      toast.success(`E-post sendt til ${email.to_name}`);
+    } catch (e: any) {
+      console.error("Send email error:", e);
+      toast.error("Kunne ikke sende e-post. Sjekk at Gmail er tilkoblet.");
+      setEmailState(index, "pending");
+    }
+  };
+
+  const handleCreateTaskFromEmail = async (index: number, email: SuggestedEmail) => {
+    try {
+      const { error } = await supabase.from("oppgaver").insert({
+        oppgave: `Følg opp ${email.to_name}: ${email.reason}`,
+        frist: new Date(Date.now() + 86400000).toISOString().split("T")[0],
+        prioritet: email.prioritet === "høy" ? "Høy" : email.prioritet === "medium" ? "Medium" : "Lav",
+        status: "Åpen",
+        salgsmulighet_id: email.entity_type === "salgsmulighet" ? email.entity_id : null,
+        selskap_id: email.selskap_id || null,
+        lead_id: email.entity_type === "lead" ? email.entity_id : null,
+      });
+      if (error) throw error;
+      setEmailState(index, "task_created");
+      toast.success("Oppgave opprettet i stedet");
+    } catch {
+      toast.error("Kunne ikke opprette oppgave");
+    }
+  };
+
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return "God morgen";
@@ -195,11 +307,9 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
         {getGreeting()}{userName ? `, ${userName}` : ""}.
       </h1>
 
-      {/* Input area - Attio style */}
+      {/* Input area */}
       <div className="bg-card border rounded-xl overflow-hidden">
-        <form
-          onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}
-        >
+        <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
           <textarea
             ref={inputRef}
             value={input}
@@ -284,6 +394,165 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
                     )}
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* Suggested emails */}
+          {response.suggested_emails?.length > 0 && (
+            <div className="border-t">
+              <div className="px-5 py-3 bg-muted/30 flex items-center gap-2">
+                <Mail className="w-4 h-4 text-primary" />
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Oppfølgings-e-poster</p>
+              </div>
+              <div className="divide-y">
+                {response.suggested_emails.map((email, i) => {
+                  const state = emailStates.get(i) || "pending";
+                  const editing = editingEmails.get(i);
+
+                  if (state === "sent") {
+                    return (
+                      <div key={i} className="flex items-center gap-3 px-5 py-3 bg-emerald-50 dark:bg-emerald-950/20">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
+                            Sendt til {email.to_name}
+                          </p>
+                          <p className="text-xs text-emerald-600/70 dark:text-emerald-500/70">{email.subject}</p>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  if (state === "skipped") return null;
+
+                  if (state === "task_created") {
+                    return (
+                      <div key={i} className="flex items-center gap-3 px-5 py-3 bg-muted/30">
+                        <ListTodo className="w-4 h-4 text-primary shrink-0" />
+                        <p className="text-sm text-muted-foreground">Oppgave opprettet for {email.to_name}</p>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div key={i} className="px-5 py-4">
+                      {/* Header */}
+                      <div className="flex items-start gap-3 mb-3">
+                        <div className={`w-2 h-2 rounded-full shrink-0 mt-1.5 ${
+                          email.prioritet === "høy" ? "bg-destructive" : email.prioritet === "medium" ? "bg-amber-500" : "bg-muted-foreground"
+                        }`} />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="text-sm font-medium">{email.to_name}</p>
+                            {email.selskap_navn && (
+                              <span className="text-xs text-muted-foreground">· {email.selskap_navn}</span>
+                            )}
+                            <Badge variant="outline" className={`text-[10px] ${prioritetColor[email.prioritet]}`}>{email.prioritet}</Badge>
+                          </div>
+                          <p className="text-xs text-primary mt-0.5">{email.reason}</p>
+                        </div>
+                      </div>
+
+                      {/* Email content */}
+                      {state === "editing" ? (
+                        <div className="ml-5 space-y-2 mb-3">
+                          <div>
+                            <label className="text-[10px] font-medium text-muted-foreground uppercase">Til</label>
+                            <Input
+                              value={editing?.to || ""}
+                              onChange={(e) => setEditingEmails((prev) => {
+                                const next = new Map(prev);
+                                const cur = next.get(i) || { subject: email.subject, body: email.body, to: email.to || "" };
+                                next.set(i, { ...cur, to: e.target.value });
+                                return next;
+                              })}
+                              placeholder="e-post@eksempel.no"
+                              className="h-8 text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[10px] font-medium text-muted-foreground uppercase">Emne</label>
+                            <Input
+                              value={editing?.subject || ""}
+                              onChange={(e) => setEditingEmails((prev) => {
+                                const next = new Map(prev);
+                                const cur = next.get(i) || { subject: email.subject, body: email.body, to: email.to || "" };
+                                next.set(i, { ...cur, subject: e.target.value });
+                                return next;
+                              })}
+                              className="h-8 text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[10px] font-medium text-muted-foreground uppercase">Innhold</label>
+                            <Textarea
+                              value={editing?.body || ""}
+                              onChange={(e) => setEditingEmails((prev) => {
+                                const next = new Map(prev);
+                                const cur = next.get(i) || { subject: email.subject, body: email.body, to: email.to || "" };
+                                next.set(i, { ...cur, body: e.target.value });
+                                return next;
+                              })}
+                              rows={5}
+                              className="text-sm"
+                            />
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="ml-5 mb-3">
+                          <div className="bg-muted/40 rounded-lg p-3 border">
+                            <p className="text-xs font-medium text-muted-foreground mb-1">
+                              {email.to ? `Til: ${email.to}` : "Mangler e-postadresse"}
+                            </p>
+                            <p className="text-xs font-medium mb-2">Emne: {email.subject}</p>
+                            <p className="text-xs text-foreground/80 whitespace-pre-line leading-relaxed">{email.body}</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Actions */}
+                      <div className="ml-5 flex items-center gap-2 flex-wrap">
+                        {state === "editing" ? (
+                          <>
+                            <Button
+                              size="sm"
+                              className="text-xs h-7 gap-1"
+                              onClick={() => handleSendEmail(i, email)}
+                              disabled={!editingEmails.get(i)?.to}
+                            >
+                              <Send className="w-3 h-3" /> Send
+                            </Button>
+                            <Button variant="ghost" size="sm" className="text-xs h-7 gap-1" onClick={() => handleCancelEdit(i)}>
+                              <X className="w-3 h-3" /> Avbryt
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button
+                              size="sm"
+                              className="text-xs h-7 gap-1"
+                              onClick={() => handleSendEmail(i, email)}
+                              disabled={state === "sending" || !email.to}
+                            >
+                              {state === "sending" ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
+                              {state === "sending" ? "Sender..." : "Send"}
+                            </Button>
+                            <Button variant="outline" size="sm" className="text-xs h-7 gap-1" onClick={() => handleEditEmail(i, email)}>
+                              <Pencil className="w-3 h-3" /> Rediger
+                            </Button>
+                            <Button variant="ghost" size="sm" className="text-xs h-7 gap-1" onClick={() => setEmailState(i, "skipped")}>
+                              <SkipForward className="w-3 h-3" /> Hopp over
+                            </Button>
+                            <Button variant="ghost" size="sm" className="text-xs h-7 gap-1" onClick={() => handleCreateTaskFromEmail(i, email)}>
+                              <ListTodo className="w-3 h-3" /> Oppgave
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}

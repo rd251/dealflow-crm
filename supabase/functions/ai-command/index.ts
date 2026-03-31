@@ -105,8 +105,30 @@ serve(async (req) => {
                       required: ["type", "tittel", "beskrivelse"],
                     },
                   },
+                  suggested_emails: {
+                    type: "array",
+                    description: "Follow-up emails that can be sent via Gmail. Generate these when the user asks about follow-ups, what to do today, or asks to write emails. Each email should be personalized based on context.",
+                    items: {
+                      type: "object",
+                      properties: {
+                        to: { type: "string", description: "Recipient email address" },
+                        to_name: { type: "string", description: "Recipient name for display" },
+                        subject: { type: "string", description: "Email subject line in Norwegian" },
+                        body: { type: "string", description: "Email body text in Norwegian. Short, natural, with clear CTA. Use newlines for paragraphs." },
+                        reason: { type: "string", description: "Why this follow-up is suggested (shown to user)" },
+                        entity_id: { type: "string", description: "ID of the related salgsmulighet or lead" },
+                        entity_type: { type: "string", enum: ["salgsmulighet", "lead"], description: "Type of entity" },
+                        entity_name: { type: "string", description: "Name of the deal or lead" },
+                        selskap_id: { type: "string", description: "Company ID if available" },
+                        selskap_navn: { type: "string", description: "Company name for display" },
+                        kontakt_id: { type: "string", description: "Contact ID if available" },
+                        prioritet: { type: "string", enum: ["høy", "medium", "lav"], description: "Priority level" },
+                      },
+                      required: ["to_name", "subject", "body", "reason", "prioritet"],
+                    },
+                  },
                 },
-                required: ["summary", "items", "suggested_tasks", "suggested_activities"],
+                required: ["summary", "items", "suggested_tasks", "suggested_activities", "suggested_emails"],
               },
             },
           },
@@ -194,6 +216,18 @@ REGLER:
 - Hold svarene korte og handlingsorienterte
 - Bruk markdown for formatering
 - Alle IDer du refererer til MÅ komme fra konteksten under
+
+OPPFØLGINGS-E-POST REGLER:
+- Når brukeren spør "hva bør jeg gjøre i dag", "deals som trenger oppfølging", "skriv oppfølging" o.l., generer suggested_emails for de viktigste kandidatene
+- E-poster skal være korte (3-5 setninger), naturlige, profesjonelle og på norsk
+- Adresser mottaker ved fornavn ("Hei [Fornavn],")
+- Referer naturlig til siste kontakt/møte/aktivitet
+- Avslutt med et konkret forslag til neste steg (CTA)
+- Bruk e-postadressen fra konteksten (e_post-feltet) som "to"-adresse
+- Ikke foreslå e-post til entiteter uten e-postadresse
+- Ikke foreslå oppfølging hvis nylig aktivitet (< 48 timer for leads, < 72 timer for salgsmuligheter)
+- Prioriter: tilbud sendt uten svar > etter møte uten oppfølging > lang inaktivitet
+- Emnelinjen skal være kort og relevant
 
 CRM-DATA:
 `;
