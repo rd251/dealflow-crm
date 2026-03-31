@@ -163,10 +163,11 @@ serve(async (req) => {
     // Fallback if no tool call
     return new Response(
       JSON.stringify({
-        summary: data.choices?.[0]?.message?.content || "Beklager, noe gikk galt.",
-        items: [],
-        suggested_tasks: [],
-      }),
+            summary: data.choices?.[0]?.message?.content || "Beklager, noe gikk galt.",
+            items: [],
+            suggested_tasks: [],
+            suggested_activities: [],
+          }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e) {
