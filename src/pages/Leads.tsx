@@ -380,10 +380,10 @@ export default function Leads() {
         badges={currentLead ? (
           <>
             <Badge className={`text-xs ${statusColors[currentLead.status] || ""}`}>{currentLead.status}</Badge>
-            {currentLead.konvertert_til && (
-              <Badge className={`text-xs gap-0.5 ${currentLead.konvertert_til === "salg" ? "bg-success/10 text-success" : "bg-primary/10 text-primary"}`}>
+            {getConversionType(currentLead) && (
+              <Badge className={`text-xs gap-0.5 ${getConversionType(currentLead) === "salg" ? "bg-success/10 text-success" : "bg-primary/10 text-primary"}`}>
                 <Lock className="w-3 h-3" />
-                {currentLead.konvertert_til === "salg" ? "Konvertert → Salg" : "Konvertert → Partner"}
+                {getConversionType(currentLead) === "salg" ? "Konvertert → Salg" : "Konvertert → Partner"}
               </Badge>
             )}
             <Badge variant="secondary" className="text-xs">{currentLead.kilde}</Badge>
