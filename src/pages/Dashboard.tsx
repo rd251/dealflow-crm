@@ -524,6 +524,17 @@ export default function Dashboard() {
                         {o.ansvarlig && (
                           <span className="text-xs text-muted-foreground">· {profileMap.get(o.ansvarlig) || o.ansvarlig}</span>
                         )}
+                        {o.selskap_id && selskaper.find(s => s.id === o.selskap_id) && (
+                          <span className="text-xs text-muted-foreground flex items-center gap-0.5">
+                            · <Building2 className="w-3 h-3" /> {selskaper.find(s => s.id === o.selskap_id)?.firmanavn}
+                          </span>
+                        )}
+                        {o.salgsmulighet_id && salgsmuligheter.find(sm => sm.id === o.salgsmulighet_id) && (
+                          <span className="text-xs text-muted-foreground">· {salgsmuligheter.find(sm => sm.id === o.salgsmulighet_id)?.navn}</span>
+                        )}
+                        {o.lead_id && leads.find(l => l.id === o.lead_id) && (
+                          <span className="text-xs text-muted-foreground">· {leads.find(l => l.id === o.lead_id)?.firmanavn}</span>
+                        )}
                         {o.prioritet && (
                           <Badge variant="outline" className={`text-[10px] ${prioritetColor}`}>
                             {o.prioritet}
