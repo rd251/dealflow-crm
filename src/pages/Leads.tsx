@@ -234,99 +234,141 @@ export default function Leads() {
         )}
       </div>
 
-      {/* Mobile: card layout */}
-      {isMobile ? (
-        <div className="space-y-3">
-          {filtered.map(lead => {
-            const locked = isConverted(lead);
-            return (
-              <div key={lead.id} className={`bg-card border rounded-xl p-4 space-y-2 ${locked ? "opacity-80" : ""}`} onClick={() => setSelectedLead(lead)}>
-                <div className="flex items-center justify-between gap-2">
-                  <p className="font-semibold text-sm truncate">{lead.firmanavn}</p>
-                  <div className="flex items-center gap-1 shrink-0">
-                    {conversionBadge(lead)}
+      {tab === "aktive" ? (
+        <>
+          {/* Mobile: card layout */}
+          {isMobile ? (
+            <div className="space-y-3">
+              {filtered.map(lead => (
+                <div key={lead.id} className="bg-card border rounded-xl p-4 space-y-2" onClick={() => setSelectedLead(lead)}>
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="font-semibold text-sm truncate">{lead.firmanavn}</p>
                     <Badge className={`text-[10px] ${statusColors[lead.status] || ""}`}>{lead.status}</Badge>
                   </div>
-                </div>
-                <p className="text-xs text-muted-foreground">{lead.kontaktperson}</p>
-                <div className="flex items-center justify-between">
-                  <Badge variant="secondary" className="text-[10px]">{lead.kilde}</Badge>
-                  {lead.neste_steg && <span className="text-[10px] text-muted-foreground truncate ml-2">→ {lead.neste_steg}</span>}
-                </div>
-                {!locked && lead.status !== "Ikke aktuelt" && (
-                  <div className="flex gap-1 mt-1">
-                    <Button size="sm" variant="ghost" className="text-xs gap-1 flex-1" onClick={e => { e.stopPropagation(); konverterLead(lead.id); }}>
-                      <ArrowRightCircle className="w-3.5 h-3.5" />Salg
-                    </Button>
-                    <Button size="sm" variant="ghost" className="text-xs gap-1 flex-1" onClick={e => { e.stopPropagation(); konverterTilPartner(lead.id); }}>
-                      <Users2 className="w-3.5 h-3.5" />Partner
-                    </Button>
+                  <p className="text-xs text-muted-foreground">{lead.kontaktperson}</p>
+                  <div className="flex items-center justify-between">
+                    <Badge variant="secondary" className="text-[10px]">{lead.kilde}</Badge>
+                    {lead.neste_steg && <span className="text-[10px] text-muted-foreground truncate ml-2">→ {lead.neste_steg}</span>}
                   </div>
-                )}
-              </div>
-            );
-          })}
-          {filtered.length === 0 && <p className="text-center text-sm text-muted-foreground py-8">Ingen leads å vise</p>}
-        </div>
+                  {lead.status !== "Ikke aktuelt" && (
+                    <div className="flex gap-1 mt-1">
+                      <Button size="sm" variant="ghost" className="text-xs gap-1 flex-1" onClick={e => { e.stopPropagation(); konverterLead(lead.id); }}>
+                        <ArrowRightCircle className="w-3.5 h-3.5" />Salg
+                      </Button>
+                      <Button size="sm" variant="ghost" className="text-xs gap-1 flex-1" onClick={e => { e.stopPropagation(); konverterTilPartner(lead.id); }}>
+                        <Users2 className="w-3.5 h-3.5" />Partner
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              ))}
+              {filtered.length === 0 && <p className="text-center text-sm text-muted-foreground py-8">Ingen aktive leads</p>}
+            </div>
+          ) : (
+            /* Desktop: table layout */
+            <div className="bg-card border rounded-xl overflow-hidden">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b bg-muted/50">
+                    <th className="text-left px-4 py-3 font-medium">Firma</th>
+                    <th className="text-left px-4 py-3 font-medium">Kontaktperson</th>
+                    <th className="text-left px-4 py-3 font-medium">Kilde</th>
+                    <th className="text-left px-4 py-3 font-medium">Status</th>
+                    <th className="text-left px-4 py-3 font-medium">Neste steg</th>
+                    <th className="text-left px-4 py-3 font-medium">Sist aktivitet</th>
+                    <th className="text-left px-4 py-3 font-medium">Opprettet</th>
+                    <th className="text-right px-4 py-3 font-medium">Handling</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map(lead => (
+                    <tr key={lead.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => setSelectedLead(lead)}>
+                      <td className="px-4 py-3 font-medium">{lead.firmanavn}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{lead.kontaktperson}</td>
+                      <td className="px-4 py-3"><Badge variant="secondary" className="text-xs">{lead.kilde}</Badge></td>
+                      <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
+                        <select
+                          className={`text-xs px-2 py-1 rounded-full font-medium border-0 cursor-pointer ${statusColors[lead.status] || ""}`}
+                          value={lead.status}
+                          onChange={e => changeStatus(lead.id, e.target.value as LeadStatus)}
+                        >
+                          {statusOptions.map(s => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground text-xs">{lead.neste_steg}</td>
+                      <td className="px-4 py-3"><LastActivityBadge lead_id={lead.id} sist_aktivitet={lead.sist_aktivitet} /></td>
+                      <td className="px-4 py-3 text-muted-foreground text-xs font-mono">{lead.opprettet_dato}</td>
+                      <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
+                        {lead.status !== "Ikke aktuelt" && (
+                          <div className="flex gap-1">
+                            <Button size="sm" variant="ghost" className="text-xs gap-1" onClick={() => konverterLead(lead.id)}>
+                              <ArrowRightCircle className="w-3.5 h-3.5" />Salg
+                            </Button>
+                            <Button size="sm" variant="ghost" className="text-xs gap-1" onClick={() => konverterTilPartner(lead.id)}>
+                              <Users2 className="w-3.5 h-3.5" />Partner
+                            </Button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {filtered.length === 0 && <p className="text-center text-sm text-muted-foreground py-8">Ingen aktive leads</p>}
+            </div>
+          )}
+        </>
       ) : (
-        /* Desktop: table layout */
+        /* Archive tab */
         <div className="bg-card border rounded-xl overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b bg-muted/50">
-                <th className="text-left px-4 py-3 font-medium">Firma</th>
-                <th className="text-left px-4 py-3 font-medium">Kontaktperson</th>
-                <th className="text-left px-4 py-3 font-medium">Kilde</th>
-                <th className="text-left px-4 py-3 font-medium">Status</th>
-                <th className="text-left px-4 py-3 font-medium">Neste steg</th>
-                <th className="text-left px-4 py-3 font-medium">Sist aktivitet</th>
-                <th className="text-left px-4 py-3 font-medium">Opprettet</th>
-                <th className="text-right px-4 py-3 font-medium">Handling</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map(lead => {
-                const locked = isConverted(lead);
-                return (
-                  <tr key={lead.id} className={`border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer ${locked ? "opacity-70" : ""}`} onClick={() => setSelectedLead(lead)}>
+          {isMobile ? (
+            <div className="space-y-3 p-3">
+              {archivedLeads.map(lead => (
+                <div key={lead.id} className="bg-muted/30 border rounded-xl p-4 space-y-2 opacity-80" onClick={() => setSelectedLead(lead)}>
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="font-semibold text-sm truncate">{lead.firmanavn}</p>
+                    <div className="flex items-center gap-1 shrink-0">
+                      {conversionBadge(lead)}
+                      {lead.status === "Ikke aktuelt" && <Badge className="text-[10px] bg-muted text-muted-foreground">Ikke aktuelt</Badge>}
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground">{lead.kontaktperson}</p>
+                </div>
+              ))}
+              {archivedLeads.length === 0 && <p className="text-center text-sm text-muted-foreground py-8">Ingen arkiverte leads</p>}
+            </div>
+          ) : (
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b bg-muted/50">
+                  <th className="text-left px-4 py-3 font-medium">Firma</th>
+                  <th className="text-left px-4 py-3 font-medium">Kontaktperson</th>
+                  <th className="text-left px-4 py-3 font-medium">Kilde</th>
+                  <th className="text-left px-4 py-3 font-medium">Status</th>
+                  <th className="text-left px-4 py-3 font-medium">Konvertert dato</th>
+                  <th className="text-left px-4 py-3 font-medium">Opprettet</th>
+                </tr>
+              </thead>
+              <tbody>
+                {archivedLeads.map(lead => (
+                  <tr key={lead.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer opacity-70" onClick={() => setSelectedLead(lead)}>
                     <td className="px-4 py-3 font-medium">{lead.firmanavn}</td>
                     <td className="px-4 py-3 text-muted-foreground">{lead.kontaktperson}</td>
                     <td className="px-4 py-3"><Badge variant="secondary" className="text-xs">{lead.kilde}</Badge></td>
-                    <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
+                    <td className="px-4 py-3">
                       <div className="flex items-center gap-1.5">
-                        {locked ? (
-                          conversionBadge(lead)
-                        ) : (
-                          <select
-                            className={`text-xs px-2 py-1 rounded-full font-medium border-0 cursor-pointer ${statusColors[lead.status] || ""}`}
-                            value={lead.status}
-                            onChange={e => changeStatus(lead.id, e.target.value as LeadStatus)}
-                          >
-                            {statusOptions.map(s => <option key={s} value={s}>{s}</option>)}
-                          </select>
-                        )}
+                        {conversionBadge(lead)}
+                        {lead.status === "Ikke aktuelt" && <Badge className="text-[10px] bg-muted text-muted-foreground">Ikke aktuelt</Badge>}
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground text-xs">{lead.neste_steg}</td>
-                    <td className="px-4 py-3"><LastActivityBadge lead_id={lead.id} sist_aktivitet={lead.sist_aktivitet} /></td>
+                    <td className="px-4 py-3 text-muted-foreground text-xs font-mono">{lead.konvertert_dato || "–"}</td>
                     <td className="px-4 py-3 text-muted-foreground text-xs font-mono">{lead.opprettet_dato}</td>
-                    <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
-                      {!locked && lead.status !== "Ikke aktuelt" && (
-                        <div className="flex gap-1">
-                          <Button size="sm" variant="ghost" className="text-xs gap-1" onClick={() => konverterLead(lead.id)}>
-                            <ArrowRightCircle className="w-3.5 h-3.5" />Salg
-                          </Button>
-                          <Button size="sm" variant="ghost" className="text-xs gap-1" onClick={() => konverterTilPartner(lead.id)}>
-                            <Users2 className="w-3.5 h-3.5" />Partner
-                          </Button>
-                        </div>
-                      )}
-                    </td>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                ))}
+              </tbody>
+            </table>
+          )}
+          {archivedLeads.length === 0 && !isMobile && <p className="text-center text-sm text-muted-foreground py-8">Ingen arkiverte leads</p>}
         </div>
       )}
 
