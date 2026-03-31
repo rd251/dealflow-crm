@@ -414,5 +414,12 @@ CRM-DATA:
     }
   }
 
+  if (context?.selskaper?.length > 0) {
+    prompt += `\n## Selskaper (${context.selskaper.length}):\n`;
+    for (const s of context.selskaper.slice(0, 20)) {
+      prompt += `- ${s.firmanavn} – status: ${s.kundestatus} – id: ${s.id}\n`;
+    }
+  }
+
   return prompt;
 }
