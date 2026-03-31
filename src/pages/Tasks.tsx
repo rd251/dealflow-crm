@@ -316,10 +316,7 @@ export default function Tasks() {
                 <option value="">Knytt til selskap (valgfritt)</option>
                 {selskaper.map(s => <option key={s.id} value={s.id}>{s.firmanavn}</option>)}
               </select>
-              <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background" value={editingTask.kontakt_id} onChange={e => setEditingTask(t => t ? { ...t, kontakt_id: e.target.value } : t)}>
-                <option value="">Knytt til person (valgfritt)</option>
-                {allPersons.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
-              </select>
+              <PersonSearchPicker persons={allPersons} value={editingTask.kontakt_id} onChange={id => setEditingTask(t => t ? { ...t, kontakt_id: id } : t)} />
               <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background" value={editingTask.ansvarlig} onChange={e => setEditingTask(t => t ? { ...t, ansvarlig: e.target.value } : t)}>
                 <option value="">Velg ansvarlig (valgfritt)</option>
                 {profiles.map(p => (
