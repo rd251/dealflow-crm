@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import MeetingPrepPanel from "@/components/MeetingPrepPanel";
 import FollowUpSection from "@/components/FollowUpSection";
+import AiCommandBar from "@/components/AiCommandBar";
 import { useFollowUps } from "@/hooks/use-follow-ups";
 import { useProfiles } from "@/hooks/use-profiles";
 import { supabase } from "@/integrations/supabase/client";
