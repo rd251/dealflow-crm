@@ -45,7 +45,7 @@ interface MeetingItem {
 export default function Dashboard() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const { selskaper, salgsmuligheter, leads } = useCrmStore();
+  const { selskaper, salgsmuligheter, leads, kontakter } = useCrmStore();
 
   const now = new Date();
   const { followUps, loading: followUpsLoading, dismiss: dismissFollowUp } = useFollowUps(leads, salgsmuligheter, selskaper);
