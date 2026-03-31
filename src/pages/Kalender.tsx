@@ -126,6 +126,7 @@ export default function Kalender() {
   // Drag state
   const [dragEvent, setDragEvent] = useState<CalendarEvent | null>(null);
   const [dragOverSlot, setDragOverSlot] = useState<{ day: Date; hour: number } | null>(null);
+  const weekGridRef = useRef<HTMLDivElement>(null);
 
   const today = new Date();
 
