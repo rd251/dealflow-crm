@@ -42,6 +42,7 @@ export default function Leads() {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [form, setForm] = useState<Partial<Lead>>({ firmanavn: "", kontaktperson: "", e_post: "", telefon: "", kilde: "Nettside", status: "Ny", ansvarlig: "", neste_steg: "", notater: "", rolle_i_firma: "", use_case: "" });
   const [filterUtenOppfolging, setFilterUtenOppfolging] = useState(false);
+  const [tab, setTab] = useState<"aktive" | "arkiv">("aktive");
 
   // Pick up filter from query param
   useEffect(() => {
@@ -53,15 +54,39 @@ export default function Leads() {
 
   const now = new Date();
 
-  // Helper: is a lead converted (locked)?
-  const isConverted = (l: Lead) => !!l.konvertert_til;
+  // Helper: is a lead converted (locked)? Also check konvertert_dato for DB-persisted state
+  const isConverted = (l: Lead) =>
+    !!l.konvertert_til ||
+    !!l.konvertert_dato ||
+    l.status === "Konvertert til salg" ||
+    l.status === "Konvertert til partner";
+
+  // Helper: is a lead archived (converted or "Ikke aktuelt")?
+  const isArchived = (l: Lead) => isConverted(l) || l.status === "Ikke aktuelt";
+
+  // Derive conversion type for display when konvertert_til is missing (after reload)
+  const getConversionType = (l: Lead): "" | "salg" | "partner" => {
+    if (l.konvertert_til) return l.konvertert_til as "salg" | "partner";
+    if (l.status === "Konvertert til salg") return "salg";
+    if (l.status === "Konvertert til partner") return "partner";
+    // Has konvertert_dato but unknown type – default to salg
+    if (l.konvertert_dato) return "salg";
+    return "";
+  };
+
+  const archivedLeads = useMemo(() => leads.filter(l => {
+    if (!isArchived(l)) return false;
+    return (
+      l.firmanavn.toLowerCase().includes(search.toLowerCase()) ||
+      l.kontaktperson.toLowerCase().includes(search.toLowerCase())
+    );
+  }), [leads, search]);
 
   const filtered = leads.filter(l => {
-    // Hide converted leads from the active list
-    if (isConverted(l)) return false;
+    // Hide archived leads from the active list
+    if (isArchived(l)) return false;
     if (filterUtenOppfolging) {
       const cutoff = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-      if (l.status === "Ikke aktuelt") return false;
       if (l.sist_aktivitet && new Date(l.sist_aktivitet) >= cutoff) return false;
     }
     return (
