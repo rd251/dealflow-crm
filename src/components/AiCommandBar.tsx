@@ -81,6 +81,7 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
     setLoading(true);
     setResponse(null);
     setCreatedTaskIds(new Set());
+    setCreatedActivityIds(new Set());
 
     try {
       const { data, error } = await supabase.functions.invoke("ai-command", {
