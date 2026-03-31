@@ -195,8 +195,8 @@ export default function Tasks() {
                 {selskaper.map(s => <option key={s.id} value={s.id}>{s.firmanavn}</option>)}
               </select>
               <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background" value={form.kontakt_id} onChange={e => setForm(f => ({ ...f, kontakt_id: e.target.value }))}>
-                <option value="">Knytt til kontakt (valgfritt)</option>
-                {kontakter.map(k => <option key={k.id} value={k.id}>{k.navn}{k.rolle ? ` – ${k.rolle}` : ""}</option>)}
+                <option value="">Knytt til person (valgfritt)</option>
+                {allPersons.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
               </select>
               <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background" value={form.ansvarlig} onChange={e => setForm(f => ({ ...f, ansvarlig: e.target.value }))}>
                 <option value="">Velg ansvarlig (valgfritt)</option>
