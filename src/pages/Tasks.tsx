@@ -232,6 +232,7 @@ export default function Tasks() {
                   )}
                   {selskap && <span className="truncate flex items-center gap-0.5"><Building2 className="w-3 h-3" /> {selskap.firmanavn}</span>}
                   {salgsmulighet && <span className="truncate flex items-center gap-0.5"><Target className="w-3 h-3" /> {salgsmulighet.navn}</span>}
+                  {kontakt && <span className="truncate flex items-center gap-0.5"><User className="w-3 h-3" /> {kontakt.navn}</span>}
                   {canEdit ? (
                     <span className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
                       <select
