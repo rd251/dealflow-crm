@@ -127,6 +127,24 @@ serve(async (req) => {
                       required: ["to_name", "subject", "body", "reason", "prioritet"],
                     },
                   },
+                  suggested_leads: {
+                    type: "array",
+                    description: "Leads to create in the CRM. Generate these when the user mentions a new potential customer, a person/company they've spoken to, received inquiry from, or wants to register. ALWAYS suggest a lead when the user describes a new contact or interaction with someone not in the CRM.",
+                    items: {
+                      type: "object",
+                      properties: {
+                        firmanavn: { type: "string", description: "Company name. If unknown, use the person's email domain or name." },
+                        kontaktperson: { type: "string", description: "Contact person name" },
+                        e_post: { type: "string", description: "Email address if provided" },
+                        telefon: { type: "string", description: "Phone number if provided" },
+                        kilde: { type: "string", enum: ["Nettside", "LinkedIn", "Partner", "Referanse", "Kald outbound", "E-post", "Telefon", "Annet"], description: "Lead source. Infer from context." },
+                        notater: { type: "string", description: "Notes about the lead, including context from the conversation" },
+                        use_case: { type: "string", description: "Use case if mentioned" },
+                        rolle_i_firma: { type: "string", description: "Role in company if mentioned" },
+                      },
+                      required: ["firmanavn", "kontaktperson"],
+                    },
+                  },
                   suggested_meeting: {
                     type: "object",
                     description: "A meeting to create. Generate this ONLY when the user explicitly asks to create/book/schedule a meeting. Parse natural language dates like 'i morgen', 'på fredag', 'neste uke', 'kl 12' etc. into proper ISO dates and times.",
