@@ -72,6 +72,24 @@ export function useFollowUps(
       return selskaper.find((s) => s.id === selskapId)?.firmanavn || "—";
     };
 
+    // Helper: if a lead has been converted, find the matching salgsmulighet
+    const resolveEntity = (entityId: string, entityType: "lead" | "salgsmulighet"): { id: string; type: "lead" | "salgsmulighet" } => {
+      if (entityType === "lead") {
+        const lead = leads.find((l) => l.id === entityId);
+        if (lead && (lead.status === "Konvertert til salg" || lead.status === "Konvertert til partner")) {
+          const sm = salgsmuligheter.find((s) => s.kontaktperson === lead.kontaktperson && s.navn === lead.firmanavn);
+          if (sm) return { id: sm.id, type: "salgsmulighet" };
+          // Also check by selskap match
+          const selskap = selskaper.find((s) => s.firmanavn === lead.firmanavn);
+          if (selskap) {
+            const smBySelskap = salgsmuligheter.find((s) => s.selskap_id === selskap.id);
+            if (smBySelskap) return { id: smBySelskap.id, type: "salgsmulighet" };
+          }
+        }
+      }
+      return { id: entityId, type: entityType };
+    };
+
     const getLastActivity = (entityId: string, entityType: "lead" | "salgsmulighet") => {
       const field = entityType === "lead" ? "lead_id" : "salgsmulighet_id";
       const acts = aktiviteter.filter((a) => a[field] === entityId);
