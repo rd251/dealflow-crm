@@ -87,6 +87,7 @@ interface AiCommandBarProps {
 }
 
 const QUICK_PROMPTS = [
+  { icon: "📅", label: "Book møte", prefill: "Møte med [navn] [dato] kl [tid], [e-post], emne [tema]" },
   { icon: "📋", label: "Prep neste møte" },
   { icon: "🔁", label: "Oppsummer siste samtaler" },
   { icon: "🎯", label: "Top 5 prioriteringer" },
