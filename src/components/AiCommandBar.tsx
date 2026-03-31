@@ -942,6 +942,111 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
             </div>
           )}
 
+          {/* Status updates */}
+          {response.suggested_status_updates && response.suggested_status_updates.length > 0 && (
+            <div className="border-t">
+              <div className="px-5 py-3 bg-muted/30 flex items-center gap-2">
+                <ArrowUp className="w-4 h-4 text-primary" />
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Statusoppdateringer</p>
+              </div>
+              <div className="divide-y">
+                {response.suggested_status_updates.map((update, i) => (
+                  <div key={i} className="flex items-center gap-3 px-5 py-3 hover:bg-muted/30 transition-colors">
+                    {appliedStatusIds.has(i) ? (
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                    ) : (
+                      <ArrowUp className="w-4 h-4 text-muted-foreground shrink-0" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{update.entity_name}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {update.entity_type === "salgsmulighet" ? "Salgsmulighet" : "Lead"} → <span className="font-medium">{update.new_status}</span>
+                        {update.neste_steg && <span> · Neste steg: {update.neste_steg}</span>}
+                      </p>
+                    </div>
+                    {appliedStatusIds.has(i) ? (
+                      <span className="text-xs text-emerald-600 font-medium shrink-0">Oppdatert ✓</span>
+                    ) : (
+                      <Button variant="outline" size="sm" className="text-xs h-7 gap-1 shrink-0" onClick={() => handleApplyStatusUpdate(update, i)}>
+                        Oppdater
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Conversions */}
+          {response.suggested_conversions && response.suggested_conversions.length > 0 && (
+            <div className="border-t">
+              <div className="px-5 py-3 bg-muted/30 flex items-center gap-2">
+                <ExternalLink className="w-4 h-4 text-primary" />
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Konverter leads</p>
+              </div>
+              <div className="divide-y">
+                {response.suggested_conversions.map((conv, i) => (
+                  <div key={i} className="flex items-center gap-3 px-5 py-3 hover:bg-muted/30 transition-colors">
+                    {appliedConversionIds.has(i) ? (
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                    ) : (
+                      <ExternalLink className="w-4 h-4 text-muted-foreground shrink-0" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{conv.lead_name} → Salgsmulighet</p>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
+                        {conv.forventet_mrr && <span>MRR: {conv.forventet_mrr} kr</span>}
+                        {conv.kontaktperson && <span>· {conv.kontaktperson}</span>}
+                      </div>
+                    </div>
+                    {appliedConversionIds.has(i) ? (
+                      <span className="text-xs text-emerald-600 font-medium shrink-0">Konvertert ✓</span>
+                    ) : (
+                      <Button variant="outline" size="sm" className="text-xs h-7 gap-1 shrink-0" onClick={() => handleApplyConversion(conv, i)}>
+                        Konverter
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* New companies */}
+          {response.suggested_companies && response.suggested_companies.length > 0 && (
+            <div className="border-t">
+              <div className="px-5 py-3 bg-muted/30 flex items-center gap-2">
+                <Building2 className="w-4 h-4 text-primary" />
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Nye selskaper</p>
+              </div>
+              <div className="divide-y">
+                {response.suggested_companies.map((company, i) => (
+                  <div key={i} className="flex items-center gap-3 px-5 py-3 hover:bg-muted/30 transition-colors">
+                    {createdCompanyIds.has(i) ? (
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                    ) : (
+                      <Building2 className="w-4 h-4 text-muted-foreground shrink-0" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{company.firmanavn}</p>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
+                        {company.bransje && <span>{company.bransje}</span>}
+                        {company.notater && <span>· {company.notater}</span>}
+                      </div>
+                    </div>
+                    {createdCompanyIds.has(i) ? (
+                      <span className="text-xs text-emerald-600 font-medium shrink-0">Opprettet ✓</span>
+                    ) : (
+                      <Button variant="outline" size="sm" className="text-xs h-7 gap-1 shrink-0" onClick={() => handleCreateCompany(company, i)}>
+                        Opprett
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Action items */}
           {response.items.length > 0 && (
             <div className="border-t">
