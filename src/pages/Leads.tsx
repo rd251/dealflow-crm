@@ -119,8 +119,9 @@ export default function Leads() {
   const currentIsLocked = currentLead ? isConverted(currentLead) : false;
 
   const conversionBadge = (lead: Lead) => {
-    if (!lead.konvertert_til) return null;
-    const isSalg = lead.konvertert_til === "salg";
+    const type = getConversionType(lead);
+    if (!type) return null;
+    const isSalg = type === "salg";
     return (
       <Badge className={`text-[10px] gap-0.5 ${isSalg ? "bg-success/10 text-success" : "bg-primary/10 text-primary"}`}>
         <Lock className="w-3 h-3" />
