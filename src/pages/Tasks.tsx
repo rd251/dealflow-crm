@@ -27,7 +27,7 @@ export default function Tasks() {
   const isMobile = useIsMobile();
   const { user, canEdit } = useAuth();
   const { profiles } = useProfiles();
-  const { oppgaver, selskaper, salgsmuligheter, updateOppgaver, generateId } = useCrmStore();
+  const { oppgaver, selskaper, salgsmuligheter, kontakter, updateOppgaver, generateId } = useCrmStore();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Oppgave | null>(null);
