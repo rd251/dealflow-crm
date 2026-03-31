@@ -59,6 +59,17 @@ interface SuggestedEmail {
   prioritet: "høy" | "medium" | "lav";
 }
 
+interface SuggestedLead {
+  firmanavn: string;
+  kontaktperson: string;
+  e_post?: string;
+  telefon?: string;
+  kilde?: string;
+  notater?: string;
+  use_case?: string;
+  rolle_i_firma?: string;
+}
+
 interface SuggestedMeeting {
   tittel: string;
   deltaker_navn: string;
@@ -78,6 +89,7 @@ interface AiResponse {
   suggested_tasks: SuggestedTask[];
   suggested_activities: SuggestedActivity[];
   suggested_emails: SuggestedEmail[];
+  suggested_leads?: SuggestedLead[];
   suggested_meeting?: SuggestedMeeting;
 }
 
@@ -124,6 +136,7 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
   const [meetingState, setMeetingState] = useState<MeetingState>("pending");
   const [editingMeeting, setEditingMeeting] = useState<SuggestedMeeting | null>(null);
   const [createdMeetingId, setCreatedMeetingId] = useState<string | null>(null);
+  const [createdLeadIds, setCreatedLeadIds] = useState<Set<number>>(new Set());
 
   const handleSubmit = async (prompt?: string) => {
     const msg = prompt || input.trim();
@@ -138,6 +151,7 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
     setMeetingState("pending");
     setEditingMeeting(null);
     setCreatedMeetingId(null);
+    setCreatedLeadIds(new Set());
 
     try {
       const { data, error } = await supabase.functions.invoke("ai-command", {
@@ -218,6 +232,33 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
       toast.success("Aktivitet logget");
     } catch {
       toast.error("Kunne ikke logge aktivitet");
+    }
+  };
+
+  const handleCreateLead = async (lead: SuggestedLead, index: number) => {
+    try {
+      const today = new Date().toISOString().split("T")[0];
+      const validKilder = ["Nettside", "LinkedIn", "Partner", "Referanse", "Kald outbound", "E-post", "Telefon", "Annet"];
+      const safeKilde = lead.kilde && validKilder.includes(lead.kilde) ? lead.kilde : "Annet";
+      
+      const { error } = await supabase.from("leads").insert({
+        firmanavn: lead.firmanavn,
+        kontaktperson: lead.kontaktperson || "",
+        e_post: lead.e_post || "",
+        telefon: lead.telefon || "",
+        kilde: safeKilde as any,
+        notater: lead.notater || "",
+        use_case: lead.use_case || "",
+        rolle_i_firma: lead.rolle_i_firma || "",
+        status: "Ny" as const,
+        opprettet_dato: today,
+        sist_aktivitet: today,
+      });
+      if (error) throw error;
+      setCreatedLeadIds((prev) => new Set([...prev, index]));
+      toast.success(`Lead "${lead.firmanavn}" opprettet`);
+    } catch {
+      toast.error("Kunne ikke opprette lead");
     }
   };
 
@@ -701,6 +742,43 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
                   )}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Suggested leads */}
+          {response.suggested_leads && response.suggested_leads.length > 0 && (
+            <div className="border-t">
+              <div className="px-5 py-3 bg-muted/30 flex items-center gap-2">
+                <Building2 className="w-4 h-4 text-primary" />
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Nye leads å opprette</p>
+              </div>
+              <div className="divide-y">
+                {response.suggested_leads.map((lead, i) => (
+                  <div key={i} className="flex items-center gap-3 px-5 py-3 hover:bg-muted/30 transition-colors">
+                    {createdLeadIds.has(i) ? (
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                    ) : (
+                      <Building2 className="w-4 h-4 text-muted-foreground shrink-0" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{lead.firmanavn}</p>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5 flex-wrap">
+                        {lead.kontaktperson && <span>{lead.kontaktperson}</span>}
+                        {lead.e_post && <span>· {lead.e_post}</span>}
+                        {lead.kilde && <Badge variant="outline" className="text-[10px]">{lead.kilde}</Badge>}
+                      </div>
+                      {lead.notater && <p className="text-xs text-muted-foreground mt-0.5 truncate">{lead.notater}</p>}
+                    </div>
+                    {createdLeadIds.has(i) ? (
+                      <span className="text-xs text-emerald-600 font-medium shrink-0">Opprettet ✓</span>
+                    ) : (
+                      <Button variant="outline" size="sm" className="text-xs h-7 gap-1 shrink-0" onClick={() => handleCreateLead(lead, i)}>
+                        Opprett
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
