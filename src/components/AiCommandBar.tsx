@@ -151,6 +151,7 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
     setMeetingState("pending");
     setEditingMeeting(null);
     setCreatedMeetingId(null);
+    setCreatedLeadIds(new Set());
 
     try {
       const { data, error } = await supabase.functions.invoke("ai-command", {
