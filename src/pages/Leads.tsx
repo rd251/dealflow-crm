@@ -57,10 +57,11 @@ export default function Leads() {
   const isConverted = (l: Lead) => !!l.konvertert_til;
 
   const filtered = leads.filter(l => {
-    // Don't hide converted leads – show them with badge instead
+    // Hide converted leads from the active list
+    if (isConverted(l)) return false;
     if (filterUtenOppfolging) {
       const cutoff = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-      if (l.status === "Ikke aktuelt" || isConverted(l)) return false;
+      if (l.status === "Ikke aktuelt") return false;
       if (l.sist_aktivitet && new Date(l.sist_aktivitet) >= cutoff) return false;
     }
     return (
