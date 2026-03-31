@@ -32,7 +32,7 @@ export default function Tasks() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Oppgave | null>(null);
   const [filter, setFilter] = useState<"alle" | "forfalte" | "idag" | "uke">("alle");
-  const [form, setForm] = useState({ oppgave: "", frist: "", prioritet: "Medium" as Prioritet, lead_id: "", selskap_id: "", salgsmulighet_id: "", ansvarlig: "", notater: "" });
+  const [form, setForm] = useState({ oppgave: "", frist: "", prioritet: "Medium" as Prioritet, lead_id: "", selskap_id: "", salgsmulighet_id: "", kontakt_id: "", ansvarlig: "", notater: "" });
 
   const today = new Date().toISOString().split("T")[0];
   const weekEnd = new Date(Date.now() + 7 * 86400000).toISOString().split("T")[0];

@@ -270,11 +270,11 @@ export const initialLeads: Lead[] = [
 export const initialProsjekter: Prosjekt[] = [];
 
 export const initialOppgaver: Oppgave[] = [
-  { id: "O-0001", oppgave: "Følg opp Drifti AS tilbud", lead_id: "", selskap_id: "S-0009", salgsmulighet_id: "SM-0006", ansvarlig: "", frist: "2026-03-12", prioritet: "Høy", status: "Åpen", paaminnelse: true, notater: "" },
-  { id: "O-0002", oppgave: "Send kontrakt til Outwork AS", lead_id: "", selskap_id: "S-0012", salgsmulighet_id: "SM-0009", ansvarlig: "", frist: "2026-03-14", prioritet: "Høy", status: "Åpen", paaminnelse: true, notater: "" },
-  { id: "O-0003", oppgave: "Demo for Fair Collection", lead_id: "", selskap_id: "S-0018", salgsmulighet_id: "SM-0010", ansvarlig: "", frist: "2026-03-18", prioritet: "Høy", status: "Åpen", paaminnelse: true, notater: "" },
-  { id: "O-0004", oppgave: "Følg opp Zen Finans møte", lead_id: "", selskap_id: "S-0020", salgsmulighet_id: "SM-0012", ansvarlig: "", frist: "2026-03-15", prioritet: "Høy", status: "Åpen", paaminnelse: true, notater: "" },
-  { id: "O-0005", oppgave: "Forbered onboarding Jobbkort", lead_id: "", selskap_id: "S-0001", salgsmulighet_id: "SM-0001", ansvarlig: "", frist: "2026-03-20", prioritet: "Medium", status: "Åpen", paaminnelse: false, notater: "" },
+  { id: "O-0001", oppgave: "Følg opp Drifti AS tilbud", lead_id: "", selskap_id: "S-0009", salgsmulighet_id: "SM-0006", kontakt_id: "", ansvarlig: "", frist: "2026-03-12", prioritet: "Høy", status: "Åpen", paaminnelse: true, notater: "" },
+  { id: "O-0002", oppgave: "Send kontrakt til Outwork AS", lead_id: "", selskap_id: "S-0012", salgsmulighet_id: "SM-0009", kontakt_id: "", ansvarlig: "", frist: "2026-03-14", prioritet: "Høy", status: "Åpen", paaminnelse: true, notater: "" },
+  { id: "O-0003", oppgave: "Demo for Fair Collection", lead_id: "", selskap_id: "S-0018", salgsmulighet_id: "SM-0010", kontakt_id: "", ansvarlig: "", frist: "2026-03-18", prioritet: "Høy", status: "Åpen", paaminnelse: true, notater: "" },
+  { id: "O-0004", oppgave: "Følg opp Zen Finans møte", lead_id: "", selskap_id: "S-0020", salgsmulighet_id: "SM-0012", kontakt_id: "", ansvarlig: "", frist: "2026-03-15", prioritet: "Høy", status: "Åpen", paaminnelse: true, notater: "" },
+  { id: "O-0005", oppgave: "Forbered onboarding Jobbkort", lead_id: "", selskap_id: "S-0001", salgsmulighet_id: "SM-0001", kontakt_id: "", ansvarlig: "", frist: "2026-03-20", prioritet: "Medium", status: "Åpen", paaminnelse: false, notater: "" },
 ];
 
 export const initialPartnere: Partner[] = [];

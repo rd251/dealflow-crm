@@ -44,7 +44,7 @@ export default function InlineTaskForm({ lead_id = "", selskap_id = "", salgsmul
     if (!oppgave.trim()) return;
     const id = generateId("O", oppgaver);
     const ny: Oppgave = {
-      id, oppgave, lead_id, selskap_id, salgsmulighet_id,
+      id, oppgave, lead_id, selskap_id, salgsmulighet_id, kontakt_id: "",
       ansvarlig, frist, prioritet, status: "Åpen", paaminnelse: true, notater: "",
     };
     updateOppgaver(prev => [...prev, ny]);
