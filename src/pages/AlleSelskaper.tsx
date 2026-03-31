@@ -94,8 +94,8 @@ export default function AlleSelskaper() {
                     </Badge>
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">{s.kundeansvarlig || "–"}</td>
-                  <td className="px-4 py-3">
-                    <LastActivityBadge date={s.sist_aktivitet} />
+                  <td className="px-4 py-3 text-xs text-muted-foreground">
+                    {s.sist_aktivitet || "–"}
                   </td>
                 </tr>
               ))}
