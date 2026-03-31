@@ -78,18 +78,24 @@ export default function Dashboard() {
       const events: Array<{ id: string; label: string; date: string; color: string }> = [];
 
       const [leadsRes, smRes] = await Promise.all([
-        supabase.from("leads").select("id,firmanavn,status,created_at").order("created_at", { ascending: false }).limit(20),
+        supabase.from("leads").select("id,firmanavn,status,created_at,konvertert_dato").order("created_at", { ascending: false }).limit(20),
         supabase.from("salgsmuligheter").select("id,navn,status,created_at,vunnet_dato,tapt_dato").order("created_at", { ascending: false }).limit(20),
       ]);
 
       if (leadsRes.data) {
         for (const l of leadsRes.data) {
-          if (l.status === "Konvertert til salg" || l.status === "Konvertert til partner") {
-            events.push({ id: `l-conv-${l.id}`, label: `Konvertert: ${l.firmanavn}`, date: l.created_at, color: "bg-emerald-500" });
+          // Always show the "new lead" event
+          events.push({ id: `l-new-${l.id}`, label: `Nytt lead: ${l.firmanavn}`, date: l.created_at, color: "bg-primary" });
+
+          // Additionally show conversion/rejection as a separate event
+          if (l.status === "Konvertert til salg") {
+            const convDate = l.konvertert_dato || l.created_at;
+            events.push({ id: `l-conv-${l.id}`, label: `${l.firmanavn} konvertert til salg`, date: convDate, color: "bg-emerald-500" });
+          } else if (l.status === "Konvertert til partner") {
+            const convDate = l.konvertert_dato || l.created_at;
+            events.push({ id: `l-conv-${l.id}`, label: `${l.firmanavn} konvertert til partner`, date: convDate, color: "bg-emerald-500" });
           } else if (l.status === "Ikke aktuelt") {
             events.push({ id: `l-ia-${l.id}`, label: `Ikke aktuelt: ${l.firmanavn}`, date: l.created_at, color: "bg-muted-foreground" });
-          } else {
-            events.push({ id: `l-new-${l.id}`, label: `Nytt lead: ${l.firmanavn}`, date: l.created_at, color: "bg-primary" });
           }
         }
       }
