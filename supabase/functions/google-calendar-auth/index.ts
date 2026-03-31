@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
       client_id: GOOGLE_CLIENT_ID,
       redirect_uri: REDIRECT_URI,
       response_type: 'code',
-      scope: 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/gmail.readonly',
+      scope: 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/gmail.settings.basic',
       access_type: 'offline',
       prompt: 'consent',
       state: JSON.stringify({ user_id: user.id, app_redirect: redirect_uri }),

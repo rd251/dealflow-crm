@@ -19,6 +19,9 @@ export interface FollowUpItem {
   navn: string;
   kontaktperson: string | null;
   selskapNavn: string;
+  ePost: string | null;
+  selskapId: string | null;
+  kontaktId: string | null;
   sistAktivitet: string | null;
   sistAktivitetType: string | null;
   anbefalHandling: string;
@@ -128,6 +131,9 @@ export function useFollowUps(
         navn: lead.kontaktperson || lead.firmanavn,
         kontaktperson: lead.kontaktperson || null,
         selskapNavn: lead.firmanavn,
+        ePost: lead.e_post || null,
+        selskapId: null,
+        kontaktId: null,
         sistAktivitet: lead.sist_aktivitet,
         sistAktivitetType: lastAct?.type || null,
         anbefalHandling: getLeadAction(lead, lastAct),
@@ -160,6 +166,9 @@ export function useFollowUps(
         navn: sm.navn,
         kontaktperson: sm.kontaktperson || null,
         selskapNavn: getSelskapNavn(sm.selskap_id),
+        ePost: sm.e_post || null,
+        selskapId: sm.selskap_id || null,
+        kontaktId: sm.kontakt_id || null,
         sistAktivitet: sm.sist_aktivitet,
         sistAktivitetType: lastAct?.type || null,
         anbefalHandling: getSmAction(sm, lastAct),
@@ -206,6 +215,9 @@ export function useFollowUps(
         navn: entityType === "salgsmulighet" ? entity.navn : (entity.kontaktperson || entity.firmanavn),
         kontaktperson: entity.kontaktperson || null,
         selskapNavn: entityType === "salgsmulighet" ? getSelskapNavn(entity.selskap_id) : entity.firmanavn,
+        ePost: entity.e_post || null,
+        selskapId: entity.selskap_id || null,
+        kontaktId: entityType === "salgsmulighet" ? (entity.kontakt_id || null) : null,
         sistAktivitet: meeting.dato,
         sistAktivitetType: "Møte",
         anbefalHandling: "Send oppfølging etter møte",
@@ -264,6 +276,9 @@ export function useFollowUps(
         navn: entityType === "salgsmulighet" ? entity.navn : (entity.kontaktperson || entity.firmanavn),
         kontaktperson: entity.kontaktperson || null,
         selskapNavn: entityType === "salgsmulighet" ? getSelskapNavn(entity.selskap_id) : entity.firmanavn,
+        ePost: entity.e_post || null,
+        selskapId: entity.selskap_id || null,
+        kontaktId: entityType === "salgsmulighet" ? (entity.kontakt_id || null) : null,
         sistAktivitet: email.dato,
         sistAktivitetType: "E-post",
         anbefalHandling: isSent ? "Følg opp – venter på svar" : "Svar på e-post",

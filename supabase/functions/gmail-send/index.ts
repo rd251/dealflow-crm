@@ -139,8 +139,26 @@ Deno.serve(async (req) => {
     const profile = await profileRes.json();
     const fromEmail = profile.emailAddress;
 
-    // Build and send email
-    const rawEmail = buildRawEmail(to, subject, body, fromEmail);
+    // Fetch Gmail signature
+    let signature = "";
+    try {
+      const sendAsRes = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/settings/sendAs", {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      if (sendAsRes.ok) {
+        const sendAsData = await sendAsRes.json();
+        const primary = sendAsData.sendAs?.find((s: any) => s.isPrimary);
+        if (primary?.signature) {
+          signature = primary.signature;
+        }
+      }
+    } catch (e) {
+      console.warn("Could not fetch Gmail signature:", e);
+    }
+
+    // Build and send email (with signature appended)
+    const fullBody = signature ? `${body}\n\n${signature}` : body;
+    const rawEmail = buildRawEmail(to, subject, fullBody, fromEmail);
     const encodedEmail = btoa(unescape(encodeURIComponent(rawEmail)))
       .replace(/\+/g, "-")
       .replace(/\//g, "_")
