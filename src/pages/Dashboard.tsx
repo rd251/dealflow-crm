@@ -237,7 +237,7 @@ export default function Dashboard() {
         ...sm,
         selskapNavn: selskaper.find((s) => s.id === sm.selskap_id)?.firmanavn || "—",
       })),
-    leads: leads.filter((l) => l.status !== "Ikke aktuelt" && l.status !== "Konvertert til salg" && l.status !== "Konvertert til partner"),
+    leads: leads.filter((l) => l.status !== "Ikke aktuelt" && l.status !== "Konvertert til salg" && l.status !== "Konvertert til partner" && !l.konvertert_til && !l.konvertert_dato),
     oppgaver,
   }), [todayMeetings, followUps, salgsmuligheter, leads, oppgaver, selskaper, entityNames]);
 
