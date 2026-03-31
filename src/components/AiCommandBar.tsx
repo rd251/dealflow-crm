@@ -90,6 +90,7 @@ const QUICK_PROMPTS = [
   { icon: "📅", label: "Book møte", prefill: "Møte med [navn] [dato] kl [tid], [e-post], emne [tema]" },
   { icon: "📝", label: "Ny oppgave", prefill: "Opprett oppgave: [beskrivelse], frist [dato], prioritet [høy/medium/lav]" },
   { icon: "📧", label: "Skriv e-post", prefill: "Skriv e-post til [navn/selskap] om [tema]" },
+  { icon: "📊", label: "Ukesrapport" },
   { icon: "📋", label: "Prep neste møte" },
   { icon: "🎯", label: "Top 5 prioriteringer" },
   { icon: "📞", label: "Deals som trenger oppfølging" },
