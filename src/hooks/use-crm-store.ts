@@ -67,7 +67,7 @@ function rowToProsjekt(r: any): Prosjekt {
 function rowToOppgave(r: any): Oppgave {
   return {
     id: r.id, oppgave: r.oppgave, lead_id: r.lead_id || "", selskap_id: r.selskap_id || "",
-    salgsmulighet_id: r.salgsmulighet_id || "", ansvarlig: r.ansvarlig || "",
+    salgsmulighet_id: r.salgsmulighet_id || "", kontakt_id: r.kontakt_id || "", ansvarlig: r.ansvarlig || "",
     frist: r.frist || "", prioritet: r.prioritet || "Medium", status: r.status || "Åpen",
     paaminnelse: r.paaminnelse ?? true, notater: r.notater || "",
   };
@@ -620,7 +620,8 @@ function useCrmStoreInternal() {
         await dbUpsert("oppgaver", {
           id: item.id, oppgave: item.oppgave, user_id: user?.id ?? null,
           lead_id: emptyToNull(item.lead_id), selskap_id: emptyToNull(item.selskap_id),
-          salgsmulighet_id: emptyToNull(item.salgsmulighet_id), ansvarlig: emptyToNull(item.ansvarlig),
+          salgsmulighet_id: emptyToNull(item.salgsmulighet_id), kontakt_id: emptyToNull(item.kontakt_id),
+          ansvarlig: emptyToNull(item.ansvarlig),
           frist: emptyToNull(item.frist), prioritet: item.prioritet,
           status: item.status, paaminnelse: item.paaminnelse, notater: emptyToNull(item.notater),
         });
@@ -632,6 +633,7 @@ function useCrmStoreInternal() {
         await dbUpdate("oppgaver", item.id, {
           oppgave: item.oppgave, lead_id: emptyToNull(item.lead_id),
           selskap_id: emptyToNull(item.selskap_id), salgsmulighet_id: emptyToNull(item.salgsmulighet_id),
+          kontakt_id: emptyToNull(item.kontakt_id),
           ansvarlig: emptyToNull(item.ansvarlig), frist: emptyToNull(item.frist),
           prioritet: item.prioritet, status: item.status,
           paaminnelse: item.paaminnelse, notater: emptyToNull(item.notater),

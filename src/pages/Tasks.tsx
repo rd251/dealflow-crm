@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Bell, BellOff, Calendar, AlertTriangle, Pencil, Trash2, Building2, Target } from "lucide-react";
+import { Plus, Bell, BellOff, Calendar, AlertTriangle, Pencil, Trash2, Building2, Target, User } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { Oppgave, OppgaveStatus, Prioritet } from "@/data/crm-data";
 import { toast } from "sonner";
@@ -27,12 +27,12 @@ export default function Tasks() {
   const isMobile = useIsMobile();
   const { user, canEdit } = useAuth();
   const { profiles } = useProfiles();
-  const { oppgaver, selskaper, salgsmuligheter, updateOppgaver, generateId } = useCrmStore();
+  const { oppgaver, selskaper, salgsmuligheter, kontakter, updateOppgaver, generateId } = useCrmStore();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Oppgave | null>(null);
   const [filter, setFilter] = useState<"alle" | "forfalte" | "idag" | "uke">("alle");
-  const [form, setForm] = useState({ oppgave: "", frist: "", prioritet: "Medium" as Prioritet, lead_id: "", selskap_id: "", salgsmulighet_id: "", ansvarlig: "", notater: "" });
+  const [form, setForm] = useState({ oppgave: "", frist: "", prioritet: "Medium" as Prioritet, lead_id: "", selskap_id: "", salgsmulighet_id: "", kontakt_id: "", ansvarlig: "", notater: "" });
 
   const today = new Date().toISOString().split("T")[0];
   const weekEnd = new Date(Date.now() + 7 * 86400000).toISOString().split("T")[0];
@@ -64,7 +64,7 @@ export default function Tasks() {
       toast.success(`Oppgave delegert til ${assignee?.display_name || "bruker"}`);
     }
 
-    setForm({ oppgave: "", frist: "", prioritet: "Medium", lead_id: "", selskap_id: "", salgsmulighet_id: "", ansvarlig: "", notater: "" });
+    setForm({ oppgave: "", frist: "", prioritet: "Medium", lead_id: "", selskap_id: "", salgsmulighet_id: "", kontakt_id: "", ansvarlig: "", notater: "" });
   };
 
   const changeStatus = (id: string, status: OppgaveStatus) => {
@@ -172,6 +172,10 @@ export default function Tasks() {
                 <option value="">Knytt til selskap (valgfritt)</option>
                 {selskaper.map(s => <option key={s.id} value={s.id}>{s.firmanavn}</option>)}
               </select>
+              <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background" value={form.kontakt_id} onChange={e => setForm(f => ({ ...f, kontakt_id: e.target.value }))}>
+                <option value="">Knytt til kontakt (valgfritt)</option>
+                {kontakter.map(k => <option key={k.id} value={k.id}>{k.navn}{k.rolle ? ` – ${k.rolle}` : ""}</option>)}
+              </select>
               <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background" value={form.ansvarlig} onChange={e => setForm(f => ({ ...f, ansvarlig: e.target.value }))}>
                 <option value="">Velg ansvarlig (valgfritt)</option>
                 {profiles.map(p => (
@@ -198,6 +202,7 @@ export default function Tasks() {
           const isOverdue = task.status !== "Ferdig" && task.frist && task.frist < today;
           const selskap = selskaper.find(s => s.id === task.selskap_id);
           const salgsmulighet = salgsmuligheter.find(s => s.id === task.salgsmulighet_id);
+          const kontakt = kontakter.find(k => k.id === task.kontakt_id);
           const ansvarligNavn = task.ansvarlig ? getProfileName(task.ansvarlig) : null;
           return (
             <div key={task.id} className={`bg-card border rounded-xl p-4 flex items-center gap-3 animate-slide-in transition-opacity cursor-pointer hover:border-primary/30 ${task.status === "Ferdig" ? "opacity-50" : ""}`} onClick={() => canEdit && openEdit(task)}>
@@ -227,6 +232,7 @@ export default function Tasks() {
                   )}
                   {selskap && <span className="truncate flex items-center gap-0.5"><Building2 className="w-3 h-3" /> {selskap.firmanavn}</span>}
                   {salgsmulighet && <span className="truncate flex items-center gap-0.5"><Target className="w-3 h-3" /> {salgsmulighet.navn}</span>}
+                  {kontakt && <span className="truncate flex items-center gap-0.5"><User className="w-3 h-3" /> {kontakt.navn}</span>}
                   {canEdit ? (
                     <span className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
                       <select
@@ -287,6 +293,10 @@ export default function Tasks() {
               <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background" value={editingTask.selskap_id} onChange={e => setEditingTask(t => t ? { ...t, selskap_id: e.target.value } : t)}>
                 <option value="">Knytt til selskap (valgfritt)</option>
                 {selskaper.map(s => <option key={s.id} value={s.id}>{s.firmanavn}</option>)}
+              </select>
+              <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background" value={editingTask.kontakt_id} onChange={e => setEditingTask(t => t ? { ...t, kontakt_id: e.target.value } : t)}>
+                <option value="">Knytt til kontakt (valgfritt)</option>
+                {kontakter.map(k => <option key={k.id} value={k.id}>{k.navn}{k.rolle ? ` – ${k.rolle}` : ""}</option>)}
               </select>
               <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background" value={editingTask.ansvarlig} onChange={e => setEditingTask(t => t ? { ...t, ansvarlig: e.target.value } : t)}>
                 <option value="">Velg ansvarlig (valgfritt)</option>
