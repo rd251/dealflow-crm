@@ -67,7 +67,7 @@ function rowToProsjekt(r: any): Prosjekt {
 function rowToOppgave(r: any): Oppgave {
   return {
     id: r.id, oppgave: r.oppgave, lead_id: r.lead_id || "", selskap_id: r.selskap_id || "",
-    salgsmulighet_id: r.salgsmulighet_id || "", ansvarlig: r.ansvarlig || "",
+    salgsmulighet_id: r.salgsmulighet_id || "", kontakt_id: r.kontakt_id || "", ansvarlig: r.ansvarlig || "",
     frist: r.frist || "", prioritet: r.prioritet || "Medium", status: r.status || "Åpen",
     paaminnelse: r.paaminnelse ?? true, notater: r.notater || "",
   };
