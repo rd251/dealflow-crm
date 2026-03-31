@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import PageShell from "@/components/PageShell";
 import { useCrmStore } from "@/hooks/use-crm-store";
@@ -42,7 +42,6 @@ export default function Leads() {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [form, setForm] = useState<Partial<Lead>>({ firmanavn: "", kontaktperson: "", e_post: "", telefon: "", kilde: "Nettside", status: "Ny", ansvarlig: "", neste_steg: "", notater: "", rolle_i_firma: "", use_case: "" });
   const [filterUtenOppfolging, setFilterUtenOppfolging] = useState(false);
-  const [tab, setTab] = useState<"aktive" | "arkiv">("aktive");
 
   // Pick up filter from query param
   useEffect(() => {
@@ -61,30 +60,16 @@ export default function Leads() {
     l.status === "Konvertert til salg" ||
     l.status === "Konvertert til partner";
 
-  // Helper: is a lead archived (converted or "Ikke aktuelt")?
-  const isArchived = (l: Lead) => isConverted(l) || l.status === "Ikke aktuelt";
-
   // Derive conversion type for display when konvertert_til is missing (after reload)
   const getConversionType = (l: Lead): "" | "salg" | "partner" => {
     if (l.konvertert_til) return l.konvertert_til as "salg" | "partner";
     if (l.status === "Konvertert til salg") return "salg";
     if (l.status === "Konvertert til partner") return "partner";
-    // Has konvertert_dato but unknown type – default to salg
     if (l.konvertert_dato) return "salg";
     return "";
   };
 
-  const archivedLeads = useMemo(() => leads.filter(l => {
-    if (!isArchived(l)) return false;
-    return (
-      l.firmanavn.toLowerCase().includes(search.toLowerCase()) ||
-      l.kontaktperson.toLowerCase().includes(search.toLowerCase())
-    );
-  }), [leads, search]);
-
   const filtered = leads.filter(l => {
-    // Hide archived leads from the active list
-    if (isArchived(l)) return false;
     if (filterUtenOppfolging) {
       const cutoff = new Date(now.getTime() - 24 * 60 * 60 * 1000);
       if (l.sist_aktivitet && new Date(l.sist_aktivitet) >= cutoff) return false;
@@ -118,22 +103,10 @@ export default function Leads() {
   const currentLead = selectedLead ? leads.find(l => l.id === selectedLead.id) || selectedLead : null;
   const currentIsLocked = currentLead ? isConverted(currentLead) : false;
 
-  const conversionBadge = (lead: Lead) => {
-    const type = getConversionType(lead);
-    if (!type) return null;
-    const isSalg = type === "salg";
-    return (
-      <Badge className={`text-[10px] gap-0.5 ${isSalg ? "bg-success/10 text-success" : "bg-primary/10 text-primary"}`}>
-        <Lock className="w-3 h-3" />
-        {isSalg ? "→ Salg" : "→ Partner"}
-      </Badge>
-    );
-  };
-
   return (
     <PageShell
       title="Leads"
-      subtitle={`${leads.filter(l => !isConverted(l) && l.status !== "Ikke aktuelt").length} aktive leads`}
+      subtitle={`${leads.length} leads`}
       actions={canEdit ? (
         <div className="flex gap-2">
         <Button size="sm" variant="outline" onClick={() => setImportOpen(true)}><Upload className="w-4 h-4 mr-1" />{!isMobile && "Importer"}</Button>
@@ -206,38 +179,20 @@ export default function Leads() {
           return { success, errors };
         }}
       />
-      {/* Tabs */}
-      <div className="mb-4 flex items-center gap-4 border-b">
-        <button
-          className={`pb-2 text-sm font-medium border-b-2 transition-colors ${tab === "aktive" ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}
-          onClick={() => setTab("aktive")}
-        >
-          Aktive ({filtered.length})
-        </button>
-        <button
-          className={`pb-2 text-sm font-medium border-b-2 transition-colors ${tab === "arkiv" ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}
-          onClick={() => setTab("arkiv")}
-        >
-          Arkiv ({archivedLeads.length})
-        </button>
-      </div>
-
       <div className="mb-4 flex items-center gap-2">
         <div className="relative max-w-sm flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input placeholder="Søk leads..." className="pl-9" value={search} onChange={e => setSearch(e.target.value)} />
         </div>
-        {filterUtenOppfolging && tab === "aktive" && (
+        {filterUtenOppfolging && (
           <Badge variant="secondary" className="gap-1 cursor-pointer hover:bg-destructive/10" onClick={() => setFilterUtenOppfolging(false)}>
             Uten oppfølging ✕
           </Badge>
         )}
       </div>
 
-      {tab === "aktive" ? (
-        <>
-          {/* Mobile: card layout */}
-          {isMobile ? (
+      {/* Mobile: card layout */}
+      {isMobile ? (
             <div className="space-y-3">
               {filtered.map(lead => (
                 <div key={lead.id} className="bg-card border rounded-xl p-4 space-y-2" onClick={() => setSelectedLead(lead)}>
@@ -314,63 +269,9 @@ export default function Leads() {
                   ))}
                 </tbody>
               </table>
-              {filtered.length === 0 && <p className="text-center text-sm text-muted-foreground py-8">Ingen aktive leads</p>}
+              {filtered.length === 0 && <p className="text-center text-sm text-muted-foreground py-8">Ingen leads funnet</p>}
             </div>
           )}
-        </>
-      ) : (
-        /* Archive tab */
-        <div className="bg-card border rounded-xl overflow-hidden">
-          {isMobile ? (
-            <div className="space-y-3 p-3">
-              {archivedLeads.map(lead => (
-                <div key={lead.id} className="bg-muted/30 border rounded-xl p-4 space-y-2 opacity-80" onClick={() => setSelectedLead(lead)}>
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="font-semibold text-sm truncate">{lead.firmanavn}</p>
-                    <div className="flex items-center gap-1 shrink-0">
-                      {conversionBadge(lead)}
-                      {lead.status === "Ikke aktuelt" && <Badge className="text-[10px] bg-muted text-muted-foreground">Ikke aktuelt</Badge>}
-                    </div>
-                  </div>
-                  <p className="text-xs text-muted-foreground">{lead.kontaktperson}</p>
-                </div>
-              ))}
-              {archivedLeads.length === 0 && <p className="text-center text-sm text-muted-foreground py-8">Ingen arkiverte leads</p>}
-            </div>
-          ) : (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b bg-muted/50">
-                  <th className="text-left px-4 py-3 font-medium">Firma</th>
-                  <th className="text-left px-4 py-3 font-medium">Kontaktperson</th>
-                  <th className="text-left px-4 py-3 font-medium">Kilde</th>
-                  <th className="text-left px-4 py-3 font-medium">Status</th>
-                  <th className="text-left px-4 py-3 font-medium">Konvertert dato</th>
-                  <th className="text-left px-4 py-3 font-medium">Opprettet</th>
-                </tr>
-              </thead>
-              <tbody>
-                {archivedLeads.map(lead => (
-                  <tr key={lead.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer opacity-70" onClick={() => setSelectedLead(lead)}>
-                    <td className="px-4 py-3 font-medium">{lead.firmanavn}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{lead.kontaktperson}</td>
-                    <td className="px-4 py-3"><Badge variant="secondary" className="text-xs">{lead.kilde}</Badge></td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-1.5">
-                        {conversionBadge(lead)}
-                        {lead.status === "Ikke aktuelt" && <Badge className="text-[10px] bg-muted text-muted-foreground">Ikke aktuelt</Badge>}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground text-xs font-mono">{lead.konvertert_dato || "–"}</td>
-                    <td className="px-4 py-3 text-muted-foreground text-xs font-mono">{lead.opprettet_dato}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-          {archivedLeads.length === 0 && !isMobile && <p className="text-center text-sm text-muted-foreground py-8">Ingen arkiverte leads</p>}
-        </div>
-      )}
 
       <DetailPanelShell
         open={!!currentLead}
