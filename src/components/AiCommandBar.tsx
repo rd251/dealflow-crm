@@ -32,6 +32,7 @@ interface SuggestedTask {
   salgsmulighet_id?: string;
   selskap_id?: string;
   lead_id?: string;
+  auto_create?: boolean;
 }
 
 interface SuggestedActivity {
