@@ -1,0 +1,220 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+};
+
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  try {
+    const { message, context } = await req.json();
+    if (!message || typeof message !== "string" || message.length > 2000) {
+      return new Response(JSON.stringify({ error: "Invalid message" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Authenticate user
+    const authHeader = req.headers.get("Authorization");
+    const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+
+    // Build CRM context summary from passed data
+    const systemPrompt = buildSystemPrompt(context);
+
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-3-flash-preview",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: message },
+        ],
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "crm_response",
+              description: "Return a structured CRM response with text, action items, and suggested tasks",
+              parameters: {
+                type: "object",
+                properties: {
+                  summary: {
+                    type: "string",
+                    description: "A conversational summary answering the user's question in Norwegian. Use markdown formatting.",
+                  },
+                  items: {
+                    type: "array",
+                    description: "Structured list of actionable items",
+                    items: {
+                      type: "object",
+                      properties: {
+                        navn: { type: "string", description: "Name of the deal, lead, or contact" },
+                        selskap: { type: "string", description: "Company name" },
+                        handling: { type: "string", description: "Recommended action" },
+                        prioritet: { type: "string", enum: ["høy", "medium", "lav"] },
+                        type: { type: "string", enum: ["deal", "lead", "meeting", "task", "general"] },
+                        entityId: { type: "string", description: "ID of the entity if available" },
+                        entityType: { type: "string", enum: ["salgsmulighet", "lead", "selskap", "oppgave"] },
+                      },
+                      required: ["navn", "selskap", "handling", "prioritet", "type"],
+                    },
+                  },
+                  suggested_tasks: {
+                    type: "array",
+                    description: "Tasks that can be created in the CRM",
+                    items: {
+                      type: "object",
+                      properties: {
+                        oppgave: { type: "string", description: "Task description" },
+                        frist: { type: "string", description: "Due date in YYYY-MM-DD format" },
+                        prioritet: { type: "string", enum: ["Høy", "Medium", "Lav"] },
+                        salgsmulighet_id: { type: "string", description: "ID of related sales opportunity" },
+                        selskap_id: { type: "string", description: "ID of related company" },
+                        lead_id: { type: "string", description: "ID of related lead" },
+                      },
+                      required: ["oppgave", "prioritet"],
+                    },
+                  },
+                },
+                required: ["summary", "items", "suggested_tasks"],
+              },
+            },
+          },
+        ],
+        tool_choice: { type: "function", function: { name: "crm_response" } },
+      }),
+    });
+
+    if (!response.ok) {
+      if (response.status === 429) {
+        return new Response(JSON.stringify({ error: "For mange forespørsler. Prøv igjen om litt." }), {
+          status: 429,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (response.status === 402) {
+        return new Response(JSON.stringify({ error: "AI-kreditter brukt opp." }), {
+          status: 402,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const t = await response.text();
+      console.error("AI gateway error:", response.status, t);
+      return new Response(JSON.stringify({ error: "AI-feil. Prøv igjen." }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const data = await response.json();
+
+    // Extract tool call result
+    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
+    if (toolCall?.function?.arguments) {
+      try {
+        const parsed = JSON.parse(toolCall.function.arguments);
+        return new Response(JSON.stringify(parsed), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      } catch {
+        // Fallback to plain text
+        return new Response(
+          JSON.stringify({
+            summary: data.choices?.[0]?.message?.content || "Beklager, noe gikk galt.",
+            items: [],
+            suggested_tasks: [],
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
+    // Fallback if no tool call
+    return new Response(
+      JSON.stringify({
+        summary: data.choices?.[0]?.message?.content || "Beklager, noe gikk galt.",
+        items: [],
+        suggested_tasks: [],
+      }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  } catch (e) {
+    console.error("ai-command error:", e);
+    return new Response(
+      JSON.stringify({ error: e instanceof Error ? e.message : "Ukjent feil" }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+});
+
+function buildSystemPrompt(context: any): string {
+  const today = new Date().toISOString().split("T")[0];
+
+  let prompt = `Du er en AI-assistent for et CRM-system kalt Snakk. Du svarer alltid på norsk.
+Dagens dato er ${today}.
+
+REGLER:
+- Prioriter alltid høy-verdi deals først
+- Prioriter alltid entiteter med manglende/gammel aktivitet
+- Aldri foreslå handlinger på ferdige deals (Vunnet/Tapt)
+- Når du foreslår oppgaver, sett alltid realistiske frister (i dag eller innen noen dager)
+- Hold svarene korte og handlingsorienterte
+- Bruk markdown for formatering
+- Alle IDer du refererer til MÅ komme fra konteksten under
+
+CRM-DATA:
+`;
+
+  if (context?.meetings?.length > 0) {
+    prompt += `\n## Møter i dag (${context.meetings.length}):\n`;
+    for (const m of context.meetings) {
+      const tid = m.start_tid ? new Date(m.start_tid).toLocaleTimeString("no-NO", { hour: "2-digit", minute: "2-digit" }) : "";
+      prompt += `- ${tid} ${m.tittel || "Uten tittel"} (selskap: ${m.selskapNavn || "—"}, salgsmulighet_id: ${m.salgsmulighet_id || "—"})\n`;
+    }
+  } else {
+    prompt += "\n## Ingen møter i dag\n";
+  }
+
+  if (context?.followUps?.length > 0) {
+    prompt += `\n## Oppfølginger som trengs (${context.followUps.length}):\n`;
+    for (const f of context.followUps.slice(0, 15)) {
+      prompt += `- [${f.priority}] ${f.navn} (${f.selskapNavn}) – ${f.anbefalHandling} – ${f.hoursInactive}t inaktiv – type: ${f.entityType} – id: ${f.entityId}${f.verdi > 0 ? ` – verdi: ${f.verdi} kr` : ""}\n`;
+    }
+  }
+
+  if (context?.salgsmuligheter?.length > 0) {
+    prompt += `\n## Åpne salgsmuligheter (${context.salgsmuligheter.length}):\n`;
+    for (const sm of context.salgsmuligheter.slice(0, 20)) {
+      prompt += `- ${sm.navn} (${sm.selskapNavn || "—"}) – status: ${sm.status} – MRR: ${sm.forventet_mrr || 0} kr – neste steg: ${sm.neste_steg || "—"} – sist aktivitet: ${sm.sist_aktivitet || "aldri"} – id: ${sm.id} – selskap_id: ${sm.selskap_id || "—"}\n`;
+    }
+  }
+
+  if (context?.leads?.length > 0) {
+    prompt += `\n## Aktive leads (${context.leads.length}):\n`;
+    for (const l of context.leads.slice(0, 15)) {
+      prompt += `- ${l.firmanavn} (${l.kontaktperson || "—"}) – status: ${l.status} – sist aktivitet: ${l.sist_aktivitet || "aldri"} – id: ${l.id}\n`;
+    }
+  }
+
+  if (context?.oppgaver?.length > 0) {
+    prompt += `\n## Åpne oppgaver (${context.oppgaver.length}):\n`;
+    for (const o of context.oppgaver.slice(0, 10)) {
+      prompt += `- ${o.oppgave} – frist: ${o.frist || "—"} – prioritet: ${o.prioritet} – status: ${o.status} – id: ${o.id}\n`;
+    }
+  }
+
+  return prompt;
+}
