@@ -132,7 +132,14 @@ export default function Salgsmuligheter() {
   const now = new Date();
   const thisMonth = (d: string) => { const dt = new Date(d); return dt.getMonth() === now.getMonth() && dt.getFullYear() === now.getFullYear(); };
 
-  const openDeals = salgsmuligheter.filter(s => openStatuses.includes(s.status));
+  const openDeals = salgsmuligheter.filter(s => {
+    if (!openStatuses.includes(s.status)) return false;
+    if (filterUtenAktivitet) {
+      const cutoff = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
+      if (s.sist_aktivitet && new Date(s.sist_aktivitet) >= cutoff) return false;
+    }
+    return true;
+  });
   const wonThisMonth = salgsmuligheter.filter(s => s.status === "Vunnet" && thisMonth(s.vunnet_dato));
   const lostThisMonth = salgsmuligheter.filter(s => s.status === "Tapt" && thisMonth(s.tapt_dato));
   const allClosed = salgsmuligheter.filter(s => s.status === "Vunnet" || s.status === "Tapt");
