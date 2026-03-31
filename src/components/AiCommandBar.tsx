@@ -274,6 +274,15 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
           }
         }
       }
+
+      // Auto-create contacts
+      if (aiData.suggested_contacts?.length) {
+        for (let i = 0; i < aiData.suggested_contacts.length; i++) {
+          if (aiData.suggested_contacts[i].auto_create) {
+            handleCreateContact(aiData.suggested_contacts[i], i);
+          }
+        }
+      }
     } catch (e: any) {
       console.error("AI command error:", e);
       toast.error("Kunne ikke kontakte AI. Prøv igjen.");
