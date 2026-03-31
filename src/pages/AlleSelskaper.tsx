@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search, Building2, ChevronRight } from "lucide-react";
 import { Kundestatus } from "@/data/crm-data";
-import LastActivityBadge from "@/components/LastActivityBadge";
+import { Kundestatus } from "@/data/crm-data";
 
 const kundestatusColors: Record<Kundestatus, string> = {
   "Ikke kunde": "bg-muted text-muted-foreground",
