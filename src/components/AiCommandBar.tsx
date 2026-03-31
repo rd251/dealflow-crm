@@ -29,10 +29,21 @@ interface SuggestedTask {
   lead_id?: string;
 }
 
+interface SuggestedActivity {
+  type: "Telefonsamtale" | "E-post" | "LinkedIn-melding" | "SMS" | "Møte" | "Notat";
+  tittel: string;
+  beskrivelse: string;
+  salgsmulighet_id?: string;
+  selskap_id?: string;
+  lead_id?: string;
+  kontakt_id?: string;
+}
+
 interface AiResponse {
   summary: string;
   items: AiItem[];
   suggested_tasks: SuggestedTask[];
+  suggested_activities: SuggestedActivity[];
 }
 
 interface AiCommandBarProps {
