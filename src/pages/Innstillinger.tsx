@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import { CalendarDays, Mail, RefreshCw, Unlink, CheckCircle2, XCircle, Loader2, Globe, Copy, Check } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import DeletedItemsLog from "@/components/DeletedItemsLog";
 
 interface ConnectionData {
   last_synced_at: string | null;
