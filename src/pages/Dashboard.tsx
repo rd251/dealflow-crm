@@ -641,6 +641,29 @@ export default function Dashboard() {
         open={!!prepMeeting}
         onOpenChange={(open) => { if (!open) setPrepMeeting(null); }}
       />
+
+      <Dialog open={!!notesMeeting} onOpenChange={open => { if (!open) setNotesMeeting(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-sm">Møtenotater – {notesMeeting?.tittel || "Møte"}</DialogTitle>
+            <DialogDescription className="text-xs">
+              {notesMeeting && format(new Date(notesMeeting.dato), "EEEE d. MMMM", { locale: nb })}
+              {notesMeeting?.start_tid && ` kl. ${format(new Date(notesMeeting.start_tid), "HH:mm")}`}
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            placeholder="Skriv detaljerte møtenotater..."
+            value={notesText}
+            onChange={e => setNotesText(e.target.value)}
+            rows={8}
+            autoFocus
+          />
+          <Button onClick={saveNotes} className="w-full gap-2" size="sm" disabled={notesSaving}>
+            <Save className="w-3.5 h-3.5" />
+            {notesSaving ? "Lagrer..." : "Lagre"}
+          </Button>
+        </DialogContent>
+      </Dialog>
     </PageShell>
   );
 }
