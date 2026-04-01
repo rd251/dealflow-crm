@@ -53,6 +53,7 @@ interface CompanyGroup {
   lastContactedAt: string | null;
   persons: KontaktStromPerson[];
   type: KontaktStromPerson["type"];
+  status: string;
 }
 
 const TYPE_COLORS: Record<string, string> = {
@@ -489,6 +490,7 @@ export default function Kontaktstrom() {
         const typePriority = { Kunde: 5, Partner: 4, Salgsmulighet: 3, Lead: 2, Kontakt: 1, Ukjent: 0 };
         if ((typePriority[p.type] || 0) > (typePriority[existing.type] || 0)) {
           existing.type = p.type;
+          existing.status = p.status;
         }
       } else {
         domainMap.set(p.domain, {
@@ -499,6 +501,7 @@ export default function Kontaktstrom() {
           lastContactedAt: p.sistKontaktetDato,
           persons: [p],
           type: p.type,
+          status: p.status,
         });
       }
     }
@@ -690,22 +693,26 @@ export default function Kontaktstrom() {
                   {p.email}
                 </p>
               </div>
-              <div className="hidden md:flex items-center gap-3 shrink-0">
+              <div className="hidden md:flex items-center gap-4 shrink-0 text-xs text-muted-foreground">
                 {p.status && (
-                  <span className="text-xs text-muted-foreground w-24 text-right truncate">{p.status}</span>
+                  <span className="w-28 text-right truncate">{p.status}</span>
                 )}
-                {p.sistKontaktetDato && (
-                  <span className="text-xs text-muted-foreground w-28 text-right truncate flex items-center justify-end gap-1">
-                    <Clock className="w-3 h-3" />
+                {p.sistKontaktetDato ? (
+                  <span className="w-36 text-right truncate flex items-center justify-end gap-1">
+                    <Clock className="w-3 h-3 shrink-0" />
                     {formatAktivitetDato(p.sistKontaktetDato)}
                   </span>
+                ) : (
+                  <span className="w-36" />
                 )}
+                <span className="w-28 text-right">
+                  {(p.type !== "Ukjent" && p.type !== "Kontakt") && (
+                    <Badge variant="secondary" className={`text-xs ${TYPE_COLORS[p.type]}`}>
+                      {p.type}
+                    </Badge>
+                  )}
+                </span>
               </div>
-              {(p.type === "Lead" || p.type === "Salgsmulighet" || p.type === "Kunde" || p.type === "Partner") && (
-                <Badge variant="secondary" className={`text-xs shrink-0 ${TYPE_COLORS[p.type]}`}>
-                  {p.type}
-                </Badge>
-              )}
             </div>
           ))}
           {filteredPeople.length === 0 && (
@@ -742,11 +749,26 @@ export default function Kontaktstrom() {
                   {g.domain && <span className="ml-1">· {g.domain}</span>}
                 </p>
               </div>
-              {(g.type === "Lead" || g.type === "Kunde" || g.type === "Partner") && (
-                <Badge variant="secondary" className={`text-xs shrink-0 ${TYPE_COLORS[g.type]}`}>
-                  {g.type}
-                </Badge>
-              )}
+              <div className="hidden md:flex items-center gap-4 shrink-0 text-xs text-muted-foreground">
+                {g.status && (
+                  <span className="w-28 text-right truncate">{g.status}</span>
+                )}
+                {g.lastContactedAt ? (
+                  <span className="w-36 text-right truncate flex items-center justify-end gap-1">
+                    <Clock className="w-3 h-3 shrink-0" />
+                    {formatAktivitetDato(g.lastContactedAt)}
+                  </span>
+                ) : (
+                  <span className="w-36" />
+                )}
+                <span className="w-28 text-right">
+                  {(g.type !== "Ukjent" && g.type !== "Kontakt") && (
+                    <Badge variant="secondary" className={`text-xs ${TYPE_COLORS[g.type]}`}>
+                      {g.type}
+                    </Badge>
+                  )}
+                </span>
+              </div>
             </div>
           ))}
           {companyGroups.length === 0 && (
