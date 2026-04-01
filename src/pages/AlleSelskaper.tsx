@@ -89,7 +89,12 @@ export default function AlleSelskaper() {
                   className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer"
                   onClick={() => navigate(`/selskaper/${s.id}`)}
                 >
-                  <td className="px-4 py-3 font-medium">{s.firmanavn}</td>
+                  <td className="px-4 py-3 font-medium">
+                    <div className="flex items-center gap-2">
+                      <CompanyLogo firmanavn={s.firmanavn} size="sm" />
+                      {s.firmanavn}
+                    </div>
+                  </td>
                   <td className="px-4 py-3 text-muted-foreground">{s.bransje || "–"}</td>
                   <td className="px-4 py-3">
                     <Badge variant="outline" className={`text-[10px] ${kundestatusColors[s.kundestatus]}`}>

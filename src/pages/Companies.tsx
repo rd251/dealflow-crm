@@ -349,7 +349,10 @@ export default function Companies() {
             return (
               <div key={s.id} className="bg-card border rounded-xl p-4 space-y-2" onClick={() => navigate(`/selskaper/${s.id}`)}>
                 <div className="flex items-center justify-between">
-                  <p className="font-semibold text-sm truncate">{s.firmanavn}</p>
+                  <div className="flex items-center gap-2">
+                    <CompanyLogo firmanavn={s.firmanavn} size="sm" />
+                    <p className="font-semibold text-sm truncate">{s.firmanavn}</p>
+                  </div>
                   <Badge className={`text-[10px] shrink-0 ${kundestatusColors[s.kundestatus]}`}>{s.kundestatus}</Badge>
                 </div>
                 {s.bransje && <p className="text-xs text-muted-foreground">{s.bransje}</p>}
