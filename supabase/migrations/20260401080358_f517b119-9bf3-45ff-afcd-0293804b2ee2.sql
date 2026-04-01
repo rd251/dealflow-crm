@@ -1,0 +1,1 @@
+ALTER TABLE public.selskaper ADD COLUMN domene text DEFAULT '' NOT NULL;

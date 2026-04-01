@@ -53,7 +53,7 @@ export default function AlleSelskaper() {
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <CompanyLogo firmanavn={s.firmanavn} kontaktEmails={kontakter.filter(k => k.selskap_id === s.id).map(k => k.e_post)} size="sm" />
+                  <CompanyLogo domain={s.domene} firmanavn={s.firmanavn} kontaktEmails={kontakter.filter(k => k.selskap_id === s.id).map(k => k.e_post)} size="sm" />
                   <p className="font-semibold text-sm truncate">{s.firmanavn}</p>
                 </div>
                 <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
@@ -91,7 +91,7 @@ export default function AlleSelskaper() {
                 >
                   <td className="px-4 py-3 font-medium">
                     <div className="flex items-center gap-2">
-                      <CompanyLogo firmanavn={s.firmanavn} kontaktEmails={kontakter.filter(k => k.selskap_id === s.id).map(k => k.e_post)} size="sm" />
+                      <CompanyLogo domain={s.domene} firmanavn={s.firmanavn} kontaktEmails={kontakter.filter(k => k.selskap_id === s.id).map(k => k.e_post)} size="sm" />
                       {s.firmanavn}
                     </div>
                   </td>

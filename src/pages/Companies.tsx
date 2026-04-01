@@ -85,7 +85,7 @@ export default function Companies() {
       mrr: 0, arr: 0, oppstartskostnad: 0, go_live_dato: "", kansellert_dato: "",
       kanselleringsaarsak: "", kanselleringsnotat: "", kundetilstand: "Bra",
       sist_aktivitet: new Date().toISOString().split("T")[0], neste_steg: "", notater: "",
-      kilde: "Direkte salg", partner_id: "", lukkedato: "",
+      kilde: "Direkte salg", partner_id: "", lukkedato: "", domene: "",
     };
     updateSelskaper(prev => [...prev, nyttSelskap]);
     setDialogOpen(false);
@@ -169,7 +169,7 @@ export default function Companies() {
                 notater: String(row.notater || ""),
                 kilde: "Direkte salg",
                 partner_id: "",
-                lukkedato: "",
+                lukkedato: "", domene: "",
               });
               success++;
             } catch { errors++; }
@@ -350,7 +350,7 @@ export default function Companies() {
               <div key={s.id} className="bg-card border rounded-xl p-4 space-y-2" onClick={() => navigate(`/selskaper/${s.id}`)}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <CompanyLogo firmanavn={s.firmanavn} kontaktEmails={kontakter.filter(k => k.selskap_id === s.id).map(k => k.e_post)} size="sm" />
+                    <CompanyLogo domain={s.domene} firmanavn={s.firmanavn} kontaktEmails={kontakter.filter(k => k.selskap_id === s.id).map(k => k.e_post)} size="sm" />
                     <p className="font-semibold text-sm truncate">{s.firmanavn}</p>
                   </div>
                   <Badge className={`text-[10px] shrink-0 ${kundestatusColors[s.kundestatus]}`}>{s.kundestatus}</Badge>
@@ -406,7 +406,7 @@ export default function Companies() {
                 <tr key={s.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => navigate(`/selskaper/${s.id}`)}>
                   <td className="px-4 py-3 font-medium">
                     <div className="flex items-center gap-2">
-                      <CompanyLogo firmanavn={s.firmanavn} kontaktEmails={kontakter.filter(k => k.selskap_id === s.id).map(k => k.e_post)} size="sm" />
+                      <CompanyLogo domain={s.domene} firmanavn={s.firmanavn} kontaktEmails={kontakter.filter(k => k.selskap_id === s.id).map(k => k.e_post)} size="sm" />
                       {s.firmanavn}
                     </div>
                   </td>

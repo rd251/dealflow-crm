@@ -194,7 +194,7 @@ export default function CompanyProfile() {
         </div>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-            <CompanyLogo firmanavn={selskap.firmanavn} kontaktEmails={selskapKontakter.map(k => k.e_post)} size={isMobile ? "md" : "lg"} />
+            <CompanyLogo domain={selskap.domene} firmanavn={selskap.firmanavn} kontaktEmails={selskapKontakter.map(k => k.e_post)} size={isMobile ? "md" : "lg"} />
             <div className="min-w-0">
               <h1 className="text-xl sm:text-2xl font-bold tracking-tight truncate">{selskap.firmanavn}</h1>
               <div className="flex items-center gap-2 mt-1 flex-wrap">
@@ -231,6 +231,10 @@ export default function CompanyProfile() {
                 <div>
                   <span className="text-muted-foreground block text-xs mb-1">Bransje</span>
                   <Input value={selskap.bransje} onChange={e => updateField("bransje", e.target.value)} className="h-8 text-sm" />
+                </div>
+                <div>
+                  <span className="text-muted-foreground block text-xs mb-1">Domene</span>
+                  <Input placeholder="f.eks. acme.no" value={selskap.domene} onChange={e => updateField("domene", e.target.value)} className="h-8 text-sm" />
                 </div>
                 <div>
                   <span className="text-muted-foreground block text-xs mb-1">Kundeansvarlig</span>

@@ -822,6 +822,7 @@ export type Database = {
           arr: number | null
           bransje: string | null
           created_at: string
+          domene: string
           firmanavn: string
           go_live_dato: string | null
           id: string
@@ -851,6 +852,7 @@ export type Database = {
           arr?: number | null
           bransje?: string | null
           created_at?: string
+          domene?: string
           firmanavn: string
           go_live_dato?: string | null
           id?: string
@@ -880,6 +882,7 @@ export type Database = {
           arr?: number | null
           bransje?: string | null
           created_at?: string
+          domene?: string
           firmanavn?: string
           go_live_dato?: string | null
           id?: string
