@@ -53,6 +53,7 @@ interface CompanyGroup {
   lastContactedAt: string | null;
   persons: KontaktStromPerson[];
   type: KontaktStromPerson["type"];
+  status: string;
 }
 
 const TYPE_COLORS: Record<string, string> = {
