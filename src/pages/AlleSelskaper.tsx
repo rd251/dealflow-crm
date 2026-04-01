@@ -52,7 +52,10 @@ export default function AlleSelskaper() {
               onClick={() => navigate(`/selskaper/${s.id}`)}
             >
               <div className="flex items-center justify-between">
-                <p className="font-semibold text-sm truncate">{s.firmanavn}</p>
+                <div className="flex items-center gap-2">
+                  <CompanyLogo firmanavn={s.firmanavn} size="sm" />
+                  <p className="font-semibold text-sm truncate">{s.firmanavn}</p>
+                </div>
                 <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
               </div>
               <div className="flex items-center gap-2">
