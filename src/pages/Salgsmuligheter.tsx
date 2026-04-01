@@ -388,7 +388,6 @@ export default function Salgsmuligheter() {
                           )}
                         </div>
                       );
-                      );
                     })}
                     {stageDeals.length === 0 && (
                       <div className="border-2 border-dashed rounded-lg p-6 text-center text-xs text-muted-foreground">Dra hit</div>
