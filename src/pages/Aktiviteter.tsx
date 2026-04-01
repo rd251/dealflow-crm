@@ -166,6 +166,7 @@ export default function Aktiviteter() {
   const [search, setSearch] = useState("");
   const [eventFilter, setEventFilter] = useState<EventFilter>("alle");
   const [entityTypeFilter, setEntityTypeFilter] = useState<EntityTypeFilter>("alle");
+  const [userFilter, setUserFilter] = useState<string>("alle");
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
@@ -184,8 +185,9 @@ export default function Aktiviteter() {
     }
     if (eventFilter !== "alle") url += `&event_type=eq.${eventFilter}`;
     if (entityTypeFilter !== "alle") url += `&entity_type=eq.${entityTypeFilter}`;
+    if (userFilter !== "alle") url += `&user_id=eq.${userFilter}`;
     return url;
-  }, [dateFrom, dateTo, eventFilter, entityTypeFilter]);
+  }, [dateFrom, dateTo, eventFilter, entityTypeFilter, userFilter]);
 
   const fetchAll = useCallback(async (reset = true) => {
     const newOffset = reset ? 0 : offset;
@@ -206,7 +208,7 @@ export default function Aktiviteter() {
     }
   }, [buildUrl, offset]);
 
-  useEffect(() => { fetchAll(true); }, [dateFrom, dateTo, eventFilter, entityTypeFilter]);
+  useEffect(() => { fetchAll(true); }, [dateFrom, dateTo, eventFilter, entityTypeFilter, userFilter]);
 
   // Realtime subscription
   useEffect(() => {
@@ -343,6 +345,15 @@ export default function Aktiviteter() {
             <SelectItem value="partner">Partnere</SelectItem>
             <SelectItem value="prosjekt">Prosjekter</SelectItem>
             <SelectItem value="oppgave">Oppgaver</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={userFilter} onValueChange={v => setUserFilter(v)}>
+          <SelectTrigger className="w-[160px] h-9"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="alle">Alle brukere</SelectItem>
+            {Object.values(profiles).map(p => (
+              <SelectItem key={p.user_id} value={p.user_id}>{p.display_name}</SelectItem>
+            ))}
           </SelectContent>
         </Select>
         <Popover>
