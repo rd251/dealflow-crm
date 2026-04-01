@@ -121,7 +121,7 @@ export default function DeletedItemsLog() {
             <CardDescription>
               {items.length === 0
                 ? "Ingen slettede elementer"
-                : `${items.length} element${items.length !== 1 ? "er" : ""} kan gjenopprettes`}
+                : `${items.length} element${items.length !== 1 ? "er" : ""} kan gjenopprettes · slettes automatisk etter 30 dager`}
             </CardDescription>
           </div>
         </div>
