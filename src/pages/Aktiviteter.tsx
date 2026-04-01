@@ -347,6 +347,15 @@ export default function Aktiviteter() {
             <SelectItem value="oppgave">Oppgaver</SelectItem>
           </SelectContent>
         </Select>
+        <Select value={userFilter} onValueChange={v => setUserFilter(v)}>
+          <SelectTrigger className="w-[160px] h-9"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="alle">Alle brukere</SelectItem>
+            {Object.values(profiles).map(p => (
+              <SelectItem key={p.user_id} value={p.user_id}>{p.display_name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <Popover>
           <PopoverTrigger asChild>
             <Button variant={hasDateFilter ? "default" : "outline"} size="sm" className="h-9 gap-2 text-xs">
