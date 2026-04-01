@@ -277,7 +277,7 @@ export default function Kontaktstrom() {
         email, navn: s.kontaktperson || s.navn,
         firmanavn: s.selskap_id ? getSelskapNavn(s.selskap_id) : "",
         domain: getDomain(email),
-        type: "Salgsmulighet", status: s.status, ansvarlig: s.ansvarlig,
+        type: "Salgsmulighet", types: ["Salgsmulighet"], status: s.status, ansvarlig: s.ansvarlig,
         sistKontaktetDato: null, sistKontaktetType: "",
         nesteSteg: s.neste_steg, totalSent: 0, totalReceived: 0,
         kontaktId: s.kontakt_id || null, leadId: null, salgsmulighetId: s.id,
