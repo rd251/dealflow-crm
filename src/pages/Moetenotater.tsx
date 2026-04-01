@@ -4,8 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Users, Clock, Building2, FileText, Save, ChevronDown, ChevronUp, Sparkles, ArrowRight, Loader2 } from "lucide-react";
+import { Users, Clock, Building2, FileText, Save, ChevronDown, ChevronUp, Sparkles, ArrowRight, Loader2, Search, Filter } from "lucide-react";
 import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 
 const API_URL = import.meta.env.VITE_SUPABASE_URL + '/rest/v1';
@@ -54,6 +56,9 @@ export default function Moetenotater() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [aiLoading, setAiLoading] = useState<string | null>(null);
   const [aiSummaries, setAiSummaries] = useState<Record<string, AiSummary>>({});
+  const [searchQuery, setSearchQuery] = useState("");
+  const [noteFilter, setNoteFilter] = useState<"all" | "with" | "without">("all");
+  const [entityFilter, setEntityFilter] = useState<string>("all");
 
   const fetchMeetings = useCallback(async () => {
     try {
@@ -154,13 +159,91 @@ export default function Moetenotater() {
   const formatDate = (d: string) => new Date(d).toLocaleDateString("no-NO", { day: "numeric", month: "short", year: "numeric" });
   const formatTime = (d: string | null) => d ? new Date(d).toLocaleTimeString("no-NO", { hour: "2-digit", minute: "2-digit" }) : null;
 
+  // Unique linked entity names for filter dropdown
+  const entityOptions = Array.from(new Set(
+    meetings.map(m => {
+      const linked = getLinkedEntity(m);
+      return linked ? linked.name : null;
+    }).filter(Boolean) as string[]
+  )).sort();
+
+  // Filter meetings
+  const filteredMeetings = meetings.filter(m => {
+    const linked = getLinkedEntity(m);
+    const hasNotes = !!m.moetenotater?.trim();
+
+    // Search filter
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      const matchTitle = (m.tittel || "").toLowerCase().includes(q);
+      const matchEntity = linked?.name.toLowerCase().includes(q);
+      const matchNotes = (m.moetenotater || "").toLowerCase().includes(q);
+      const matchBeskrivelse = (m.beskrivelse || "").toLowerCase().includes(q);
+      if (!matchTitle && !matchEntity && !matchNotes && !matchBeskrivelse) return false;
+    }
+
+    // Note status filter
+    if (noteFilter === "with" && !hasNotes) return false;
+    if (noteFilter === "without" && hasNotes) return false;
+
+    // Entity filter
+    if (entityFilter !== "all") {
+      if (!linked || linked.name !== entityFilter) return false;
+    }
+
+    return true;
+  });
+
   return (
     <PageShell title="Møtenotater" subtitle="Detaljerte notater fra møter for bedre AI-kontekst">
+      {/* Filters */}
+      <div className="flex flex-wrap items-center gap-2 mb-4">
+        <div className="relative flex-1 min-w-[200px] max-w-sm">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+          <Input
+            placeholder="Søk i møter..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className="h-8 pl-8 text-xs"
+          />
+        </div>
+        <Select value={noteFilter} onValueChange={(v) => setNoteFilter(v as any)}>
+          <SelectTrigger className="h-8 w-[150px] text-xs">
+            <Filter className="w-3 h-3 mr-1.5 text-muted-foreground" />
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all" className="text-xs">Alle møter</SelectItem>
+            <SelectItem value="with" className="text-xs">Med notater</SelectItem>
+            <SelectItem value="without" className="text-xs">Uten notater</SelectItem>
+          </SelectContent>
+        </Select>
+        {entityOptions.length > 0 && (
+          <Select value={entityFilter} onValueChange={setEntityFilter}>
+            <SelectTrigger className="h-8 w-[180px] text-xs">
+              <Building2 className="w-3 h-3 mr-1.5 text-muted-foreground" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all" className="text-xs">Alle selskaper</SelectItem>
+              {entityOptions.map(name => (
+                <SelectItem key={name} value={name} className="text-xs">{name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+        {(searchQuery || noteFilter !== "all" || entityFilter !== "all") && (
+          <span className="text-[10px] text-muted-foreground">{filteredMeetings.length} av {meetings.length} møter</span>
+        )}
+      </div>
+
       <div className="space-y-3">
-        {meetings.length === 0 ? (
-          <p className="text-sm text-muted-foreground italic py-8 text-center">Ingen møter registrert ennå</p>
+        {filteredMeetings.length === 0 ? (
+          <p className="text-sm text-muted-foreground italic py-8 text-center">
+            {meetings.length === 0 ? "Ingen møter registrert ennå" : "Ingen møter matcher filteret"}
+          </p>
         ) : (
-          meetings.map(m => {
+          filteredMeetings.map(m => {
             const linked = getLinkedEntity(m);
             const hasNotes = !!m.moetenotater?.trim();
             const isExpanded = expandedId === m.id;
