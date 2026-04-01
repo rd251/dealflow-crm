@@ -260,6 +260,28 @@ function useCrmStoreInternal() {
 
   const dbDelete = async (table: string, id: string) => {
     console.log(`[CRM-SYNC] DELETE ${table} id=${id}`);
+
+    // Archive the record before deleting
+    try {
+      const fetchRes = await fetch(`${API_URL}/${table}?id=eq.${encodeURIComponent(id)}&select=*`, {
+        headers: { ...API_HEADERS, 'Prefer': 'return=representation' },
+        cache: 'no-store',
+      });
+      if (fetchRes.ok) {
+        const rows = await fetchRes.json();
+        if (Array.isArray(rows) && rows.length > 0) {
+          await supabase.from("deleted_items" as any).insert({
+            table_name: table,
+            record_id: id,
+            record_data: rows[0],
+            deleted_by: user?.id || null,
+          });
+        }
+      }
+    } catch (archiveErr) {
+      console.warn(`[CRM-SYNC] Failed to archive ${table} id=${id}:`, archiveErr);
+    }
+
     const res = await fetch(`${API_URL}/${table}?id=eq.${encodeURIComponent(id)}`, {
       method: 'DELETE',
       headers: { ...API_HEADERS, 'Prefer': 'return=representation' },
