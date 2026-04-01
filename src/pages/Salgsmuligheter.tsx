@@ -189,6 +189,14 @@ export default function Salgsmuligheter() {
                 <Input placeholder="Rolle i firma" value={form.rolle_i_firma} onChange={e => setForm(f => ({ ...f, rolle_i_firma: e.target.value }))} />
               </div>
               <Input placeholder="Use case" value={form.use_case} onChange={e => setForm(f => ({ ...f, use_case: e.target.value }))} />
+              <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background" value={form.ansvarlig} onChange={e => setForm(f => ({ ...f, ansvarlig: e.target.value }))}>
+                <option value="">Velg ansvarlig</option>
+                {profiles.map(p => (
+                  <option key={p.user_id} value={p.user_id}>
+                    {p.display_name}{p.user_id === user?.id ? " (deg)" : ""}
+                  </option>
+                ))}
+              </select>
               <Button onClick={addSm} className="w-full" disabled={!form.navn || !form.neste_steg}>Opprett</Button>
             </div>
           </DialogContent>
