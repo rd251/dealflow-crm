@@ -769,12 +769,12 @@ export default function Kontaktstrom() {
                 ) : (
                   <span className="w-36" />
                 )}
-                <span className="w-28 text-right">
-                  {(g.type !== "Ukjent" && g.type !== "Kontakt") && (
-                    <Badge variant="secondary" className={`text-xs ${TYPE_COLORS[g.type]}`}>
-                      {g.type}
+                <span className="w-fit min-w-[7rem] flex items-center justify-end gap-1">
+                  {Array.from(g.types).map(t => (
+                    <Badge key={t} variant="secondary" className={`text-xs ${TYPE_COLORS[t]}`}>
+                      {t}
                     </Badge>
-                  )}
+                  ))}
                 </span>
               </div>
             </div>
