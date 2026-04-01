@@ -319,12 +319,15 @@ export default function Salgsmuligheter() {
 
                             {/* 3. Use case */}
                             {deal.use_case?.trim() && (
-                              <p className="text-[11px] text-muted-foreground truncate pl-7">💡 {deal.use_case}</p>
+                              <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                                <div className="w-5 h-5 flex items-center justify-center shrink-0">💡</div>
+                                <span className="truncate">{deal.use_case}</span>
+                              </div>
                             )}
 
                             {/* 4. MRR */}
                             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                              <div className="w-5 h-5 rounded flex items-center justify-center shrink-0">
+                              <div className="w-5 h-5 flex items-center justify-center shrink-0">
                                 <DollarSign className="w-3.5 h-3.5" />
                               </div>
                               <span className="font-medium text-foreground">{nok(deal.forventet_mrr)}</span>
