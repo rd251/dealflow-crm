@@ -23,8 +23,86 @@ import ActivityLog from "@/components/ActivityLog";
 import EntityChangelog from "@/components/EntityChangelog";
 import MeetingNotesList from "@/components/MeetingNotesList";
 
-const openStatuses: SalgsmulighetStatus[] = ["Møte booket", "Behov avklart", "Løsning presentert", "Tilbud sendt", "Beslutning"];
+const allStatuses: SalgsmulighetStatus[] = ["Møte booket", "Behov avklart", "Løsning presentert", "Tilbud sendt", "Beslutning"];
+const openStatuses = allStatuses;
 const tapsaarsaker: Tapsaarsak[] = ["Pris", "Ikke riktig timing", "Valgte annen leverandør", "Ikke behov", "Teknisk / integrasjon", "Annet"];
+
+function MobileSwipeCard({ deal, stage, onMove, onClick, signal, missingNeste, isBlocked, children }: {
+  deal: Salgsmulighet; stage: SalgsmulighetStatus; onMove: (dealId: string, newStage: SalgsmulighetStatus) => void;
+  onClick: () => void; signal: { color: string; label: string }; missingNeste: boolean; isBlocked: boolean; children: React.ReactNode;
+}) {
+  const startX = useRef(0);
+  const currentX = useRef(0);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [swiping, setSwiping] = useState(false);
+  const [swipeDir, setSwipeDir] = useState<"left" | "right" | null>(null);
+
+  const stageIdx = allStatuses.indexOf(stage);
+  const canLeft = stageIdx < allStatuses.length - 1;
+  const canRight = stageIdx > 0;
+  const nextStage = canLeft ? allStatuses[stageIdx + 1] : null;
+  const prevStage = canRight ? allStatuses[stageIdx - 1] : null;
+
+  const onTouchStart = useCallback((e: React.TouchEvent) => {
+    startX.current = e.touches[0].clientX;
+    currentX.current = 0;
+    setSwiping(true);
+    setSwipeDir(null);
+  }, []);
+
+  const onTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!swiping) return;
+    const diff = e.touches[0].clientX - startX.current;
+    currentX.current = diff;
+    if (cardRef.current) {
+      const clamped = Math.max(-100, Math.min(100, diff));
+      cardRef.current.style.transform = `translateX(${clamped}px)`;
+      cardRef.current.style.opacity = `${1 - Math.abs(clamped) / 200}`;
+    }
+    if (Math.abs(diff) > 20) setSwipeDir(diff > 0 ? "right" : "left");
+    else setSwipeDir(null);
+  }, [swiping]);
+
+  const onTouchEnd = useCallback(() => {
+    setSwiping(false);
+    if (cardRef.current) {
+      cardRef.current.style.transform = "";
+      cardRef.current.style.opacity = "";
+    }
+    const diff = currentX.current;
+    if (Math.abs(diff) >= 70) {
+      if (diff < 0 && canLeft && nextStage && !missingNeste) {
+        onMove(deal.id, nextStage);
+      } else if (diff > 0 && canRight && prevStage && !missingNeste) {
+        onMove(deal.id, prevStage);
+      }
+    }
+    setSwipeDir(null);
+  }, [deal.id, canLeft, canRight, nextStage, prevStage, missingNeste, onMove]);
+
+  return (
+    <div className="relative overflow-hidden rounded-lg">
+      {/* Swipe hint labels */}
+      {swiping && swipeDir === "right" && prevStage && (
+        <div className="absolute inset-y-0 left-0 w-16 flex items-center justify-center bg-primary/10 rounded-l-lg z-0">
+          <span className="text-[9px] font-medium text-primary writing-vertical">← {prevStage}</span>
+        </div>
+      )}
+      {swiping && swipeDir === "left" && nextStage && (
+        <div className="absolute inset-y-0 right-0 w-16 flex items-center justify-center bg-primary/10 rounded-r-lg z-0">
+          <span className="text-[9px] font-medium text-primary">→ {nextStage}</span>
+        </div>
+      )}
+      <div ref={cardRef}
+        onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}
+        onClick={onClick}
+        className={`relative z-10 bg-card border rounded-lg p-2.5 active:bg-muted/50 transition-[opacity] duration-100 ${isBlocked ? "ring-2 ring-destructive animate-pulse" : ""}`}
+        style={{ touchAction: "pan-y" }}>
+        {children}
+      </div>
+    </div>
+  );
+}
 
 const statusColors: Record<SalgsmulighetStatus, string> = {
   "Møte booket": "bg-stage-contacted",
