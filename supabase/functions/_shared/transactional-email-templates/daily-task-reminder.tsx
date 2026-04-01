@@ -269,6 +269,6 @@ const meetingRow: React.CSSProperties = { fontSize: '14px', color: BRAND_DARK, m
 const meetingTime: React.CSSProperties = { color: '#16a34a', fontWeight: 600, fontSize: '13px' }
 
 // Footer
-const footerSection: React.CSSProperties = { padding: '24px 40px', textAlign: 'center', borderRadius: '0 0 8px 8px' }
+const footerSection: React.CSSProperties = { padding: '24px 40px', textAlign: 'center', borderRadius: '0 0 8px 8px', backgroundColor: '#ffffff', borderTop: `2px solid ${BRAND_RED}` }
 const footerText: React.CSSProperties = { fontSize: '13px', color: '#999999', margin: '0 0 4px' }
 const footerCopy: React.CSSProperties = { fontSize: '12px', color: '#bbbbbb', margin: '8px 0 0' }
