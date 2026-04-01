@@ -408,6 +408,7 @@ function useCrmStoreInternal() {
     salgsmuligheterRef.current = next;
     setSalgsmuligheter(next);
     salgsmuligheterSyncQueueRef.current = salgsmuligheterSyncQueueRef.current
+      .then(() => Promise.all([selskaperSyncQueueRef.current, kontakterSyncQueueRef.current]))
       .then(() => syncSalgsmuligheter(prev, next))
       .catch(syncErrorHandler("Salgsmuligheter"));
   }, []);
