@@ -231,6 +231,7 @@ export default function Kontaktstrom() {
         selskapId: null, partnerId: null, inCrm: true,
         suggestedSelskapId: sugL?.id || null, suggestedSelskapNavn: sugL?.firmanavn || "",
         connectionStatus: resolveConnectionStatus(null, sugL?.id || null),
+        ownerUserId: null,
       });
     }
 
