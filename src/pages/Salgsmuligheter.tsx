@@ -288,7 +288,30 @@ export default function Salgsmuligheter() {
                       const signal = activitySignal(deal.sist_aktivitet);
                       const missingNeste = !deal.neste_steg?.trim();
                       const isBlocked = moveBlockedId === deal.id;
-                      return (
+                      return isMobile ? (
+                        /* ── Compact mobile card ── */
+                        <div key={deal.id}
+                          onClick={() => setSelectedSm(deal)}
+                          className={`bg-card border rounded-lg p-2.5 active:bg-muted/50 transition-colors ${isBlocked ? "ring-2 ring-destructive animate-pulse" : ""}`}>
+                          <div className="flex items-center gap-2">
+                            <CompanyLogo domain={getSelskapDomain(deal.selskap_id)} firmanavn={getSelskapNavn(deal.selskap_id || "")} kontaktEmails={deal.e_post ? [deal.e_post] : undefined} size="sm" className="w-6 h-6 rounded shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-semibold text-foreground truncate">{getSelskapNavn(deal.selskap_id || "")}</p>
+                              {deal.kontaktperson && <p className="text-[10px] text-muted-foreground truncate">{deal.kontaktperson}</p>}
+                            </div>
+                            <span className="text-xs font-medium text-foreground shrink-0">{nok(deal.forventet_mrr)}</span>
+                            <div className={`w-2 h-2 rounded-full shrink-0 ${signal.color}`} title={signal.label} />
+                          </div>
+                          {missingNeste && (
+                            <div className="flex items-center gap-1 mt-1 text-destructive">
+                              <AlertTriangle className="w-2.5 h-2.5" />
+                              <span className="text-[9px] font-medium">Neste steg mangler</span>
+                            </div>
+                          )}
+                          {isBlocked && <p className="text-[9px] text-destructive mt-0.5 font-medium">⛔ Fyll inn neste steg</p>}
+                        </div>
+                      ) : (
+                        /* ── Full desktop card ── */
                         <div key={deal.id} draggable onDragStart={e => { setDraggedId(deal.id); e.dataTransfer.effectAllowed = "move"; }}
                           onClick={() => setSelectedSm(deal)}
                           className={`bg-card border rounded-xl p-3.5 cursor-grab active:cursor-grabbing hover:shadow-md transition-all group ${isBlocked ? "ring-2 ring-destructive animate-pulse" : ""}`}>
@@ -299,7 +322,7 @@ export default function Salgsmuligheter() {
                             <span className="text-sm font-semibold text-foreground truncate flex-1 cursor-pointer hover:text-primary hover:underline" onClick={e => { e.stopPropagation(); if (deal.selskap_id) navigate(`/selskaper/${deal.selskap_id}`); }}>
                               {getSelskapNavn(deal.selskap_id || "")}
                             </span>
-                            {!isMobile && <GripVertical className="w-4 h-4 text-muted-foreground/30 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />}
+                            <GripVertical className="w-4 h-4 text-muted-foreground/30 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
                           </div>
 
                           {/* Details */}
