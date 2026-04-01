@@ -164,7 +164,7 @@ export default function Salgsmuligheter() {
           <DialogContent className="max-w-[95vw] sm:max-w-lg">
             <DialogHeader><DialogTitle>Ny salgsmulighet</DialogTitle><DialogDescription>Fyll inn detaljer for den nye salgsmuligheten.</DialogDescription></DialogHeader>
             <div className="space-y-3">
-              <Input placeholder="Navn" value={form.navn} onChange={e => setForm(f => ({ ...f, navn: e.target.value }))} />
+              <Input placeholder="Use case / Navn på deal *" value={form.use_case} onChange={e => setForm(f => ({ ...f, use_case: e.target.value }))} />
               <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background" value={form.selskap_id} onChange={e => setForm(f => ({ ...f, selskap_id: e.target.value }))}>
                 <option value="">Velg selskap</option>
                 {selskaper.map(s => <option key={s.id} value={s.id}>{s.firmanavn}</option>)}
