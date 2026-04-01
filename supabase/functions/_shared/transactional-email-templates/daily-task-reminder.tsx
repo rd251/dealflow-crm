@@ -110,10 +110,10 @@ const DailyTaskReminderEmail = ({
                 </Section>
                 {overdueTasks.map((task, i) => (
                   <Section key={i} style={overdueTaskCard}>
-                    <Text style={taskName}>
+                    <Text style={taskName} className="task-name">
                       <span style={taskCircleOverdue}>●</span>&nbsp;&nbsp;{task.oppgave}
                     </Text>
-                    <Text style={taskMetaLine}>
+                    <Text style={taskMetaLine} className="task-meta">
                       <span style={taskDateOverdue}>📅 {task.frist || 'Ingen frist'}</span>
                       {task.prioritet && priorityLabel[task.prioritet] && (
                         <span style={{ ...priorityBadge, color: priorityLabel[task.prioritet].color }}>
