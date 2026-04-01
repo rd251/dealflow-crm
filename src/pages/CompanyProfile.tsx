@@ -6,6 +6,7 @@ import { beregnTotalKontraktsverdi, beregnVektetPipeline } from "@/data/crm-data
 import StatCard from "@/components/StatCard";
 import InlineTaskForm from "@/components/InlineTaskForm";
 import ActivityLog from "@/components/ActivityLog";
+import EntityChangelog from "@/components/EntityChangelog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
