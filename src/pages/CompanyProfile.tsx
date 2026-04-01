@@ -6,6 +6,7 @@ import { beregnTotalKontraktsverdi, beregnVektetPipeline } from "@/data/crm-data
 import StatCard from "@/components/StatCard";
 import InlineTaskForm from "@/components/InlineTaskForm";
 import ActivityLog from "@/components/ActivityLog";
+import EntityChangelog from "@/components/EntityChangelog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -469,6 +470,7 @@ export default function CompanyProfile() {
               <ActivityLog selskap_id={id!} onActivityLogged={() => {
                 updateSelskaper(prev => prev.map(s => s.id === id ? { ...s, sist_aktivitet: new Date().toISOString().split("T")[0] } : s));
               }} />
+              <EntityChangelog entity_type="selskap" entity_id={id!} />
             </div>
           </div>
         </div>

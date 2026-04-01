@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Salgsmulighet, SalgsmulighetStatus, Tapsaarsak, beregnTotalKontraktsverdi, beregnVektetPipeline } from "@/data/crm-data";
 import InlineTaskForm from "@/components/InlineTaskForm";
 import ActivityLog from "@/components/ActivityLog";
+import EntityChangelog from "@/components/EntityChangelog";
 import MeetingNotesList from "@/components/MeetingNotesList";
 
 const openStatuses: SalgsmulighetStatus[] = ["Møte booket", "Behov avklart", "Løsning presentert", "Tilbud sendt", "Beslutning"];
@@ -611,6 +612,7 @@ export default function Salgsmuligheter() {
                   companyName={getSelskapNavn(currentSm.selskap_id)}
                   onSuggestNesteSteg={(text) => updateField("neste_steg", text)}
                 />
+                <EntityChangelog entity_type="salgsmulighet" entity_id={currentSm.id} />
               </>
             ),
             notater: (

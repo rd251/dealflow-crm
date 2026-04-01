@@ -16,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Kontakt, Selskap, Salgsmulighet } from "@/data/crm-data";
 import DataImportDialog from "@/components/DataImportDialog";
 import ActivityLog from "@/components/ActivityLog";
+import EntityChangelog from "@/components/EntityChangelog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
@@ -456,7 +457,10 @@ export default function Contacts() {
             </div>
           ),
           interaksjoner: (
-            <ActivityLog kontakt_id={currentKontakt.id} />
+            <>
+              <ActivityLog kontakt_id={currentKontakt.id} />
+              <EntityChangelog entity_type="kontakt" entity_id={currentKontakt.id} />
+            </>
           ),
           notater: (
             <div className="space-y-1">
