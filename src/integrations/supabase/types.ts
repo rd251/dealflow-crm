@@ -129,6 +129,54 @@ export type Database = {
           },
         ]
       }
+      crm_changelog: {
+        Row: {
+          created_at: string
+          entity_id: string
+          entity_name: string
+          entity_type: string
+          event_type: string
+          field_name: string | null
+          id: string
+          new_value: string | null
+          old_value: string | null
+          related_entity_id: string | null
+          related_entity_name: string | null
+          related_entity_type: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          entity_id: string
+          entity_name?: string
+          entity_type: string
+          event_type: string
+          field_name?: string | null
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          related_entity_id?: string | null
+          related_entity_name?: string | null
+          related_entity_type?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          entity_id?: string
+          entity_name?: string
+          entity_type?: string
+          event_type?: string
+          field_name?: string | null
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          related_entity_id?: string | null
+          related_entity_name?: string | null
+          related_entity_type?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       deleted_items: {
         Row: {
           deleted_at: string
