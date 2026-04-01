@@ -11,6 +11,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import DetailPanelShell, { DetailSection, DetailField, DetailDivider, DetailStatGrid, DetailStatCard } from "@/components/DetailPanelShell";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, GripVertical, Trophy, XCircle, Trash2, Phone, User, AlertTriangle, Clock, Building2, DollarSign } from "lucide-react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { gravatarUrl } from "@/lib/gravatar";
 import EntityLinkPicker from "@/components/EntityLinkPicker";
 import { Badge } from "@/components/ui/badge";
 import { Salgsmulighet, SalgsmulighetStatus, Tapsaarsak, beregnTotalKontraktsverdi, beregnVektetPipeline } from "@/data/crm-data";
@@ -279,9 +281,12 @@ export default function Salgsmuligheter() {
                           
                           {/* Header: Contact person with avatar */}
                           <div className="flex items-center gap-2.5 mb-3">
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold text-primary-foreground shrink-0 ${signal.color === "bg-destructive" ? "bg-destructive" : signal.color === "bg-warning" ? "bg-warning" : "bg-primary"}`}>
-                              {(deal.kontaktperson || deal.navn || "?").charAt(0).toUpperCase()}
-                            </div>
+                            <Avatar className="w-8 h-8 shrink-0">
+                              {deal.e_post && <AvatarImage src={gravatarUrl(deal.e_post, 64) || undefined} alt={deal.kontaktperson || deal.navn} />}
+                              <AvatarFallback className={`text-xs font-semibold text-primary-foreground ${signal.color === "bg-destructive" ? "bg-destructive" : signal.color === "bg-warning" ? "bg-warning" : "bg-primary"}`}>
+                                {(deal.kontaktperson || deal.navn || "?").charAt(0).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-semibold text-foreground truncate leading-tight">
                                 {deal.kontaktperson || deal.navn}
