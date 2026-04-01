@@ -11,8 +11,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   AlertTriangle, CalendarDays, PhoneOff, Target, Clock, Building2,
-  BarChart3, ChevronRight, ListTodo, Activity, CheckCircle2,
+  BarChart3, ChevronRight, ListTodo, Activity, CheckCircle2, NotebookPen, Save,
 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import MeetingPrepPanel from "@/components/MeetingPrepPanel";
 import FollowUpSection from "@/components/FollowUpSection";
 import AiCommandBar from "@/components/AiCommandBar";
