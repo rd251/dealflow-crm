@@ -4,6 +4,7 @@ import PageShell from "@/components/PageShell";
 import { useCrmStore } from "@/hooks/use-crm-store";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/use-auth";
+import { useProfiles } from "@/hooks/use-profiles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -57,7 +58,8 @@ export default function Salgsmuligheter() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const isMobile = useIsMobile();
-  const { canEdit } = useAuth();
+  const { canEdit, user } = useAuth();
+  const { profiles } = useProfiles();
   const { salgsmuligheter, selskaper, kontakter, updateSalgsmuligheter, updateKontakter, vinnSalgsmulighet, tapSalgsmulighet, generateId } = useCrmStore();
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [dragOverStage, setDragOverStage] = useState<string | null>(null);
@@ -66,7 +68,7 @@ export default function Salgsmuligheter() {
   const [lossReason, setLossReason] = useState<Tapsaarsak>("Pris");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [moveBlockedId, setMoveBlockedId] = useState<string | null>(null);
-  const [form, setForm] = useState({ navn: "", selskap_id: "", kontakt_id: "", forventet_mrr: 0, sla: 0, oppstartskostnad: 0, kontraktslengde_mnd: 12, sannsynlighet: 50, forventet_lukkedato: "", neste_steg: "", rolle_i_firma: "", use_case: "", kontaktperson: "", e_post: "", telefon: "" });
+  const [form, setForm] = useState({ navn: "", selskap_id: "", kontakt_id: "", forventet_mrr: 0, sla: 0, oppstartskostnad: 0, kontraktslengde_mnd: 12, sannsynlighet: 50, forventet_lukkedato: "", neste_steg: "", rolle_i_firma: "", use_case: "", kontaktperson: "", e_post: "", telefon: "", ansvarlig: "" });
   const [filterUtenAktivitet, setFilterUtenAktivitet] = useState(false);
 
   useEffect(() => {
@@ -85,7 +87,7 @@ export default function Salgsmuligheter() {
   }, [searchParams, salgsmuligheter]);
 
   const getSelskapNavn = (id: string) => selskaper.find(s => s.id === id)?.firmanavn || "–";
-
+  const getProfileName = (id: string) => profiles.find(p => p.user_id === id)?.display_name || "";
   const handleDrop = (e: React.DragEvent, stage: SalgsmulighetStatus) => {
     e.preventDefault();
     setDragOverStage(null);
@@ -117,7 +119,7 @@ export default function Salgsmuligheter() {
     const id = generateId("SM", salgsmuligheter);
     const nySm: Salgsmulighet = {
       id, navn: form.navn, selskap_id: form.selskap_id, kontakt_id: form.kontakt_id,
-      ansvarlig: "", status: "Møte booket", forventet_mrr: form.forventet_mrr, sla: form.sla,
+      ansvarlig: form.ansvarlig || user?.id || "", status: "Møte booket", forventet_mrr: form.forventet_mrr, sla: form.sla,
       oppstartskostnad: form.oppstartskostnad, kontraktslengde_mnd: form.kontraktslengde_mnd,
       sannsynlighet: form.sannsynlighet, forventet_lukkedato: form.forventet_lukkedato,
       vunnet_dato: "", tapt_dato: "", tapsaarsak: "", neste_steg: form.neste_steg, notater: "",
@@ -128,7 +130,7 @@ export default function Salgsmuligheter() {
     };
     updateSalgsmuligheter(prev => [...prev, nySm]);
     setDialogOpen(false);
-    setForm({ navn: "", selskap_id: "", kontakt_id: "", forventet_mrr: 0, sla: 0, oppstartskostnad: 0, kontraktslengde_mnd: 12, sannsynlighet: 50, forventet_lukkedato: "", neste_steg: "", rolle_i_firma: "", use_case: "", kontaktperson: "", e_post: "", telefon: "" });
+    setForm({ navn: "", selskap_id: "", kontakt_id: "", forventet_mrr: 0, sla: 0, oppstartskostnad: 0, kontraktslengde_mnd: 12, sannsynlighet: 50, forventet_lukkedato: "", neste_steg: "", rolle_i_firma: "", use_case: "", kontaktperson: "", e_post: "", telefon: "", ansvarlig: "" });
   };
 
   const now = new Date();
@@ -187,6 +189,14 @@ export default function Salgsmuligheter() {
                 <Input placeholder="Rolle i firma" value={form.rolle_i_firma} onChange={e => setForm(f => ({ ...f, rolle_i_firma: e.target.value }))} />
               </div>
               <Input placeholder="Use case" value={form.use_case} onChange={e => setForm(f => ({ ...f, use_case: e.target.value }))} />
+              <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background" value={form.ansvarlig} onChange={e => setForm(f => ({ ...f, ansvarlig: e.target.value }))}>
+                <option value="">Velg ansvarlig</option>
+                {profiles.map(p => (
+                  <option key={p.user_id} value={p.user_id}>
+                    {p.display_name}{p.user_id === user?.id ? " (deg)" : ""}
+                  </option>
+                ))}
+              </select>
               <Button onClick={addSm} className="w-full" disabled={!form.navn || !form.neste_steg}>Opprett</Button>
             </div>
           </DialogContent>
@@ -316,12 +326,12 @@ export default function Salgsmuligheter() {
                             </div>
 
                             {/* Responsible person */}
-                            {deal.ansvarlig && (
+                            {deal.ansvarlig && getProfileName(deal.ansvarlig) && (
                               <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                <div className="w-5 h-5 rounded flex items-center justify-center shrink-0">
-                                  <User className="w-3.5 h-3.5" />
+                                <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                                  <span className="text-[9px] font-bold text-primary">{getProfileName(deal.ansvarlig).charAt(0).toUpperCase()}</span>
                                 </div>
-                                <span className="truncate">{deal.ansvarlig}</span>
+                                <span className="truncate">{getProfileName(deal.ansvarlig)}</span>
                               </div>
                             )}
                           </div>
@@ -503,6 +513,19 @@ export default function Salgsmuligheter() {
                   </div>
                   <DetailField label="Use case">
                     <Input value={currentSm.use_case} onChange={e => updateField("use_case", e.target.value)} className="h-7 text-xs" readOnly={!canEdit} />
+                  </DetailField>
+                  <DetailField label="Ansvarlig">
+                    <select className="w-full border rounded-lg px-2 py-1 text-xs bg-background h-7"
+                      value={currentSm.ansvarlig}
+                      disabled={!canEdit}
+                      onChange={e => updateField("ansvarlig", e.target.value)}>
+                      <option value="">Ikke tildelt</option>
+                      {profiles.map(p => (
+                        <option key={p.user_id} value={p.user_id}>
+                          {p.display_name}{p.user_id === user?.id ? " (deg)" : ""}
+                        </option>
+                      ))}
+                    </select>
                   </DetailField>
                 </div>
 
