@@ -418,7 +418,7 @@ export default function Kontaktstrom() {
           navn: ec.display_name || email,
           firmanavn: ecFirmanavn,
           domain: getDomain(email),
-          type: ecType, status: ecStatus, ansvarlig: ecAnsvarlig,
+          type: ecType, types: (ecType !== "Ukjent" && ecType !== "Kontakt" ? [ecType] : []) as KontaktStromPerson["types"], status: ecStatus, ansvarlig: ecAnsvarlig,
           sistKontaktetDato: ec.last_contacted_at,
           sistKontaktetType: ec.last_activity_type || "E-post",
           nesteSteg: ecNesteSteg,
