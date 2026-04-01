@@ -121,14 +121,22 @@ export default function DeletedItemsLog() {
           <div className="w-10 h-10 rounded-lg bg-destructive/10 flex items-center justify-center">
             <Trash2 className="w-5 h-5 text-destructive" />
           </div>
-          <div>
+          <div className="flex-1">
             <CardTitle className="text-lg">Slettet logg</CardTitle>
             <CardDescription>
               {items.length === 0
                 ? "Ingen slettede elementer"
-                : `${items.length} element${items.length !== 1 ? "er" : ""} kan gjenopprettes · slettes automatisk etter 30 dager`}
+                : `${items.length} element${items.length !== 1 ? "er" : ""} · slettes automatisk etter 30 dager`}
             </CardDescription>
           </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-xs shrink-0"
+            onClick={() => setShowRestored(!showRestored)}
+          >
+            {showRestored ? "Skjul gjenopprettede" : "Vis alle"}
+          </Button>
         </div>
       </CardHeader>
       <CardContent>
