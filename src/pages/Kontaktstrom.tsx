@@ -26,6 +26,7 @@ interface KontaktStromPerson {
   firmanavn: string;
   domain: string;
   type: "Lead" | "Salgsmulighet" | "Kunde" | "Partner" | "Kontakt" | "Ukjent";
+  types: Array<"Lead" | "Salgsmulighet" | "Kunde" | "Partner">;
   status: string;
   ansvarlig: string;
   sistKontaktetDato: string | null;
@@ -53,6 +54,7 @@ interface CompanyGroup {
   lastContactedAt: string | null;
   persons: KontaktStromPerson[];
   type: KontaktStromPerson["type"];
+  types: Set<"Lead" | "Salgsmulighet" | "Kunde" | "Partner">;
   status: string;
 }
 
@@ -210,14 +212,15 @@ export default function Kontaktstrom() {
       let status = k.selskap_id ? getSelskapStatus(k.selskap_id) : "";
       let ansvarlig = "";
       let nesteSteg = "";
+      const types: KontaktStromPerson["types"] = [];
 
-      if (sm) { type = "Salgsmulighet"; status = sm.status; ansvarlig = sm.ansvarlig; nesteSteg = sm.neste_steg; }
-      if (lead) { type = "Lead"; status = lead.status; ansvarlig = lead.ansvarlig; nesteSteg = lead.neste_steg; }
-      if (partner) { type = "Partner"; status = partner.partnerstatus; ansvarlig = partner.ansvarlig; }
       if (k.selskap_id) {
         const selskapType = getTypeFromSelskap(k.selskap_id);
-        if (selskapType === "Kunde") { type = "Kunde"; status = getSelskapStatus(k.selskap_id); }
+        if (selskapType === "Kunde") { type = "Kunde"; status = getSelskapStatus(k.selskap_id); types.push("Kunde"); }
       }
+      if (sm) { type = "Salgsmulighet"; status = sm.status; ansvarlig = sm.ansvarlig; nesteSteg = sm.neste_steg; types.push("Salgsmulighet"); }
+      if (lead) { type = "Lead"; status = lead.status; ansvarlig = lead.ansvarlig; nesteSteg = lead.neste_steg; types.push("Lead"); }
+      if (partner) { type = "Partner"; status = partner.partnerstatus; ansvarlig = partner.ansvarlig; types.push("Partner"); }
 
       const resolvedSelskapId = k.selskap_id || sm?.selskap_id || null;
       const suggested = !resolvedSelskapId ? findSelskapByDomain(email) : null;
@@ -226,7 +229,7 @@ export default function Kontaktstrom() {
         navn: k.navn,
         firmanavn: k.selskap_id ? getSelskapNavn(k.selskap_id) : (lead?.firmanavn || ""),
         domain: getDomain(email),
-        type, status, ansvarlig,
+        type, types, status, ansvarlig,
         sistKontaktetDato: null,
         sistKontaktetType: "",
         nesteSteg,
@@ -254,7 +257,7 @@ export default function Kontaktstrom() {
       map.set(email, {
         email, navn: l.kontaktperson || l.firmanavn, firmanavn: l.firmanavn,
         domain: getDomain(email),
-        type: "Lead", status: l.status, ansvarlig: l.ansvarlig,
+        type: "Lead", types: ["Lead"], status: l.status, ansvarlig: l.ansvarlig,
         sistKontaktetDato: null, sistKontaktetType: "",
         nesteSteg: l.neste_steg, totalSent: 0, totalReceived: 0,
         kontaktId: null, leadId: l.id, salgsmulighetId: null,
@@ -274,7 +277,7 @@ export default function Kontaktstrom() {
         email, navn: s.kontaktperson || s.navn,
         firmanavn: s.selskap_id ? getSelskapNavn(s.selskap_id) : "",
         domain: getDomain(email),
-        type: "Salgsmulighet", status: s.status, ansvarlig: s.ansvarlig,
+        type: "Salgsmulighet", types: ["Salgsmulighet"], status: s.status, ansvarlig: s.ansvarlig,
         sistKontaktetDato: null, sistKontaktetType: "",
         nesteSteg: s.neste_steg, totalSent: 0, totalReceived: 0,
         kontaktId: s.kontakt_id || null, leadId: null, salgsmulighetId: s.id,
@@ -293,7 +296,7 @@ export default function Kontaktstrom() {
       map.set(email, {
         email, navn: p.kontaktperson || p.partnernavn, firmanavn: p.partnernavn,
         domain: getDomain(email),
-        type: "Partner", status: p.partnerstatus, ansvarlig: p.ansvarlig,
+        type: "Partner", types: ["Partner"], status: p.partnerstatus, ansvarlig: p.ansvarlig,
         sistKontaktetDato: null, sistKontaktetType: "",
         nesteSteg: "", totalSent: 0, totalReceived: 0,
         kontaktId: null, leadId: null, salgsmulighetId: null,
@@ -415,7 +418,7 @@ export default function Kontaktstrom() {
           navn: ec.display_name || email,
           firmanavn: ecFirmanavn,
           domain: getDomain(email),
-          type: ecType, status: ecStatus, ansvarlig: ecAnsvarlig,
+          type: ecType, types: (ecType !== "Ukjent" && ecType !== "Kontakt" ? [ecType] : []) as KontaktStromPerson["types"], status: ecStatus, ansvarlig: ecAnsvarlig,
           sistKontaktetDato: ec.last_contacted_at,
           sistKontaktetType: ec.last_activity_type || "E-post",
           nesteSteg: ecNesteSteg,
@@ -486,6 +489,10 @@ export default function Kontaktstrom() {
             existing.lastContactedAt = p.sistKontaktetDato;
           }
         }
+        // Collect unique types across persons
+        for (const t of p.types) {
+          existing.types.add(t);
+        }
         // Promote type priority
         const typePriority = { Kunde: 5, Partner: 4, Salgsmulighet: 3, Lead: 2, Kontakt: 1, Ukjent: 0 };
         if ((typePriority[p.type] || 0) > (typePriority[existing.type] || 0)) {
@@ -501,6 +508,7 @@ export default function Kontaktstrom() {
           lastContactedAt: p.sistKontaktetDato,
           persons: [p],
           type: p.type,
+          types: new Set(p.types),
           status: p.status,
         });
       }
@@ -705,12 +713,12 @@ export default function Kontaktstrom() {
                 ) : (
                   <span className="w-36" />
                 )}
-                <span className="w-28 text-right">
-                  {(p.type !== "Ukjent" && p.type !== "Kontakt") && (
-                    <Badge variant="secondary" className={`text-xs ${TYPE_COLORS[p.type]}`}>
-                      {p.type}
+                <span className="w-fit min-w-[7rem] flex items-center justify-end gap-1">
+                  {p.types.map(t => (
+                    <Badge key={t} variant="secondary" className={`text-xs ${TYPE_COLORS[t]}`}>
+                      {t}
                     </Badge>
-                  )}
+                  ))}
                 </span>
               </div>
             </div>
@@ -761,12 +769,12 @@ export default function Kontaktstrom() {
                 ) : (
                   <span className="w-36" />
                 )}
-                <span className="w-28 text-right">
-                  {(g.type !== "Ukjent" && g.type !== "Kontakt") && (
-                    <Badge variant="secondary" className={`text-xs ${TYPE_COLORS[g.type]}`}>
-                      {g.type}
+                <span className="w-fit min-w-[7rem] flex items-center justify-end gap-1">
+                  {Array.from(g.types).map(t => (
+                    <Badge key={t} variant="secondary" className={`text-xs ${TYPE_COLORS[t]}`}>
+                      {t}
                     </Badge>
-                  )}
+                  ))}
                 </span>
               </div>
             </div>
