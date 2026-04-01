@@ -1,0 +1,1 @@
+ALTER TABLE public.aktiviteter ADD COLUMN moetenotater text DEFAULT '';
