@@ -469,6 +469,7 @@ export default function CompanyProfile() {
               <ActivityLog selskap_id={id!} onActivityLogged={() => {
                 updateSelskaper(prev => prev.map(s => s.id === id ? { ...s, sist_aktivitet: new Date().toISOString().split("T")[0] } : s));
               }} />
+              <EntityChangelog entity_type="selskap" entity_id={id!} />
             </div>
           </div>
         </div>
