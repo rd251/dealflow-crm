@@ -449,6 +449,15 @@ export default function Dashboard() {
                           <Button
                             variant="outline"
                             size="sm"
+                            className="text-xs h-7 shrink-0 hidden sm:flex gap-1"
+                            onClick={(e) => { e.stopPropagation(); setNotesMeeting(m); setNotesText(m.moetenotater || ""); }}
+                          >
+                            <NotebookPen className="w-3 h-3" />
+                            {m.moetenotater?.trim() ? "Notat" : "+ Notat"}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
                             className="text-xs h-7 shrink-0 hidden sm:flex"
                             onClick={(e) => { e.stopPropagation(); setPrepMeeting(m); }}
                           >
