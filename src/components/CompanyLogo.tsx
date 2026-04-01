@@ -5,6 +5,8 @@ import { cn } from "@/lib/utils";
 interface CompanyLogoProps {
   domain?: string;
   firmanavn?: string;
+  /** Pass kontakter e_post values to extract real domain */
+  kontaktEmails?: string[];
   size?: "sm" | "md" | "lg";
   className?: string;
 }
@@ -21,13 +23,34 @@ const iconSizes = {
   lg: "w-6 h-6",
 };
 
+const imgSizes = {
+  sm: "w-5 h-5",
+  md: "w-6 h-6",
+  lg: "w-7 h-7",
+};
+
 const faviconUrl = (domain: string) =>
   `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
 
-export default function CompanyLogo({ domain, firmanavn, size = "md", className }: CompanyLogoProps) {
+/** Known generic email providers to skip */
+const GENERIC_DOMAINS = /^(gmail\.com|hotmail\.com|outlook\.com|yahoo\.com|live\.com|icloud\.com|me\.com|msn\.com|aol\.com|protonmail\.com|proton\.me)$/i;
+
+export default function CompanyLogo({ domain, firmanavn, kontaktEmails, size = "md", className }: CompanyLogoProps) {
   const [imgError, setImgError] = useState(false);
 
-  const effectiveDomain = domain || (firmanavn ? guessDomain(firmanavn) : "");
+  // Priority: explicit domain → domain from kontakt emails → skip (no guess)
+  let effectiveDomain = domain || "";
+
+  if (!effectiveDomain && kontaktEmails?.length) {
+    for (const email of kontaktEmails) {
+      if (!email || !email.includes("@")) continue;
+      const d = email.split("@")[1]?.toLowerCase();
+      if (d && !GENERIC_DOMAINS.test(d)) {
+        effectiveDomain = d;
+        break;
+      }
+    }
+  }
 
   if (!effectiveDomain || imgError) {
     return (
@@ -42,21 +65,9 @@ export default function CompanyLogo({ domain, firmanavn, size = "md", className 
       <img
         src={faviconUrl(effectiveDomain)}
         alt={firmanavn || effectiveDomain}
-        className="w-6 h-6 object-contain"
+        className={cn("object-contain", imgSizes[size])}
         onError={() => setImgError(true)}
       />
     </div>
   );
 }
-
-/** Best-effort: turn "Acme AS" → "acme.no", "Google" → "google.com" */
-function guessDomain(name: string): string {
-  const clean = name
-    .replace(/\b(AS|ASA|ANS|DA|ENK|SA|NUF|KS|BA|IKS|SF|Ltd|GmbH|Inc|LLC|AB|ApS|Oy|BV|SRL|SAS)\b/gi, "")
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "");
-  return clean ? `${clean}.com` : "";
-}
-
-export { guessDomain };
