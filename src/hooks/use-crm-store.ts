@@ -712,7 +712,7 @@ function useCrmStoreInternal() {
   }, []);
 
   // Convert lead → salgsmulighet + selskap + kontakt
-  const konverterLead = useCallback((leadId: string) => {
+  const konverterLead = useCallback((leadId: string, customNavn?: string) => {
     const lead = leads.find(l => l.id === leadId);
     if (!lead) return;
     const today = new Date().toISOString().split("T")[0];
