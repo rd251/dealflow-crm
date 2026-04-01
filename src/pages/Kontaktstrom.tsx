@@ -54,6 +54,7 @@ interface CompanyGroup {
   lastContactedAt: string | null;
   persons: KontaktStromPerson[];
   type: KontaktStromPerson["type"];
+  types: Set<"Lead" | "Salgsmulighet" | "Kunde" | "Partner">;
   status: string;
 }
 
