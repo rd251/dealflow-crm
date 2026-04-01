@@ -296,7 +296,7 @@ export default function Kontaktstrom() {
       map.set(email, {
         email, navn: p.kontaktperson || p.partnernavn, firmanavn: p.partnernavn,
         domain: getDomain(email),
-        type: "Partner", status: p.partnerstatus, ansvarlig: p.ansvarlig,
+        type: "Partner", types: ["Partner"], status: p.partnerstatus, ansvarlig: p.ansvarlig,
         sistKontaktetDato: null, sistKontaktetType: "",
         nesteSteg: "", totalSent: 0, totalReceived: 0,
         kontaktId: null, leadId: null, salgsmulighetId: null,
