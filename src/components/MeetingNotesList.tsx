@@ -2,9 +2,10 @@ import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Users, Clock, FileText, Save, ChevronDown, ChevronUp, NotebookPen } from "lucide-react";
+import { Users, Clock, FileText, Save, ChevronDown, ChevronUp, NotebookPen, Sparkles, ArrowRight, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const API_URL = import.meta.env.VITE_SUPABASE_URL + '/rest/v1';
 const API_HEADERS = {
@@ -22,19 +23,31 @@ interface MeetingNote {
   start_tid: string | null;
 }
 
+interface AiSummary {
+  oppsummering: string;
+  neste_steg: string[];
+  kundesignal: string;
+  foreslatt_neste_steg_tekst: string;
+}
+
 interface MeetingNotesListProps {
   salgsmulighet_id?: string;
   selskap_id?: string;
   lead_id?: string;
   partner_id?: string;
+  dealName?: string;
+  companyName?: string;
+  onSuggestNesteSteg?: (text: string) => void;
 }
 
-export default function MeetingNotesList({ salgsmulighet_id, selskap_id, lead_id, partner_id }: MeetingNotesListProps) {
+export default function MeetingNotesList({ salgsmulighet_id, selskap_id, lead_id, partner_id, dealName, companyName, onSuggestNesteSteg }: MeetingNotesListProps) {
   const [meetings, setMeetings] = useState<MeetingNote[]>([]);
   const [selectedMeeting, setSelectedMeeting] = useState<MeetingNote | null>(null);
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [aiLoading, setAiLoading] = useState<string | null>(null);
+  const [aiSummaries, setAiSummaries] = useState<Record<string, AiSummary>>({});
 
   const fetchMeetings = useCallback(async () => {
     const filters: string[] = ["type=eq.Møte"];
@@ -78,6 +91,37 @@ export default function MeetingNotesList({ salgsmulighet_id, selskap_id, lead_id
     }
   };
 
+  const generateSummary = async (meeting: MeetingNote) => {
+    if (!meeting.moetenotater?.trim()) {
+      toast.error("Legg til møtenotater først");
+      return;
+    }
+    setAiLoading(meeting.id);
+    try {
+      const { data, error } = await supabase.functions.invoke("meeting-summary", {
+        body: {
+          meetingNotes: meeting.moetenotater,
+          meetingTitle: meeting.tittel,
+          dealName,
+          companyName,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) {
+        toast.error(data.error);
+        return;
+      }
+      setAiSummaries(prev => ({ ...prev, [meeting.id]: data as AiSummary }));
+      setExpandedId(meeting.id);
+      toast.success("AI-oppsummering klar");
+    } catch (e: any) {
+      console.error("AI summary error:", e);
+      toast.error("Kunne ikke generere oppsummering");
+    } finally {
+      setAiLoading(null);
+    }
+  };
+
   const formatDate = (d: string) => new Date(d).toLocaleDateString("no-NO", { day: "numeric", month: "short" });
   const formatTime = (d: string | null) => d ? new Date(d).toLocaleTimeString("no-NO", { hour: "2-digit", minute: "2-digit" }) : null;
 
@@ -94,6 +138,8 @@ export default function MeetingNotesList({ salgsmulighet_id, selskap_id, lead_id
         {meetings.map(m => {
           const hasNotes = !!m.moetenotater?.trim();
           const isExpanded = expandedId === m.id;
+          const summary = aiSummaries[m.id];
+          const isLoadingAi = aiLoading === m.id;
           return (
             <div key={m.id} className="rounded-md border bg-card">
               <div className="px-3 py-2 flex items-center gap-2">
@@ -111,6 +157,16 @@ export default function MeetingNotesList({ salgsmulighet_id, selskap_id, lead_id
                   <Badge variant="outline" className="text-[9px] px-1 py-0 text-muted-foreground ml-auto shrink-0">—</Badge>
                 )}
                 {hasNotes && (
+                  <button
+                    className="p-0.5 rounded hover:bg-muted shrink-0 disabled:opacity-50"
+                    disabled={isLoadingAi}
+                    onClick={() => generateSummary(m)}
+                    title="AI-oppsummering"
+                  >
+                    {isLoadingAi ? <Loader2 className="w-3 h-3 text-primary animate-spin" /> : <Sparkles className="w-3 h-3 text-primary" />}
+                  </button>
+                )}
+                {(hasNotes || summary) && (
                   <button className="p-0.5 rounded hover:bg-muted shrink-0" onClick={() => setExpandedId(isExpanded ? null : m.id)}>
                     {isExpanded ? <ChevronUp className="w-3 h-3 text-muted-foreground" /> : <ChevronDown className="w-3 h-3 text-muted-foreground" />}
                   </button>
@@ -119,9 +175,54 @@ export default function MeetingNotesList({ salgsmulighet_id, selskap_id, lead_id
                   {hasNotes ? "Rediger" : "+ Notat"}
                 </button>
               </div>
-              {isExpanded && hasNotes && (
-                <div className="px-3 pb-2">
-                  <p className="text-xs text-muted-foreground whitespace-pre-line bg-muted/50 rounded p-2">{m.moetenotater}</p>
+
+              {isExpanded && (
+                <div className="px-3 pb-2 space-y-2">
+                  {hasNotes && (
+                    <p className="text-xs text-muted-foreground whitespace-pre-line bg-muted/50 rounded p-2">{m.moetenotater}</p>
+                  )}
+
+                  {/* AI Summary */}
+                  {summary && (
+                    <div className="rounded-md border border-primary/20 bg-primary/5 p-3 space-y-2">
+                      <div className="flex items-center gap-1.5">
+                        <Sparkles className="w-3 h-3 text-primary" />
+                        <span className="text-[10px] font-semibold uppercase tracking-wide text-primary">AI-oppsummering</span>
+                        {summary.kundesignal && (
+                          <Badge variant="secondary" className="text-[9px] ml-auto">{summary.kundesignal}</Badge>
+                        )}
+                      </div>
+
+                      <p className="text-xs">{summary.oppsummering}</p>
+
+                      {summary.neste_steg.length > 0 && (
+                        <div className="space-y-1">
+                          <span className="text-[10px] font-medium text-muted-foreground uppercase">Foreslåtte neste steg:</span>
+                          {summary.neste_steg.map((step, i) => (
+                            <div key={i} className="flex items-start gap-1.5 text-xs">
+                              <ArrowRight className="w-3 h-3 text-primary shrink-0 mt-0.5" />
+                              <span>{step}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {summary.foreslatt_neste_steg_tekst && onSuggestNesteSteg && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-[10px] h-6 gap-1 w-full border-primary/30 text-primary hover:bg-primary/10"
+                          onClick={() => {
+                            onSuggestNesteSteg(summary.foreslatt_neste_steg_tekst);
+                            toast.success("Neste steg oppdatert fra AI-forslag");
+                          }}
+                        >
+                          <Sparkles className="w-2.5 h-2.5" />
+                          Bruk som «Neste steg»: {summary.foreslatt_neste_steg_tekst}
+                        </Button>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
