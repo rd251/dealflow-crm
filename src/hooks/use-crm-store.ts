@@ -712,7 +712,7 @@ function useCrmStoreInternal() {
   }, []);
 
   // Convert lead → salgsmulighet + selskap + kontakt
-  const konverterLead = useCallback((leadId: string) => {
+  const konverterLead = useCallback((leadId: string, customNavn?: string) => {
     const lead = leads.find(l => l.id === leadId);
     if (!lead) return;
     const today = new Date().toISOString().split("T")[0];
@@ -743,7 +743,7 @@ function useCrmStoreInternal() {
 
     const smId = crypto.randomUUID();
     const nySm: Salgsmulighet = {
-      id: smId, navn: lead.firmanavn, selskap_id: selskapId, kontakt_id: kontaktId || "",
+      id: smId, navn: customNavn || lead.use_case || lead.firmanavn, selskap_id: selskapId, kontakt_id: kontaktId || "",
       ansvarlig: lead.ansvarlig, status: "Møte booket", forventet_mrr: 0, sla: 0, oppstartskostnad: 0,
       kontraktslengde_mnd: 12, sannsynlighet: 50, forventet_lukkedato: "", vunnet_dato: "",
       tapt_dato: "", tapsaarsak: "", neste_steg: lead.neste_steg, notater: lead.notater,

@@ -68,7 +68,7 @@ export default function Salgsmuligheter() {
   const [lossReason, setLossReason] = useState<Tapsaarsak>("Pris");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [moveBlockedId, setMoveBlockedId] = useState<string | null>(null);
-  const [form, setForm] = useState({ navn: "", selskap_id: "", kontakt_id: "", forventet_mrr: 0, sla: 0, oppstartskostnad: 0, kontraktslengde_mnd: 12, sannsynlighet: 50, forventet_lukkedato: "", neste_steg: "", rolle_i_firma: "", use_case: "", kontaktperson: "", e_post: "", telefon: "", ansvarlig: "" });
+  const [form, setForm] = useState({ selskap_id: "", kontakt_id: "", forventet_mrr: 0, sla: 0, oppstartskostnad: 0, kontraktslengde_mnd: 12, sannsynlighet: 50, forventet_lukkedato: "", neste_steg: "", rolle_i_firma: "", use_case: "", kontaktperson: "", e_post: "", telefon: "", ansvarlig: "" });
   const [filterUtenAktivitet, setFilterUtenAktivitet] = useState(false);
 
   useEffect(() => {
@@ -118,7 +118,7 @@ export default function Salgsmuligheter() {
     const today = new Date().toISOString().split("T")[0];
     const id = generateId("SM", salgsmuligheter);
     const nySm: Salgsmulighet = {
-      id, navn: form.navn, selskap_id: form.selskap_id, kontakt_id: form.kontakt_id,
+      id, navn: form.use_case, selskap_id: form.selskap_id, kontakt_id: form.kontakt_id,
       ansvarlig: form.ansvarlig || user?.id || "", status: "Møte booket", forventet_mrr: form.forventet_mrr, sla: form.sla,
       oppstartskostnad: form.oppstartskostnad, kontraktslengde_mnd: form.kontraktslengde_mnd,
       sannsynlighet: form.sannsynlighet, forventet_lukkedato: form.forventet_lukkedato,
@@ -130,7 +130,7 @@ export default function Salgsmuligheter() {
     };
     updateSalgsmuligheter(prev => [...prev, nySm]);
     setDialogOpen(false);
-    setForm({ navn: "", selskap_id: "", kontakt_id: "", forventet_mrr: 0, sla: 0, oppstartskostnad: 0, kontraktslengde_mnd: 12, sannsynlighet: 50, forventet_lukkedato: "", neste_steg: "", rolle_i_firma: "", use_case: "", kontaktperson: "", e_post: "", telefon: "", ansvarlig: "" });
+    setForm({ selskap_id: "", kontakt_id: "", forventet_mrr: 0, sla: 0, oppstartskostnad: 0, kontraktslengde_mnd: 12, sannsynlighet: 50, forventet_lukkedato: "", neste_steg: "", rolle_i_firma: "", use_case: "", kontaktperson: "", e_post: "", telefon: "", ansvarlig: "" });
   };
 
   const now = new Date();
@@ -164,7 +164,7 @@ export default function Salgsmuligheter() {
           <DialogContent className="max-w-[95vw] sm:max-w-lg">
             <DialogHeader><DialogTitle>Ny salgsmulighet</DialogTitle><DialogDescription>Fyll inn detaljer for den nye salgsmuligheten.</DialogDescription></DialogHeader>
             <div className="space-y-3">
-              <Input placeholder="Navn" value={form.navn} onChange={e => setForm(f => ({ ...f, navn: e.target.value }))} />
+              <Input placeholder="Use case / Navn på deal *" value={form.use_case} onChange={e => setForm(f => ({ ...f, use_case: e.target.value }))} />
               <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background" value={form.selskap_id} onChange={e => setForm(f => ({ ...f, selskap_id: e.target.value }))}>
                 <option value="">Velg selskap</option>
                 {selskaper.map(s => <option key={s.id} value={s.id}>{s.firmanavn}</option>)}
@@ -188,7 +188,7 @@ export default function Salgsmuligheter() {
                 <Input placeholder="Telefon" value={form.telefon} onChange={e => setForm(f => ({ ...f, telefon: e.target.value }))} />
                 <Input placeholder="Rolle i firma" value={form.rolle_i_firma} onChange={e => setForm(f => ({ ...f, rolle_i_firma: e.target.value }))} />
               </div>
-              <Input placeholder="Use case" value={form.use_case} onChange={e => setForm(f => ({ ...f, use_case: e.target.value }))} />
+              
               <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background" value={form.ansvarlig} onChange={e => setForm(f => ({ ...f, ansvarlig: e.target.value }))}>
                 <option value="">Velg ansvarlig</option>
                 {profiles.map(p => (
@@ -197,7 +197,7 @@ export default function Salgsmuligheter() {
                   </option>
                 ))}
               </select>
-              <Button onClick={addSm} className="w-full" disabled={!form.navn || !form.neste_steg}>Opprett</Button>
+              <Button onClick={addSm} className="w-full" disabled={!form.use_case || !form.neste_steg}>Opprett</Button>
             </div>
           </DialogContent>
         </Dialog>

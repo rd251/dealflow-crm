@@ -40,6 +40,8 @@ export default function Leads() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [convertDialogLead, setConvertDialogLead] = useState<Lead | null>(null);
+  const [convertNavn, setConvertNavn] = useState("");
   const [form, setForm] = useState<Partial<Lead>>({ firmanavn: "", kontaktperson: "", e_post: "", telefon: "", kilde: "Nettside", status: "Ny", ansvarlig: "", neste_steg: "", notater: "", rolle_i_firma: "", use_case: "" });
   const [filterUtenOppfolging, setFilterUtenOppfolging] = useState(false);
 
@@ -182,6 +184,39 @@ export default function Leads() {
           return { success, errors };
         }}
       />
+
+      {/* Convert to sale dialog */}
+      <Dialog open={!!convertDialogLead} onOpenChange={open => { if (!open) { setConvertDialogLead(null); setConvertNavn(""); } }}>
+        <DialogContent className="max-w-[95vw] sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Konverter til salgsmulighet</DialogTitle>
+            <DialogDescription>Gi salgsmuligheten et navn (use case) for {convertDialogLead?.firmanavn}.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <Input
+              placeholder="Navn på salgsmulighet / use case"
+              value={convertNavn}
+              onChange={e => setConvertNavn(e.target.value)}
+              autoFocus
+            />
+            <Button
+              className="w-full"
+              disabled={!convertNavn.trim()}
+              onClick={() => {
+                if (convertDialogLead) {
+                  konverterLead(convertDialogLead.id, convertNavn.trim());
+                  setConvertDialogLead(null);
+                  setConvertNavn("");
+                  if (selectedLead?.id === convertDialogLead.id) setSelectedLead(null);
+                }
+              }}
+            >
+              Konverter
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <div className="mb-4 flex items-center gap-2">
         <div className="relative max-w-sm flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -210,7 +245,7 @@ export default function Leads() {
                   </div>
                   {lead.status !== "Ikke aktuelt" && (
                     <div className="flex gap-1 mt-1">
-                      <Button size="sm" variant="ghost" className="text-xs gap-1 flex-1" onClick={e => { e.stopPropagation(); konverterLead(lead.id); }}>
+                      <Button size="sm" variant="ghost" className="text-xs gap-1 flex-1" onClick={e => { e.stopPropagation(); setConvertDialogLead(lead); setConvertNavn(lead.use_case || lead.firmanavn); }}>
                         <ArrowRightCircle className="w-3.5 h-3.5" />Salg
                       </Button>
                       <Button size="sm" variant="ghost" className="text-xs gap-1 flex-1" onClick={e => { e.stopPropagation(); konverterTilPartner(lead.id); }}>
@@ -259,7 +294,7 @@ export default function Leads() {
                       <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
                         {lead.status !== "Ikke aktuelt" && (
                           <div className="flex gap-1">
-                            <Button size="sm" variant="ghost" className="text-xs gap-1" onClick={() => konverterLead(lead.id)}>
+                            <Button size="sm" variant="ghost" className="text-xs gap-1" onClick={() => { setConvertDialogLead(lead); setConvertNavn(lead.use_case || lead.firmanavn); }}>
                               <ArrowRightCircle className="w-3.5 h-3.5" />Salg
                             </Button>
                             <Button size="sm" variant="ghost" className="text-xs gap-1" onClick={() => konverterTilPartner(lead.id)}>
@@ -295,7 +330,7 @@ export default function Leads() {
         ) : undefined}
         actions={canEdit && currentLead && !currentIsLocked && currentLead.status !== "Ikke aktuelt" ? (
           <>
-            <Button size="sm" onClick={() => { konverterLead(currentLead.id); setSelectedLead(null); }}>
+            <Button size="sm" onClick={() => { setConvertDialogLead(currentLead); setConvertNavn(currentLead.use_case || currentLead.firmanavn); }}>
               <ArrowRightCircle className="w-4 h-4 mr-1.5" />Til salg
             </Button>
             <Button size="sm" variant="secondary" onClick={() => { konverterTilPartner(currentLead.id); setSelectedLead(null); }}>
