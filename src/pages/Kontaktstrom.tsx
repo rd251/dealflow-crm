@@ -212,6 +212,7 @@ export default function Kontaktstrom() {
         suggestedSelskapId: suggested?.id || null,
         suggestedSelskapNavn: suggested?.firmanavn || "",
         connectionStatus: resolveConnectionStatus(resolvedSelskapId, suggested?.id || null),
+        ownerUserId: null,
       });
     }
 
