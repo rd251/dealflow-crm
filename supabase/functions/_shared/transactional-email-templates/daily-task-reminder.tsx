@@ -252,30 +252,29 @@ const ctaButton: React.CSSProperties = {
 const divider: React.CSSProperties = { borderColor: '#e8e6e3', margin: '18px 0' }
 
 // Overdue section — visually distinct
-const overdueHeader: React.CSSProperties = { backgroundColor: '#fef2f2', borderRadius: '8px', padding: '12px 16px', marginBottom: '8px' }
-const overdueHeading: React.CSSProperties = { fontSize: '14px', fontWeight: 700, color: BRAND_RED, margin: '0', textTransform: 'uppercase', letterSpacing: '0.5px' }
-const overdueTaskCard: React.CSSProperties = { padding: '12px 0', borderBottom: '1px solid #fde8e8' }
-const taskCircleOverdue: React.CSSProperties = { color: BRAND_RED, fontSize: '14px' }
+const overdueHeader: React.CSSProperties = { backgroundColor: '#fef2f2', borderRadius: '6px', padding: '10px 14px', marginBottom: '6px' }
+const overdueHeading: React.CSSProperties = { fontSize: '13px', fontWeight: 700, color: BRAND_RED, margin: '0', textTransform: 'uppercase', letterSpacing: '0.5px' }
+const overdueTaskCard: React.CSSProperties = { padding: '10px 0', borderBottom: '1px solid #fde8e8' }
+const taskCircleOverdue: React.CSSProperties = { color: BRAND_RED, fontSize: '13px' }
 
-// General task styles
-const sectionHeading: React.CSSProperties = { fontSize: '13px', fontWeight: 700, color: BRAND_DARK, margin: '0 0 12px', textTransform: 'uppercase', letterSpacing: '0.5px' }
-const taskCard: React.CSSProperties = { padding: '12px 0', borderBottom: '1px solid #f0eeec' }
-const taskCircle: React.CSSProperties = { color: '#cccccc', fontSize: '14px' }
-const taskName: React.CSSProperties = { fontSize: '15px', color: BRAND_DARK, margin: '0 0 6px', fontWeight: 500 }
-const taskMetaLine: React.CSSProperties = { fontSize: '13px', color: '#666666', margin: '0' }
-const taskDateOverdue: React.CSSProperties = { color: BRAND_RED, fontSize: '13px', fontWeight: 600 }
-const priorityBadge: React.CSSProperties = { fontSize: '12px', fontWeight: 500 }
-const taskAssigneeText: React.CSSProperties = { fontSize: '13px', color: '#666666' }
+const sectionHeading: React.CSSProperties = { fontSize: '12px', fontWeight: 700, color: BRAND_DARK, margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: '0.5px' }
+const taskCard: React.CSSProperties = { padding: '10px 0', borderBottom: '1px solid #f0eeec' }
+const taskCircle: React.CSSProperties = { color: '#cccccc', fontSize: '13px' }
+const taskName: React.CSSProperties = { fontSize: '14px', color: BRAND_DARK, margin: '0 0 4px', fontWeight: 500 }
+const taskMetaLine: React.CSSProperties = { fontSize: '12px', color: '#666666', margin: '0' }
+const taskDateOverdue: React.CSSProperties = { color: BRAND_RED, fontSize: '12px', fontWeight: 600 }
+const priorityBadge: React.CSSProperties = { fontSize: '11px', fontWeight: 500 }
+const taskAssigneeText: React.CSSProperties = { fontSize: '12px', color: '#666666' }
 const assigneeBadge: React.CSSProperties = {
   display: 'inline-block',
-  width: '20px',
-  height: '20px',
+  width: '18px',
+  height: '18px',
   borderRadius: '50%',
   backgroundColor: BRAND_RED,
   color: '#ffffff',
-  fontSize: '11px',
+  fontSize: '10px',
   fontWeight: 600,
-  lineHeight: '20px',
+  lineHeight: '18px',
   textAlign: 'center',
   verticalAlign: 'middle',
 }
