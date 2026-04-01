@@ -424,6 +424,7 @@ export default function Leads() {
                 <ActivityLog lead_id={currentLead.id} onActivityLogged={() => {
                   updateLeads(prev => prev.map(l => l.id === currentLead.id ? { ...l, sist_aktivitet: new Date().toISOString().split("T")[0] } : l));
                 }} />
+                <EntityChangelog entity_type="lead" entity_id={currentLead.id} />
               </>
             ),
             notater: (

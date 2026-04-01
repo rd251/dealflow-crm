@@ -456,7 +456,10 @@ export default function Contacts() {
             </div>
           ),
           interaksjoner: (
-            <ActivityLog kontakt_id={currentKontakt.id} />
+            <>
+              <ActivityLog kontakt_id={currentKontakt.id} />
+              <EntityChangelog entity_type="kontakt" entity_id={currentKontakt.id} />
+            </>
           ),
           notater: (
             <div className="space-y-1">

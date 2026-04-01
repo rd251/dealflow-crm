@@ -611,6 +611,7 @@ export default function Salgsmuligheter() {
                   companyName={getSelskapNavn(currentSm.selskap_id)}
                   onSuggestNesteSteg={(text) => updateField("neste_steg", text)}
                 />
+                <EntityChangelog entity_type="salgsmulighet" entity_id={currentSm.id} />
               </>
             ),
             notater: (
