@@ -69,6 +69,9 @@ const SYSTEM_EMAIL_PATTERNS = /^(noreply|no-reply|no\.reply|donotreply|do-not-re
 const SYSTEM_DOMAINS = /(@|\.)?(google|facebook|linkedin|twitter|github|apple|microsoft|amazon|stripe|paypal|shopify|slack|zoom|calendly|hubspot|mailchimp|sendgrid|intercom|zendesk|atlassian|notion|figma|canva|vercel|netlify|cloudflare|dropbox|trello|asana|monday|jira|confluence|bitbucket|heroku|twilio|postmark|sparkpost|mailgun|mandrill|amazonaws|googlemail)\.(com|io|co|net|org|no|se|dk)$/i;
 const THROWAWAY_PATTERNS = /\+(bounce|tag|sub|unsub|verify|confirm|test|spam|junk)/i;
 
+// Generic / free email providers — should NOT be grouped as companies
+const GENERIC_EMAIL_DOMAINS = /^(gmail\.com|googlemail\.com|hotmail\.(com|no|co\.uk|fr|de|se|dk)|outlook\.(com|no|se|dk)|live\.(com|no|se)|yahoo\.(com|no|co\.uk|se)|icloud\.com|me\.com|mac\.com|msn\.com|aol\.com|mail\.com|protonmail\.com|proton\.me|gmx\.(com|net|de)|yandex\.(com|ru)|tutanota\.com|tuta\.io|zoho\.com|fastmail\.com|hey\.com)$/i;
+
 function isNoiseEmail(email: string): boolean {
   if (!email) return true;
   const local = email.split("@")[0];
@@ -460,6 +463,8 @@ export default function Kontaktstrom() {
 
     for (const p of persons) {
       if (!p.domain) continue;
+      // Skip generic email providers — they're not real companies
+      if (GENERIC_EMAIL_DOMAINS.test(p.domain)) continue;
       if (filterEier !== "alle" && p.ownerUserId !== filterEier) continue;
 
       const existing = domainMap.get(p.domain);
