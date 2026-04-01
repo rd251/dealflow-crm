@@ -82,46 +82,11 @@ export default function Dashboard() {
         .limit(8)
         .then(({ data }) => { if (data) setOppgaver(data); });
 
-      // Fetch CRM events: recent leads + salgsmuligheter status changes
-      const events: Array<{ id: string; label: string; date: string; color: string }> = [];
-
-      const [leadsRes, smRes] = await Promise.all([
-        supabase.from("leads").select("id,firmanavn,status,created_at,konvertert_dato").order("created_at", { ascending: false }).limit(20),
-        supabase.from("salgsmuligheter").select("id,navn,status,created_at,vunnet_dato,tapt_dato").order("created_at", { ascending: false }).limit(20),
-      ]);
-
-      if (leadsRes.data) {
-        for (const l of leadsRes.data) {
-          // Always show the "new lead" event
-          events.push({ id: `l-new-${l.id}`, label: `Nytt lead: ${l.firmanavn}`, date: l.created_at, color: "bg-primary" });
-
-          // Additionally show conversion/rejection as a separate event
-          if (l.status === "Konvertert til salg") {
-            const convDate = l.konvertert_dato || l.created_at;
-            events.push({ id: `l-conv-${l.id}`, label: `${l.firmanavn} konvertert til salg`, date: convDate, color: "bg-emerald-500" });
-          } else if (l.status === "Konvertert til partner") {
-            const convDate = l.konvertert_dato || l.created_at;
-            events.push({ id: `l-conv-${l.id}`, label: `${l.firmanavn} konvertert til partner`, date: convDate, color: "bg-emerald-500" });
-          } else if (l.status === "Ikke aktuelt") {
-            events.push({ id: `l-ia-${l.id}`, label: `Ikke aktuelt: ${l.firmanavn}`, date: l.created_at, color: "bg-muted-foreground" });
-          }
-        }
-      }
-
-      if (smRes.data) {
-        for (const s of smRes.data) {
-          if (s.status === "Vunnet") {
-            events.push({ id: `sm-won-${s.id}`, label: `Vunnet: ${s.navn}`, date: s.vunnet_dato || s.created_at, color: "bg-emerald-500" });
-          } else if (s.status === "Tapt") {
-            events.push({ id: `sm-lost-${s.id}`, label: `Tapt: ${s.navn}`, date: s.tapt_dato || s.created_at, color: "bg-destructive" });
-          } else {
-            events.push({ id: `sm-new-${s.id}`, label: `Ny salgsmulighet: ${s.navn}`, date: s.created_at, color: "bg-amber-500" });
-          }
-        }
-      }
-
-      events.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-      setCrmEvents(events.slice(0, 12));
+      // Fetch CRM changelog
+      fetch(`${API_URL}/crm_changelog?order=created_at.desc&limit=5`, { headers: API_HEADERS })
+        .then(r => r.ok ? r.json() : [])
+        .then(data => setChangelogEntries(data))
+        .catch(() => {});
     };
     fetchDashboardData();
   }, []);
