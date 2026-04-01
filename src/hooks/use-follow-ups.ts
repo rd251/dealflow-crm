@@ -114,14 +114,19 @@ export function useFollowUps(
     leads.forEach((lead) => {
       if (lead.status === "Ikke aktuelt" || lead.konvertert_til) return;
 
-      const hoursInactive = lead.sist_aktivitet
-        ? differenceInHours(now, new Date(lead.sist_aktivitet))
+      // Check both the lead's sist_aktivitet field AND actual activities in the aktiviteter table
+      const lastAktivitet = getLastActivity(lead.id, "lead");
+      const latestDate = [lead.sist_aktivitet, lastAktivitet?.dato]
+        .filter(Boolean)
+        .map((d) => new Date(d!))
+        .sort((a, b) => b.getTime() - a.getTime())[0];
+
+      const hoursInactive = latestDate
+        ? differenceInHours(now, latestDate)
         : 999;
 
       if (hoursInactive < 48) return;
       if (hasRecentFollowUp(lead.id, "lead")) return;
-
-      const lastAct = getLastActivity(lead.id, "lead");
 
       items.push({
         id: `lead-${lead.id}`,
@@ -135,8 +140,8 @@ export function useFollowUps(
         selskapId: null,
         kontaktId: null,
         sistAktivitet: lead.sist_aktivitet,
-        sistAktivitetType: lastAct?.type || null,
-        anbefalHandling: getLeadAction(lead, lastAct),
+        sistAktivitetType: lastAktivitet?.type || null,
+        anbefalHandling: getLeadAction(lead, lastAktivitet),
         verdi: 0,
         priority: hoursInactive > 120 ? "high" : "medium",
         hoursInactive,
@@ -148,14 +153,20 @@ export function useFollowUps(
     salgsmuligheter.forEach((sm) => {
       if (sm.status === "Vunnet" || sm.status === "Tapt") return;
 
-      const hoursInactive = sm.sist_aktivitet
-        ? differenceInHours(now, new Date(sm.sist_aktivitet))
+      // Check both the sm's sist_aktivitet field AND actual activities in the aktiviteter table
+      const lastAktivitet = getLastActivity(sm.id, "salgsmulighet");
+      const latestDate = [sm.sist_aktivitet, lastAktivitet?.dato]
+        .filter(Boolean)
+        .map((d) => new Date(d!))
+        .sort((a, b) => b.getTime() - a.getTime())[0];
+
+      const hoursInactive = latestDate
+        ? differenceInHours(now, latestDate)
         : 999;
 
       if (hoursInactive < 72) return; // 3 days
       if (hasRecentFollowUp(sm.id, "salgsmulighet")) return;
 
-      const lastAct = getLastActivity(sm.id, "salgsmulighet");
       const verdi = (sm.forventet_mrr || 0) * (sm.kontraktslengde_mnd || 12);
 
       items.push({
@@ -170,8 +181,8 @@ export function useFollowUps(
         selskapId: sm.selskap_id || null,
         kontaktId: sm.kontakt_id || null,
         sistAktivitet: sm.sist_aktivitet,
-        sistAktivitetType: lastAct?.type || null,
-        anbefalHandling: getSmAction(sm, lastAct),
+        sistAktivitetType: lastAktivitet?.type || null,
+        anbefalHandling: getSmAction(sm, lastAktivitet),
         verdi,
         priority: verdi > 50000 ? "high" : hoursInactive > 120 ? "high" : "medium",
         hoursInactive,
