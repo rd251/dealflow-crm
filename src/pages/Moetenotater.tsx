@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Users, Clock, Building2, FileText, Save, ChevronDown, ChevronUp, Sparkles, ArrowRight, Loader2, Search, Filter } from "lucide-react";
+import { Users, Clock, Building2, FileText, Save, ChevronDown, ChevronUp, Sparkles, ArrowRight, Loader2, Search, Filter, CalendarDays } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -59,6 +59,7 @@ export default function Moetenotater() {
   const [searchQuery, setSearchQuery] = useState("");
   const [noteFilter, setNoteFilter] = useState<"all" | "with" | "without">("all");
   const [entityFilter, setEntityFilter] = useState<string>("all");
+  const [dateFilter, setDateFilter] = useState<"all" | "today">("all");
 
   const fetchMeetings = useCallback(async () => {
     try {
@@ -191,6 +192,13 @@ export default function Moetenotater() {
       if (!linked || linked.name !== entityFilter) return false;
     }
 
+    // Date filter
+    if (dateFilter === "today") {
+      const today = new Date().toISOString().split("T")[0];
+      const meetingDate = new Date(m.dato).toISOString().split("T")[0];
+      if (meetingDate !== today) return false;
+    }
+
     return true;
   });
 
@@ -232,9 +240,18 @@ export default function Moetenotater() {
             </SelectContent>
           </Select>
         )}
-        {(searchQuery || noteFilter !== "all" || entityFilter !== "all") && (
+        {(searchQuery || noteFilter !== "all" || entityFilter !== "all" || dateFilter !== "all") && (
           <span className="text-[10px] text-muted-foreground">{filteredMeetings.length} av {meetings.length} møter</span>
         )}
+        <Button
+          size="sm"
+          variant={dateFilter === "today" ? "default" : "outline"}
+          className="h-8 text-xs gap-1.5"
+          onClick={() => setDateFilter(dateFilter === "today" ? "all" : "today")}
+        >
+          <CalendarDays className="w-3 h-3" />
+          I dag
+        </Button>
       </div>
 
       <div className="space-y-3">
