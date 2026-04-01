@@ -563,39 +563,73 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* RIGHT: SISTE AKTIVITET */}
+        {/* RIGHT: ENDRINGSLOGG */}
         <div className="bg-card border rounded-xl overflow-hidden">
           <div className="px-4 sm:px-6 py-4 border-b flex items-center justify-between">
             <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
-              <Activity className="w-4 h-4" /> Siste aktivitet
+              <Activity className="w-4 h-4" /> Endringslogg
             </h2>
             <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={() => navigate("/aktiviteter")}>
               Se alle <ChevronRight className="w-3 h-3" />
             </Button>
           </div>
-          {crmEvents.length === 0 ? (
-            <p className="px-4 py-8 text-center text-muted-foreground text-sm">Ingen hendelser</p>
+          {changelogEntries.length === 0 ? (
+            <p className="px-4 py-8 text-center text-muted-foreground text-sm">Ingen hendelser ennå</p>
           ) : (
             <div className="divide-y">
-              {crmEvents.map((ev) => (
-                <div
-                  key={ev.id}
-                  className="px-4 sm:px-6 py-3 flex items-start gap-3 hover:bg-muted/30 cursor-pointer transition-colors"
-                  onClick={() => {
-                    const entityId = ev.id.replace(/^(l|sm)-[^-]+-/, "");
-                    if (ev.id.startsWith("l-")) navigate(`/leads?open=${entityId}`);
-                    else navigate(`/salgsmuligheter?open=${entityId}`);
-                  }}
-                >
-                  <div className={`w-2.5 h-2.5 rounded-full ${ev.color} shrink-0 mt-1.5`} />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{ev.label}</p>
-                    <span className="text-xs text-muted-foreground">
-                      {format(new Date(ev.date), "d. MMMM", { locale: nb })}
-                    </span>
+              {changelogEntries.map((entry) => {
+                const eventColors: Record<string, string> = {
+                  created: "bg-emerald-500", updated: "bg-blue-500", converted: "bg-violet-500",
+                  linked: "bg-sky-500", completed: "bg-emerald-500", deleted: "bg-destructive",
+                };
+                const eventVerbs: Record<string, string> = {
+                  created: "opprettet", updated: "endret", converted: "konverterte",
+                  linked: "koblet", completed: "fullførte", deleted: "slettet",
+                };
+                const entLabels: Record<string, string> = {
+                  selskap: "selskap", kontakt: "kontakt", salgsmulighet: "deal",
+                  lead: "lead", partner: "partner", prosjekt: "prosjekt", oppgave: "oppgave",
+                  epost: "e-post", møte: "møte",
+                };
+                const userName = entry.user_id && profileMap.get(entry.user_id)
+                  ? profileMap.get(entry.user_id)!.split(" ")[0]
+                  : null;
+                const verb = eventVerbs[entry.event_type] || entry.event_type;
+                const entType = entLabels[entry.entity_type] || entry.entity_type;
+                let desc = `${userName ? userName + " " : ""}${verb} ${entType} '${entry.entity_name}'`;
+                if (entry.event_type === "updated" && entry.field_name) {
+                  desc = `${userName ? userName + " " : ""}${verb} ${entry.field_name} på '${entry.entity_name}'`;
+                  if (entry.new_value) desc += ` → ${entry.new_value}`;
+                }
+                if (entry.event_type === "linked" && entry.related_entity_name) {
+                  desc += ` → ${entry.related_entity_name}`;
+                }
+
+                return (
+                  <div
+                    key={entry.id}
+                    className="px-4 sm:px-6 py-3 flex items-start gap-3 hover:bg-muted/30 cursor-pointer transition-colors"
+                    onClick={() => {
+                      const path = entry.entity_type === "selskap" ? `/selskaper/${entry.entity_id}`
+                        : entry.entity_type === "partner" ? `/partnere/${entry.entity_id}`
+                        : entry.entity_type === "lead" ? `/leads`
+                        : entry.entity_type === "salgsmulighet" ? `/salgsmuligheter`
+                        : entry.entity_type === "kontakt" ? `/kontakter`
+                        : entry.entity_type === "prosjekt" ? `/prosjekter`
+                        : `/aktiviteter`;
+                      navigate(path);
+                    }}
+                  >
+                    <div className={`w-2.5 h-2.5 rounded-full ${eventColors[entry.event_type] || "bg-muted-foreground"} shrink-0 mt-1.5`} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{desc}</p>
+                      <span className="text-xs text-muted-foreground">
+                        {format(new Date(entry.created_at), "d. MMMM HH:mm", { locale: nb })}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
