@@ -552,8 +552,29 @@ export default function Kontaktstrom() {
       }).select().single();
 
       if (error) throw error;
-      toast.success(`Selskap "${firmanavn}" opprettet`);
+      const newSelskapId = data.id;
+
+      // Auto-link existing kontakter in this group to the new selskap
+      const kontaktIdsToLink = group.persons
+        .filter(p => p.kontaktId && !p.selskapId)
+        .map(p => p.kontaktId!);
+
+      if (kontaktIdsToLink.length > 0) {
+        await supabase.from("kontakter")
+          .update({ selskap_id: newSelskapId })
+          .in("id", kontaktIdsToLink);
+      }
+
+      // Auto-link email_contacts with matching domain
+      await supabase.from("email_contacts")
+        .update({ selskap_id: newSelskapId })
+        .eq("domain", group.domain)
+        .is("selskap_id", null);
+
+      const linkedCount = kontaktIdsToLink.length;
+      toast.success(`Selskap "${firmanavn}" opprettet${linkedCount > 0 ? ` og ${linkedCount} kontakt${linkedCount > 1 ? "er" : ""} koblet` : ""}`);
       refresh();
+      await fetchEmailContacts();
       setSelectedCompany(null);
     } catch (err: any) {
       toast.error("Kunne ikke opprette selskap: " + (err.message || "Ukjent feil"));
