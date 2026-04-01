@@ -8,21 +8,23 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import DetailPanelShell, { DetailSection, DetailField as SharedDetailField, DetailDivider, DetailStatGrid, DetailStatCard } from "@/components/DetailPanelShell";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, UserPlus, Mail, Phone, Calendar, MessageSquare, Building2, ExternalLink, Clock, RefreshCw } from "lucide-react";
+import { Search, UserPlus, Mail, Phone, Calendar, MessageSquare, Building2, ExternalLink, Clock, RefreshCw, Users } from "lucide-react";
 import { format, formatDistanceToNow, isAfter } from "date-fns";
 import { nb } from "date-fns/locale";
 import { toast } from "sonner";
 import ActivityLog from "@/components/ActivityLog";
 import CompanyLinker from "@/components/CompanyLinker";
 import DealSuggestions from "@/components/DealSuggestions";
+import { gravatarUrl } from "@/lib/gravatar";
 
 interface KontaktStromPerson {
   email: string;
   navn: string;
   firmanavn: string;
+  domain: string;
   type: "Lead" | "Salgsmulighet" | "Kunde" | "Partner" | "Kontakt" | "Ukjent";
   status: string;
   ansvarlig: string;
@@ -43,6 +45,16 @@ interface KontaktStromPerson {
   ownerUserId: string | null;
 }
 
+interface CompanyGroup {
+  domain: string;
+  firmanavn: string;
+  selskapId: string | null;
+  personCount: number;
+  lastContactedAt: string | null;
+  persons: KontaktStromPerson[];
+  type: KontaktStromPerson["type"];
+}
+
 const TYPE_COLORS: Record<string, string> = {
   Lead: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
   Salgsmulighet: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
@@ -52,12 +64,26 @@ const TYPE_COLORS: Record<string, string> = {
   Ukjent: "bg-muted text-muted-foreground",
 };
 
-const AKTIVITET_TYPE_ICONS: Record<string, typeof Mail> = {
-  "E-post": Mail,
-  "Møte": Calendar,
-  "Telefonsamtale": Phone,
-  "Notat": MessageSquare,
-};
+// Noise email patterns to filter out
+const SYSTEM_EMAIL_PATTERNS = /^(noreply|no-reply|no\.reply|donotreply|do-not-reply|notifications?|alert[s]?|info@|support@|admin@|postmaster@|mailer-daemon|bounce[s]?|feedback@|newsletter|updates?@|billing@|receipts?@|hello@|team@|marketing@|sales@|press@|media@|contact@|webmaster@|hostmaster@|abuse@|daemon@|root@|system@|automated|auto-reply|auto\.reply|unsubscribe|opt-?out|calendar-notification|invitations?@)/i;
+const SYSTEM_DOMAINS = /(@|\.)?(google|facebook|linkedin|twitter|github|apple|microsoft|amazon|stripe|paypal|shopify|slack|zoom|calendly|hubspot|mailchimp|sendgrid|intercom|zendesk|atlassian|notion|figma|canva|vercel|netlify|cloudflare|dropbox|trello|asana|monday|jira|confluence|bitbucket|heroku|twilio|postmark|sparkpost|mailgun|mandrill|amazonaws|googlemail)\.(com|io|co|net|org|no|se|dk)$/i;
+const THROWAWAY_PATTERNS = /\+(bounce|tag|sub|unsub|verify|confirm|test|spam|junk)/i;
+
+function isNoiseEmail(email: string): boolean {
+  if (!email) return true;
+  const local = email.split("@")[0];
+  const domain = email.split("@")[1] || "";
+  if (SYSTEM_EMAIL_PATTERNS.test(local)) return true;
+  if (SYSTEM_DOMAINS.test("@" + domain)) return true;
+  if (THROWAWAY_PATTERNS.test(local)) return true;
+  // Filter very short local parts that are likely automated
+  if (local.length <= 1) return true;
+  return false;
+}
+
+function getDomain(email: string): string {
+  return (email.split("@")[1] || "").toLowerCase();
+}
 
 function formatAktivitetDato(dato: string | null) {
   if (!dato) return "–";
@@ -69,20 +95,18 @@ function formatAktivitetDato(dato: string | null) {
   return formatDistanceToNow(d, { addSuffix: true, locale: nb });
 }
 
-// Using shared DetailField from DetailPanelShell
-
 export default function Kontaktstrom() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { kontakter, leads, salgsmuligheter, selskaper, partnere, refresh } = useCrmStore();
-
   const { profiles } = useProfiles();
 
   const [emailContacts, setEmailContacts] = useState<any[]>([]);
   const [search, setSearch] = useState("");
-  const [filterType, setFilterType] = useState<string>("alle");
   const [filterEier, setFilterEier] = useState<string>("alle");
+  const [activeTab, setActiveTab] = useState<"people" | "companies">("people");
   const [selected, setSelected] = useState<KontaktStromPerson | null>(null);
+  const [selectedCompany, setSelectedCompany] = useState<CompanyGroup | null>(null);
   const [creatingLead, setCreatingLead] = useState(false);
   const [syncing, setSyncing] = useState(false);
 
@@ -92,7 +116,6 @@ export default function Kontaktstrom() {
       .select("*")
       .order("last_contacted_at", { ascending: false, nullsFirst: false })
       .limit(500);
-
     setEmailContacts(data || []);
   };
 
@@ -123,7 +146,7 @@ export default function Kontaktstrom() {
     handleGmailSync(true);
   }, []);
 
-  // Build unified list: merge email_contacts with CRM data
+  // Build unified person list
   const persons = useMemo(() => {
     const map = new Map<string, KontaktStromPerson>();
 
@@ -136,7 +159,6 @@ export default function Kontaktstrom() {
       return "Kontakt";
     };
 
-    // Smart match helpers
     const findSelskapByDomain = (email: string): { id: string; firmanavn: string } | null => {
       const domain = email.split("@")[1] || "";
       const domainBase = domain.split(".")[0] || "";
@@ -170,10 +192,11 @@ export default function Kontaktstrom() {
       return "unlinked";
     };
 
-    // 1. Add CRM kontakter
+    // 1. CRM kontakter
     for (const k of kontakter) {
       if (!k.e_post) continue;
       const email = k.e_post.toLowerCase();
+      if (isNoiseEmail(email)) continue;
       const lead = leads.find(l => l.e_post?.toLowerCase() === email);
       const sm = salgsmuligheter.find(s => s.e_post?.toLowerCase() === email || s.kontakt_id === k.id);
       const partner = partnere.find(p => p.e_post?.toLowerCase() === email);
@@ -197,6 +220,7 @@ export default function Kontaktstrom() {
         email,
         navn: k.navn,
         firmanavn: k.selskap_id ? getSelskapNavn(k.selskap_id) : (lead?.firmanavn || ""),
+        domain: getDomain(email),
         type, status, ansvarlig,
         sistKontaktetDato: null,
         sistKontaktetType: "",
@@ -216,14 +240,15 @@ export default function Kontaktstrom() {
       });
     }
 
-    // 2. Add leads not present
+    // 2. Leads
     for (const l of leads) {
       if (!l.e_post) continue;
       const email = l.e_post.toLowerCase();
-      if (map.has(email)) continue;
+      if (map.has(email) || isNoiseEmail(email)) continue;
       const sugL = findSelskapByName(l.firmanavn) || findSelskapByDomain(email);
       map.set(email, {
         email, navn: l.kontaktperson || l.firmanavn, firmanavn: l.firmanavn,
+        domain: getDomain(email),
         type: "Lead", status: l.status, ansvarlig: l.ansvarlig,
         sistKontaktetDato: null, sistKontaktetType: "",
         nesteSteg: l.neste_steg, totalSent: 0, totalReceived: 0,
@@ -235,14 +260,15 @@ export default function Kontaktstrom() {
       });
     }
 
-    // 3. Add salgsmuligheter not present
+    // 3. Salgsmuligheter
     for (const s of salgsmuligheter) {
       if (!s.e_post) continue;
       const email = s.e_post.toLowerCase();
-      if (map.has(email)) continue;
+      if (map.has(email) || isNoiseEmail(email)) continue;
       map.set(email, {
         email, navn: s.kontaktperson || s.navn,
         firmanavn: s.selskap_id ? getSelskapNavn(s.selskap_id) : "",
+        domain: getDomain(email),
         type: "Salgsmulighet", status: s.status, ansvarlig: s.ansvarlig,
         sistKontaktetDato: null, sistKontaktetType: "",
         nesteSteg: s.neste_steg, totalSent: 0, totalReceived: 0,
@@ -254,13 +280,14 @@ export default function Kontaktstrom() {
       });
     }
 
-    // 4. Add partnere not present
+    // 4. Partnere
     for (const p of partnere) {
       if (!p.e_post) continue;
       const email = p.e_post.toLowerCase();
-      if (map.has(email)) continue;
+      if (map.has(email) || isNoiseEmail(email)) continue;
       map.set(email, {
         email, navn: p.kontaktperson || p.partnernavn, firmanavn: p.partnernavn,
+        domain: getDomain(email),
         type: "Partner", status: p.partnerstatus, ansvarlig: p.ansvarlig,
         sistKontaktetDato: null, sistKontaktetType: "",
         nesteSteg: "", totalSent: 0, totalReceived: 0,
@@ -272,22 +299,13 @@ export default function Kontaktstrom() {
       });
     }
 
-    // 5. Merge email_contacts data (structured Gmail data)
-    const SYSTEM_EMAIL_PATTERNS = /^(noreply|no-reply|no\.reply|donotreply|do-not-reply|notifications?|alert[s]?|info@|support@|admin@|postmaster@|mailer-daemon|bounce[s]?|feedback@|newsletter|updates?@|billing@|receipts?@|hello@|team@|marketing@|sales@|press@|media@|contact@|webmaster@|hostmaster@|abuse@)/i;
-    const SYSTEM_DOMAINS = /\.(google|facebook|linkedin|twitter|github|apple|microsoft|amazon|stripe|paypal|shopify|slack|zoom|calendly|hubspot|mailchimp|sendgrid|intercom|zendesk|atlassian|notion|figma|canva|vercel|netlify|cloudflare)\.(com|io|co|net)$/i;
-
-    const isSystemEmail = (email: string) => {
-      const local = email.split("@")[0];
-      return SYSTEM_EMAIL_PATTERNS.test(local) || SYSTEM_DOMAINS.test("@" + email.split("@")[1]);
-    };
-
+    // 5. Email contacts
     for (const ec of emailContacts) {
       const email = ec.primary_email?.toLowerCase();
-      if (!email || isSystemEmail(email)) continue;
+      if (!email || isNoiseEmail(email)) continue;
 
       const existing = map.get(email);
       if (existing) {
-        // Merge: update last contacted and counts
         if (ec.last_contacted_at) {
           if (!existing.sistKontaktetDato || new Date(ec.last_contacted_at) > new Date(existing.sistKontaktetDato)) {
             existing.sistKontaktetDato = ec.last_contacted_at;
@@ -296,11 +314,8 @@ export default function Kontaktstrom() {
         }
         existing.totalSent += ec.total_emails_sent || 0;
         existing.totalReceived += ec.total_emails_received || 0;
-        if (ec.user_id && !existing.ownerUserId) {
-          existing.ownerUserId = ec.user_id;
-        }
+        if (ec.user_id && !existing.ownerUserId) existing.ownerUserId = ec.user_id;
       } else {
-        // New person from Gmail, not in CRM — smart matching
         let ecType: KontaktStromPerson["type"] = "Ukjent";
         let ecStatus = "";
         let ecAnsvarlig = "";
@@ -311,7 +326,6 @@ export default function Kontaktstrom() {
         let ecSuggestedSelskapId: string | null = null;
         let ecSuggestedSelskapNavn = "";
 
-        // Step 1: Exact email match against kontakter
         const kontaktByEmail = kontakter.find(k => k.e_post?.toLowerCase() === email);
         if (kontaktByEmail) {
           ecKontaktId = kontaktByEmail.id;
@@ -325,7 +339,6 @@ export default function Kontaktstrom() {
           }
         }
 
-        // Step 2: Name + company match (if no kontakt found)
         if (!ecKontaktId && ec.display_name && ecFirmanavn) {
           const nameCompanyMatch = findKontaktByNameAndCompany(ec.display_name, ecFirmanavn);
           if (nameCompanyMatch) {
@@ -339,7 +352,6 @@ export default function Kontaktstrom() {
           }
         }
 
-        // Step 3: Company name match (suggest selskap)
         if (!ecSelskapId && ecFirmanavn) {
           const selskapByName = findSelskapByName(ecFirmanavn);
           if (selskapByName) {
@@ -348,7 +360,6 @@ export default function Kontaktstrom() {
           }
         }
 
-        // Step 4: Domain fallback (suggest selskap)
         if (!ecSelskapId && !ecSuggestedSelskapId) {
           const selskapByDomain = findSelskapByDomain(email);
           if (selskapByDomain) {
@@ -357,7 +368,6 @@ export default function Kontaktstrom() {
           }
         }
 
-        // Resolve kontakt -> selskap link (existing logic for linked IDs)
         if (ec.kontakt_id && !ecKontaktId) {
           const kontakt = kontakter.find(k => k.id === ec.kontakt_id);
           if (kontakt) {
@@ -399,9 +409,8 @@ export default function Kontaktstrom() {
           email,
           navn: ec.display_name || email,
           firmanavn: ecFirmanavn,
-          type: ecType,
-          status: ecStatus,
-          ansvarlig: ecAnsvarlig,
+          domain: getDomain(email),
+          type: ecType, status: ecStatus, ansvarlig: ecAnsvarlig,
           sistKontaktetDato: ec.last_contacted_at,
           sistKontaktetType: ec.last_activity_type || "E-post",
           nesteSteg: ecNesteSteg,
@@ -421,7 +430,6 @@ export default function Kontaktstrom() {
       }
     }
 
-    // Sort by last contacted
     const result = Array.from(map.values());
     result.sort((a, b) => {
       if (!a.sistKontaktetDato && !b.sistKontaktetDato) return 0;
@@ -433,22 +441,88 @@ export default function Kontaktstrom() {
     return result;
   }, [kontakter, leads, salgsmuligheter, selskaper, partnere, emailContacts]);
 
-  const filtered = useMemo(() => {
+  // Filtered people
+  const filteredPeople = useMemo(() => {
     return persons.filter(p => {
       if (search) {
         const q = search.toLowerCase();
         if (!p.navn.toLowerCase().includes(q) && !p.email.includes(q) && !p.firmanavn.toLowerCase().includes(q)) return false;
       }
-      if (filterType !== "alle" && p.type !== filterType) return false;
       if (filterEier !== "alle" && p.ownerUserId !== filterEier) return false;
       return true;
     });
-  }, [persons, search, filterType, filterEier]);
+  }, [persons, search, filterEier]);
+
+  // Company groups
+  const companyGroups = useMemo(() => {
+    const domainMap = new Map<string, CompanyGroup>();
+
+    for (const p of persons) {
+      if (!p.domain) continue;
+      if (filterEier !== "alle" && p.ownerUserId !== filterEier) continue;
+
+      const existing = domainMap.get(p.domain);
+      if (existing) {
+        existing.personCount++;
+        existing.persons.push(p);
+        // Use best company name / selskap
+        if (!existing.selskapId && p.selskapId) {
+          existing.selskapId = p.selskapId;
+          existing.firmanavn = p.firmanavn;
+        }
+        if (!existing.firmanavn && p.firmanavn) {
+          existing.firmanavn = p.firmanavn;
+        }
+        // Track latest activity
+        if (p.sistKontaktetDato) {
+          if (!existing.lastContactedAt || new Date(p.sistKontaktetDato) > new Date(existing.lastContactedAt)) {
+            existing.lastContactedAt = p.sistKontaktetDato;
+          }
+        }
+        // Promote type priority
+        const typePriority = { Kunde: 5, Partner: 4, Salgsmulighet: 3, Lead: 2, Kontakt: 1, Ukjent: 0 };
+        if ((typePriority[p.type] || 0) > (typePriority[existing.type] || 0)) {
+          existing.type = p.type;
+        }
+      } else {
+        domainMap.set(p.domain, {
+          domain: p.domain,
+          firmanavn: p.firmanavn || p.domain,
+          selskapId: p.selskapId,
+          personCount: 1,
+          lastContactedAt: p.sistKontaktetDato,
+          persons: [p],
+          type: p.type,
+        });
+      }
+    }
+
+    let groups = Array.from(domainMap.values());
+
+    if (search) {
+      const q = search.toLowerCase();
+      groups = groups.filter(g =>
+        g.firmanavn.toLowerCase().includes(q) ||
+        g.domain.includes(q) ||
+        g.persons.some(p => p.navn.toLowerCase().includes(q) || p.email.includes(q))
+      );
+    }
+
+    // Sort by last contacted
+    groups.sort((a, b) => {
+      if (!a.lastContactedAt && !b.lastContactedAt) return 0;
+      if (!a.lastContactedAt) return 1;
+      if (!b.lastContactedAt) return -1;
+      return new Date(b.lastContactedAt).getTime() - new Date(a.lastContactedAt).getTime();
+    });
+
+    return groups;
+  }, [persons, search, filterEier]);
 
   const handleCreateLead = async (person: KontaktStromPerson) => {
     setCreatingLead(true);
     try {
-      const { data, error } = await supabase.from("leads").insert({
+      const { error } = await supabase.from("leads").insert({
         firmanavn: person.firmanavn || person.navn,
         kontaktperson: person.navn !== person.email ? person.navn : "",
         e_post: person.email,
@@ -467,10 +541,11 @@ export default function Kontaktstrom() {
     }
   };
 
+  const personInitial = (name: string) => (name || "?").charAt(0).toUpperCase();
+
   return (
     <PageShell
       title="Søk"
-      subtitle={`${persons.length} personer`}
       actions={
         <div className="flex flex-wrap items-center gap-3">
           <Button
@@ -487,20 +562,6 @@ export default function Kontaktstrom() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input placeholder="Søk navn, e-post, selskap..." className="pl-9" value={search} onChange={e => setSearch(e.target.value)} />
           </div>
-          <Select value={filterType} onValueChange={setFilterType}>
-            <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="Type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="alle">Alle typer</SelectItem>
-              <SelectItem value="Lead">Lead</SelectItem>
-              <SelectItem value="Salgsmulighet">Salgsmulighet</SelectItem>
-              <SelectItem value="Kunde">Kunde</SelectItem>
-              <SelectItem value="Partner">Partner</SelectItem>
-              <SelectItem value="Kontakt">Kontakt</SelectItem>
-              <SelectItem value="Ukjent">Ukjent</SelectItem>
-            </SelectContent>
-          </Select>
           <Select value={filterEier} onValueChange={setFilterEier}>
             <SelectTrigger className="w-[160px]">
               <SelectValue placeholder="Eier" />
@@ -517,118 +578,120 @@ export default function Kontaktstrom() {
         </div>
       }
     >
-      {/* Table */}
-      <div className="bg-card border rounded-xl overflow-auto max-h-[calc(100vh-180px)]">
-        <table className="w-full text-sm">
-          <thead className="sticky top-0 z-[5]">
-            <tr className="bg-muted border-b">
-              <th className="text-left px-4 py-3 font-medium">Navn</th>
-              {!isMobile && <th className="text-left px-4 py-3 font-medium">Selskap</th>}
-              {!isMobile && <th className="text-left px-4 py-3 font-medium">E-post</th>}
-              <th className="text-left px-4 py-3 font-medium">Type</th>
-              {!isMobile && <th className="text-left px-4 py-3 font-medium">Status</th>}
-              {!isMobile && <th className="text-left px-4 py-3 font-medium">E-poster</th>}
-              <th className="text-left px-4 py-3 font-medium">Sist kontaktet</th>
-              {!isMobile && <th className="text-left px-4 py-3 font-medium">Kobling</th>}
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map(p => {
-              const AktIcon = AKTIVITET_TYPE_ICONS[p.sistKontaktetType] || Clock;
-              const totalEmails = p.totalSent + p.totalReceived;
-              return (
-                <tr
-                  key={p.email}
-                  className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer"
-                  onClick={() => setSelected(p)}
-                >
-                  <td className="px-4 py-3">
-                    <div className="font-medium">{p.navn || p.email}</div>
-                    {isMobile && p.firmanavn && (
-                      <div className="text-xs text-muted-foreground">{p.firmanavn}</div>
-                    )}
-                  </td>
-                  {!isMobile && (
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {p.selskapId ? (
-                        <span
-                          className="hover:text-primary hover:underline cursor-pointer"
-                          onClick={e => { e.stopPropagation(); navigate(`/selskaper/${p.selskapId}`); }}
-                        >
-                          {p.firmanavn}
-                        </span>
-                      ) : p.suggestedSelskapId ? (
-                        <span className="text-xs italic text-muted-foreground">
-                          {p.suggestedSelskapNavn} <span className="opacity-60">(forslag)</span>
-                        </span>
-                      ) : (
-                        p.firmanavn || "–"
-                      )}
-                    </td>
-                  )}
-                  {!isMobile && (
-                    <td className="px-4 py-3 text-muted-foreground text-xs">{p.email}</td>
-                  )}
-                  <td className="px-4 py-3">
-                    <Badge variant="secondary" className={`text-xs font-medium ${TYPE_COLORS[p.type] || ""}`}>
-                      {p.type}
-                    </Badge>
-                  </td>
-                  {!isMobile && (
-                    <td className="px-4 py-3 text-xs text-muted-foreground">
-                      {p.status || "–"}
-                    </td>
-                  )}
-                  {!isMobile && (
-                    <td className="px-4 py-3 text-xs text-muted-foreground">
-                      {totalEmails > 0 ? (
-                        <span title={`${p.totalSent} sendt, ${p.totalReceived} mottatt`}>
-                          ↑{p.totalSent} ↓{p.totalReceived}
-                        </span>
-                      ) : "–"}
-                    </td>
-                  )}
-                  <td className="px-4 py-3">
-                    {p.sistKontaktetDato ? (
-                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <AktIcon className="w-3.5 h-3.5 shrink-0" />
-                        <span>{formatAktivitetDato(p.sistKontaktetDato)}</span>
-                      </div>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">–</span>
-                    )}
-                  </td>
-                  {!isMobile && (
-                    <td className="px-4 py-3">
-                      {p.connectionStatus === "linked" ? (
-                        <Badge variant="outline" className="text-xs bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800">
-                          Koblet
-                        </Badge>
-                      ) : p.connectionStatus === "suggested" ? (
-                        <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800">
-                          Foreslått
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline" className="text-xs bg-muted text-muted-foreground">
-                          Ikke koblet
-                        </Badge>
-                      )}
-                    </td>
-                  )}
-                </tr>
-              );
-            })}
-            {filtered.length === 0 && (
-              <tr>
-                <td colSpan={8} className="text-center text-sm text-muted-foreground py-12">
-                  Ingen personer funnet
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+      {/* Tabs */}
+      <div className="border-b mb-0">
+        <div className="flex gap-6 px-1">
+          <button
+            className={`pb-2.5 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === "people"
+                ? "border-foreground text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+            onClick={() => { setActiveTab("people"); setSelectedCompany(null); }}
+          >
+            People <span className="text-muted-foreground ml-1">{filteredPeople.length}</span>
+          </button>
+          <button
+            className={`pb-2.5 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === "companies"
+                ? "border-foreground text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+            onClick={() => { setActiveTab("companies"); setSelected(null); }}
+          >
+            Companies <span className="text-muted-foreground ml-1">{companyGroups.length}</span>
+          </button>
+        </div>
       </div>
 
+      {/* People list */}
+      {activeTab === "people" && (
+        <div className="divide-y max-h-[calc(100vh-220px)] overflow-y-auto">
+          {filteredPeople.map(p => (
+            <div
+              key={p.email}
+              className={`flex items-center gap-3 px-4 py-3 hover:bg-muted/40 cursor-pointer transition-colors ${
+                selected?.email === p.email ? "bg-muted/60" : ""
+              }`}
+              onClick={() => { setSelected(p); setSelectedCompany(null); }}
+            >
+              <Avatar className="w-9 h-9 shrink-0">
+                <AvatarImage src={gravatarUrl(p.email, 72) || undefined} alt={p.navn} />
+                <AvatarFallback className="text-xs font-medium bg-muted text-muted-foreground">
+                  {personInitial(p.navn)}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{p.navn}</p>
+                <p className="text-xs text-muted-foreground truncate">
+                  {p.firmanavn && (
+                    <>
+                      {p.selskapId ? (
+                        <span
+                          className="hover:underline cursor-pointer"
+                          onClick={e => { e.stopPropagation(); navigate(`/selskaper/${p.selskapId}`); }}
+                        >{p.firmanavn}</span>
+                      ) : (
+                        <span>{p.firmanavn}</span>
+                      )}
+                      <span className="mx-1">·</span>
+                    </>
+                  )}
+                  {p.email}
+                </p>
+              </div>
+              {(p.type === "Lead" || p.type === "Salgsmulighet" || p.type === "Kunde" || p.type === "Partner") && (
+                <Badge variant="secondary" className={`text-xs shrink-0 ${TYPE_COLORS[p.type]}`}>
+                  {p.type}
+                </Badge>
+              )}
+            </div>
+          ))}
+          {filteredPeople.length === 0 && (
+            <div className="text-center text-sm text-muted-foreground py-12">
+              Ingen personer funnet
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Companies list */}
+      {activeTab === "companies" && (
+        <div className="divide-y max-h-[calc(100vh-220px)] overflow-y-auto">
+          {companyGroups.map(g => (
+            <div
+              key={g.domain}
+              className={`flex items-center gap-3 px-4 py-3 hover:bg-muted/40 cursor-pointer transition-colors ${
+                selectedCompany?.domain === g.domain ? "bg-muted/60" : ""
+              }`}
+              onClick={() => { setSelectedCompany(g); setSelected(null); }}
+            >
+              <div className="w-9 h-9 rounded-md bg-muted flex items-center justify-center shrink-0">
+                <Building2 className="w-4 h-4 text-muted-foreground" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{g.firmanavn}</p>
+                <p className="text-xs text-muted-foreground">
+                  {g.personCount} {g.personCount === 1 ? "person" : "personer"}
+                  {g.domain && <span className="ml-1">· {g.domain}</span>}
+                </p>
+              </div>
+              {(g.type === "Lead" || g.type === "Kunde" || g.type === "Partner") && (
+                <Badge variant="secondary" className={`text-xs shrink-0 ${TYPE_COLORS[g.type]}`}>
+                  {g.type}
+                </Badge>
+              )}
+            </div>
+          ))}
+          {companyGroups.length === 0 && (
+            <div className="text-center text-sm text-muted-foreground py-12">
+              Ingen selskaper funnet
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Person detail panel */}
       <DetailPanelShell
         open={!!selected}
         onClose={() => setSelected(null)}
@@ -641,17 +704,6 @@ export default function Kontaktstrom() {
             </Badge>
             {selected.status && (
               <Badge variant="outline" className="text-xs">{selected.status}</Badge>
-            )}
-            {selected.connectionStatus === "linked" ? (
-              <Badge variant="outline" className="text-xs bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400">
-                Koblet
-              </Badge>
-            ) : selected.connectionStatus === "suggested" ? (
-              <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400">
-                Foreslått selskap
-              </Badge>
-            ) : (
-              <Badge variant="outline" className="text-xs">Ikke koblet</Badge>
             )}
           </>
         ) : undefined}
@@ -693,33 +745,20 @@ export default function Kontaktstrom() {
                   </span>
                 </SharedDetailField>
               )}
-
               <DetailSection title="Kontaktdetaljer">
                 <SharedDetailField label="E-post" value={selected.email} />
-                {selected.ansvarlig && (
-                  <SharedDetailField label="Ansvarlig" value={selected.ansvarlig} />
-                )}
-                {selected.nesteSteg && (
-                  <SharedDetailField label="Neste steg" value={selected.nesteSteg} />
-                )}
+                {selected.ansvarlig && <SharedDetailField label="Ansvarlig" value={selected.ansvarlig} />}
+                {selected.nesteSteg && <SharedDetailField label="Neste steg" value={selected.nesteSteg} />}
               </DetailSection>
-
               <DetailDivider />
-
               {(selected.totalSent > 0 || selected.totalReceived > 0 || selected.sistKontaktetDato) && (
                 <>
                   <DetailSection title="E-poststatistikk">
                     {(selected.totalSent > 0 || selected.totalReceived > 0) && (
-                      <SharedDetailField
-                        label="Totalt interaksjoner"
-                        value={`${selected.totalSent + selected.totalReceived}`}
-                      />
+                      <SharedDetailField label="Totalt interaksjoner" value={`${selected.totalSent + selected.totalReceived}`} />
                     )}
                     {selected.sistKontaktetDato && (
-                      <SharedDetailField
-                        label="Siste interaksjon"
-                        value={format(new Date(selected.sistKontaktetDato), "d. MMM yyyy, HH:mm", { locale: nb })}
-                      />
+                      <SharedDetailField label="Siste interaksjon" value={format(new Date(selected.sistKontaktetDato), "d. MMM yyyy, HH:mm", { locale: nb })} />
                     )}
                     {(selected.totalSent > 0 || selected.totalReceived > 0) && (
                       <DetailStatGrid>
@@ -731,44 +770,97 @@ export default function Kontaktstrom() {
                   <DetailDivider />
                 </>
               )}
-
               <CompanyLinker
                 email={selected.email}
                 kontaktId={selected.kontaktId}
                 currentSelskapId={selected.selskapId}
                 personNavn={selected.navn}
-                onLinked={() => {
-                  fetchEmailContacts();
-                  refresh();
-                  setSelected(null);
-                }}
+                onLinked={() => { fetchEmailContacts(); refresh(); setSelected(null); }}
               />
-
               <DetailDivider />
-
               <DealSuggestions
                 selskapId={selected.selskapId || selected.suggestedSelskapId}
                 kontaktId={selected.kontaktId}
                 email={selected.email}
                 currentSalgsmulighetId={selected.salgsmulighetId}
-                onLinked={() => {
-                  fetchEmailContacts();
-                  refresh();
-                  setSelected(null);
-                }}
+                onLinked={() => { fetchEmailContacts(); refresh(); setSelected(null); }}
               />
             </>
           ),
           interaksjoner: (
             <>
-              {selected.kontaktId && (
-                <ActivityLog kontakt_id={selected.kontaktId} />
+              {selected.kontaktId && <ActivityLog kontakt_id={selected.kontaktId} />}
+              {selected.leadId && !selected.kontaktId && <ActivityLog lead_id={selected.leadId} />}
+              {!selected.kontaktId && !selected.leadId && <ActivityLog email={selected.email} />}
+            </>
+          ),
+        } : undefined}
+      />
+
+      {/* Company detail panel */}
+      <DetailPanelShell
+        open={!!selectedCompany}
+        onClose={() => setSelectedCompany(null)}
+        title={selectedCompany?.firmanavn || ""}
+        subtitle={`${selectedCompany?.personCount || 0} ${(selectedCompany?.personCount || 0) === 1 ? "person" : "personer"}`}
+        badges={selectedCompany ? (
+          <Badge variant="secondary" className={`text-xs ${TYPE_COLORS[selectedCompany.type]}`}>
+            {selectedCompany.type}
+          </Badge>
+        ) : undefined}
+        actions={selectedCompany?.selskapId ? (
+          <Button size="sm" variant="outline" onClick={() => { navigate(`/selskaper/${selectedCompany.selskapId}`); setSelectedCompany(null); }}>
+            <ExternalLink className="w-4 h-4 mr-1.5" />Selskapsprofil
+          </Button>
+        ) : undefined}
+        tabContent={selectedCompany ? {
+          detaljer: (
+            <>
+              <DetailSection title={`Personer (${selectedCompany.persons.length})`}>
+                <div className="space-y-0 -mx-2">
+                  {selectedCompany.persons.map(p => (
+                    <div
+                      key={p.email}
+                      className="flex items-center gap-2.5 px-2 py-2 rounded-md hover:bg-muted/50 cursor-pointer transition-colors"
+                      onClick={() => { setSelected(p); setSelectedCompany(null); }}
+                    >
+                      <Avatar className="w-7 h-7 shrink-0">
+                        <AvatarImage src={gravatarUrl(p.email, 56) || undefined} alt={p.navn} />
+                        <AvatarFallback className="text-[10px] font-medium bg-muted text-muted-foreground">
+                          {personInitial(p.navn)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium truncate">{p.navn}</p>
+                        <p className="text-[11px] text-muted-foreground truncate">{p.email}</p>
+                      </div>
+                      {p.sistKontaktetDato && (
+                        <span className="text-[10px] text-muted-foreground shrink-0">
+                          {formatAktivitetDato(p.sistKontaktetDato)}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </DetailSection>
+              <DetailDivider />
+              {selectedCompany.lastContactedAt && (
+                <SharedDetailField
+                  label="Siste kontakt"
+                  value={format(new Date(selectedCompany.lastContactedAt), "d. MMM yyyy", { locale: nb })}
+                />
               )}
-              {selected.leadId && !selected.kontaktId && (
-                <ActivityLog lead_id={selected.leadId} />
-              )}
-              {!selected.kontaktId && !selected.leadId && (
-                <ActivityLog email={selected.email} />
+              <SharedDetailField label="Domene" value={selectedCompany.domain} />
+            </>
+          ),
+          interaksjoner: (
+            <>
+              {selectedCompany.selskapId ? (
+                <ActivityLog selskap_id={selectedCompany.selskapId} />
+              ) : selectedCompany.persons.length > 0 ? (
+                <ActivityLog email={selectedCompany.persons[0].email} />
+              ) : (
+                <p className="text-xs text-muted-foreground py-4">Ingen aktiviteter</p>
               )}
             </>
           ),
