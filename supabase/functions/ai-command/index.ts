@@ -232,6 +232,7 @@ serve(async (req) => {
                       },
                       required: ["navn"],
                     },
+                  },
                 },
                 required: ["summary", "items", "suggested_tasks", "suggested_activities", "suggested_emails"],
               },
