@@ -166,6 +166,7 @@ export default function Aktiviteter() {
   const [search, setSearch] = useState("");
   const [eventFilter, setEventFilter] = useState<EventFilter>("alle");
   const [entityTypeFilter, setEntityTypeFilter] = useState<EntityTypeFilter>("alle");
+  const [userFilter, setUserFilter] = useState<string>("alle");
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
