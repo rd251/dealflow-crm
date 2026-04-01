@@ -281,9 +281,12 @@ export default function Salgsmuligheter() {
                           
                           {/* Header: Contact person with avatar */}
                           <div className="flex items-center gap-2.5 mb-3">
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold text-primary-foreground shrink-0 ${signal.color === "bg-destructive" ? "bg-destructive" : signal.color === "bg-warning" ? "bg-warning" : "bg-primary"}`}>
-                              {(deal.kontaktperson || deal.navn || "?").charAt(0).toUpperCase()}
-                            </div>
+                            <Avatar className="w-8 h-8 shrink-0">
+                              {deal.e_post && <AvatarImage src={gravatarUrl(deal.e_post, 64) || undefined} alt={deal.kontaktperson || deal.navn} />}
+                              <AvatarFallback className={`text-xs font-semibold text-primary-foreground ${signal.color === "bg-destructive" ? "bg-destructive" : signal.color === "bg-warning" ? "bg-warning" : "bg-primary"}`}>
+                                {(deal.kontaktperson || deal.navn || "?").charAt(0).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-semibold text-foreground truncate leading-tight">
                                 {deal.kontaktperson || deal.navn}
