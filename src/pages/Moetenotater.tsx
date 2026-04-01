@@ -56,6 +56,9 @@ export default function Moetenotater() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [aiLoading, setAiLoading] = useState<string | null>(null);
   const [aiSummaries, setAiSummaries] = useState<Record<string, AiSummary>>({});
+  const [searchQuery, setSearchQuery] = useState("");
+  const [noteFilter, setNoteFilter] = useState<"all" | "with" | "without">("all");
+  const [entityFilter, setEntityFilter] = useState<string>("all");
 
   const fetchMeetings = useCallback(async () => {
     try {
