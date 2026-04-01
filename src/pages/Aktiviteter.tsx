@@ -185,8 +185,9 @@ export default function Aktiviteter() {
     }
     if (eventFilter !== "alle") url += `&event_type=eq.${eventFilter}`;
     if (entityTypeFilter !== "alle") url += `&entity_type=eq.${entityTypeFilter}`;
+    if (userFilter !== "alle") url += `&user_id=eq.${userFilter}`;
     return url;
-  }, [dateFrom, dateTo, eventFilter, entityTypeFilter]);
+  }, [dateFrom, dateTo, eventFilter, entityTypeFilter, userFilter]);
 
   const fetchAll = useCallback(async (reset = true) => {
     const newOffset = reset ? 0 : offset;
