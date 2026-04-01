@@ -202,6 +202,7 @@ export default function Salgsmuligheter() {
     ));
   }, [updateSalgsmuligheter]);
 
+  const addSm = () => {
     const today = new Date().toISOString().split("T")[0];
     const id = generateId("SM", salgsmuligheter);
     const nySm: Salgsmulighet = {
