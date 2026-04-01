@@ -188,3 +188,12 @@ function formatDate(dateStr: string): string {
     day: 'numeric',
   })
 }
+
+function formatTime(timeStr: string): string {
+  // Handles ISO datetime or HH:MM:SS
+  if (timeStr.includes('T')) {
+    const date = new Date(timeStr)
+    return date.toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit' })
+  }
+  return timeStr.substring(0, 5)
+}
