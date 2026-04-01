@@ -90,6 +90,7 @@ export default function Salgsmuligheter() {
   }, [searchParams, salgsmuligheter]);
 
   const getSelskapNavn = (id: string) => selskaper.find(s => s.id === id)?.firmanavn || "–";
+  const getSelskapDomain = (id: string | null) => id ? selskaper.find(s => s.id === id)?.domene || "" : "";
   const getProfileName = (id: string) => profiles.find(p => p.user_id === id)?.display_name || "";
   const handleDrop = (e: React.DragEvent, stage: SalgsmulighetStatus) => {
     e.preventDefault();
