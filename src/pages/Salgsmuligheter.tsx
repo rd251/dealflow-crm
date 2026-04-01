@@ -605,7 +605,12 @@ export default function Salgsmuligheter() {
                 <ActivityLog salgsmulighet_id={currentSm.id} onActivityLogged={() => {
                   updateSalgsmuligheter(prev => prev.map(s => s.id === currentSm.id ? { ...s, sist_aktivitet: new Date().toISOString().split("T")[0] } : s));
                 }} />
-                <MeetingNotesList salgsmulighet_id={currentSm.id} />
+                <MeetingNotesList
+                  salgsmulighet_id={currentSm.id}
+                  dealName={currentSm.navn}
+                  companyName={getSelskapNavn(currentSm.selskap_id)}
+                  onSuggestNesteSteg={(text) => updateField("neste_steg", text)}
+                />
               </>
             ),
             notater: (
