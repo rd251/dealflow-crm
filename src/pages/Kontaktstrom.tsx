@@ -391,17 +391,19 @@ export default function Kontaktstrom() {
           }
         }
 
+        const ecTypes: KontaktStromPerson["types"] = [];
+
         if (ec.partner_id) {
           const partner = partnere.find(p => p.id === ec.partner_id);
-          if (partner) { ecType = "Partner"; ecStatus = partner.partnerstatus || ""; ecAnsvarlig = partner.ansvarlig || ""; ecFirmanavn = partner.partnernavn || ecFirmanavn; }
+          if (partner) { ecType = "Partner"; ecStatus = partner.partnerstatus || ""; ecAnsvarlig = partner.ansvarlig || ""; ecFirmanavn = partner.partnernavn || ecFirmanavn; ecTypes.push("Partner"); }
         }
         if (ec.salgsmulighet_id) {
           const sm = salgsmuligheter.find(s => s.id === ec.salgsmulighet_id);
-          if (sm) { ecType = "Salgsmulighet"; ecStatus = sm.status || ""; ecAnsvarlig = sm.ansvarlig || ""; ecNesteSteg = sm.neste_steg || ""; ecFirmanavn = sm.selskap_id ? (selskaper.find(s => s.id === sm.selskap_id)?.firmanavn || ecFirmanavn) : ecFirmanavn; }
+          if (sm) { ecType = "Salgsmulighet"; ecStatus = sm.status || ""; ecAnsvarlig = sm.ansvarlig || ""; ecNesteSteg = sm.neste_steg || ""; ecFirmanavn = sm.selskap_id ? (selskaper.find(s => s.id === sm.selskap_id)?.firmanavn || ecFirmanavn) : ecFirmanavn; ecTypes.push("Salgsmulighet"); }
         }
         if (ec.lead_id) {
           const lead = leads.find(l => l.id === ec.lead_id);
-          if (lead) { ecType = "Lead"; ecStatus = lead.status || ""; ecAnsvarlig = lead.ansvarlig || ""; ecNesteSteg = lead.neste_steg || ""; ecFirmanavn = lead.firmanavn || ecFirmanavn; }
+          if (lead) { ecType = "Lead"; ecStatus = lead.status || ""; ecAnsvarlig = lead.ansvarlig || ""; ecNesteSteg = lead.neste_steg || ""; ecFirmanavn = lead.firmanavn || ecFirmanavn; ecTypes.push("Lead"); }
         }
         if (ecSelskapId) {
           const selskap = selskaper.find(s => s.id === ecSelskapId);
@@ -409,6 +411,7 @@ export default function Kontaktstrom() {
             ecFirmanavn = selskap.firmanavn || ecFirmanavn;
             if (selskap.kundestatus === "Live" || selskap.kundestatus === "Pilot") {
               ecType = "Kunde"; ecStatus = selskap.kundestatus;
+              ecTypes.push("Kunde");
             }
           }
         }
@@ -418,7 +421,7 @@ export default function Kontaktstrom() {
           navn: ec.display_name || email,
           firmanavn: ecFirmanavn,
           domain: getDomain(email),
-          type: ecType, types: (ecType !== "Ukjent" && ecType !== "Kontakt" ? [ecType] : []) as KontaktStromPerson["types"], status: ecStatus, ansvarlig: ecAnsvarlig,
+          type: ecType, types: ecTypes, status: ecStatus, ansvarlig: ecAnsvarlig,
           sistKontaktetDato: ec.last_contacted_at,
           sistKontaktetType: ec.last_activity_type || "E-post",
           nesteSteg: ecNesteSteg,
