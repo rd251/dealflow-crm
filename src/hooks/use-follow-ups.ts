@@ -128,8 +128,6 @@ export function useFollowUps(
       if (hoursInactive < 48) return;
       if (hasRecentFollowUp(lead.id, "lead")) return;
 
-      const lastAct = getLastActivity(lead.id, "lead");
-
       items.push({
         id: `lead-${lead.id}`,
         type: "lead_stale",
