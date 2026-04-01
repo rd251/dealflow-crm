@@ -58,7 +58,24 @@ const DailyTaskReminderEmail = ({
 
   return (
     <Html lang="no" dir="ltr">
-      <Head />
+      <Head>
+        <style>{`
+          @media only screen and (max-width: 480px) {
+            .email-container { width: 100% !important; }
+            .content-section { padding: 20px 16px !important; }
+            .header-section { padding: 18px 0 !important; }
+            .footer-section { padding: 16px 16px !important; }
+            .cta-button { padding: 12px 20px !important; font-size: 14px !important; }
+            .h1-heading { font-size: 18px !important; }
+            .summary-text { font-size: 13px !important; }
+            .task-name { font-size: 14px !important; }
+            .task-meta { font-size: 12px !important; }
+            .meeting-row { font-size: 13px !important; }
+            .logo-img { width: 110px !important; }
+            .footer-logo { width: 60px !important; }
+          }
+        `}</style>
+      </Head>
       <Preview>{previewText}</Preview>
       <Body style={main}>
         <Container style={container}>
