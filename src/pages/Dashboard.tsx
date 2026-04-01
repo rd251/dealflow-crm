@@ -160,7 +160,30 @@ export default function Dashboard() {
       .catch(() => {});
   }, []);
 
-  // ─── SECTION 1: FOKUS I DAG ───
+  const saveNotes = useCallback(async () => {
+    if (!notesMeeting) return;
+    setNotesSaving(true);
+    try {
+      const res = await fetch(`${API_URL}/aktiviteter?id=eq.${notesMeeting.id}`, {
+        method: 'PATCH',
+        headers: { ...API_HEADERS, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ moetenotater: notesText }),
+      });
+      if (res.ok) {
+        const { toast } = await import("sonner");
+        toast.success("Møtenotater lagret");
+        setMeetings(prev => prev.map(m => m.id === notesMeeting.id ? { ...m, moetenotater: notesText } : m));
+        setNotesMeeting(null);
+      }
+    } catch {
+      const { toast } = await import("sonner");
+      toast.error("Kunne ikke lagre notater");
+    } finally {
+      setNotesSaving(false);
+    }
+  }, [notesMeeting, notesText]);
+
+
   const leadsUtenOppfolging = useMemo(() => {
     const cutoff = new Date(now.getTime() - 24 * 60 * 60 * 1000);
     return leads.filter((l) => {
