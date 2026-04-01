@@ -433,12 +433,6 @@ export default function Kontaktstrom() {
     return result;
   }, [kontakter, leads, salgsmuligheter, selskaper, partnere, emailContacts]);
 
-  const ansvarlige = useMemo(() => {
-    const set = new Set<string>();
-    persons.forEach(p => { if (p.ansvarlig) set.add(p.ansvarlig); });
-    return Array.from(set).sort();
-  }, [persons]);
-
   const filtered = useMemo(() => {
     return persons.filter(p => {
       if (search) {
@@ -446,10 +440,10 @@ export default function Kontaktstrom() {
         if (!p.navn.toLowerCase().includes(q) && !p.email.includes(q) && !p.firmanavn.toLowerCase().includes(q)) return false;
       }
       if (filterType !== "alle" && p.type !== filterType) return false;
-      if (filterAnsvarlig !== "alle" && p.ansvarlig !== filterAnsvarlig) return false;
+      if (filterEier !== "alle" && p.ownerUserId !== filterEier) return false;
       return true;
     });
-  }, [persons, search, filterType, filterAnsvarlig]);
+  }, [persons, search, filterType, filterEier]);
 
   const handleCreateLead = async (person: KontaktStromPerson) => {
     setCreatingLead(true);
@@ -507,14 +501,16 @@ export default function Kontaktstrom() {
               <SelectItem value="Ukjent">Ukjent</SelectItem>
             </SelectContent>
           </Select>
-          <Select value={filterAnsvarlig} onValueChange={setFilterAnsvarlig}>
-            <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="Ansvarlig" />
+          <Select value={filterEier} onValueChange={setFilterEier}>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue placeholder="Eier" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="alle">Alle ansvarlige</SelectItem>
-              {ansvarlige.map(a => (
-                <SelectItem key={a} value={a}>{a}</SelectItem>
+              <SelectItem value="alle">Alle eiere</SelectItem>
+              {profiles.map(p => (
+                <SelectItem key={p.user_id} value={p.user_id}>
+                  {p.display_name || p.email}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
