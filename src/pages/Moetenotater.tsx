@@ -240,9 +240,18 @@ export default function Moetenotater() {
             </SelectContent>
           </Select>
         )}
-        {(searchQuery || noteFilter !== "all" || entityFilter !== "all") && (
+        {(searchQuery || noteFilter !== "all" || entityFilter !== "all" || dateFilter !== "all") && (
           <span className="text-[10px] text-muted-foreground">{filteredMeetings.length} av {meetings.length} møter</span>
         )}
+        <Button
+          size="sm"
+          variant={dateFilter === "today" ? "default" : "outline"}
+          className="h-8 text-xs gap-1.5"
+          onClick={() => setDateFilter(dateFilter === "today" ? "all" : "today")}
+        >
+          <CalendarDays className="w-3 h-3" />
+          I dag
+        </Button>
       </div>
 
       <div className="space-y-3">
