@@ -184,6 +184,39 @@ export default function Leads() {
           return { success, errors };
         }}
       />
+
+      {/* Convert to sale dialog */}
+      <Dialog open={!!convertDialogLead} onOpenChange={open => { if (!open) { setConvertDialogLead(null); setConvertNavn(""); } }}>
+        <DialogContent className="max-w-[95vw] sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Konverter til salgsmulighet</DialogTitle>
+            <DialogDescription>Gi salgsmuligheten et navn (use case) for {convertDialogLead?.firmanavn}.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <Input
+              placeholder="Navn på salgsmulighet / use case"
+              value={convertNavn}
+              onChange={e => setConvertNavn(e.target.value)}
+              autoFocus
+            />
+            <Button
+              className="w-full"
+              disabled={!convertNavn.trim()}
+              onClick={() => {
+                if (convertDialogLead) {
+                  konverterLead(convertDialogLead.id, convertNavn.trim());
+                  setConvertDialogLead(null);
+                  setConvertNavn("");
+                  if (selectedLead?.id === convertDialogLead.id) setSelectedLead(null);
+                }
+              }}
+            >
+              Konverter
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <div className="mb-4 flex items-center gap-2">
         <div className="relative max-w-sm flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
