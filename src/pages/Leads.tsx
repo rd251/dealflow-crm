@@ -294,7 +294,7 @@ export default function Leads() {
                       <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
                         {lead.status !== "Ikke aktuelt" && (
                           <div className="flex gap-1">
-                            <Button size="sm" variant="ghost" className="text-xs gap-1" onClick={() => konverterLead(lead.id)}>
+                            <Button size="sm" variant="ghost" className="text-xs gap-1" onClick={() => { setConvertDialogLead(lead); setConvertNavn(lead.use_case || lead.firmanavn); }}>
                               <ArrowRightCircle className="w-3.5 h-3.5" />Salg
                             </Button>
                             <Button size="sm" variant="ghost" className="text-xs gap-1" onClick={() => konverterTilPartner(lead.id)}>
