@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { format, isToday, isTomorrow, differenceInDays, differenceInHours } from "date-fns";
 import { nb } from "date-fns/locale";
@@ -11,8 +11,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   AlertTriangle, CalendarDays, PhoneOff, Target, Clock, Building2,
-  BarChart3, ChevronRight, ListTodo, Activity, CheckCircle2,
+  BarChart3, ChevronRight, ListTodo, Activity, CheckCircle2, NotebookPen, Save,
 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import MeetingPrepPanel from "@/components/MeetingPrepPanel";
 import FollowUpSection from "@/components/FollowUpSection";
 import AiCommandBar from "@/components/AiCommandBar";
@@ -40,6 +42,7 @@ interface MeetingItem {
   salgsmulighet_id: string | null;
   ekstern_id: string | null;
   ekstern_provider: string | null;
+  moetenotater: string | null;
 }
 
 export default function Dashboard() {
@@ -62,6 +65,9 @@ export default function Dashboard() {
   const [meetings, setMeetings] = useState<MeetingItem[]>([]);
   const [entityNames, setEntityNames] = useState<Record<string, string>>({});
   const [prepMeeting, setPrepMeeting] = useState<MeetingItem | null>(null);
+  const [notesMeeting, setNotesMeeting] = useState<MeetingItem | null>(null);
+  const [notesText, setNotesText] = useState("");
+  const [notesSaving, setNotesSaving] = useState(false);
   const [oppgaver, setOppgaver] = useState<Tables<"oppgaver">[]>([]);
   const [crmEvents, setCrmEvents] = useState<Array<{ id: string; label: string; date: string; color: string }>>([]);
 
@@ -127,7 +133,7 @@ export default function Dashboard() {
     weekEnd.setDate(weekEnd.getDate() + 7);
 
     fetch(
-      `${API_URL}/aktiviteter?type=eq.Møte&dato=gte.${todayStart.toISOString()}&dato=lt.${weekEnd.toISOString()}&order=dato.asc,start_tid.asc&limit=20&select=id,tittel,beskrivelse,dato,start_tid,slutt_tid,selskap_id,salgsmulighet_id,ekstern_id,ekstern_provider`,
+      `${API_URL}/aktiviteter?type=eq.Møte&dato=gte.${todayStart.toISOString()}&dato=lt.${weekEnd.toISOString()}&order=dato.asc,start_tid.asc&limit=20&select=id,tittel,beskrivelse,dato,start_tid,slutt_tid,selskap_id,salgsmulighet_id,ekstern_id,ekstern_provider,moetenotater`,
       { headers: API_HEADERS }
     )
       .then((r) => (r.ok ? r.json() : []))
@@ -154,7 +160,30 @@ export default function Dashboard() {
       .catch(() => {});
   }, []);
 
-  // ─── SECTION 1: FOKUS I DAG ───
+  const saveNotes = useCallback(async () => {
+    if (!notesMeeting) return;
+    setNotesSaving(true);
+    try {
+      const res = await fetch(`${API_URL}/aktiviteter?id=eq.${notesMeeting.id}`, {
+        method: 'PATCH',
+        headers: { ...API_HEADERS, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ moetenotater: notesText }),
+      });
+      if (res.ok) {
+        const { toast } = await import("sonner");
+        toast.success("Møtenotater lagret");
+        setMeetings(prev => prev.map(m => m.id === notesMeeting.id ? { ...m, moetenotater: notesText } : m));
+        setNotesMeeting(null);
+      }
+    } catch {
+      const { toast } = await import("sonner");
+      toast.error("Kunne ikke lagre notater");
+    } finally {
+      setNotesSaving(false);
+    }
+  }, [notesMeeting, notesText]);
+
+
   const leadsUtenOppfolging = useMemo(() => {
     const cutoff = new Date(now.getTime() - 24 * 60 * 60 * 1000);
     return leads.filter((l) => {
@@ -420,6 +449,15 @@ export default function Dashboard() {
                           <Button
                             variant="outline"
                             size="sm"
+                            className="text-xs h-7 shrink-0 hidden sm:flex gap-1"
+                            onClick={(e) => { e.stopPropagation(); setNotesMeeting(m); setNotesText(m.moetenotater || ""); }}
+                          >
+                            <NotebookPen className="w-3 h-3" />
+                            {m.moetenotater?.trim() ? "Notat" : "+ Notat"}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
                             className="text-xs h-7 shrink-0 hidden sm:flex"
                             onClick={(e) => { e.stopPropagation(); setPrepMeeting(m); }}
                           >
@@ -462,6 +500,15 @@ export default function Dashboard() {
                               )}
                             </div>
                           </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-xs h-7 shrink-0 hidden sm:flex gap-1"
+                            onClick={(e) => { e.stopPropagation(); setNotesMeeting(m); setNotesText(m.moetenotater || ""); }}
+                          >
+                            <NotebookPen className="w-3 h-3" />
+                            {m.moetenotater?.trim() ? "Notat" : "+ Notat"}
+                          </Button>
                           <Button
                             variant="outline"
                             size="sm"
@@ -594,6 +641,29 @@ export default function Dashboard() {
         open={!!prepMeeting}
         onOpenChange={(open) => { if (!open) setPrepMeeting(null); }}
       />
+
+      <Dialog open={!!notesMeeting} onOpenChange={open => { if (!open) setNotesMeeting(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-sm">Møtenotater – {notesMeeting?.tittel || "Møte"}</DialogTitle>
+            <DialogDescription className="text-xs">
+              {notesMeeting && format(new Date(notesMeeting.dato), "EEEE d. MMMM", { locale: nb })}
+              {notesMeeting?.start_tid && ` kl. ${format(new Date(notesMeeting.start_tid), "HH:mm")}`}
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            placeholder="Skriv detaljerte møtenotater..."
+            value={notesText}
+            onChange={e => setNotesText(e.target.value)}
+            rows={8}
+            autoFocus
+          />
+          <Button onClick={saveNotes} className="w-full gap-2" size="sm" disabled={notesSaving}>
+            <Save className="w-3.5 h-3.5" />
+            {notesSaving ? "Lagrer..." : "Lagre"}
+          </Button>
+        </DialogContent>
+      </Dialog>
     </PageShell>
   );
 }
