@@ -76,10 +76,12 @@ export default function Kontaktstrom() {
   const isMobile = useIsMobile();
   const { kontakter, leads, salgsmuligheter, selskaper, partnere, refresh } = useCrmStore();
 
+  const { profiles } = useProfiles();
+
   const [emailContacts, setEmailContacts] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState<string>("alle");
-  const [filterAnsvarlig, setFilterAnsvarlig] = useState<string>("alle");
+  const [filterEier, setFilterEier] = useState<string>("alle");
   const [selected, setSelected] = useState<KontaktStromPerson | null>(null);
   const [creatingLead, setCreatingLead] = useState(false);
   const [syncing, setSyncing] = useState(false);
