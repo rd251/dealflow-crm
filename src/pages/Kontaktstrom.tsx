@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import DetailPanelShell, { DetailSection, DetailField as SharedDetailField, DetailDivider, DetailStatGrid, DetailStatCard } from "@/components/DetailPanelShell";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, UserPlus, Mail, Phone, Calendar, MessageSquare, Building2, ExternalLink, Clock, RefreshCw, Users } from "lucide-react";
+import { Search, UserPlus, Mail, Phone, Calendar, MessageSquare, Building2, ExternalLink, Clock, RefreshCw, Users, Plus } from "lucide-react";
 import { format, formatDistanceToNow, isAfter } from "date-fns";
 import { nb } from "date-fns/locale";
 import { toast } from "sonner";
@@ -108,6 +108,7 @@ export default function Kontaktstrom() {
   const [selected, setSelected] = useState<KontaktStromPerson | null>(null);
   const [selectedCompany, setSelectedCompany] = useState<CompanyGroup | null>(null);
   const [creatingLead, setCreatingLead] = useState(false);
+  const [creatingCompany, setCreatingCompany] = useState(false);
   const [syncing, setSyncing] = useState(false);
 
   const fetchEmailContacts = async () => {
@@ -541,6 +542,28 @@ export default function Kontaktstrom() {
     }
   };
 
+  const handleCreateCompany = async (group: CompanyGroup) => {
+    setCreatingCompany(true);
+    try {
+      const firmanavn = group.firmanavn !== group.domain ? group.firmanavn : group.domain.split(".")[0].charAt(0).toUpperCase() + group.domain.split(".")[0].slice(1);
+      const { data, error } = await supabase.from("selskaper").insert({
+        firmanavn,
+        kundestatus: "Ikke kunde" as any,
+      }).select().single();
+
+      if (error) throw error;
+      toast.success(`Selskap "${firmanavn}" opprettet`);
+      refresh();
+      setSelectedCompany(null);
+    } catch (err: any) {
+      toast.error("Kunne ikke opprette selskap: " + (err.message || "Ukjent feil"));
+    } finally {
+      setCreatingCompany(false);
+    }
+  };
+
+  const faviconUrl = (domain: string) => `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+
   const personInitial = (name: string) => (name || "?").charAt(0).toUpperCase();
 
   return (
@@ -666,8 +689,13 @@ export default function Kontaktstrom() {
               }`}
               onClick={() => { setSelectedCompany(g); setSelected(null); }}
             >
-              <div className="w-9 h-9 rounded-md bg-muted flex items-center justify-center shrink-0">
-                <Building2 className="w-4 h-4 text-muted-foreground" />
+              <div className="w-9 h-9 rounded-md bg-muted flex items-center justify-center shrink-0 overflow-hidden">
+                <img
+                  src={faviconUrl(g.domain)}
+                  alt={g.firmanavn}
+                  className="w-5 h-5"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; (e.target as HTMLImageElement).parentElement!.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-muted-foreground"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></svg>'; }}
+                />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">{g.firmanavn}</p>
@@ -808,10 +836,19 @@ export default function Kontaktstrom() {
             {selectedCompany.type}
           </Badge>
         ) : undefined}
-        actions={selectedCompany?.selskapId ? (
-          <Button size="sm" variant="outline" onClick={() => { navigate(`/selskaper/${selectedCompany.selskapId}`); setSelectedCompany(null); }}>
-            <ExternalLink className="w-4 h-4 mr-1.5" />Selskapsprofil
-          </Button>
+        actions={selectedCompany ? (
+          <>
+            {selectedCompany.selskapId ? (
+              <Button size="sm" variant="outline" onClick={() => { navigate(`/selskaper/${selectedCompany.selskapId}`); setSelectedCompany(null); }}>
+                <ExternalLink className="w-4 h-4 mr-1.5" />Selskapsprofil
+              </Button>
+            ) : (
+              <Button size="sm" onClick={() => handleCreateCompany(selectedCompany)} disabled={creatingCompany}>
+                <Plus className="w-4 h-4 mr-1.5" />
+                {creatingCompany ? "Oppretter..." : "Opprett selskap"}
+              </Button>
+            )}
+          </>
         ) : undefined}
         tabContent={selectedCompany ? {
           detaljer: (
