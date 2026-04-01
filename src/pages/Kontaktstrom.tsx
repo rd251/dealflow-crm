@@ -250,6 +250,7 @@ export default function Kontaktstrom() {
         selskapId: s.selskap_id || null, partnerId: null, inCrm: true,
         suggestedSelskapId: null, suggestedSelskapNavn: "",
         connectionStatus: resolveConnectionStatus(s.selskap_id || null, null),
+        ownerUserId: null,
       });
     }
 
