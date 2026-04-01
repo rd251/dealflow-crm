@@ -65,6 +65,9 @@ export default function Dashboard() {
   const [meetings, setMeetings] = useState<MeetingItem[]>([]);
   const [entityNames, setEntityNames] = useState<Record<string, string>>({});
   const [prepMeeting, setPrepMeeting] = useState<MeetingItem | null>(null);
+  const [notesMeeting, setNotesMeeting] = useState<MeetingItem | null>(null);
+  const [notesText, setNotesText] = useState("");
+  const [notesSaving, setNotesSaving] = useState(false);
   const [oppgaver, setOppgaver] = useState<Tables<"oppgaver">[]>([]);
   const [crmEvents, setCrmEvents] = useState<Array<{ id: string; label: string; date: string; color: string }>>([]);
 
