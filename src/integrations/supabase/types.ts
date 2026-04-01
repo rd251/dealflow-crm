@@ -26,6 +26,7 @@ export type Database = {
           id: string
           kontakt_id: string | null
           lead_id: string | null
+          moetenotater: string | null
           partner_id: string | null
           prosjekt_id: string | null
           salgsmulighet_id: string | null
@@ -48,6 +49,7 @@ export type Database = {
           id?: string
           kontakt_id?: string | null
           lead_id?: string | null
+          moetenotater?: string | null
           partner_id?: string | null
           prosjekt_id?: string | null
           salgsmulighet_id?: string | null
@@ -70,6 +72,7 @@ export type Database = {
           id?: string
           kontakt_id?: string | null
           lead_id?: string | null
+          moetenotater?: string | null
           partner_id?: string | null
           prosjekt_id?: string | null
           salgsmulighet_id?: string | null

@@ -26,6 +26,7 @@ import Kontaktstrom from "./pages/Kontaktstrom";
 import Rapporter from "./pages/Rapporter";
 import Kalender from "./pages/Kalender";
 import Innstillinger from "./pages/Innstillinger";
+import Moetenotater from "./pages/Moetenotater";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Unsubscribe from "./pages/Unsubscribe";
@@ -126,6 +127,7 @@ function AppRoutes() {
                 <Route path="/partnere/:id" element={<PartnerProfile />} />
                 <Route path="/partner-pipeline" element={<PartnerPipeline />} />
                 <Route path="/aktiviteter" element={<Aktiviteter />} />
+                <Route path="/moetenotater" element={<Moetenotater />} />
                 <Route path="/rapporter" element={<Rapporter />} />
                 <Route path="/admin" element={<Admin />} />
                 <Route path="/innstillinger" element={<Innstillinger />} />
