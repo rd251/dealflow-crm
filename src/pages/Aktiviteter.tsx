@@ -229,6 +229,43 @@ export default function Aktiviteter() {
         setProfiles(map);
       })
       .catch(() => {});
+
+    // Fetch selskaper for name lookup
+    fetch(`${API_URL}/selskaper?select=id,firmanavn`, { headers: API_HEADERS })
+      .then(r => r.ok ? r.json() : [])
+      .then((data: { id: string; firmanavn: string }[]) => {
+        const map: Record<string, string> = {};
+        data.forEach(s => { map[s.id] = s.firmanavn; });
+        setSelskapLookup(map);
+      })
+      .catch(() => {});
+
+    // Fetch salgsmuligheter for selskap_id + kontaktperson mapping
+    fetch(`${API_URL}/salgsmuligheter?select=id,selskap_id,kontaktperson`, { headers: API_HEADERS })
+      .then(r => r.ok ? r.json() : [])
+      .then((data: { id: string; selskap_id: string | null; kontaktperson: string | null }[]) => {
+        const sMap: Record<string, string> = {};
+        const kMap: Record<string, string> = {};
+        data.forEach(sm => {
+          if (sm.selskap_id) sMap[`salgsmulighet:${sm.id}`] = sm.selskap_id;
+          if (sm.kontaktperson) kMap[`salgsmulighet:${sm.id}`] = sm.kontaktperson;
+        });
+        setEntitySelskapMap(prev => ({ ...prev, ...sMap }));
+        setEntityKontaktMap(prev => ({ ...prev, ...kMap }));
+      })
+      .catch(() => {});
+
+    // Fetch leads for kontaktperson mapping
+    fetch(`${API_URL}/leads?select=id,kontaktperson`, { headers: API_HEADERS })
+      .then(r => r.ok ? r.json() : [])
+      .then((data: { id: string; kontaktperson: string | null }[]) => {
+        const kMap: Record<string, string> = {};
+        data.forEach(l => {
+          if (l.kontaktperson) kMap[`lead:${l.id}`] = l.kontaktperson;
+        });
+        setEntityKontaktMap(prev => ({ ...prev, ...kMap }));
+      })
+      .catch(() => {});
   }, []);
 
   // Infinite scroll
