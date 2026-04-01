@@ -401,7 +401,12 @@ export default function Companies() {
                 const totalSla = selskapSm.reduce((sum, sm) => sum + (sm.sla || 0), 0);
                 return (
                 <tr key={s.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => navigate(`/selskaper/${s.id}`)}>
-                  <td className="px-4 py-3 font-medium">{s.firmanavn}</td>
+                  <td className="px-4 py-3 font-medium">
+                    <div className="flex items-center gap-2">
+                      <CompanyLogo firmanavn={s.firmanavn} size="sm" />
+                      {s.firmanavn}
+                    </div>
+                  </td>
                   <td className="px-4 py-3 text-muted-foreground">{s.bransje || "–"}</td>
                   <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                     <select className={`text-xs px-2 py-1 rounded-full font-medium border-0 cursor-pointer ${kundestatusColors[s.kundestatus]}`}
