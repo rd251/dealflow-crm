@@ -214,7 +214,7 @@ export const template = {
 // Styles
 const main: React.CSSProperties = { backgroundColor: '#f5f4f2', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }
 const container: React.CSSProperties = { maxWidth: '580px', margin: '0 auto' }
-const headerSection: React.CSSProperties = { backgroundColor: BRAND_DARK, padding: '28px 0', textAlign: 'center', borderRadius: '8px 8px 0 0' }
+const headerSection: React.CSSProperties = { backgroundColor: '#ffffff', padding: '28px 0', textAlign: 'center', borderRadius: '8px 8px 0 0', borderBottom: `3px solid ${BRAND_RED}` }
 const logoImg: React.CSSProperties = { margin: '0 auto', display: 'block' }
 const contentSection: React.CSSProperties = { backgroundColor: '#ffffff', padding: '32px 40px' }
 const h1: React.CSSProperties = { fontSize: '22px', fontWeight: 700, color: BRAND_DARK, margin: '0 0 8px' }
