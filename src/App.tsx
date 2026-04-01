@@ -26,6 +26,7 @@ import Kontaktstrom from "./pages/Kontaktstrom";
 import Rapporter from "./pages/Rapporter";
 import Kalender from "./pages/Kalender";
 import Innstillinger from "./pages/Innstillinger";
+import Moetenotater from "./pages/Moetenotater";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Unsubscribe from "./pages/Unsubscribe";
