@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Users, Clock, Building2, FileText, Save, ChevronDown, ChevronUp } from "lucide-react";
+import { Users, Clock, Building2, FileText, Save, ChevronDown, ChevronUp, Sparkles, ArrowRight, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const API_URL = import.meta.env.VITE_SUPABASE_URL + '/rest/v1';
 const API_HEADERS = {
@@ -37,6 +38,13 @@ interface RelatedEntity {
   type: string;
 }
 
+interface AiSummary {
+  oppsummering: string;
+  neste_steg: string[];
+  kundesignal: string;
+  foreslatt_neste_steg_tekst: string;
+}
+
 export default function Moetenotater() {
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [entities, setEntities] = useState<Record<string, RelatedEntity>>({});
@@ -44,6 +52,8 @@ export default function Moetenotater() {
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [aiLoading, setAiLoading] = useState<string | null>(null);
+  const [aiSummaries, setAiSummaries] = useState<Record<string, AiSummary>>({});
 
   const fetchMeetings = useCallback(async () => {
     try {
@@ -109,6 +119,38 @@ export default function Moetenotater() {
     }
   };
 
+  const generateSummary = async (meeting: Meeting) => {
+    if (!meeting.moetenotater?.trim()) {
+      toast.error("Legg til møtenotater først");
+      return;
+    }
+    setAiLoading(meeting.id);
+    const linked = getLinkedEntity(meeting);
+    try {
+      const { data, error } = await supabase.functions.invoke("meeting-summary", {
+        body: {
+          meetingNotes: meeting.moetenotater,
+          meetingTitle: meeting.tittel,
+          dealName: linked?.type === "Salgsmulighet" ? linked.name : undefined,
+          companyName: linked?.type === "Selskap" ? linked.name : undefined,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) {
+        toast.error(data.error);
+        return;
+      }
+      setAiSummaries(prev => ({ ...prev, [meeting.id]: data as AiSummary }));
+      setExpandedId(meeting.id);
+      toast.success("AI-oppsummering klar");
+    } catch (e: any) {
+      console.error("AI summary error:", e);
+      toast.error("Kunne ikke generere oppsummering");
+    } finally {
+      setAiLoading(null);
+    }
+  };
+
   const formatDate = (d: string) => new Date(d).toLocaleDateString("no-NO", { day: "numeric", month: "short", year: "numeric" });
   const formatTime = (d: string | null) => d ? new Date(d).toLocaleTimeString("no-NO", { hour: "2-digit", minute: "2-digit" }) : null;
 
@@ -122,6 +164,8 @@ export default function Moetenotater() {
             const linked = getLinkedEntity(m);
             const hasNotes = !!m.moetenotater?.trim();
             const isExpanded = expandedId === m.id;
+            const summary = aiSummaries[m.id];
+            const isLoadingAi = aiLoading === m.id;
             return (
               <div key={m.id} className="border rounded-lg bg-card">
                 <div className="p-4 flex items-start gap-3">
@@ -146,6 +190,11 @@ export default function Moetenotater() {
                           <FileText className="w-2.5 h-2.5" /> Ingen notater
                         </Badge>
                       )}
+                      {summary && (
+                        <Badge variant="default" className="text-[10px] gap-1 bg-primary/10 text-primary hover:bg-primary/20 border-0">
+                          <Sparkles className="w-2.5 h-2.5" /> AI
+                        </Badge>
+                      )}
                     </div>
                     <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
                       <span className="flex items-center gap-1">
@@ -158,15 +207,57 @@ export default function Moetenotater() {
                     {m.beskrivelse && (
                       <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{m.beskrivelse}</p>
                     )}
-                    {/* Inline expanded notes */}
-                    {isExpanded && hasNotes && (
-                      <div className="mt-3 p-3 bg-muted/50 rounded-md">
-                        <p className="text-xs whitespace-pre-line">{m.moetenotater}</p>
+
+                    {/* Expanded content */}
+                    {isExpanded && (
+                      <div className="mt-3 space-y-3">
+                        {hasNotes && (
+                          <div className="p-3 bg-muted/50 rounded-md">
+                            <p className="text-xs whitespace-pre-line">{m.moetenotater}</p>
+                          </div>
+                        )}
+
+                        {/* AI Summary */}
+                        {summary && (
+                          <div className="rounded-md border border-primary/20 bg-primary/5 p-3 space-y-2">
+                            <div className="flex items-center gap-1.5">
+                              <Sparkles className="w-3.5 h-3.5 text-primary" />
+                              <span className="text-[11px] font-semibold uppercase tracking-wide text-primary">AI-oppsummering</span>
+                              {summary.kundesignal && (
+                                <Badge variant="secondary" className="text-[10px] ml-auto">{summary.kundesignal}</Badge>
+                              )}
+                            </div>
+                            <p className="text-xs">{summary.oppsummering}</p>
+                            {summary.neste_steg.length > 0 && (
+                              <div className="space-y-1">
+                                <span className="text-[10px] font-medium text-muted-foreground uppercase">Foreslåtte neste steg:</span>
+                                {summary.neste_steg.map((step, i) => (
+                                  <div key={i} className="flex items-start gap-1.5 text-xs">
+                                    <ArrowRight className="w-3 h-3 text-primary shrink-0 mt-0.5" />
+                                    <span>{step}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
                     {hasNotes && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 w-7 p-0"
+                        disabled={isLoadingAi}
+                        onClick={() => generateSummary(m)}
+                        title="AI-oppsummering"
+                      >
+                        {isLoadingAi ? <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" /> : <Sparkles className="w-3.5 h-3.5 text-primary" />}
+                      </Button>
+                    )}
+                    {(hasNotes || summary) && (
                       <Button
                         size="sm"
                         variant="ghost"
