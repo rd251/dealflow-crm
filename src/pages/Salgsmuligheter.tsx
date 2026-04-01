@@ -118,7 +118,7 @@ export default function Salgsmuligheter() {
     const today = new Date().toISOString().split("T")[0];
     const id = generateId("SM", salgsmuligheter);
     const nySm: Salgsmulighet = {
-      id, navn: form.navn, selskap_id: form.selskap_id, kontakt_id: form.kontakt_id,
+      id, navn: form.use_case, selskap_id: form.selskap_id, kontakt_id: form.kontakt_id,
       ansvarlig: form.ansvarlig || user?.id || "", status: "Møte booket", forventet_mrr: form.forventet_mrr, sla: form.sla,
       oppstartskostnad: form.oppstartskostnad, kontraktslengde_mnd: form.kontraktslengde_mnd,
       sannsynlighet: form.sannsynlighet, forventet_lukkedato: form.forventet_lukkedato,
