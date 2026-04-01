@@ -281,10 +281,9 @@ const assigneeBadge: React.CSSProperties = {
 
 // Meetings — compact
 const meetingsContainer: React.CSSProperties = { padding: '0' }
-const meetingRow: React.CSSProperties = { fontSize: '14px', color: BRAND_DARK, margin: '0', padding: '8px 0', borderBottom: '1px solid #f5f4f2', lineHeight: '1.4' }
-const meetingTime: React.CSSProperties = { color: '#16a34a', fontWeight: 600, fontSize: '13px' }
+const meetingRow: React.CSSProperties = { fontSize: '13px', color: BRAND_DARK, margin: '0', padding: '6px 0', borderBottom: '1px solid #f5f4f2', lineHeight: '1.4' }
+const meetingTime: React.CSSProperties = { color: '#16a34a', fontWeight: 600, fontSize: '12px' }
 
-// Footer
-const footerSection: React.CSSProperties = { padding: '24px 40px', textAlign: 'center', borderRadius: '0 0 8px 8px', backgroundColor: '#ffffff', borderTop: `2px solid ${BRAND_RED}` }
-const footerText: React.CSSProperties = { fontSize: '13px', color: '#999999', margin: '0 0 4px' }
-const footerCopy: React.CSSProperties = { fontSize: '12px', color: '#bbbbbb', margin: '8px 0 0' }
+const footerSection: React.CSSProperties = { padding: '18px 28px', textAlign: 'center', borderRadius: '0 0 8px 8px', backgroundColor: '#ffffff', borderTop: `2px solid ${BRAND_RED}` }
+const footerText: React.CSSProperties = { fontSize: '12px', color: '#999999', margin: '0 0 4px' }
+const footerCopy: React.CSSProperties = { fontSize: '11px', color: '#bbbbbb', margin: '6px 0 0' }
