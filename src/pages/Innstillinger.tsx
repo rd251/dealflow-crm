@@ -356,6 +356,8 @@ export default function Innstillinger() {
             </div>
           </CardContent>
         </Card>
+        {/* Deleted items log */}
+        <DeletedItemsLog />
       </div>
     </PageShell>
   );
