@@ -233,6 +233,10 @@ export default function CompanyProfile() {
                   <Input value={selskap.bransje} onChange={e => updateField("bransje", e.target.value)} className="h-8 text-sm" />
                 </div>
                 <div>
+                  <span className="text-muted-foreground block text-xs mb-1">Domene</span>
+                  <Input placeholder="f.eks. acme.no" value={selskap.domene} onChange={e => updateField("domene", e.target.value)} className="h-8 text-sm" />
+                </div>
+                <div>
                   <span className="text-muted-foreground block text-xs mb-1">Kundeansvarlig</span>
                   <Input value={selskap.kundeansvarlig} onChange={e => updateField("kundeansvarlig", e.target.value)} className="h-8 text-sm" />
                 </div>
