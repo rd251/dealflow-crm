@@ -605,6 +605,20 @@ export default function Dashboard() {
                   desc += ` → ${entry.related_entity_name}`;
                 }
 
+                // Resolve company/contact context
+                let contextSelskap: string | null = null;
+                let contextKontakt: string | null = null;
+                if (entry.entity_type === "salgsmulighet") {
+                  const sm = salgsmuligheter.find(s => s.id === entry.entity_id);
+                  if (sm?.selskap_id) contextSelskap = selskaper.find(s => s.id === sm.selskap_id)?.firmanavn || null;
+                  if (sm?.kontaktperson) contextKontakt = sm.kontaktperson;
+                } else if (entry.entity_type === "lead") {
+                  const lead = leads.find(l => l.id === entry.entity_id);
+                  if (lead?.kontaktperson) contextKontakt = lead.kontaktperson;
+                }
+                const contextStr = [contextSelskap, contextKontakt].filter(Boolean).join(" · ");
+                if (contextStr) desc += ` (${contextStr})`;
+
                 return (
                   <div
                     key={entry.id}

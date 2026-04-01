@@ -160,6 +160,9 @@ export default function Aktiviteter() {
   const navigate = useNavigate();
   const [entries, setEntries] = useState<ChangelogEntry[]>([]);
   const [profiles, setProfiles] = useState<Record<string, UserProfile>>({});
+  const [selskapLookup, setSelskapLookup] = useState<Record<string, string>>({});
+  const [entitySelskapMap, setEntitySelskapMap] = useState<Record<string, string>>({});
+  const [entityKontaktMap, setEntityKontaktMap] = useState<Record<string, string>>({});
   const [search, setSearch] = useState("");
   const [eventFilter, setEventFilter] = useState<EventFilter>("alle");
   const [entityTypeFilter, setEntityTypeFilter] = useState<EntityTypeFilter>("alle");
@@ -224,6 +227,43 @@ export default function Aktiviteter() {
         const map: Record<string, UserProfile> = {};
         data.forEach(p => { map[p.user_id] = p; });
         setProfiles(map);
+      })
+      .catch(() => {});
+
+    // Fetch selskaper for name lookup
+    fetch(`${API_URL}/selskaper?select=id,firmanavn`, { headers: API_HEADERS })
+      .then(r => r.ok ? r.json() : [])
+      .then((data: { id: string; firmanavn: string }[]) => {
+        const map: Record<string, string> = {};
+        data.forEach(s => { map[s.id] = s.firmanavn; });
+        setSelskapLookup(map);
+      })
+      .catch(() => {});
+
+    // Fetch salgsmuligheter for selskap_id + kontaktperson mapping
+    fetch(`${API_URL}/salgsmuligheter?select=id,selskap_id,kontaktperson`, { headers: API_HEADERS })
+      .then(r => r.ok ? r.json() : [])
+      .then((data: { id: string; selskap_id: string | null; kontaktperson: string | null }[]) => {
+        const sMap: Record<string, string> = {};
+        const kMap: Record<string, string> = {};
+        data.forEach(sm => {
+          if (sm.selskap_id) sMap[`salgsmulighet:${sm.id}`] = sm.selskap_id;
+          if (sm.kontaktperson) kMap[`salgsmulighet:${sm.id}`] = sm.kontaktperson;
+        });
+        setEntitySelskapMap(prev => ({ ...prev, ...sMap }));
+        setEntityKontaktMap(prev => ({ ...prev, ...kMap }));
+      })
+      .catch(() => {});
+
+    // Fetch leads for kontaktperson mapping
+    fetch(`${API_URL}/leads?select=id,kontaktperson`, { headers: API_HEADERS })
+      .then(r => r.ok ? r.json() : [])
+      .then((data: { id: string; kontaktperson: string | null }[]) => {
+        const kMap: Record<string, string> = {};
+        data.forEach(l => {
+          if (l.kontaktperson) kMap[`lead:${l.id}`] = l.kontaktperson;
+        });
+        setEntityKontaktMap(prev => ({ ...prev, ...kMap }));
       })
       .catch(() => {});
   }, []);
@@ -396,6 +436,33 @@ export default function Aktiviteter() {
                               {entry.entity_name}
                             </Badge>
                           )}
+
+                          {/* Company context for salgsmulighet/lead */}
+                          {(entry.entity_type === "salgsmulighet" || entry.entity_type === "lead") && (() => {
+                            const selskapId = entitySelskapMap[`${entry.entity_type}:${entry.entity_id}`];
+                            const selskapName = selskapId ? selskapLookup[selskapId] : null;
+                            const kontaktperson = entityKontaktMap[`${entry.entity_type}:${entry.entity_id}`];
+                            return (
+                              <>
+                                {selskapName && (
+                                  <Badge
+                                    variant="outline"
+                                    className={`text-[10px] px-1.5 py-0 h-5 cursor-pointer transition-colors hover:opacity-80 ${entityBadgeColor.selskap}`}
+                                    onClick={() => navigate(`/selskaper/${selskapId}`)}
+                                  >
+                                    <Building2 className="w-3 h-3 mr-1" />
+                                    {selskapName}
+                                  </Badge>
+                                )}
+                                {kontaktperson && (
+                                  <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                                    <User className="w-3 h-3" />
+                                    {kontaktperson}
+                                  </span>
+                                )}
+                              </>
+                            );
+                          })()}
 
                           {/* Related entity badge */}
                           {entry.related_entity_type && entry.related_entity_name && (() => {
