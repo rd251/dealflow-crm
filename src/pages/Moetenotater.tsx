@@ -192,6 +192,13 @@ export default function Moetenotater() {
       if (!linked || linked.name !== entityFilter) return false;
     }
 
+    // Date filter
+    if (dateFilter === "today") {
+      const today = new Date().toISOString().split("T")[0];
+      const meetingDate = new Date(m.dato).toISOString().split("T")[0];
+      if (meetingDate !== today) return false;
+    }
+
     return true;
   });
 
