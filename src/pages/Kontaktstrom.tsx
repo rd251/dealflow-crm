@@ -212,14 +212,15 @@ export default function Kontaktstrom() {
       let status = k.selskap_id ? getSelskapStatus(k.selskap_id) : "";
       let ansvarlig = "";
       let nesteSteg = "";
+      const types: KontaktStromPerson["types"] = [];
 
-      if (sm) { type = "Salgsmulighet"; status = sm.status; ansvarlig = sm.ansvarlig; nesteSteg = sm.neste_steg; }
-      if (lead) { type = "Lead"; status = lead.status; ansvarlig = lead.ansvarlig; nesteSteg = lead.neste_steg; }
-      if (partner) { type = "Partner"; status = partner.partnerstatus; ansvarlig = partner.ansvarlig; }
       if (k.selskap_id) {
         const selskapType = getTypeFromSelskap(k.selskap_id);
-        if (selskapType === "Kunde") { type = "Kunde"; status = getSelskapStatus(k.selskap_id); }
+        if (selskapType === "Kunde") { type = "Kunde"; status = getSelskapStatus(k.selskap_id); types.push("Kunde"); }
       }
+      if (sm) { type = "Salgsmulighet"; status = sm.status; ansvarlig = sm.ansvarlig; nesteSteg = sm.neste_steg; types.push("Salgsmulighet"); }
+      if (lead) { type = "Lead"; status = lead.status; ansvarlig = lead.ansvarlig; nesteSteg = lead.neste_steg; types.push("Lead"); }
+      if (partner) { type = "Partner"; status = partner.partnerstatus; ansvarlig = partner.ansvarlig; types.push("Partner"); }
 
       const resolvedSelskapId = k.selskap_id || sm?.selskap_id || null;
       const suggested = !resolvedSelskapId ? findSelskapByDomain(email) : null;
@@ -228,7 +229,7 @@ export default function Kontaktstrom() {
         navn: k.navn,
         firmanavn: k.selskap_id ? getSelskapNavn(k.selskap_id) : (lead?.firmanavn || ""),
         domain: getDomain(email),
-        type, status, ansvarlig,
+        type, types, status, ansvarlig,
         sistKontaktetDato: null,
         sistKontaktetType: "",
         nesteSteg,
