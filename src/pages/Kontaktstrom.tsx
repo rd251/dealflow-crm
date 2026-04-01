@@ -26,6 +26,7 @@ interface KontaktStromPerson {
   firmanavn: string;
   domain: string;
   type: "Lead" | "Salgsmulighet" | "Kunde" | "Partner" | "Kontakt" | "Ukjent";
+  types: Array<"Lead" | "Salgsmulighet" | "Kunde" | "Partner">;
   status: string;
   ansvarlig: string;
   sistKontaktetDato: string | null;
