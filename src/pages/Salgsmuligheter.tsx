@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Salgsmulighet, SalgsmulighetStatus, Tapsaarsak, beregnTotalKontraktsverdi, beregnVektetPipeline } from "@/data/crm-data";
 import InlineTaskForm from "@/components/InlineTaskForm";
 import ActivityLog from "@/components/ActivityLog";
+import MeetingNotesList from "@/components/MeetingNotesList";
 
 const openStatuses: SalgsmulighetStatus[] = ["Møte booket", "Behov avklart", "Løsning presentert", "Tilbud sendt", "Beslutning"];
 const tapsaarsaker: Tapsaarsak[] = ["Pris", "Ikke riktig timing", "Valgte annen leverandør", "Ikke behov", "Teknisk / integrasjon", "Annet"];
@@ -604,6 +605,7 @@ export default function Salgsmuligheter() {
                 <ActivityLog salgsmulighet_id={currentSm.id} onActivityLogged={() => {
                   updateSalgsmuligheter(prev => prev.map(s => s.id === currentSm.id ? { ...s, sist_aktivitet: new Date().toISOString().split("T")[0] } : s));
                 }} />
+                <MeetingNotesList salgsmulighet_id={currentSm.id} />
               </>
             ),
             notater: (
