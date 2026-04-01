@@ -489,6 +489,10 @@ export default function Kontaktstrom() {
             existing.lastContactedAt = p.sistKontaktetDato;
           }
         }
+        // Collect unique types across persons
+        for (const t of p.types) {
+          existing.types.add(t);
+        }
         // Promote type priority
         const typePriority = { Kunde: 5, Partner: 4, Salgsmulighet: 3, Lead: 2, Kontakt: 1, Ukjent: 0 };
         if ((typePriority[p.type] || 0) > (typePriority[existing.type] || 0)) {
@@ -504,6 +508,7 @@ export default function Kontaktstrom() {
           lastContactedAt: p.sistKontaktetDato,
           persons: [p],
           type: p.type,
+          types: new Set(p.types),
           status: p.status,
         });
       }
