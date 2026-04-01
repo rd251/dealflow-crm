@@ -313,11 +313,9 @@ export default function Salgsmuligheter() {
                           <div className="space-y-1.5 pl-[2px]">
                             {/* Company with logo placeholder */}
                             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                              <div className="w-5 h-5 rounded bg-muted flex items-center justify-center shrink-0">
-                                <Building2 className="w-3 h-3" />
-                              </div>
+                              <CompanyLogo domain={getSelskapDomain(deal.selskap_id)} firmanavn={getSelskapNavn(deal.selskap_id || "")} kontaktEmails={deal.e_post ? [deal.e_post] : undefined} size="sm" className="w-5 h-5 rounded" />
                               <span className="truncate cursor-pointer hover:text-primary hover:underline" onClick={e => { e.stopPropagation(); if (deal.selskap_id) navigate(`/selskaper/${deal.selskap_id}`); }}>
-                                {getSelskapNavn(deal.selskap_id)}
+                                {getSelskapNavn(deal.selskap_id || "")}
                               </span>
                             </div>
 
