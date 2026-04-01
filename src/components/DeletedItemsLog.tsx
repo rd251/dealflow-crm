@@ -53,14 +53,19 @@ export default function DeletedItemsLog() {
   const [restoring, setRestoring] = useState<string | null>(null);
   const [expanded, setExpanded] = useState(false);
 
+  const [showRestored, setShowRestored] = useState(false);
+
   const fetchItems = async () => {
     setLoading(true);
-    const { data } = await supabase
+    let query = supabase
       .from("deleted_items" as any)
       .select("*")
-      .is("restored_at", null)
       .order("deleted_at", { ascending: false })
-      .limit(100);
+      .limit(200);
+    if (!showRestored) {
+      query = query.is("restored_at", null);
+    }
+    const { data } = await query;
     setItems((data as any as DeletedItem[]) || []);
     setLoading(false);
   };
