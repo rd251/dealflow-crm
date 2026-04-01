@@ -182,8 +182,8 @@ const DailyTaskReminderEmail = ({
           </Section>
 
           {/* Footer */}
-          <Section style={footerSection}>
-            <Img src={LOGO_URL} alt="Snakk" width="80" height="auto" style={{ margin: '0 auto 8px' }} />
+          <Section style={footerSection} className="footer-section">
+            <Img src={LOGO_URL} alt="Snakk" width="80" height="auto" style={{ margin: '0 auto 8px' }} className="footer-logo" />
             <Text style={footerText}>Snakk CRM</Text>
             <Text style={footerCopy}>©2026 Snakk. Alle rettigheter reservert.</Text>
           </Section>
