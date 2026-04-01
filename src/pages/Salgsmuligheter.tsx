@@ -326,12 +326,12 @@ export default function Salgsmuligheter() {
                             </div>
 
                             {/* Responsible person */}
-                            {deal.ansvarlig && (
+                            {deal.ansvarlig && getProfileName(deal.ansvarlig) && (
                               <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                <div className="w-5 h-5 rounded flex items-center justify-center shrink-0">
-                                  <User className="w-3.5 h-3.5" />
+                                <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                                  <span className="text-[9px] font-bold text-primary">{getProfileName(deal.ansvarlig).charAt(0).toUpperCase()}</span>
                                 </div>
-                                <span className="truncate">{deal.ansvarlig}</span>
+                                <span className="truncate">{getProfileName(deal.ansvarlig)}</span>
                               </div>
                             )}
                           </div>
