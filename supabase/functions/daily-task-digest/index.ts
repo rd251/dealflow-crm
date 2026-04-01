@@ -41,23 +41,50 @@ Deno.serve(async (req) => {
     })
   }
 
-  if (!tasks?.length) {
-    return new Response(JSON.stringify({ sent: 0, reason: 'no_tasks' }), {
+  // Get today's meetings
+  const { data: meetings, error: meetingsError } = await supabase
+    .from('aktiviteter')
+    .select('id, tittel, beskrivelse, start_tid, slutt_tid, dato, user_id')
+    .eq('type', 'Møte')
+    .eq('dato', today)
+    .not('user_id', 'is', null)
+    .order('start_tid', { ascending: true })
+
+  if (meetingsError) {
+    console.error('Failed to fetch meetings', meetingsError)
+  }
+
+  const hasTasks = tasks && tasks.length > 0
+  const hasMeetings = meetings && meetings.length > 0
+
+  if (!hasTasks && !hasMeetings) {
+    return new Response(JSON.stringify({ sent: 0, reason: 'no_tasks_or_meetings' }), {
       headers: { 'Content-Type': 'application/json' },
     })
   }
 
   // Group tasks by user_id
   const tasksByUser = new Map<string, typeof tasks>()
-  for (const task of tasks) {
+  for (const task of tasks || []) {
     if (!task.user_id) continue
     const existing = tasksByUser.get(task.user_id) || []
     existing.push(task)
     tasksByUser.set(task.user_id, existing)
   }
 
-  // Get profiles for all relevant users
-  const userIds = Array.from(tasksByUser.keys())
+  // Group meetings by user_id
+  const meetingsByUser = new Map<string, NonNullable<typeof meetings>>()
+  for (const meeting of meetings || []) {
+    if (!meeting.user_id) continue
+    const existing = meetingsByUser.get(meeting.user_id) || []
+    existing.push(meeting)
+    meetingsByUser.set(meeting.user_id, existing)
+  }
+
+  // Collect all user IDs from both tasks and meetings
+  const allUserIds = new Set([...tasksByUser.keys(), ...meetingsByUser.keys()])
+  const userIds = Array.from(allUserIds)
+
   const { data: profiles, error: profilesError } = await supabase
     .from('profiles')
     .select('user_id, display_name, email')
@@ -72,18 +99,20 @@ Deno.serve(async (req) => {
   }
 
   const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || [])
-  // Build a lookup for user_id → display_name (used to resolve ansvarlig UUIDs)
   const nameMap = new Map(profiles?.map(p => [p.user_id, p.display_name]) || [])
 
   let sentCount = 0
   const errors: string[] = []
 
-  for (const [userId, userTasks] of tasksByUser) {
+  for (const userId of allUserIds) {
     const profile = profileMap.get(userId)
     if (!profile?.email) {
       console.warn('No profile/email for user', userId)
       continue
     }
+
+    const userTasks = tasksByUser.get(userId) || []
+    const userMeetings = meetingsByUser.get(userId) || []
 
     // Split into overdue vs today
     const overdueTasks = userTasks
@@ -104,7 +133,13 @@ Deno.serve(async (req) => {
         prioritet: t.prioritet,
       }))
 
-    if (overdueTasks.length === 0 && todayTasks.length === 0) continue
+    const todayMeetings = userMeetings.map(m => ({
+      tittel: m.tittel || m.beskrivelse || 'Møte',
+      start_tid: m.start_tid ? formatTime(m.start_tid) : null,
+      slutt_tid: m.slutt_tid ? formatTime(m.slutt_tid) : null,
+    }))
+
+    if (overdueTasks.length === 0 && todayTasks.length === 0 && todayMeetings.length === 0) continue
 
     const firstName = profile.display_name?.split(' ')[0] || profile.display_name || 'der'
 
@@ -118,8 +153,10 @@ Deno.serve(async (req) => {
             displayName: firstName,
             overdueCount: overdueTasks.length,
             todayCount: todayTasks.length,
+            meetingCount: todayMeetings.length,
             overdueTasks,
             todayTasks,
+            todayMeetings,
             appUrl: 'https://snakk-ai-crm.lovable.app',
           },
         },
@@ -150,4 +187,13 @@ function formatDate(dateStr: string): string {
     month: 'long',
     day: 'numeric',
   })
+}
+
+function formatTime(timeStr: string): string {
+  // Handles ISO datetime or HH:MM:SS
+  if (timeStr.includes('T')) {
+    const date = new Date(timeStr)
+    return date.toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit' })
+  }
+  return timeStr.substring(0, 5)
 }

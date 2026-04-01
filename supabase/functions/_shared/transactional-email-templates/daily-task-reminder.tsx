@@ -16,25 +16,45 @@ interface TaskItem {
   prioritet: string | null
 }
 
+interface MeetingItem {
+  tittel: string
+  start_tid: string | null
+  slutt_tid: string | null
+}
+
 interface DailyTaskReminderProps {
   displayName?: string
   overdueCount?: number
   todayCount?: number
+  meetingCount?: number
   overdueTasks?: TaskItem[]
   todayTasks?: TaskItem[]
+  todayMeetings?: MeetingItem[]
   appUrl?: string
+}
+
+const priorityLabel: Record<string, { text: string; color: string }> = {
+  'Høy': { text: '🔴 Høy', color: BRAND_RED },
+  'Medium': { text: '🟡 Medium', color: '#d97706' },
+  'Lav': { text: '🟢 Lav', color: '#16a34a' },
 }
 
 const DailyTaskReminderEmail = ({
   displayName = 'der',
   overdueCount = 0,
   todayCount = 0,
+  meetingCount = 0,
   overdueTasks = [],
   todayTasks = [],
+  todayMeetings = [],
   appUrl = 'https://snakk-ai-crm.lovable.app',
 }: DailyTaskReminderProps) => {
   const totalTasks = overdueCount + todayCount
-  const previewText = `Du har ${overdueCount > 0 ? `${overdueCount} forfalte` : ''}${overdueCount > 0 && todayCount > 0 ? ' og ' : ''}${todayCount > 0 ? `${todayCount} oppgaver i dag` : overdueCount > 0 ? ' oppgaver' : 'oppgaver å se på'}`
+  const parts: string[] = []
+  if (overdueCount > 0) parts.push(`${overdueCount} forfalte oppgaver`)
+  if (todayCount > 0) parts.push(`${todayCount} oppgaver i dag`)
+  if (meetingCount > 0) parts.push(`${meetingCount} møter`)
+  const previewText = parts.length > 0 ? `Du har ${parts.join(' og ')}` : 'Ingenting planlagt i dag'
 
   return (
     <Html lang="no" dir="ltr">
@@ -42,40 +62,52 @@ const DailyTaskReminderEmail = ({
       <Preview>{previewText}</Preview>
       <Body style={main}>
         <Container style={container}>
-          {/* Header with Snakk branding */}
+          {/* Header */}
           <Section style={headerSection}>
             <Img src={LOGO_URL} alt="Snakk" width="140" height="auto" style={logoImg} />
           </Section>
 
           {/* Main content */}
           <Section style={contentSection}>
-            <Heading style={h1}>Hei {displayName},</Heading>
+            <Heading style={h1}>God morgen, {displayName} ☀️</Heading>
             <Text style={summaryText}>
-              Du har <strong style={{ color: BRAND_DARK }}>{totalTasks} {overdueCount > 0 ? 'forfalte ' : ''}oppgave{totalTasks !== 1 ? 'r' : ''}</strong>.
+              {overdueCount > 0 && (
+                <span style={{ color: BRAND_RED, fontWeight: 700 }}>⚠️ {overdueCount} forfalte</span>
+              )}
+              {overdueCount > 0 && (todayCount > 0 || meetingCount > 0) && <span> · </span>}
+              {todayCount > 0 && <span>{todayCount} oppgave{todayCount !== 1 ? 'r' : ''} i dag</span>}
+              {todayCount > 0 && meetingCount > 0 && <span> · </span>}
+              {meetingCount > 0 && <span>📅 {meetingCount} møte{meetingCount !== 1 ? 'r' : ''}</span>}
             </Text>
 
             <Button style={ctaButton} href={`${appUrl}/oppgaver`}>
-              Se alle oppgaver
+              Åpne Snakk
             </Button>
 
-            <Hr style={divider} />
-
-            {/* Overdue section */}
+            {/* ===== OVERDUE TASKS ===== */}
             {overdueTasks.length > 0 && (
               <>
-                <Heading as="h2" style={sectionHeading}>Forfalt</Heading>
+                <Hr style={divider} />
+                <Section style={overdueHeader}>
+                  <Heading as="h2" style={overdueHeading}>⚠️ Forfalt ({overdueTasks.length})</Heading>
+                </Section>
                 {overdueTasks.map((task, i) => (
-                  <Section key={i} style={taskCard}>
+                  <Section key={i} style={overdueTaskCard}>
                     <Text style={taskName}>
-                      <span style={taskCircle}>○</span>&nbsp;&nbsp;{task.oppgave}
+                      <span style={taskCircleOverdue}>●</span>&nbsp;&nbsp;{task.oppgave}
                     </Text>
                     <Text style={taskMetaLine}>
                       <span style={taskDateOverdue}>📅 {task.frist || 'Ingen frist'}</span>
+                      {task.prioritet && priorityLabel[task.prioritet] && (
+                        <span style={{ ...priorityBadge, color: priorityLabel[task.prioritet].color }}>
+                          &nbsp;&nbsp;{priorityLabel[task.prioritet].text}
+                        </span>
+                      )}
                       {task.ansvarlig && (
                         <>
                           &nbsp;&nbsp;
                           <span style={assigneeBadge}>{task.ansvarlig.charAt(0).toUpperCase()}</span>
-                          <span style={taskAssigneeText}>&nbsp;Tildelt {task.ansvarlig}</span>
+                          <span style={taskAssigneeText}>&nbsp;{task.ansvarlig}</span>
                         </>
                       )}
                     </Text>
@@ -84,27 +116,50 @@ const DailyTaskReminderEmail = ({
               </>
             )}
 
-            {/* Today section */}
+            {/* ===== TODAY'S TASKS ===== */}
             {todayTasks.length > 0 && (
               <>
-                <Heading as="h2" style={sectionHeading}>I dag</Heading>
+                <Hr style={divider} />
+                <Heading as="h2" style={sectionHeading}>✅ I dag ({todayTasks.length})</Heading>
                 {todayTasks.map((task, i) => (
                   <Section key={i} style={taskCard}>
                     <Text style={taskName}>
                       <span style={taskCircle}>○</span>&nbsp;&nbsp;{task.oppgave}
                     </Text>
                     <Text style={taskMetaLine}>
-                      <span style={taskDateToday}>📅 {task.frist || 'Ingen frist'}</span>
+                      {task.prioritet && priorityLabel[task.prioritet] && (
+                        <span style={{ ...priorityBadge, color: priorityLabel[task.prioritet].color }}>
+                          {priorityLabel[task.prioritet].text}
+                        </span>
+                      )}
                       {task.ansvarlig && (
                         <>
                           &nbsp;&nbsp;
                           <span style={assigneeBadge}>{task.ansvarlig.charAt(0).toUpperCase()}</span>
-                          <span style={taskAssigneeText}>&nbsp;Tildelt {task.ansvarlig}</span>
+                          <span style={taskAssigneeText}>&nbsp;{task.ansvarlig}</span>
                         </>
                       )}
                     </Text>
                   </Section>
                 ))}
+              </>
+            )}
+
+            {/* ===== MEETINGS (compact) ===== */}
+            {todayMeetings.length > 0 && (
+              <>
+                <Hr style={divider} />
+                <Heading as="h2" style={sectionHeading}>📅 Møter i dag</Heading>
+                <Section style={meetingsContainer}>
+                  {todayMeetings.map((m, i) => (
+                    <Text key={i} style={meetingRow}>
+                      <span style={meetingTime}>
+                        {m.start_tid || '?'}{m.slutt_tid ? `–${m.slutt_tid}` : ''}
+                      </span>
+                      &nbsp;&nbsp;{m.tittel}
+                    </Text>
+                  ))}
+                </Section>
               </>
             )}
           </Section>
@@ -126,34 +181,43 @@ export const template = {
   subject: (data: Record<string, any>) => {
     const overdue = data.overdueCount || 0
     const today = data.todayCount || 0
-    if (overdue > 0 && today > 0) return `Du har ${overdue} forfalte og ${today} oppgaver i dag`
-    if (overdue > 0) return `Du har ${overdue} forfalte oppgaver`
-    if (today > 0) return `Du har ${today} oppgaver i dag`
-    return 'Dine oppgaver for i dag'
+    const meetings = data.meetingCount || 0
+    const parts: string[] = []
+    if (overdue > 0) parts.push(`⚠️ ${overdue} forfalte`)
+    if (today > 0) parts.push(`${today} oppgaver`)
+    if (meetings > 0) parts.push(`${meetings} møter`)
+    if (parts.length === 0) return 'Din dag i Snakk'
+    return parts.join(' · ')
   },
   displayName: 'Daglig oppgavepåminnelse',
   previewData: {
     displayName: 'Robin',
     overdueCount: 2,
     todayCount: 1,
+    meetingCount: 3,
     overdueTasks: [
       { oppgave: 'Ring han', frist: '17. februar 2026', ansvarlig: 'Robin Sæter Diallo', prioritet: 'Høy' },
-      { oppgave: 'Følg opp', frist: '17. februar 2026', ansvarlig: 'Robin Sæter Diallo', prioritet: 'Medium' },
+      { oppgave: 'Følg opp tilbud Straye', frist: '28. mars 2026', ansvarlig: 'Robin Sæter Diallo', prioritet: 'Medium' },
     ],
     todayTasks: [
-      { oppgave: 'Send tilbud til Acme Corp', frist: '30. mars 2026', ansvarlig: 'Robin Sæter Diallo', prioritet: 'Høy' },
+      { oppgave: 'Send tilbud til Acme Corp', frist: '1. april 2026', ansvarlig: 'Robin Sæter Diallo', prioritet: 'Høy' },
+    ],
+    todayMeetings: [
+      { tittel: 'Trale.ai <> Snakk ai', start_tid: '10:00', slutt_tid: '11:00' },
+      { tittel: 'Internmøte - Snakk Teknologi', start_tid: '13:00', slutt_tid: '14:00' },
+      { tittel: 'Unaas Cycling <> Snakk ai demo', start_tid: '14:00', slutt_tid: '15:00' },
     ],
     appUrl: 'https://snakk-ai-crm.lovable.app',
   },
 } satisfies TemplateEntry
 
-// Styles — Snakk brand: red #da291c, dark #1a1917, warm white backgrounds
+// Styles
 const main: React.CSSProperties = { backgroundColor: '#f5f4f2', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }
 const container: React.CSSProperties = { maxWidth: '580px', margin: '0 auto' }
 const headerSection: React.CSSProperties = { backgroundColor: BRAND_DARK, padding: '28px 0', textAlign: 'center', borderRadius: '8px 8px 0 0' }
 const logoImg: React.CSSProperties = { margin: '0 auto', display: 'block' }
 const contentSection: React.CSSProperties = { backgroundColor: '#ffffff', padding: '32px 40px' }
-const h1: React.CSSProperties = { fontSize: '24px', fontWeight: 700, color: BRAND_DARK, margin: '0 0 8px' }
+const h1: React.CSSProperties = { fontSize: '22px', fontWeight: 700, color: BRAND_DARK, margin: '0 0 8px' }
 const summaryText: React.CSSProperties = { fontSize: '15px', color: '#555555', lineHeight: '1.5', margin: '0 0 24px' }
 const ctaButton: React.CSSProperties = {
   backgroundColor: BRAND_RED,
@@ -168,14 +232,22 @@ const ctaButton: React.CSSProperties = {
   width: '100%',
   boxSizing: 'border-box',
 }
-const divider: React.CSSProperties = { borderColor: '#e8e6e3', margin: '28px 0' }
-const sectionHeading: React.CSSProperties = { fontSize: '13px', fontWeight: 700, color: BRAND_DARK, margin: '0 0 16px', textTransform: 'uppercase', letterSpacing: '0.5px' }
-const taskCard: React.CSSProperties = { padding: '16px 0', borderBottom: '1px solid #f0eeec' }
-const taskCircle: React.CSSProperties = { color: '#cccccc', fontSize: '16px' }
-const taskName: React.CSSProperties = { fontSize: '15px', color: BRAND_DARK, margin: '0 0 8px', fontWeight: 500 }
+const divider: React.CSSProperties = { borderColor: '#e8e6e3', margin: '24px 0' }
+
+// Overdue section — visually distinct
+const overdueHeader: React.CSSProperties = { backgroundColor: '#fef2f2', borderRadius: '8px', padding: '12px 16px', marginBottom: '8px' }
+const overdueHeading: React.CSSProperties = { fontSize: '14px', fontWeight: 700, color: BRAND_RED, margin: '0', textTransform: 'uppercase', letterSpacing: '0.5px' }
+const overdueTaskCard: React.CSSProperties = { padding: '12px 0', borderBottom: '1px solid #fde8e8' }
+const taskCircleOverdue: React.CSSProperties = { color: BRAND_RED, fontSize: '14px' }
+
+// General task styles
+const sectionHeading: React.CSSProperties = { fontSize: '13px', fontWeight: 700, color: BRAND_DARK, margin: '0 0 12px', textTransform: 'uppercase', letterSpacing: '0.5px' }
+const taskCard: React.CSSProperties = { padding: '12px 0', borderBottom: '1px solid #f0eeec' }
+const taskCircle: React.CSSProperties = { color: '#cccccc', fontSize: '14px' }
+const taskName: React.CSSProperties = { fontSize: '15px', color: BRAND_DARK, margin: '0 0 6px', fontWeight: 500 }
 const taskMetaLine: React.CSSProperties = { fontSize: '13px', color: '#666666', margin: '0' }
-const taskDateOverdue: React.CSSProperties = { color: BRAND_RED, fontSize: '13px' }
-const taskDateToday: React.CSSProperties = { color: '#666666', fontSize: '13px' }
+const taskDateOverdue: React.CSSProperties = { color: BRAND_RED, fontSize: '13px', fontWeight: 600 }
+const priorityBadge: React.CSSProperties = { fontSize: '12px', fontWeight: 500 }
 const taskAssigneeText: React.CSSProperties = { fontSize: '13px', color: '#666666' }
 const assigneeBadge: React.CSSProperties = {
   display: 'inline-block',
@@ -190,6 +262,13 @@ const assigneeBadge: React.CSSProperties = {
   textAlign: 'center',
   verticalAlign: 'middle',
 }
+
+// Meetings — compact
+const meetingsContainer: React.CSSProperties = { padding: '0' }
+const meetingRow: React.CSSProperties = { fontSize: '14px', color: BRAND_DARK, margin: '0', padding: '8px 0', borderBottom: '1px solid #f5f4f2', lineHeight: '1.4' }
+const meetingTime: React.CSSProperties = { color: '#16a34a', fontWeight: 600, fontSize: '13px' }
+
+// Footer
 const footerSection: React.CSSProperties = { padding: '24px 40px', textAlign: 'center', borderRadius: '0 0 8px 8px' }
 const footerText: React.CSSProperties = { fontSize: '13px', color: '#999999', margin: '0 0 4px' }
 const footerCopy: React.CSSProperties = { fontSize: '12px', color: '#bbbbbb', margin: '8px 0 0' }
