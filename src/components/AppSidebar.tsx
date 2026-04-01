@@ -22,7 +22,7 @@ const navItems = [
   { to: "/kalender", icon: CalendarDays, label: "Kalender" },
   { to: "/partnere", icon: Users2, label: "Partnere" },
   { to: "/partner-pipeline", icon: GitBranch, label: "Partner Pipeline" },
-  { to: "/aktiviteter", icon: Activity, label: "Aktivitetslogg" },
+  { to: "/aktiviteter", icon: Activity, label: "Endringslogg" },
   { to: "/moetenotater", icon: NotebookPen, label: "Møtenotater" },
   { to: "/rapporter", icon: BarChart3, label: "Rapporter" },
   { to: "/innstillinger", icon: Settings, label: "Innstillinger" },
