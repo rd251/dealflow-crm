@@ -844,6 +844,7 @@ export type Database = {
             | Database["public"]["Enums"]["onboarding_status"]
             | null
           oppstartskostnad: number | null
+          orgnr: string
           partner_id: string | null
           sist_aktivitet: string | null
           updated_at: string
@@ -874,6 +875,7 @@ export type Database = {
             | Database["public"]["Enums"]["onboarding_status"]
             | null
           oppstartskostnad?: number | null
+          orgnr?: string
           partner_id?: string | null
           sist_aktivitet?: string | null
           updated_at?: string
@@ -904,6 +906,7 @@ export type Database = {
             | Database["public"]["Enums"]["onboarding_status"]
             | null
           oppstartskostnad?: number | null
+          orgnr?: string
           partner_id?: string | null
           sist_aktivitet?: string | null
           updated_at?: string
