@@ -114,8 +114,15 @@ export function useFollowUps(
     leads.forEach((lead) => {
       if (lead.status === "Ikke aktuelt" || lead.konvertert_til) return;
 
-      const hoursInactive = lead.sist_aktivitet
-        ? differenceInHours(now, new Date(lead.sist_aktivitet))
+      // Check both the lead's sist_aktivitet field AND actual activities in the aktiviteter table
+      const lastAktivitet = getLastActivity(lead.id, "lead");
+      const latestDate = [lead.sist_aktivitet, lastAktivitet?.dato]
+        .filter(Boolean)
+        .map((d) => new Date(d!))
+        .sort((a, b) => b.getTime() - a.getTime())[0];
+
+      const hoursInactive = latestDate
+        ? differenceInHours(now, latestDate)
         : 999;
 
       if (hoursInactive < 48) return;
