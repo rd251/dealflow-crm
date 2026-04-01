@@ -47,7 +47,7 @@ export default function Companies() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { canEdit } = useAuth();
-  const { selskaper, salgsmuligheter, prosjekter, updateSelskaper, kansellerSelskap, slettSelskap, konverterSelskapTilPartner, angreTilSalgsmulighet, generateId } = useCrmStore();
+  const { selskaper, kontakter, salgsmuligheter, prosjekter, updateSelskaper, kansellerSelskap, slettSelskap, konverterSelskapTilPartner, angreTilSalgsmulighet, generateId } = useCrmStore();
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
