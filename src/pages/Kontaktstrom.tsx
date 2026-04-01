@@ -463,6 +463,8 @@ export default function Kontaktstrom() {
 
     for (const p of persons) {
       if (!p.domain) continue;
+      // Skip generic email providers — they're not real companies
+      if (GENERIC_EMAIL_DOMAINS.test(p.domain)) continue;
       if (filterEier !== "alle" && p.ownerUserId !== filterEier) continue;
 
       const existing = domainMap.get(p.domain);
