@@ -490,6 +490,7 @@ export default function Kontaktstrom() {
         const typePriority = { Kunde: 5, Partner: 4, Salgsmulighet: 3, Lead: 2, Kontakt: 1, Ukjent: 0 };
         if ((typePriority[p.type] || 0) > (typePriority[existing.type] || 0)) {
           existing.type = p.type;
+          existing.status = p.status;
         }
       } else {
         domainMap.set(p.domain, {
@@ -500,6 +501,7 @@ export default function Kontaktstrom() {
           lastContactedAt: p.sistKontaktetDato,
           persons: [p],
           type: p.type,
+          status: p.status,
         });
       }
     }
