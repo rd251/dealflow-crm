@@ -169,7 +169,7 @@ const DailyTaskReminderEmail = ({
                 <Heading as="h2" style={sectionHeading}>📅 Møter i dag</Heading>
                 <Section style={meetingsContainer}>
                   {todayMeetings.map((m, i) => (
-                    <Text key={i} style={meetingRow}>
+                    <Text key={i} style={meetingRow} className="meeting-row">
                       <span style={meetingTime}>
                         {m.start_tid || '?'}{m.slutt_tid ? `–${m.slutt_tid}` : ''}
                       </span>
