@@ -296,6 +296,9 @@ export default function Kontaktstrom() {
         }
         existing.totalSent += ec.total_emails_sent || 0;
         existing.totalReceived += ec.total_emails_received || 0;
+        if (ec.user_id && !existing.ownerUserId) {
+          existing.ownerUserId = ec.user_id;
+        }
       } else {
         // New person from Gmail, not in CRM — smart matching
         let ecType: KontaktStromPerson["type"] = "Ukjent";
