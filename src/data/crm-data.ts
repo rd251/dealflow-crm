@@ -120,6 +120,7 @@ export interface Selskap {
   kilde: Kilde;
   partner_id: string;
   lukkedato: string;
+  domene: string;
 }
 
 export interface Kontakt {
