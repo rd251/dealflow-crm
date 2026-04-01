@@ -223,14 +223,13 @@ export default function Aktiviteter() {
 
   // Profiles
   useEffect(() => {
-    fetch(`${API_URL}/profiles?select=user_id,display_name`, { headers: API_HEADERS })
-      .then(r => r.ok ? r.json() : [])
-      .then((data: UserProfile[]) => {
+    supabase.from('profiles').select('user_id,display_name')
+      .then(({ data }) => {
+        if (!data) return;
         const map: Record<string, UserProfile> = {};
         data.forEach(p => { map[p.user_id] = p; });
         setProfiles(map);
-      })
-      .catch(() => {});
+      });
 
     // Fetch selskaper for name lookup
     fetch(`${API_URL}/selskaper?select=id,firmanavn`, { headers: API_HEADERS })
