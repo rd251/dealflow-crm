@@ -155,14 +155,18 @@ export function useFollowUps(
     salgsmuligheter.forEach((sm) => {
       if (sm.status === "Vunnet" || sm.status === "Tapt") return;
 
-      const hoursInactive = sm.sist_aktivitet
-        ? differenceInHours(now, new Date(sm.sist_aktivitet))
+      // Check both the sm's sist_aktivitet field AND actual activities in the aktiviteter table
+      const lastAktivitet = getLastActivity(sm.id, "salgsmulighet");
+      const latestDate = [sm.sist_aktivitet, lastAktivitet?.dato]
+        .filter(Boolean)
+        .map((d) => new Date(d!))
+        .sort((a, b) => b.getTime() - a.getTime())[0];
+
+      const hoursInactive = latestDate
+        ? differenceInHours(now, latestDate)
         : 999;
 
       if (hoursInactive < 72) return; // 3 days
-      if (hasRecentFollowUp(sm.id, "salgsmulighet")) return;
-
-      const lastAct = getLastActivity(sm.id, "salgsmulighet");
       const verdi = (sm.forventet_mrr || 0) * (sm.kontraktslengde_mnd || 12);
 
       items.push({
