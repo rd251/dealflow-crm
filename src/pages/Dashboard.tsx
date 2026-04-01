@@ -69,7 +69,7 @@ export default function Dashboard() {
   const [notesText, setNotesText] = useState("");
   const [notesSaving, setNotesSaving] = useState(false);
   const [oppgaver, setOppgaver] = useState<Tables<"oppgaver">[]>([]);
-  const [crmEvents, setCrmEvents] = useState<Array<{ id: string; label: string; date: string; color: string }>>([]);
+  const [changelogEntries, setChangelogEntries] = useState<Array<{ id: string; event_type: string; entity_type: string; entity_id: string; entity_name: string; field_name: string | null; old_value: string | null; new_value: string | null; related_entity_type: string | null; related_entity_name: string | null; user_id: string | null; created_at: string }>>([]);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -82,46 +82,11 @@ export default function Dashboard() {
         .limit(8)
         .then(({ data }) => { if (data) setOppgaver(data); });
 
-      // Fetch CRM events: recent leads + salgsmuligheter status changes
-      const events: Array<{ id: string; label: string; date: string; color: string }> = [];
-
-      const [leadsRes, smRes] = await Promise.all([
-        supabase.from("leads").select("id,firmanavn,status,created_at,konvertert_dato").order("created_at", { ascending: false }).limit(20),
-        supabase.from("salgsmuligheter").select("id,navn,status,created_at,vunnet_dato,tapt_dato").order("created_at", { ascending: false }).limit(20),
-      ]);
-
-      if (leadsRes.data) {
-        for (const l of leadsRes.data) {
-          // Always show the "new lead" event
-          events.push({ id: `l-new-${l.id}`, label: `Nytt lead: ${l.firmanavn}`, date: l.created_at, color: "bg-primary" });
-
-          // Additionally show conversion/rejection as a separate event
-          if (l.status === "Konvertert til salg") {
-            const convDate = l.konvertert_dato || l.created_at;
-            events.push({ id: `l-conv-${l.id}`, label: `${l.firmanavn} konvertert til salg`, date: convDate, color: "bg-emerald-500" });
-          } else if (l.status === "Konvertert til partner") {
-            const convDate = l.konvertert_dato || l.created_at;
-            events.push({ id: `l-conv-${l.id}`, label: `${l.firmanavn} konvertert til partner`, date: convDate, color: "bg-emerald-500" });
-          } else if (l.status === "Ikke aktuelt") {
-            events.push({ id: `l-ia-${l.id}`, label: `Ikke aktuelt: ${l.firmanavn}`, date: l.created_at, color: "bg-muted-foreground" });
-          }
-        }
-      }
-
-      if (smRes.data) {
-        for (const s of smRes.data) {
-          if (s.status === "Vunnet") {
-            events.push({ id: `sm-won-${s.id}`, label: `Vunnet: ${s.navn}`, date: s.vunnet_dato || s.created_at, color: "bg-emerald-500" });
-          } else if (s.status === "Tapt") {
-            events.push({ id: `sm-lost-${s.id}`, label: `Tapt: ${s.navn}`, date: s.tapt_dato || s.created_at, color: "bg-destructive" });
-          } else {
-            events.push({ id: `sm-new-${s.id}`, label: `Ny salgsmulighet: ${s.navn}`, date: s.created_at, color: "bg-amber-500" });
-          }
-        }
-      }
-
-      events.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-      setCrmEvents(events.slice(0, 12));
+      // Fetch CRM changelog
+      fetch(`${API_URL}/crm_changelog?order=created_at.desc&limit=5`, { headers: API_HEADERS })
+        .then(r => r.ok ? r.json() : [])
+        .then(data => setChangelogEntries(data))
+        .catch(() => {});
     };
     fetchDashboardData();
   }, []);
@@ -598,39 +563,73 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* RIGHT: SISTE AKTIVITET */}
+        {/* RIGHT: ENDRINGSLOGG */}
         <div className="bg-card border rounded-xl overflow-hidden">
           <div className="px-4 sm:px-6 py-4 border-b flex items-center justify-between">
             <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
-              <Activity className="w-4 h-4" /> Siste aktivitet
+              <Activity className="w-4 h-4" /> Endringslogg
             </h2>
             <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={() => navigate("/aktiviteter")}>
               Se alle <ChevronRight className="w-3 h-3" />
             </Button>
           </div>
-          {crmEvents.length === 0 ? (
-            <p className="px-4 py-8 text-center text-muted-foreground text-sm">Ingen hendelser</p>
+          {changelogEntries.length === 0 ? (
+            <p className="px-4 py-8 text-center text-muted-foreground text-sm">Ingen hendelser ennå</p>
           ) : (
             <div className="divide-y">
-              {crmEvents.map((ev) => (
-                <div
-                  key={ev.id}
-                  className="px-4 sm:px-6 py-3 flex items-start gap-3 hover:bg-muted/30 cursor-pointer transition-colors"
-                  onClick={() => {
-                    const entityId = ev.id.replace(/^(l|sm)-[^-]+-/, "");
-                    if (ev.id.startsWith("l-")) navigate(`/leads?open=${entityId}`);
-                    else navigate(`/salgsmuligheter?open=${entityId}`);
-                  }}
-                >
-                  <div className={`w-2.5 h-2.5 rounded-full ${ev.color} shrink-0 mt-1.5`} />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{ev.label}</p>
-                    <span className="text-xs text-muted-foreground">
-                      {format(new Date(ev.date), "d. MMMM", { locale: nb })}
-                    </span>
+              {changelogEntries.map((entry) => {
+                const eventColors: Record<string, string> = {
+                  created: "bg-emerald-500", updated: "bg-blue-500", converted: "bg-violet-500",
+                  linked: "bg-sky-500", completed: "bg-emerald-500", deleted: "bg-destructive",
+                };
+                const eventVerbs: Record<string, string> = {
+                  created: "opprettet", updated: "endret", converted: "konverterte",
+                  linked: "koblet", completed: "fullførte", deleted: "slettet",
+                };
+                const entLabels: Record<string, string> = {
+                  selskap: "selskap", kontakt: "kontakt", salgsmulighet: "deal",
+                  lead: "lead", partner: "partner", prosjekt: "prosjekt", oppgave: "oppgave",
+                  epost: "e-post", møte: "møte",
+                };
+                const userName = entry.user_id && profileMap.get(entry.user_id)
+                  ? profileMap.get(entry.user_id)!.split(" ")[0]
+                  : null;
+                const verb = eventVerbs[entry.event_type] || entry.event_type;
+                const entType = entLabels[entry.entity_type] || entry.entity_type;
+                let desc = `${userName ? userName + " " : ""}${verb} ${entType} '${entry.entity_name}'`;
+                if (entry.event_type === "updated" && entry.field_name) {
+                  desc = `${userName ? userName + " " : ""}${verb} ${entry.field_name} på '${entry.entity_name}'`;
+                  if (entry.new_value) desc += ` → ${entry.new_value}`;
+                }
+                if (entry.event_type === "linked" && entry.related_entity_name) {
+                  desc += ` → ${entry.related_entity_name}`;
+                }
+
+                return (
+                  <div
+                    key={entry.id}
+                    className="px-4 sm:px-6 py-3 flex items-start gap-3 hover:bg-muted/30 cursor-pointer transition-colors"
+                    onClick={() => {
+                      const path = entry.entity_type === "selskap" ? `/selskaper/${entry.entity_id}`
+                        : entry.entity_type === "partner" ? `/partnere/${entry.entity_id}`
+                        : entry.entity_type === "lead" ? `/leads`
+                        : entry.entity_type === "salgsmulighet" ? `/salgsmuligheter`
+                        : entry.entity_type === "kontakt" ? `/kontakter`
+                        : entry.entity_type === "prosjekt" ? `/prosjekter`
+                        : `/aktiviteter`;
+                      navigate(path);
+                    }}
+                  >
+                    <div className={`w-2.5 h-2.5 rounded-full ${eventColors[entry.event_type] || "bg-muted-foreground"} shrink-0 mt-1.5`} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{desc}</p>
+                      <span className="text-xs text-muted-foreground">
+                        {format(new Date(entry.created_at), "d. MMMM HH:mm", { locale: nb })}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
