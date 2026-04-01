@@ -549,6 +549,7 @@ export default function Kontaktstrom() {
       const { data, error } = await supabase.from("selskaper").insert({
         firmanavn,
         kundestatus: "Ikke kunde" as any,
+        domene: group.domain,
       }).select().single();
 
       if (error) throw error;
