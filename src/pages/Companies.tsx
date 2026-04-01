@@ -169,7 +169,7 @@ export default function Companies() {
                 notater: String(row.notater || ""),
                 kilde: "Direkte salg",
                 partner_id: "",
-                lukkedato: "",
+                lukkedato: "", domene: "",
               });
               success++;
             } catch { errors++; }
