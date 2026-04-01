@@ -15,6 +15,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { Plus, Search, Building2, ChevronRight, CalendarIcon, X, Upload, Trash2, ArrowRightLeft, Undo2, DollarSign, TrendingUp, Target, PieChart, Users, BarChart3, ArrowDownRight, ArrowUpRight, Trophy, XCircle, UserMinus, AlertTriangle } from "lucide-react";
+import CompanyLogo from "@/components/CompanyLogo";
 import { beregnTotalKontraktsverdi } from "@/data/crm-data";
 import { useNavigate } from "react-router-dom";
 import InlineTaskForm from "@/components/InlineTaskForm";
@@ -348,7 +349,10 @@ export default function Companies() {
             return (
               <div key={s.id} className="bg-card border rounded-xl p-4 space-y-2" onClick={() => navigate(`/selskaper/${s.id}`)}>
                 <div className="flex items-center justify-between">
-                  <p className="font-semibold text-sm truncate">{s.firmanavn}</p>
+                  <div className="flex items-center gap-2">
+                    <CompanyLogo firmanavn={s.firmanavn} size="sm" />
+                    <p className="font-semibold text-sm truncate">{s.firmanavn}</p>
+                  </div>
                   <Badge className={`text-[10px] shrink-0 ${kundestatusColors[s.kundestatus]}`}>{s.kundestatus}</Badge>
                 </div>
                 {s.bransje && <p className="text-xs text-muted-foreground">{s.bransje}</p>}
@@ -400,7 +404,12 @@ export default function Companies() {
                 const totalSla = selskapSm.reduce((sum, sm) => sum + (sm.sla || 0), 0);
                 return (
                 <tr key={s.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => navigate(`/selskaper/${s.id}`)}>
-                  <td className="px-4 py-3 font-medium">{s.firmanavn}</td>
+                  <td className="px-4 py-3 font-medium">
+                    <div className="flex items-center gap-2">
+                      <CompanyLogo firmanavn={s.firmanavn} size="sm" />
+                      {s.firmanavn}
+                    </div>
+                  </td>
                   <td className="px-4 py-3 text-muted-foreground">{s.bransje || "–"}</td>
                   <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                     <select className={`text-xs px-2 py-1 rounded-full font-medium border-0 cursor-pointer ${kundestatusColors[s.kundestatus]}`}

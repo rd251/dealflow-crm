@@ -16,6 +16,7 @@ import {
   Building2, ArrowLeft, DollarSign, TrendingUp, Briefcase, Users,
   Mail, Phone, Linkedin, FileText, CalendarDays, ChevronRight, Plus, X, Shield, Trash2,
 } from "lucide-react";
+import CompanyLogo from "@/components/CompanyLogo";
 import { Kundestatus, OnboardingStatus, Kundetilstand, SalgsmulighetStatus, Kontakt } from "@/data/crm-data";
 import { toast } from "sonner";
 
@@ -193,9 +194,7 @@ export default function CompanyProfile() {
         </div>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-            <div className="p-2 sm:p-3 rounded-xl bg-primary/10 text-primary shrink-0">
-              <Building2 className={isMobile ? "w-5 h-5" : "w-6 h-6"} />
-            </div>
+            <CompanyLogo firmanavn={selskap.firmanavn} size={isMobile ? "md" : "lg"} />
             <div className="min-w-0">
               <h1 className="text-xl sm:text-2xl font-bold tracking-tight truncate">{selskap.firmanavn}</h1>
               <div className="flex items-center gap-2 mt-1 flex-wrap">

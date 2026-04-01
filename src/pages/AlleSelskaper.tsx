@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search, Building2, ChevronRight } from "lucide-react";
 import { Kundestatus } from "@/data/crm-data";
+import CompanyLogo from "@/components/CompanyLogo";
 
 const kundestatusColors: Record<Kundestatus, string> = {
   "Ikke kunde": "bg-muted text-muted-foreground",
@@ -51,7 +52,10 @@ export default function AlleSelskaper() {
               onClick={() => navigate(`/selskaper/${s.id}`)}
             >
               <div className="flex items-center justify-between">
-                <p className="font-semibold text-sm truncate">{s.firmanavn}</p>
+                <div className="flex items-center gap-2">
+                  <CompanyLogo firmanavn={s.firmanavn} size="sm" />
+                  <p className="font-semibold text-sm truncate">{s.firmanavn}</p>
+                </div>
                 <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
               </div>
               <div className="flex items-center gap-2">
@@ -85,7 +89,12 @@ export default function AlleSelskaper() {
                   className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer"
                   onClick={() => navigate(`/selskaper/${s.id}`)}
                 >
-                  <td className="px-4 py-3 font-medium">{s.firmanavn}</td>
+                  <td className="px-4 py-3 font-medium">
+                    <div className="flex items-center gap-2">
+                      <CompanyLogo firmanavn={s.firmanavn} size="sm" />
+                      {s.firmanavn}
+                    </div>
+                  </td>
                   <td className="px-4 py-3 text-muted-foreground">{s.bransje || "–"}</td>
                   <td className="px-4 py-3">
                     <Badge variant="outline" className={`text-[10px] ${kundestatusColors[s.kundestatus]}`}>
