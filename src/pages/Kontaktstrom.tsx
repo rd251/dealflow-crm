@@ -542,6 +542,28 @@ export default function Kontaktstrom() {
     }
   };
 
+  const handleCreateCompany = async (group: CompanyGroup) => {
+    setCreatingCompany(true);
+    try {
+      const firmanavn = group.firmanavn !== group.domain ? group.firmanavn : group.domain.split(".")[0].charAt(0).toUpperCase() + group.domain.split(".")[0].slice(1);
+      const { data, error } = await supabase.from("selskaper").insert({
+        firmanavn,
+        kundestatus: "Ikke kunde" as any,
+      }).select().single();
+
+      if (error) throw error;
+      toast.success(`Selskap "${firmanavn}" opprettet`);
+      refresh();
+      setSelectedCompany(null);
+    } catch (err: any) {
+      toast.error("Kunne ikke opprette selskap: " + (err.message || "Ukjent feil"));
+    } finally {
+      setCreatingCompany(false);
+    }
+  };
+
+  const faviconUrl = (domain: string) => `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+
   const personInitial = (name: string) => (name || "?").charAt(0).toUpperCase();
 
   return (
