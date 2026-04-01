@@ -194,7 +194,7 @@ export default function CompanyProfile() {
         </div>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-            <CompanyLogo firmanavn={selskap.firmanavn} size={isMobile ? "md" : "lg"} />
+            <CompanyLogo firmanavn={selskap.firmanavn} kontaktEmails={selskapKontakter.map(k => k.e_post)} size={isMobile ? "md" : "lg"} />
             <div className="min-w-0">
               <h1 className="text-xl sm:text-2xl font-bold tracking-tight truncate">{selskap.firmanavn}</h1>
               <div className="flex items-center gap-2 mt-1 flex-wrap">
