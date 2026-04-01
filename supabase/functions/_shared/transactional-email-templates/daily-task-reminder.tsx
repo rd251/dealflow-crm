@@ -140,10 +140,10 @@ const DailyTaskReminderEmail = ({
                 <Heading as="h2" style={sectionHeading}>✅ I dag ({todayTasks.length})</Heading>
                 {todayTasks.map((task, i) => (
                   <Section key={i} style={taskCard}>
-                    <Text style={taskName}>
+                    <Text style={taskName} className="task-name">
                       <span style={taskCircle}>○</span>&nbsp;&nbsp;{task.oppgave}
                     </Text>
-                    <Text style={taskMetaLine}>
+                    <Text style={taskMetaLine} className="task-meta">
                       {task.prioritet && priorityLabel[task.prioritet] && (
                         <span style={{ ...priorityBadge, color: priorityLabel[task.prioritet].color }}>
                           {priorityLabel[task.prioritet].text}
