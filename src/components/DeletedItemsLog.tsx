@@ -153,7 +153,7 @@ export default function DeletedItemsLog() {
             {visibleItems.map(item => (
               <div
                 key={item.id}
-                className="flex items-center gap-3 py-2.5 px-3 rounded-lg hover:bg-muted/50 group transition-colors"
+                className={`flex items-center gap-3 py-2.5 px-3 rounded-lg hover:bg-muted/50 group transition-colors ${item.restored_at ? "opacity-50" : ""}`}
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
@@ -161,35 +161,45 @@ export default function DeletedItemsLog() {
                       {TABLE_LABELS[item.table_name] || item.table_name}
                     </Badge>
                     <span className="text-sm font-medium truncate">{getItemLabel(item)}</span>
+                    {item.restored_at && (
+                      <Badge variant="outline" className="text-[10px] shrink-0 text-emerald-600 border-emerald-200">
+                        Gjenopprettet
+                      </Badge>
+                    )}
                   </div>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     Slettet {formatDistanceToNow(new Date(item.deleted_at), { addSuffix: true, locale: nb })}
+                    {item.restored_at && (
+                      <span> · gjenopprettet {formatDistanceToNow(new Date(item.restored_at), { addSuffix: true, locale: nb })}</span>
+                    )}
                   </p>
                 </div>
-                <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 px-2 gap-1 text-xs"
-                    onClick={() => handleRestore(item)}
-                    disabled={restoring === item.id}
-                  >
-                    {restoring === item.id ? (
-                      <Loader2 className="w-3 h-3 animate-spin" />
-                    ) : (
-                      <RotateCcw className="w-3 h-3" />
-                    )}
-                    Gjenopprett
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 px-2 text-xs text-destructive hover:text-destructive"
-                    onClick={() => handlePermanentDelete(item)}
-                  >
-                    <Trash2 className="w-3 h-3" />
-                  </Button>
-                </div>
+                {!item.restored_at && (
+                  <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 px-2 gap-1 text-xs"
+                      onClick={() => handleRestore(item)}
+                      disabled={restoring === item.id}
+                    >
+                      {restoring === item.id ? (
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                      ) : (
+                        <RotateCcw className="w-3 h-3" />
+                      )}
+                      Gjenopprett
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 px-2 text-xs text-destructive hover:text-destructive"
+                      onClick={() => handlePermanentDelete(item)}
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </Button>
+                  </div>
+                )}
               </div>
             ))}
             {items.length > 5 && (
