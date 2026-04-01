@@ -59,6 +59,7 @@ export default function Moetenotater() {
   const [searchQuery, setSearchQuery] = useState("");
   const [noteFilter, setNoteFilter] = useState<"all" | "with" | "without">("all");
   const [entityFilter, setEntityFilter] = useState<string>("all");
+  const [dateFilter, setDateFilter] = useState<"all" | "today">("all");
 
   const fetchMeetings = useCallback(async () => {
     try {
