@@ -293,33 +293,36 @@ export default function Salgsmuligheter() {
                           onClick={() => setSelectedSm(deal)}
                           className={`bg-card border rounded-xl p-3.5 cursor-grab active:cursor-grabbing hover:shadow-md transition-all group ${isBlocked ? "ring-2 ring-destructive animate-pulse" : ""}`}>
                           
-                          {/* Header: Contact person with avatar */}
-                          <div className="flex items-center gap-2.5 mb-3">
-                            <Avatar className="w-8 h-8 shrink-0">
-                              {deal.e_post && <AvatarImage src={gravatarUrl(deal.e_post, 64) || undefined} alt={deal.kontaktperson || deal.navn} />}
-                              <AvatarFallback className={`text-xs font-semibold text-primary-foreground ${signal.color === "bg-destructive" ? "bg-destructive" : signal.color === "bg-warning" ? "bg-warning" : "bg-primary"}`}>
-                                {(deal.kontaktperson || deal.navn || "?").charAt(0).toUpperCase()}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-semibold text-foreground truncate leading-tight">
-                                {deal.kontaktperson || deal.navn}
-                              </p>
-                            </div>
+                          {/* 1. Company with logo */}
+                          <div className="flex items-center gap-2 mb-2.5">
+                            <CompanyLogo domain={getSelskapDomain(deal.selskap_id)} firmanavn={getSelskapNavn(deal.selskap_id || "")} kontaktEmails={deal.e_post ? [deal.e_post] : undefined} size="sm" className="w-7 h-7 rounded-lg" />
+                            <span className="text-sm font-semibold text-foreground truncate flex-1 cursor-pointer hover:text-primary hover:underline" onClick={e => { e.stopPropagation(); if (deal.selskap_id) navigate(`/selskaper/${deal.selskap_id}`); }}>
+                              {getSelskapNavn(deal.selskap_id || "")}
+                            </span>
                             {!isMobile && <GripVertical className="w-4 h-4 text-muted-foreground/30 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />}
                           </div>
 
-                          {/* Details list */}
+                          {/* Details */}
                           <div className="space-y-1.5 pl-[2px]">
-                            {/* Company with logo placeholder */}
-                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                              <CompanyLogo domain={getSelskapDomain(deal.selskap_id)} firmanavn={getSelskapNavn(deal.selskap_id || "")} kontaktEmails={deal.e_post ? [deal.e_post] : undefined} size="sm" className="w-5 h-5 rounded" />
-                              <span className="truncate cursor-pointer hover:text-primary hover:underline" onClick={e => { e.stopPropagation(); if (deal.selskap_id) navigate(`/selskaper/${deal.selskap_id}`); }}>
-                                {getSelskapNavn(deal.selskap_id || "")}
-                              </span>
-                            </div>
+                            {/* 2. Contact person */}
+                            {deal.kontaktperson && (
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <Avatar className="w-5 h-5 shrink-0">
+                                  {deal.e_post && <AvatarImage src={gravatarUrl(deal.e_post, 40) || undefined} alt={deal.kontaktperson} />}
+                                  <AvatarFallback className="text-[8px] font-bold bg-primary/10 text-primary">
+                                    {deal.kontaktperson.charAt(0).toUpperCase()}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <span className="truncate">{deal.kontaktperson}</span>
+                              </div>
+                            )}
 
-                            {/* MRR */}
+                            {/* 3. Use case */}
+                            {deal.use_case?.trim() && (
+                              <p className="text-[11px] text-muted-foreground truncate pl-7">💡 {deal.use_case}</p>
+                            )}
+
+                            {/* 4. MRR */}
                             <div className="flex items-center gap-2 text-xs text-muted-foreground">
                               <div className="w-5 h-5 rounded flex items-center justify-center shrink-0">
                                 <DollarSign className="w-3.5 h-3.5" />
@@ -327,7 +330,7 @@ export default function Salgsmuligheter() {
                               <span className="font-medium text-foreground">{nok(deal.forventet_mrr)}</span>
                             </div>
 
-                            {/* Responsible person */}
+                            {/* 5. Deal owner */}
                             {deal.ansvarlig && getProfileName(deal.ansvarlig) && (
                               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                 <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
@@ -338,7 +341,7 @@ export default function Salgsmuligheter() {
                             )}
                           </div>
 
-                          {/* Neste steg warning or activity signal */}
+                          {/* 6. Neste steg */}
                           {missingNeste ? (
                             <div className="flex items-center gap-1.5 mt-2.5 pt-2 border-t border-border/50 text-destructive">
                               <AlertTriangle className="w-3 h-3 shrink-0" />
