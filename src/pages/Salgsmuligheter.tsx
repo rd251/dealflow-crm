@@ -196,7 +196,12 @@ export default function Salgsmuligheter() {
     setDraggedId(null);
   };
 
-  const addSm = () => {
+  const moveDealToStage = useCallback((dealId: string, newStage: SalgsmulighetStatus) => {
+    updateSalgsmuligheter(prev => prev.map(s =>
+      s.id === dealId ? { ...s, status: newStage, sist_aktivitet: new Date().toISOString().split("T")[0] } : s
+    ));
+  }, [updateSalgsmuligheter]);
+
     const today = new Date().toISOString().split("T")[0];
     const id = generateId("SM", salgsmuligheter);
     const nySm: Salgsmulighet = {
