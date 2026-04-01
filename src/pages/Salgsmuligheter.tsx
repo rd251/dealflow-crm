@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import DetailPanelShell, { DetailSection, DetailField, DetailDivider, DetailStatGrid, DetailStatCard } from "@/components/DetailPanelShell";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, GripVertical, Trophy, XCircle, Trash2, Phone, User, AlertTriangle, Clock } from "lucide-react";
+import { Plus, GripVertical, Trophy, XCircle, Trash2, Phone, User, AlertTriangle, Clock, Building2, DollarSign } from "lucide-react";
 import EntityLinkPicker from "@/components/EntityLinkPicker";
 import { Badge } from "@/components/ui/badge";
 import { Salgsmulighet, SalgsmulighetStatus, Tapsaarsak, beregnTotalKontraktsverdi, beregnVektetPipeline } from "@/data/crm-data";
@@ -275,47 +275,71 @@ export default function Salgsmuligheter() {
                       return (
                         <div key={deal.id} draggable onDragStart={e => { setDraggedId(deal.id); e.dataTransfer.effectAllowed = "move"; }}
                           onClick={() => setSelectedSm(deal)}
-                          className={`bg-card border rounded-lg p-3 cursor-grab active:cursor-grabbing hover:shadow-md transition-all group border-l-[3px] ${signal.border} ${isBlocked ? "ring-2 ring-destructive animate-pulse" : ""}`}>
-                          <div className="flex items-start gap-2">
-                            {!isMobile && <GripVertical className="w-4 h-4 text-muted-foreground/40 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />}
-                            <div className="flex-1 min-w-0">
-                              {/* Row 1: Company + MRR */}
-                              <div className="flex items-center justify-between gap-2">
-                                <p className="text-sm font-medium text-foreground truncate cursor-pointer hover:text-primary hover:underline" onClick={e => { e.stopPropagation(); navigate(`/selskaper/${deal.selskap_id}`); }}>{getSelskapNavn(deal.selskap_id)}</p>
-                                <span className="text-xs font-mono font-bold shrink-0">{nok(deal.forventet_mrr)}</span>
-                              </div>
-
-                              {/* Row 2: Deal name */}
-                              <p className="font-semibold text-sm truncate mt-0.5">{deal.navn}</p>
-
-                              {/* Row 3: Neste steg or warning */}
-                              {missingNeste ? (
-                                <div className="flex items-center gap-1 mt-1 text-destructive">
-                                  <AlertTriangle className="w-3 h-3 shrink-0" />
-                                  <span className="text-[10px] font-medium">Neste steg mangler!</span>
-                                </div>
-                              ) : (
-                                <p className="text-[10px] text-muted-foreground mt-1 truncate">→ {deal.neste_steg}</p>
-                              )}
-
-                              {/* Row 4: Activity signal + ansvarlig */}
-                              <div className="flex items-center justify-between gap-2 mt-1.5">
-                                <div className="flex items-center gap-1.5">
-                                  <div className={`w-2 h-2 rounded-full ${signal.color}`} />
-                                  <span className="text-[10px] text-muted-foreground">{signal.label}</span>
-                                </div>
-                                {deal.ansvarlig && (
-                                  <span className="text-[10px] text-muted-foreground truncate flex items-center gap-1">
-                                    <User className="w-3 h-3 shrink-0" />{deal.ansvarlig}
-                                  </span>
-                                )}
-                              </div>
-
-                              {isBlocked && (
-                                <p className="text-[10px] text-destructive mt-1 font-medium">⛔ Fyll inn neste steg før flytting</p>
-                              )}
+                          className={`bg-card border rounded-xl p-3.5 cursor-grab active:cursor-grabbing hover:shadow-md transition-all group ${isBlocked ? "ring-2 ring-destructive animate-pulse" : ""}`}>
+                          
+                          {/* Header: Contact person with avatar */}
+                          <div className="flex items-center gap-2.5 mb-3">
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold text-primary-foreground shrink-0 ${signal.color === "bg-destructive" ? "bg-destructive" : signal.color === "bg-warning" ? "bg-warning" : "bg-primary"}`}>
+                              {(deal.kontaktperson || deal.navn || "?").charAt(0).toUpperCase()}
                             </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold text-foreground truncate leading-tight">
+                                {deal.kontaktperson || deal.navn}
+                              </p>
+                            </div>
+                            {!isMobile && <GripVertical className="w-4 h-4 text-muted-foreground/30 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />}
                           </div>
+
+                          {/* Details list */}
+                          <div className="space-y-1.5 pl-[2px]">
+                            {/* Company with logo placeholder */}
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <div className="w-5 h-5 rounded bg-muted flex items-center justify-center shrink-0">
+                                <Building2 className="w-3 h-3" />
+                              </div>
+                              <span className="truncate cursor-pointer hover:text-primary hover:underline" onClick={e => { e.stopPropagation(); if (deal.selskap_id) navigate(`/selskaper/${deal.selskap_id}`); }}>
+                                {getSelskapNavn(deal.selskap_id)}
+                              </span>
+                            </div>
+
+                            {/* MRR */}
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <div className="w-5 h-5 rounded flex items-center justify-center shrink-0">
+                                <DollarSign className="w-3.5 h-3.5" />
+                              </div>
+                              <span className="font-medium text-foreground">{nok(deal.forventet_mrr)}</span>
+                            </div>
+
+                            {/* Responsible person */}
+                            {deal.ansvarlig && (
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <div className="w-5 h-5 rounded flex items-center justify-center shrink-0">
+                                  <User className="w-3.5 h-3.5" />
+                                </div>
+                                <span className="truncate">{deal.ansvarlig}</span>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Neste steg warning or activity signal */}
+                          {missingNeste ? (
+                            <div className="flex items-center gap-1.5 mt-2.5 pt-2 border-t border-border/50 text-destructive">
+                              <AlertTriangle className="w-3 h-3 shrink-0" />
+                              <span className="text-[10px] font-medium">Neste steg mangler!</span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center justify-between gap-2 mt-2.5 pt-2 border-t border-border/50">
+                              <p className="text-[10px] text-muted-foreground truncate">→ {deal.neste_steg}</p>
+                              <div className="flex items-center gap-1 shrink-0">
+                                <div className={`w-1.5 h-1.5 rounded-full ${signal.color}`} />
+                                <span className="text-[10px] text-muted-foreground">{signal.label}</span>
+                              </div>
+                            </div>
+                          )}
+
+                          {isBlocked && (
+                            <p className="text-[10px] text-destructive mt-1 font-medium">⛔ Fyll inn neste steg før flytting</p>
+                          )}
                         </div>
                       );
                     })}
