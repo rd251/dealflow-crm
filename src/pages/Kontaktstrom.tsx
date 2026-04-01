@@ -749,11 +749,26 @@ export default function Kontaktstrom() {
                   {g.domain && <span className="ml-1">· {g.domain}</span>}
                 </p>
               </div>
-              {(g.type === "Lead" || g.type === "Kunde" || g.type === "Partner") && (
-                <Badge variant="secondary" className={`text-xs shrink-0 ${TYPE_COLORS[g.type]}`}>
-                  {g.type}
-                </Badge>
-              )}
+              <div className="hidden md:flex items-center gap-4 shrink-0 text-xs text-muted-foreground">
+                {g.status && (
+                  <span className="w-28 text-right truncate">{g.status}</span>
+                )}
+                {g.lastContactedAt ? (
+                  <span className="w-36 text-right truncate flex items-center justify-end gap-1">
+                    <Clock className="w-3 h-3 shrink-0" />
+                    {formatAktivitetDato(g.lastContactedAt)}
+                  </span>
+                ) : (
+                  <span className="w-36" />
+                )}
+                <span className="w-28 text-right">
+                  {(g.type !== "Ukjent" && g.type !== "Kontakt") && (
+                    <Badge variant="secondary" className={`text-xs ${TYPE_COLORS[g.type]}`}>
+                      {g.type}
+                    </Badge>
+                  )}
+                </span>
+              </div>
             </div>
           ))}
           {companyGroups.length === 0 && (
