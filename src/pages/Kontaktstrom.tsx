@@ -40,6 +40,7 @@ interface KontaktStromPerson {
   suggestedSelskapId: string | null;
   suggestedSelskapNavn: string;
   connectionStatus: "linked" | "suggested" | "unlinked";
+  ownerUserId: string | null;
 }
 
 const TYPE_COLORS: Record<string, string> = {
