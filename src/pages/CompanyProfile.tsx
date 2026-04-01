@@ -16,6 +16,7 @@ import {
   Building2, ArrowLeft, DollarSign, TrendingUp, Briefcase, Users,
   Mail, Phone, Linkedin, FileText, CalendarDays, ChevronRight, Plus, X, Shield, Trash2,
 } from "lucide-react";
+import CompanyLogo from "@/components/CompanyLogo";
 import { Kundestatus, OnboardingStatus, Kundetilstand, SalgsmulighetStatus, Kontakt } from "@/data/crm-data";
 import { toast } from "sonner";
 
