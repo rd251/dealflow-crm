@@ -108,6 +108,7 @@ export default function Kontaktstrom() {
   const [selected, setSelected] = useState<KontaktStromPerson | null>(null);
   const [selectedCompany, setSelectedCompany] = useState<CompanyGroup | null>(null);
   const [creatingLead, setCreatingLead] = useState(false);
+  const [creatingCompany, setCreatingCompany] = useState(false);
   const [syncing, setSyncing] = useState(false);
 
   const fetchEmailContacts = async () => {
