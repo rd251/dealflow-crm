@@ -208,7 +208,7 @@ export default function Aktiviteter() {
     }
   }, [buildUrl, offset]);
 
-  useEffect(() => { fetchAll(true); }, [dateFrom, dateTo, eventFilter, entityTypeFilter]);
+  useEffect(() => { fetchAll(true); }, [dateFrom, dateTo, eventFilter, entityTypeFilter, userFilter]);
 
   // Realtime subscription
   useEffect(() => {
