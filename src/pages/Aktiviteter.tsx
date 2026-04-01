@@ -437,6 +437,33 @@ export default function Aktiviteter() {
                             </Badge>
                           )}
 
+                          {/* Company context for salgsmulighet/lead */}
+                          {(entry.entity_type === "salgsmulighet" || entry.entity_type === "lead") && (() => {
+                            const selskapId = entitySelskapMap[`${entry.entity_type}:${entry.entity_id}`];
+                            const selskapName = selskapId ? selskapLookup[selskapId] : null;
+                            const kontaktperson = entityKontaktMap[`${entry.entity_type}:${entry.entity_id}`];
+                            return (
+                              <>
+                                {selskapName && (
+                                  <Badge
+                                    variant="outline"
+                                    className={`text-[10px] px-1.5 py-0 h-5 cursor-pointer transition-colors hover:opacity-80 ${entityBadgeColor.selskap}`}
+                                    onClick={() => navigate(`/selskaper/${selskapId}`)}
+                                  >
+                                    <Building2 className="w-3 h-3 mr-1" />
+                                    {selskapName}
+                                  </Badge>
+                                )}
+                                {kontaktperson && (
+                                  <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                                    <User className="w-3 h-3" />
+                                    {kontaktperson}
+                                  </span>
+                                )}
+                              </>
+                            );
+                          })()}
+
                           {/* Related entity badge */}
                           {entry.related_entity_type && entry.related_entity_name && (() => {
                             const relPath = getEntityPath(entry.related_entity_type, entry.related_entity_id || "");
