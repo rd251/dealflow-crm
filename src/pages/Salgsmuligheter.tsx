@@ -373,10 +373,9 @@ export default function Salgsmuligheter() {
                       const missingNeste = !deal.neste_steg?.trim();
                       const isBlocked = moveBlockedId === deal.id;
                       return isMobile ? (
-                        /* ── Compact mobile card ── */
-                        <div key={deal.id}
-                          onClick={() => setSelectedSm(deal)}
-                          className={`bg-card border rounded-lg p-2.5 active:bg-muted/50 transition-colors ${isBlocked ? "ring-2 ring-destructive animate-pulse" : ""}`}>
+                        /* ── Compact mobile card with swipe ── */
+                        <MobileSwipeCard key={deal.id} deal={deal} stage={stage} onMove={moveDealToStage}
+                          onClick={() => setSelectedSm(deal)} signal={signal} missingNeste={missingNeste} isBlocked={isBlocked}>
                           <div className="flex items-center gap-2">
                             <CompanyLogo domain={getSelskapDomain(deal.selskap_id)} firmanavn={getSelskapNavn(deal.selskap_id || "")} kontaktEmails={deal.e_post ? [deal.e_post] : undefined} size="sm" className="w-6 h-6 rounded shrink-0" />
                             <div className="flex-1 min-w-0">
@@ -393,7 +392,7 @@ export default function Salgsmuligheter() {
                             </div>
                           )}
                           {isBlocked && <p className="text-[9px] text-destructive mt-0.5 font-medium">⛔ Fyll inn neste steg</p>}
-                        </div>
+                        </MobileSwipeCard>
                       ) : (
                         /* ── Full desktop card ── */
                         <div key={deal.id} draggable onDragStart={e => { setDraggedId(deal.id); e.dataTransfer.effectAllowed = "move"; }}
