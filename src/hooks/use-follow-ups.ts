@@ -167,6 +167,8 @@ export function useFollowUps(
         : 999;
 
       if (hoursInactive < 72) return; // 3 days
+      if (hasRecentFollowUp(sm.id, "salgsmulighet")) return;
+
       const verdi = (sm.forventet_mrr || 0) * (sm.kontraktslengde_mnd || 12);
 
       items.push({
@@ -181,8 +183,8 @@ export function useFollowUps(
         selskapId: sm.selskap_id || null,
         kontaktId: sm.kontakt_id || null,
         sistAktivitet: sm.sist_aktivitet,
-        sistAktivitetType: lastAct?.type || null,
-        anbefalHandling: getSmAction(sm, lastAct),
+        sistAktivitetType: lastAktivitet?.type || null,
+        anbefalHandling: getSmAction(sm, lastAktivitet),
         verdi,
         priority: verdi > 50000 ? "high" : hoursInactive > 120 ? "high" : "medium",
         hoursInactive,
