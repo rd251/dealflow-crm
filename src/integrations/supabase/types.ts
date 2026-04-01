@@ -126,6 +126,36 @@ export type Database = {
           },
         ]
       }
+      deleted_items: {
+        Row: {
+          deleted_at: string
+          deleted_by: string | null
+          id: string
+          record_data: Json
+          record_id: string
+          restored_at: string | null
+          table_name: string
+        }
+        Insert: {
+          deleted_at?: string
+          deleted_by?: string | null
+          id?: string
+          record_data: Json
+          record_id: string
+          restored_at?: string | null
+          table_name: string
+        }
+        Update: {
+          deleted_at?: string
+          deleted_by?: string | null
+          id?: string
+          record_data?: Json
+          record_id?: string
+          restored_at?: string | null
+          table_name?: string
+        }
+        Relationships: []
+      }
       email_contacts: {
         Row: {
           all_emails: string[]
