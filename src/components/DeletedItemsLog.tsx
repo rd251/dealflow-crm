@@ -70,7 +70,7 @@ export default function DeletedItemsLog() {
     setLoading(false);
   };
 
-  useEffect(() => { fetchItems(); }, []);
+  useEffect(() => { fetchItems(); }, [showRestored]);
 
   const handleRestore = async (item: DeletedItem) => {
     setRestoring(item.id);
