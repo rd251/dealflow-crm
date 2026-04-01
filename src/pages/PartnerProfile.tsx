@@ -88,7 +88,7 @@ export default function PartnerProfile() {
       onboarding_status: "Ikke startet", mrr: 0, arr: 0, oppstartskostnad: 0,
       go_live_dato: "", kansellert_dato: "", kanselleringsaarsak: "", kanselleringsnotat: "",
       kundetilstand: "Bra", sist_aktivitet: today, neste_steg: "", notater: "",
-      kilde: "Partner", partner_id: id!, lukkedato: "", domene: "",
+      kilde: "Partner", partner_id: id!, lukkedato: "", domene: "", orgnr: "",
     };
     updateSelskaper(prev => [...prev, nyttSelskap]);
     setCustomerForm({ firmanavn: "", bransje: "" });

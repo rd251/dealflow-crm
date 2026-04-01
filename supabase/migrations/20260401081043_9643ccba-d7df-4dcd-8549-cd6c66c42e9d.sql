@@ -1,0 +1,1 @@
+ALTER TABLE public.selskaper ADD COLUMN orgnr text DEFAULT '' NOT NULL;
