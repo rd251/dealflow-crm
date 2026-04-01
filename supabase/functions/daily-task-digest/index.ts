@@ -41,8 +41,24 @@ Deno.serve(async (req) => {
     })
   }
 
-  if (!tasks?.length) {
-    return new Response(JSON.stringify({ sent: 0, reason: 'no_tasks' }), {
+  // Get today's meetings
+  const { data: meetings, error: meetingsError } = await supabase
+    .from('aktiviteter')
+    .select('id, tittel, beskrivelse, start_tid, slutt_tid, dato, user_id')
+    .eq('type', 'Møte')
+    .eq('dato', today)
+    .not('user_id', 'is', null)
+    .order('start_tid', { ascending: true })
+
+  if (meetingsError) {
+    console.error('Failed to fetch meetings', meetingsError)
+  }
+
+  const hasTasks = tasks && tasks.length > 0
+  const hasMeetings = meetings && meetings.length > 0
+
+  if (!hasTasks && !hasMeetings) {
+    return new Response(JSON.stringify({ sent: 0, reason: 'no_tasks_or_meetings' }), {
       headers: { 'Content-Type': 'application/json' },
     })
   }
