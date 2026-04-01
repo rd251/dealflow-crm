@@ -836,10 +836,19 @@ export default function Kontaktstrom() {
             {selectedCompany.type}
           </Badge>
         ) : undefined}
-        actions={selectedCompany?.selskapId ? (
-          <Button size="sm" variant="outline" onClick={() => { navigate(`/selskaper/${selectedCompany.selskapId}`); setSelectedCompany(null); }}>
-            <ExternalLink className="w-4 h-4 mr-1.5" />Selskapsprofil
-          </Button>
+        actions={selectedCompany ? (
+          <>
+            {selectedCompany.selskapId ? (
+              <Button size="sm" variant="outline" onClick={() => { navigate(`/selskaper/${selectedCompany.selskapId}`); setSelectedCompany(null); }}>
+                <ExternalLink className="w-4 h-4 mr-1.5" />Selskapsprofil
+              </Button>
+            ) : (
+              <Button size="sm" onClick={() => handleCreateCompany(selectedCompany)} disabled={creatingCompany}>
+                <Plus className="w-4 h-4 mr-1.5" />
+                {creatingCompany ? "Oppretter..." : "Opprett selskap"}
+              </Button>
+            )}
+          </>
         ) : undefined}
         tabContent={selectedCompany ? {
           detaljer: (
