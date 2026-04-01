@@ -78,16 +78,16 @@ const DailyTaskReminderEmail = ({
       </Head>
       <Preview>{previewText}</Preview>
       <Body style={main}>
-        <Container style={container}>
+        <Container style={container} className="email-container">
           {/* Header */}
-          <Section style={headerSection}>
-            <Img src={LOGO_URL} alt="Snakk" width="140" height="auto" style={logoImg} />
+          <Section style={headerSection} className="header-section">
+            <Img src={LOGO_URL} alt="Snakk" width="120" height="auto" style={logoImg} className="logo-img" />
           </Section>
 
           {/* Main content */}
-          <Section style={contentSection}>
-            <Heading style={h1}>God morgen, {displayName} ☀️</Heading>
-            <Text style={summaryText}>
+          <Section style={contentSection} className="content-section">
+            <Heading style={h1} className="h1-heading">God morgen, {displayName} ☀️</Heading>
+            <Text style={summaryText} className="summary-text">
               {overdueCount > 0 && (
                 <span style={{ color: BRAND_RED, fontWeight: 700 }}>⚠️ {overdueCount} forfalte</span>
               )}
@@ -97,7 +97,7 @@ const DailyTaskReminderEmail = ({
               {meetingCount > 0 && <span>📅 {meetingCount} møte{meetingCount !== 1 ? 'r' : ''}</span>}
             </Text>
 
-            <Button style={ctaButton} href={`${appUrl}/oppgaver`}>
+            <Button style={ctaButton} className="cta-button" href={`${appUrl}/oppgaver`}>
               Åpne Snakk
             </Button>
 
