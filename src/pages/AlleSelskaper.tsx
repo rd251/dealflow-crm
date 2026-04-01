@@ -20,7 +20,7 @@ const kundestatusColors: Record<Kundestatus, string> = {
 export default function AlleSelskaper() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const { selskaper } = useCrmStore();
+  const { selskaper, kontakter } = useCrmStore();
   const [search, setSearch] = useState("");
 
   const filtered = selskaper.filter(s =>
