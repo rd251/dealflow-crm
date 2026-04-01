@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import PageShell from "@/components/PageShell";
 import { useCrmStore } from "@/hooks/use-crm-store";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useProfiles } from "@/hooks/use-profiles";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,6 +40,7 @@ interface KontaktStromPerson {
   suggestedSelskapId: string | null;
   suggestedSelskapNavn: string;
   connectionStatus: "linked" | "suggested" | "unlinked";
+  ownerUserId: string | null;
 }
 
 const TYPE_COLORS: Record<string, string> = {
@@ -74,10 +76,12 @@ export default function Kontaktstrom() {
   const isMobile = useIsMobile();
   const { kontakter, leads, salgsmuligheter, selskaper, partnere, refresh } = useCrmStore();
 
+  const { profiles } = useProfiles();
+
   const [emailContacts, setEmailContacts] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState<string>("alle");
-  const [filterAnsvarlig, setFilterAnsvarlig] = useState<string>("alle");
+  const [filterEier, setFilterEier] = useState<string>("alle");
   const [selected, setSelected] = useState<KontaktStromPerson | null>(null);
   const [creatingLead, setCreatingLead] = useState(false);
   const [syncing, setSyncing] = useState(false);
@@ -208,6 +212,7 @@ export default function Kontaktstrom() {
         suggestedSelskapId: suggested?.id || null,
         suggestedSelskapNavn: suggested?.firmanavn || "",
         connectionStatus: resolveConnectionStatus(resolvedSelskapId, suggested?.id || null),
+        ownerUserId: null,
       });
     }
 
@@ -226,6 +231,7 @@ export default function Kontaktstrom() {
         selskapId: null, partnerId: null, inCrm: true,
         suggestedSelskapId: sugL?.id || null, suggestedSelskapNavn: sugL?.firmanavn || "",
         connectionStatus: resolveConnectionStatus(null, sugL?.id || null),
+        ownerUserId: null,
       });
     }
 
@@ -244,6 +250,7 @@ export default function Kontaktstrom() {
         selskapId: s.selskap_id || null, partnerId: null, inCrm: true,
         suggestedSelskapId: null, suggestedSelskapNavn: "",
         connectionStatus: resolveConnectionStatus(s.selskap_id || null, null),
+        ownerUserId: null,
       });
     }
 
@@ -261,6 +268,7 @@ export default function Kontaktstrom() {
         selskapId: p.selskap_id || null, partnerId: p.id, inCrm: true,
         suggestedSelskapId: null, suggestedSelskapNavn: "",
         connectionStatus: resolveConnectionStatus(p.selskap_id || null, null),
+        ownerUserId: null,
       });
     }
 
@@ -288,6 +296,9 @@ export default function Kontaktstrom() {
         }
         existing.totalSent += ec.total_emails_sent || 0;
         existing.totalReceived += ec.total_emails_received || 0;
+        if (ec.user_id && !existing.ownerUserId) {
+          existing.ownerUserId = ec.user_id;
+        }
       } else {
         // New person from Gmail, not in CRM — smart matching
         let ecType: KontaktStromPerson["type"] = "Ukjent";
@@ -405,6 +416,7 @@ export default function Kontaktstrom() {
           suggestedSelskapId: ecSuggestedSelskapId,
           suggestedSelskapNavn: ecSuggestedSelskapNavn,
           connectionStatus: resolveConnectionStatus(ecSelskapId, ecSuggestedSelskapId),
+          ownerUserId: ec.user_id || null,
         });
       }
     }
@@ -421,12 +433,6 @@ export default function Kontaktstrom() {
     return result;
   }, [kontakter, leads, salgsmuligheter, selskaper, partnere, emailContacts]);
 
-  const ansvarlige = useMemo(() => {
-    const set = new Set<string>();
-    persons.forEach(p => { if (p.ansvarlig) set.add(p.ansvarlig); });
-    return Array.from(set).sort();
-  }, [persons]);
-
   const filtered = useMemo(() => {
     return persons.filter(p => {
       if (search) {
@@ -434,10 +440,10 @@ export default function Kontaktstrom() {
         if (!p.navn.toLowerCase().includes(q) && !p.email.includes(q) && !p.firmanavn.toLowerCase().includes(q)) return false;
       }
       if (filterType !== "alle" && p.type !== filterType) return false;
-      if (filterAnsvarlig !== "alle" && p.ansvarlig !== filterAnsvarlig) return false;
+      if (filterEier !== "alle" && p.ownerUserId !== filterEier) return false;
       return true;
     });
-  }, [persons, search, filterType, filterAnsvarlig]);
+  }, [persons, search, filterType, filterEier]);
 
   const handleCreateLead = async (person: KontaktStromPerson) => {
     setCreatingLead(true);
@@ -495,14 +501,16 @@ export default function Kontaktstrom() {
               <SelectItem value="Ukjent">Ukjent</SelectItem>
             </SelectContent>
           </Select>
-          <Select value={filterAnsvarlig} onValueChange={setFilterAnsvarlig}>
-            <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="Ansvarlig" />
+          <Select value={filterEier} onValueChange={setFilterEier}>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue placeholder="Eier" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="alle">Alle ansvarlige</SelectItem>
-              {ansvarlige.map(a => (
-                <SelectItem key={a} value={a}>{a}</SelectItem>
+              <SelectItem value="alle">Alle eiere</SelectItem>
+              {profiles.map(p => (
+                <SelectItem key={p.user_id} value={p.user_id}>
+                  {p.display_name || p.email}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
