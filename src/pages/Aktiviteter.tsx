@@ -160,6 +160,9 @@ export default function Aktiviteter() {
   const navigate = useNavigate();
   const [entries, setEntries] = useState<ChangelogEntry[]>([]);
   const [profiles, setProfiles] = useState<Record<string, UserProfile>>({});
+  const [selskapLookup, setSelskapLookup] = useState<Record<string, string>>({});
+  const [entitySelskapMap, setEntitySelskapMap] = useState<Record<string, string>>({});
+  const [entityKontaktMap, setEntityKontaktMap] = useState<Record<string, string>>({});
   const [search, setSearch] = useState("");
   const [eventFilter, setEventFilter] = useState<EventFilter>("alle");
   const [entityTypeFilter, setEntityTypeFilter] = useState<EntityTypeFilter>("alle");
