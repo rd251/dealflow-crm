@@ -42,6 +42,7 @@ interface MeetingItem {
   salgsmulighet_id: string | null;
   ekstern_id: string | null;
   ekstern_provider: string | null;
+  moetenotater: string | null;
 }
 
 export default function Dashboard() {
