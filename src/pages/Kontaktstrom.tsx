@@ -691,22 +691,26 @@ export default function Kontaktstrom() {
                   {p.email}
                 </p>
               </div>
-              <div className="hidden md:flex items-center gap-3 shrink-0">
+              <div className="hidden md:flex items-center gap-4 shrink-0 text-xs text-muted-foreground">
                 {p.status && (
-                  <span className="text-xs text-muted-foreground w-24 text-right truncate">{p.status}</span>
+                  <span className="w-28 text-right truncate">{p.status}</span>
                 )}
-                {p.sistKontaktetDato && (
-                  <span className="text-xs text-muted-foreground w-28 text-right truncate flex items-center justify-end gap-1">
-                    <Clock className="w-3 h-3" />
+                {p.sistKontaktetDato ? (
+                  <span className="w-36 text-right truncate flex items-center justify-end gap-1">
+                    <Clock className="w-3 h-3 shrink-0" />
                     {formatAktivitetDato(p.sistKontaktetDato)}
                   </span>
+                ) : (
+                  <span className="w-36" />
                 )}
+                <span className="w-28 text-right">
+                  {(p.type !== "Ukjent" && p.type !== "Kontakt") && (
+                    <Badge variant="secondary" className={`text-xs ${TYPE_COLORS[p.type]}`}>
+                      {p.type}
+                    </Badge>
+                  )}
+                </span>
               </div>
-              {(p.type === "Lead" || p.type === "Salgsmulighet" || p.type === "Kunde" || p.type === "Partner") && (
-                <Badge variant="secondary" className={`text-xs shrink-0 ${TYPE_COLORS[p.type]}`}>
-                  {p.type}
-                </Badge>
-              )}
             </div>
           ))}
           {filteredPeople.length === 0 && (
