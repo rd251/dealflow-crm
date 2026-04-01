@@ -514,6 +514,19 @@ export default function Salgsmuligheter() {
                   <DetailField label="Use case">
                     <Input value={currentSm.use_case} onChange={e => updateField("use_case", e.target.value)} className="h-7 text-xs" readOnly={!canEdit} />
                   </DetailField>
+                  <DetailField label="Ansvarlig">
+                    <select className="w-full border rounded-lg px-2 py-1 text-xs bg-background h-7"
+                      value={currentSm.ansvarlig}
+                      disabled={!canEdit}
+                      onChange={e => updateField("ansvarlig", e.target.value)}>
+                      <option value="">Ikke tildelt</option>
+                      {profiles.map(p => (
+                        <option key={p.user_id} value={p.user_id}>
+                          {p.display_name}{p.user_id === user?.id ? " (deg)" : ""}
+                        </option>
+                      ))}
+                    </select>
+                  </DetailField>
                 </div>
 
                 {/* Kontakt – compact */}
