@@ -229,19 +229,19 @@ export const template = {
 } satisfies TemplateEntry
 
 // Styles
-const main: React.CSSProperties = { backgroundColor: '#f5f4f2', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }
-const container: React.CSSProperties = { maxWidth: '580px', margin: '0 auto' }
-const headerSection: React.CSSProperties = { backgroundColor: '#ffffff', padding: '28px 0', textAlign: 'center', borderRadius: '8px 8px 0 0', borderBottom: `3px solid ${BRAND_RED}` }
+const main: React.CSSProperties = { backgroundColor: '#f5f4f2', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', padding: '8px 0' }
+const container: React.CSSProperties = { maxWidth: '560px', margin: '0 auto', width: '100%' }
+const headerSection: React.CSSProperties = { backgroundColor: '#ffffff', padding: '22px 0', textAlign: 'center', borderRadius: '8px 8px 0 0', borderBottom: `3px solid ${BRAND_RED}` }
 const logoImg: React.CSSProperties = { margin: '0 auto', display: 'block' }
-const contentSection: React.CSSProperties = { backgroundColor: '#ffffff', padding: '32px 40px' }
-const h1: React.CSSProperties = { fontSize: '22px', fontWeight: 700, color: BRAND_DARK, margin: '0 0 8px' }
-const summaryText: React.CSSProperties = { fontSize: '15px', color: '#555555', lineHeight: '1.5', margin: '0 0 24px' }
+const contentSection: React.CSSProperties = { backgroundColor: '#ffffff', padding: '24px 28px' }
+const h1: React.CSSProperties = { fontSize: '20px', fontWeight: 700, color: BRAND_DARK, margin: '0 0 6px' }
+const summaryText: React.CSSProperties = { fontSize: '14px', color: '#555555', lineHeight: '1.5', margin: '0 0 18px' }
 const ctaButton: React.CSSProperties = {
   backgroundColor: BRAND_RED,
   color: '#ffffff',
-  padding: '14px 32px',
+  padding: '12px 24px',
   borderRadius: '8px',
-  fontSize: '15px',
+  fontSize: '14px',
   fontWeight: 600,
   textDecoration: 'none',
   display: 'block',
@@ -249,7 +249,7 @@ const ctaButton: React.CSSProperties = {
   width: '100%',
   boxSizing: 'border-box',
 }
-const divider: React.CSSProperties = { borderColor: '#e8e6e3', margin: '24px 0' }
+const divider: React.CSSProperties = { borderColor: '#e8e6e3', margin: '18px 0' }
 
 // Overdue section — visually distinct
 const overdueHeader: React.CSSProperties = { backgroundColor: '#fef2f2', borderRadius: '8px', padding: '12px 16px', marginBottom: '8px' }
