@@ -121,6 +121,7 @@ export interface Selskap {
   partner_id: string;
   lukkedato: string;
   domene: string;
+  orgnr: string;
 }
 
 export interface Kontakt {
