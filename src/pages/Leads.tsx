@@ -330,7 +330,7 @@ export default function Leads() {
         ) : undefined}
         actions={canEdit && currentLead && !currentIsLocked && currentLead.status !== "Ikke aktuelt" ? (
           <>
-            <Button size="sm" onClick={() => { konverterLead(currentLead.id); setSelectedLead(null); }}>
+            <Button size="sm" onClick={() => { setConvertDialogLead(currentLead); setConvertNavn(currentLead.use_case || currentLead.firmanavn); }}>
               <ArrowRightCircle className="w-4 h-4 mr-1.5" />Til salg
             </Button>
             <Button size="sm" variant="secondary" onClick={() => { konverterTilPartner(currentLead.id); setSelectedLead(null); }}>
