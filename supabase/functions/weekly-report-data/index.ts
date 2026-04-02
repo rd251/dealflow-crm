@@ -30,14 +30,16 @@ Deno.serve(async (req) => {
     { data: prevLost },
     { data: allSelskaper },
     { data: prosjekter },
+    { data: allPartnere },
   ] = await Promise.all([
     supabase.from('salgsmuligheter').select('navn, forventet_mrr, ansvarlig, selskap_id, vunnet_dato').eq('status', 'Vunnet').gte('vunnet_dato', weekAgo).lte('vunnet_dato', todayStr),
     supabase.from('salgsmuligheter').select('navn, forventet_mrr, selskap_id, tapt_dato, tapsaarsak').eq('status', 'Tapt').gte('tapt_dato', weekAgo).lte('tapt_dato', todayStr),
     supabase.from('salgsmuligheter').select('id, navn, status, forventet_mrr, forventet_lukkedato, ansvarlig, selskap_id, sist_aktivitet, neste_steg, kontaktperson').not('status', 'in', '("Vunnet","Tapt")'),
     supabase.from('salgsmuligheter').select('forventet_mrr').eq('status', 'Vunnet').gte('vunnet_dato', twoWeeksAgo).lt('vunnet_dato', weekAgo),
     supabase.from('salgsmuligheter').select('forventet_mrr').eq('status', 'Tapt').gte('tapt_dato', twoWeeksAgo).lt('tapt_dato', weekAgo),
-    supabase.from('selskaper').select('id, firmanavn, kundestatus, go_live_dato, lukkedato, kanselleringsaarsak, kansellert_dato, kundetilstand'),
+    supabase.from('selskaper').select('id, firmanavn, kundestatus, go_live_dato, lukkedato, kanselleringsaarsak, kansellert_dato, kundetilstand, partner_id'),
     supabase.from('prosjekter').select('prosjektnavn, selskap_id, forventet_go_live, status').not('status', 'eq', 'Live').not('forventet_go_live', 'is', null).order('forventet_go_live', { ascending: true }).limit(10),
+    supabase.from('partnere').select('id, partnernavn, partnertype, partnerstatus, opprettet_dato'),
   ])
 
   const selskapMap = new Map<string, any>()
