@@ -20,29 +20,22 @@ interface SnapshotData {
   winRate: number | null
 }
 
-interface WonDeal {
-  selskap: string
-  verdi: number | null
-  ansvarlig: string | null
-}
+interface WonDeal { selskap: string; verdi: number | null; ansvarlig: string | null }
+interface LostDeal { selskap: string; verdi: number | null; tapsaarsak: string | null }
+interface StageBreakdown { stage: string; totalVerdi: number; antall: number }
+interface NearClosingDeal { selskap: string; verdi: number | null; sistAktivitet: string | null }
 
-interface LostDeal {
-  selskap: string
-  verdi: number | null
-  tapsaarsak: string | null
+interface KundeSnapshot {
+  antallLive: number
+  antallIkkeLive: number
+  snittDagerTilGoLive: number | null
+  antallPause: number
+  antallChurn: number
 }
-
-interface StageBreakdown {
-  stage: string
-  totalVerdi: number
-  antall: number
-}
-
-interface NearClosingDeal {
-  selskap: string
-  verdi: number | null
-  sistAktivitet: string | null
-}
+interface GaattLiveItem { selskap: string; dagerFraVunnet: number | null }
+interface IkkeLiveItem { selskap: string; dagerSidenVunnet: number | null; advarsel: boolean }
+interface PlanlagtGoLiveItem { selskap: string; planlagtDato: string }
+interface PauseChurnItem { selskap: string; status: 'Pause' | 'Kansellert'; aarsak: string | null }
 
 interface WeeklyReportProps {
   displayName?: string
@@ -52,6 +45,11 @@ interface WeeklyReportProps {
   stageBreakdown?: StageBreakdown[]
   nearClosing?: NearClosingDeal[]
   innsikt?: string[]
+  kundeSnapshot?: KundeSnapshot
+  gaattLive?: GaattLiveItem[]
+  ikkeLive?: IkkeLiveItem[]
+  planlagtGoLive?: PlanlagtGoLiveItem[]
+  pauseChurn?: PauseChurnItem[]
   appUrl?: string
   periodLabel?: string
 }
@@ -88,6 +86,11 @@ const WeeklySalesReportEmail = ({
   stageBreakdown = [],
   nearClosing = [],
   innsikt = [],
+  kundeSnapshot = { antallLive: 0, antallIkkeLive: 0, snittDagerTilGoLive: null, antallPause: 0, antallChurn: 0 },
+  gaattLive = [],
+  ikkeLive = [],
+  planlagtGoLive = [],
+  pauseChurn = [],
   appUrl = APP_URL_DEFAULT,
   periodLabel = 'Siste 7 dager',
 }: WeeklyReportProps) => {
@@ -257,6 +260,131 @@ const WeeklySalesReportEmail = ({
                 Oppgaver
               </Button>
             </Section>
+
+            {/* ══════════════════════════════════════════ */}
+            {/* ═══ 8. KUNDER & GO-LIVE STATUS ═══ */}
+            {/* ══════════════════════════════════════════ */}
+            <Hr style={dividerThick} />
+            <Heading style={h1} className="h1-heading">Kunder & Go-live 🚀</Heading>
+
+            <Section style={snapshotGrid}>
+              <Section style={snapshotRow}>
+                <Section style={snapshotMini}>
+                  <Text style={snapshotLabel}>Live</Text>
+                  <Text style={{ ...snapshotMiniValue, color: '#16a34a' }}>{kundeSnapshot.antallLive}</Text>
+                </Section>
+                <Section style={snapshotMini}>
+                  <Text style={snapshotLabel}>Ikke live</Text>
+                  <Text style={{ ...snapshotMiniValue, color: '#f59e0b' }}>{kundeSnapshot.antallIkkeLive}</Text>
+                </Section>
+                <Section style={snapshotMini}>
+                  <Text style={snapshotLabel}>Snitt → live</Text>
+                  <Text style={snapshotMiniValue}>{kundeSnapshot.snittDagerTilGoLive != null ? `${kundeSnapshot.snittDagerTilGoLive}d` : '–'}</Text>
+                </Section>
+              </Section>
+              <Section style={{ ...snapshotRow, marginTop: '10px' }}>
+                <Section style={snapshotMini}>
+                  <Text style={snapshotLabel}>Pause</Text>
+                  <Text style={{ ...snapshotMiniValue, color: '#f59e0b' }}>{kundeSnapshot.antallPause}</Text>
+                </Section>
+                <Section style={snapshotMini}>
+                  <Text style={snapshotLabel}>Churn</Text>
+                  <Text style={{ ...snapshotMiniValue, color: BRAND_RED }}>{kundeSnapshot.antallChurn}</Text>
+                </Section>
+                <Section style={snapshotMini}>{/* spacer */}</Section>
+              </Section>
+            </Section>
+
+            {/* ═══ 9. GÅTT LIVE DENNE UKEN ═══ */}
+            {gaattLive.length > 0 && (
+              <>
+                <Hr style={divider} />
+                <Section style={wonHeaderBox}>
+                  <Heading as="h2" style={wonHeading}>🎉 Gått live denne uken ({gaattLive.length})</Heading>
+                </Section>
+                {gaattLive.map((item, i) => (
+                  <Section key={i} style={dealRow}>
+                    <Text style={dealName}>{item.selskap}</Text>
+                    <Text style={dealMeta}>
+                      {item.dagerFraVunnet != null && <span style={metaChip}>⏱️ {item.dagerFraVunnet} dager fra vunnet → live</span>}
+                    </Text>
+                  </Section>
+                ))}
+              </>
+            )}
+
+            {/* ═══ 10. IKKE LIVE ═══ */}
+            {ikkeLive.length > 0 && (
+              <>
+                <Hr style={divider} />
+                <Heading as="h2" style={sectionHeading}>⏳ Ikke live ennå ({ikkeLive.length})</Heading>
+                {ikkeLive.map((item, i) => (
+                  <Section key={i} style={dealRow}>
+                    <Text style={dealName}>
+                      {item.advarsel && <span style={{ color: '#f59e0b' }}>⚠️ </span>}
+                      {item.selskap}
+                    </Text>
+                    <Text style={dealMeta}>
+                      {item.dagerSidenVunnet != null && (
+                        <span style={{ ...metaChip, color: item.advarsel ? BRAND_RED : '#666', fontWeight: item.advarsel ? 600 : 400 }}>
+                          📅 {item.dagerSidenVunnet} dager siden vunnet
+                        </span>
+                      )}
+                    </Text>
+                  </Section>
+                ))}
+              </>
+            )}
+
+            {/* ═══ 11. PLANLAGT GO-LIVE ═══ */}
+            {planlagtGoLive.length > 0 && (
+              <>
+                <Hr style={divider} />
+                <Heading as="h2" style={sectionHeading}>📅 Planlagt go-live ({planlagtGoLive.length})</Heading>
+                {planlagtGoLive.map((item, i) => (
+                  <Section key={i} style={dealRow}>
+                    <Text style={dealName}>{item.selskap}</Text>
+                    <Text style={dealMeta}>
+                      <span style={metaChip}>🗓️ {item.planlagtDato}</span>
+                    </Text>
+                  </Section>
+                ))}
+              </>
+            )}
+
+            {/* ═══ 12. PAUSE / CHURN ═══ */}
+            {pauseChurn.length > 0 && (
+              <>
+                <Hr style={divider} />
+                <Section style={lostHeaderBox}>
+                  <Heading as="h2" style={lostHeading}>⛔ Pause / Churn ({pauseChurn.length})</Heading>
+                </Section>
+                {pauseChurn.map((item, i) => (
+                  <Section key={i} style={dealRow}>
+                    <Text style={dealName}>
+                      <span style={{ color: item.status === 'Kansellert' ? BRAND_RED : '#f59e0b' }}>●</span>&nbsp;&nbsp;{item.selskap}
+                    </Text>
+                    <Text style={dealMeta}>
+                      <span style={metaChip}>{item.status === 'Kansellert' ? '🔴 Avsluttet' : '⏸️ Pause'}</span>
+                      {item.aarsak && <span style={{ ...metaChip, fontStyle: 'italic' }}>📋 {item.aarsak}</span>}
+                    </Text>
+                  </Section>
+                ))}
+              </>
+            )}
+
+            {/* ═══ FINAL QUICK ACTIONS ═══ */}
+            <Hr style={divider} />
+            <Section style={quickActionsRow}>
+              <Button style={ctaButtonPrimary} className="cta-button" href={`${appUrl}/selskaper`}>
+                Åpne kundeforhold
+              </Button>
+            </Section>
+            <Section style={quickActionsRow}>
+              <Button style={ctaButtonSecondary} href={`${appUrl}/prosjekter`}>
+                Prosjekter
+              </Button>
+            </Section>
           </Section>
 
           {/* ── Footer ── */}
@@ -309,6 +437,24 @@ export const template = {
       'Win rate er 67% – opp fra 55% forrige uke',
       '3 deals har stått i "Behov avklart" i over 14 dager',
       'Straye AS har ikke hatt aktivitet på 5 dager – vurder oppfølging',
+      '2 kunde(r) har ventet >7 dager på go-live',
+      '1 kunde(r) gikk live denne uken 🎉',
+    ],
+    kundeSnapshot: { antallLive: 12, antallIkkeLive: 3, snittDagerTilGoLive: 11, antallPause: 1, antallChurn: 2 },
+    gaattLive: [
+      { selskap: 'Trale.ai', dagerFraVunnet: 8 },
+    ],
+    ikkeLive: [
+      { selskap: 'NordicFoods', dagerSidenVunnet: 14, advarsel: true },
+      { selskap: 'GreenBite', dagerSidenVunnet: 5, advarsel: false },
+    ],
+    planlagtGoLive: [
+      { selskap: 'Sushi Express', planlagtDato: '15. april 2026' },
+      { selskap: 'Café Oslo', planlagtDato: '22. april 2026' },
+    ],
+    pauseChurn: [
+      { selskap: 'OldClient AS', status: 'Kansellert', aarsak: 'Lav bruk' },
+      { selskap: 'PausedCo', status: 'Pause', aarsak: null },
     ],
     appUrl: 'https://snakk-ai-crm.lovable.app',
   },
@@ -324,6 +470,7 @@ const contentSection: React.CSSProperties = { backgroundColor: '#ffffff', paddin
 const h1: React.CSSProperties = { fontSize: '20px', fontWeight: 700, color: BRAND_DARK, margin: '0 0 6px' }
 const summaryText: React.CSSProperties = { fontSize: '14px', color: '#555555', lineHeight: '1.5', margin: '0 0 18px' }
 const divider: React.CSSProperties = { borderColor: '#e8e6e3', margin: '18px 0' }
+const dividerThick: React.CSSProperties = { borderColor: BRAND_RED, borderWidth: '2px', margin: '28px 0 18px' }
 const sectionHeading: React.CSSProperties = { fontSize: '12px', fontWeight: 700, color: BRAND_DARK, margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: '0.5px' }
 const metaChip: React.CSSProperties = { marginRight: '10px', fontSize: '12px' }
 
@@ -351,15 +498,7 @@ const dealMeta: React.CSSProperties = { fontSize: '12px', color: '#666666', marg
 // Stage breakdown
 const stageRow: React.CSSProperties = { padding: '8px 0', borderBottom: '1px solid #f0eeec', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }
 const stageName: React.CSSProperties = { fontSize: '13px', color: BRAND_DARK, margin: '0' }
-const stageBadge: React.CSSProperties = {
-  display: 'inline-block',
-  backgroundColor: '#f0f0ee',
-  color: BRAND_DARK,
-  fontSize: '11px',
-  fontWeight: 600,
-  padding: '2px 8px',
-  borderRadius: '4px',
-}
+const stageBadge: React.CSSProperties = { display: 'inline-block', backgroundColor: '#f0f0ee', color: BRAND_DARK, fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '4px' }
 const stageValue: React.CSSProperties = { fontSize: '13px', fontWeight: 600, color: BRAND_DARK, margin: '0', textAlign: 'right' }
 
 // AI box
@@ -367,29 +506,8 @@ const aiBox: React.CSSProperties = { backgroundColor: '#f8f7f5', borderRadius: '
 const aiItem: React.CSSProperties = { fontSize: '13px', color: BRAND_DARK, margin: '0 0 8px', lineHeight: '1.4' }
 
 // CTAs
-const ctaButtonPrimary: React.CSSProperties = {
-  backgroundColor: BRAND_RED,
-  color: '#ffffff',
-  padding: '12px 24px',
-  borderRadius: '8px',
-  fontSize: '14px',
-  fontWeight: 600,
-  textDecoration: 'none',
-  display: 'inline-block',
-  textAlign: 'center',
-}
-const ctaButtonSecondary: React.CSSProperties = {
-  backgroundColor: '#ffffff',
-  color: BRAND_DARK,
-  padding: '10px 20px',
-  borderRadius: '8px',
-  fontSize: '13px',
-  fontWeight: 600,
-  textDecoration: 'none',
-  display: 'inline-block',
-  textAlign: 'center',
-  border: '1px solid #e0dfdc',
-}
+const ctaButtonPrimary: React.CSSProperties = { backgroundColor: BRAND_RED, color: '#ffffff', padding: '12px 24px', borderRadius: '8px', fontSize: '14px', fontWeight: 600, textDecoration: 'none', display: 'inline-block', textAlign: 'center' }
+const ctaButtonSecondary: React.CSSProperties = { backgroundColor: '#ffffff', color: BRAND_DARK, padding: '10px 20px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, textDecoration: 'none', display: 'inline-block', textAlign: 'center', border: '1px solid #e0dfdc' }
 const quickActionsRow: React.CSSProperties = { textAlign: 'center', margin: '8px 0' }
 
 // Footer
