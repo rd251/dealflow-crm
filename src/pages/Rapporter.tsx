@@ -249,6 +249,18 @@ export default function Rapporter() {
           </ResponsiveContainer>
         ))}
 
+        {chartCard("Total ARR", (
+          <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
+            <LineChart data={arrByMonth}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="mnd" tick={{ fontSize: isMobile ? 8 : 11 }} />
+              <YAxis tick={{ fontSize: 11 }} tickFormatter={v => `${(v / 1000).toFixed(0)}k`} />
+              <Tooltip formatter={(value: number) => [`${nok(value)} NOK`, "ARR"]} contentStyle={{ borderRadius: "8px", fontSize: "13px" }} />
+              <Line type="monotone" dataKey="arr" stroke="hsl(142, 71%, 45%)" strokeWidth={2} dot={{ r: 4 }} />
+            </LineChart>
+          </ResponsiveContainer>
+        ))}
+
         {chartCard("Vunnet vs Tapt per måned", (
           <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
             <BarChart data={wonLostByMonth}>
