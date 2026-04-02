@@ -38,6 +38,9 @@ interface ReportData {
   planlagtGoLive: { selskap: string; planlagtDato: string }[];
   pauseChurn: { selskap: string; status: string; aarsak: string | null }[];
   innsikt: string[];
+  partnerSnapshot?: { totalt: number; aktive: number; live: number; nyeDenneUken: number };
+  partnerByType?: { type: string; antall: number }[];
+  nyePartnere?: { navn: string; type: string }[];
 }
 
 const nok = (v: number | null | undefined) =>
