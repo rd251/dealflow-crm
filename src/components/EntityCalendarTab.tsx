@@ -1,0 +1,166 @@
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Calendar, Clock, Video, Phone, Users, ChevronRight } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { format, isPast, isToday, parseISO } from "date-fns";
+import { nb } from "date-fns/locale";
+
+interface EntityCalendarTabProps {
+  /** Pass one or more entity filters */
+  selskap_id?: string;
+  kontakt_id?: string;
+  salgsmulighet_id?: string;
+  lead_id?: string;
+  partner_id?: string;
+  prosjekt_id?: string;
+}
+
+interface Meeting {
+  id: string;
+  tittel: string | null;
+  beskrivelse: string;
+  dato: string;
+  start_tid: string | null;
+  slutt_tid: string | null;
+  deltakere: string[] | null;
+  moetenotater: string | null;
+  type: string;
+}
+
+export default function EntityCalendarTab(props: EntityCalendarTabProps) {
+  const [meetings, setMeetings] = useState<Meeting[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchMeetings = async () => {
+      setLoading(true);
+      let query = supabase
+        .from("aktiviteter")
+        .select("id, tittel, beskrivelse, dato, start_tid, slutt_tid, deltakere, moetenotater, type")
+        .eq("type", "Møte")
+        .order("dato", { ascending: false })
+        .order("start_tid", { ascending: false })
+        .limit(50);
+
+      if (props.selskap_id) query = query.eq("selskap_id", props.selskap_id);
+      if (props.kontakt_id) query = query.eq("kontakt_id", props.kontakt_id);
+      if (props.salgsmulighet_id) query = query.eq("salgsmulighet_id", props.salgsmulighet_id);
+      if (props.lead_id) query = query.eq("lead_id", props.lead_id);
+      if (props.partner_id) query = query.eq("partner_id", props.partner_id);
+      if (props.prosjekt_id) query = query.eq("prosjekt_id", props.prosjekt_id);
+
+      const { data } = await query;
+      setMeetings(data || []);
+      setLoading(false);
+    };
+    fetchMeetings();
+  }, [props.selskap_id, props.kontakt_id, props.salgsmulighet_id, props.lead_id, props.partner_id, props.prosjekt_id]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-8 text-muted-foreground text-sm">
+        <Clock className="w-4 h-4 mr-2 animate-spin" />
+        Laster møter…
+      </div>
+    );
+  }
+
+  const now = new Date();
+  const upcoming = meetings.filter(m => !isPast(parseISO(m.dato)) || isToday(parseISO(m.dato)));
+  const past = meetings.filter(m => isPast(parseISO(m.dato)) && !isToday(parseISO(m.dato)));
+
+  // Sort upcoming ascending (nearest first)
+  upcoming.sort((a, b) => a.dato.localeCompare(b.dato) || (a.start_tid || "").localeCompare(b.start_tid || ""));
+
+  if (meetings.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-10 text-muted-foreground">
+        <Calendar className="w-8 h-8 mb-2 opacity-40" />
+        <p className="text-sm">Ingen møter registrert</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-5">
+      {upcoming.length > 0 && (
+        <MeetingGroup label="Kommende" meetings={upcoming} variant="upcoming" />
+      )}
+      {past.length > 0 && (
+        <MeetingGroup label="Tidligere" meetings={past} variant="past" />
+      )}
+    </div>
+  );
+}
+
+function MeetingGroup({ label, meetings, variant }: { label: string; meetings: Meeting[]; variant: "upcoming" | "past" }) {
+  return (
+    <div className="space-y-2">
+      <h4 className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+        <Calendar className="w-3.5 h-3.5" />
+        {label}
+        <Badge variant="secondary" className="text-[10px] ml-1">{meetings.length}</Badge>
+      </h4>
+      <div className="space-y-1.5">
+        {meetings.map(m => (
+          <MeetingRow key={m.id} meeting={m} variant={variant} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function MeetingRow({ meeting, variant }: { meeting: Meeting; variant: "upcoming" | "past" }) {
+  const dateStr = (() => {
+    try {
+      const d = parseISO(meeting.dato);
+      if (isToday(d)) return "I dag";
+      return format(d, "d. MMM yyyy", { locale: nb });
+    } catch {
+      return meeting.dato;
+    }
+  })();
+
+  const timeStr = meeting.start_tid
+    ? meeting.start_tid.slice(0, 5) + (meeting.slutt_tid ? `–${meeting.slutt_tid.slice(0, 5)}` : "")
+    : null;
+
+  const hasNotes = !!meeting.moetenotater?.trim();
+
+  return (
+    <div className={`rounded-lg border p-3 space-y-1 transition-colors ${variant === "upcoming" ? "bg-primary/5 border-primary/20" : "bg-muted/30"}`}>
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-sm font-medium leading-tight truncate">
+          {meeting.tittel || meeting.beskrivelse || "Møte"}
+        </p>
+        {hasNotes && (
+          <Badge variant="outline" className="text-[10px] shrink-0">Notater</Badge>
+        )}
+      </div>
+      <div className="flex items-center gap-3 text-xs text-muted-foreground">
+        <span className="flex items-center gap-1">
+          <Calendar className="w-3 h-3" />
+          {dateStr}
+        </span>
+        {timeStr && (
+          <span className="flex items-center gap-1">
+            <Clock className="w-3 h-3" />
+            {timeStr}
+          </span>
+        )}
+        {meeting.deltakere && meeting.deltakere.length > 0 && (
+          <span className="flex items-center gap-1">
+            <Users className="w-3 h-3" />
+            {meeting.deltakere.length}
+          </span>
+        )}
+      </div>
+      {meeting.deltakere && meeting.deltakere.length > 0 && (
+        <p className="text-[11px] text-muted-foreground truncate">
+          {meeting.deltakere.slice(0, 3).join(", ")}
+          {meeting.deltakere.length > 3 && ` +${meeting.deltakere.length - 3}`}
+        </p>
+      )}
+    </div>
+  );
+}
