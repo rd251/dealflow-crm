@@ -474,6 +474,9 @@ export default function Contacts() {
               />
             </div>
           ),
+          kalender: (
+            <EntityCalendarTab kontakt_id={currentKontakt.id} />
+          ),
         } : undefined}
       />
     </PageShell>

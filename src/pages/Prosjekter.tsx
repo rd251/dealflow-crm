@@ -136,6 +136,9 @@ export default function Prosjekter() {
               <ActivityLog prosjekt_id={currentP.id} />
             </>
           ),
+          kalender: (
+            <EntityCalendarTab prosjekt_id={currentP.id} />
+          ),
         } : undefined}
       />
     </PageShell>

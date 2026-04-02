@@ -733,6 +733,9 @@ export default function Salgsmuligheter() {
                 <Textarea value={currentSm.notater} onChange={e => updateField("notater", e.target.value)} rows={6} readOnly={!canEdit} />
               </DetailField>
             ),
+            kalender: (
+              <EntityCalendarTab salgsmulighet_id={currentSm.id} />
+            ),
           };
         })() : undefined}
       />

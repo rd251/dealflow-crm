@@ -338,6 +338,9 @@ export default function Partnere() {
                 <Textarea value={currentPartner.notater} onChange={e => updateField("notater", e.target.value)} rows={6} />
               </DetailField>
             ),
+            kalender: (
+              <EntityCalendarTab partner_id={currentPartner.id} />
+            ),
           };
         })() : undefined}
       />

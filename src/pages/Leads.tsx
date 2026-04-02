@@ -434,6 +434,9 @@ export default function Leads() {
                 <Textarea value={currentLead.notater} onChange={e => updateField("notater", e.target.value)} rows={6} readOnly={!canEdit || currentIsLocked} />
               </DetailField>
             ),
+            kalender: (
+              <EntityCalendarTab lead_id={currentLead.id} />
+            ),
           };
         })() : undefined}
       />

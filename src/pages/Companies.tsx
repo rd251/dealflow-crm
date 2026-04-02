@@ -575,6 +575,9 @@ export default function Companies() {
                 <Textarea value={currentSelskap.notater} onChange={e => updateField("notater", e.target.value)} rows={6} readOnly={!canEdit} />
               </DetailField>
             ),
+            kalender: (
+              <EntityCalendarTab selskap_id={currentSelskap.id} />
+            ),
           };
         })() : undefined}
       />
