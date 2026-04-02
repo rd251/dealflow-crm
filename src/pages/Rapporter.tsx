@@ -230,31 +230,33 @@ export default function Rapporter() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6">
         {chartCard("Oppstartskostnader per måned", (
-          <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
+          <ResponsiveContainer width="100%" height={isMobile ? 250 : 340}>
             <BarChart data={oppstartByMonth}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="mnd" tick={{ fontSize: isMobile ? 8 : 11 }} />
               <YAxis tick={{ fontSize: 11 }} tickFormatter={v => `${(v / 1000).toFixed(0)}k`} />
               <Tooltip formatter={(value: number) => [`${nok(value)} NOK`, "Vunnet"]} contentStyle={{ borderRadius: "8px", fontSize: "13px" }} />
-              <Bar dataKey="vunnet" fill="hsl(142, 71%, 45%)" radius={[6, 6, 0, 0]} />
+              <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: "12px" }} />
+              <Bar dataKey="vunnet" name="Oppstartskostnad" fill="hsl(142, 71%, 45%)" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         ))}
 
         {chartCard("Ny MRR per måned", (
-          <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
+          <ResponsiveContainer width="100%" height={isMobile ? 250 : 340}>
             <LineChart data={mrrByMonth}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="mnd" tick={{ fontSize: isMobile ? 8 : 11 }} />
               <YAxis tick={{ fontSize: 11 }} tickFormatter={v => `${(v / 1000).toFixed(0)}k`} />
               <Tooltip formatter={(value: number) => [`${nok(value)} NOK`, "MRR"]} contentStyle={{ borderRadius: "8px", fontSize: "13px" }} />
-              <Line type="monotone" dataKey="mrr" stroke="hsl(220, 70%, 55%)" strokeWidth={2} dot={{ r: 4 }} />
+              <Legend verticalAlign="bottom" height={36} iconType="line" wrapperStyle={{ fontSize: "12px" }} />
+              <Line type="monotone" dataKey="mrr" name="Ny MRR" stroke="hsl(220, 70%, 55%)" strokeWidth={2} dot={{ r: 4 }} />
             </LineChart>
           </ResponsiveContainer>
         ))}
 
         {chartCard("Total ARR", (
-          <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
+          <ResponsiveContainer width="100%" height={isMobile ? 250 : 340}>
             <LineChart data={arrByMonth}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="mnd" tick={{ fontSize: isMobile ? 8 : 11 }} />
@@ -269,12 +271,13 @@ export default function Rapporter() {
         ))}
 
         {chartCard("Vunnet vs Tapt per måned", (
-          <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
+          <ResponsiveContainer width="100%" height={isMobile ? 250 : 340}>
             <BarChart data={wonLostByMonth}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="mnd" tick={{ fontSize: isMobile ? 8 : 11 }} />
               <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
               <Tooltip contentStyle={{ borderRadius: "8px", fontSize: "13px" }} />
+              <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: "12px" }} />
               <Bar dataKey="vunnet" name="Vunnet" fill="hsl(142, 71%, 45%)" radius={[6, 6, 0, 0]} />
               <Bar dataKey="tapt" name="Tapt" fill="hsl(0, 72%, 51%)" radius={[6, 6, 0, 0]} />
             </BarChart>
@@ -282,24 +285,26 @@ export default function Rapporter() {
         ))}
 
         {chartCard("Nye leads per måned", (
-          <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
+          <ResponsiveContainer width="100%" height={isMobile ? 250 : 340}>
             <BarChart data={leadsByMonth}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="mnd" tick={{ fontSize: isMobile ? 8 : 11 }} />
               <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
               <Tooltip contentStyle={{ borderRadius: "8px", fontSize: "13px" }} />
+              <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: "12px" }} />
               <Bar dataKey="antall" name="Leads" fill="hsl(199, 89%, 48%)" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         ))}
 
         {chartCard("Pipeline per status", (
-          <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
+          <ResponsiveContainer width="100%" height={isMobile ? 250 : 340}>
             <BarChart data={pipelineData}>
               <XAxis dataKey="status" tick={{ fontSize: isMobile ? 8 : 11 }} />
               <YAxis tick={{ fontSize: 11 }} tickFormatter={v => `${(v / 1000).toFixed(0)}k`} />
               <Tooltip formatter={(value: number) => [`${nok(value)} NOK`, "Verdi"]} contentStyle={{ borderRadius: "8px", fontSize: "13px" }} />
-              <Bar dataKey="verdi" radius={[6, 6, 0, 0]}>
+              <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: "12px" }} />
+              <Bar dataKey="verdi" name="Pipeline-verdi" radius={[6, 6, 0, 0]}>
                 {pipelineData.map((_, i) => <Cell key={i} fill={pipelineColors[i % pipelineColors.length]} />)}
               </Bar>
             </BarChart>
@@ -307,52 +312,56 @@ export default function Rapporter() {
         ))}
 
         {kundestatusData.length > 0 && chartCard("Kundestatus fordeling", (
-          <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
+          <ResponsiveContainer width="100%" height={isMobile ? 250 : 340}>
             <PieChart>
               <Pie data={kundestatusData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={isMobile ? 70 : 100} label={({ name, value }) => `${name}: ${value}`}>
                 {kundestatusData.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
               </Pie>
               <Tooltip contentStyle={{ borderRadius: "8px", fontSize: "13px" }} />
+              <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: "12px" }} />
             </PieChart>
           </ResponsiveContainer>
         ))}
 
         {chartCard("Lukkede kunder per måned", (
-          <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
+          <ResponsiveContainer width="100%" height={isMobile ? 250 : 340}>
             <BarChart data={closedByMonth}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="mnd" tick={{ fontSize: isMobile ? 8 : 11 }} />
               <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
               <Tooltip
                 formatter={(value: number, name: string) => [
-                  name === "antall" ? value : `${nok(value)} NOK`,
-                  name === "antall" ? "Kunder" : "MRR"
+                  name === "Kunder" ? value : `${nok(value)} NOK`,
+                  name
                 ]}
                 contentStyle={{ borderRadius: "8px", fontSize: "13px" }}
               />
-              <Bar dataKey="antall" name="antall" fill="hsl(220, 70%, 55%)" radius={[6, 6, 0, 0]} />
+              <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: "12px" }} />
+              <Bar dataKey="antall" name="Kunder" fill="hsl(220, 70%, 55%)" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         ))}
 
         {cancelData.length > 0 && chartCard("Kanselleringsårsaker", (
-          <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
+          <ResponsiveContainer width="100%" height={isMobile ? 250 : 340}>
             <BarChart data={cancelData} layout="vertical">
               <XAxis type="number" tick={{ fontSize: 11 }} />
               <YAxis type="category" dataKey="aarsak" tick={{ fontSize: isMobile ? 9 : 11 }} width={isMobile ? 70 : 100} />
               <Tooltip contentStyle={{ borderRadius: "8px", fontSize: "13px" }} />
-              <Bar dataKey="antall" fill="hsl(0, 72%, 51%)" radius={[0, 6, 6, 0]} />
+              <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: "12px" }} />
+              <Bar dataKey="antall" name="Antall" fill="hsl(0, 72%, 51%)" radius={[0, 6, 6, 0]} />
             </BarChart>
           </ResponsiveContainer>
         ))}
 
         {topPartnere.length > 0 && chartCard("Topp partnere etter MRR", (
-          <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
+          <ResponsiveContainer width="100%" height={isMobile ? 250 : 340}>
             <BarChart data={topPartnere} layout="vertical">
               <XAxis type="number" tick={{ fontSize: 11 }} tickFormatter={v => `${(v / 1000).toFixed(0)}k`} />
               <YAxis type="category" dataKey="navn" tick={{ fontSize: isMobile ? 9 : 11 }} width={isMobile ? 80 : 120} />
               <Tooltip formatter={(value: number) => [`${nok(value)} NOK`, "MRR"]} contentStyle={{ borderRadius: "8px", fontSize: "13px" }} />
-              <Bar dataKey="mrr" fill="hsl(3, 76%, 48%)" radius={[0, 6, 6, 0]} />
+              <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: "12px" }} />
+              <Bar dataKey="mrr" name="MRR" fill="hsl(3, 76%, 48%)" radius={[0, 6, 6, 0]} />
             </BarChart>
           </ResponsiveContainer>
         ))}
