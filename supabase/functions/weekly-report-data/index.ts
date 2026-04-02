@@ -182,6 +182,9 @@ Deno.serve(async (req) => {
     planlagtGoLive,
     pauseChurn,
     innsikt: innsikt.slice(0, 8),
+    partnerSnapshot,
+    partnerByType,
+    nyePartnere,
   }
 
   return new Response(JSON.stringify(result), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
