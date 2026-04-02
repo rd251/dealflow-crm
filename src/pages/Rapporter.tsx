@@ -365,6 +365,19 @@ export default function Rapporter() {
             </BarChart>
           </ResponsiveContainer>
         ))}
+
+        {partnerByTypeData.length > 0 && chartCard("Partnere per type", (
+          <ResponsiveContainer width="100%" height={isMobile ? 250 : 340}>
+            <BarChart data={partnerByTypeData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="type" tick={{ fontSize: isMobile ? 8 : 11 }} />
+              <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+              <Tooltip contentStyle={{ borderRadius: "8px", fontSize: "13px" }} />
+              <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: "12px" }} />
+              <Bar dataKey="antall" name="Partnere" fill="hsl(262, 60%, 55%)" radius={[6, 6, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        ))}
       </div>
     </PageShell>
   );
