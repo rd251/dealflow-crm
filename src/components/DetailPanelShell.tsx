@@ -18,6 +18,7 @@ interface DetailPanelShellProps {
     detaljer?: ReactNode;
     interaksjoner?: ReactNode;
     notater?: ReactNode;
+    kalender?: ReactNode;
   };
 }
 
