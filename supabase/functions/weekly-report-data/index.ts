@@ -30,14 +30,16 @@ Deno.serve(async (req) => {
     { data: prevLost },
     { data: allSelskaper },
     { data: prosjekter },
+    { data: allPartnere },
   ] = await Promise.all([
     supabase.from('salgsmuligheter').select('navn, forventet_mrr, ansvarlig, selskap_id, vunnet_dato').eq('status', 'Vunnet').gte('vunnet_dato', weekAgo).lte('vunnet_dato', todayStr),
     supabase.from('salgsmuligheter').select('navn, forventet_mrr, selskap_id, tapt_dato, tapsaarsak').eq('status', 'Tapt').gte('tapt_dato', weekAgo).lte('tapt_dato', todayStr),
     supabase.from('salgsmuligheter').select('id, navn, status, forventet_mrr, forventet_lukkedato, ansvarlig, selskap_id, sist_aktivitet, neste_steg, kontaktperson').not('status', 'in', '("Vunnet","Tapt")'),
     supabase.from('salgsmuligheter').select('forventet_mrr').eq('status', 'Vunnet').gte('vunnet_dato', twoWeeksAgo).lt('vunnet_dato', weekAgo),
     supabase.from('salgsmuligheter').select('forventet_mrr').eq('status', 'Tapt').gte('tapt_dato', twoWeeksAgo).lt('tapt_dato', weekAgo),
-    supabase.from('selskaper').select('id, firmanavn, kundestatus, go_live_dato, lukkedato, kanselleringsaarsak, kansellert_dato, kundetilstand'),
+    supabase.from('selskaper').select('id, firmanavn, kundestatus, go_live_dato, lukkedato, kanselleringsaarsak, kansellert_dato, kundetilstand, partner_id'),
     supabase.from('prosjekter').select('prosjektnavn, selskap_id, forventet_go_live, status').not('status', 'eq', 'Live').not('forventet_go_live', 'is', null).order('forventet_go_live', { ascending: true }).limit(10),
+    supabase.from('partnere').select('id, partnernavn, partnertype, partnerstatus, opprettet_dato'),
   ])
 
   const selskapMap = new Map<string, any>()
@@ -137,6 +139,30 @@ Deno.serve(async (req) => {
   }
   if (ikkeLive.filter(s => s.advarsel).length > 0) innsikt.push(`${ikkeLive.filter(s => s.advarsel).length} kunde(r) har ventet >7 dager på go-live`)
 
+  // Partner data
+  const partners = allPartnere || []
+  const activePartners = partners.filter(p => p.partnerstatus === 'Aktiv')
+  const newPartnersThisWeek = partners.filter(p => p.opprettet_dato && p.opprettet_dato >= weekAgo && p.opprettet_dato <= todayStr)
+  
+  // Count live partners (partners that have at least one Live customer)
+  const livePartnerIds = new Set((allSelskaper || []).filter(s => s.kundestatus === 'Live' && s.partner_id).map(s => s.partner_id))
+  
+  // Group by type
+  const partnerTypeMap = new Map<string, number>()
+  for (const p of partners) {
+    const t = p.partnertype || 'Ukjent'
+    partnerTypeMap.set(t, (partnerTypeMap.get(t) || 0) + 1)
+  }
+  const partnerByType = Array.from(partnerTypeMap.entries()).map(([type, antall]) => ({ type, antall }))
+
+  const partnerSnapshot = {
+    totalt: partners.length,
+    aktive: activePartners.length,
+    live: livePartnerIds.size,
+    nyeDenneUken: newPartnersThisWeek.length,
+  }
+  const nyePartnere = newPartnersThisWeek.map(p => ({ navn: p.partnernavn, type: p.partnertype || 'Ukjent' }))
+
   const result = {
     generatedAt: todayStr,
     periodLabel: 'Siste 7 dager',
@@ -156,6 +182,9 @@ Deno.serve(async (req) => {
     planlagtGoLive,
     pauseChurn,
     innsikt: innsikt.slice(0, 8),
+    partnerSnapshot,
+    partnerByType,
+    nyePartnere,
   }
 
   return new Response(JSON.stringify(result), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })

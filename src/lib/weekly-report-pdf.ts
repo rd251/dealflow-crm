@@ -38,6 +38,9 @@ interface ReportData {
   planlagtGoLive: { selskap: string; planlagtDato: string }[];
   pauseChurn: { selskap: string; status: string; aarsak: string | null }[];
   innsikt: string[];
+  partnerSnapshot?: { totalt: number; aktive: number; live: number; nyeDenneUken: number };
+  partnerByType?: { type: string; antall: number }[];
+  nyePartnere?: { navn: string; type: string }[];
 }
 
 const nok = (v: number | null | undefined) =>
@@ -583,6 +586,78 @@ export function generateWeeklyReportPDF(data: ReportData) {
           hookData.cell.styles.fontStyle = "bold";
         }
       },
+    });
+    y = (doc as any).lastAutoTable.finalY + 8;
+  }
+
+  // ── PARTNERE ──
+  if (data.partnerSnapshot) {
+    drawSectionHeader("Partnere");
+    const ps = data.partnerSnapshot;
+
+    // KPI row
+    const pKpis = [
+      { label: "Totalt partnere", value: String(ps.totalt) },
+      { label: "Aktive", value: String(ps.aktive) },
+      { label: "Live partnere", value: String(ps.live) },
+      { label: "Nye denne uken", value: String(ps.nyeDenneUken) },
+    ];
+    const pKpiW = (pageW - marginL - marginR) / pKpis.length;
+    pKpis.forEach((k, i) => {
+      const kx = marginL + i * pKpiW;
+      doc.setFillColor(...LIGHT_BG);
+      doc.roundedRect(kx, y, pKpiW - 3, 18, 2, 2, "F");
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(...BRAND_DARK);
+      doc.text(k.value, kx + (pKpiW - 3) / 2, y + 8, { align: "center" });
+      doc.setFontSize(7);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(...GRAY);
+      doc.text(k.label, kx + (pKpiW - 3) / 2, y + 14, { align: "center" });
+    });
+    y += 24;
+  }
+
+  // Partner by type
+  if (data.partnerByType && data.partnerByType.length > 0) {
+    checkPageBreak(30);
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(...BRAND_DARK);
+    doc.text("Fordeling per partnertype", marginL, y);
+    y += 4;
+    autoTable(doc, {
+      startY: y,
+      margin: { left: marginL, right: marginR },
+      head: [["Partnertype", "Antall"]],
+      body: data.partnerByType.map((d) => [d.type, String(d.antall)]),
+      theme: "plain",
+      styles: { fontSize: 9, cellPadding: 3, textColor: BRAND_DARK },
+      headStyles: { fillColor: LIGHT_BG, textColor: BRAND_DARK, fontStyle: "bold", fontSize: 8 },
+      alternateRowStyles: { fillColor: [252, 252, 250] as C3 },
+      columnStyles: { 1: { halign: "right" } },
+    });
+    y = (doc as any).lastAutoTable.finalY + 8;
+  }
+
+  // New partners this week
+  if (data.nyePartnere && data.nyePartnere.length > 0) {
+    checkPageBreak(30);
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(...BRAND_DARK);
+    doc.text("Nye partnere denne uken", marginL, y);
+    y += 4;
+    autoTable(doc, {
+      startY: y,
+      margin: { left: marginL, right: marginR },
+      head: [["Partnernavn", "Type"]],
+      body: data.nyePartnere.map((d) => [d.navn, d.type]),
+      theme: "plain",
+      styles: { fontSize: 9, cellPadding: 3, textColor: BRAND_DARK },
+      headStyles: { fillColor: LIGHT_BG, textColor: BRAND_DARK, fontStyle: "bold", fontSize: 8 },
+      alternateRowStyles: { fillColor: [252, 252, 250] as C3 },
     });
     y = (doc as any).lastAutoTable.finalY + 8;
   }
