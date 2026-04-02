@@ -40,6 +40,39 @@ interface MeetingNotesListProps {
   onSuggestNesteSteg?: (text: string) => void;
 }
 
+/** Fetch all activities + emails on this deal for AI context */
+async function fetchDealContext(salgsmulighet_id: string) {
+  try {
+    const [activitiesRes, emailsRes, upcomingRes] = await Promise.all([
+      // All past activities on the deal
+      fetch(
+        `${API_URL}/aktiviteter?salgsmulighet_id=eq.${salgsmulighet_id}&order=dato.desc&limit=20&select=id,tittel,beskrivelse,moetenotater,dato,type`,
+        { headers: API_HEADERS }
+      ),
+      // Emails on the deal
+      fetch(
+        `${API_URL}/aktiviteter?salgsmulighet_id=eq.${salgsmulighet_id}&type=eq.E-post&order=dato.desc&limit=10&select=id,tittel,beskrivelse,dato,type`,
+        { headers: API_HEADERS }
+      ),
+      // Upcoming meetings (future dates)
+      fetch(
+        `${API_URL}/aktiviteter?salgsmulighet_id=eq.${salgsmulighet_id}&type=eq.Møte&dato=gt.${new Date().toISOString()}&order=dato.asc&limit=5&select=id,tittel,dato,start_tid`,
+        { headers: API_HEADERS }
+      ),
+    ]);
+
+    const [activities, emails, upcoming] = await Promise.all([
+      activitiesRes.ok ? activitiesRes.json() : [],
+      emailsRes.ok ? emailsRes.json() : [],
+      upcomingRes.ok ? upcomingRes.json() : [],
+    ]);
+
+    return { dealActivities: activities, emails, upcomingMeetings: upcoming };
+  } catch {
+    return { dealActivities: [], emails: [], upcomingMeetings: [] };
+  }
+}
+
 export default function MeetingNotesList({ salgsmulighet_id, selskap_id, lead_id, partner_id, dealName, companyName, onSuggestNesteSteg }: MeetingNotesListProps) {
   const [meetings, setMeetings] = useState<MeetingNote[]>([]);
   const [selectedMeeting, setSelectedMeeting] = useState<MeetingNote | null>(null);
@@ -70,6 +103,58 @@ export default function MeetingNotesList({ salgsmulighet_id, selskap_id, lead_id
 
   useEffect(() => { fetchMeetings(); }, [fetchMeetings]);
 
+  const generateSummary = useCallback(async (meeting: MeetingNote, notesText?: string) => {
+    const meetingNotes = notesText || meeting.moetenotater;
+    if (!meetingNotes?.trim() || meetingNotes.trim().length < 10) return;
+
+    setAiLoading(meeting.id);
+    try {
+      // Fetch rich context if we have a deal
+      const context = salgsmulighet_id ? await fetchDealContext(salgsmulighet_id) : {};
+
+      const { data, error } = await supabase.functions.invoke("meeting-summary", {
+        body: {
+          meetingNotes,
+          meetingTitle: meeting.tittel,
+          dealName,
+          companyName,
+          ...context,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) {
+        toast.error(data.error);
+        return;
+      }
+      const summary = data as AiSummary;
+      setAiSummaries(prev => ({ ...prev, [meeting.id]: summary }));
+      setExpandedId(meeting.id);
+
+      // Auto-update neste steg on the deal
+      if (summary.foreslatt_neste_steg_tekst && salgsmulighet_id) {
+        try {
+          await fetch(`${API_URL}/salgsmuligheter?id=eq.${salgsmulighet_id}`, {
+            method: 'PATCH',
+            headers: { ...API_HEADERS, 'Prefer': 'return=minimal' },
+            body: JSON.stringify({ neste_steg: summary.foreslatt_neste_steg_tekst }),
+          });
+          // Also notify parent component
+          onSuggestNesteSteg?.(summary.foreslatt_neste_steg_tekst);
+          toast.success("AI oppdaterte «Neste steg» automatisk");
+        } catch {
+          // Silent fail on auto-update, user can still click manually
+        }
+      }
+
+      toast.success("AI-oppsummering klar");
+    } catch (e: any) {
+      console.error("AI summary error:", e);
+      toast.error("Kunne ikke generere oppsummering");
+    } finally {
+      setAiLoading(null);
+    }
+  }, [salgsmulighet_id, dealName, companyName, onSuggestNesteSteg]);
+
   const saveNotes = async () => {
     if (!selectedMeeting) return;
     setSaving(true);
@@ -81,44 +166,19 @@ export default function MeetingNotesList({ salgsmulighet_id, selskap_id, lead_id
       });
       if (res.ok) {
         toast.success("Møtenotater lagret");
-        setMeetings(prev => prev.map(m => m.id === selectedMeeting.id ? { ...m, moetenotater: notes } : m));
+        const updatedMeeting = { ...selectedMeeting, moetenotater: notes };
+        setMeetings(prev => prev.map(m => m.id === selectedMeeting.id ? updatedMeeting : m));
         setSelectedMeeting(null);
+
+        // Auto-trigger AI summary after save if notes are substantial
+        if (notes.trim().length >= 10) {
+          generateSummary(updatedMeeting, notes);
+        }
       }
     } catch {
       toast.error("Kunne ikke lagre notater");
     } finally {
       setSaving(false);
-    }
-  };
-
-  const generateSummary = async (meeting: MeetingNote) => {
-    if (!meeting.moetenotater?.trim()) {
-      toast.error("Legg til møtenotater først");
-      return;
-    }
-    setAiLoading(meeting.id);
-    try {
-      const { data, error } = await supabase.functions.invoke("meeting-summary", {
-        body: {
-          meetingNotes: meeting.moetenotater,
-          meetingTitle: meeting.tittel,
-          dealName,
-          companyName,
-        },
-      });
-      if (error) throw error;
-      if (data?.error) {
-        toast.error(data.error);
-        return;
-      }
-      setAiSummaries(prev => ({ ...prev, [meeting.id]: data as AiSummary }));
-      setExpandedId(meeting.id);
-      toast.success("AI-oppsummering klar");
-    } catch (e: any) {
-      console.error("AI summary error:", e);
-      toast.error("Kunne ikke generere oppsummering");
-    } finally {
-      setAiLoading(null);
     }
   };
 
@@ -182,7 +242,13 @@ export default function MeetingNotesList({ salgsmulighet_id, selskap_id, lead_id
                     <p className="text-xs text-muted-foreground whitespace-pre-line bg-muted/50 rounded p-2">{m.moetenotater}</p>
                   )}
 
-                  {/* AI Summary */}
+                  {isLoadingAi && (
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground py-2">
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
+                      <span>Genererer AI-oppsummering med full kontekst...</span>
+                    </div>
+                  )}
+
                   {summary && (
                     <div className="rounded-md border border-primary/20 bg-primary/5 p-3 space-y-2">
                       <div className="flex items-center gap-1.5">
@@ -207,19 +273,11 @@ export default function MeetingNotesList({ salgsmulighet_id, selskap_id, lead_id
                         </div>
                       )}
 
-                      {summary.foreslatt_neste_steg_tekst && onSuggestNesteSteg && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-[10px] h-6 gap-1 w-full border-primary/30 text-primary hover:bg-primary/10"
-                          onClick={() => {
-                            onSuggestNesteSteg(summary.foreslatt_neste_steg_tekst);
-                            toast.success("Neste steg oppdatert fra AI-forslag");
-                          }}
-                        >
-                          <Sparkles className="w-2.5 h-2.5" />
-                          Bruk som «Neste steg»: {summary.foreslatt_neste_steg_tekst}
-                        </Button>
+                      {summary.foreslatt_neste_steg_tekst && (
+                        <div className="text-[10px] text-muted-foreground italic flex items-center gap-1">
+                          <Sparkles className="w-2.5 h-2.5 text-primary" />
+                          «Neste steg» oppdatert automatisk: {summary.foreslatt_neste_steg_tekst}
+                        </div>
                       )}
                     </div>
                   )}
