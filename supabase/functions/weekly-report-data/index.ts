@@ -139,6 +139,30 @@ Deno.serve(async (req) => {
   }
   if (ikkeLive.filter(s => s.advarsel).length > 0) innsikt.push(`${ikkeLive.filter(s => s.advarsel).length} kunde(r) har ventet >7 dager på go-live`)
 
+  // Partner data
+  const partners = allPartnere || []
+  const activePartners = partners.filter(p => p.partnerstatus === 'Aktiv')
+  const newPartnersThisWeek = partners.filter(p => p.opprettet_dato && p.opprettet_dato >= weekAgo && p.opprettet_dato <= todayStr)
+  
+  // Count live partners (partners that have at least one Live customer)
+  const livePartnerIds = new Set((allSelskaper || []).filter(s => s.kundestatus === 'Live' && s.partner_id).map(s => s.partner_id))
+  
+  // Group by type
+  const partnerTypeMap = new Map<string, number>()
+  for (const p of partners) {
+    const t = p.partnertype || 'Ukjent'
+    partnerTypeMap.set(t, (partnerTypeMap.get(t) || 0) + 1)
+  }
+  const partnerByType = Array.from(partnerTypeMap.entries()).map(([type, antall]) => ({ type, antall }))
+
+  const partnerSnapshot = {
+    totalt: partners.length,
+    aktive: activePartners.length,
+    live: livePartnerIds.size,
+    nyeDenneUken: newPartnersThisWeek.length,
+  }
+  const nyePartnere = newPartnersThisWeek.map(p => ({ navn: p.partnernavn, type: p.partnertype || 'Ukjent' }))
+
   const result = {
     generatedAt: todayStr,
     periodLabel: 'Siste 7 dager',
