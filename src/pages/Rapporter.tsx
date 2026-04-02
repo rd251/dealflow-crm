@@ -76,17 +76,21 @@ export default function Rapporter() {
     return { mnd: label, mrr: closed.reduce((sum, s) => sum + s.mrr, 0) };
   });
 
-  // --- Total ARR over tid ---
+  // --- Total ARR over tid (Live vs Ikke-live) ---
   const arrByMonth = months.map(({ date, label }) => {
     const endOfM = endOfMonth(date);
-    const liveAtMonth = selskaper.filter(s => {
-      // Became live (lukkedato) before or during this month
+    const activeAtMonth = selskaper.filter(s => {
       if (!s.lukkedato || new Date(s.lukkedato) > endOfM) return false;
-      // Not cancelled before end of this month
       if (s.kundestatus === "Kansellert" && s.kansellert_dato && new Date(s.kansellert_dato) <= endOfM) return false;
       return true;
     });
-    return { mnd: label, arr: liveAtMonth.reduce((sum, s) => sum + (s.mrr * 12), 0) };
+    const liveArr = activeAtMonth
+      .filter(s => s.go_live_dato && new Date(s.go_live_dato) <= endOfM)
+      .reduce((sum, s) => sum + (s.mrr * 12), 0);
+    const ikkeLiveArr = activeAtMonth
+      .filter(s => !s.go_live_dato || new Date(s.go_live_dato) > endOfM)
+      .reduce((sum, s) => sum + (s.mrr * 12), 0);
+    return { mnd: label, liveArr, ikkeLiveArr };
   });
 
   // --- Oppstartskostnader per måned ---
