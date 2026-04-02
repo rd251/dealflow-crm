@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Calendar, Clock, Video, Phone, Users, ChevronRight } from "lucide-react";
+import { Calendar, Clock, Users, ChevronDown, ChevronUp, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format, isPast, isToday, parseISO } from "date-fns";
 import { nb } from "date-fns/locale";
 
 interface EntityCalendarTabProps {
-  /** Pass one or more entity filters */
   selskap_id?: string;
   kontakt_id?: string;
   salgsmulighet_id?: string;
@@ -65,11 +64,9 @@ export default function EntityCalendarTab(props: EntityCalendarTabProps) {
     );
   }
 
-  const now = new Date();
   const upcoming = meetings.filter(m => !isPast(parseISO(m.dato)) || isToday(parseISO(m.dato)));
   const past = meetings.filter(m => isPast(parseISO(m.dato)) && !isToday(parseISO(m.dato)));
 
-  // Sort upcoming ascending (nearest first)
   upcoming.sort((a, b) => a.dato.localeCompare(b.dato) || (a.start_tid || "").localeCompare(b.start_tid || ""));
 
   if (meetings.length === 0) {
@@ -111,6 +108,9 @@ function MeetingGroup({ label, meetings, variant }: { label: string; meetings: M
 }
 
 function MeetingRow({ meeting, variant }: { meeting: Meeting; variant: "upcoming" | "past" }) {
+  const [expanded, setExpanded] = useState(false);
+  const hasNotes = !!meeting.moetenotater?.trim();
+
   const dateStr = (() => {
     try {
       const d = parseISO(meeting.dato);
@@ -125,41 +125,62 @@ function MeetingRow({ meeting, variant }: { meeting: Meeting; variant: "upcoming
     ? meeting.start_tid.slice(0, 5) + (meeting.slutt_tid ? `–${meeting.slutt_tid.slice(0, 5)}` : "")
     : null;
 
-  const hasNotes = !!meeting.moetenotater?.trim();
-
   return (
-    <div className={`rounded-lg border p-3 space-y-1 transition-colors ${variant === "upcoming" ? "bg-primary/5 border-primary/20" : "bg-muted/30"}`}>
-      <div className="flex items-start justify-between gap-2">
-        <p className="text-sm font-medium leading-tight truncate">
-          {meeting.tittel || meeting.beskrivelse || "Møte"}
-        </p>
-        {hasNotes && (
-          <Badge variant="outline" className="text-[10px] shrink-0">Notater</Badge>
-        )}
-      </div>
-      <div className="flex items-center gap-3 text-xs text-muted-foreground">
-        <span className="flex items-center gap-1">
-          <Calendar className="w-3 h-3" />
-          {dateStr}
-        </span>
-        {timeStr && (
+    <div
+      className={`rounded-lg border transition-colors ${variant === "upcoming" ? "bg-primary/5 border-primary/20" : "bg-muted/30"} ${hasNotes ? "cursor-pointer" : ""}`}
+      onClick={() => hasNotes && setExpanded(prev => !prev)}
+    >
+      <div className="p-3 space-y-1">
+        <div className="flex items-start justify-between gap-2">
+          <p className="text-sm font-medium leading-tight truncate">
+            {meeting.tittel || meeting.beskrivelse || "Møte"}
+          </p>
+          <div className="flex items-center gap-1 shrink-0">
+            {hasNotes && (
+              <Badge variant="outline" className="text-[10px] shrink-0 gap-0.5">
+                <FileText className="w-2.5 h-2.5" />
+                Notater
+              </Badge>
+            )}
+            {hasNotes && (
+              expanded
+                ? <ChevronUp className="w-3.5 h-3.5 text-muted-foreground" />
+                : <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+            )}
+          </div>
+        </div>
+        <div className="flex items-center gap-3 text-xs text-muted-foreground">
           <span className="flex items-center gap-1">
-            <Clock className="w-3 h-3" />
-            {timeStr}
+            <Calendar className="w-3 h-3" />
+            {dateStr}
           </span>
-        )}
+          {timeStr && (
+            <span className="flex items-center gap-1">
+              <Clock className="w-3 h-3" />
+              {timeStr}
+            </span>
+          )}
+          {meeting.deltakere && meeting.deltakere.length > 0 && (
+            <span className="flex items-center gap-1">
+              <Users className="w-3 h-3" />
+              {meeting.deltakere.length}
+            </span>
+          )}
+        </div>
         {meeting.deltakere && meeting.deltakere.length > 0 && (
-          <span className="flex items-center gap-1">
-            <Users className="w-3 h-3" />
-            {meeting.deltakere.length}
-          </span>
+          <p className="text-[11px] text-muted-foreground truncate">
+            {meeting.deltakere.slice(0, 3).join(", ")}
+            {meeting.deltakere.length > 3 && ` +${meeting.deltakere.length - 3}`}
+          </p>
         )}
       </div>
-      {meeting.deltakere && meeting.deltakere.length > 0 && (
-        <p className="text-[11px] text-muted-foreground truncate">
-          {meeting.deltakere.slice(0, 3).join(", ")}
-          {meeting.deltakere.length > 3 && ` +${meeting.deltakere.length - 3}`}
-        </p>
+
+      {expanded && hasNotes && (
+        <div className="px-3 pb-3 border-t border-border/50 pt-2">
+          <p className="text-xs text-muted-foreground whitespace-pre-line bg-muted/50 rounded p-2 leading-relaxed">
+            {meeting.moetenotater}
+          </p>
+        </div>
       )}
     </div>
   );
