@@ -76,6 +76,19 @@ export default function Rapporter() {
     return { mnd: label, mrr: closed.reduce((sum, s) => sum + s.mrr, 0) };
   });
 
+  // --- Total ARR over tid ---
+  const arrByMonth = months.map(({ date, label }) => {
+    const endOfM = endOfMonth(date);
+    const liveAtMonth = selskaper.filter(s => {
+      // Became live (lukkedato) before or during this month
+      if (!s.lukkedato || new Date(s.lukkedato) > endOfM) return false;
+      // Not cancelled before end of this month
+      if (s.kundestatus === "Kansellert" && s.kansellert_dato && new Date(s.kansellert_dato) <= endOfM) return false;
+      return true;
+    });
+    return { mnd: label, arr: liveAtMonth.reduce((sum, s) => sum + (s.mrr * 12), 0) };
+  });
+
   // --- Oppstartskostnader per måned ---
   const oppstartByMonth = months.map(({ date, label }) => {
     const m = date.getMonth(), y = date.getFullYear();
@@ -232,6 +245,18 @@ export default function Rapporter() {
               <YAxis tick={{ fontSize: 11 }} tickFormatter={v => `${(v / 1000).toFixed(0)}k`} />
               <Tooltip formatter={(value: number) => [`${nok(value)} NOK`, "MRR"]} contentStyle={{ borderRadius: "8px", fontSize: "13px" }} />
               <Line type="monotone" dataKey="mrr" stroke="hsl(220, 70%, 55%)" strokeWidth={2} dot={{ r: 4 }} />
+            </LineChart>
+          </ResponsiveContainer>
+        ))}
+
+        {chartCard("Total ARR", (
+          <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
+            <LineChart data={arrByMonth}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="mnd" tick={{ fontSize: isMobile ? 8 : 11 }} />
+              <YAxis tick={{ fontSize: 11 }} tickFormatter={v => `${(v / 1000).toFixed(0)}k`} />
+              <Tooltip formatter={(value: number) => [`${nok(value)} NOK`, "ARR"]} contentStyle={{ borderRadius: "8px", fontSize: "13px" }} />
+              <Line type="monotone" dataKey="arr" stroke="hsl(142, 71%, 45%)" strokeWidth={2} dot={{ r: 4 }} />
             </LineChart>
           </ResponsiveContainer>
         ))}
