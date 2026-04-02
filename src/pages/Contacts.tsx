@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import DetailPanelShell, { DetailSection, DetailDivider } from "@/components/DetailPanelShell";
+import EntityCalendarTab from "@/components/EntityCalendarTab";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Plus, Search, Mail, Phone, Linkedin, Upload, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
@@ -472,6 +473,9 @@ export default function Contacts() {
                 className="text-sm min-h-[120px]"
               />
             </div>
+          ),
+          kalender: (
+            <EntityCalendarTab kontakt_id={currentKontakt.id} />
           ),
         } : undefined}
       />

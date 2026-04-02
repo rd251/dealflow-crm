@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import DetailPanelShell, { DetailSection, DetailField, DetailDivider, DetailStatGrid, DetailStatCard } from "@/components/DetailPanelShell";
+import EntityCalendarTab from "@/components/EntityCalendarTab";
 import { GripVertical, Rocket } from "lucide-react";
 import InlineTaskForm from "@/components/InlineTaskForm";
 import ActivityLog from "@/components/ActivityLog";
@@ -134,6 +135,9 @@ export default function Prosjekter() {
               <InlineTaskForm selskap_id={currentP.selskap_id} salgsmulighet_id={currentP.salgsmulighet_id} />
               <ActivityLog prosjekt_id={currentP.id} />
             </>
+          ),
+          kalender: (
+            <EntityCalendarTab prosjekt_id={currentP.id} />
           ),
         } : undefined}
       />
