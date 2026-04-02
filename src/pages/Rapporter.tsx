@@ -186,9 +186,15 @@ export default function Rapporter() {
       title="Rapporter"
       subtitle="Detaljerte grafer og innsikt"
       actions={
-        <Button variant="outline" size="sm" onClick={() => navigate("/")} className="gap-1.5">
-          <ArrowLeft className="w-4 h-4" /> Dashboard
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={handleDownloadPDF} disabled={downloadingPdf} className="gap-1.5">
+            {downloadingPdf ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+            {isMobile ? "PDF" : "Last ned salgsrapport"}
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => navigate("/")} className="gap-1.5">
+            <ArrowLeft className="w-4 h-4" /> Dashboard
+          </Button>
+        </div>
       }
     >
       {/* Date range picker */}
