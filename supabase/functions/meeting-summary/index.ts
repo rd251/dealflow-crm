@@ -10,7 +10,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { meetingNotes, meetingTitle, dealName, companyName } = await req.json();
+    const { meetingNotes, meetingTitle, dealName, companyName, dealActivities, upcomingMeetings, emails } = await req.json();
 
     if (!meetingNotes || typeof meetingNotes !== "string" || meetingNotes.trim().length < 10) {
       return new Response(
@@ -22,10 +22,35 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
+    // Build rich context
     const contextParts: string[] = [];
     if (dealName) contextParts.push(`Deal: ${dealName}`);
     if (companyName) contextParts.push(`Selskap: ${companyName}`);
     if (meetingTitle) contextParts.push(`Møtetittel: ${meetingTitle}`);
+
+    if (dealActivities && dealActivities.length > 0) {
+      contextParts.push(`\nTidligere aktiviteter på denne dealen (${dealActivities.length} stk):`);
+      for (const a of dealActivities.slice(0, 15)) {
+        const line = `- ${a.dato?.slice(0, 10) || ""} [${a.type}] ${a.tittel || a.beskrivelse || ""}`.trim();
+        if (a.moetenotater) contextParts.push(`${line}\n  Notater: ${a.moetenotater.slice(0, 300)}`);
+        else contextParts.push(line);
+      }
+    }
+
+    if (upcomingMeetings && upcomingMeetings.length > 0) {
+      contextParts.push(`\nKommende møter booket:`);
+      for (const m of upcomingMeetings.slice(0, 5)) {
+        contextParts.push(`- ${m.dato?.slice(0, 10) || ""} ${m.tittel || "Møte"}`);
+      }
+    }
+
+    if (emails && emails.length > 0) {
+      contextParts.push(`\nSiste e-poster (${emails.length} stk):`);
+      for (const e of emails.slice(0, 10)) {
+        contextParts.push(`- ${e.dato?.slice(0, 10) || ""} ${e.tittel || e.beskrivelse || "E-post"}`);
+      }
+    }
+
     const contextStr = contextParts.length > 0 ? `\nKontekst:\n${contextParts.join("\n")}\n` : "";
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -40,6 +65,8 @@ serve(async (req) => {
           {
             role: "system",
             content: `Du er en salgs-AI-assistent for et norsk CRM-system (Snakk CRM). Analyser møtenotater og gi en kort oppsummering og foreslå konkrete neste steg.
+
+Du har tilgang til full kontekst om dealen: tidligere aktiviteter, e-poster og kommende møter. Bruk dette til å gi smarte, kontekstbaserte anbefalinger.
 
 Svar alltid på norsk. Vær konkret og handlingsorientert. Formater svaret slik:
 
@@ -114,7 +141,6 @@ Svar alltid på norsk. Vær konkret og handlingsorientert. Formater svaret slik:
       });
     }
 
-    // Fallback: return raw content
     const content = data.choices?.[0]?.message?.content || "";
     return new Response(JSON.stringify({ oppsummering: content, neste_steg: [], kundesignal: "", foreslatt_neste_steg_tekst: "" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
