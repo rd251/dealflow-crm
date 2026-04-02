@@ -165,6 +165,13 @@ export default function Rapporter() {
     return { navn: p.partnernavn.length > 15 ? p.partnernavn.substring(0, 15) + "…" : p.partnernavn, mrr };
   }).sort((a, b) => b.mrr - a.mrr).slice(0, 10).filter(p => p.mrr > 0);
 
+  // --- Partnere per type (snapshot) ---
+  const partnerTypes = ["Provisjonspartner", "Integrasjonspartner", "Salgspartner", "Strategisk partner"];
+  const partnerByTypeData = partnerTypes.map(t => ({
+    type: t.length > 14 ? t.substring(0, 14) + "…" : t,
+    antall: partnere.filter(p => p.partnertype === t).length,
+  })).filter(d => d.antall > 0);
+
   const chartCard = (title: string, children: React.ReactNode) => (
     <div className="bg-card border rounded-xl p-4 sm:p-6">
       <h2 className="text-base sm:text-lg font-semibold mb-4">{title}</h2>
@@ -362,6 +369,19 @@ export default function Rapporter() {
               <Tooltip formatter={(value: number) => [`${nok(value)} NOK`, "MRR"]} contentStyle={{ borderRadius: "8px", fontSize: "13px" }} />
               <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: "12px" }} />
               <Bar dataKey="mrr" name="MRR" fill="hsl(3, 76%, 48%)" radius={[0, 6, 6, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        ))}
+
+        {partnerByTypeData.length > 0 && chartCard("Partnere per type", (
+          <ResponsiveContainer width="100%" height={isMobile ? 250 : 340}>
+            <BarChart data={partnerByTypeData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="type" tick={{ fontSize: isMobile ? 8 : 11 }} />
+              <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+              <Tooltip contentStyle={{ borderRadius: "8px", fontSize: "13px" }} />
+              <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: "12px" }} />
+              <Bar dataKey="antall" name="Partnere" fill="hsl(262, 60%, 55%)" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         ))}
