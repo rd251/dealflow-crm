@@ -42,13 +42,13 @@
 
     --radius: 0.75rem;
 
-    --sidebar-background: 0 10% 12%;
-    --sidebar-foreground: 20 10% 80%;
-    --sidebar-primary: 3 76% 52%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 8% 18%;
-    --sidebar-accent-foreground: 20 10% 90%;
-    --sidebar-border: 0 8% 20%;
+    --sidebar-background: 0 100% 15%;
+    --sidebar-foreground: 0 20% 85%;
+    --sidebar-primary: 0 0% 100%;
+    --sidebar-primary-foreground: 0 100% 15%;
+    --sidebar-accent: 0 80% 20%;
+    --sidebar-accent-foreground: 0 20% 95%;
+    --sidebar-border: 0 60% 22%;
     --sidebar-ring: 3 76% 52%;
 
     --stage-new-lead: 220 70% 55%;
