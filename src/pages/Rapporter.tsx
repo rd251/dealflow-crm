@@ -90,7 +90,7 @@ export default function Rapporter() {
     const ikkeLiveArr = activeAtMonth
       .filter(s => !s.go_live_dato || new Date(s.go_live_dato) > endOfM)
       .reduce((sum, s) => sum + (s.mrr * 12), 0);
-    return { mnd: label, liveArr, ikkeLiveArr };
+    return { mnd: label, liveArr, ikkeLiveArr, totalArr: liveArr + ikkeLiveArr };
   });
 
   // --- Oppstartskostnader per måned ---
