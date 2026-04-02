@@ -259,7 +259,8 @@ export default function Rapporter() {
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="mnd" tick={{ fontSize: isMobile ? 8 : 11 }} />
               <YAxis tick={{ fontSize: 11 }} tickFormatter={v => `${(v / 1000).toFixed(0)}k`} />
-              <Tooltip formatter={(value: number, name: string) => [`${nok(value)} NOK`, name === "liveArr" ? "Live ARR" : "Ikke-live ARR"]} contentStyle={{ borderRadius: "8px", fontSize: "13px" }} />
+              <Tooltip formatter={(value: number, name: string) => [`${nok(value)} NOK`, name === "liveArr" ? "Live ARR" : name === "ikkeLiveArr" ? "Ikke-live ARR" : "Total ARR"]} contentStyle={{ borderRadius: "8px", fontSize: "13px" }} />
+              <Line type="monotone" dataKey="totalArr" name="totalArr" stroke="hsl(220, 70%, 55%)" strokeWidth={2} dot={{ r: 4 }} strokeDasharray="5 3" />
               <Line type="monotone" dataKey="liveArr" name="liveArr" stroke="hsl(142, 71%, 45%)" strokeWidth={2} dot={{ r: 4 }} />
               <Line type="monotone" dataKey="ikkeLiveArr" name="ikkeLiveArr" stroke="hsl(38, 92%, 50%)" strokeWidth={2} dot={{ r: 4 }} />
             </LineChart>
