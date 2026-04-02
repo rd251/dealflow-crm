@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import DetailPanelShell, { DetailSection, DetailField, DetailDivider } from "@/components/DetailPanelShell";
+import EntityCalendarTab from "@/components/EntityCalendarTab";
 import { Plus, Search, ArrowRightCircle, Trash2, Users2, Upload, Lock } from "lucide-react";
 import { Lead, LeadStatus, LeadKilde } from "@/data/crm-data";
 import { Badge } from "@/components/ui/badge";
