@@ -25,7 +25,6 @@ const navItems = [
   { to: "/aktiviteter", icon: Activity, label: "Endringslogg" },
   { to: "/moetenotater", icon: NotebookPen, label: "Møtenotater" },
   { to: "/rapporter", icon: BarChart3, label: "Rapporter" },
-  { to: "/innstillinger", icon: Settings, label: "Innstillinger" },
 ];
 
 function SidebarNav({ onNavigate, isAdmin }: { onNavigate?: () => void; isAdmin: boolean }) {
