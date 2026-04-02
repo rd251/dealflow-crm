@@ -21,3 +21,5 @@ project_id = "tchmujgzcklwgptocbno"
     verify_jwt = true
   [functions.send-transactional-email]
     verify_jwt = false
+  [functions.weekly-sales-digest]
+    verify_jwt = false
