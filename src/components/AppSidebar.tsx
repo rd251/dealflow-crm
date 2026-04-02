@@ -25,7 +25,6 @@ const navItems = [
   { to: "/aktiviteter", icon: Activity, label: "Endringslogg" },
   { to: "/moetenotater", icon: NotebookPen, label: "Møtenotater" },
   { to: "/rapporter", icon: BarChart3, label: "Rapporter" },
-  { to: "/innstillinger", icon: Settings, label: "Innstillinger" },
 ];
 
 function SidebarNav({ onNavigate, isAdmin }: { onNavigate?: () => void; isAdmin: boolean }) {
@@ -58,9 +57,8 @@ function SidebarNav({ onNavigate, isAdmin }: { onNavigate?: () => void; isAdmin:
       </nav>
       {user && (
         <div className="px-3 pb-2">
-          <div className="px-3 py-2 flex items-center justify-between">
+          <div className="px-3 py-2">
             <span className="text-xs text-sidebar-foreground/60 truncate">{user.email}</span>
-            <NotificationBell />
           </div>
           <button
             onClick={() => { signOut(); onNavigate?.(); }}
