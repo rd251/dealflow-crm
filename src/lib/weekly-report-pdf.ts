@@ -1,14 +1,15 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
-const BRAND_RED = [218, 41, 28] as const;
-const BRAND_DARK = [26, 25, 23] as const;
-const LIGHT_BG = [248, 247, 245] as const;
-const WHITE = [255, 255, 255] as const;
-const GREEN = [22, 163, 74] as const;
-const AMBER = [245, 158, 11] as const;
-const GRAY = [120, 120, 120] as const;
-const LIGHT_GRAY = [230, 228, 225] as const;
+type C3 = [number, number, number];
+const BRAND_RED: C3 = [218, 41, 28];
+const BRAND_DARK: C3 = [26, 25, 23];
+const LIGHT_BG: C3 = [248, 247, 245];
+const WHITE: C3 = [255, 255, 255];
+const GREEN: C3 = [22, 163, 74];
+const AMBER: C3 = [245, 158, 11];
+const GRAY: C3 = [120, 120, 120];
+const LIGHT_GRAY: C3 = [230, 228, 225];
 
 interface ReportData {
   generatedAt: string;
