@@ -154,9 +154,9 @@ export function generateWeeklyReportPDF(data: ReportData) {
       head: [["Selskap", "Verdi/mnd", "Ansvarlig"]],
       body: data.wonDeals.map((d) => [d.selskap, nok(d.verdi), d.ansvarlig || "–"]),
       theme: "plain",
-      styles: { fontSize: 9, cellPadding: 3, textColor: BRAND_DARK as unknown as number[] },
-      headStyles: { fillColor: [240, 253, 244] as unknown as number[], textColor: GREEN as unknown as number[], fontStyle: "bold", fontSize: 8 },
-      alternateRowStyles: { fillColor: [252, 252, 250] as unknown as number[] },
+      styles: { fontSize: 9, cellPadding: 3, textColor: BRAND_DARK as C3 },
+      headStyles: { fillColor: [240, 253, 244] as C3 as C3, textColor: GREEN as C3, fontStyle: "bold", fontSize: 8 },
+      alternateRowStyles: { fillColor: [252, 252, 250] as C3 as C3 },
       columnStyles: { 1: { halign: "right", fontStyle: "bold" } },
     });
     y = (doc as any).lastAutoTable.finalY + 8;
@@ -171,9 +171,9 @@ export function generateWeeklyReportPDF(data: ReportData) {
       head: [["Selskap", "Verdi/mnd", "Tapsårsak"]],
       body: data.lostDeals.map((d) => [d.selskap, nok(d.verdi), d.tapsaarsak || "–"]),
       theme: "plain",
-      styles: { fontSize: 9, cellPadding: 3, textColor: BRAND_DARK as unknown as number[] },
-      headStyles: { fillColor: [254, 242, 242] as unknown as number[], textColor: BRAND_RED as unknown as number[], fontStyle: "bold", fontSize: 8 },
-      alternateRowStyles: { fillColor: [252, 252, 250] as unknown as number[] },
+      styles: { fontSize: 9, cellPadding: 3, textColor: BRAND_DARK as C3 },
+      headStyles: { fillColor: [254, 242, 242] as C3 as C3, textColor: BRAND_RED as C3, fontStyle: "bold", fontSize: 8 },
+      alternateRowStyles: { fillColor: [252, 252, 250] as C3 as C3 },
       columnStyles: { 1: { halign: "right" } },
     });
     y = (doc as any).lastAutoTable.finalY + 8;
@@ -188,9 +188,9 @@ export function generateWeeklyReportPDF(data: ReportData) {
       head: [["Stage", "Antall", "Total verdi/mnd"]],
       body: data.stageBreakdown.map((s) => [s.stage, `${s.antall}`, nok(s.totalVerdi)]),
       theme: "plain",
-      styles: { fontSize: 9, cellPadding: 3, textColor: BRAND_DARK as unknown as number[] },
-      headStyles: { fillColor: LIGHT_BG as unknown as number[], textColor: BRAND_DARK as unknown as number[], fontStyle: "bold", fontSize: 8 },
-      alternateRowStyles: { fillColor: [252, 252, 250] as unknown as number[] },
+      styles: { fontSize: 9, cellPadding: 3, textColor: BRAND_DARK as C3 },
+      headStyles: { fillColor: LIGHT_BG as C3, textColor: BRAND_DARK as C3, fontStyle: "bold", fontSize: 8 },
+      alternateRowStyles: { fillColor: [252, 252, 250] as C3 as C3 },
       columnStyles: { 1: { halign: "center" }, 2: { halign: "right", fontStyle: "bold" } },
     });
     y = (doc as any).lastAutoTable.finalY + 8;
@@ -205,9 +205,9 @@ export function generateWeeklyReportPDF(data: ReportData) {
       head: [["Selskap", "Verdi/mnd", "Siste aktivitet"]],
       body: data.nearClosing.map((d) => [d.selskap, nok(d.verdi), d.sistAktivitet ? formatDate(d.sistAktivitet) : "–"]),
       theme: "plain",
-      styles: { fontSize: 9, cellPadding: 3, textColor: BRAND_DARK as unknown as number[] },
-      headStyles: { fillColor: [255, 247, 237] as unknown as number[], textColor: AMBER as unknown as number[], fontStyle: "bold", fontSize: 8 },
-      alternateRowStyles: { fillColor: [252, 252, 250] as unknown as number[] },
+      styles: { fontSize: 9, cellPadding: 3, textColor: BRAND_DARK as C3 },
+      headStyles: { fillColor: [255, 247, 237] as C3 as C3, textColor: AMBER as C3, fontStyle: "bold", fontSize: 8 },
+      alternateRowStyles: { fillColor: [252, 252, 250] as C3 as C3 },
       columnStyles: { 1: { halign: "right", fontStyle: "bold" } },
     });
     y = (doc as any).lastAutoTable.finalY + 8;
@@ -293,9 +293,9 @@ export function generateWeeklyReportPDF(data: ReportData) {
       head: [["Selskap", "Dager fra vunnet → live"]],
       body: data.gaattLive.map((d) => [d.selskap, d.dagerFraVunnet != null ? `${d.dagerFraVunnet} dager` : "–"]),
       theme: "plain",
-      styles: { fontSize: 9, cellPadding: 3, textColor: BRAND_DARK as unknown as number[] },
-      headStyles: { fillColor: [240, 253, 244] as unknown as number[], textColor: GREEN as unknown as number[], fontStyle: "bold", fontSize: 8 },
-      alternateRowStyles: { fillColor: [252, 252, 250] as unknown as number[] },
+      styles: { fontSize: 9, cellPadding: 3, textColor: BRAND_DARK as C3 },
+      headStyles: { fillColor: [240, 253, 244] as C3 as C3, textColor: GREEN as C3, fontStyle: "bold", fontSize: 8 },
+      alternateRowStyles: { fillColor: [252, 252, 250] as C3 as C3 },
       columnStyles: { 1: { halign: "right" } },
     });
     y = (doc as any).lastAutoTable.finalY + 8;
@@ -310,13 +310,13 @@ export function generateWeeklyReportPDF(data: ReportData) {
       head: [["Selskap", "Dager siden vunnet", ""]],
       body: data.ikkeLive.map((d) => [d.selskap, d.dagerSidenVunnet != null ? `${d.dagerSidenVunnet} dager` : "–", d.advarsel ? "⚠️" : ""]),
       theme: "plain",
-      styles: { fontSize: 9, cellPadding: 3, textColor: BRAND_DARK as unknown as number[] },
-      headStyles: { fillColor: [255, 251, 235] as unknown as number[], textColor: AMBER as unknown as number[], fontStyle: "bold", fontSize: 8 },
-      alternateRowStyles: { fillColor: [252, 252, 250] as unknown as number[] },
+      styles: { fontSize: 9, cellPadding: 3, textColor: BRAND_DARK as C3 },
+      headStyles: { fillColor: [255, 251, 235] as C3 as C3, textColor: AMBER as C3, fontStyle: "bold", fontSize: 8 },
+      alternateRowStyles: { fillColor: [252, 252, 250] as C3 as C3 },
       columnStyles: { 1: { halign: "right" }, 2: { halign: "center", cellWidth: 12 } },
       didParseCell: (hookData: any) => {
         if (hookData.section === "body" && hookData.row.raw[2] === "⚠️") {
-          hookData.cell.styles.textColor = AMBER as unknown as number[];
+          hookData.cell.styles.textColor = AMBER as C3;
           hookData.cell.styles.fontStyle = "bold";
         }
       },
@@ -333,9 +333,9 @@ export function generateWeeklyReportPDF(data: ReportData) {
       head: [["Selskap", "Planlagt dato"]],
       body: data.planlagtGoLive.map((d) => [d.selskap, formatDate(d.planlagtDato)]),
       theme: "plain",
-      styles: { fontSize: 9, cellPadding: 3, textColor: BRAND_DARK as unknown as number[] },
-      headStyles: { fillColor: LIGHT_BG as unknown as number[], textColor: BRAND_DARK as unknown as number[], fontStyle: "bold", fontSize: 8 },
-      alternateRowStyles: { fillColor: [252, 252, 250] as unknown as number[] },
+      styles: { fontSize: 9, cellPadding: 3, textColor: BRAND_DARK as C3 },
+      headStyles: { fillColor: LIGHT_BG as C3, textColor: BRAND_DARK as C3, fontStyle: "bold", fontSize: 8 },
+      alternateRowStyles: { fillColor: [252, 252, 250] as C3 as C3 },
       columnStyles: { 1: { halign: "right" } },
     });
     y = (doc as any).lastAutoTable.finalY + 8;
@@ -350,12 +350,12 @@ export function generateWeeklyReportPDF(data: ReportData) {
       head: [["Selskap", "Status", "Årsak"]],
       body: data.pauseChurn.map((d) => [d.selskap, d.status, d.aarsak || "–"]),
       theme: "plain",
-      styles: { fontSize: 9, cellPadding: 3, textColor: BRAND_DARK as unknown as number[] },
-      headStyles: { fillColor: [254, 242, 242] as unknown as number[], textColor: BRAND_RED as unknown as number[], fontStyle: "bold", fontSize: 8 },
-      alternateRowStyles: { fillColor: [252, 252, 250] as unknown as number[] },
+      styles: { fontSize: 9, cellPadding: 3, textColor: BRAND_DARK as C3 },
+      headStyles: { fillColor: [254, 242, 242] as C3 as C3, textColor: BRAND_RED as C3, fontStyle: "bold", fontSize: 8 },
+      alternateRowStyles: { fillColor: [252, 252, 250] as C3 as C3 },
       didParseCell: (hookData: any) => {
         if (hookData.section === "body" && hookData.column.index === 1) {
-          hookData.cell.styles.textColor = hookData.cell.raw === "Kansellert" ? (BRAND_RED as unknown as number[]) : (AMBER as unknown as number[]);
+          hookData.cell.styles.textColor = hookData.cell.raw === "Kansellert" ? (BRAND_RED as C3) : (AMBER as C3);
           hookData.cell.styles.fontStyle = "bold";
         }
       },
