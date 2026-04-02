@@ -165,6 +165,13 @@ export default function Rapporter() {
     return { navn: p.partnernavn.length > 15 ? p.partnernavn.substring(0, 15) + "…" : p.partnernavn, mrr };
   }).sort((a, b) => b.mrr - a.mrr).slice(0, 10).filter(p => p.mrr > 0);
 
+  // --- Partnere per type (snapshot) ---
+  const partnerTypes = ["Provisjonspartner", "Integrasjonspartner", "Salgspartner", "Strategisk partner"];
+  const partnerByTypeData = partnerTypes.map(t => ({
+    type: t.length > 14 ? t.substring(0, 14) + "…" : t,
+    antall: partnere.filter(p => p.partnertype === t).length,
+  })).filter(d => d.antall > 0);
+
   const chartCard = (title: string, children: React.ReactNode) => (
     <div className="bg-card border rounded-xl p-4 sm:p-6">
       <h2 className="text-base sm:text-lg font-semibold mb-4">{title}</h2>
