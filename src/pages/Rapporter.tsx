@@ -5,7 +5,7 @@ import { nb } from "date-fns/locale";
 import PageShell from "@/components/PageShell";
 import { useCrmStore } from "@/hooks/use-crm-store";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, CartesianGrid, LineChart, Line, PieChart, Pie } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, CartesianGrid, LineChart, Line, PieChart, Pie, Legend } from "recharts";
 import { beregnTotalKontraktsverdi } from "@/data/crm-data";
 import { ArrowLeft, CalendarIcon, Download, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
