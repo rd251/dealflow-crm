@@ -3,7 +3,7 @@ import autoTable from "jspdf-autotable";
 
 type C3 = [number, number, number];
 const BRAND_RED: C3 = [218, 41, 28];
-const BRAND_DARK: C3 = [26, 25, 23];
+const BRAND_DARK: C3 = [80, 0, 0];
 const LIGHT_BG: C3 = [248, 247, 245];
 const WHITE: C3 = [255, 255, 255];
 const GREEN: C3 = [22, 163, 74];
