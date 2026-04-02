@@ -7,11 +7,14 @@ import { useCrmStore } from "@/hooks/use-crm-store";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, CartesianGrid, LineChart, Line, PieChart, Pie } from "recharts";
 import { beregnTotalKontraktsverdi } from "@/data/crm-data";
-import { ArrowLeft, CalendarIcon } from "lucide-react";
+import { ArrowLeft, CalendarIcon, Download, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { generateWeeklyReportPDF } from "@/lib/weekly-report-pdf";
+import { toast } from "sonner";
 
 function getMonthsBetween(from: Date, to: Date) {
   const months: { date: Date; label: string }[] = [];
@@ -41,6 +44,23 @@ export default function Rapporter() {
   const now = new Date();
   const [fromDate, setFromDate] = useState<Date>(subMonths(startOfMonth(now), 11));
   const [toDate, setToDate] = useState<Date>(startOfMonth(now));
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
+
+  const handleDownloadPDF = async () => {
+    setDownloadingPdf(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("weekly-report-data");
+      if (error) throw error;
+      const doc = generateWeeklyReportPDF(data);
+      doc.save(`salgsrapport-${new Date().toISOString().split("T")[0]}.pdf`);
+      toast.success("PDF lastet ned");
+    } catch (err) {
+      console.error("PDF generation failed:", err);
+      toast.error("Kunne ikke generere PDF");
+    } finally {
+      setDownloadingPdf(false);
+    }
+  };
 
   const nok = (v: number) => v.toLocaleString("no-NO");
   const months = getMonthsBetween(fromDate, toDate);
@@ -166,9 +186,15 @@ export default function Rapporter() {
       title="Rapporter"
       subtitle="Detaljerte grafer og innsikt"
       actions={
-        <Button variant="outline" size="sm" onClick={() => navigate("/")} className="gap-1.5">
-          <ArrowLeft className="w-4 h-4" /> Dashboard
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={handleDownloadPDF} disabled={downloadingPdf} className="gap-1.5">
+            {downloadingPdf ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+            {isMobile ? "PDF" : "Last ned salgsrapport"}
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => navigate("/")} className="gap-1.5">
+            <ArrowLeft className="w-4 h-4" /> Dashboard
+          </Button>
+        </div>
       }
     >
       {/* Date range picker */}
