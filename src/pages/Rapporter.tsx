@@ -44,6 +44,23 @@ export default function Rapporter() {
   const now = new Date();
   const [fromDate, setFromDate] = useState<Date>(subMonths(startOfMonth(now), 11));
   const [toDate, setToDate] = useState<Date>(startOfMonth(now));
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
+
+  const handleDownloadPDF = async () => {
+    setDownloadingPdf(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("weekly-report-data");
+      if (error) throw error;
+      const doc = generateWeeklyReportPDF(data);
+      doc.save(`salgsrapport-${new Date().toISOString().split("T")[0]}.pdf`);
+      toast.success("PDF lastet ned");
+    } catch (err) {
+      console.error("PDF generation failed:", err);
+      toast.error("Kunne ikke generere PDF");
+    } finally {
+      setDownloadingPdf(false);
+    }
+  };
 
   const nok = (v: number) => v.toLocaleString("no-NO");
   const months = getMonthsBetween(fromDate, toDate);
