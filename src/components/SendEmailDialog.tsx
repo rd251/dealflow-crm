@@ -126,7 +126,7 @@ Adresser meldingen til ${contactName.split(" ")[0]}. Vær direkte men høflig. A
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Mail className="w-4 h-4" /> Send e-post
