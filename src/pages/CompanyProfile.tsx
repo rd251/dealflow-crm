@@ -509,6 +509,22 @@ export default function CompanyProfile() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {emailContact && selskap && (
+        <SendEmailDialog
+          open={emailDialogOpen}
+          onOpenChange={setEmailDialogOpen}
+          defaultTo={emailContact.e_post}
+          defaultSubject={`Hei ${emailContact.navn.split(" ")[0]} – ${selskap.firmanavn}`}
+          context={{
+            entityType: "lead",
+            entityId: emailContact.id,
+            selskapNavn: selskap.firmanavn,
+            kontaktperson: emailContact.navn,
+            kontaktId: emailContact.id,
+            selskapId: selskap.id,
+          }}
+        />
+      )}
     </>
   );
 }
