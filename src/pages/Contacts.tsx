@@ -12,7 +12,8 @@ import DetailPanelShell, { DetailSection, DetailDivider } from "@/components/Det
 import EntityCalendarTab from "@/components/EntityCalendarTab";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Plus, Search, Mail, Phone, Linkedin, Upload, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { Plus, Search, Mail, Phone, Linkedin, Upload, MoreHorizontal, Pencil, Trash2, Send } from "lucide-react";
+import SendEmailDialog from "@/components/SendEmailDialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Kontakt, Selskap, Salgsmulighet } from "@/data/crm-data";
 import DataImportDialog from "@/components/DataImportDialog";
@@ -124,6 +125,7 @@ export default function Contacts() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [form, setForm] = useState({ navn: "", selskap_id: "", rolle: "", e_post: "", telefon: "", linkedin: "", notater: "" });
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
 
   // Delete state
   const [deleteTarget, setDeleteTarget] = useState<Kontakt | null>(null);
@@ -386,6 +388,11 @@ export default function Contacts() {
         badges={currentKontakt?.rolle ? (
           <Badge variant="secondary" className="text-xs">{currentKontakt.rolle}</Badge>
         ) : undefined}
+        actions={currentKontakt?.e_post ? (
+          <Button size="sm" variant="outline" onClick={() => setEmailDialogOpen(true)}>
+            <Send className="w-4 h-4 mr-1.5" />E-post
+          </Button>
+        ) : undefined}
         tabContent={currentKontakt ? {
           detaljer: (
             <div className="space-y-3">
@@ -479,6 +486,22 @@ export default function Contacts() {
           ),
         } : undefined}
       />
+      {currentKontakt && (
+        <SendEmailDialog
+          open={emailDialogOpen}
+          onOpenChange={setEmailDialogOpen}
+          defaultTo={currentKontakt.e_post}
+          defaultSubject={`Hei ${currentKontakt.navn.split(" ")[0]}`}
+          context={{
+            entityType: "lead",
+            entityId: currentKontakt.id,
+            selskapNavn: currentKontakt.selskap_id ? getSelskapNavn(currentKontakt.selskap_id) : currentKontakt.navn,
+            kontaktperson: currentKontakt.navn,
+            kontaktId: currentKontakt.id,
+            selskapId: currentKontakt.selskap_id,
+          }}
+        />
+      )}
     </PageShell>
   );
 }

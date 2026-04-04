@@ -15,8 +15,9 @@ import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import {
   Building2, ArrowLeft, DollarSign, TrendingUp, Briefcase, Users,
-  Mail, Phone, Linkedin, FileText, CalendarDays, ChevronRight, Plus, X, Shield, Trash2,
+  Mail, Phone, Linkedin, FileText, CalendarDays, ChevronRight, Plus, X, Shield, Trash2, Send,
 } from "lucide-react";
+import SendEmailDialog from "@/components/SendEmailDialog";
 import CompanyLogo from "@/components/CompanyLogo";
 import { Kundestatus, OnboardingStatus, Kundetilstand, SalgsmulighetStatus, Kontakt } from "@/data/crm-data";
 import { toast } from "sonner";
@@ -64,6 +65,8 @@ export default function CompanyProfile() {
   const [deleteRelations, setDeleteRelations] = useState<string[]>([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+  const [emailContact, setEmailContact] = useState<Kontakt | null>(null);
 
   const API_URL = `${import.meta.env.VITE_SUPABASE_URL}/rest/v1`;
   const API_HEADERS: HeadersInit = {
@@ -387,10 +390,17 @@ export default function CompanyProfile() {
                               <span className="text-muted-foreground text-xs">LinkedIn</span>
                               <Input value={k.linkedin || ""} onChange={e => updateKontakter(prev => prev.map(c => c.id === k.id ? { ...c, linkedin: e.target.value } : c))} className="h-8 text-sm" placeholder="LinkedIn URL" />
                             </div>
-                            <Button variant="ghost" size="sm" className="w-full mt-2 text-destructive hover:text-destructive hover:bg-destructive/10"
-                              onClick={() => handleDeleteContact(k)}>
-                              <Trash2 className="w-4 h-4 mr-1" /> Slett kontakt
-                            </Button>
+                            <div className="flex gap-2 mt-2">
+                              {k.e_post && (
+                                <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={() => { setEmailContact(k); setEmailDialogOpen(true); }}>
+                                  <Send className="w-3.5 h-3.5 mr-1" /> Send e-post
+                                </Button>
+                              )}
+                              <Button variant="ghost" size="sm" className="flex-1 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
+                                onClick={() => handleDeleteContact(k)}>
+                                <Trash2 className="w-4 h-4 mr-1" /> Slett
+                              </Button>
+                            </div>
                           </div>
                         )}
                       </div>
@@ -499,6 +509,22 @@ export default function CompanyProfile() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {emailContact && selskap && (
+        <SendEmailDialog
+          open={emailDialogOpen}
+          onOpenChange={setEmailDialogOpen}
+          defaultTo={emailContact.e_post}
+          defaultSubject={`Hei ${emailContact.navn.split(" ")[0]} – ${selskap.firmanavn}`}
+          context={{
+            entityType: "lead",
+            entityId: emailContact.id,
+            selskapNavn: selskap.firmanavn,
+            kontaktperson: emailContact.navn,
+            kontaktId: emailContact.id,
+            selskapId: selskap.id,
+          }}
+        />
+      )}
     </>
   );
 }
