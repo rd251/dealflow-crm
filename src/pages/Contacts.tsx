@@ -486,6 +486,22 @@ export default function Contacts() {
           ),
         } : undefined}
       />
+      {currentKontakt && (
+        <SendEmailDialog
+          open={emailDialogOpen}
+          onOpenChange={setEmailDialogOpen}
+          defaultTo={currentKontakt.e_post}
+          defaultSubject={`Hei ${currentKontakt.navn.split(" ")[0]}`}
+          context={{
+            entityType: "lead",
+            entityId: currentKontakt.id,
+            selskapNavn: currentKontakt.selskap_id ? getSelskapNavn(currentKontakt.selskap_id) : currentKontakt.navn,
+            kontaktperson: currentKontakt.navn,
+            kontaktId: currentKontakt.id,
+            selskapId: currentKontakt.selskap_id,
+          }}
+        />
+      )}
     </PageShell>
   );
 }

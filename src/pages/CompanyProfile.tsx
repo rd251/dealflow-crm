@@ -65,6 +65,8 @@ export default function CompanyProfile() {
   const [deleteRelations, setDeleteRelations] = useState<string[]>([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+  const [emailContact, setEmailContact] = useState<Kontakt | null>(null);
 
   const API_URL = `${import.meta.env.VITE_SUPABASE_URL}/rest/v1`;
   const API_HEADERS: HeadersInit = {
