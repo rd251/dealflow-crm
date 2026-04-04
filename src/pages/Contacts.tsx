@@ -125,6 +125,7 @@ export default function Contacts() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [form, setForm] = useState({ navn: "", selskap_id: "", rolle: "", e_post: "", telefon: "", linkedin: "", notater: "" });
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
 
   // Delete state
   const [deleteTarget, setDeleteTarget] = useState<Kontakt | null>(null);
