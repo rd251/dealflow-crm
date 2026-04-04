@@ -11,7 +11,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import DetailPanelShell, { DetailSection, DetailField, DetailDivider } from "@/components/DetailPanelShell";
 import EntityCalendarTab from "@/components/EntityCalendarTab";
-import { Plus, Search, ArrowRightCircle, Trash2, Users2, Upload, Lock } from "lucide-react";
+import { Plus, Search, ArrowRightCircle, Trash2, Users2, Upload, Lock, Mail } from "lucide-react";
+import SendEmailDialog from "@/components/SendEmailDialog";
 import { Lead, LeadStatus, LeadKilde } from "@/data/crm-data";
 import { Badge } from "@/components/ui/badge";
 import InlineTaskForm from "@/components/InlineTaskForm";
