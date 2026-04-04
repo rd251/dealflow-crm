@@ -447,6 +447,27 @@ export default function Leads() {
           };
         })() : undefined}
       />
+      {currentLead && (
+        <SendEmailDialog
+          open={emailDialogOpen}
+          onOpenChange={setEmailDialogOpen}
+          defaultTo={currentLead.e_post}
+          defaultSubject={`Oppfølging – ${currentLead.firmanavn}`}
+          context={{
+            entityType: "lead",
+            entityId: currentLead.id,
+            selskapNavn: currentLead.firmanavn,
+            kontaktperson: currentLead.kontaktperson,
+            nesteSteg: currentLead.neste_steg,
+            useCase: currentLead.use_case,
+            status: currentLead.status,
+          }}
+          onSent={() => {
+            const today = new Date().toISOString().split("T")[0];
+            updateLeads(prev => prev.map(l => l.id === currentLead.id ? { ...l, sist_aktivitet: today } : l));
+          }}
+        />
+      )}
     </PageShell>
   );
 }
