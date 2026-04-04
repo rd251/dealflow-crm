@@ -536,6 +536,11 @@ export default function Salgsmuligheter() {
         ) : undefined}
         actions={canEdit && currentSm && openStatuses.includes(currentSm.status as any) ? (
           <>
+            {currentSm.e_post && (
+              <Button size="sm" variant="outline" onClick={() => setEmailDialogOpen(true)}>
+                <Mail className="w-3.5 h-3.5 mr-1.5" />E-post
+              </Button>
+            )}
             <Button size="sm" className="bg-success hover:bg-success/90 text-success-foreground" onClick={() => { vinnSalgsmulighet(currentSm.id); setSelectedSm(null); }}>
               <Trophy className="w-3.5 h-3.5 mr-1.5" />Vunnet
             </Button>
