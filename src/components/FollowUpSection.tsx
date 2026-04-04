@@ -239,7 +239,7 @@ Adresser meldingen til ${contactName.split(' ')[0]}. Vær direkte men høflig. A
                   className="text-xs h-7 gap-1 hidden sm:flex"
                   onClick={(e) => {
                     e.stopPropagation();
-                    generateMessage(item);
+                    handleOpenDialog(item);
                   }}
                 >
                   <Sparkles className="w-3 h-3" />
