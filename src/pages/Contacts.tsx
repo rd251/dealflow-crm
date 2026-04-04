@@ -388,6 +388,11 @@ export default function Contacts() {
         badges={currentKontakt?.rolle ? (
           <Badge variant="secondary" className="text-xs">{currentKontakt.rolle}</Badge>
         ) : undefined}
+        actions={currentKontakt?.e_post ? (
+          <Button size="sm" variant="outline" onClick={() => setEmailDialogOpen(true)}>
+            <Send className="w-4 h-4 mr-1.5" />E-post
+          </Button>
+        ) : undefined}
         tabContent={currentKontakt ? {
           detaljer: (
             <div className="space-y-3">
