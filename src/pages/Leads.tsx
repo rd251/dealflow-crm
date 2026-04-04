@@ -334,6 +334,11 @@ export default function Leads() {
         ) : undefined}
         actions={canEdit && currentLead && !currentIsLocked && currentLead.status !== "Ikke aktuelt" ? (
           <>
+            {currentLead.e_post && (
+              <Button size="sm" variant="outline" onClick={() => setEmailDialogOpen(true)}>
+                <Mail className="w-4 h-4 mr-1.5" />E-post
+              </Button>
+            )}
             <Button size="sm" onClick={() => { setConvertDialogLead(currentLead); setConvertNavn(currentLead.use_case || currentLead.firmanavn); }}>
               <ArrowRightCircle className="w-4 h-4 mr-1.5" />Til salg
             </Button>
