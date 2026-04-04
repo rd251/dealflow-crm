@@ -12,7 +12,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import DetailPanelShell, { DetailSection, DetailField, DetailDivider, DetailStatGrid, DetailStatCard } from "@/components/DetailPanelShell";
 import EntityCalendarTab from "@/components/EntityCalendarTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, GripVertical, Trophy, XCircle, Trash2, Phone, User, AlertTriangle, Clock, Building2, DollarSign } from "lucide-react";
+import { Plus, GripVertical, Trophy, XCircle, Trash2, Phone, User, AlertTriangle, Clock, Building2, DollarSign, Mail } from "lucide-react";
+import SendEmailDialog from "@/components/SendEmailDialog";
 import CompanyLogo from "@/components/CompanyLogo";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { gravatarUrl } from "@/lib/gravatar";
@@ -147,6 +148,7 @@ export default function Salgsmuligheter() {
   const [dragOverStage, setDragOverStage] = useState<string | null>(null);
   const [selectedSm, setSelectedSm] = useState<Salgsmulighet | null>(null);
   const [lossDialog, setLossDialog] = useState<string | null>(null);
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
   const [lossReason, setLossReason] = useState<Tapsaarsak>("Pris");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [moveBlockedId, setMoveBlockedId] = useState<string | null>(null);
@@ -534,6 +536,11 @@ export default function Salgsmuligheter() {
         ) : undefined}
         actions={canEdit && currentSm && openStatuses.includes(currentSm.status as any) ? (
           <>
+            {currentSm.e_post && (
+              <Button size="sm" variant="outline" onClick={() => setEmailDialogOpen(true)}>
+                <Mail className="w-3.5 h-3.5 mr-1.5" />E-post
+              </Button>
+            )}
             <Button size="sm" className="bg-success hover:bg-success/90 text-success-foreground" onClick={() => { vinnSalgsmulighet(currentSm.id); setSelectedSm(null); }}>
               <Trophy className="w-3.5 h-3.5 mr-1.5" />Vunnet
             </Button>
@@ -739,6 +746,29 @@ export default function Salgsmuligheter() {
           };
         })() : undefined}
       />
+      {currentSm && (
+        <SendEmailDialog
+          open={emailDialogOpen}
+          onOpenChange={setEmailDialogOpen}
+          defaultTo={currentSm.e_post}
+          defaultSubject={`Oppfølging – ${getSelskapNavn(currentSm.selskap_id)}`}
+          context={{
+            entityType: "salgsmulighet",
+            entityId: currentSm.id,
+            selskapNavn: getSelskapNavn(currentSm.selskap_id),
+            kontaktperson: currentSm.kontaktperson,
+            selskapId: currentSm.selskap_id,
+            kontaktId: currentSm.kontakt_id,
+            nesteSteg: currentSm.neste_steg,
+            useCase: currentSm.use_case,
+            status: currentSm.status,
+          }}
+          onSent={() => {
+            const today = new Date().toISOString().split("T")[0];
+            updateSalgsmuligheter(prev => prev.map(s => s.id === currentSm.id ? { ...s, sist_aktivitet: today } : s));
+          }}
+        />
+      )}
     </PageShell>
   );
 }

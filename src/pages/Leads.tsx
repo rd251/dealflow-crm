@@ -11,7 +11,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import DetailPanelShell, { DetailSection, DetailField, DetailDivider } from "@/components/DetailPanelShell";
 import EntityCalendarTab from "@/components/EntityCalendarTab";
-import { Plus, Search, ArrowRightCircle, Trash2, Users2, Upload, Lock } from "lucide-react";
+import { Plus, Search, ArrowRightCircle, Trash2, Users2, Upload, Lock, Mail } from "lucide-react";
+import SendEmailDialog from "@/components/SendEmailDialog";
 import { Lead, LeadStatus, LeadKilde } from "@/data/crm-data";
 import { Badge } from "@/components/ui/badge";
 import InlineTaskForm from "@/components/InlineTaskForm";
@@ -46,6 +47,7 @@ export default function Leads() {
   const [convertNavn, setConvertNavn] = useState("");
   const [form, setForm] = useState<Partial<Lead>>({ firmanavn: "", kontaktperson: "", e_post: "", telefon: "", kilde: "Nettside", status: "Ny", ansvarlig: "", neste_steg: "", notater: "", rolle_i_firma: "", use_case: "" });
   const [filterUtenOppfolging, setFilterUtenOppfolging] = useState(false);
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
 
   // Pick up filter from query param
   useEffect(() => {
@@ -332,6 +334,11 @@ export default function Leads() {
         ) : undefined}
         actions={canEdit && currentLead && !currentIsLocked && currentLead.status !== "Ikke aktuelt" ? (
           <>
+            {currentLead.e_post && (
+              <Button size="sm" variant="outline" onClick={() => setEmailDialogOpen(true)}>
+                <Mail className="w-4 h-4 mr-1.5" />E-post
+              </Button>
+            )}
             <Button size="sm" onClick={() => { setConvertDialogLead(currentLead); setConvertNavn(currentLead.use_case || currentLead.firmanavn); }}>
               <ArrowRightCircle className="w-4 h-4 mr-1.5" />Til salg
             </Button>
@@ -440,6 +447,27 @@ export default function Leads() {
           };
         })() : undefined}
       />
+      {currentLead && (
+        <SendEmailDialog
+          open={emailDialogOpen}
+          onOpenChange={setEmailDialogOpen}
+          defaultTo={currentLead.e_post}
+          defaultSubject={`Oppfølging – ${currentLead.firmanavn}`}
+          context={{
+            entityType: "lead",
+            entityId: currentLead.id,
+            selskapNavn: currentLead.firmanavn,
+            kontaktperson: currentLead.kontaktperson,
+            nesteSteg: currentLead.neste_steg,
+            useCase: currentLead.use_case,
+            status: currentLead.status,
+          }}
+          onSent={() => {
+            const today = new Date().toISOString().split("T")[0];
+            updateLeads(prev => prev.map(l => l.id === currentLead.id ? { ...l, sist_aktivitet: today } : l));
+          }}
+        />
+      )}
     </PageShell>
   );
 }
