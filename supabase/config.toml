@@ -23,3 +23,5 @@ project_id = "tchmujgzcklwgptocbno"
     verify_jwt = false
   [functions.weekly-sales-digest]
     verify_jwt = false
+  [functions.crm-stats-api]
+    verify_jwt = false
