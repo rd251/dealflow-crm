@@ -10,7 +10,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { type, navn, kontaktperson, selskapNavn, sistAktivitetType, anbefalHandling, hoursInactive, entityType } = await req.json();
+    const { type, navn, kontaktperson, selskapNavn, sistAktivitetType, anbefalHandling, hoursInactive, entityType, customPrompt } = await req.json();
 
     const apiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!apiKey) {
@@ -28,10 +28,9 @@ Deno.serve(async (req) => {
     };
 
     const daysInactive = Math.floor(hoursInactive / 24);
-
     const contactName = kontaktperson || navn;
 
-    const prompt = `Du er en norsk salgsassistent. Generer en kort, profesjonell oppfølgingsmelding.
+    const prompt = customPrompt || `Du er en norsk salgsassistent. Generer en kort, profesjonell oppfølgingsmelding.
 
 Kontekst:
 - Kontaktperson: ${contactName}

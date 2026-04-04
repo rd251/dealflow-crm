@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  Clock, Building2, Sparkles, X, Send, Loader2, Pencil, ChevronRight,
+  Clock, Building2, Sparkles, X, Send, Loader2, Pencil, ChevronRight, RefreshCw, Settings2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { FollowUpItem } from "@/hooks/use-follow-ups";
@@ -57,11 +57,28 @@ export default function FollowUpSection({ items, loading, onDismiss }: FollowUpS
   const [emailBody, setEmailBody] = useState("");
   const [sending, setSending] = useState(false);
 
-  const generateMessage = async (item: FollowUpItem) => {
+  // Prompt editing
+  const [showPrompt, setShowPrompt] = useState(false);
+  const [customPrompt, setCustomPrompt] = useState("");
+
+  const buildDefaultPrompt = (item: FollowUpItem) => {
+    const contactName = item.kontaktperson || item.navn;
+    const daysInactive = Math.floor(item.hoursInactive / 24);
+    return `Skriv en kort, profesjonell oppfølgings-epost på norsk (3-5 setninger).
+Kontaktperson: ${contactName}
+Selskap: ${item.selskapNavn}
+Situasjon: ${item.anbefalHandling}
+Dager inaktiv: ${daysInactive}
+Adresser meldingen til ${contactName.split(' ')[0]}. Vær direkte men høflig. Avslutt med et konkret forslag til neste steg.`;
+  };
+
+  const generateMessage = async (item: FollowUpItem, promptOverride?: string) => {
     setMessageDialog(item);
     setGeneratedMessage("");
     setGenerating(true);
     setEditMode(false);
+
+    const prompt = promptOverride || customPrompt || undefined;
 
     try {
       const { data, error } = await supabase.functions.invoke("follow-up-ai", {
@@ -74,13 +91,13 @@ export default function FollowUpSection({ items, loading, onDismiss }: FollowUpS
           anbefalHandling: item.anbefalHandling,
           hoursInactive: item.hoursInactive,
           entityType: item.entityType,
+          customPrompt: prompt,
         },
       });
       if (error) throw error;
       const msg = data?.message || "Kunne ikke generere melding.";
       setGeneratedMessage(msg);
 
-      // Pre-fill email fields
       setEmailTo(item.ePost || "");
       setEmailSubject(`Oppfølging – ${item.selskapNavn}`);
       setEmailBody(msg);
@@ -89,6 +106,13 @@ export default function FollowUpSection({ items, loading, onDismiss }: FollowUpS
     } finally {
       setGenerating(false);
     }
+  };
+
+  const handleOpenDialog = (item: FollowUpItem) => {
+    const defaultPrompt = buildDefaultPrompt(item);
+    setCustomPrompt(defaultPrompt);
+    setShowPrompt(false);
+    generateMessage(item, defaultPrompt);
   };
 
   const handleSendEmail = async () => {
@@ -215,7 +239,7 @@ export default function FollowUpSection({ items, loading, onDismiss }: FollowUpS
                   className="text-xs h-7 gap-1 hidden sm:flex"
                   onClick={(e) => {
                     e.stopPropagation();
-                    generateMessage(item);
+                    handleOpenDialog(item);
                   }}
                 >
                   <Sparkles className="w-3 h-3" />
@@ -269,6 +293,38 @@ export default function FollowUpSection({ items, loading, onDismiss }: FollowUpS
             </div>
           ) : (
             <div className="space-y-4">
+              {/* AI Prompt editor */}
+              <div className="space-y-1.5">
+                <button
+                  type="button"
+                  className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                  onClick={() => setShowPrompt(!showPrompt)}
+                >
+                  <Settings2 className="w-3 h-3" />
+                  {showPrompt ? "Skjul instruksjon" : "Rediger AI-instruksjon"}
+                </button>
+                {showPrompt && (
+                  <div className="space-y-2">
+                    <Textarea
+                      value={customPrompt}
+                      onChange={(e) => setCustomPrompt(e.target.value)}
+                      rows={5}
+                      className="text-xs"
+                      placeholder="Skriv instruksjoner til AI-en her..."
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-1 text-xs h-7"
+                      onClick={() => messageDialog && generateMessage(messageDialog)}
+                      disabled={generating}
+                    >
+                      <RefreshCw className="w-3 h-3" />
+                      Generer på nytt
+                    </Button>
+                  </div>
+                )}
+              </div>
               {/* Recipient */}
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-muted-foreground">Til</label>
