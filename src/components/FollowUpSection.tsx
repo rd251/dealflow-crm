@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  Clock, Building2, Sparkles, X, Send, Loader2, Pencil, ChevronRight,
+  Clock, Building2, Sparkles, X, Send, Loader2, Pencil, ChevronRight, RefreshCw, Settings2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { FollowUpItem } from "@/hooks/use-follow-ups";
