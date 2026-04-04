@@ -293,6 +293,38 @@ Adresser meldingen til ${contactName.split(' ')[0]}. Vær direkte men høflig. A
             </div>
           ) : (
             <div className="space-y-4">
+              {/* AI Prompt editor */}
+              <div className="space-y-1.5">
+                <button
+                  type="button"
+                  className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                  onClick={() => setShowPrompt(!showPrompt)}
+                >
+                  <Settings2 className="w-3 h-3" />
+                  {showPrompt ? "Skjul instruksjon" : "Rediger AI-instruksjon"}
+                </button>
+                {showPrompt && (
+                  <div className="space-y-2">
+                    <Textarea
+                      value={customPrompt}
+                      onChange={(e) => setCustomPrompt(e.target.value)}
+                      rows={5}
+                      className="text-xs"
+                      placeholder="Skriv instruksjoner til AI-en her..."
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-1 text-xs h-7"
+                      onClick={() => messageDialog && generateMessage(messageDialog)}
+                      disabled={generating}
+                    >
+                      <RefreshCw className="w-3 h-3" />
+                      Generer på nytt
+                    </Button>
+                  </div>
+                )}
+              </div>
               {/* Recipient */}
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-muted-foreground">Til</label>
