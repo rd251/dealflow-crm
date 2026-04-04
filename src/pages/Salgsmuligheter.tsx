@@ -746,6 +746,29 @@ export default function Salgsmuligheter() {
           };
         })() : undefined}
       />
+      {currentSm && (
+        <SendEmailDialog
+          open={emailDialogOpen}
+          onOpenChange={setEmailDialogOpen}
+          defaultTo={currentSm.e_post}
+          defaultSubject={`Oppfølging – ${getSelskapNavn(currentSm.selskap_id)}`}
+          context={{
+            entityType: "salgsmulighet",
+            entityId: currentSm.id,
+            selskapNavn: getSelskapNavn(currentSm.selskap_id),
+            kontaktperson: currentSm.kontaktperson,
+            selskapId: currentSm.selskap_id,
+            kontaktId: currentSm.kontakt_id,
+            nesteSteg: currentSm.neste_steg,
+            useCase: currentSm.use_case,
+            status: currentSm.status,
+          }}
+          onSent={() => {
+            const today = new Date().toISOString().split("T")[0];
+            updateSalgsmuligheter(prev => prev.map(s => s.id === currentSm.id ? { ...s, sist_aktivitet: today } : s));
+          }}
+        />
+      )}
     </PageShell>
   );
 }
