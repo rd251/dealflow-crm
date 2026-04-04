@@ -390,10 +390,17 @@ export default function CompanyProfile() {
                               <span className="text-muted-foreground text-xs">LinkedIn</span>
                               <Input value={k.linkedin || ""} onChange={e => updateKontakter(prev => prev.map(c => c.id === k.id ? { ...c, linkedin: e.target.value } : c))} className="h-8 text-sm" placeholder="LinkedIn URL" />
                             </div>
-                            <Button variant="ghost" size="sm" className="w-full mt-2 text-destructive hover:text-destructive hover:bg-destructive/10"
-                              onClick={() => handleDeleteContact(k)}>
-                              <Trash2 className="w-4 h-4 mr-1" /> Slett kontakt
-                            </Button>
+                            <div className="flex gap-2 mt-2">
+                              {k.e_post && (
+                                <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={() => { setEmailContact(k); setEmailDialogOpen(true); }}>
+                                  <Send className="w-3.5 h-3.5 mr-1" /> Send e-post
+                                </Button>
+                              )}
+                              <Button variant="ghost" size="sm" className="flex-1 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
+                                onClick={() => handleDeleteContact(k)}>
+                                <Trash2 className="w-4 h-4 mr-1" /> Slett
+                              </Button>
+                            </div>
                           </div>
                         )}
                       </div>
