@@ -12,7 +12,8 @@ import DetailPanelShell, { DetailSection, DetailDivider } from "@/components/Det
 import EntityCalendarTab from "@/components/EntityCalendarTab";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Plus, Search, Mail, Phone, Linkedin, Upload, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { Plus, Search, Mail, Phone, Linkedin, Upload, MoreHorizontal, Pencil, Trash2, Send } from "lucide-react";
+import SendEmailDialog from "@/components/SendEmailDialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Kontakt, Selskap, Salgsmulighet } from "@/data/crm-data";
 import DataImportDialog from "@/components/DataImportDialog";

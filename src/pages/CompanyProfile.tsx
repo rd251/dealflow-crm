@@ -15,8 +15,9 @@ import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import {
   Building2, ArrowLeft, DollarSign, TrendingUp, Briefcase, Users,
-  Mail, Phone, Linkedin, FileText, CalendarDays, ChevronRight, Plus, X, Shield, Trash2,
+  Mail, Phone, Linkedin, FileText, CalendarDays, ChevronRight, Plus, X, Shield, Trash2, Send,
 } from "lucide-react";
+import SendEmailDialog from "@/components/SendEmailDialog";
 import CompanyLogo from "@/components/CompanyLogo";
 import { Kundestatus, OnboardingStatus, Kundetilstand, SalgsmulighetStatus, Kontakt } from "@/data/crm-data";
 import { toast } from "sonner";
