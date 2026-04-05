@@ -481,6 +481,7 @@ function RingelisteContacts({ liste, onBack }: { liste: Ringelister; onBack: () 
         {liste.kanal && <Badge variant="outline" className="text-[10px]">{liste.kanal}</Badge>}
         {liste.kilde_segment && <Badge variant="outline" className="text-[10px]">{liste.kilde_segment}</Badge>}
         {liste.partnertype_segment && <Badge variant="outline" className="text-[10px]">{liste.partnertype_segment}</Badge>}
+        {liste.underkilde && <Badge variant="outline" className="text-[10px] bg-muted/50">{liste.underkilde}</Badge>}
       </div>
 
       {/* Toolbar */}
