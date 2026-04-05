@@ -407,6 +407,7 @@ function RingelisteContacts({ liste, onBack }: { liste: Ringelister; onBack: () 
       kanal: liste.kanal,
       partnertype_segment: liste.partnertype_segment,
       kilde_segment: liste.kilde_segment,
+      underkilde: liste.underkilde,
     });
     toast.success("Lagt til i ringeliste");
     setAddForm({ navn: "", e_post: "", telefon: "", selskap: "", rolle: "", ansvarlig: "" });
