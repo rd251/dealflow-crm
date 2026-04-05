@@ -774,6 +774,72 @@ export type Database = {
           },
         ]
       }
+      ringeliste: {
+        Row: {
+          ansvarlig: string | null
+          created_at: string
+          e_post: string | null
+          id: string
+          kontakt_id: string | null
+          navn: string
+          notater: string | null
+          partner_id: string | null
+          prioritet: string | null
+          rolle: string | null
+          salgsmulighet_id: string | null
+          selskap: string | null
+          selskap_id: string | null
+          sist_kontaktet: string | null
+          status: string | null
+          telefon: string | null
+          updated_at: string
+          user_id: string | null
+          utfall: string | null
+        }
+        Insert: {
+          ansvarlig?: string | null
+          created_at?: string
+          e_post?: string | null
+          id?: string
+          kontakt_id?: string | null
+          navn: string
+          notater?: string | null
+          partner_id?: string | null
+          prioritet?: string | null
+          rolle?: string | null
+          salgsmulighet_id?: string | null
+          selskap?: string | null
+          selskap_id?: string | null
+          sist_kontaktet?: string | null
+          status?: string | null
+          telefon?: string | null
+          updated_at?: string
+          user_id?: string | null
+          utfall?: string | null
+        }
+        Update: {
+          ansvarlig?: string | null
+          created_at?: string
+          e_post?: string | null
+          id?: string
+          kontakt_id?: string | null
+          navn?: string
+          notater?: string | null
+          partner_id?: string | null
+          prioritet?: string | null
+          rolle?: string | null
+          salgsmulighet_id?: string | null
+          selskap?: string | null
+          selskap_id?: string | null
+          sist_kontaktet?: string | null
+          status?: string | null
+          telefon?: string | null
+          updated_at?: string
+          user_id?: string | null
+          utfall?: string | null
+        }
+        Relationships: []
+      }
       salgsmuligheter: {
         Row: {
           ansvarlig: string | null
