@@ -819,6 +819,7 @@ function RingelisteImport({ open, onOpenChange, onDone, liste }: { open: boolean
       kanal: liste.kanal,
       partnertype_segment: liste.partnertype_segment,
       kilde_segment: liste.kilde_segment,
+      underkilde: liste.underkilde,
     }));
     const { error } = await supabase.from("ringeliste").insert(inserts);
     if (error) { toast.error("Importfeil"); } else { toast.success(`${inserts.length} kontakter importert`); }
