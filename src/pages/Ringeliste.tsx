@@ -192,6 +192,9 @@ function RingelisterOverview({ onSelect }: { onSelect: (l: Ringelister) => void 
   const [seg, setSeg] = useState({ segment: "", kanal: "", partnertype_segment: "", kilde_segment: "", underkilde: "" });
   const [saving, setSaving] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [editItem, setEditItem] = useState<Ringelister | null>(null);
+  const [editForm, setEditForm] = useState({ navn: "", ansvarlig: "", notater: "" });
+  const [editSeg, setEditSeg] = useState({ segment: "", kanal: "", partnertype_segment: "", kilde_segment: "", underkilde: "" });
 
   const fetchLister = async () => {
     const { data: listsData } = await supabase.from("ringelister").select("*").order("created_at", { ascending: false });
@@ -230,6 +233,30 @@ function RingelisterOverview({ onSelect }: { onSelect: (l: Ringelister) => void 
     fetchLister();
   };
 
+  const openEdit = (l: Ringelister) => {
+    setEditItem(l);
+    setEditForm({ navn: l.navn, ansvarlig: l.ansvarlig || "", notater: l.notater || "" });
+    setEditSeg({ segment: l.segment, kanal: l.kanal, partnertype_segment: l.partnertype_segment, kilde_segment: l.kilde_segment, underkilde: l.underkilde || "" });
+  };
+
+  const handleEdit = async () => {
+    if (!editItem || !editForm.navn.trim() || !isSegmentValid(editSeg)) return;
+    setSaving(true);
+    await supabase.from("ringelister").update({ ...editForm, ...editSeg } as any).eq("id", editItem.id);
+    // Update all contacts in this list with new segmentation
+    await supabase.from("ringeliste").update({
+      segment: editSeg.segment,
+      kanal: editSeg.kanal,
+      partnertype_segment: editSeg.partnertype_segment,
+      kilde_segment: editSeg.kilde_segment,
+      underkilde: editSeg.underkilde,
+    }).eq("ringeliste_id", editItem.id);
+    toast.success("Ringeliste oppdatert");
+    setEditItem(null);
+    setSaving(false);
+    fetchLister();
+  };
+
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
@@ -258,14 +285,16 @@ function RingelisterOverview({ onSelect }: { onSelect: (l: Ringelister) => void 
                   <FolderOpen className="w-4 h-4 text-primary shrink-0" />
                   <h3 className="font-medium text-sm truncate">{l.navn}</h3>
                 </div>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 shrink-0"
-                  onClick={e => { e.stopPropagation(); setDeleteId(l.id); }}
-                >
-                  <Trash2 className="w-3.5 h-3.5 text-destructive" />
-                </Button>
+                <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 shrink-0">
+                  <Button size="sm" variant="ghost" className="h-7 w-7 p-0"
+                    onClick={e => { e.stopPropagation(); openEdit(l); }}>
+                    <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
+                  </Button>
+                  <Button size="sm" variant="ghost" className="h-7 w-7 p-0"
+                    onClick={e => { e.stopPropagation(); setDeleteId(l.id); }}>
+                    <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                  </Button>
+                </div>
               </div>
               <div className="flex flex-wrap gap-1.5 mb-2">
                 {l.segment && <Badge variant="outline" className={cn("text-[10px]", segmentColors[l.segment])}>{l.segment}</Badge>}
@@ -315,6 +344,43 @@ function RingelisterOverview({ onSelect }: { onSelect: (l: Ringelister) => void 
             <Button variant="outline" onClick={() => setCreateOpen(false)}>Avbryt</Button>
             <Button onClick={handleCreate} disabled={!form.navn.trim() || !isSegmentValid(seg) || saving}>
               {saving ? "Oppretter..." : "Opprett"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Dialog */}
+      <Dialog open={!!editItem} onOpenChange={o => { if (!o) setEditItem(null); }}>
+        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Rediger ringeliste</DialogTitle>
+            <DialogDescription>Oppdater navn og segmentering. Kontaktene oppdateres automatisk.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="bg-muted/30 rounded-lg p-3 border">
+              <div className="flex items-center gap-2 mb-3">
+                <Layers className="w-4 h-4 text-primary" />
+                <span className="text-sm font-semibold">Segmentering</span>
+              </div>
+              <SegmentationForm seg={editSeg} onChange={setEditSeg} />
+            </div>
+            <div>
+              <Label className="text-xs">Listenavn *</Label>
+              <Input value={editForm.navn} onChange={e => setEditForm(p => ({ ...p, navn: e.target.value }))} className="h-8 mt-1" />
+            </div>
+            <div>
+              <Label className="text-xs">Ansvarlig</Label>
+              <Input value={editForm.ansvarlig} onChange={e => setEditForm(p => ({ ...p, ansvarlig: e.target.value }))} className="h-8 mt-1" />
+            </div>
+            <div>
+              <Label className="text-xs">Notater</Label>
+              <Textarea value={editForm.notater} onChange={e => setEditForm(p => ({ ...p, notater: e.target.value }))} className="mt-1 min-h-[50px]" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditItem(null)}>Avbryt</Button>
+            <Button onClick={handleEdit} disabled={!editForm.navn.trim() || !isSegmentValid(editSeg) || saving}>
+              {saving ? "Lagrer..." : "Lagre"}
             </Button>
           </DialogFooter>
         </DialogContent>
