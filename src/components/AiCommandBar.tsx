@@ -314,6 +314,11 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
           }
         }
       }
+
+      // Auto-create ringeliste
+      if (aiData.suggested_ringeliste?.auto_create) {
+        handleCreateRingeliste(aiData.suggested_ringeliste);
+      }
     } catch (e: any) {
       console.error("AI command error:", e);
       toast.error("Kunne ikke kontakte AI. Prøv igjen.");
