@@ -126,6 +126,33 @@ interface SuggestedContact {
   auto_create?: boolean;
 }
 
+interface SuggestedRingelisteKontakt {
+  navn: string;
+  selskap?: string;
+  e_post?: string;
+  telefon?: string;
+  rolle?: string;
+  prioritet: "Høy" | "Medium" | "Lav";
+  kontakt_id?: string;
+  selskap_id?: string;
+  salgsmulighet_id?: string;
+  lead_id?: string;
+  dialog_status: string;
+  grunn: string;
+}
+
+interface SuggestedRingeliste {
+  navn: string;
+  segment: string;
+  kanal: string;
+  kilde_segment: string;
+  underkilde?: string;
+  notater?: string;
+  signal: string;
+  kontakter: SuggestedRingelisteKontakt[];
+  auto_create?: boolean;
+}
+
 interface AiResponse {
   summary: string;
   items: AiItem[];
@@ -138,6 +165,7 @@ interface AiResponse {
   suggested_conversions?: SuggestedConversion[];
   suggested_companies?: SuggestedCompany[];
   suggested_contacts?: SuggestedContact[];
+  suggested_ringeliste?: SuggestedRingeliste;
 }
 
 interface AiCommandBarProps {
@@ -153,6 +181,7 @@ const QUICK_PROMPTS = [
   { icon: "📋", label: "Prep neste møte" },
   { icon: "🎯", label: "Top 5 prioriteringer" },
   { icon: "📞", label: "Deals som trenger oppfølging" },
+  { icon: "📋", label: "Lag ringeliste", prefill: "Lag ringeliste for leads som trenger oppfølging basert på e-posthistorikk" },
 ];
 
 const prioritetColor: Record<string, string> = {
