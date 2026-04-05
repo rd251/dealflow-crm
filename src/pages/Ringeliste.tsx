@@ -121,7 +121,7 @@ const outcomes = [
 
 // ========== Segmentation Form ==========
 function SegmentationForm({ seg, onChange }: {
-  seg: { segment: string; kanal: string; partnertype_segment: string; kilde_segment: string };
+  seg: { segment: string; kanal: string; partnertype_segment: string; kilde_segment: string; underkilde: string };
   onChange: (s: typeof seg) => void;
 }) {
   return (
