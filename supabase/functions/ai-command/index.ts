@@ -610,6 +610,8 @@ REGLER:
 - Prioriter alltid høy-verdi deals først
 - Prioriter alltid entiteter med manglende/gammel aktivitet
 - Aldri foreslå handlinger på ferdige deals (Vunnet/Tapt)
+- VIKTIG: Sjekk ALLTID møtenotatene FØR du foreslår en handling. Hvis et møte nylig diskuterte neste steg, bruk det som grunnlag. Ikke foreslå noe som motstrider det som ble avtalt i et møte.
+- Hvis møtenotater viser at noe ble avtalt (f.eks. "kunden skal sende tilbakemelding innen fredag"), ikke foreslå oppfølging før den avtalte fristen er passert.
 - Når du foreslår oppgaver, sett alltid realistiske frister (i dag eller innen noen dager)
 - Sett auto_create=true på oppgaver når brukeren eksplisitt ber om å opprette/lage en oppgave (f.eks. "opprett oppgave", "lag oppgave", "legg til oppgave"). Da opprettes oppgaven automatisk uten bekreftelse.
 - Når brukeren nevner samtaler, møter, e-poster eller andre interaksjoner, foreslå å logge disse som aktiviteter
