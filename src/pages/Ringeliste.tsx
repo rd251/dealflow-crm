@@ -192,6 +192,9 @@ function RingelisterOverview({ onSelect }: { onSelect: (l: Ringelister) => void 
   const [seg, setSeg] = useState({ segment: "", kanal: "", partnertype_segment: "", kilde_segment: "", underkilde: "" });
   const [saving, setSaving] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [editItem, setEditItem] = useState<Ringelister | null>(null);
+  const [editForm, setEditForm] = useState({ navn: "", ansvarlig: "", notater: "" });
+  const [editSeg, setEditSeg] = useState({ segment: "", kanal: "", partnertype_segment: "", kilde_segment: "", underkilde: "" });
 
   const fetchLister = async () => {
     const { data: listsData } = await supabase.from("ringelister").select("*").order("created_at", { ascending: false });
