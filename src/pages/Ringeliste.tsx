@@ -189,7 +189,7 @@ function RingelisterOverview({ onSelect }: { onSelect: (l: Ringelister) => void 
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
   const [form, setForm] = useState({ navn: "", ansvarlig: "", notater: "" });
-  const [seg, setSeg] = useState({ segment: "", kanal: "", partnertype_segment: "", kilde_segment: "" });
+  const [seg, setSeg] = useState({ segment: "", kanal: "", partnertype_segment: "", kilde_segment: "", underkilde: "" });
   const [saving, setSaving] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
