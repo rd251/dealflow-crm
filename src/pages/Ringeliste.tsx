@@ -349,6 +349,43 @@ function RingelisterOverview({ onSelect }: { onSelect: (l: Ringelister) => void 
         </DialogContent>
       </Dialog>
 
+      {/* Edit Dialog */}
+      <Dialog open={!!editItem} onOpenChange={o => { if (!o) setEditItem(null); }}>
+        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Rediger ringeliste</DialogTitle>
+            <DialogDescription>Oppdater navn og segmentering. Kontaktene oppdateres automatisk.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="bg-muted/30 rounded-lg p-3 border">
+              <div className="flex items-center gap-2 mb-3">
+                <Layers className="w-4 h-4 text-primary" />
+                <span className="text-sm font-semibold">Segmentering</span>
+              </div>
+              <SegmentationForm seg={editSeg} onChange={setEditSeg} />
+            </div>
+            <div>
+              <Label className="text-xs">Listenavn *</Label>
+              <Input value={editForm.navn} onChange={e => setEditForm(p => ({ ...p, navn: e.target.value }))} className="h-8 mt-1" />
+            </div>
+            <div>
+              <Label className="text-xs">Ansvarlig</Label>
+              <Input value={editForm.ansvarlig} onChange={e => setEditForm(p => ({ ...p, ansvarlig: e.target.value }))} className="h-8 mt-1" />
+            </div>
+            <div>
+              <Label className="text-xs">Notater</Label>
+              <Textarea value={editForm.notater} onChange={e => setEditForm(p => ({ ...p, notater: e.target.value }))} className="mt-1 min-h-[50px]" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditItem(null)}>Avbryt</Button>
+            <Button onClick={handleEdit} disabled={!editForm.navn.trim() || !isSegmentValid(editSeg) || saving}>
+              {saving ? "Lagrer..." : "Lagre"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Delete confirm */}
       <Dialog open={!!deleteId} onOpenChange={o => { if (!o) setDeleteId(null); }}>
         <DialogContent className="sm:max-w-sm">
