@@ -156,6 +156,10 @@ function SegmentationForm({ seg, onChange }: {
           <SelectContent>{KILDER_SEGMENT.map(k => <SelectItem key={k} value={k}>{k}</SelectItem>)}</SelectContent>
         </Select>
       </div>
+      <div className="col-span-2">
+        <Label className="text-xs">Underkilde</Label>
+        <Input placeholder="F.eks. Stand på tech-messen" value={seg.underkilde} onChange={e => onChange({ ...seg, underkilde: e.target.value })} className="h-8 mt-1" />
+      </div>
     </div>
   );
 }
