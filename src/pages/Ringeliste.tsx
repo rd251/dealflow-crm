@@ -7,10 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import {
   Phone, Upload, Plus, Search, ArrowUpDown,
   PhoneCall, CalendarPlus, X, Send, RotateCcw, CheckCircle2,
   FileSpreadsheet, AlertCircle, UserPlus, Crown, TrendingUp,
-  BarChart3, Users, Target
+  BarChart3, Users, Target, Layers, Tag
 } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
@@ -38,7 +41,17 @@ interface RingelisteItem {
   salgsmulighet_id: string | null;
   partner_id: string | null;
   created_at: string;
+  segment: string;
+  kanal: string;
+  partnertype_segment: string;
+  kilde_segment: string;
 }
+
+// ---------- segmentation constants ----------
+const SEGMENTS = ["SMB", "Enterprise", "Kommune", "Statlig", "Interkommunalt"];
+const KANALER = ["Direkte", "Partner", "Self-serve"];
+const PARTNERTYPER = ["Integrasjonspartner", "Strategisk partner", "Salgspartner", "Utviklingspartner"];
+const KILDER_SEGMENT = ["LinkedIn", "Event", "Web", "Kjøpt liste", "Egen research"];
 
 // ---------- role helpers ----------
 const BESLUTNINGSTAKER = ["daglig leder", "ceo", "cfo", "coo", "cto", "cmo", "managing director", "adm. dir", "adm.dir", "administrerende direktør"];
@@ -74,6 +87,14 @@ const statusColors: Record<string, string> = {
   "Konvertert": "bg-emerald-500/15 text-emerald-700",
 };
 
+const segmentColors: Record<string, string> = {
+  "SMB": "bg-blue-500/15 text-blue-700 border-blue-300",
+  "Enterprise": "bg-purple-500/15 text-purple-700 border-purple-300",
+  "Kommune": "bg-emerald-500/15 text-emerald-700 border-emerald-300",
+  "Statlig": "bg-amber-500/15 text-amber-700 border-amber-300",
+  "Interkommunalt": "bg-teal-500/15 text-teal-700 border-teal-300",
+};
+
 // ---------- outcomes ----------
 const outcomes = [
   { value: "Ikke svar", icon: <X className="w-4 h-4" />, status: "Ring igjen", cls: "border-muted-foreground/30" },
@@ -83,12 +104,58 @@ const outcomes = [
   { value: "Ring igjen", icon: <RotateCcw className="w-4 h-4" />, status: "Ring igjen", cls: "border-amber-300 bg-amber-500/10 text-amber-700" },
 ];
 
+// ========== Segmentation Form (reused in add & import) ==========
+function SegmentationForm({ seg, onChange }: {
+  seg: { segment: string; kanal: string; partnertype_segment: string; kilde_segment: string };
+  onChange: (s: typeof seg) => void;
+}) {
+  return (
+    <div className="grid grid-cols-2 gap-3">
+      <div>
+        <Label className="text-xs">Segment *</Label>
+        <Select value={seg.segment} onValueChange={v => onChange({ ...seg, segment: v })}>
+          <SelectTrigger className="h-8 mt-1"><SelectValue placeholder="Velg segment" /></SelectTrigger>
+          <SelectContent>{SEGMENTS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+        </Select>
+      </div>
+      <div>
+        <Label className="text-xs">Kanal *</Label>
+        <Select value={seg.kanal} onValueChange={v => onChange({ ...seg, kanal: v, partnertype_segment: v !== "Partner" ? "" : seg.partnertype_segment })}>
+          <SelectTrigger className="h-8 mt-1"><SelectValue placeholder="Velg kanal" /></SelectTrigger>
+          <SelectContent>{KANALER.map(k => <SelectItem key={k} value={k}>{k}</SelectItem>)}</SelectContent>
+        </Select>
+      </div>
+      {seg.kanal === "Partner" && (
+        <div>
+          <Label className="text-xs">Partnertype</Label>
+          <Select value={seg.partnertype_segment} onValueChange={v => onChange({ ...seg, partnertype_segment: v })}>
+            <SelectTrigger className="h-8 mt-1"><SelectValue placeholder="Velg partnertype" /></SelectTrigger>
+            <SelectContent>{PARTNERTYPER.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent>
+          </Select>
+        </div>
+      )}
+      <div>
+        <Label className="text-xs">Kilde *</Label>
+        <Select value={seg.kilde_segment} onValueChange={v => onChange({ ...seg, kilde_segment: v })}>
+          <SelectTrigger className="h-8 mt-1"><SelectValue placeholder="Velg kilde" /></SelectTrigger>
+          <SelectContent>{KILDER_SEGMENT.map(k => <SelectItem key={k} value={k}>{k}</SelectItem>)}</SelectContent>
+        </Select>
+      </div>
+    </div>
+  );
+}
+
+function isSegmentValid(seg: { segment: string; kanal: string; kilde_segment: string }) {
+  return seg.segment && seg.kanal && seg.kilde_segment;
+}
+
 // ---------- component ----------
 export default function Ringeliste() {
   const [items, setItems] = useState<RingelisteItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("alle");
+  const [filterSegment, setFilterSegment] = useState<string>("alle");
   const [sortBy, setSortBy] = useState<"prioritet" | "sist_kontaktet" | "status">("prioritet");
   const [selected, setSelected] = useState<RingelisteItem | null>(null);
   const [callNotes, setCallNotes] = useState("");
@@ -101,6 +168,7 @@ export default function Ringeliste() {
 
   // add form
   const [addForm, setAddForm] = useState({ navn: "", e_post: "", telefon: "", selskap: "", rolle: "", ansvarlig: "" });
+  const [addSeg, setAddSeg] = useState({ segment: "", kanal: "", partnertype_segment: "", kilde_segment: "" });
 
   // convert dialog
   const [convertOpen, setConvertOpen] = useState(false);
@@ -122,6 +190,7 @@ export default function Ringeliste() {
       list = list.filter(i => i.navn.toLowerCase().includes(s) || i.selskap.toLowerCase().includes(s) || i.rolle.toLowerCase().includes(s));
     }
     if (filterStatus !== "alle") list = list.filter(i => i.status === filterStatus);
+    if (filterSegment !== "alle") list = list.filter(i => i.segment === filterSegment);
 
     const prioOrder = { "Høy": 0, "Medium": 1, "Lav": 2 };
     list = [...list].sort((a, b) => {
@@ -130,7 +199,7 @@ export default function Ringeliste() {
       return a.status.localeCompare(b.status);
     });
     return list;
-  }, [items, search, filterStatus, sortBy]);
+  }, [items, search, filterStatus, filterSegment, sortBy]);
 
   // ---------- outcome handler ----------
   const handleOutcome = async (outcome: typeof outcomes[0]) => {
@@ -148,7 +217,6 @@ export default function Ringeliste() {
 
     toast.success(`Registrert: ${outcome.value}`);
 
-    // Auto suggestion
     if (outcome.value === "Booket møte" && isBeslutningstaker) {
       toast.info("🎯 Beslutningstaker – vurder direkte konvertering til salgsmulighet");
     }
@@ -164,11 +232,12 @@ export default function Ringeliste() {
 
   // ---------- add item ----------
   const handleAdd = async () => {
-    if (!addForm.navn.trim()) return;
+    if (!addForm.navn.trim() || !isSegmentValid(addSeg)) return;
     const prio = getRolePriority(addForm.rolle);
-    await supabase.from("ringeliste").insert({ ...addForm, prioritet: prio });
+    await supabase.from("ringeliste").insert({ ...addForm, ...addSeg, prioritet: prio });
     toast.success("Lagt til i ringeliste");
     setAddForm({ navn: "", e_post: "", telefon: "", selskap: "", rolle: "", ansvarlig: "" });
+    setAddSeg({ segment: "", kanal: "", partnertype_segment: "", kilde_segment: "" });
     setAddOpen(false);
     fetchItems();
   };
@@ -223,7 +292,11 @@ export default function Ringeliste() {
     });
     const beslutningstakere = items.filter(i => getRolePriority(i.rolle) === "Høy");
     const btBooket = beslutningstakere.filter(i => i.status === "Booket møte" || i.status === "Konvertert").length;
-    return { total, booket, konvertert, perRolle, btBooket, btTotal: beslutningstakere.length };
+
+    const perSegment: Record<string, number> = {};
+    items.forEach(i => { if (i.segment) { perSegment[i.segment] = (perSegment[i.segment] || 0) + 1; } });
+
+    return { total, booket, konvertert, perRolle, btBooket, btTotal: beslutningstakere.length, perSegment };
   }, [items]);
 
   return (
@@ -237,6 +310,10 @@ export default function Ringeliste() {
         <select className="border rounded-md px-3 py-1.5 text-sm bg-background h-9" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
           <option value="alle">Alle statuser</option>
           {Object.keys(statusColors).map(s => <option key={s} value={s}>{s}</option>)}
+        </select>
+        <select className="border rounded-md px-3 py-1.5 text-sm bg-background h-9" value={filterSegment} onChange={e => setFilterSegment(e.target.value)}>
+          <option value="alle">Alle segmenter</option>
+          {SEGMENTS.map(s => <option key={s} value={s}>{s}</option>)}
         </select>
         <select className="border rounded-md px-3 py-1.5 text-sm bg-background h-9" value={sortBy} onChange={e => setSortBy(e.target.value as any)}>
           <option value="prioritet">Sorter: Prioritet</option>
@@ -256,8 +333,10 @@ export default function Ringeliste() {
               <tr>
                 <th className="text-left px-3 py-2 font-medium">Navn</th>
                 <th className="text-left px-3 py-2 font-medium">Selskap</th>
+                <th className="text-left px-3 py-2 font-medium">Segment</th>
+                <th className="text-left px-3 py-2 font-medium">Kanal</th>
+                <th className="text-left px-3 py-2 font-medium">Kilde</th>
                 <th className="text-left px-3 py-2 font-medium">Rolle</th>
-                <th className="text-left px-3 py-2 font-medium">Prioritet</th>
                 <th className="text-left px-3 py-2 font-medium">Status</th>
                 <th className="text-left px-3 py-2 font-medium">Sist kontakt</th>
                 <th className="text-left px-3 py-2 font-medium">Ansvarlig</th>
@@ -266,13 +345,22 @@ export default function Ringeliste() {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={8} className="text-center py-8 text-muted-foreground">Laster...</td></tr>
+                <tr><td colSpan={10} className="text-center py-8 text-muted-foreground">Laster...</td></tr>
               ) : filtered.length === 0 ? (
-                <tr><td colSpan={8} className="text-center py-8 text-muted-foreground">Ingen oppføringer</td></tr>
+                <tr><td colSpan={10} className="text-center py-8 text-muted-foreground">Ingen oppføringer</td></tr>
               ) : filtered.map(item => (
                 <tr key={item.id} className="border-t hover:bg-muted/30 cursor-pointer transition-colors" onClick={() => { setSelected(item); setCallNotes(""); }}>
                   <td className="px-3 py-2.5 font-medium">{item.navn}</td>
                   <td className="px-3 py-2.5 text-muted-foreground">{item.selskap}</td>
+                  <td className="px-3 py-2.5">
+                    {item.segment && (
+                      <Badge variant="outline" className={cn("text-[10px]", segmentColors[item.segment] || "")}>
+                        {item.segment}
+                      </Badge>
+                    )}
+                  </td>
+                  <td className="px-3 py-2.5 text-muted-foreground text-xs">{item.kanal || "–"}</td>
+                  <td className="px-3 py-2.5 text-muted-foreground text-xs">{item.kilde_segment || "–"}</td>
                   <td className="px-3 py-2.5">
                     {item.rolle && (
                       <Badge variant="outline" className={cn("text-[10px]", getRoleBadgeClass(item.rolle))}>
@@ -281,7 +369,6 @@ export default function Ringeliste() {
                       </Badge>
                     )}
                   </td>
-                  <td className="px-3 py-2.5">{getPrioritetBadge(item.prioritet)}</td>
                   <td className="px-3 py-2.5">
                     <Badge variant="outline" className={cn("text-[10px]", statusColors[item.status] || "")}>
                       {item.status}
@@ -316,6 +403,16 @@ export default function Ringeliste() {
                 <DialogDescription>Ring og registrer utfall</DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-2">
+                {/* Segment badges */}
+                {(selected.segment || selected.kanal || selected.kilde_segment) && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {selected.segment && <Badge variant="outline" className={cn("text-[10px]", segmentColors[selected.segment])}>{selected.segment}</Badge>}
+                    {selected.kanal && <Badge variant="outline" className="text-[10px]">{selected.kanal}</Badge>}
+                    {selected.partnertype_segment && <Badge variant="outline" className="text-[10px]">{selected.partnertype_segment}</Badge>}
+                    {selected.kilde_segment && <Badge variant="outline" className="text-[10px]">{selected.kilde_segment}</Badge>}
+                  </div>
+                )}
+
                 {/* Contact info */}
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
@@ -440,30 +537,43 @@ export default function Ringeliste() {
         <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Legg til i ringeliste</DialogTitle>
+            <DialogDescription>Velg segmentering først, deretter kontaktinfo.</DialogDescription>
           </DialogHeader>
-          <div className="space-y-3">
-            {[
-              { key: "navn", label: "Navn *", placeholder: "Ola Nordmann" },
-              { key: "telefon", label: "Telefon", placeholder: "+47..." },
-              { key: "e_post", label: "E-post", placeholder: "ola@firma.no" },
-              { key: "selskap", label: "Selskap", placeholder: "Firma AS" },
-              { key: "rolle", label: "Rolle", placeholder: "Daglig leder, CFO, Marked..." },
-              { key: "ansvarlig", label: "Ansvarlig", placeholder: "Selger" },
-            ].map(f => (
-              <div key={f.key}>
-                <Label className="text-xs">{f.label}</Label>
-                <Input
-                  placeholder={f.placeholder}
-                  value={(addForm as any)[f.key]}
-                  onChange={e => setAddForm(prev => ({ ...prev, [f.key]: e.target.value }))}
-                  className="h-8 mt-1"
-                />
+          <div className="space-y-4">
+            {/* Segmentation first */}
+            <div className="bg-muted/30 rounded-lg p-3 border">
+              <div className="flex items-center gap-2 mb-3">
+                <Layers className="w-4 h-4 text-primary" />
+                <span className="text-sm font-semibold">Segmentering</span>
               </div>
-            ))}
+              <SegmentationForm seg={addSeg} onChange={setAddSeg} />
+            </div>
+
+            {/* Contact fields */}
+            <div className="space-y-3">
+              {[
+                { key: "navn", label: "Navn *", placeholder: "Ola Nordmann" },
+                { key: "telefon", label: "Telefon", placeholder: "+47..." },
+                { key: "e_post", label: "E-post", placeholder: "ola@firma.no" },
+                { key: "selskap", label: "Selskap", placeholder: "Firma AS" },
+                { key: "rolle", label: "Rolle", placeholder: "Daglig leder, CFO, Marked..." },
+                { key: "ansvarlig", label: "Ansvarlig", placeholder: "Selger" },
+              ].map(f => (
+                <div key={f.key}>
+                  <Label className="text-xs">{f.label}</Label>
+                  <Input
+                    placeholder={f.placeholder}
+                    value={(addForm as any)[f.key]}
+                    onChange={e => setAddForm(prev => ({ ...prev, [f.key]: e.target.value }))}
+                    className="h-8 mt-1"
+                  />
+                </div>
+              ))}
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setAddOpen(false)}>Avbryt</Button>
-            <Button onClick={handleAdd} disabled={!addForm.navn.trim()}>Legg til</Button>
+            <Button onClick={handleAdd} disabled={!addForm.navn.trim() || !isSegmentValid(addSeg)}>Legg til</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -492,6 +602,20 @@ export default function Ringeliste() {
                 <p className="text-xs text-muted-foreground">Konvertert</p>
               </div>
             </div>
+
+            {/* Segment breakdown */}
+            {Object.keys(stats.perSegment).length > 0 && (
+              <div>
+                <h4 className="text-sm font-semibold mb-2">Per segment</h4>
+                <div className="flex flex-wrap gap-2">
+                  {Object.entries(stats.perSegment).sort((a, b) => b[1] - a[1]).map(([seg, count]) => (
+                    <Badge key={seg} variant="outline" className={cn("text-xs", segmentColors[seg] || "")}>
+                      {seg}: {count}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
               <div className="flex items-center gap-2 mb-1">
@@ -530,8 +654,9 @@ function RingelisteImport({ open, onOpenChange, onDone }: { open: boolean; onOpe
   const [rows, setRows] = useState<Record<string, any>[]>([]);
   const [headers, setHeaders] = useState<string[]>([]);
   const [mapping, setMapping] = useState<Record<string, string>>({});
-  const [step, setStep] = useState<"upload" | "map" | "preview">("upload");
+  const [step, setStep] = useState<"segment" | "upload" | "map" | "preview">("segment");
   const [importing, setImporting] = useState(false);
+  const [seg, setSeg] = useState({ segment: "", kanal: "", partnertype_segment: "", kilde_segment: "" });
 
   const fields = [
     { key: "navn", label: "Navn", required: true },
@@ -542,7 +667,7 @@ function RingelisteImport({ open, onOpenChange, onDone }: { open: boolean; onOpe
     { key: "ansvarlig", label: "Ansvarlig" },
   ];
 
-  const reset = () => { setRows([]); setHeaders([]); setMapping({}); setStep("upload"); if (fileRef.current) fileRef.current.value = ""; };
+  const reset = () => { setRows([]); setHeaders([]); setMapping({}); setStep("segment"); setSeg({ segment: "", kanal: "", partnertype_segment: "", kilde_segment: "" }); if (fileRef.current) fileRef.current.value = ""; };
 
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -554,7 +679,6 @@ function RingelisteImport({ open, onOpenChange, onDone }: { open: boolean; onOpe
     const h = Object.keys(json[0]);
     setHeaders(h);
     setRows(json);
-    // auto-map
     const m: Record<string, string> = {};
     for (const f of fields) {
       const match = h.find(hh => {
@@ -585,9 +709,14 @@ function RingelisteImport({ open, onOpenChange, onDone }: { open: boolean; onOpe
       rolle: String(r.rolle || "").trim(),
       ansvarlig: String(r.ansvarlig || "").trim(),
       prioritet: getRolePriority(String(r.rolle || "")),
+      // Inherited segmentation
+      segment: seg.segment,
+      kanal: seg.kanal,
+      partnertype_segment: seg.partnertype_segment,
+      kilde_segment: seg.kilde_segment,
     }));
     const { error } = await supabase.from("ringeliste").insert(inserts);
-    if (error) { toast.error("Importfeil"); } else { toast.success(`${inserts.length} kontakter importert`); }
+    if (error) { toast.error("Importfeil"); } else { toast.success(`${inserts.length} kontakter importert med segment ${seg.segment}`); }
     setImporting(false);
     reset();
     onOpenChange(false);
@@ -599,11 +728,50 @@ function RingelisteImport({ open, onOpenChange, onDone }: { open: boolean; onOpe
       <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2"><FileSpreadsheet className="w-5 h-5" />Importer ringeliste</DialogTitle>
-          <DialogDescription>Last opp CSV eller Excel med kontakter for ringelisten.</DialogDescription>
+          <DialogDescription>Velg segmentering først, deretter last opp fil.</DialogDescription>
         </DialogHeader>
+
+        {/* Step indicator */}
+        <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+          {["Segmentering", "Last opp", "Koble kolonner", "Forhåndsvis"].map((label, i) => {
+            const stepOrder = ["segment", "upload", "map", "preview"];
+            const current = stepOrder.indexOf(step);
+            return (
+              <div key={label} className="flex items-center gap-1">
+                <span className={cn("w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold",
+                  i <= current ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                )}>{i + 1}</span>
+                <span className={i <= current ? "font-medium text-foreground" : ""}>{label}</span>
+                {i < 3 && <span className="mx-1">→</span>}
+              </div>
+            );
+          })}
+        </div>
+
+        {step === "segment" && (
+          <div className="space-y-4">
+            <div className="bg-muted/30 rounded-lg p-4 border">
+              <div className="flex items-center gap-2 mb-3">
+                <Layers className="w-4 h-4 text-primary" />
+                <span className="text-sm font-semibold">Segmentering for denne listen</span>
+              </div>
+              <p className="text-xs text-muted-foreground mb-3">Alle importerte leads arver disse verdiene automatisk.</p>
+              <SegmentationForm seg={seg} onChange={setSeg} />
+            </div>
+            <div className="flex justify-end">
+              <Button size="sm" disabled={!isSegmentValid(seg)} onClick={() => setStep("upload")}>Neste: Last opp fil</Button>
+            </div>
+          </div>
+        )}
 
         {step === "upload" && (
           <div className="space-y-4">
+            <div className="flex flex-wrap gap-1.5 mb-2">
+              <Badge variant="outline" className={cn("text-[10px]", segmentColors[seg.segment])}>{seg.segment}</Badge>
+              <Badge variant="outline" className="text-[10px]">{seg.kanal}</Badge>
+              {seg.partnertype_segment && <Badge variant="outline" className="text-[10px]">{seg.partnertype_segment}</Badge>}
+              <Badge variant="outline" className="text-[10px]">{seg.kilde_segment}</Badge>
+            </div>
             <div className="border-2 border-dashed rounded-xl p-8 text-center cursor-pointer hover:border-primary/50 hover:bg-accent/30 transition-colors" onClick={() => fileRef.current?.click()}>
               <Upload className="w-10 h-10 mx-auto mb-3 text-muted-foreground" />
               <p className="font-medium text-sm">Klikk for å velge fil</p>
@@ -619,6 +787,9 @@ function RingelisteImport({ open, onOpenChange, onDone }: { open: boolean; onOpe
                   </Badge>
                 ))}
               </div>
+            </div>
+            <div className="flex justify-between">
+              <Button variant="outline" size="sm" onClick={() => setStep("segment")}>Tilbake</Button>
             </div>
           </div>
         )}
@@ -638,7 +809,7 @@ function RingelisteImport({ open, onOpenChange, onDone }: { open: boolean; onOpe
               ))}
             </div>
             <div className="flex justify-between pt-2">
-              <Button variant="outline" size="sm" onClick={reset}>Tilbake</Button>
+              <Button variant="outline" size="sm" onClick={() => setStep("upload")}>Tilbake</Button>
               <Button size="sm" disabled={mappedRows.length === 0} onClick={() => setStep("preview")}>Forhåndsvis ({mappedRows.length} rader)</Button>
             </div>
           </div>
@@ -646,7 +817,14 @@ function RingelisteImport({ open, onOpenChange, onDone }: { open: boolean; onOpe
 
         {step === "preview" && (
           <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">{mappedRows.length} klare for import.</p>
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">{mappedRows.length} klare for import.</p>
+              <div className="flex flex-wrap gap-1.5">
+                <Badge variant="outline" className={cn("text-[10px]", segmentColors[seg.segment])}>{seg.segment}</Badge>
+                <Badge variant="outline" className="text-[10px]">{seg.kanal}</Badge>
+                <Badge variant="outline" className="text-[10px]">{seg.kilde_segment}</Badge>
+              </div>
+            </div>
             <div className="border rounded-lg overflow-auto max-h-60">
               <table className="w-full text-xs">
                 <thead className="bg-muted sticky top-0">
