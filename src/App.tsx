@@ -123,6 +123,7 @@ function AppRoutes() {
                 <Route path="/kontakter" element={<Contacts />} />
                 <Route path="/kontaktstrom" element={<Kontaktstrom />} />
                 <Route path="/oppgaver" element={<Tasks />} />
+                <Route path="/ringeliste" element={<Ringeliste />} />
                 <Route path="/kalender" element={<Kalender />} />
                 <Route path="/partnere" element={<Partnere />} />
                 <Route path="/partnere/:id" element={<PartnerProfile />} />
