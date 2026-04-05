@@ -523,29 +523,37 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
 
       // 2. Insert all contacts into the ringeliste
       if (rl.kontakter?.length && folder?.id) {
+        const isValidUuid = (v: string | undefined) => v && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);
+
         const rows = rl.kontakter.map((k) => ({
           ringeliste_id: folder.id,
-          navn: k.navn,
+          navn: k.navn || "Ukjent",
           selskap: k.selskap || "",
           e_post: k.e_post || "",
           telefon: k.telefon || "",
           rolle: k.rolle || "",
           prioritet: k.prioritet || "Medium",
-          kontakt_id: k.kontakt_id || null,
-          selskap_id: k.selskap_id || null,
-          salgsmulighet_id: k.salgsmulighet_id || null,
-          lead_id: k.lead_id || null,
-          notater: `${k.dialog_status}: ${k.grunn}`,
+          kontakt_id: isValidUuid(k.kontakt_id) ? k.kontakt_id : null,
+          selskap_id: isValidUuid(k.selskap_id) ? k.selskap_id : null,
+          salgsmulighet_id: isValidUuid(k.salgsmulighet_id) ? k.salgsmulighet_id : null,
+          lead_id: isValidUuid(k.lead_id) ? k.lead_id : null,
+          partner_id: null,
+          notater: `${k.dialog_status || ""}: ${k.grunn || ""}`.trim(),
           status: "Ikke ringt",
           segment: rl.segment || "Annet",
           kanal: rl.kanal || "Direkte",
           kilde_segment: rl.kilde_segment || "Annet",
           underkilde: rl.underkilde || "AI-generert",
+          partnertype_segment: "",
           user_id: user?.id || null,
         }));
 
+        console.log("Inserting ringeliste contacts:", rows.length, rows[0]);
         const { error: contactsError } = await supabase.from("ringeliste").insert(rows);
-        if (contactsError) throw contactsError;
+        if (contactsError) {
+          console.error("Ringeliste contacts insert error:", contactsError);
+          throw contactsError;
+        }
       }
 
       setRingelisteState("created");
