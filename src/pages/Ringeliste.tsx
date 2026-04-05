@@ -59,6 +59,7 @@ interface RingelisteItem {
   kanal: string;
   partnertype_segment: string;
   kilde_segment: string;
+  underkilde: string;
   ringeliste_id: string | null;
 }
 
