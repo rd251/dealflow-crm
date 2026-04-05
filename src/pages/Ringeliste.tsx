@@ -272,6 +272,7 @@ function RingelisterOverview({ onSelect }: { onSelect: (l: Ringelister) => void 
                 {l.kanal && <Badge variant="outline" className="text-[10px]">{l.kanal}</Badge>}
                 {l.kilde_segment && <Badge variant="outline" className="text-[10px]">{l.kilde_segment}</Badge>}
                 {l.partnertype_segment && <Badge variant="outline" className="text-[10px]">{l.partnertype_segment}</Badge>}
+                {l.underkilde && <Badge variant="outline" className="text-[10px] bg-muted/50">{l.underkilde}</Badge>}
               </div>
               <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <span>{l.contact_count || 0} kontakter</span>
