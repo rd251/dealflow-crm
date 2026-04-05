@@ -233,6 +233,30 @@ function RingelisterOverview({ onSelect }: { onSelect: (l: Ringelister) => void 
     fetchLister();
   };
 
+  const openEdit = (l: Ringelister) => {
+    setEditItem(l);
+    setEditForm({ navn: l.navn, ansvarlig: l.ansvarlig || "", notater: l.notater || "" });
+    setEditSeg({ segment: l.segment, kanal: l.kanal, partnertype_segment: l.partnertype_segment, kilde_segment: l.kilde_segment, underkilde: l.underkilde || "" });
+  };
+
+  const handleEdit = async () => {
+    if (!editItem || !editForm.navn.trim() || !isSegmentValid(editSeg)) return;
+    setSaving(true);
+    await supabase.from("ringelister").update({ ...editForm, ...editSeg } as any).eq("id", editItem.id);
+    // Update all contacts in this list with new segmentation
+    await supabase.from("ringeliste").update({
+      segment: editSeg.segment,
+      kanal: editSeg.kanal,
+      partnertype_segment: editSeg.partnertype_segment,
+      kilde_segment: editSeg.kilde_segment,
+      underkilde: editSeg.underkilde,
+    }).eq("ringeliste_id", editItem.id);
+    toast.success("Ringeliste oppdatert");
+    setEditItem(null);
+    setSaving(false);
+    fetchLister();
+  };
+
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
