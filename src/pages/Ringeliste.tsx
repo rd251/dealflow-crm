@@ -30,6 +30,7 @@ interface Ringelister {
   kanal: string;
   partnertype_segment: string;
   kilde_segment: string;
+  underkilde: string;
   ansvarlig: string;
   notater: string;
   created_at: string;
