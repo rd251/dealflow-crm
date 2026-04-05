@@ -237,6 +237,7 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
     setAppliedConversionIds(new Set());
     setCreatedCompanyIds(new Set());
     setCreatedContactIds(new Set());
+    setRingelisteState("pending");
 
     try {
       const { data, error } = await supabase.functions.invoke("ai-command", {
