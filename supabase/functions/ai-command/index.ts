@@ -27,8 +27,19 @@ serve(async (req) => {
     const authHeader = req.headers.get("Authorization");
     const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
+    // ─── FETCH EMAIL DATA SERVER-SIDE ───
+    let emailContext = "";
+    const userId = context?.user_id;
+    if (userId) {
+      try {
+        emailContext = await buildEmailContext(supabase, userId, context);
+      } catch (e) {
+        console.error("Error building email context:", e);
+      }
+    }
+
     // Build CRM context summary from passed data
-    const systemPrompt = buildSystemPrompt(context);
+    const systemPrompt = buildSystemPrompt(context, emailContext);
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -143,7 +154,7 @@ serve(async (req) => {
                         notater: { type: "string", description: "Notes about the lead, including context from the conversation" },
                         use_case: { type: "string", description: "Use case if mentioned" },
                         rolle_i_firma: { type: "string", description: "Role in company if mentioned" },
-                        auto_create: { type: "boolean", description: "Set to true when the user explicitly asks to register/create/add the lead (e.g. 'registrer', 'legg inn', 'opprett lead'). When true the lead will be created automatically without user confirmation." },
+                        auto_create: { type: "boolean", description: "Set to true when the user explicitly asks to register/create/add the lead (e.g. 'registrer', 'legg inn', 'opprett lead for', 'lag lead'). When true the lead will be created automatically without user confirmation." },
                       },
                       required: ["firmanavn", "kontaktperson"],
                     },
@@ -233,6 +244,43 @@ serve(async (req) => {
                       required: ["navn"],
                     },
                   },
+                  suggested_ringeliste: {
+                    type: "object",
+                    description: "A smart call/follow-up list to create as a ringeliste. Generate when the user asks to create a ringeliste, follow-up list, or asks about contacts that need follow-up based on email/dialog status. This creates a ringeliste folder with contacts.",
+                    properties: {
+                      navn: { type: "string", description: "Descriptive list name, e.g. 'Oppfølging – tilbud sendt uten svar'" },
+                      segment: { type: "string", description: "Segment category: SMB, Enterprise, Kommune, Helse, Restaurant, Hotell, Annet" },
+                      kanal: { type: "string", description: "Channel: Direkte, Partner, Inbound, Outbound" },
+                      kilde_segment: { type: "string", description: "Source: LinkedIn, Web, Event, Telefon, E-post, Referanse, Annet" },
+                      underkilde: { type: "string", description: "Sub-source free text, e.g. 'AI-generert oppfølgingsliste'" },
+                      notater: { type: "string", description: "Notes explaining the list criteria and why contacts were selected" },
+                      signal: { type: "string", description: "Short signal description shown to user, e.g. 'Sendt tilbud + ingen respons siste 4 dager'" },
+                      kontakter: {
+                        type: "array",
+                        description: "Contacts to add to the list. Each must have a name.",
+                        items: {
+                          type: "object",
+                          properties: {
+                            navn: { type: "string", description: "Contact/company name" },
+                            selskap: { type: "string", description: "Company name" },
+                            e_post: { type: "string", description: "Email if available" },
+                            telefon: { type: "string", description: "Phone if available" },
+                            rolle: { type: "string", description: "Role/title" },
+                            prioritet: { type: "string", enum: ["Høy", "Medium", "Lav"], description: "Priority based on dialog status" },
+                            kontakt_id: { type: "string", description: "Existing kontakt ID if available" },
+                            selskap_id: { type: "string", description: "Existing selskap ID if available" },
+                            salgsmulighet_id: { type: "string", description: "Related salgsmulighet ID" },
+                            lead_id: { type: "string", description: "Related lead ID" },
+                            dialog_status: { type: "string", description: "Current dialog status for this contact, e.g. 'Ingen svar etter tilbud', 'Aktiv dialog', 'Venter på kunde'" },
+                            grunn: { type: "string", description: "Why this contact is included in the list" },
+                          },
+                          required: ["navn", "prioritet", "dialog_status", "grunn"],
+                        },
+                      },
+                      auto_create: { type: "boolean", description: "Set true when user explicitly asks to create the list. Created automatically." },
+                    },
+                    required: ["navn", "segment", "kanal", "kilde_segment", "kontakter", "signal"],
+                  },
                 },
                 required: ["summary", "items", "suggested_tasks", "suggested_activities", "suggested_emails"],
               },
@@ -308,7 +356,215 @@ serve(async (req) => {
   }
 });
 
-function buildSystemPrompt(context: any): string {
+// ─── EMAIL CONTEXT BUILDER ───
+async function buildEmailContext(supabase: any, userId: string, context: any): Promise<string> {
+  const now = new Date();
+  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+  // Fetch recent email activities (sent and received via Gmail)
+  const { data: emailActivities } = await supabase
+    .from("aktiviteter")
+    .select("id, tittel, beskrivelse, dato, type, kontakt_id, lead_id, salgsmulighet_id, selskap_id, ekstern_provider, aktivitet_kilde")
+    .eq("type", "E-post")
+    .gte("dato", thirtyDaysAgo.toISOString())
+    .order("dato", { ascending: false })
+    .limit(200);
+
+  // Fetch email contacts with activity stats
+  const { data: emailContacts } = await supabase
+    .from("email_contacts")
+    .select("primary_email, display_name, total_emails_sent, total_emails_received, last_contacted_at, last_activity_type, kontakt_id, lead_id, salgsmulighet_id, selskap_id")
+    .eq("user_id", userId)
+    .order("last_contacted_at", { ascending: false, nullsFirst: false })
+    .limit(100);
+
+  if (!emailActivities?.length && !emailContacts?.length) return "";
+
+  let emailCtx = "\n## E-POSTDATA OG DIALOGSTATUS\n";
+
+  // Build per-entity email summaries
+  const entityEmailMap = new Map<string, {
+    entityType: string;
+    entityId: string;
+    entityName: string;
+    emails: Array<{ dato: string; tittel: string; retning: string; snippet: string }>;
+    lastSent: string | null;
+    lastReceived: string | null;
+    totalSent: number;
+    totalReceived: number;
+  }>();
+
+  // Helper to determine email direction
+  const getDirection = (beskrivelse: string, kilde: string | null): string => {
+    if (kilde === "gmail_sendt") return "sendt";
+    if (beskrivelse?.includes("📤") || beskrivelse?.toLowerCase().includes("sendt")) return "sendt";
+    if (beskrivelse?.includes("📥") || beskrivelse?.toLowerCase().includes("mottatt")) return "mottatt";
+    return "ukjent";
+  };
+
+  // Process email activities into entity-grouped summaries
+  for (const email of (emailActivities || [])) {
+    const entityKeys: Array<{ type: string; id: string }> = [];
+    if (email.lead_id) entityKeys.push({ type: "lead", id: email.lead_id });
+    if (email.salgsmulighet_id) entityKeys.push({ type: "salgsmulighet", id: email.salgsmulighet_id });
+    if (email.kontakt_id) entityKeys.push({ type: "kontakt", id: email.kontakt_id });
+    if (email.selskap_id && entityKeys.length === 0) entityKeys.push({ type: "selskap", id: email.selskap_id });
+
+    // If no entity linked, use email address from description
+    if (entityKeys.length === 0) continue;
+
+    const direction = getDirection(email.beskrivelse, email.aktivitet_kilde);
+
+    for (const ek of entityKeys) {
+      const key = `${ek.type}:${ek.id}`;
+      if (!entityEmailMap.has(key)) {
+        // Try to find entity name from context
+        let name = "";
+        if (ek.type === "lead") {
+          const lead = context?.leads?.find((l: any) => l.id === ek.id);
+          name = lead?.firmanavn || lead?.kontaktperson || "";
+        } else if (ek.type === "salgsmulighet") {
+          const sm = context?.salgsmuligheter?.find((s: any) => s.id === ek.id);
+          name = sm?.navn || "";
+        } else if (ek.type === "kontakt") {
+          const k = context?.kontakter?.find((c: any) => c.id === ek.id);
+          name = k?.navn || "";
+        }
+
+        entityEmailMap.set(key, {
+          entityType: ek.type,
+          entityId: ek.id,
+          entityName: name,
+          emails: [],
+          lastSent: null,
+          lastReceived: null,
+          totalSent: 0,
+          totalReceived: 0,
+        });
+      }
+
+      const entry = entityEmailMap.get(key)!;
+      const snippet = (email.tittel || email.beskrivelse || "").substring(0, 80);
+      entry.emails.push({ dato: email.dato, tittel: email.tittel || "", retning: direction, snippet });
+
+      if (direction === "sendt") {
+        entry.totalSent++;
+        if (!entry.lastSent || email.dato > entry.lastSent) entry.lastSent = email.dato;
+      } else if (direction === "mottatt") {
+        entry.totalReceived++;
+        if (!entry.lastReceived || email.dato > entry.lastReceived) entry.lastReceived = email.dato;
+      }
+    }
+  }
+
+  // Compute dialog status for each entity
+  const hoursAgo = (dateStr: string | null) => {
+    if (!dateStr) return Infinity;
+    return (now.getTime() - new Date(dateStr).getTime()) / (1000 * 60 * 60);
+  };
+
+  const dialogStatuses: Array<{
+    entityType: string;
+    entityId: string;
+    entityName: string;
+    status: string;
+    detail: string;
+    totalSent: number;
+    totalReceived: number;
+    lastSentHoursAgo: number;
+    lastReceivedHoursAgo: number;
+  }> = [];
+
+  for (const [_key, entry] of entityEmailMap) {
+    const lastSentH = hoursAgo(entry.lastSent);
+    const lastReceivedH = hoursAgo(entry.lastReceived);
+
+    let status = "Ukjent";
+    let detail = "";
+
+    if (entry.totalSent > 0 && entry.totalReceived === 0) {
+      // We sent but never got a reply
+      status = "Ingen svar";
+      detail = `Sendt ${entry.totalSent} e-post(er), ingen svar. Sist sendt: ${Math.round(lastSentH)}t siden`;
+    } else if (entry.totalSent > 0 && entry.totalReceived > 0) {
+      if (lastSentH < lastReceivedH) {
+        // We sent last – waiting for their reply
+        status = "Venter på kunde";
+        detail = `Vi sendte sist (${Math.round(lastSentH)}t siden). ${entry.totalSent} sendt, ${entry.totalReceived} mottatt`;
+      } else {
+        // They replied last – we should follow up
+        if (lastReceivedH < 72) {
+          status = "Aktiv dialog";
+          detail = `Kunde svarte sist (${Math.round(lastReceivedH)}t siden). ${entry.totalSent} sendt, ${entry.totalReceived} mottatt`;
+        } else {
+          status = "Venter på oss";
+          detail = `Kunde svarte for ${Math.round(lastReceivedH)}t siden – vi bør følge opp`;
+        }
+      }
+    } else if (entry.totalReceived > 0 && entry.totalSent === 0) {
+      status = "Innkommende – ikke besvart";
+      detail = `Mottatt ${entry.totalReceived} e-post(er), vi har ikke svart`;
+    }
+
+    // Check for "tilbud sendt" pattern
+    const salgsmulighet = entry.entityType === "salgsmulighet"
+      ? context?.salgsmuligheter?.find((s: any) => s.id === entry.entityId)
+      : null;
+    if (salgsmulighet?.status === "Tilbud sendt" && status === "Ingen svar") {
+      status = "Tilbud sendt uten svar";
+      detail = `Tilbud sendt, ingen respons etter ${Math.round(lastSentH)}t`;
+    } else if (salgsmulighet?.status === "Tilbud sendt" && status === "Venter på kunde") {
+      status = "Tilbud sendt – venter på kunde";
+    }
+
+    dialogStatuses.push({
+      entityType: entry.entityType,
+      entityId: entry.entityId,
+      entityName: entry.entityName,
+      status,
+      detail,
+      totalSent: entry.totalSent,
+      totalReceived: entry.totalReceived,
+      lastSentHoursAgo: Math.round(lastSentH),
+      lastReceivedHoursAgo: Math.round(lastReceivedH),
+    });
+  }
+
+  // Sort: most urgent first (no reply > waiting on us > active dialog)
+  const statusPriority: Record<string, number> = {
+    "Tilbud sendt uten svar": 1,
+    "Innkommende – ikke besvart": 2,
+    "Venter på oss": 3,
+    "Ingen svar": 4,
+    "Aktiv dialog": 5,
+    "Tilbud sendt – venter på kunde": 6,
+    "Venter på kunde": 7,
+    "Ukjent": 8,
+  };
+  dialogStatuses.sort((a, b) => (statusPriority[a.status] || 99) - (statusPriority[b.status] || 99));
+
+  if (dialogStatuses.length > 0) {
+    emailCtx += `\n### Dialogstatuser (${dialogStatuses.length} entiteter med e-posthistorikk):\n`;
+    for (const ds of dialogStatuses.slice(0, 40)) {
+      emailCtx += `- [${ds.status}] ${ds.entityName || ds.entityId} (${ds.entityType}) – ${ds.detail} – id: ${ds.entityId}\n`;
+    }
+  }
+
+  // Add email contact stats for unlinked contacts
+  if (emailContacts?.length) {
+    const unlinked = emailContacts.filter((ec: any) => !ec.kontakt_id && !ec.lead_id && !ec.salgsmulighet_id);
+    if (unlinked.length > 0) {
+      emailCtx += `\n### Ukoblede e-postkontakter (${unlinked.length}):\n`;
+      for (const ec of unlinked.slice(0, 15)) {
+        emailCtx += `- ${ec.display_name} (${ec.primary_email}) – sendt: ${ec.total_emails_sent}, mottatt: ${ec.total_emails_received} – sist: ${ec.last_contacted_at || "—"}\n`;
+      }
+    }
+  }
+
+  return emailCtx;
+}
+
+function buildSystemPrompt(context: any, emailContext: string): string {
   const today = new Date().toISOString().split("T")[0];
   const dayOfWeek = new Date().toLocaleDateString("no-NO", { weekday: "long" });
 
@@ -391,6 +647,31 @@ KONTAKTOPPRETTING REGLER:
 - Sjekk at kontakten ikke allerede finnes blant kontakter i konteksten
 - Sett auto_create=true når brukeren eksplisitt ber om det
 
+RINGELISTE-OPPRETTING REGLER:
+- Når brukeren ber om å lage en ringeliste, oppfølgingsliste, eller spør om kontakter som trenger oppfølging basert på e-post/dialog, generer et suggested_ringeliste-objekt
+- Bruk E-POSTDATA OG DIALOGSTATUS fra konteksten for å identifisere de riktige kontaktene
+- AI skal identifisere og inkludere kontakter basert på dialogstatus:
+  * "Ingen svar" – vi sendte e-post men fikk aldri svar
+  * "Aktiv dialog" – frem og tilbake med meldinger
+  * "Venter på kunde" – vi sendte sist, venter på deres svar
+  * "Venter på oss" – kunden svarte, vi har ikke fulgt opp
+  * "Tilbud sendt uten svar" – tilbud sendt uten respons
+  * "Innkommende – ikke besvart" – mottatt e-post vi ikke har svart på
+- Gi listen et tydelig, beskrivende navn som forklarer hva den inneholder
+- Inkluder signal-feltet som kort forklarer kriteriene (vises til bruker)
+- Sett prioritet basert på hastegrad: Tilbud uten svar = Høy, Venter på oss = Høy, Aktiv dialog = Medium, Ingen svar = Medium/Lav
+- Ikke legg til duplikater – bruk eksisterende koblinger (kontakt_id, selskap_id, salgsmulighet_id, lead_id)
+- Koble e-post til riktig selskap og salgsmulighet
+- Forklar i grunn-feltet HVORFOR hver kontakt er med i listen
+- Sett auto_create=true når brukeren eksplisitt ber om å opprette/lage listen
+- Eksempler på forespørsler som skal utløse ringeliste:
+  * "Lag ringeliste for leads uten svar siste 3 dager"
+  * "Opprett oppfølgingsliste for deals med tilbud sendt uten respons"
+  * "Hvem bør jeg ringe i dag?"
+  * "Lag liste over kontakter med aktiv dialog"
+  * "Varme leads uten neste steg"
+  * "Hvem venter på svar fra oss?"
+
 CRM-DATA:
 `;
 
@@ -421,14 +702,14 @@ CRM-DATA:
   if (context?.salgsmuligheter?.length > 0) {
     prompt += `\n## Åpne salgsmuligheter (${context.salgsmuligheter.length}):\n`;
     for (const sm of context.salgsmuligheter.slice(0, 20)) {
-      prompt += `- ${sm.navn} (${sm.selskapNavn || "—"}) – status: ${sm.status} – MRR: ${sm.forventet_mrr || 0} kr – neste steg: ${sm.neste_steg || "—"} – sist aktivitet: ${sm.sist_aktivitet || "aldri"} – id: ${sm.id} – selskap_id: ${sm.selskap_id || "—"}\n`;
+      prompt += `- ${sm.navn} (${sm.selskapNavn || "—"}) – status: ${sm.status} – MRR: ${sm.forventet_mrr || 0} kr – neste steg: ${sm.neste_steg || "—"} – sist aktivitet: ${sm.sist_aktivitet || "aldri"} – id: ${sm.id} – selskap_id: ${sm.selskap_id || "—"} – e_post: ${sm.e_post || "—"} – kontaktperson: ${sm.kontaktperson || "—"} – telefon: ${sm.telefon || "—"}\n`;
     }
   }
 
   if (context?.leads?.length > 0) {
     prompt += `\n## Aktive leads (${context.leads.length}):\n`;
     for (const l of context.leads.slice(0, 15)) {
-      prompt += `- ${l.firmanavn} (${l.kontaktperson || "—"}) – status: ${l.status} – sist aktivitet: ${l.sist_aktivitet || "aldri"} – id: ${l.id}\n`;
+      prompt += `- ${l.firmanavn} (${l.kontaktperson || "—"}) – status: ${l.status} – sist aktivitet: ${l.sist_aktivitet || "aldri"} – e_post: ${l.e_post || "—"} – telefon: ${l.telefon || "—"} – id: ${l.id}\n`;
     }
   }
 
@@ -444,6 +725,11 @@ CRM-DATA:
     for (const s of context.selskaper.slice(0, 20)) {
       prompt += `- ${s.firmanavn} – status: ${s.kundestatus} – id: ${s.id}\n`;
     }
+  }
+
+  // Append email context
+  if (emailContext) {
+    prompt += emailContext;
   }
 
   return prompt;
