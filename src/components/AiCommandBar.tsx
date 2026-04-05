@@ -521,35 +521,48 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
 
       if (folderError) throw folderError;
 
-      // 2. Insert all contacts into the ringeliste
+      // 2. Insert all contacts into the ringeliste, enriching with CRM data
       if (rl.kontakter?.length && folder?.id) {
         const isValidUuid = (v: string | undefined) => v && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);
 
-        const rows = rl.kontakter.map((k) => ({
-          ringeliste_id: folder.id,
-          navn: k.navn || "Ukjent",
-          selskap: k.selskap || "",
-          e_post: k.e_post || "",
-          telefon: k.telefon || "",
-          rolle: k.rolle || "",
-          prioritet: k.prioritet || "Medium",
-          kontakt_id: isValidUuid(k.kontakt_id) ? k.kontakt_id : null,
-          selskap_id: isValidUuid(k.selskap_id) ? k.selskap_id : null,
-          salgsmulighet_id: isValidUuid(k.salgsmulighet_id) ? k.salgsmulighet_id : null,
-          partner_id: null,
-          notater: [
-            k.dialog_status || "",
-            k.grunn || "",
-            k.lead_id ? `lead_id: ${k.lead_id}` : "",
-          ].filter(Boolean).join(" | ").trim(),
-          status: "Ikke ringt",
-          segment: rl.segment || "Annet",
-          kanal: rl.kanal || "Direkte",
-          kilde_segment: rl.kilde_segment || "Annet",
-          underkilde: rl.underkilde || "AI-generert",
-          partnertype_segment: "",
-          user_id: user?.id || null,
-        }));
+        // Lookup helpers to enrich contact info from CRM context
+        const findLead = (id?: string) => id ? context?.leads?.find((l: any) => l.id === id) : null;
+        const findKontakt = (id?: string) => id ? context?.kontakter?.find((c: any) => c.id === id) : null;
+        const findSm = (id?: string) => id ? context?.salgsmuligheter?.find((s: any) => s.id === id) : null;
+
+        const rows = rl.kontakter.map((k) => {
+          const lead = findLead(k.lead_id);
+          const kontakt = findKontakt(k.kontakt_id);
+          const sm = findSm(k.salgsmulighet_id);
+
+          // Prefer AI data, fall back to CRM data for contact info
+          const epost = k.e_post || lead?.e_post || kontakt?.e_post || sm?.e_post || "";
+          const telefon = k.telefon || lead?.telefon || kontakt?.telefon || sm?.telefon || "";
+          const rolle = k.rolle || lead?.rolle_i_firma || kontakt?.rolle || sm?.rolle_i_firma || "";
+          const selskap = k.selskap || lead?.firmanavn || sm?.navn || "";
+
+          return {
+            ringeliste_id: folder.id,
+            navn: k.navn || "Ukjent",
+            selskap,
+            e_post: epost,
+            telefon,
+            rolle,
+            prioritet: k.prioritet || "Medium",
+            kontakt_id: isValidUuid(k.kontakt_id) ? k.kontakt_id : null,
+            selskap_id: isValidUuid(k.selskap_id) ? k.selskap_id : null,
+            salgsmulighet_id: isValidUuid(k.salgsmulighet_id) ? k.salgsmulighet_id : null,
+            partner_id: null,
+            notater: [k.dialog_status, k.grunn].filter(Boolean).join(" – "),
+            status: "Ikke ringt",
+            segment: rl.segment || "Annet",
+            kanal: rl.kanal || "Direkte",
+            kilde_segment: rl.kilde_segment || "Annet",
+            underkilde: rl.underkilde || "AI-generert",
+            partnertype_segment: "",
+            user_id: user?.id || null,
+          };
+        });
 
         console.log("Inserting ringeliste contacts:", rows.length, rows[0]);
         const { error: contactsError } = await supabase.from("ringeliste").insert(rows);
