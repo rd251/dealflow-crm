@@ -220,6 +220,7 @@ export default function Dashboard() {
 
   // ─── AI COMMAND CONTEXT ───
   const aiContext = useMemo(() => ({
+    user_id: user?.id,
     meetings: todayMeetings.map((m) => ({
       ...m,
       selskapNavn: m.selskap_id ? entityNames[m.selskap_id] || "—" : "—",
@@ -235,7 +236,7 @@ export default function Dashboard() {
     oppgaver,
     kontakter: kontakter.map((k) => ({ id: k.id, navn: k.navn, e_post: k.e_post, selskap_id: k.selskap_id })),
     selskaper: selskaper.map((s) => ({ id: s.id, firmanavn: s.firmanavn, kundestatus: s.kundestatus })),
-  }), [todayMeetings, followUps, salgsmuligheter, leads, oppgaver, selskaper, entityNames, kontakter]);
+  }), [user, todayMeetings, followUps, salgsmuligheter, leads, oppgaver, selskaper, entityNames, kontakter]);
 
   const { user } = useAuth();
   const currentUserName = useMemo(() => {
