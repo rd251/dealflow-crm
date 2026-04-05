@@ -285,14 +285,16 @@ function RingelisterOverview({ onSelect }: { onSelect: (l: Ringelister) => void 
                   <FolderOpen className="w-4 h-4 text-primary shrink-0" />
                   <h3 className="font-medium text-sm truncate">{l.navn}</h3>
                 </div>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 shrink-0"
-                  onClick={e => { e.stopPropagation(); setDeleteId(l.id); }}
-                >
-                  <Trash2 className="w-3.5 h-3.5 text-destructive" />
-                </Button>
+                <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 shrink-0">
+                  <Button size="sm" variant="ghost" className="h-7 w-7 p-0"
+                    onClick={e => { e.stopPropagation(); openEdit(l); }}>
+                    <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
+                  </Button>
+                  <Button size="sm" variant="ghost" className="h-7 w-7 p-0"
+                    onClick={e => { e.stopPropagation(); setDeleteId(l.id); }}>
+                    <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                  </Button>
+                </div>
               </div>
               <div className="flex flex-wrap gap-1.5 mb-2">
                 {l.segment && <Badge variant="outline" className={cn("text-[10px]", segmentColors[l.segment])}>{l.segment}</Badge>}
