@@ -227,7 +227,7 @@ export default function Ringeliste() {
   }, [items]);
 
   return (
-    <PageShell title="Ringeliste" icon={Phone}>
+    <PageShell title="Ringeliste">
       {/* Toolbar */}
       <div className="flex flex-wrap gap-2 mb-4">
         <div className="relative flex-1 min-w-[200px]">
