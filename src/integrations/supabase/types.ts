@@ -788,6 +788,7 @@ export type Database = {
           partner_id: string | null
           partnertype_segment: string
           prioritet: string | null
+          ringeliste_id: string | null
           rolle: string | null
           salgsmulighet_id: string | null
           segment: string
@@ -813,6 +814,7 @@ export type Database = {
           partner_id?: string | null
           partnertype_segment?: string
           prioritet?: string | null
+          ringeliste_id?: string | null
           rolle?: string | null
           salgsmulighet_id?: string | null
           segment?: string
@@ -838,6 +840,7 @@ export type Database = {
           partner_id?: string | null
           partnertype_segment?: string
           prioritet?: string | null
+          ringeliste_id?: string | null
           rolle?: string | null
           salgsmulighet_id?: string | null
           segment?: string
@@ -849,6 +852,56 @@ export type Database = {
           updated_at?: string
           user_id?: string | null
           utfall?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ringeliste_ringeliste_id_fkey"
+            columns: ["ringeliste_id"]
+            isOneToOne: false
+            referencedRelation: "ringelister"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ringelister: {
+        Row: {
+          ansvarlig: string | null
+          created_at: string
+          id: string
+          kanal: string
+          kilde_segment: string
+          navn: string
+          notater: string | null
+          partnertype_segment: string
+          segment: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          ansvarlig?: string | null
+          created_at?: string
+          id?: string
+          kanal?: string
+          kilde_segment?: string
+          navn: string
+          notater?: string | null
+          partnertype_segment?: string
+          segment?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          ansvarlig?: string | null
+          created_at?: string
+          id?: string
+          kanal?: string
+          kilde_segment?: string
+          navn?: string
+          notater?: string | null
+          partnertype_segment?: string
+          segment?: string
+          updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
