@@ -30,6 +30,7 @@ import Moetenotater from "./pages/Moetenotater";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Unsubscribe from "./pages/Unsubscribe";
+import Ringeliste from "./pages/Ringeliste";
 
 const queryClient = new QueryClient();
 
