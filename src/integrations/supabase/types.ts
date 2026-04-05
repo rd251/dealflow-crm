@@ -780,13 +780,17 @@ export type Database = {
           created_at: string
           e_post: string | null
           id: string
+          kanal: string
+          kilde_segment: string
           kontakt_id: string | null
           navn: string
           notater: string | null
           partner_id: string | null
+          partnertype_segment: string
           prioritet: string | null
           rolle: string | null
           salgsmulighet_id: string | null
+          segment: string
           selskap: string | null
           selskap_id: string | null
           sist_kontaktet: string | null
@@ -801,13 +805,17 @@ export type Database = {
           created_at?: string
           e_post?: string | null
           id?: string
+          kanal?: string
+          kilde_segment?: string
           kontakt_id?: string | null
           navn: string
           notater?: string | null
           partner_id?: string | null
+          partnertype_segment?: string
           prioritet?: string | null
           rolle?: string | null
           salgsmulighet_id?: string | null
+          segment?: string
           selskap?: string | null
           selskap_id?: string | null
           sist_kontaktet?: string | null
@@ -822,13 +830,17 @@ export type Database = {
           created_at?: string
           e_post?: string | null
           id?: string
+          kanal?: string
+          kilde_segment?: string
           kontakt_id?: string | null
           navn?: string
           notater?: string | null
           partner_id?: string | null
+          partnertype_segment?: string
           prioritet?: string | null
           rolle?: string | null
           salgsmulighet_id?: string | null
+          segment?: string
           selskap?: string | null
           selskap_id?: string | null
           sist_kontaktet?: string | null
