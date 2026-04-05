@@ -1218,7 +1218,73 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
             </div>
           )}
 
-          {/* Action items */}
+          {/* Suggested ringeliste */}
+          {response.suggested_ringeliste && response.suggested_ringeliste.kontakter?.length > 0 && (
+            <div className="border-t">
+              <div className="px-5 py-3 bg-muted/30 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <PhoneCall className="w-4 h-4 text-primary" />
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Ringeliste</p>
+                </div>
+                {ringelisteState === "created" ? (
+                  <span className="text-xs text-emerald-600 font-medium flex items-center gap-1">
+                    <CheckCircle2 className="w-3.5 h-3.5" /> Opprettet
+                  </span>
+                ) : (
+                  <Button
+                    variant="default"
+                    size="sm"
+                    className="text-xs h-7 gap-1"
+                    disabled={ringelisteState === "creating"}
+                    onClick={() => handleCreateRingeliste(response.suggested_ringeliste!)}
+                  >
+                    {ringelisteState === "creating" ? (
+                      <><Loader2 className="w-3 h-3 animate-spin" /> Oppretter...</>
+                    ) : (
+                      <>Opprett ringeliste</>
+                    )}
+                  </Button>
+                )}
+              </div>
+              <div className="px-5 py-2 bg-muted/10 border-b">
+                <p className="text-sm font-medium">{response.suggested_ringeliste.navn}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {response.suggested_ringeliste.kontakter.length} kontakter · {response.suggested_ringeliste.signal}
+                </p>
+                <div className="flex flex-wrap gap-1.5 mt-1.5">
+                  <Badge variant="outline" className="text-[10px]">{response.suggested_ringeliste.segment}</Badge>
+                  <Badge variant="outline" className="text-[10px]">{response.suggested_ringeliste.kanal}</Badge>
+                  <Badge variant="outline" className="text-[10px]">{response.suggested_ringeliste.kilde_segment}</Badge>
+                  {response.suggested_ringeliste.underkilde && (
+                    <Badge variant="secondary" className="text-[10px]">{response.suggested_ringeliste.underkilde}</Badge>
+                  )}
+                </div>
+              </div>
+              <div className="divide-y max-h-64 overflow-y-auto">
+                {response.suggested_ringeliste.kontakter.map((k, i) => (
+                  <div key={i} className="flex items-start gap-3 px-5 py-2.5 hover:bg-muted/30 transition-colors">
+                    <div className={`w-2 h-2 rounded-full shrink-0 mt-1.5 ${
+                      k.prioritet === "Høy" ? "bg-destructive" : k.prioritet === "Medium" ? "bg-amber-500" : "bg-muted-foreground"
+                    }`} />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-medium truncate">{k.navn}</p>
+                        <Badge variant="outline" className={`text-[10px] shrink-0 ${
+                          k.prioritet === "Høy" ? "bg-destructive/10 text-destructive border-destructive/20" :
+                          k.prioritet === "Medium" ? "bg-amber-500/10 text-amber-600 border-amber-200" :
+                          "bg-muted text-muted-foreground border-border"
+                        }`}>{k.prioritet}</Badge>
+                      </div>
+                      {k.selskap && <p className="text-xs text-muted-foreground">{k.selskap}</p>}
+                      <p className="text-xs text-primary mt-0.5 font-medium">{k.dialog_status}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{k.grunn}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {response.items.length > 0 && (
             <div className="border-t">
               <div className="px-5 py-3 bg-muted/30">
