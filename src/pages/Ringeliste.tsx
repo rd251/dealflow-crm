@@ -216,7 +216,7 @@ function RingelisterOverview({ onSelect }: { onSelect: (l: Ringelister) => void 
     await supabase.from("ringelister").insert({ ...form, ...seg } as any);
     toast.success("Ringeliste opprettet");
     setForm({ navn: "", ansvarlig: "", notater: "" });
-    setSeg({ segment: "", kanal: "", partnertype_segment: "", kilde_segment: "" });
+    setSeg({ segment: "", kanal: "", partnertype_segment: "", kilde_segment: "", underkilde: "" });
     setCreateOpen(false);
     setSaving(false);
     fetchLister();
