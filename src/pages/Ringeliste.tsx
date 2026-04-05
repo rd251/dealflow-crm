@@ -30,6 +30,7 @@ interface Ringelister {
   kanal: string;
   partnertype_segment: string;
   kilde_segment: string;
+  underkilde: string;
   ansvarlig: string;
   notater: string;
   created_at: string;
@@ -58,6 +59,7 @@ interface RingelisteItem {
   kanal: string;
   partnertype_segment: string;
   kilde_segment: string;
+  underkilde: string;
   ringeliste_id: string | null;
 }
 
@@ -119,7 +121,7 @@ const outcomes = [
 
 // ========== Segmentation Form ==========
 function SegmentationForm({ seg, onChange }: {
-  seg: { segment: string; kanal: string; partnertype_segment: string; kilde_segment: string };
+  seg: { segment: string; kanal: string; partnertype_segment: string; kilde_segment: string; underkilde: string };
   onChange: (s: typeof seg) => void;
 }) {
   return (
@@ -154,6 +156,10 @@ function SegmentationForm({ seg, onChange }: {
           <SelectContent>{KILDER_SEGMENT.map(k => <SelectItem key={k} value={k}>{k}</SelectItem>)}</SelectContent>
         </Select>
       </div>
+      <div className="col-span-2">
+        <Label className="text-xs">Underkilde</Label>
+        <Input placeholder="F.eks. Stand på tech-messen" value={seg.underkilde} onChange={e => onChange({ ...seg, underkilde: e.target.value })} className="h-8 mt-1" />
+      </div>
     </div>
   );
 }
@@ -183,7 +189,7 @@ function RingelisterOverview({ onSelect }: { onSelect: (l: Ringelister) => void 
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
   const [form, setForm] = useState({ navn: "", ansvarlig: "", notater: "" });
-  const [seg, setSeg] = useState({ segment: "", kanal: "", partnertype_segment: "", kilde_segment: "" });
+  const [seg, setSeg] = useState({ segment: "", kanal: "", partnertype_segment: "", kilde_segment: "", underkilde: "" });
   const [saving, setSaving] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
@@ -210,7 +216,7 @@ function RingelisterOverview({ onSelect }: { onSelect: (l: Ringelister) => void 
     await supabase.from("ringelister").insert({ ...form, ...seg } as any);
     toast.success("Ringeliste opprettet");
     setForm({ navn: "", ansvarlig: "", notater: "" });
-    setSeg({ segment: "", kanal: "", partnertype_segment: "", kilde_segment: "" });
+    setSeg({ segment: "", kanal: "", partnertype_segment: "", kilde_segment: "", underkilde: "" });
     setCreateOpen(false);
     setSaving(false);
     fetchLister();
@@ -266,6 +272,7 @@ function RingelisterOverview({ onSelect }: { onSelect: (l: Ringelister) => void 
                 {l.kanal && <Badge variant="outline" className="text-[10px]">{l.kanal}</Badge>}
                 {l.kilde_segment && <Badge variant="outline" className="text-[10px]">{l.kilde_segment}</Badge>}
                 {l.partnertype_segment && <Badge variant="outline" className="text-[10px]">{l.partnertype_segment}</Badge>}
+                {l.underkilde && <Badge variant="outline" className="text-[10px] bg-muted/50">{l.underkilde}</Badge>}
               </div>
               <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <span>{l.contact_count || 0} kontakter</span>
@@ -401,6 +408,7 @@ function RingelisteContacts({ liste, onBack }: { liste: Ringelister; onBack: () 
       kanal: liste.kanal,
       partnertype_segment: liste.partnertype_segment,
       kilde_segment: liste.kilde_segment,
+      underkilde: liste.underkilde,
     });
     toast.success("Lagt til i ringeliste");
     setAddForm({ navn: "", e_post: "", telefon: "", selskap: "", rolle: "", ansvarlig: "" });
@@ -473,6 +481,7 @@ function RingelisteContacts({ liste, onBack }: { liste: Ringelister; onBack: () 
         {liste.kanal && <Badge variant="outline" className="text-[10px]">{liste.kanal}</Badge>}
         {liste.kilde_segment && <Badge variant="outline" className="text-[10px]">{liste.kilde_segment}</Badge>}
         {liste.partnertype_segment && <Badge variant="outline" className="text-[10px]">{liste.partnertype_segment}</Badge>}
+        {liste.underkilde && <Badge variant="outline" className="text-[10px] bg-muted/50">{liste.underkilde}</Badge>}
       </div>
 
       {/* Toolbar */}
@@ -812,6 +821,7 @@ function RingelisteImport({ open, onOpenChange, onDone, liste }: { open: boolean
       kanal: liste.kanal,
       partnertype_segment: liste.partnertype_segment,
       kilde_segment: liste.kilde_segment,
+      underkilde: liste.underkilde,
     }));
     const { error } = await supabase.from("ringeliste").insert(inserts);
     if (error) { toast.error("Importfeil"); } else { toast.success(`${inserts.length} kontakter importert`); }

@@ -797,6 +797,7 @@ export type Database = {
           sist_kontaktet: string | null
           status: string | null
           telefon: string | null
+          underkilde: string
           updated_at: string
           user_id: string | null
           utfall: string | null
@@ -823,6 +824,7 @@ export type Database = {
           sist_kontaktet?: string | null
           status?: string | null
           telefon?: string | null
+          underkilde?: string
           updated_at?: string
           user_id?: string | null
           utfall?: string | null
@@ -849,6 +851,7 @@ export type Database = {
           sist_kontaktet?: string | null
           status?: string | null
           telefon?: string | null
+          underkilde?: string
           updated_at?: string
           user_id?: string | null
           utfall?: string | null
@@ -874,6 +877,7 @@ export type Database = {
           notater: string | null
           partnertype_segment: string
           segment: string
+          underkilde: string
           updated_at: string
           user_id: string | null
         }
@@ -887,6 +891,7 @@ export type Database = {
           notater?: string | null
           partnertype_segment?: string
           segment?: string
+          underkilde?: string
           updated_at?: string
           user_id?: string | null
         }
@@ -900,6 +905,7 @@ export type Database = {
           notater?: string | null
           partnertype_segment?: string
           segment?: string
+          underkilde?: string
           updated_at?: string
           user_id?: string | null
         }
