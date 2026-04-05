@@ -1,0 +1,1 @@
+DELETE FROM ringelister WHERE id = 'b3fd5f5b-d06a-42c3-adff-1111bcc4df27';
