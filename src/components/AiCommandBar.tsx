@@ -126,6 +126,33 @@ interface SuggestedContact {
   auto_create?: boolean;
 }
 
+interface SuggestedRingelisteKontakt {
+  navn: string;
+  selskap?: string;
+  e_post?: string;
+  telefon?: string;
+  rolle?: string;
+  prioritet: "Høy" | "Medium" | "Lav";
+  kontakt_id?: string;
+  selskap_id?: string;
+  salgsmulighet_id?: string;
+  lead_id?: string;
+  dialog_status: string;
+  grunn: string;
+}
+
+interface SuggestedRingeliste {
+  navn: string;
+  segment: string;
+  kanal: string;
+  kilde_segment: string;
+  underkilde?: string;
+  notater?: string;
+  signal: string;
+  kontakter: SuggestedRingelisteKontakt[];
+  auto_create?: boolean;
+}
+
 interface AiResponse {
   summary: string;
   items: AiItem[];
@@ -138,6 +165,7 @@ interface AiResponse {
   suggested_conversions?: SuggestedConversion[];
   suggested_companies?: SuggestedCompany[];
   suggested_contacts?: SuggestedContact[];
+  suggested_ringeliste?: SuggestedRingeliste;
 }
 
 interface AiCommandBarProps {
@@ -153,6 +181,7 @@ const QUICK_PROMPTS = [
   { icon: "📋", label: "Prep neste møte" },
   { icon: "🎯", label: "Top 5 prioriteringer" },
   { icon: "📞", label: "Deals som trenger oppfølging" },
+  { icon: "📋", label: "Lag ringeliste", prefill: "Lag ringeliste for leads som trenger oppfølging basert på e-posthistorikk" },
 ];
 
 const prioritetColor: Record<string, string> = {
@@ -188,6 +217,7 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
   const [editingMeeting, setEditingMeeting] = useState<SuggestedMeeting | null>(null);
   const [createdMeetingId, setCreatedMeetingId] = useState<string | null>(null);
   const [createdLeadIds, setCreatedLeadIds] = useState<Set<number>>(new Set());
+  const [ringelisteState, setRingelisteState] = useState<"pending" | "creating" | "created">("pending");
 
   const handleSubmit = async (prompt?: string) => {
     const msg = prompt || input.trim();
@@ -207,6 +237,7 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
     setAppliedConversionIds(new Set());
     setCreatedCompanyIds(new Set());
     setCreatedContactIds(new Set());
+    setRingelisteState("pending");
 
     try {
       const { data, error } = await supabase.functions.invoke("ai-command", {
@@ -282,6 +313,11 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
             handleCreateContact(aiData.suggested_contacts[i], i);
           }
         }
+      }
+
+      // Auto-create ringeliste
+      if (aiData.suggested_ringeliste?.auto_create) {
+        handleCreateRingeliste(aiData.suggested_ringeliste);
       }
     } catch (e: any) {
       console.error("AI command error:", e);
@@ -462,6 +498,62 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
       toast.success(`Kontakt "${contact.navn}" opprettet`);
     } catch {
       toast.error("Kunne ikke opprette kontakt");
+    }
+  };
+
+  const handleCreateRingeliste = async (rl: SuggestedRingeliste) => {
+    setRingelisteState("creating");
+    try {
+      // 1. Create the ringeliste folder
+      const { data: folder, error: folderError } = await supabase
+        .from("ringelister")
+        .insert({
+          navn: rl.navn,
+          segment: rl.segment || "Annet",
+          kanal: rl.kanal || "Direkte",
+          kilde_segment: rl.kilde_segment || "Annet",
+          underkilde: rl.underkilde || "AI-generert",
+          notater: rl.notater || rl.signal || "",
+          user_id: user?.id || null,
+        })
+        .select("id")
+        .single();
+
+      if (folderError) throw folderError;
+
+      // 2. Insert all contacts into the ringeliste
+      if (rl.kontakter?.length && folder?.id) {
+        const rows = rl.kontakter.map((k) => ({
+          ringeliste_id: folder.id,
+          navn: k.navn,
+          selskap: k.selskap || "",
+          e_post: k.e_post || "",
+          telefon: k.telefon || "",
+          rolle: k.rolle || "",
+          prioritet: k.prioritet || "Medium",
+          kontakt_id: k.kontakt_id || null,
+          selskap_id: k.selskap_id || null,
+          salgsmulighet_id: k.salgsmulighet_id || null,
+          lead_id: k.lead_id || null,
+          notater: `${k.dialog_status}: ${k.grunn}`,
+          status: "Ikke ringt",
+          segment: rl.segment || "Annet",
+          kanal: rl.kanal || "Direkte",
+          kilde_segment: rl.kilde_segment || "Annet",
+          underkilde: rl.underkilde || "AI-generert",
+          user_id: user?.id || null,
+        }));
+
+        const { error: contactsError } = await supabase.from("ringeliste").insert(rows);
+        if (contactsError) throw contactsError;
+      }
+
+      setRingelisteState("created");
+      toast.success(`Ringeliste "${rl.navn}" opprettet med ${rl.kontakter?.length || 0} kontakter`);
+    } catch (e) {
+      console.error("Create ringeliste error:", e);
+      toast.error("Kunne ikke opprette ringeliste");
+      setRingelisteState("pending");
     }
   };
 
@@ -1126,7 +1218,73 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
             </div>
           )}
 
-          {/* Action items */}
+          {/* Suggested ringeliste */}
+          {response.suggested_ringeliste && response.suggested_ringeliste.kontakter?.length > 0 && (
+            <div className="border-t">
+              <div className="px-5 py-3 bg-muted/30 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <PhoneCall className="w-4 h-4 text-primary" />
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Ringeliste</p>
+                </div>
+                {ringelisteState === "created" ? (
+                  <span className="text-xs text-emerald-600 font-medium flex items-center gap-1">
+                    <CheckCircle2 className="w-3.5 h-3.5" /> Opprettet
+                  </span>
+                ) : (
+                  <Button
+                    variant="default"
+                    size="sm"
+                    className="text-xs h-7 gap-1"
+                    disabled={ringelisteState === "creating"}
+                    onClick={() => handleCreateRingeliste(response.suggested_ringeliste!)}
+                  >
+                    {ringelisteState === "creating" ? (
+                      <><Loader2 className="w-3 h-3 animate-spin" /> Oppretter...</>
+                    ) : (
+                      <>Opprett ringeliste</>
+                    )}
+                  </Button>
+                )}
+              </div>
+              <div className="px-5 py-2 bg-muted/10 border-b">
+                <p className="text-sm font-medium">{response.suggested_ringeliste.navn}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {response.suggested_ringeliste.kontakter.length} kontakter · {response.suggested_ringeliste.signal}
+                </p>
+                <div className="flex flex-wrap gap-1.5 mt-1.5">
+                  <Badge variant="outline" className="text-[10px]">{response.suggested_ringeliste.segment}</Badge>
+                  <Badge variant="outline" className="text-[10px]">{response.suggested_ringeliste.kanal}</Badge>
+                  <Badge variant="outline" className="text-[10px]">{response.suggested_ringeliste.kilde_segment}</Badge>
+                  {response.suggested_ringeliste.underkilde && (
+                    <Badge variant="secondary" className="text-[10px]">{response.suggested_ringeliste.underkilde}</Badge>
+                  )}
+                </div>
+              </div>
+              <div className="divide-y max-h-64 overflow-y-auto">
+                {response.suggested_ringeliste.kontakter.map((k, i) => (
+                  <div key={i} className="flex items-start gap-3 px-5 py-2.5 hover:bg-muted/30 transition-colors">
+                    <div className={`w-2 h-2 rounded-full shrink-0 mt-1.5 ${
+                      k.prioritet === "Høy" ? "bg-destructive" : k.prioritet === "Medium" ? "bg-amber-500" : "bg-muted-foreground"
+                    }`} />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-medium truncate">{k.navn}</p>
+                        <Badge variant="outline" className={`text-[10px] shrink-0 ${
+                          k.prioritet === "Høy" ? "bg-destructive/10 text-destructive border-destructive/20" :
+                          k.prioritet === "Medium" ? "bg-amber-500/10 text-amber-600 border-amber-200" :
+                          "bg-muted text-muted-foreground border-border"
+                        }`}>{k.prioritet}</Badge>
+                      </div>
+                      {k.selskap && <p className="text-xs text-muted-foreground">{k.selskap}</p>}
+                      <p className="text-xs text-primary mt-0.5 font-medium">{k.dialog_status}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{k.grunn}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {response.items.length > 0 && (
             <div className="border-t">
               <div className="px-5 py-3 bg-muted/30">
