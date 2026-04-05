@@ -47,7 +47,7 @@ const PAVIRKER = ["leder", "ansvarlig", "sjef", "manager", "director", "head of"
 function getRolePriority(rolle: string): "Høy" | "Medium" | "Lav" {
   const r = rolle.toLowerCase().trim();
   if (BESLUTNINGSTAKER.some(b => r.includes(b))) return "Høy";
-  if (PAVIRKER.some(p => r.includes(p))) return "Lav" !== "Lav" ? "Lav" : "Medium");
+  if (PAVIRKER.some(p => r.includes(p))) return "Medium";
   return "Lav";
 }
 
