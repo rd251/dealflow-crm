@@ -501,6 +501,62 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
     }
   };
 
+  const handleCreateRingeliste = async (rl: SuggestedRingeliste) => {
+    setRingelisteState("creating");
+    try {
+      // 1. Create the ringeliste folder
+      const { data: folder, error: folderError } = await supabase
+        .from("ringelister")
+        .insert({
+          navn: rl.navn,
+          segment: rl.segment || "Annet",
+          kanal: rl.kanal || "Direkte",
+          kilde_segment: rl.kilde_segment || "Annet",
+          underkilde: rl.underkilde || "AI-generert",
+          notater: rl.notater || rl.signal || "",
+          user_id: user?.id || null,
+        })
+        .select("id")
+        .single();
+
+      if (folderError) throw folderError;
+
+      // 2. Insert all contacts into the ringeliste
+      if (rl.kontakter?.length && folder?.id) {
+        const rows = rl.kontakter.map((k) => ({
+          ringeliste_id: folder.id,
+          navn: k.navn,
+          selskap: k.selskap || "",
+          e_post: k.e_post || "",
+          telefon: k.telefon || "",
+          rolle: k.rolle || "",
+          prioritet: k.prioritet || "Medium",
+          kontakt_id: k.kontakt_id || null,
+          selskap_id: k.selskap_id || null,
+          salgsmulighet_id: k.salgsmulighet_id || null,
+          lead_id: k.lead_id || null,
+          notater: `${k.dialog_status}: ${k.grunn}`,
+          status: "Ikke ringt",
+          segment: rl.segment || "Annet",
+          kanal: rl.kanal || "Direkte",
+          kilde_segment: rl.kilde_segment || "Annet",
+          underkilde: rl.underkilde || "AI-generert",
+          user_id: user?.id || null,
+        }));
+
+        const { error: contactsError } = await supabase.from("ringeliste").insert(rows);
+        if (contactsError) throw contactsError;
+      }
+
+      setRingelisteState("created");
+      toast.success(`Ringeliste "${rl.navn}" opprettet med ${rl.kontakter?.length || 0} kontakter`);
+    } catch (e) {
+      console.error("Create ringeliste error:", e);
+      toast.error("Kunne ikke opprette ringeliste");
+      setRingelisteState("pending");
+    }
+  };
+
   const handleNavigate = (item: AiItem) => {
     if (!item.entityId || !item.entityType) return;
     switch (item.entityType) {
