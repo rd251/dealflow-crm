@@ -378,9 +378,49 @@ async function buildEmailContext(supabase: any, userId: string, context: any): P
     .order("last_contacted_at", { ascending: false, nullsFirst: false })
     .limit(100);
 
-  if (!emailActivities?.length && !emailContacts?.length) return "";
+  // Fetch recent meeting notes (Møte-aktiviteter med notater)
+  const { data: meetingNotes } = await supabase
+    .from("aktiviteter")
+    .select("id, tittel, beskrivelse, moetenotater, dato, kontakt_id, lead_id, salgsmulighet_id, selskap_id")
+    .eq("type", "Møte")
+    .gte("dato", thirtyDaysAgo.toISOString())
+    .order("dato", { ascending: false })
+    .limit(50);
 
-  let emailCtx = "\n## E-POSTDATA OG DIALOGSTATUS\n";
+  let emailCtx = "";
+
+  // ─── MEETING NOTES CONTEXT ───
+  if (meetingNotes?.length) {
+    emailCtx += `\n## MØTENOTATER (${meetingNotes.length} siste 30 dager)\n`;
+    for (const m of meetingNotes.slice(0, 25)) {
+      const noteText = m.moetenotater || m.beskrivelse || "";
+      if (!noteText || noteText.length < 5) continue;
+      const dateStr = new Date(m.dato).toLocaleDateString("no-NO", { day: "numeric", month: "short" });
+      // Find entity name from context
+      let entityInfo = "";
+      if (m.salgsmulighet_id) {
+        const sm = context?.salgsmuligheter?.find((s: any) => s.id === m.salgsmulighet_id);
+        entityInfo = sm ? `deal: ${sm.navn}` : `salgsmulighet_id: ${m.salgsmulighet_id}`;
+      }
+      if (m.selskap_id) {
+        const sel = context?.selskaper?.find((s: any) => s.id === m.selskap_id);
+        entityInfo += entityInfo ? `, selskap: ${sel?.firmanavn || m.selskap_id}` : `selskap: ${sel?.firmanavn || m.selskap_id}`;
+      }
+      if (m.lead_id) {
+        const lead = context?.leads?.find((l: any) => l.id === m.lead_id);
+        entityInfo += entityInfo ? `, lead: ${lead?.firmanavn || m.lead_id}` : `lead: ${lead?.firmanavn || m.lead_id}`;
+      }
+      const snippet = noteText.substring(0, 200);
+      emailCtx += `- [${dateStr}] ${m.tittel || "Møte"} (${entityInfo || "ukoblet"}) – notater: "${snippet}"\n`;
+    }
+    emailCtx += `\nBRUK MØTENOTATENE til å forstå hva som ble diskutert, avtalt og lovet. Før du foreslår en handling, sjekk om det allerede er avtalt noe i et nylig møte. Ikke foreslå oppfølging som motstrir det som ble avtalt i et møte.\n`;
+  }
+
+  if (!emailActivities?.length && !emailContacts?.length && !meetingNotes?.length) return "";
+
+  if (!emailActivities?.length && !emailContacts?.length) return emailCtx;
+
+  emailCtx += "\n## E-POSTDATA OG DIALOGSTATUS\n";
 
   // Build per-entity email summaries
   const entityEmailMap = new Map<string, {
@@ -410,7 +450,6 @@ async function buildEmailContext(supabase: any, userId: string, context: any): P
     if (email.kontakt_id) entityKeys.push({ type: "kontakt", id: email.kontakt_id });
     if (email.selskap_id && entityKeys.length === 0) entityKeys.push({ type: "selskap", id: email.selskap_id });
 
-    // If no entity linked, use email address from description
     if (entityKeys.length === 0) continue;
 
     const direction = getDirection(email.beskrivelse, email.aktivitet_kilde);
@@ -418,7 +457,6 @@ async function buildEmailContext(supabase: any, userId: string, context: any): P
     for (const ek of entityKeys) {
       const key = `${ek.type}:${ek.id}`;
       if (!entityEmailMap.has(key)) {
-        // Try to find entity name from context
         let name = "";
         if (ek.type === "lead") {
           const lead = context?.leads?.find((l: any) => l.id === ek.id);
@@ -483,16 +521,13 @@ async function buildEmailContext(supabase: any, userId: string, context: any): P
     let detail = "";
 
     if (entry.totalSent > 0 && entry.totalReceived === 0) {
-      // We sent but never got a reply
       status = "Ingen svar";
       detail = `Sendt ${entry.totalSent} e-post(er), ingen svar. Sist sendt: ${Math.round(lastSentH)}t siden`;
     } else if (entry.totalSent > 0 && entry.totalReceived > 0) {
       if (lastSentH < lastReceivedH) {
-        // We sent last – waiting for their reply
         status = "Venter på kunde";
         detail = `Vi sendte sist (${Math.round(lastSentH)}t siden). ${entry.totalSent} sendt, ${entry.totalReceived} mottatt`;
       } else {
-        // They replied last – we should follow up
         if (lastReceivedH < 72) {
           status = "Aktiv dialog";
           detail = `Kunde svarte sist (${Math.round(lastReceivedH)}t siden). ${entry.totalSent} sendt, ${entry.totalReceived} mottatt`;
@@ -530,7 +565,7 @@ async function buildEmailContext(supabase: any, userId: string, context: any): P
     });
   }
 
-  // Sort: most urgent first (no reply > waiting on us > active dialog)
+  // Sort: most urgent first
   const statusPriority: Record<string, number> = {
     "Tilbud sendt uten svar": 1,
     "Innkommende – ikke besvart": 2,
