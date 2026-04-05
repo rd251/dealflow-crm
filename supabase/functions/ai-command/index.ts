@@ -49,6 +49,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
+        temperature: 0,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: message },
@@ -687,6 +688,13 @@ KONTAKTOPPRETTING REGLER:
 RINGELISTE-OPPRETTING REGLER:
 - Når brukeren ber om å lage en ringeliste, oppfølgingsliste, eller spør om kontakter som trenger oppfølging basert på e-post/dialog, generer et suggested_ringeliste-objekt
 - Bruk E-POSTDATA OG DIALOGSTATUS fra konteksten for å identifisere de riktige kontaktene
+- SORTERING OG KONSISTENS – VIKTIG:
+  * Inkluder ALLE kontakter som matcher kriteriene, ikke et tilfeldig utvalg
+  * Sorter kontaktene i FAST rekkefølge etter disse kriteriene (viktigst først):
+    1. Dialogstatus-prioritet: Tilbud sendt uten svar > Innkommende ikke besvart > Venter på oss > Ingen svar > Aktiv dialog > Venter på kunde
+    2. Ved lik status: lengst tid siden siste kontakt først (flest timer inaktiv)
+    3. Ved lik inaktivitet: høyest verdi (MRR) først
+  * Ikke hopp over kontakter eller velg tilfeldig – bruk ALLE som matcher
 - AI skal identifisere og inkludere kontakter basert på dialogstatus:
   * "Ingen svar" – vi sendte e-post men fikk aldri svar
   * "Aktiv dialog" – frem og tilbake med meldinger
