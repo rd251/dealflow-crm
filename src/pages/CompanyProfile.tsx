@@ -312,7 +312,25 @@ export default function CompanyProfile() {
               </div>
             </div>
 
-            <SelskapInnsikt domene={selskap.domene} firmanavn={selskap.firmanavn} e_post={selskapKontakter[0]?.e_post} />
+            <SelskapInnsikt
+              domene={selskap.domene}
+              firmanavn={selskap.firmanavn}
+              e_post={selskapKontakter[0]?.e_post}
+              onEnriched={(innsikt) => {
+                const needsBransje = innsikt.bransje && (!selskap.bransje || selskap.bransje === "");
+                const needsOrgnr = innsikt.orgnr && (!selskap.orgnr || selskap.orgnr === "");
+                if (needsBransje || needsOrgnr) {
+                  updateSelskaper(prev => prev.map(s =>
+                    s.id === selskap.id ? {
+                      ...s,
+                      ...(needsBransje ? { bransje: innsikt.bransje! } : {}),
+                      ...(needsOrgnr ? { orgnr: innsikt.orgnr! } : {}),
+                    } : s
+                  ));
+                  toast.success("Selskapsfelt oppdatert fra berikelsesdata");
+                }
+              }}
+            />
             <div className="bg-card border rounded-xl p-4 sm:p-5 space-y-3">
               <div className="flex items-center justify-between">
                 <h2 className="font-semibold text-base flex items-center gap-2">

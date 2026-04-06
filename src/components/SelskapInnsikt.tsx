@@ -7,6 +7,7 @@ interface SelskapInnsiktProps {
   domene?: string;
   firmanavn?: string;
   e_post?: string;
+  onEnriched?: (data: InnsiktData) => void;
 }
 
 interface InnsiktData {
@@ -37,7 +38,7 @@ function extractDomain(email?: string, domene?: string): string {
   return "";
 }
 
-export default function SelskapInnsikt({ domene, firmanavn, e_post }: SelskapInnsiktProps) {
+export default function SelskapInnsikt({ domene, firmanavn, e_post, onEnriched }: SelskapInnsiktProps) {
   const [data, setData] = useState<InnsiktData | null>(null);
   const [loading, setLoading] = useState(false);
   const [hasChecked, setHasChecked] = useState(false);
@@ -60,6 +61,7 @@ export default function SelskapInnsikt({ domene, firmanavn, e_post }: SelskapInn
         const age = Date.now() - new Date(cached.updated_at).getTime();
         if (age < 7 * 24 * 60 * 60 * 1000) {
           setData(cached);
+          onEnriched?.(cached);
           setLoading(false);
           setHasChecked(true);
           return;
@@ -75,6 +77,7 @@ export default function SelskapInnsikt({ domene, firmanavn, e_post }: SelskapInn
 
       if (!error && result?.success) {
         setData(result.data);
+        onEnriched?.(result.data);
       }
     } catch (e) {
       console.error("Enrichment error:", e);
