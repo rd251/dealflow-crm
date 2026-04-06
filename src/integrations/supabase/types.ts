@@ -1348,6 +1348,10 @@ export type Database = {
         | "E-post"
         | "Telefon"
         | "Annet"
+        | "Organisk"
+        | "Facebook ads"
+        | "Instantly kald e-post"
+        | "Google ads"
       lead_status:
         | "Ny"
         | "Kontaktet"
@@ -1566,6 +1570,10 @@ export const Constants = {
         "E-post",
         "Telefon",
         "Annet",
+        "Organisk",
+        "Facebook ads",
+        "Instantly kald e-post",
+        "Google ads",
       ],
       lead_status: [
         "Ny",
