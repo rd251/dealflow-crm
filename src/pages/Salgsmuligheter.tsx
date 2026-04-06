@@ -700,7 +700,27 @@ export default function Salgsmuligheter() {
                   )}
                 </div>
 
-                <SelskapInnsikt domene={getSelskapDomain(currentSm.selskap_id)} firmanavn={getSelskapNavn(currentSm.selskap_id || "")} e_post={currentSm.e_post} />
+                <SelskapInnsikt
+                  domene={getSelskapDomain(currentSm.selskap_id)}
+                  firmanavn={getSelskapNavn(currentSm.selskap_id || "")}
+                  e_post={currentSm.e_post}
+                  onEnriched={(innsikt) => {
+                    if (!currentSm.selskap_id) return;
+                    const selskap = selskaper.find(s => s.id === currentSm.selskap_id);
+                    if (!selskap) return;
+                    const needsBransje = innsikt.bransje && (!selskap.bransje || selskap.bransje === "");
+                    const needsOrgnr = innsikt.orgnr && (!selskap.orgnr || selskap.orgnr === "");
+                    if (needsBransje || needsOrgnr) {
+                      updateSelskaper(prev => prev.map(s =>
+                        s.id === currentSm.selskap_id ? {
+                          ...s,
+                          ...(needsBransje ? { bransje: innsikt.bransje! } : {}),
+                          ...(needsOrgnr ? { orgnr: innsikt.orgnr! } : {}),
+                        } : s
+                      ));
+                    }
+                  }}
+                />
 
                 {currentSm.status === "Tapt" && currentSm.tapsaarsak && (
                   <div className="p-2 bg-destructive/10 rounded-lg text-destructive text-xs">
