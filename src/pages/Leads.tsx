@@ -413,7 +413,11 @@ export default function Leads() {
 
 
                 <div className="border-t" />
-                <SelskapInnsikt domene="" firmanavn={currentLead.firmanavn} e_post={currentLead.e_post} />
+                <SelskapInnsikt
+                  domene=""
+                  firmanavn={currentLead.firmanavn}
+                  e_post={currentLead.e_post}
+                />
 
                 {getConversionType(currentLead) && (
                   <div className={`p-2.5 rounded-lg text-xs font-medium flex items-center gap-2 ${getConversionType(currentLead) === "salg" ? "bg-success/10 text-success" : "bg-primary/10 text-primary"}`}>
