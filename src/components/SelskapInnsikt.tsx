@@ -38,7 +38,7 @@ function extractDomain(email?: string, domene?: string): string {
   return "";
 }
 
-export default function SelskapInnsikt({ domene, firmanavn, e_post }: SelskapInnsiktProps) {
+export default function SelskapInnsikt({ domene, firmanavn, e_post, onEnriched }: SelskapInnsiktProps) {
   const [data, setData] = useState<InnsiktData | null>(null);
   const [loading, setLoading] = useState(false);
   const [hasChecked, setHasChecked] = useState(false);
