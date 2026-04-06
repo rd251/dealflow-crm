@@ -700,6 +700,8 @@ export default function Salgsmuligheter() {
                   )}
                 </div>
 
+                <SelskapInnsikt domene={getSelskapDomain(currentSm.selskap_id)} firmanavn={getSelskapNavn(currentSm.selskap_id || "")} e_post={currentSm.e_post} />
+
                 {currentSm.status === "Tapt" && currentSm.tapsaarsak && (
                   <div className="p-2 bg-destructive/10 rounded-lg text-destructive text-xs">
                     <strong>Tapsårsak:</strong> {currentSm.tapsaarsak} · {currentSm.tapt_dato}
