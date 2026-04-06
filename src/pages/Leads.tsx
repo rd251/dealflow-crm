@@ -13,6 +13,7 @@ import DetailPanelShell, { DetailSection, DetailField, DetailDivider } from "@/c
 import EntityCalendarTab from "@/components/EntityCalendarTab";
 import { Plus, Search, ArrowRightCircle, Trash2, Users2, Upload, Lock, Mail } from "lucide-react";
 import SendEmailDialog from "@/components/SendEmailDialog";
+import SelskapInnsikt from "@/components/SelskapInnsikt";
 import { Lead, LeadStatus, LeadKilde } from "@/data/crm-data";
 import { Badge } from "@/components/ui/badge";
 import InlineTaskForm from "@/components/InlineTaskForm";
@@ -409,6 +410,10 @@ export default function Leads() {
                 <div className="text-xs"><span className="text-muted-foreground">Use case</span>
                   <Input value={currentLead.use_case} onChange={e => updateField("use_case", e.target.value)} className="h-7 text-xs mt-0.5" readOnly={!canEdit || currentIsLocked} />
                 </div>
+
+
+                <div className="border-t" />
+                <SelskapInnsikt domene="" firmanavn={currentLead.firmanavn} e_post={currentLead.e_post} />
 
                 {getConversionType(currentLead) && (
                   <div className={`p-2.5 rounded-lg text-xs font-medium flex items-center gap-2 ${getConversionType(currentLead) === "salg" ? "bg-success/10 text-success" : "bg-primary/10 text-primary"}`}>
