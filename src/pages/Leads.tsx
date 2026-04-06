@@ -413,7 +413,18 @@ export default function Leads() {
 
 
                 <div className="border-t" />
-                <SelskapInnsikt domene="" firmanavn={currentLead.firmanavn} e_post={currentLead.e_post} />
+                <SelskapInnsikt
+                  domene=""
+                  firmanavn={currentLead.firmanavn}
+                  e_post={currentLead.e_post}
+                  onEnriched={(innsikt) => {
+                    // Leads don't have bransje/orgnr fields, but we can update firmanavn from brreg if it's richer
+                    if (innsikt.orgnr && currentLead.firmanavn && !currentIsLocked && canEdit) {
+                      // Store enriched firmanavn from brreg if significantly different
+                      const enrichedName = innsikt.beskrivelse; // just use for display, no auto-overwrite of firmanavn
+                    }
+                  }}
+                />
 
                 {getConversionType(currentLead) && (
                   <div className={`p-2.5 rounded-lg text-xs font-medium flex items-center gap-2 ${getConversionType(currentLead) === "salg" ? "bg-success/10 text-success" : "bg-primary/10 text-primary"}`}>
