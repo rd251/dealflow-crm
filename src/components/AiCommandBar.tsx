@@ -397,7 +397,7 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
   const handleCreateLead = async (lead: SuggestedLead, index: number) => {
     try {
       const today = new Date().toISOString().split("T")[0];
-      const validKilder = ["Nettside", "LinkedIn", "Partner", "Referanse", "Kald outbound", "E-post", "Telefon", "Annet"];
+      const validKilder = ["Nettside", "LinkedIn", "Partner", "Referanse", "Kald outbound", "E-post", "Telefon", "Annet", "Organisk", "Facebook ads", "Instantly kald e-post", "Google ads"];
       const safeKilde = lead.kilde && validKilder.includes(lead.kilde) ? lead.kilde : "Annet";
       
       const { error } = await supabase.from("leads").insert({

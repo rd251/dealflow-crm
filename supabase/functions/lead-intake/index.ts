@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
     }
 
     // Validate kilde against enum
-    const validKilder = ["Nettside", "LinkedIn", "Partner", "Referanse", "Kald outbound", "E-post", "Telefon", "Annet"];
+    const validKilder = ["Nettside", "LinkedIn", "Partner", "Referanse", "Kald outbound", "E-post", "Telefon", "Annet", "Organisk", "Facebook ads", "Instantly kald e-post", "Google ads"];
     const safeKilde = validKilder.includes(kilde) ? kilde : "Nettside";
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
