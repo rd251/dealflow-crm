@@ -144,7 +144,7 @@ export default function Salgsmuligheter() {
   const isMobile = useIsMobile();
   const { canEdit, user } = useAuth();
   const { profiles } = useProfiles();
-  const { salgsmuligheter, selskaper, kontakter, updateSalgsmuligheter, updateKontakter, vinnSalgsmulighet, tapSalgsmulighet, generateId } = useCrmStore();
+  const { salgsmuligheter, selskaper, kontakter, updateSalgsmuligheter, updateSelskaper, updateKontakter, vinnSalgsmulighet, tapSalgsmulighet, generateId } = useCrmStore();
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [dragOverStage, setDragOverStage] = useState<string | null>(null);
   const [selectedSm, setSelectedSm] = useState<Salgsmulighet | null>(null);
