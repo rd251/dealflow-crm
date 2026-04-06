@@ -87,22 +87,13 @@ export default function SelskapInnsikt({ domene, firmanavn, e_post }: SelskapInn
   useEffect(() => {
     setData(null);
     setHasChecked(false);
+    // Auto-fetch on mount / when domain changes
+    if (cleanDomain || firmanavn) {
+      fetchInnsikt();
+    }
   }, [cleanDomain, firmanavn]);
 
   if (!cleanDomain && !firmanavn) return null;
-
-  // Not yet checked — show trigger button
-  if (!hasChecked && !loading && !data) {
-    return (
-      <button
-        onClick={() => fetchInnsikt()}
-        className="w-full rounded-lg border border-dashed border-muted-foreground/30 p-3 flex items-center justify-center gap-2 text-xs text-muted-foreground hover:bg-muted/50 hover:border-primary/30 transition-colors cursor-pointer"
-      >
-        <Sparkles className="w-3.5 h-3.5" />
-        Hent selskapsinnsikt
-      </button>
-    );
-  }
 
   if (loading) {
     return (
