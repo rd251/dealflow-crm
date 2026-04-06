@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import SendEmailDialog from "@/components/SendEmailDialog";
 import CompanyLogo from "@/components/CompanyLogo";
+import SelskapInnsikt from "@/components/SelskapInnsikt";
 import { Kundestatus, OnboardingStatus, Kundetilstand, SalgsmulighetStatus, Kontakt } from "@/data/crm-data";
 import { toast } from "sonner";
 
