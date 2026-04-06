@@ -77,6 +77,7 @@ export default function SelskapInnsikt({ domene, firmanavn, e_post, onEnriched }
 
       if (!error && result?.success) {
         setData(result.data);
+        onEnriched?.(result.data);
       }
     } catch (e) {
       console.error("Enrichment error:", e);
