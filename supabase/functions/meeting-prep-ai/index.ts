@@ -45,6 +45,11 @@ Deno.serve(async (req) => {
       smNavn ? `Salgsmulighet: ${smNavn}` : "",
       smStatus ? `Status: ${smStatus}` : "",
       smNesteSteg ? `Neste steg: ${smNesteSteg}` : "",
+      selskapInnsikt?.bransje ? `Bransje: ${selskapInnsikt.bransje}` : "",
+      selskapInnsikt?.beskrivelse ? `Om selskapet: ${selskapInnsikt.beskrivelse}` : "",
+      selskapInnsikt?.stoerrelse ? `Selskapsstørrelse: ${selskapInnsikt.stoerrelse}` : "",
+      selskapInnsikt?.estimert_ansatte ? `Estimert ansatte: ${selskapInnsikt.estimert_ansatte}` : "",
+      selskapInnsikt?.estimert_omsetning && selskapInnsikt.estimert_omsetning !== "Ukjent" ? `Estimert omsetning: ${selskapInnsikt.estimert_omsetning}` : "",
     ]
       .filter(Boolean)
       .join("\n");
