@@ -317,15 +317,16 @@ export default function CompanyProfile() {
               firmanavn={selskap.firmanavn}
               e_post={selskapKontakter[0]?.e_post}
               onEnriched={(innsikt) => {
-                const updates: Record<string, unknown> = {};
-                if (innsikt.bransje && (!selskap.bransje || selskap.bransje === "")) {
-                  updates.bransje = innsikt.bransje;
-                }
-                if (innsikt.orgnr && (!selskap.orgnr || selskap.orgnr === "")) {
-                  updates.orgnr = innsikt.orgnr;
-                }
-                if (Object.keys(updates).length > 0) {
-                  updateSelskaper(selskap.id, updates);
+                const needsBransje = innsikt.bransje && (!selskap.bransje || selskap.bransje === "");
+                const needsOrgnr = innsikt.orgnr && (!selskap.orgnr || selskap.orgnr === "");
+                if (needsBransje || needsOrgnr) {
+                  updateSelskaper(prev => prev.map(s =>
+                    s.id === selskap.id ? {
+                      ...s,
+                      ...(needsBransje ? { bransje: innsikt.bransje! } : {}),
+                      ...(needsOrgnr ? { orgnr: innsikt.orgnr! } : {}),
+                    } : s
+                  ));
                   toast.success("Selskapsfelt oppdatert fra berikelsesdata");
                 }
               }}
