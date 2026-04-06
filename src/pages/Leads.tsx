@@ -417,13 +417,6 @@ export default function Leads() {
                   domene=""
                   firmanavn={currentLead.firmanavn}
                   e_post={currentLead.e_post}
-                  onEnriched={(innsikt) => {
-                    // Leads don't have bransje/orgnr fields, but we can update firmanavn from brreg if it's richer
-                    if (innsikt.orgnr && currentLead.firmanavn && !currentIsLocked && canEdit) {
-                      // Store enriched firmanavn from brreg if significantly different
-                      const enrichedName = innsikt.beskrivelse; // just use for display, no auto-overwrite of firmanavn
-                    }
-                  }}
                 />
 
                 {getConversionType(currentLead) && (
