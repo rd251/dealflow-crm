@@ -1035,6 +1035,51 @@ export type Database = {
           },
         ]
       }
+      selskap_innsikt: {
+        Row: {
+          beskrivelse: string | null
+          bransje: string | null
+          created_at: string
+          domene: string
+          estimert_ansatte: string | null
+          estimert_omsetning: string | null
+          firmanavn: string
+          id: string
+          kilde_data: Json | null
+          orgnr: string | null
+          stoerrelse: string | null
+          updated_at: string
+        }
+        Insert: {
+          beskrivelse?: string | null
+          bransje?: string | null
+          created_at?: string
+          domene?: string
+          estimert_ansatte?: string | null
+          estimert_omsetning?: string | null
+          firmanavn?: string
+          id?: string
+          kilde_data?: Json | null
+          orgnr?: string | null
+          stoerrelse?: string | null
+          updated_at?: string
+        }
+        Update: {
+          beskrivelse?: string | null
+          bransje?: string | null
+          created_at?: string
+          domene?: string
+          estimert_ansatte?: string | null
+          estimert_omsetning?: string | null
+          firmanavn?: string
+          id?: string
+          kilde_data?: Json | null
+          orgnr?: string | null
+          stoerrelse?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       selskaper: {
         Row: {
           arr: number | null
