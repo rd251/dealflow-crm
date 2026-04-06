@@ -158,10 +158,24 @@ export default function MeetingPrepPanel({ meeting, open, onOpenChange }: Props)
       );
     }
 
-    Promise.all(fetches).then(() => {
+    Promise.all(fetches).then(async () => {
       setLoading(false);
-      // Trigger AI summary – even without activities, use meeting title/description
-      fetchAiSummary(actData, selskapData, smData);
+      // Fetch enrichment data for the company
+      let enrichment: any = null;
+      const domain = selskapData?.firmanavn ? "" : "";
+      const selskapId = meeting.selskap_id;
+      if (selskapId) {
+        try {
+          const { data: innsikt } = await supabase
+            .from("selskap_innsikt")
+            .select("bransje, beskrivelse, stoerrelse, estimert_ansatte, estimert_omsetning")
+            .or(`firmanavn.ilike.%${selskapData?.firmanavn || ""}%`)
+            .limit(1)
+            .maybeSingle();
+          if (innsikt) enrichment = innsikt;
+        } catch {}
+      }
+      fetchAiSummary(actData, selskapData, smData, enrichment);
     });
   }, [meeting, open]);
 
