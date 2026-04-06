@@ -280,6 +280,12 @@ export default function Salgsmuligheter() {
                 <Input placeholder="Telefon" value={form.telefon} onChange={e => setForm(f => ({ ...f, telefon: e.target.value }))} />
                 <Input placeholder="Rolle i firma" value={form.rolle_i_firma} onChange={e => setForm(f => ({ ...f, rolle_i_firma: e.target.value }))} />
               </div>
+
+              <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background" value={form.kilde} onChange={e => setForm(f => ({ ...f, kilde: e.target.value }))}>
+                {["Nettside","LinkedIn","Partner","Referanse","Kald outbound","E-post","Telefon","Annet","Organisk","Facebook ads","Instantly kald e-post","Google ads"].map(k => (
+                  <option key={k} value={k}>{k}</option>
+                ))}
+              </select>
               
               <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background" value={form.ansvarlig} onChange={e => setForm(f => ({ ...f, ansvarlig: e.target.value }))}>
                 <option value="">Velg ansvarlig</option>
