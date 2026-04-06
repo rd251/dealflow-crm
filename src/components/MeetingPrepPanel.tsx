@@ -179,7 +179,7 @@ export default function MeetingPrepPanel({ meeting, open, onOpenChange }: Props)
     });
   }, [meeting, open]);
 
-  const fetchAiSummary = async (acts: Activity[], s: SelskapData | null, sm: SmData | null) => {
+  const fetchAiSummary = async (acts: Activity[], s: SelskapData | null, sm: SmData | null, enrichment?: any) => {
     setAiLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("meeting-prep-ai", {
@@ -191,6 +191,7 @@ export default function MeetingPrepPanel({ meeting, open, onOpenChange }: Props)
           smNesteSteg: sm?.neste_steg || null,
           meetingTitle: meeting?.tittel || meeting?.beskrivelse || null,
           meetingDate: meeting?.dato || null,
+          selskapInnsikt: enrichment || null,
         },
       });
       if (!error && data) {
