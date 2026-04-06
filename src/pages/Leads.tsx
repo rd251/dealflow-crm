@@ -13,6 +13,7 @@ import DetailPanelShell, { DetailSection, DetailField, DetailDivider } from "@/c
 import EntityCalendarTab from "@/components/EntityCalendarTab";
 import { Plus, Search, ArrowRightCircle, Trash2, Users2, Upload, Lock, Mail } from "lucide-react";
 import SendEmailDialog from "@/components/SendEmailDialog";
+import SelskapInnsikt from "@/components/SelskapInnsikt";
 import { Lead, LeadStatus, LeadKilde } from "@/data/crm-data";
 import { Badge } from "@/components/ui/badge";
 import InlineTaskForm from "@/components/InlineTaskForm";
