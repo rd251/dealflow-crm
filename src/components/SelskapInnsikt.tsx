@@ -7,6 +7,7 @@ interface SelskapInnsiktProps {
   domene?: string;
   firmanavn?: string;
   e_post?: string;
+  onEnriched?: (data: InnsiktData) => void;
 }
 
 interface InnsiktData {
