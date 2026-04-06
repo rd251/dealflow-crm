@@ -61,6 +61,7 @@ export default function SelskapInnsikt({ domene, firmanavn, e_post, onEnriched }
         const age = Date.now() - new Date(cached.updated_at).getTime();
         if (age < 7 * 24 * 60 * 60 * 1000) {
           setData(cached);
+          onEnriched?.(cached);
           setLoading(false);
           setHasChecked(true);
           return;
