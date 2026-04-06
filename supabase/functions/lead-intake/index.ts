@@ -70,6 +70,21 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Fire-and-forget: trigger company enrichment in background
+    const enrichDomain = e_post ? e_post.split("@")[1] || "" : "";
+    const enrichFirma = data.firmanavn || firmanavn;
+    if (enrichDomain || enrichFirma) {
+      const enrichUrl = `${supabaseUrl}/functions/v1/company-enrich`;
+      fetch(enrichUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${supabaseServiceKey}`,
+        },
+        body: JSON.stringify({ domene: enrichDomain, firmanavn: enrichFirma }),
+      }).catch((err) => console.error("Enrichment trigger failed:", err));
+    }
+
     return new Response(
       JSON.stringify({ success: true, lead: data }),
       { status: 201, headers: { ...corsHeaders, "Content-Type": "application/json" } }
