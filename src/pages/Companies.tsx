@@ -778,14 +778,24 @@ export default function Companies() {
                   <Textarea value={editProject.notater} onChange={e => setEditProject(p => p ? { ...p, notater: e.target.value } : p)} rows={3} className="text-sm mt-0.5" />
                 </div>
               </div>
-              <div className="flex justify-end gap-2 mt-2">
-                <Button variant="outline" onClick={() => setEditProject(null)}>Avbryt</Button>
-                <Button onClick={() => {
+              <div className="flex justify-between gap-2 mt-2">
+                <Button variant="destructive" size="sm" onClick={() => {
                   if (!editProject) return;
-                  updateProsjekter(prev => prev.map(p => p.id === editProject.id ? editProject : p));
+                  updateProsjekter(prev => prev.filter(p => p.id !== editProject.id));
                   setEditProject(null);
-                  toast.success("Prosjekt oppdatert");
-                }}>Lagre endringer</Button>
+                  toast.success("Prosjekt slettet");
+                }}>
+                  <Trash2 className="w-3.5 h-3.5 mr-1" />Slett
+                </Button>
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={() => setEditProject(null)}>Avbryt</Button>
+                  <Button onClick={() => {
+                    if (!editProject) return;
+                    updateProsjekter(prev => prev.map(p => p.id === editProject.id ? editProject : p));
+                    setEditProject(null);
+                    toast.success("Prosjekt oppdatert");
+                  }}>Lagre endringer</Button>
+                </div>
               </div>
             </div>
           )}
