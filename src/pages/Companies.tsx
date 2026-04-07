@@ -65,7 +65,7 @@ export default function Companies() {
   const [lukkedatoTil, setLukkedatoTil] = useState<Date | undefined>(undefined);
   const [newProjectDialog, setNewProjectDialog] = useState<string | null>(null);
   const [projectForm, setProjectForm] = useState({ prosjektnavn: "", integrasjon: "Ingen" as Integrasjon });
-
+  const [editProject, setEditProject] = useState<Prosjekt | null>(null);
   type SortKey = "firmanavn" | "bransje" | "kundestatus" | "live" | "tilstand" | "mrr" | "arr" | "sla" | "oppstart" | "lukkedato" | "sist_aktivitet";
   const [sortKey, setSortKey] = useState<SortKey | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
