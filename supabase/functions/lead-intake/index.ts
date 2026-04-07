@@ -6,6 +6,76 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+const validKilder = [
+  "Nettside", "LinkedIn", "Partner", "Referanse", "Kald outbound",
+  "E-post", "Telefon", "Annet", "Organisk", "Facebook ads",
+  "Instantly kald e-post", "Google ads", "Kasoleads",
+];
+
+async function detectKildeFromNotes(notater: string): Promise<string | null> {
+  if (!notater || notater.length < 3) return null;
+
+  const apiKey = Deno.env.get("LOVABLE_API_KEY");
+  if (!apiKey) {
+    console.warn("LOVABLE_API_KEY not set, skipping AI kilde detection");
+    return null;
+  }
+
+  try {
+    const res = await fetch("https://api.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash-lite",
+        temperature: 0,
+        max_tokens: 50,
+        messages: [
+          {
+            role: "system",
+            content: `Du analyserer notater fra innkommende leads for å bestemme hvilken kilde leadet kom fra.
+Gyldige kilder: ${validKilder.join(", ")}
+
+Regler:
+- "Instantly" eller "kampanje" i teksten → "Instantly kald e-post"
+- "LinkedIn" i teksten → "LinkedIn"
+- "Facebook" eller "Meta" i teksten → "Facebook ads"
+- "Google" og "ads" i teksten → "Google ads"
+- "partner" i teksten → "Partner"
+- "referanse" eller "anbefalt" i teksten → "Referanse"
+- "Kasoleads" i teksten → "Kasoleads"
+- "kald" og ("e-post" eller "epost" eller "mail") men IKKE "Instantly" → "Kald outbound"
+- "organisk" i teksten → "Organisk"
+- "nettside" eller "kontaktskjema" eller "website" → "Nettside"
+- Hvis usikker → svar "Annet"
+
+Svar KUN med kildenavnet, ingenting annet.`,
+          },
+          { role: "user", content: notater },
+        ],
+      }),
+    });
+
+    if (!res.ok) {
+      console.error("AI kilde detection failed:", res.status);
+      return null;
+    }
+
+    const data = await res.json();
+    const detected = data.choices?.[0]?.message?.content?.trim();
+    if (detected && validKilder.includes(detected)) {
+      return detected;
+    }
+    console.log("AI returned non-matching kilde:", detected);
+    return null;
+  } catch (err) {
+    console.error("AI kilde detection error:", err);
+    return null;
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -27,7 +97,7 @@ Deno.serve(async (req) => {
     const e_post = String(body.e_post || body.epost || body.email || "").trim();
     const telefon = String(body.telefon || body.phone || body.telefonnummer || "").trim();
     const notater = String(body.notater || body.melding || body.message || body.notes || "").trim();
-    const kilde = body.kilde || body.source || "Nettside";
+    const eksplisittKilde = body.kilde || body.source || "";
     const use_case = String(body.use_case || "").trim();
     const rolle_i_firma = String(body.rolle_i_firma || body.rolle || "").trim();
 
@@ -38,9 +108,17 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Validate kilde against enum
-    const validKilder = ["Nettside", "LinkedIn", "Partner", "Referanse", "Kald outbound", "E-post", "Telefon", "Annet", "Organisk", "Facebook ads", "Instantly kald e-post", "Google ads"];
-    const safeKilde = validKilder.includes(kilde) ? kilde : "Nettside";
+    // Determine kilde: explicit > AI-detected from notes > default "Nettside"
+    let safeKilde = "Nettside";
+    if (eksplisittKilde && validKilder.includes(eksplisittKilde)) {
+      safeKilde = eksplisittKilde;
+    } else if (notater) {
+      const aiKilde = await detectKildeFromNotes(notater);
+      if (aiKilde) {
+        safeKilde = aiKilde;
+        console.log(`AI detected kilde: "${aiKilde}" from notes`);
+      }
+    }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -60,7 +138,7 @@ Deno.serve(async (req) => {
       sist_aktivitet: today,
       use_case,
       rolle_i_firma,
-    }).select("id, firmanavn, kontaktperson, e_post, status").single();
+    }).select("id, firmanavn, kontaktperson, e_post, status, kilde").single();
 
     if (error) {
       console.error("Insert error:", error);
