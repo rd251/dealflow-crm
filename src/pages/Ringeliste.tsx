@@ -37,6 +37,7 @@ interface Ringelister {
   created_at: string;
   contact_count?: number;
   status_counts?: Record<string, number>;
+  emails_sent?: number;
 }
 
 interface RingelisteItem {
