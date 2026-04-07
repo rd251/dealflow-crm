@@ -616,6 +616,47 @@ export default function Companies() {
                     {currentSelskap.kanselleringsnotat && <p className="mt-1">{currentSelskap.kanselleringsnotat}</p>}
                   </div>
                 )}
+
+                <div className="border-t" />
+
+                {/* Prosjekter */}
+                {(() => {
+                  const selskapProsjekter = prosjekter.filter(p => p.selskap_id === currentSelskap.id);
+                  return (
+                    <div className="rounded-lg border p-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2 text-sm font-medium">
+                          <FileText className="w-4 h-4 text-muted-foreground" />
+                          Prosjekter ({selskapProsjekter.length})
+                        </div>
+                        {canEdit && (
+                          <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => {
+                            setProjectForm({ prosjektnavn: currentSelskap.firmanavn, integrasjon: "Ingen" });
+                            setNewProjectDialog(currentSelskap.id);
+                          }}>
+                            <Plus className="w-3 h-3" /> Nytt prosjekt
+                          </Button>
+                        )}
+                      </div>
+                      {selskapProsjekter.length === 0 ? (
+                        <p className="text-xs text-muted-foreground">Ingen prosjekter</p>
+                      ) : (
+                        <div className="space-y-1.5">
+                          {selskapProsjekter.map(p => (
+                            <div key={p.id} className="flex items-center justify-between p-2 rounded-lg bg-muted/30 hover:bg-muted/50 cursor-pointer transition-colors"
+                              onClick={() => navigate("/prosjekter")}>
+                              <div>
+                                <div className="text-sm font-medium">{p.prosjektnavn}</div>
+                                <div className="text-[10px] text-muted-foreground">{p.status}{p.forventet_go_live ? ` · Go-live: ${p.forventet_go_live}` : ""}</div>
+                              </div>
+                              <Badge variant="secondary" className="text-[10px]">{p.status}</Badge>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
             ),
             interaksjoner: (
