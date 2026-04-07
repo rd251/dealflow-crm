@@ -552,7 +552,127 @@ export default function CompanyProfile() {
             selskapId: selskap.id,
           }}
         />
-      )}
+      {/* Nytt prosjekt dialog */}
+      <Dialog open={newProjectOpen} onOpenChange={setNewProjectOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Opprett nytt prosjekt</DialogTitle>
+            <DialogDescription>Legg til et prosjekt for dette selskapet.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="text-xs"><span className="text-muted-foreground">Prosjektnavn</span>
+              <Input value={projectForm.prosjektnavn} onChange={e => setProjectForm(f => ({ ...f, prosjektnavn: e.target.value }))} className="h-8 text-sm mt-0.5" />
+            </div>
+            <div className="text-xs"><span className="text-muted-foreground">Integrasjon</span>
+              <select className="w-full border rounded px-2 py-1.5 text-sm bg-background mt-0.5"
+                value={projectForm.integrasjon} onChange={e => setProjectForm(f => ({ ...f, integrasjon: e.target.value as Integrasjon }))}>
+                {(["Ingen", "GastroPlanner", "HubSpot", "Lime", "Salesforce", "API", "Annet"] as Integrasjon[]).map(i => <option key={i} value={i}>{i}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 mt-2">
+            <Button variant="outline" onClick={() => setNewProjectOpen(false)}>Avbryt</Button>
+            <Button disabled={!projectForm.prosjektnavn.trim()} onClick={() => {
+              const newP: Prosjekt = {
+                id: generateId("p", prosjekter),
+                prosjektnavn: projectForm.prosjektnavn.trim(),
+                selskap_id: id!,
+                salgsmulighet_id: "",
+                ansvarlig: selskap.kundeansvarlig || "",
+                status: "Ny",
+                startdato: new Date().toISOString().split("T")[0],
+                forventet_go_live: "",
+                go_live_dato: "",
+                oppstartskostnad: 0,
+                oppstart_fakturert: false,
+                oppstart_faktura_dato: "",
+                oppstart_betalt: false,
+                integrasjon: projectForm.integrasjon,
+                notater: "",
+              };
+              updateProsjekter(prev => [...prev, newP]);
+              setNewProjectOpen(false);
+              toast.success("Prosjekt opprettet");
+            }}>
+              <Rocket className="w-3.5 h-3.5 mr-1.5" />Opprett
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Rediger prosjekt dialog */}
+      <Dialog open={!!editProject} onOpenChange={open => { if (!open) setEditProject(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Rediger prosjekt</DialogTitle>
+            <DialogDescription>Oppdater prosjektdetaljer.</DialogDescription>
+          </DialogHeader>
+          {editProject && (
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="text-xs col-span-2"><span className="text-muted-foreground">Prosjektnavn</span>
+                  <Input value={editProject.prosjektnavn} onChange={e => setEditProject(p => p ? { ...p, prosjektnavn: e.target.value } : p)} className="h-8 text-sm mt-0.5" />
+                </div>
+                <div className="text-xs"><span className="text-muted-foreground">Status</span>
+                  <select className="w-full border rounded px-2 py-1.5 text-sm bg-background mt-0.5"
+                    value={editProject.status} onChange={e => setEditProject(p => p ? { ...p, status: e.target.value as ProsjektStatus } : p)}>
+                    {(["Ny", "I produksjon", "Test med kunde", "Live", "Blokkert"] as ProsjektStatus[]).map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+                <div className="text-xs"><span className="text-muted-foreground">Integrasjon</span>
+                  <select className="w-full border rounded px-2 py-1.5 text-sm bg-background mt-0.5"
+                    value={editProject.integrasjon} onChange={e => setEditProject(p => p ? { ...p, integrasjon: e.target.value as Integrasjon } : p)}>
+                    {(["Ingen", "GastroPlanner", "HubSpot", "Lime", "Salesforce", "API", "Annet"] as Integrasjon[]).map(i => <option key={i} value={i}>{i}</option>)}
+                  </select>
+                </div>
+                <div className="text-xs"><span className="text-muted-foreground">Ansvarlig</span>
+                  <Input value={editProject.ansvarlig} onChange={e => setEditProject(p => p ? { ...p, ansvarlig: e.target.value } : p)} className="h-8 text-sm mt-0.5" />
+                </div>
+                <div className="text-xs"><span className="text-muted-foreground">Startdato</span>
+                  <Input type="date" value={editProject.startdato} onChange={e => setEditProject(p => p ? { ...p, startdato: e.target.value } : p)} className="h-8 text-sm mt-0.5" />
+                </div>
+                <div className="text-xs"><span className="text-muted-foreground">Forventet go-live</span>
+                  <Input type="date" value={editProject.forventet_go_live} onChange={e => setEditProject(p => p ? { ...p, forventet_go_live: e.target.value } : p)} className="h-8 text-sm mt-0.5" />
+                </div>
+                <div className="text-xs"><span className="text-muted-foreground">Go-live dato</span>
+                  <Input type="date" value={editProject.go_live_dato} onChange={e => setEditProject(p => p ? { ...p, go_live_dato: e.target.value } : p)} className="h-8 text-sm mt-0.5" />
+                </div>
+                <div className="text-xs"><span className="text-muted-foreground">Oppstartskostnad</span>
+                  <Input type="number" value={editProject.oppstartskostnad || ""} onChange={e => setEditProject(p => p ? { ...p, oppstartskostnad: Number(e.target.value) } : p)} className="h-8 text-sm mt-0.5" />
+                </div>
+                <div className="text-xs flex items-end gap-2 pb-1">
+                  <span className="text-muted-foreground">Fakturert</span>
+                  <Switch checked={editProject.oppstart_fakturert} onCheckedChange={v => setEditProject(p => p ? { ...p, oppstart_fakturert: v } : p)} />
+                </div>
+                <div className="text-xs flex items-end gap-2 pb-1">
+                  <span className="text-muted-foreground">Betalt</span>
+                  <Switch checked={editProject.oppstart_betalt} onCheckedChange={v => setEditProject(p => p ? { ...p, oppstart_betalt: v } : p)} />
+                </div>
+                <div className="text-xs col-span-2"><span className="text-muted-foreground">Notater</span>
+                  <Textarea value={editProject.notater} onChange={e => setEditProject(p => p ? { ...p, notater: e.target.value } : p)} rows={3} className="text-sm mt-0.5" />
+                </div>
+              </div>
+              <div className="flex justify-between gap-2 mt-2">
+                <Button variant="destructive" size="sm" onClick={() => {
+                  updateProsjekter(prev => prev.filter(p => p.id !== editProject.id));
+                  setEditProject(null);
+                  toast.success("Prosjekt slettet");
+                }}>
+                  <Trash2 className="w-3.5 h-3.5 mr-1" />Slett
+                </Button>
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={() => setEditProject(null)}>Avbryt</Button>
+                  <Button onClick={() => {
+                    updateProsjekter(prev => prev.map(p => p.id === editProject.id ? editProject : p));
+                    setEditProject(null);
+                    toast.success("Prosjekt oppdatert");
+                  }}>Lagre endringer</Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
