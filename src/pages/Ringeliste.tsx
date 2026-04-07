@@ -686,9 +686,16 @@ function RingelisteContacts({ liste, onBack }: { liste: Ringelister; onBack: () 
                   </td>
                   <td className="px-3 py-2.5 text-muted-foreground">{item.ansvarlig}</td>
                   <td className="px-3 py-2.5">
-                    <Button size="sm" variant="ghost" className="h-7 px-2" onClick={e => { e.stopPropagation(); setSelected(item); setCallNotes(""); }}>
-                      <PhoneCall className="w-4 h-4" />
-                    </Button>
+                    <div className="flex gap-0.5">
+                      <Button size="sm" variant="ghost" className="h-7 px-2" onClick={e => { e.stopPropagation(); setSelected(item); setCallNotes(""); }}>
+                        <PhoneCall className="w-4 h-4" />
+                      </Button>
+                      {item.e_post && (
+                        <Button size="sm" variant="ghost" className="h-7 px-2" onClick={e => { e.stopPropagation(); setEmailTarget(item); setEmailOpen(true); }}>
+                          <Mail className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
