@@ -50,6 +50,23 @@ Deno.serve(async (req) => {
 
     if (updateErr) throw updateErr;
 
+    // Log each removal in crm_changelog
+    const changelogEntries = cancelled.map((c) => ({
+      event_type: "updated",
+      entity_type: "selskap",
+      entity_id: c.id,
+      entity_name: c.firmanavn,
+      field_name: "kundestatus",
+      old_value: "Kansellert",
+      new_value: "Ikke kunde (automatisk fjernet)",
+    }));
+
+    const { error: logErr } = await supabase
+      .from("crm_changelog")
+      .insert(changelogEntries);
+
+    if (logErr) console.error("Changelog insert error:", logErr);
+
     console.log(`Purged ${ids.length} cancelled customers: ${cancelled.map(c => c.firmanavn).join(", ")}`);
 
     return new Response(
