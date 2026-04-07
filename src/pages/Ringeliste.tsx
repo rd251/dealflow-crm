@@ -341,7 +341,7 @@ function RingelisterOverview({ onSelect }: { onSelect: (l: Ringelister) => void 
                       <span className="font-medium text-foreground">{contacted}/{total} ({pct}%)</span>
                     </div>
                     <div className="h-1.5 w-full rounded-full bg-secondary overflow-hidden">
-                      <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} />
+                      <div className={cn("h-full rounded-full transition-all", pct < 25 ? "bg-destructive" : pct < 75 ? "bg-amber-500" : "bg-green-500")} style={{ width: `${pct}%` }} />
                     </div>
                   </div>
                 );
