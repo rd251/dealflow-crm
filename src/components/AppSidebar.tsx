@@ -4,6 +4,7 @@ import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/use-auth";
+import { useProfiles } from "@/hooks/use-profiles";
 import NotificationBell from "@/components/NotificationBell";
 import logo from "@/assets/logo-white.svg";
 import { useState } from "react";
@@ -28,7 +29,7 @@ const navItems = [
   { to: "/rapporter", icon: BarChart3, label: "Rapporter" },
 ];
 
-function SidebarNav({ onNavigate, isAdmin }: { onNavigate?: () => void; isAdmin: boolean }) {
+function SidebarNav({ onNavigate, isAdmin, displayName }: { onNavigate?: () => void; isAdmin: boolean; displayName?: string }) {
   const location = useLocation();
   const { signOut, user } = useAuth();
 
@@ -59,7 +60,8 @@ function SidebarNav({ onNavigate, isAdmin }: { onNavigate?: () => void; isAdmin:
       {user && (
         <div className="px-3 pb-2">
           <div className="px-3 py-2">
-            <span className="text-xs text-sidebar-foreground/60 truncate">{user.email}</span>
+            <p className="text-sm font-medium text-sidebar-foreground truncate">{displayName || user.email}</p>
+            {displayName && <span className="text-xs text-sidebar-foreground/60 truncate">{user.email}</span>}
           </div>
           <button
             onClick={() => { signOut(); onNavigate?.(); }}
@@ -117,9 +119,12 @@ function CollapsedSidebarNav({ isAdmin }: { isAdmin: boolean }) {
 
 export default function AppSidebar() {
   const isMobile = useIsMobile();
-  const { isAdmin } = useAuth();
+  const { isAdmin, user } = useAuth();
+  const { profiles } = useProfiles();
   const [open, setOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+
+  const displayName = user ? profiles.find(p => p.user_id === user.id)?.display_name : undefined;
 
   if (isMobile) {
     return (
@@ -138,7 +143,7 @@ export default function AppSidebar() {
             <div className="p-6 pb-4">
               <img src={logo} alt="Snakk CRM" className="h-8 w-auto" />
             </div>
-            <SidebarNav onNavigate={() => setOpen(false)} isAdmin={isAdmin} />
+            <SidebarNav onNavigate={() => setOpen(false)} isAdmin={isAdmin} displayName={displayName} />
             <div className="p-4 text-xs text-sidebar-foreground/50">
               Snakk CRM v2.0
             </div>
@@ -180,7 +185,7 @@ export default function AppSidebar() {
           </Button>
         </div>
       )}
-      {collapsed ? <CollapsedSidebarNav isAdmin={isAdmin} /> : <SidebarNav isAdmin={isAdmin} />}
+      {collapsed ? <CollapsedSidebarNav isAdmin={isAdmin} /> : <SidebarNav isAdmin={isAdmin} displayName={displayName} />}
       {!collapsed && (
         <div className="p-4 text-xs text-sidebar-foreground/50">
           Snakk CRM v2.0
