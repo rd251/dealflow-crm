@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Shield, User, Trash2 } from "lucide-react";
+import { Plus, Shield, User, Trash2, Pencil } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface TeamMember {
@@ -25,6 +25,9 @@ export default function Admin() {
   const [form, setForm] = useState({ email: "", password: "", displayName: "" });
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [editingMember, setEditingMember] = useState<TeamMember | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editLoading, setEditLoading] = useState(false);
 
   const fetchMembers = async () => {
     const { data: profiles } = await supabase.from("profiles").select("user_id, display_name, email");
@@ -78,6 +81,23 @@ export default function Admin() {
     setDeleting(null);
   };
 
+  const handleEditName = async () => {
+    if (!editingMember || !editName.trim()) return;
+    setEditLoading(true);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ display_name: editName.trim() })
+      .eq("user_id", editingMember.user_id);
+    if (error) {
+      toast({ title: "Feil", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Oppdatert", description: `Visningsnavn endret til "${editName.trim()}".` });
+      setEditingMember(null);
+      fetchMembers();
+    }
+    setEditLoading(false);
+  };
+
   if (!isAdmin) {
     return <PageShell title="Ingen tilgang" subtitle="Du har ikke tilgang til denne siden."><div /></PageShell>;
   }
@@ -108,6 +128,27 @@ export default function Admin() {
         </Dialog>
       }
     >
+      {/* Edit display name dialog */}
+      <Dialog open={!!editingMember} onOpenChange={open => { if (!open) setEditingMember(null); }}>
+        <DialogContent className="max-w-[95vw] sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Endre visningsnavn</DialogTitle>
+            <DialogDescription>{editingMember?.email}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <Input
+              placeholder="Nytt visningsnavn"
+              value={editName}
+              onChange={e => setEditName(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter") handleEditName(); }}
+            />
+            <Button onClick={handleEditName} className="w-full" disabled={editLoading || !editName.trim()}>
+              {editLoading ? "Lagrer..." : "Lagre"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <div className="space-y-2">
         {members.map(m => (
           <div key={m.user_id} className="bg-card border rounded-xl p-4 flex items-center gap-3">
@@ -118,6 +159,14 @@ export default function Admin() {
               <p className="font-medium text-sm truncate">{m.display_name}</p>
               <p className="text-xs text-muted-foreground truncate">{m.email}</p>
             </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+              onClick={() => { setEditingMember(m); setEditName(m.display_name); }}
+            >
+              <Pencil className="w-4 h-4" />
+            </Button>
             <Badge
               variant={m.role === "admin" ? "default" : m.role === "viewer" ? "outline" : "secondary"}
               className="text-xs cursor-pointer"
