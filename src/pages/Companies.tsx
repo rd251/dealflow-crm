@@ -21,7 +21,7 @@ import CompanyLogo from "@/components/CompanyLogo";
 import { beregnTotalKontraktsverdi } from "@/data/crm-data";
 import { useNavigate } from "react-router-dom";
 import InlineTaskForm from "@/components/InlineTaskForm";
-import { Selskap, Kundestatus, OnboardingStatus, Kundetilstand, Kanselleringsaarsak, Prosjekt, Integrasjon } from "@/data/crm-data";
+import { Selskap, Kundestatus, OnboardingStatus, Kundetilstand, Kanselleringsaarsak, Prosjekt, ProsjektStatus, Integrasjon } from "@/data/crm-data";
 import { Badge } from "@/components/ui/badge";
 import DataImportDialog from "@/components/DataImportDialog";
 import LastActivityBadge from "@/components/LastActivityBadge";
@@ -65,7 +65,7 @@ export default function Companies() {
   const [lukkedatoTil, setLukkedatoTil] = useState<Date | undefined>(undefined);
   const [newProjectDialog, setNewProjectDialog] = useState<string | null>(null);
   const [projectForm, setProjectForm] = useState({ prosjektnavn: "", integrasjon: "Ingen" as Integrasjon });
-
+  const [editProject, setEditProject] = useState<Prosjekt | null>(null);
   type SortKey = "firmanavn" | "bransje" | "kundestatus" | "live" | "tilstand" | "mrr" | "arr" | "sla" | "oppstart" | "lukkedato" | "sist_aktivitet";
   const [sortKey, setSortKey] = useState<SortKey | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
@@ -645,7 +645,7 @@ export default function Companies() {
                         <div className="space-y-1.5">
                           {selskapProsjekter.map(p => (
                             <div key={p.id} className="flex items-center justify-between p-2 rounded-lg bg-muted/30 hover:bg-muted/50 cursor-pointer transition-colors"
-                              onClick={() => navigate("/prosjekter")}>
+                              onClick={() => setEditProject({ ...p })}>
                               <div>
                                 <div className="text-sm font-medium">{p.prosjektnavn}</div>
                                 <div className="text-[10px] text-muted-foreground">{p.status}{p.forventet_go_live ? ` · Go-live: ${p.forventet_go_live}` : ""}</div>
@@ -723,6 +723,72 @@ export default function Companies() {
               <Rocket className="w-3.5 h-3.5 mr-1.5" />Opprett
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Rediger prosjekt dialog */}
+      <Dialog open={!!editProject} onOpenChange={open => { if (!open) setEditProject(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Rediger prosjekt</DialogTitle>
+            <DialogDescription>Oppdater prosjektdetaljer.</DialogDescription>
+          </DialogHeader>
+          {editProject && (
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="text-xs col-span-2"><span className="text-muted-foreground">Prosjektnavn</span>
+                  <Input value={editProject.prosjektnavn} onChange={e => setEditProject(p => p ? { ...p, prosjektnavn: e.target.value } : p)} className="h-8 text-sm mt-0.5" />
+                </div>
+                <div className="text-xs"><span className="text-muted-foreground">Status</span>
+                  <select className="w-full border rounded px-2 py-1.5 text-sm bg-background mt-0.5"
+                    value={editProject.status} onChange={e => setEditProject(p => p ? { ...p, status: e.target.value as ProsjektStatus } : p)}>
+                    {(["Ny", "I produksjon", "Test med kunde", "Live", "Blokkert"] as ProsjektStatus[]).map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+                <div className="text-xs"><span className="text-muted-foreground">Integrasjon</span>
+                  <select className="w-full border rounded px-2 py-1.5 text-sm bg-background mt-0.5"
+                    value={editProject.integrasjon} onChange={e => setEditProject(p => p ? { ...p, integrasjon: e.target.value as Integrasjon } : p)}>
+                    {(["Ingen", "GastroPlanner", "HubSpot", "Lime", "Salesforce", "API", "Annet"] as Integrasjon[]).map(i => <option key={i} value={i}>{i}</option>)}
+                  </select>
+                </div>
+                <div className="text-xs"><span className="text-muted-foreground">Ansvarlig</span>
+                  <Input value={editProject.ansvarlig} onChange={e => setEditProject(p => p ? { ...p, ansvarlig: e.target.value } : p)} className="h-8 text-sm mt-0.5" />
+                </div>
+                <div className="text-xs"><span className="text-muted-foreground">Startdato</span>
+                  <Input type="date" value={editProject.startdato} onChange={e => setEditProject(p => p ? { ...p, startdato: e.target.value } : p)} className="h-8 text-sm mt-0.5" />
+                </div>
+                <div className="text-xs"><span className="text-muted-foreground">Forventet go-live</span>
+                  <Input type="date" value={editProject.forventet_go_live} onChange={e => setEditProject(p => p ? { ...p, forventet_go_live: e.target.value } : p)} className="h-8 text-sm mt-0.5" />
+                </div>
+                <div className="text-xs"><span className="text-muted-foreground">Go-live dato</span>
+                  <Input type="date" value={editProject.go_live_dato} onChange={e => setEditProject(p => p ? { ...p, go_live_dato: e.target.value } : p)} className="h-8 text-sm mt-0.5" />
+                </div>
+                <div className="text-xs"><span className="text-muted-foreground">Oppstartskostnad</span>
+                  <Input type="number" value={editProject.oppstartskostnad || ""} onChange={e => setEditProject(p => p ? { ...p, oppstartskostnad: Number(e.target.value) } : p)} className="h-8 text-sm mt-0.5" />
+                </div>
+                <div className="text-xs flex items-end gap-2 pb-1">
+                  <span className="text-muted-foreground">Fakturert</span>
+                  <Switch checked={editProject.oppstart_fakturert} onCheckedChange={v => setEditProject(p => p ? { ...p, oppstart_fakturert: v } : p)} />
+                </div>
+                <div className="text-xs flex items-end gap-2 pb-1">
+                  <span className="text-muted-foreground">Betalt</span>
+                  <Switch checked={editProject.oppstart_betalt} onCheckedChange={v => setEditProject(p => p ? { ...p, oppstart_betalt: v } : p)} />
+                </div>
+                <div className="text-xs col-span-2"><span className="text-muted-foreground">Notater</span>
+                  <Textarea value={editProject.notater} onChange={e => setEditProject(p => p ? { ...p, notater: e.target.value } : p)} rows={3} className="text-sm mt-0.5" />
+                </div>
+              </div>
+              <div className="flex justify-end gap-2 mt-2">
+                <Button variant="outline" onClick={() => setEditProject(null)}>Avbryt</Button>
+                <Button onClick={() => {
+                  if (!editProject) return;
+                  updateProsjekter(prev => prev.map(p => p.id === editProject.id ? editProject : p));
+                  setEditProject(null);
+                  toast.success("Prosjekt oppdatert");
+                }}>Lagre endringer</Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </PageShell>
