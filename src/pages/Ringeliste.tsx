@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from "react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
 import PageShell from "@/components/PageShell";
 import { Button } from "@/components/ui/button";
@@ -335,15 +336,28 @@ function RingelisterOverview({ onSelect }: { onSelect: (l: Ringelister) => void 
                 const contacted = (l.status_counts?.["Ringt"] || 0) + (l.status_counts?.["Møte booket"] || 0) + (l.status_counts?.["Callback"] || 0) + (l.status_counts?.["Ikke aktuelt"] || 0) + (l.status_counts?.["Ikke svar"] || 0);
                 const pct = Math.round((contacted / total) * 100);
                 return (
-                  <div className="mb-2">
-                    <div className="flex items-center justify-between text-[11px] mb-1">
-                      <span className="text-muted-foreground">Ringt</span>
-                      <span className="font-medium text-foreground">{contacted}/{total} ({pct}%)</span>
-                    </div>
-                    <div className="h-1.5 w-full rounded-full bg-secondary overflow-hidden">
-                      <div className={cn("h-full rounded-full transition-all", pct < 25 ? "bg-destructive" : pct < 75 ? "bg-amber-500" : "bg-green-500")} style={{ width: `${pct}%` }} />
-                    </div>
-                  </div>
+                  <TooltipProvider delayDuration={200}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="mb-2 cursor-default">
+                          <div className="flex items-center justify-between text-[11px] mb-1">
+                            <span className="text-muted-foreground">Ringt</span>
+                            <span className="font-medium text-foreground">{contacted}/{total} ({pct}%)</span>
+                          </div>
+                          <div className="h-1.5 w-full rounded-full bg-secondary overflow-hidden">
+                            <div className={cn("h-full rounded-full transition-all", pct < 25 ? "bg-destructive" : pct < 75 ? "bg-amber-500" : "bg-green-500")} style={{ width: `${pct}%` }} />
+                          </div>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" className="text-xs space-y-0.5 max-w-[200px]">
+                        <p className="font-semibold mb-1">Statusfordeling</p>
+                        {Object.entries(l.status_counts || {}).sort(([a], [b]) => a.localeCompare(b)).map(([s, c]) => (
+                          <p key={s} className="flex justify-between gap-3"><span>{s}</span><span className="font-medium">{c}</span></p>
+                        ))}
+                        <p className="flex justify-between gap-3 border-t border-border pt-1 mt-1"><span>Totalt</span><span className="font-medium">{total}</span></p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 );
               })()}
               <div className="flex items-center justify-between text-xs text-muted-foreground">
