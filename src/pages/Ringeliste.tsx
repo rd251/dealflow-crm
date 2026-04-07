@@ -14,7 +14,7 @@ import {
   Phone, Upload, Plus, Search, ArrowLeft,
   PhoneCall, CalendarPlus, X, Send, RotateCcw,
   FileSpreadsheet, UserPlus, Crown, TrendingUp,
-  BarChart3, Users, Layers, FolderOpen, Trash2, Pencil
+  BarChart3, Users, Layers, FolderOpen, Trash2, Pencil, Mail
 } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
@@ -22,6 +22,7 @@ import {
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import * as XLSX from "xlsx";
+import SendEmailDialog from "@/components/SendEmailDialog";
 
 // ---------- types ----------
 interface Ringelister {
