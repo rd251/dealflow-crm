@@ -18,7 +18,7 @@ interface SendEmailDialogProps {
   defaultSubject?: string;
   /** Context for AI generation */
   context: {
-    entityType: "lead" | "salgsmulighet";
+    entityType: "lead" | "salgsmulighet" | "ringeliste";
     entityId: string;
     selskapNavn: string;
     kontaktperson?: string;

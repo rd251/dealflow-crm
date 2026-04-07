@@ -14,7 +14,7 @@ import {
   Phone, Upload, Plus, Search, ArrowLeft,
   PhoneCall, CalendarPlus, X, Send, RotateCcw,
   FileSpreadsheet, UserPlus, Crown, TrendingUp,
-  BarChart3, Users, Layers, FolderOpen, Trash2, Pencil
+  BarChart3, Users, Layers, FolderOpen, Trash2, Pencil, Mail
 } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
@@ -22,6 +22,7 @@ import {
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import * as XLSX from "xlsx";
+import SendEmailDialog from "@/components/SendEmailDialog";
 
 // ---------- types ----------
 interface Ringelister {
@@ -484,6 +485,8 @@ function RingelisteContacts({ liste, onBack }: { liste: Ringelister; onBack: () 
   const [selected, setSelected] = useState<RingelisteItem | null>(null);
   const [callNotes, setCallNotes] = useState("");
   const [saving, setSaving] = useState(false);
+  const [emailOpen, setEmailOpen] = useState(false);
+  const [emailTarget, setEmailTarget] = useState<RingelisteItem | null>(null);
   const [importOpen, setImportOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [statsOpen, setStatsOpen] = useState(false);
@@ -683,9 +686,16 @@ function RingelisteContacts({ liste, onBack }: { liste: Ringelister; onBack: () 
                   </td>
                   <td className="px-3 py-2.5 text-muted-foreground">{item.ansvarlig}</td>
                   <td className="px-3 py-2.5">
-                    <Button size="sm" variant="ghost" className="h-7 px-2" onClick={e => { e.stopPropagation(); setSelected(item); setCallNotes(""); }}>
-                      <PhoneCall className="w-4 h-4" />
-                    </Button>
+                    <div className="flex gap-0.5">
+                      <Button size="sm" variant="ghost" className="h-7 px-2" onClick={e => { e.stopPropagation(); setSelected(item); setCallNotes(""); }}>
+                        <PhoneCall className="w-4 h-4" />
+                      </Button>
+                      {item.e_post && (
+                        <Button size="sm" variant="ghost" className="h-7 px-2" onClick={e => { e.stopPropagation(); setEmailTarget(item); setEmailOpen(true); }}>
+                          <Mail className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -774,6 +784,12 @@ function RingelisteContacts({ liste, onBack }: { liste: Ringelister; onBack: () 
                     ))}
                   </div>
                 </div>
+
+                {selected.e_post && (
+                  <Button size="sm" variant="outline" className="w-full gap-2" onClick={() => { setEmailTarget(selected); setEmailOpen(true); }}>
+                    <Mail className="w-4 h-4" />Send e-post til {selected.navn.split(" ")[0]}
+                  </Button>
+                )}
 
                 {selected.status === "Booket møte" && (
                   <div className="flex gap-2 pt-2 border-t">
@@ -891,6 +907,27 @@ function RingelisteContacts({ liste, onBack }: { liste: Ringelister; onBack: () 
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Send Email Dialog */}
+      {emailTarget && (
+        <SendEmailDialog
+          open={emailOpen}
+          onOpenChange={(o) => { setEmailOpen(o); if (!o) setEmailTarget(null); }}
+          defaultTo={emailTarget.e_post}
+          defaultSubject={`Oppfølging – ${emailTarget.selskap || emailTarget.navn}`}
+          context={{
+            entityType: "ringeliste",
+            entityId: emailTarget.id,
+            selskapNavn: emailTarget.selskap || emailTarget.navn,
+            kontaktperson: emailTarget.navn,
+          }}
+          onSent={async () => {
+            const now = new Date().toISOString();
+            await supabase.from("ringeliste").update({ utfall: "Send info", sist_kontaktet: now }).eq("id", emailTarget.id);
+            fetchItems();
+          }}
+        />
+      )}
     </>
   );
 }
