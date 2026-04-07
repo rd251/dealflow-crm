@@ -552,6 +552,7 @@ export default function CompanyProfile() {
             selskapId: selskap.id,
           }}
         />
+      )}
       {/* Nytt prosjekt dialog */}
       <Dialog open={newProjectOpen} onOpenChange={setNewProjectOpen}>
         <DialogContent className="max-w-md">
