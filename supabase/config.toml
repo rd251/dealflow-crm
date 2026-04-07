@@ -25,3 +25,5 @@ project_id = "tchmujgzcklwgptocbno"
     verify_jwt = false
   [functions.crm-stats-api]
     verify_jwt = false
+  [functions.purge-cancelled-customers]
+    verify_jwt = false
