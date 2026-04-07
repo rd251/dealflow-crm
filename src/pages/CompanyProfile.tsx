@@ -466,15 +466,21 @@ export default function CompanyProfile() {
             </div>
 
             <div className="bg-card border rounded-xl p-4 sm:p-5 space-y-3">
-              <h2 className="font-semibold text-base flex items-center gap-2">
-                <FileText className="w-4 h-4" /> Prosjekter ({selskapProsjekter.length})
-              </h2>
+              <div className="flex items-center justify-between">
+                <h2 className="font-semibold text-base flex items-center gap-2">
+                  <FileText className="w-4 h-4" /> Prosjekter ({selskapProsjekter.length})
+                </h2>
+                <Button variant="ghost" size="sm" onClick={() => { setProjectForm({ prosjektnavn: selskap.firmanavn, integrasjon: "Ingen" }); setNewProjectOpen(true); }}>
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </div>
               {selskapProsjekter.length === 0 ? (
                 <p className="text-xs text-muted-foreground">Ingen prosjekter</p>
               ) : (
                 <div className="space-y-2">
                   {selskapProsjekter.map(p => (
-                    <Link to={`/prosjekter`} key={p.id} className="block p-3 bg-muted/50 rounded-lg hover:bg-muted/80 transition-colors">
+                    <div key={p.id} className="block p-3 bg-muted/50 rounded-lg hover:bg-muted/80 transition-colors cursor-pointer"
+                      onClick={() => setEditProject({ ...p })}>
                       <div className="flex items-center justify-between mb-1">
                         <p className="font-medium text-sm truncate">{p.prosjektnavn}</p>
                         <Badge variant="outline" className="text-[10px] shrink-0">{p.status}</Badge>
@@ -485,7 +491,7 @@ export default function CompanyProfile() {
                         <span>Oppstart: {p.oppstartskostnad.toLocaleString("no-NO")} kr</span>
                         <span>Integrasjon: {p.integrasjon}</span>
                       </div>
-                    </Link>
+                    </div>
                   ))}
                 </div>
               )}
