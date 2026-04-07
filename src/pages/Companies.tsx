@@ -20,7 +20,7 @@ import CompanyLogo from "@/components/CompanyLogo";
 import { beregnTotalKontraktsverdi } from "@/data/crm-data";
 import { useNavigate } from "react-router-dom";
 import InlineTaskForm from "@/components/InlineTaskForm";
-import { Selskap, Kundestatus, OnboardingStatus, Kundetilstand, Kanselleringsaarsak } from "@/data/crm-data";
+import { Selskap, Kundestatus, OnboardingStatus, Kundetilstand, Kanselleringsaarsak, Prosjekt, Integrasjon } from "@/data/crm-data";
 import { Badge } from "@/components/ui/badge";
 import DataImportDialog from "@/components/DataImportDialog";
 import LastActivityBadge from "@/components/LastActivityBadge";
