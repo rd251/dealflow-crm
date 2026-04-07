@@ -360,6 +360,9 @@ function RingelisterOverview({ onSelect }: { onSelect: (l: Ringelister) => void 
                           <p key={s} className="flex justify-between gap-3"><span>{s}</span><span className="font-medium">{c}</span></p>
                         ))}
                         <p className="flex justify-between gap-3 border-t border-border pt-1 mt-1"><span>Totalt</span><span className="font-medium">{total}</span></p>
+                        {(l.emails_sent || 0) > 0 && (
+                          <p className="flex justify-between gap-3"><span>📧 E-poster sendt</span><span className="font-medium">{l.emails_sent}</span></p>
+                        )}
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
