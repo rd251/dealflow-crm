@@ -51,7 +51,13 @@ export default function Prosjekter() {
   const currentP = selectedP ? prosjekter.find(p => p.id === selectedP.id) || selectedP : null;
 
   return (
-    <PageShell title="Prosjekter" subtitle={`${prosjekter.length} prosjekter`}>
+    <PageShell title="Prosjekter" subtitle={`${prosjekter.length} prosjekter`}
+      actions={
+        <Button size="sm" onClick={() => { setForm({ prosjektnavn: "", selskap_id: selskaper[0]?.id || "", integrasjon: "Ingen" }); setNewOpen(true); }}>
+          <Plus className="w-4 h-4 mr-1" />{!isMobile && "Nytt prosjekt"}
+        </Button>
+      }
+    >
       {prosjekter.length === 0 ? (
         <div className="text-center py-20 text-muted-foreground">
           <Rocket className="w-10 h-10 mx-auto mb-3 opacity-40" />
