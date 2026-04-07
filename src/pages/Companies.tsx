@@ -422,17 +422,29 @@ export default function Companies() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-muted/50">
-                <th className="text-left px-4 py-3 font-medium">Firma</th>
-                <th className="text-left px-4 py-3 font-medium">Bransje</th>
-                <th className="text-left px-4 py-3 font-medium">Kundestatus</th>
-                <th className="text-left px-4 py-3 font-medium">Live</th>
-                <th className="text-left px-4 py-3 font-medium">Tilstand</th>
-                <th className="text-right px-4 py-3 font-medium">MRR</th>
-                <th className="text-right px-4 py-3 font-medium">ARR</th>
-                <th className="text-right px-4 py-3 font-medium">SLA</th>
-                <th className="text-right px-4 py-3 font-medium">Oppstart</th>
-                <th className="text-left px-4 py-3 font-medium">Lukkedato</th>
-                <th className="text-left px-4 py-3 font-medium">Sist aktivitet</th>
+                {([
+                  ["firmanavn", "Firma", "left"],
+                  ["bransje", "Bransje", "left"],
+                  ["kundestatus", "Kundestatus", "left"],
+                  ["live", "Live", "left"],
+                  ["tilstand", "Tilstand", "left"],
+                  ["mrr", "MRR", "right"],
+                  ["arr", "ARR", "right"],
+                  ["sla", "SLA", "right"],
+                  ["oppstart", "Oppstart", "right"],
+                  ["lukkedato", "Lukkedato", "left"],
+                  ["sist_aktivitet", "Sist aktivitet", "left"],
+                ] as [SortKey, string, string][]).map(([key, label, align]) => (
+                  <th
+                    key={key}
+                    className={`text-${align} px-4 py-3 font-medium cursor-pointer select-none hover:bg-muted/80 transition-colors`}
+                    onClick={() => toggleSort(key)}
+                  >
+                    <span className={`inline-flex items-center gap-1 ${align === "right" ? "justify-end w-full" : ""}`}>
+                      {label} <SortIcon col={key} />
+                    </span>
+                  </th>
+                ))}
                 {canEdit && <th className="text-right px-4 py-3 font-medium">Handlinger</th>}
               </tr>
             </thead>
