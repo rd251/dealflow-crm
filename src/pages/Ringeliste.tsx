@@ -35,6 +35,7 @@ interface Ringelister {
   notater: string;
   created_at: string;
   contact_count?: number;
+  status_counts?: Record<string, number>;
 }
 
 interface RingelisteItem {
@@ -200,14 +201,20 @@ function RingelisterOverview({ onSelect }: { onSelect: (l: Ringelister) => void 
     const { data: listsData } = await supabase.from("ringelister").select("*").order("created_at", { ascending: false });
     if (!listsData) { setLoading(false); return; }
 
-    // Get contact counts per list
-    const { data: contacts } = await supabase.from("ringeliste").select("ringeliste_id");
+    // Get contact counts and status counts per list
+    const { data: contacts } = await supabase.from("ringeliste").select("ringeliste_id, status");
     const counts: Record<string, number> = {};
+    const statusCounts: Record<string, Record<string, number>> = {};
     contacts?.forEach(c => {
-      if (c.ringeliste_id) counts[c.ringeliste_id] = (counts[c.ringeliste_id] || 0) + 1;
+      if (c.ringeliste_id) {
+        counts[c.ringeliste_id] = (counts[c.ringeliste_id] || 0) + 1;
+        if (!statusCounts[c.ringeliste_id]) statusCounts[c.ringeliste_id] = {};
+        const s = c.status || "Ikke ringt";
+        statusCounts[c.ringeliste_id][s] = (statusCounts[c.ringeliste_id][s] || 0) + 1;
+      }
     });
 
-    setLister((listsData as any[]).map(l => ({ ...l, contact_count: counts[l.id] || 0 })));
+    setLister((listsData as any[]).map(l => ({ ...l, contact_count: counts[l.id] || 0, status_counts: statusCounts[l.id] || {} })));
     setLoading(false);
   };
 
@@ -303,6 +310,25 @@ function RingelisterOverview({ onSelect }: { onSelect: (l: Ringelister) => void 
                 {l.partnertype_segment && <Badge variant="outline" className="text-[10px]">{l.partnertype_segment}</Badge>}
                 {l.underkilde && <Badge variant="outline" className="text-[10px] bg-muted/50">{l.underkilde}</Badge>}
               </div>
+              {/* Status breakdown */}
+              {l.status_counts && Object.keys(l.status_counts).length > 0 && (
+                <div className="flex flex-wrap gap-x-3 gap-y-1 mb-2 text-[11px]">
+                  {Object.entries(l.status_counts).sort(([a], [b]) => a.localeCompare(b)).map(([status, count]) => (
+                    <span key={status} className="flex items-center gap-1">
+                      <span className={cn("w-1.5 h-1.5 rounded-full", 
+                        status === "Ringt" ? "bg-green-500" :
+                        status === "Ikke ringt" ? "bg-muted-foreground/40" :
+                        status === "Ikke svar" ? "bg-amber-500" :
+                        status === "Callback" ? "bg-blue-500" :
+                        status === "Møte booket" ? "bg-primary" :
+                        status === "Ikke aktuelt" ? "bg-destructive/60" :
+                        "bg-muted-foreground/30"
+                      )} />
+                      <span className="text-muted-foreground">{status}: <span className="font-medium text-foreground">{count}</span></span>
+                    </span>
+                  ))}
+                </div>
+              )}
               <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <span>{l.contact_count || 0} kontakter</span>
                 {l.ansvarlig && <span>{l.ansvarlig}</span>}
