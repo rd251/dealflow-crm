@@ -235,9 +235,21 @@ async function syncForUser(supabase: any, connection: any) {
       .maybeSingle();
 
     if (existing) {
+      // Fetch current record to avoid overwriting manually-set links
+      const { data: current } = await supabase
+        .from('aktiviteter')
+        .select('kontakt_id, selskap_id')
+        .eq('id', existing.id)
+        .maybeSingle();
+
+      // Don't overwrite kontakt_id / selskap_id if already set
+      const updateData = { ...aktivitetData };
+      if (current?.kontakt_id) updateData.kontakt_id = current.kontakt_id;
+      if (current?.selskap_id) updateData.selskap_id = current.selskap_id;
+
       await supabase
         .from('aktiviteter')
-        .update(aktivitetData)
+        .update(updateData)
         .eq('id', existing.id);
     } else {
       await supabase
