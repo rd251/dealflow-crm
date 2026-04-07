@@ -458,6 +458,14 @@ export default function Salgsmuligheter() {
                                 <span className="truncate">{getProfileName(deal.ansvarlig)}</span>
                               </div>
                             )}
+
+                            {/* 6. Kilde */}
+                            {deal.kilde && (
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <div className="w-5 h-5 flex items-center justify-center shrink-0">📣</div>
+                                <span className="truncate">{deal.kilde}</span>
+                              </div>
+                            )}
                           </div>
 
                           {/* 6. Neste steg */}
