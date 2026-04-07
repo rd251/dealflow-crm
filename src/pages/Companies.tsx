@@ -48,7 +48,7 @@ export default function Companies() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { canEdit } = useAuth();
-  const { selskaper, kontakter, salgsmuligheter, prosjekter, updateSelskaper, kansellerSelskap, slettSelskap, konverterSelskapTilPartner, angreTilSalgsmulighet, generateId } = useCrmStore();
+  const { selskaper, kontakter, salgsmuligheter, prosjekter, updateSelskaper, updateProsjekter, kansellerSelskap, slettSelskap, konverterSelskapTilPartner, angreTilSalgsmulighet, generateId } = useCrmStore();
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
@@ -62,6 +62,8 @@ export default function Companies() {
   const [form, setForm] = useState({ firmanavn: "", bransje: "", kundeansvarlig: "" });
   const [lukkedatoFra, setLukkedatoFra] = useState<Date | undefined>(undefined);
   const [lukkedatoTil, setLukkedatoTil] = useState<Date | undefined>(undefined);
+  const [newProjectDialog, setNewProjectDialog] = useState<string | null>(null);
+  const [projectForm, setProjectForm] = useState({ prosjektnavn: "", integrasjon: "Ingen" as Integrasjon });
 
   type SortKey = "firmanavn" | "bransje" | "kundestatus" | "live" | "tilstand" | "mrr" | "arr" | "sla" | "oppstart" | "lukkedato" | "sist_aktivitet";
   const [sortKey, setSortKey] = useState<SortKey | null>(null);
