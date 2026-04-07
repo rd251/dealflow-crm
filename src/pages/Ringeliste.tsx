@@ -35,6 +35,7 @@ interface Ringelister {
   notater: string;
   created_at: string;
   contact_count?: number;
+  status_counts?: Record<string, number>;
 }
 
 interface RingelisteItem {
