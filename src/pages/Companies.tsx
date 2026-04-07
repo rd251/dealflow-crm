@@ -63,6 +63,24 @@ export default function Companies() {
   const [lukkedatoFra, setLukkedatoFra] = useState<Date | undefined>(undefined);
   const [lukkedatoTil, setLukkedatoTil] = useState<Date | undefined>(undefined);
 
+  type SortKey = "firmanavn" | "bransje" | "kundestatus" | "live" | "tilstand" | "mrr" | "arr" | "sla" | "oppstart" | "lukkedato" | "sist_aktivitet";
+  const [sortKey, setSortKey] = useState<SortKey | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+
+  const toggleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDir(d => d === "asc" ? "desc" : "asc");
+    } else {
+      setSortKey(key);
+      setSortDir("asc");
+    }
+  };
+
+  const SortIcon = ({ col }: { col: SortKey }) => {
+    if (sortKey !== col) return <ChevronsUpDown className="w-3 h-3 opacity-40" />;
+    return sortDir === "asc" ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />;
+  };
+
   // Only show companies that have an active agreement (not "Ikke kunde")
   const filtered = selskaper.filter(s => {
     if (!s.firmanavn.toLowerCase().includes(search.toLowerCase())) return false;
