@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useCrmStore } from "@/hooks/use-crm-store";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { beregnTotalKontraktsverdi, beregnVektetPipeline } from "@/data/crm-data";
+import { beregnTotalKontraktsverdi, beregnVektetPipeline, Prosjekt, ProsjektStatus, Integrasjon } from "@/data/crm-data";
 import StatCard from "@/components/StatCard";
 import InlineTaskForm from "@/components/InlineTaskForm";
 import ActivityLog from "@/components/ActivityLog";
@@ -21,6 +21,7 @@ import SendEmailDialog from "@/components/SendEmailDialog";
 import CompanyLogo from "@/components/CompanyLogo";
 import SelskapInnsikt from "@/components/SelskapInnsikt";
 import { Kundestatus, OnboardingStatus, Kundetilstand, SalgsmulighetStatus, Kontakt } from "@/data/crm-data";
+import { Rocket } from "lucide-react";
 import { toast } from "sonner";
 
 const kundestatuser: Kundestatus[] = ["Ikke kunde", "Pilot", "Live", "Pause", "Kansellert"];
@@ -56,7 +57,7 @@ export default function CompanyProfile() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const {
-    selskaper, updateSelskaper, kontakter, updateKontakter, salgsmuligheter, updateSalgsmuligheter, prosjekter, oppgaver, generateId,
+    selskaper, updateSelskaper, kontakter, updateKontakter, salgsmuligheter, updateSalgsmuligheter, prosjekter, updateProsjekter, oppgaver, generateId,
   } = useCrmStore();
 
   const [showAddContact, setShowAddContact] = useState(false);
@@ -68,7 +69,9 @@ export default function CompanyProfile() {
   const [deleting, setDeleting] = useState(false);
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
   const [emailContact, setEmailContact] = useState<Kontakt | null>(null);
-
+  const [newProjectOpen, setNewProjectOpen] = useState(false);
+  const [projectForm, setProjectForm] = useState({ prosjektnavn: "", integrasjon: "Ingen" as Integrasjon });
+  const [editProject, setEditProject] = useState<Prosjekt | null>(null);
   const API_URL = `${import.meta.env.VITE_SUPABASE_URL}/rest/v1`;
   const API_HEADERS: HeadersInit = {
     apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
