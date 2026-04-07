@@ -37,6 +37,7 @@ interface Ringelister {
   created_at: string;
   contact_count?: number;
   status_counts?: Record<string, number>;
+  emails_sent?: number;
 }
 
 interface RingelisteItem {
@@ -203,19 +204,23 @@ function RingelisterOverview({ onSelect }: { onSelect: (l: Ringelister) => void 
     if (!listsData) { setLoading(false); return; }
 
     // Get contact counts and status counts per list
-    const { data: contacts } = await supabase.from("ringeliste").select("ringeliste_id, status");
+    const { data: contacts } = await supabase.from("ringeliste").select("ringeliste_id, status, utfall");
     const counts: Record<string, number> = {};
     const statusCounts: Record<string, Record<string, number>> = {};
+    const emailCounts: Record<string, number> = {};
     contacts?.forEach(c => {
       if (c.ringeliste_id) {
         counts[c.ringeliste_id] = (counts[c.ringeliste_id] || 0) + 1;
         if (!statusCounts[c.ringeliste_id]) statusCounts[c.ringeliste_id] = {};
         const s = c.status || "Ikke ringt";
         statusCounts[c.ringeliste_id][s] = (statusCounts[c.ringeliste_id][s] || 0) + 1;
+        if (c.utfall === "Send info") {
+          emailCounts[c.ringeliste_id] = (emailCounts[c.ringeliste_id] || 0) + 1;
+        }
       }
     });
 
-    setLister((listsData as any[]).map(l => ({ ...l, contact_count: counts[l.id] || 0, status_counts: statusCounts[l.id] || {} })));
+    setLister((listsData as any[]).map(l => ({ ...l, contact_count: counts[l.id] || 0, status_counts: statusCounts[l.id] || {}, emails_sent: emailCounts[l.id] || 0 })));
     setLoading(false);
   };
 
@@ -355,6 +360,9 @@ function RingelisterOverview({ onSelect }: { onSelect: (l: Ringelister) => void 
                           <p key={s} className="flex justify-between gap-3"><span>{s}</span><span className="font-medium">{c}</span></p>
                         ))}
                         <p className="flex justify-between gap-3 border-t border-border pt-1 mt-1"><span>Totalt</span><span className="font-medium">{total}</span></p>
+                        {(l.emails_sent || 0) > 0 && (
+                          <p className="flex justify-between gap-3"><span>📧 E-poster sendt</span><span className="font-medium">{l.emails_sent}</span></p>
+                        )}
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -362,7 +370,15 @@ function RingelisterOverview({ onSelect }: { onSelect: (l: Ringelister) => void 
               })()}
               <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <span>{l.contact_count || 0} kontakter</span>
-                {l.ansvarlig && <span>{l.ansvarlig}</span>}
+                <div className="flex items-center gap-3">
+                  {(l.emails_sent || 0) > 0 && (
+                    <span className="flex items-center gap-1">
+                      <Send className="w-3 h-3" />
+                      {l.emails_sent} e-post
+                    </span>
+                  )}
+                  {l.ansvarlig && <span>{l.ansvarlig}</span>}
+                </div>
               </div>
             </div>
           ))}
