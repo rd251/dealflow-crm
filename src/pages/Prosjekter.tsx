@@ -152,6 +152,61 @@ export default function Prosjekter() {
           ),
         } : undefined}
       />
+      {/* Nytt prosjekt dialog */}
+      <Dialog open={newOpen} onOpenChange={setNewOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Opprett nytt prosjekt</DialogTitle>
+            <DialogDescription>Velg selskap og fyll inn prosjektdetaljer.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="text-xs"><span className="text-muted-foreground">Prosjektnavn</span>
+              <Input value={form.prosjektnavn} onChange={e => setForm(f => ({ ...f, prosjektnavn: e.target.value }))} className="h-8 text-sm mt-0.5" placeholder="Prosjektnavn" />
+            </div>
+            <div className="text-xs"><span className="text-muted-foreground">Selskap</span>
+              <select className="w-full border rounded px-2 py-1.5 text-sm bg-background mt-0.5"
+                value={form.selskap_id} onChange={e => setForm(f => ({ ...f, selskap_id: e.target.value }))}>
+                <option value="">Velg selskap...</option>
+                {selskaper.map(s => <option key={s.id} value={s.id}>{s.firmanavn}</option>)}
+              </select>
+            </div>
+            <div className="text-xs"><span className="text-muted-foreground">Integrasjon</span>
+              <select className="w-full border rounded px-2 py-1.5 text-sm bg-background mt-0.5"
+                value={form.integrasjon} onChange={e => setForm(f => ({ ...f, integrasjon: e.target.value as Integrasjon }))}>
+                {(["Ingen", "GastroPlanner", "HubSpot", "Lime", "Salesforce", "API", "Annet"] as Integrasjon[]).map(i => <option key={i} value={i}>{i}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 mt-2">
+            <Button variant="outline" onClick={() => setNewOpen(false)}>Avbryt</Button>
+            <Button disabled={!form.prosjektnavn.trim() || !form.selskap_id} onClick={() => {
+              const selskap = selskaper.find(s => s.id === form.selskap_id);
+              const newP: Prosjekt = {
+                id: generateId("p", prosjekter),
+                prosjektnavn: form.prosjektnavn.trim(),
+                selskap_id: form.selskap_id,
+                salgsmulighet_id: "",
+                ansvarlig: selskap?.kundeansvarlig || "",
+                status: "Ny",
+                startdato: new Date().toISOString().split("T")[0],
+                forventet_go_live: "",
+                go_live_dato: "",
+                oppstartskostnad: 0,
+                oppstart_fakturert: false,
+                oppstart_faktura_dato: "",
+                oppstart_betalt: false,
+                integrasjon: form.integrasjon,
+                notater: "",
+              };
+              updateProsjekter(prev => [...prev, newP]);
+              setNewOpen(false);
+              toast.success("Prosjekt opprettet");
+            }}>
+              <Rocket className="w-3.5 h-3.5 mr-1.5" />Opprett
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </PageShell>
   );
 }
