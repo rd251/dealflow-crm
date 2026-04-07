@@ -484,6 +484,8 @@ function RingelisteContacts({ liste, onBack }: { liste: Ringelister; onBack: () 
   const [selected, setSelected] = useState<RingelisteItem | null>(null);
   const [callNotes, setCallNotes] = useState("");
   const [saving, setSaving] = useState(false);
+  const [emailOpen, setEmailOpen] = useState(false);
+  const [emailTarget, setEmailTarget] = useState<RingelisteItem | null>(null);
   const [importOpen, setImportOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [statsOpen, setStatsOpen] = useState(false);
