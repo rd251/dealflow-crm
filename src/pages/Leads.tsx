@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import DetailPanelShell, { DetailSection, DetailField, DetailDivider } from "@/components/DetailPanelShell";
 import EntityCalendarTab from "@/components/EntityCalendarTab";
-import { Plus, Search, ArrowRightCircle, Trash2, Users2, Upload, Lock, Mail } from "lucide-react";
+import { Plus, Search, ArrowRightCircle, Trash2, Users2, Upload, Lock, Mail, ArrowUp, ArrowDown, ChevronsUpDown } from "lucide-react";
 import SendEmailDialog from "@/components/SendEmailDialog";
 import SelskapInnsikt from "@/components/SelskapInnsikt";
 import { Lead, LeadStatus, LeadKilde } from "@/data/crm-data";
@@ -49,6 +49,24 @@ export default function Leads() {
   const [form, setForm] = useState<Partial<Lead>>({ firmanavn: "", kontaktperson: "", e_post: "", telefon: "", kilde: "Nettside", status: "Ny", ansvarlig: "", neste_steg: "", notater: "", rolle_i_firma: "", use_case: "" });
   const [filterUtenOppfolging, setFilterUtenOppfolging] = useState(false);
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+
+  type LeadSortKey = "firmanavn" | "kontaktperson" | "kilde" | "status" | "neste_steg" | "sist_aktivitet" | "opprettet_dato";
+  const [sortKey, setSortKey] = useState<LeadSortKey | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+
+  const toggleSort = (key: LeadSortKey) => {
+    if (sortKey === key) {
+      setSortDir(d => d === "asc" ? "desc" : "asc");
+    } else {
+      setSortKey(key);
+      setSortDir("asc");
+    }
+  };
+
+  const SortIcon = ({ col }: { col: LeadSortKey }) => {
+    if (sortKey !== col) return <ChevronsUpDown className="w-3 h-3 opacity-40" />;
+    return sortDir === "asc" ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />;
+  };
 
   // Pick up filter from query param
   useEffect(() => {
