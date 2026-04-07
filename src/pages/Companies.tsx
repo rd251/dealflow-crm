@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from "sonner";
 import { format } from "date-fns";
 import PageShell from "@/components/PageShell";
 import { useCrmStore } from "@/hooks/use-crm-store";
@@ -15,12 +16,12 @@ import { Switch } from "@/components/ui/switch";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
-import { Plus, Search, Building2, ChevronRight, CalendarIcon, X, Upload, Trash2, ArrowRightLeft, Undo2, DollarSign, TrendingUp, Target, PieChart, Users, BarChart3, ArrowDownRight, ArrowUpRight, Trophy, XCircle, UserMinus, AlertTriangle, ArrowUp, ArrowDown, ChevronsUpDown } from "lucide-react";
+import { Plus, Search, Building2, ChevronRight, CalendarIcon, X, Upload, Trash2, ArrowRightLeft, Undo2, DollarSign, TrendingUp, Target, PieChart, Users, BarChart3, ArrowDownRight, ArrowUpRight, Trophy, XCircle, UserMinus, AlertTriangle, ArrowUp, ArrowDown, ChevronsUpDown, Rocket, FileText } from "lucide-react";
 import CompanyLogo from "@/components/CompanyLogo";
 import { beregnTotalKontraktsverdi } from "@/data/crm-data";
 import { useNavigate } from "react-router-dom";
 import InlineTaskForm from "@/components/InlineTaskForm";
-import { Selskap, Kundestatus, OnboardingStatus, Kundetilstand, Kanselleringsaarsak } from "@/data/crm-data";
+import { Selskap, Kundestatus, OnboardingStatus, Kundetilstand, Kanselleringsaarsak, Prosjekt, Integrasjon } from "@/data/crm-data";
 import { Badge } from "@/components/ui/badge";
 import DataImportDialog from "@/components/DataImportDialog";
 import LastActivityBadge from "@/components/LastActivityBadge";
@@ -48,7 +49,7 @@ export default function Companies() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { canEdit } = useAuth();
-  const { selskaper, kontakter, salgsmuligheter, prosjekter, updateSelskaper, kansellerSelskap, slettSelskap, konverterSelskapTilPartner, angreTilSalgsmulighet, generateId } = useCrmStore();
+  const { selskaper, kontakter, salgsmuligheter, prosjekter, updateSelskaper, updateProsjekter, kansellerSelskap, slettSelskap, konverterSelskapTilPartner, angreTilSalgsmulighet, generateId } = useCrmStore();
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
@@ -62,6 +63,8 @@ export default function Companies() {
   const [form, setForm] = useState({ firmanavn: "", bransje: "", kundeansvarlig: "" });
   const [lukkedatoFra, setLukkedatoFra] = useState<Date | undefined>(undefined);
   const [lukkedatoTil, setLukkedatoTil] = useState<Date | undefined>(undefined);
+  const [newProjectDialog, setNewProjectDialog] = useState<string | null>(null);
+  const [projectForm, setProjectForm] = useState({ prosjektnavn: "", integrasjon: "Ingen" as Integrasjon });
 
   type SortKey = "firmanavn" | "bransje" | "kundestatus" | "live" | "tilstand" | "mrr" | "arr" | "sla" | "oppstart" | "lukkedato" | "sist_aktivitet";
   const [sortKey, setSortKey] = useState<SortKey | null>(null);
@@ -614,6 +617,47 @@ export default function Companies() {
                     {currentSelskap.kanselleringsnotat && <p className="mt-1">{currentSelskap.kanselleringsnotat}</p>}
                   </div>
                 )}
+
+                <div className="border-t" />
+
+                {/* Prosjekter */}
+                {(() => {
+                  const selskapProsjekter = prosjekter.filter(p => p.selskap_id === currentSelskap.id);
+                  return (
+                    <div className="rounded-lg border p-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2 text-sm font-medium">
+                          <FileText className="w-4 h-4 text-muted-foreground" />
+                          Prosjekter ({selskapProsjekter.length})
+                        </div>
+                        {canEdit && (
+                          <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => {
+                            setProjectForm({ prosjektnavn: currentSelskap.firmanavn, integrasjon: "Ingen" });
+                            setNewProjectDialog(currentSelskap.id);
+                          }}>
+                            <Plus className="w-3 h-3" /> Nytt prosjekt
+                          </Button>
+                        )}
+                      </div>
+                      {selskapProsjekter.length === 0 ? (
+                        <p className="text-xs text-muted-foreground">Ingen prosjekter</p>
+                      ) : (
+                        <div className="space-y-1.5">
+                          {selskapProsjekter.map(p => (
+                            <div key={p.id} className="flex items-center justify-between p-2 rounded-lg bg-muted/30 hover:bg-muted/50 cursor-pointer transition-colors"
+                              onClick={() => navigate("/prosjekter")}>
+                              <div>
+                                <div className="text-sm font-medium">{p.prosjektnavn}</div>
+                                <div className="text-[10px] text-muted-foreground">{p.status}{p.forventet_go_live ? ` · Go-live: ${p.forventet_go_live}` : ""}</div>
+                              </div>
+                              <Badge variant="secondary" className="text-[10px]">{p.status}</Badge>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
             ),
             interaksjoner: (
@@ -630,6 +674,57 @@ export default function Companies() {
           };
         })() : undefined}
       />
+
+      {/* Nytt prosjekt dialog */}
+      <Dialog open={!!newProjectDialog} onOpenChange={open => { if (!open) setNewProjectDialog(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Opprett nytt prosjekt</DialogTitle>
+            <DialogDescription>Legg til et prosjekt for dette selskapet.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="text-xs"><span className="text-muted-foreground">Prosjektnavn</span>
+              <Input value={projectForm.prosjektnavn} onChange={e => setProjectForm(f => ({ ...f, prosjektnavn: e.target.value }))} className="h-8 text-sm mt-0.5" placeholder="Prosjektnavn" />
+            </div>
+            <div className="text-xs"><span className="text-muted-foreground">Integrasjon</span>
+              <select className="w-full border rounded px-2 py-1.5 text-sm bg-background mt-0.5"
+                value={projectForm.integrasjon} onChange={e => setProjectForm(f => ({ ...f, integrasjon: e.target.value as Integrasjon }))}>
+                {(["Ingen", "GastroPlanner", "HubSpot", "Lime", "Salesforce", "API", "Annet"] as Integrasjon[]).map(i => <option key={i} value={i}>{i}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 mt-2">
+            <Button variant="outline" onClick={() => setNewProjectDialog(null)}>Avbryt</Button>
+            <Button disabled={!projectForm.prosjektnavn.trim()} onClick={() => {
+              if (!newProjectDialog || !projectForm.prosjektnavn.trim()) return;
+              const today = new Date().toISOString().split("T")[0];
+              const selskap = selskaper.find(s => s.id === newProjectDialog);
+              const newP: Prosjekt = {
+                id: generateId("p", prosjekter),
+                prosjektnavn: projectForm.prosjektnavn.trim(),
+                selskap_id: newProjectDialog,
+                salgsmulighet_id: "",
+                ansvarlig: selskap?.kundeansvarlig || "",
+                status: "Ny",
+                startdato: today,
+                forventet_go_live: "",
+                go_live_dato: "",
+                oppstartskostnad: 0,
+                oppstart_fakturert: false,
+                oppstart_faktura_dato: "",
+                oppstart_betalt: false,
+                integrasjon: projectForm.integrasjon,
+                notater: "",
+              };
+              updateProsjekter(prev => [...prev, newP]);
+              setNewProjectDialog(null);
+              toast.success("Prosjekt opprettet");
+            }}>
+              <Rocket className="w-3.5 h-3.5 mr-1.5" />Opprett
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </PageShell>
   );
 }
