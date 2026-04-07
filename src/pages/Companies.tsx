@@ -15,7 +15,7 @@ import { Switch } from "@/components/ui/switch";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
-import { Plus, Search, Building2, ChevronRight, CalendarIcon, X, Upload, Trash2, ArrowRightLeft, Undo2, DollarSign, TrendingUp, Target, PieChart, Users, BarChart3, ArrowDownRight, ArrowUpRight, Trophy, XCircle, UserMinus, AlertTriangle } from "lucide-react";
+import { Plus, Search, Building2, ChevronRight, CalendarIcon, X, Upload, Trash2, ArrowRightLeft, Undo2, DollarSign, TrendingUp, Target, PieChart, Users, BarChart3, ArrowDownRight, ArrowUpRight, Trophy, XCircle, UserMinus, AlertTriangle, ArrowUp, ArrowDown, ChevronsUpDown } from "lucide-react";
 import CompanyLogo from "@/components/CompanyLogo";
 import { beregnTotalKontraktsverdi } from "@/data/crm-data";
 import { useNavigate } from "react-router-dom";
@@ -63,10 +63,27 @@ export default function Companies() {
   const [lukkedatoFra, setLukkedatoFra] = useState<Date | undefined>(undefined);
   const [lukkedatoTil, setLukkedatoTil] = useState<Date | undefined>(undefined);
 
+  type SortKey = "firmanavn" | "bransje" | "kundestatus" | "live" | "tilstand" | "mrr" | "arr" | "sla" | "oppstart" | "lukkedato" | "sist_aktivitet";
+  const [sortKey, setSortKey] = useState<SortKey | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+
+  const toggleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDir(d => d === "asc" ? "desc" : "asc");
+    } else {
+      setSortKey(key);
+      setSortDir("asc");
+    }
+  };
+
+  const SortIcon = ({ col }: { col: SortKey }) => {
+    if (sortKey !== col) return <ChevronsUpDown className="w-3 h-3 opacity-40" />;
+    return sortDir === "asc" ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />;
+  };
+
   // Only show companies that have an active agreement (not "Ikke kunde")
-  const filtered = selskaper.filter(s => {
+  const filteredUnsorted = selskaper.filter(s => {
     if (!s.firmanavn.toLowerCase().includes(search.toLowerCase())) return false;
-    // Kundeforhold only shows companies with a customer relationship
     if (s.kundestatus === "Ikke kunde") return false;
     if (lukkedatoFra || lukkedatoTil) {
       if (!s.lukkedato) return false;
@@ -75,6 +92,26 @@ export default function Companies() {
       if (lukkedatoTil && ld > lukkedatoTil) return false;
     }
     return true;
+  });
+
+  const filtered = [...filteredUnsorted].sort((a, b) => {
+    if (!sortKey) return 0;
+    const dir = sortDir === "asc" ? 1 : -1;
+    const slaFor = (s: Selskap) => salgsmuligheter.filter(sm => sm.selskap_id === s.id && sm.status !== "Tapt").reduce((sum, sm) => sum + (sm.sla || 0), 0);
+    switch (sortKey) {
+      case "firmanavn": return dir * a.firmanavn.localeCompare(b.firmanavn, "nb");
+      case "bransje": return dir * (a.bransje || "").localeCompare(b.bransje || "", "nb");
+      case "kundestatus": return dir * a.kundestatus.localeCompare(b.kundestatus, "nb");
+      case "live": return dir * (Number(a.live_status) - Number(b.live_status));
+      case "tilstand": return dir * (a.kundetilstand || "").localeCompare(b.kundetilstand || "", "nb");
+      case "mrr": return dir * (a.mrr - b.mrr);
+      case "arr": return dir * (a.arr - b.arr);
+      case "sla": return dir * (slaFor(a) - slaFor(b));
+      case "oppstart": return dir * (a.oppstartskostnad - b.oppstartskostnad);
+      case "lukkedato": return dir * (a.lukkedato || "").localeCompare(b.lukkedato || "");
+      case "sist_aktivitet": return dir * (a.sist_aktivitet || "").localeCompare(b.sist_aktivitet || "");
+      default: return 0;
+    }
   });
 
   const addSelskap = () => {
@@ -385,17 +422,29 @@ export default function Companies() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-muted/50">
-                <th className="text-left px-4 py-3 font-medium">Firma</th>
-                <th className="text-left px-4 py-3 font-medium">Bransje</th>
-                <th className="text-left px-4 py-3 font-medium">Kundestatus</th>
-                <th className="text-left px-4 py-3 font-medium">Live</th>
-                <th className="text-left px-4 py-3 font-medium">Tilstand</th>
-                <th className="text-right px-4 py-3 font-medium">MRR</th>
-                <th className="text-right px-4 py-3 font-medium">ARR</th>
-                <th className="text-right px-4 py-3 font-medium">SLA</th>
-                <th className="text-right px-4 py-3 font-medium">Oppstart</th>
-                <th className="text-left px-4 py-3 font-medium">Lukkedato</th>
-                <th className="text-left px-4 py-3 font-medium">Sist aktivitet</th>
+                {([
+                  ["firmanavn", "Firma", "left"],
+                  ["bransje", "Bransje", "left"],
+                  ["kundestatus", "Kundestatus", "left"],
+                  ["live", "Live", "left"],
+                  ["tilstand", "Tilstand", "left"],
+                  ["mrr", "MRR", "right"],
+                  ["arr", "ARR", "right"],
+                  ["sla", "SLA", "right"],
+                  ["oppstart", "Oppstart", "right"],
+                  ["lukkedato", "Lukkedato", "left"],
+                  ["sist_aktivitet", "Sist aktivitet", "left"],
+                ] as [SortKey, string, string][]).map(([key, label, align]) => (
+                  <th
+                    key={key}
+                    className={`text-${align} px-4 py-3 font-medium cursor-pointer select-none hover:bg-muted/80 transition-colors`}
+                    onClick={() => toggleSort(key)}
+                  >
+                    <span className={`inline-flex items-center gap-1 ${align === "right" ? "justify-end w-full" : ""}`}>
+                      {label} <SortIcon col={key} />
+                    </span>
+                  </th>
+                ))}
                 {canEdit && <th className="text-right px-4 py-3 font-medium">Handlinger</th>}
               </tr>
             </thead>
