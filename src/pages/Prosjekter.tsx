@@ -29,9 +29,11 @@ const statusColors: Record<ProsjektStatus, string> = {
 export default function Prosjekter() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const { prosjekter, selskaper, updateProsjekter, settProsjektLive } = useCrmStore();
+  const { prosjekter, selskaper, updateProsjekter, settProsjektLive, generateId } = useCrmStore();
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [selectedP, setSelectedP] = useState<Prosjekt | null>(null);
+  const [newOpen, setNewOpen] = useState(false);
+  const [form, setForm] = useState({ prosjektnavn: "", selskap_id: "", integrasjon: "Ingen" as Integrasjon });
 
   const getSelskapNavn = (id: string) => selskaper.find(s => s.id === id)?.firmanavn || "–";
 
