@@ -656,6 +656,17 @@ export default function Salgsmuligheter() {
                       ))}
                     </select>
                   </DetailField>
+                  <DetailField label="Kilde">
+                    <select className="w-full border rounded-lg px-2 py-1 text-xs bg-background h-7"
+                      value={currentSm.kilde || ""}
+                      disabled={!canEdit}
+                      onChange={e => updateField("kilde", e.target.value)}>
+                      <option value="">Ikke satt</option>
+                      {["Nettside","LinkedIn","Partner","Referanse","Kald outbound","E-post","Telefon","Annet","Organisk","Facebook ads","Instantly kald e-post","Google ads"].map(k => (
+                        <option key={k} value={k}>{k}</option>
+                      ))}
+                    </select>
+                  </DetailField>
                 </div>
 
                 {/* Kontakt – compact */}
