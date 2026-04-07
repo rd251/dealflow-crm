@@ -907,6 +907,27 @@ function RingelisteContacts({ liste, onBack }: { liste: Ringelister; onBack: () 
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Send Email Dialog */}
+      {emailTarget && (
+        <SendEmailDialog
+          open={emailOpen}
+          onOpenChange={(o) => { setEmailOpen(o); if (!o) setEmailTarget(null); }}
+          defaultTo={emailTarget.e_post}
+          defaultSubject={`Oppfølging – ${emailTarget.selskap || emailTarget.navn}`}
+          context={{
+            entityType: "ringeliste",
+            entityId: emailTarget.id,
+            selskapNavn: emailTarget.selskap || emailTarget.navn,
+            kontaktperson: emailTarget.navn,
+          }}
+          onSent={async () => {
+            const now = new Date().toISOString();
+            await supabase.from("ringeliste").update({ utfall: "Send info", sist_kontaktet: now }).eq("id", emailTarget.id);
+            fetchItems();
+          }}
+        />
+      )}
     </>
   );
 }
