@@ -204,19 +204,23 @@ function RingelisterOverview({ onSelect }: { onSelect: (l: Ringelister) => void 
     if (!listsData) { setLoading(false); return; }
 
     // Get contact counts and status counts per list
-    const { data: contacts } = await supabase.from("ringeliste").select("ringeliste_id, status");
+    const { data: contacts } = await supabase.from("ringeliste").select("ringeliste_id, status, utfall");
     const counts: Record<string, number> = {};
     const statusCounts: Record<string, Record<string, number>> = {};
+    const emailCounts: Record<string, number> = {};
     contacts?.forEach(c => {
       if (c.ringeliste_id) {
         counts[c.ringeliste_id] = (counts[c.ringeliste_id] || 0) + 1;
         if (!statusCounts[c.ringeliste_id]) statusCounts[c.ringeliste_id] = {};
         const s = c.status || "Ikke ringt";
         statusCounts[c.ringeliste_id][s] = (statusCounts[c.ringeliste_id][s] || 0) + 1;
+        if (c.utfall === "Send info") {
+          emailCounts[c.ringeliste_id] = (emailCounts[c.ringeliste_id] || 0) + 1;
+        }
       }
     });
 
-    setLister((listsData as any[]).map(l => ({ ...l, contact_count: counts[l.id] || 0, status_counts: statusCounts[l.id] || {} })));
+    setLister((listsData as any[]).map(l => ({ ...l, contact_count: counts[l.id] || 0, status_counts: statusCounts[l.id] || {}, emails_sent: emailCounts[l.id] || 0 })));
     setLoading(false);
   };
 
