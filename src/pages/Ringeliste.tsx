@@ -785,6 +785,12 @@ function RingelisteContacts({ liste, onBack }: { liste: Ringelister; onBack: () 
                   </div>
                 </div>
 
+                {selected.e_post && (
+                  <Button size="sm" variant="outline" className="w-full gap-2" onClick={() => { setEmailTarget(selected); setEmailOpen(true); }}>
+                    <Mail className="w-4 h-4" />Send e-post til {selected.navn.split(" ")[0]}
+                  </Button>
+                )}
+
                 {selected.status === "Booket møte" && (
                   <div className="flex gap-2 pt-2 border-t">
                     <Button size="sm" variant="outline" className="flex-1" onClick={() => { setConvertTarget("salg"); setConvertOpen(true); }}>
