@@ -700,7 +700,7 @@ export default function Companies() {
               const today = new Date().toISOString().split("T")[0];
               const selskap = selskaper.find(s => s.id === newProjectDialog);
               const newP: Prosjekt = {
-                id: generateId(),
+                id: generateId("p", prosjekter),
                 prosjektnavn: projectForm.prosjektnavn.trim(),
                 selskap_id: newProjectDialog,
                 salgsmulighet_id: "",
