@@ -1,0 +1,1 @@
+ALTER TYPE lead_kilde ADD VALUE 'Kasoleads';

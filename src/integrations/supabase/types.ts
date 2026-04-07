@@ -1352,6 +1352,7 @@ export type Database = {
         | "Facebook ads"
         | "Instantly kald e-post"
         | "Google ads"
+        | "Kasoleads"
       lead_status:
         | "Ny"
         | "Kontaktet"
@@ -1574,6 +1575,7 @@ export const Constants = {
         "Facebook ads",
         "Instantly kald e-post",
         "Google ads",
+        "Kasoleads",
       ],
       lead_status: [
         "Ny",
