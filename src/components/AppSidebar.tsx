@@ -143,7 +143,7 @@ export default function AppSidebar() {
             <div className="p-6 pb-4">
               <img src={logo} alt="Snakk CRM" className="h-8 w-auto" />
             </div>
-            <SidebarNav onNavigate={() => setOpen(false)} isAdmin={isAdmin} />
+            <SidebarNav onNavigate={() => setOpen(false)} isAdmin={isAdmin} displayName={displayName} />
             <div className="p-4 text-xs text-sidebar-foreground/50">
               Snakk CRM v2.0
             </div>
@@ -185,7 +185,7 @@ export default function AppSidebar() {
           </Button>
         </div>
       )}
-      {collapsed ? <CollapsedSidebarNav isAdmin={isAdmin} /> : <SidebarNav isAdmin={isAdmin} />}
+      {collapsed ? <CollapsedSidebarNav isAdmin={isAdmin} /> : <SidebarNav isAdmin={isAdmin} displayName={displayName} />}
       {!collapsed && (
         <div className="p-4 text-xs text-sidebar-foreground/50">
           Snakk CRM v2.0
