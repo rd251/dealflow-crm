@@ -201,14 +201,20 @@ function RingelisterOverview({ onSelect }: { onSelect: (l: Ringelister) => void 
     const { data: listsData } = await supabase.from("ringelister").select("*").order("created_at", { ascending: false });
     if (!listsData) { setLoading(false); return; }
 
-    // Get contact counts per list
-    const { data: contacts } = await supabase.from("ringeliste").select("ringeliste_id");
+    // Get contact counts and status counts per list
+    const { data: contacts } = await supabase.from("ringeliste").select("ringeliste_id, status");
     const counts: Record<string, number> = {};
+    const statusCounts: Record<string, Record<string, number>> = {};
     contacts?.forEach(c => {
-      if (c.ringeliste_id) counts[c.ringeliste_id] = (counts[c.ringeliste_id] || 0) + 1;
+      if (c.ringeliste_id) {
+        counts[c.ringeliste_id] = (counts[c.ringeliste_id] || 0) + 1;
+        if (!statusCounts[c.ringeliste_id]) statusCounts[c.ringeliste_id] = {};
+        const s = c.status || "Ikke ringt";
+        statusCounts[c.ringeliste_id][s] = (statusCounts[c.ringeliste_id][s] || 0) + 1;
+      }
     });
 
-    setLister((listsData as any[]).map(l => ({ ...l, contact_count: counts[l.id] || 0 })));
+    setLister((listsData as any[]).map(l => ({ ...l, contact_count: counts[l.id] || 0, status_counts: statusCounts[l.id] || {} })));
     setLoading(false);
   };
 
