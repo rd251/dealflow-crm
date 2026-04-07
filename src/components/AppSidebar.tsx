@@ -4,6 +4,7 @@ import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/use-auth";
+import { useProfiles } from "@/hooks/use-profiles";
 import NotificationBell from "@/components/NotificationBell";
 import logo from "@/assets/logo-white.svg";
 import { useState } from "react";
@@ -28,7 +29,7 @@ const navItems = [
   { to: "/rapporter", icon: BarChart3, label: "Rapporter" },
 ];
 
-function SidebarNav({ onNavigate, isAdmin }: { onNavigate?: () => void; isAdmin: boolean }) {
+function SidebarNav({ onNavigate, isAdmin, displayName }: { onNavigate?: () => void; isAdmin: boolean; displayName?: string }) {
   const location = useLocation();
   const { signOut, user } = useAuth();
 
@@ -59,7 +60,8 @@ function SidebarNav({ onNavigate, isAdmin }: { onNavigate?: () => void; isAdmin:
       {user && (
         <div className="px-3 pb-2">
           <div className="px-3 py-2">
-            <span className="text-xs text-sidebar-foreground/60 truncate">{user.email}</span>
+            <p className="text-sm font-medium text-sidebar-foreground truncate">{displayName || user.email}</p>
+            {displayName && <span className="text-xs text-sidebar-foreground/60 truncate">{user.email}</span>}
           </div>
           <button
             onClick={() => { signOut(); onNavigate?.(); }}
