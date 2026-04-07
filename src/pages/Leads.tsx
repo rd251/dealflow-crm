@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import DetailPanelShell, { DetailSection, DetailField, DetailDivider } from "@/components/DetailPanelShell";
 import EntityCalendarTab from "@/components/EntityCalendarTab";
-import { Plus, Search, ArrowRightCircle, Trash2, Users2, Upload, Lock, Mail } from "lucide-react";
+import { Plus, Search, ArrowRightCircle, Trash2, Users2, Upload, Lock, Mail, ArrowUp, ArrowDown, ChevronsUpDown } from "lucide-react";
 import SendEmailDialog from "@/components/SendEmailDialog";
 import SelskapInnsikt from "@/components/SelskapInnsikt";
 import { Lead, LeadStatus, LeadKilde } from "@/data/crm-data";
@@ -50,6 +50,24 @@ export default function Leads() {
   const [filterUtenOppfolging, setFilterUtenOppfolging] = useState(false);
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
 
+  type LeadSortKey = "firmanavn" | "kontaktperson" | "kilde" | "status" | "neste_steg" | "sist_aktivitet" | "opprettet_dato";
+  const [sortKey, setSortKey] = useState<LeadSortKey | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+
+  const toggleSort = (key: LeadSortKey) => {
+    if (sortKey === key) {
+      setSortDir(d => d === "asc" ? "desc" : "asc");
+    } else {
+      setSortKey(key);
+      setSortDir("asc");
+    }
+  };
+
+  const SortIcon = ({ col }: { col: LeadSortKey }) => {
+    if (sortKey !== col) return <ChevronsUpDown className="w-3 h-3 opacity-40" />;
+    return sortDir === "asc" ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />;
+  };
+
   // Pick up filter from query param
   useEffect(() => {
     if (searchParams.get("filter") === "uten-oppfolging") {
@@ -76,7 +94,7 @@ export default function Leads() {
     return "";
   };
 
-  const filtered = leads.filter(l => {
+  const filteredUnsorted = leads.filter(l => {
     // Hide converted leads to avoid duplication with salgsmuligheter/partnere
     if (isConverted(l)) return false;
     if (filterUtenOppfolging) {
@@ -88,6 +106,21 @@ export default function Leads() {
       l.firmanavn.toLowerCase().includes(search.toLowerCase()) ||
       l.kontaktperson.toLowerCase().includes(search.toLowerCase())
     );
+  });
+
+  const filtered = [...filteredUnsorted].sort((a, b) => {
+    if (!sortKey) return 0;
+    const dir = sortDir === "asc" ? 1 : -1;
+    switch (sortKey) {
+      case "firmanavn": return dir * a.firmanavn.localeCompare(b.firmanavn, "nb");
+      case "kontaktperson": return dir * a.kontaktperson.localeCompare(b.kontaktperson, "nb");
+      case "kilde": return dir * (a.kilde || "").localeCompare(b.kilde || "", "nb");
+      case "status": return dir * a.status.localeCompare(b.status, "nb");
+      case "neste_steg": return dir * (a.neste_steg || "").localeCompare(b.neste_steg || "", "nb");
+      case "sist_aktivitet": return dir * (a.sist_aktivitet || "").localeCompare(b.sist_aktivitet || "");
+      case "opprettet_dato": return dir * (a.opprettet_dato || "").localeCompare(b.opprettet_dato || "");
+      default: return 0;
+    }
   });
 
   const addLead = () => {
@@ -268,13 +301,25 @@ export default function Leads() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b bg-muted/50">
-                    <th className="text-left px-4 py-3 font-medium">Firma</th>
-                    <th className="text-left px-4 py-3 font-medium">Kontaktperson</th>
-                    <th className="text-left px-4 py-3 font-medium">Kilde</th>
-                    <th className="text-left px-4 py-3 font-medium">Status</th>
-                    <th className="text-left px-4 py-3 font-medium">Neste steg</th>
-                    <th className="text-left px-4 py-3 font-medium">Sist aktivitet</th>
-                    <th className="text-left px-4 py-3 font-medium">Opprettet</th>
+                    {([
+                      ["firmanavn", "Firma"],
+                      ["kontaktperson", "Kontaktperson"],
+                      ["kilde", "Kilde"],
+                      ["status", "Status"],
+                      ["neste_steg", "Neste steg"],
+                      ["sist_aktivitet", "Sist aktivitet"],
+                      ["opprettet_dato", "Opprettet"],
+                    ] as [LeadSortKey, string][]).map(([key, label]) => (
+                      <th
+                        key={key}
+                        className="text-left px-4 py-3 font-medium cursor-pointer select-none hover:bg-muted/80 transition-colors"
+                        onClick={() => toggleSort(key)}
+                      >
+                        <span className="inline-flex items-center gap-1">
+                          {label} <SortIcon col={key} />
+                        </span>
+                      </th>
+                    ))}
                     <th className="text-right px-4 py-3 font-medium">Handling</th>
                   </tr>
                 </thead>
