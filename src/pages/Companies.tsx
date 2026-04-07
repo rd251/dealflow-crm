@@ -673,6 +673,57 @@ export default function Companies() {
           };
         })() : undefined}
       />
+
+      {/* Nytt prosjekt dialog */}
+      <Dialog open={!!newProjectDialog} onOpenChange={open => { if (!open) setNewProjectDialog(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Opprett nytt prosjekt</DialogTitle>
+            <DialogDescription>Legg til et prosjekt for dette selskapet.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="text-xs"><span className="text-muted-foreground">Prosjektnavn</span>
+              <Input value={projectForm.prosjektnavn} onChange={e => setProjectForm(f => ({ ...f, prosjektnavn: e.target.value }))} className="h-8 text-sm mt-0.5" placeholder="Prosjektnavn" />
+            </div>
+            <div className="text-xs"><span className="text-muted-foreground">Integrasjon</span>
+              <select className="w-full border rounded px-2 py-1.5 text-sm bg-background mt-0.5"
+                value={projectForm.integrasjon} onChange={e => setProjectForm(f => ({ ...f, integrasjon: e.target.value as Integrasjon }))}>
+                {(["Ingen", "GastroPlanner", "HubSpot", "Lime", "Salesforce", "API", "Annet"] as Integrasjon[]).map(i => <option key={i} value={i}>{i}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 mt-2">
+            <Button variant="outline" onClick={() => setNewProjectDialog(null)}>Avbryt</Button>
+            <Button disabled={!projectForm.prosjektnavn.trim()} onClick={() => {
+              if (!newProjectDialog || !projectForm.prosjektnavn.trim()) return;
+              const today = new Date().toISOString().split("T")[0];
+              const selskap = selskaper.find(s => s.id === newProjectDialog);
+              const newP: Prosjekt = {
+                id: generateId(),
+                prosjektnavn: projectForm.prosjektnavn.trim(),
+                selskap_id: newProjectDialog,
+                salgsmulighet_id: "",
+                ansvarlig: selskap?.kundeansvarlig || "",
+                status: "Ny",
+                startdato: today,
+                forventet_go_live: "",
+                go_live_dato: "",
+                oppstartskostnad: 0,
+                oppstart_fakturert: false,
+                oppstart_faktura_dato: "",
+                oppstart_betalt: false,
+                integrasjon: projectForm.integrasjon,
+                notater: "",
+              };
+              updateProsjekter(prev => [...prev, newP]);
+              setNewProjectDialog(null);
+              toast.success("Prosjekt opprettet");
+            }}>
+              <Rocket className="w-3.5 h-3.5 mr-1.5" />Opprett
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </PageShell>
   );
 }
