@@ -1,0 +1,1 @@
+DELETE FROM crm_changelog WHERE entity_name = 'Boiler room' AND entity_type = 'møte' AND event_type = 'linked';
