@@ -645,7 +645,7 @@ export default function Companies() {
                         <div className="space-y-1.5">
                           {selskapProsjekter.map(p => (
                             <div key={p.id} className="flex items-center justify-between p-2 rounded-lg bg-muted/30 hover:bg-muted/50 cursor-pointer transition-colors"
-                              onClick={() => navigate("/prosjekter")}>
+                              onClick={() => setEditProject({ ...p })}>
                               <div>
                                 <div className="text-sm font-medium">{p.prosjektnavn}</div>
                                 <div className="text-[10px] text-muted-foreground">{p.status}{p.forventet_go_live ? ` · Go-live: ${p.forventet_go_live}` : ""}</div>
