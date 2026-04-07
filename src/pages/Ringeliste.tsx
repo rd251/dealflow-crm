@@ -336,11 +336,10 @@ function RingelisterOverview({ onSelect }: { onSelect: (l: Ringelister) => void 
                 const contacted = (l.status_counts?.["Ringt"] || 0) + (l.status_counts?.["Møte booket"] || 0) + (l.status_counts?.["Callback"] || 0) + (l.status_counts?.["Ikke aktuelt"] || 0) + (l.status_counts?.["Ikke svar"] || 0);
                 const pct = Math.round((contacted / total) * 100);
                 return (
-                  <div className="mb-2">
                   <TooltipProvider delayDuration={200}>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <div>
+                        <div className="mb-2 cursor-default">
                           <div className="flex items-center justify-between text-[11px] mb-1">
                             <span className="text-muted-foreground">Ringt</span>
                             <span className="font-medium text-foreground">{contacted}/{total} ({pct}%)</span>
