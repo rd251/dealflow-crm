@@ -367,7 +367,15 @@ function RingelisterOverview({ onSelect }: { onSelect: (l: Ringelister) => void 
               })()}
               <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <span>{l.contact_count || 0} kontakter</span>
-                {l.ansvarlig && <span>{l.ansvarlig}</span>}
+                <div className="flex items-center gap-3">
+                  {(l.emails_sent || 0) > 0 && (
+                    <span className="flex items-center gap-1">
+                      <Send className="w-3 h-3" />
+                      {l.emails_sent} e-post
+                    </span>
+                  )}
+                  {l.ansvarlig && <span>{l.ansvarlig}</span>}
+                </div>
               </div>
             </div>
           ))}
