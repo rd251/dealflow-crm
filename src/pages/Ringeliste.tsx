@@ -329,6 +329,23 @@ function RingelisterOverview({ onSelect }: { onSelect: (l: Ringelister) => void 
                   ))}
                 </div>
               )}
+              {/* Progress bar */}
+              {(l.contact_count || 0) > 0 && (() => {
+                const total = l.contact_count || 0;
+                const contacted = (l.status_counts?.["Ringt"] || 0) + (l.status_counts?.["Møte booket"] || 0) + (l.status_counts?.["Callback"] || 0) + (l.status_counts?.["Ikke aktuelt"] || 0) + (l.status_counts?.["Ikke svar"] || 0);
+                const pct = Math.round((contacted / total) * 100);
+                return (
+                  <div className="mb-2">
+                    <div className="flex items-center justify-between text-[11px] mb-1">
+                      <span className="text-muted-foreground">Ringt</span>
+                      <span className="font-medium text-foreground">{contacted}/{total} ({pct}%)</span>
+                    </div>
+                    <div className="h-1.5 w-full rounded-full bg-secondary overflow-hidden">
+                      <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} />
+                    </div>
+                  </div>
+                );
+              })()}
               <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <span>{l.contact_count || 0} kontakter</span>
                 {l.ansvarlig && <span>{l.ansvarlig}</span>}
