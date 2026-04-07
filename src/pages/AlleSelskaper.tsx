@@ -5,8 +5,8 @@ import { useCrmStore } from "@/hooks/use-crm-store";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Building2, ChevronRight } from "lucide-react";
-import { Kundestatus } from "@/data/crm-data";
+import { Search, ChevronRight, ArrowUp, ArrowDown, ChevronsUpDown } from "lucide-react";
+import { Kundestatus, Selskap } from "@/data/crm-data";
 import CompanyLogo from "@/components/CompanyLogo";
 
 const kundestatusColors: Record<Kundestatus, string> = {
@@ -17,16 +17,47 @@ const kundestatusColors: Record<Kundestatus, string> = {
   "Kansellert": "bg-destructive/10 text-destructive",
 };
 
+type SortKey = "firmanavn" | "bransje" | "kundestatus" | "kundeansvarlig" | "sist_aktivitet";
+
 export default function AlleSelskaper() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { selskaper, kontakter } = useCrmStore();
   const [search, setSearch] = useState("");
+  const [sortKey, setSortKey] = useState<SortKey | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
 
-  const filtered = selskaper.filter(s =>
+  const toggleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDir(d => d === "asc" ? "desc" : "asc");
+    } else {
+      setSortKey(key);
+      setSortDir("asc");
+    }
+  };
+
+  const SortIcon = ({ col }: { col: SortKey }) => {
+    if (sortKey !== col) return <ChevronsUpDown className="w-3 h-3 opacity-40" />;
+    return sortDir === "asc" ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />;
+  };
+
+  const filteredUnsorted = selskaper.filter(s =>
     s.firmanavn.toLowerCase().includes(search.toLowerCase()) ||
     (s.bransje || "").toLowerCase().includes(search.toLowerCase())
   );
+
+  const filtered = [...filteredUnsorted].sort((a, b) => {
+    if (!sortKey) return 0;
+    const dir = sortDir === "asc" ? 1 : -1;
+    switch (sortKey) {
+      case "firmanavn": return dir * a.firmanavn.localeCompare(b.firmanavn, "nb");
+      case "bransje": return dir * (a.bransje || "").localeCompare(b.bransje || "", "nb");
+      case "kundestatus": return dir * a.kundestatus.localeCompare(b.kundestatus, "nb");
+      case "kundeansvarlig": return dir * (a.kundeansvarlig || "").localeCompare(b.kundeansvarlig || "", "nb");
+      case "sist_aktivitet": return dir * (a.sist_aktivitet || "").localeCompare(b.sist_aktivitet || "");
+      default: return 0;
+    }
+  });
 
   return (
     <PageShell title="Selskaper" subtitle="Alle selskaper i CRM-et">
@@ -75,11 +106,23 @@ export default function AlleSelskaper() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-muted/30">
-                <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Selskap</th>
-                <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Bransje</th>
-                <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Status</th>
-                <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Ansvarlig</th>
-                <th className="px-4 py-3 text-left font-semibold text-muted-foreground">Sist aktivitet</th>
+                {([
+                  ["firmanavn", "Selskap"],
+                  ["bransje", "Bransje"],
+                  ["kundestatus", "Status"],
+                  ["kundeansvarlig", "Ansvarlig"],
+                  ["sist_aktivitet", "Sist aktivitet"],
+                ] as [SortKey, string][]).map(([key, label]) => (
+                  <th
+                    key={key}
+                    className="px-4 py-3 text-left font-semibold text-muted-foreground cursor-pointer select-none hover:bg-muted/80 transition-colors"
+                    onClick={() => toggleSort(key)}
+                  >
+                    <span className="inline-flex items-center gap-1">
+                      {label} <SortIcon col={key} />
+                    </span>
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
