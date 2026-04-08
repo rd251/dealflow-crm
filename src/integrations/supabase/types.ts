@@ -1047,6 +1047,39 @@ export type Database = {
           },
         ]
       }
+      selskap_dokumenter: {
+        Row: {
+          created_at: string
+          fil_navn: string
+          fil_sti: string
+          fil_type: string
+          id: string
+          opplastet_av: string
+          opplastet_av_user_id: string | null
+          selskap_id: string
+        }
+        Insert: {
+          created_at?: string
+          fil_navn: string
+          fil_sti: string
+          fil_type?: string
+          id?: string
+          opplastet_av?: string
+          opplastet_av_user_id?: string | null
+          selskap_id: string
+        }
+        Update: {
+          created_at?: string
+          fil_navn?: string
+          fil_sti?: string
+          fil_type?: string
+          id?: string
+          opplastet_av?: string
+          opplastet_av_user_id?: string | null
+          selskap_id?: string
+        }
+        Relationships: []
+      }
       selskap_innsikt: {
         Row: {
           beskrivelse: string | null
