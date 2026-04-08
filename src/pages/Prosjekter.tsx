@@ -16,10 +16,11 @@ import ActivityLog from "@/components/ActivityLog";
 import { Prosjekt, ProsjektStatus, Integrasjon } from "@/data/crm-data";
 import { toast } from "sonner";
 
-const statuses: ProsjektStatus[] = ["Ny", "I produksjon", "Test med kunde", "Live", "Blokkert"];
+const statuses: ProsjektStatus[] = ["Ny", "Skjema mottatt", "I produksjon", "Test med kunde", "Live", "Blokkert"];
 
 const statusColors: Record<ProsjektStatus, string> = {
   "Ny": "bg-stage-new-lead",
+  "Skjema mottatt": "bg-blue-400",
   "I produksjon": "bg-stage-contacted",
   "Test med kunde": "bg-stage-demo",
   "Live": "bg-stage-won",
