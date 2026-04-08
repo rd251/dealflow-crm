@@ -578,6 +578,15 @@ export default function Salgsmuligheter() {
           </div>
         </TabsContent>
 
+        <TabsContent value="awaiting">
+          <DealList deals={awaitingSignature} getSelskapNavn={getSelskapNavn} onSelect={setSelectedSm} label="Venter på signering" onNavigateSelskap={id => navigate(`/selskaper/${id}`)} isMobile={isMobile} showKontraktStatus />
+        </TabsContent>
+        <TabsContent value="overdue">
+          <DealList deals={overdueDeals} getSelskapNavn={getSelskapNavn} onSelect={setSelectedSm} label="Forfalt lukkedato" onNavigateSelskap={id => navigate(`/selskaper/${id}`)} isMobile={isMobile} showLukkedato />
+        </TabsContent>
+        <TabsContent value="inactive">
+          <DealList deals={inactiveDeals} getSelskapNavn={getSelskapNavn} onSelect={setSelectedSm} label="Inaktive deals (>7 dager)" onNavigateSelskap={id => navigate(`/selskaper/${id}`)} isMobile={isMobile} />
+        </TabsContent>
         <TabsContent value="won">
           <DealList deals={wonThisMonth} getSelskapNavn={getSelskapNavn} onSelect={setSelectedSm} label="Vunnet denne måneden" onNavigateSelskap={id => navigate(`/selskaper/${id}`)} isMobile={isMobile} />
         </TabsContent>
