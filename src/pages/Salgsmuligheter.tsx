@@ -402,6 +402,11 @@ export default function Salgsmuligheter() {
                               {deal.kontaktperson && <p className="text-[10px] text-muted-foreground truncate">{deal.kontaktperson}</p>}
                             </div>
                             <span className="text-xs font-medium text-foreground shrink-0">{nok(deal.forventet_mrr)}</span>
+                            {deal.kontrakt_status && deal.kontrakt_status !== "Ikke sendt" && (
+                              <Badge className={`text-[8px] px-1 py-0 h-3.5 shrink-0 ${kontraktStatusColors[deal.kontrakt_status as KontraktStatus]}`}>
+                                {deal.kontrakt_status === "Signert" ? "✅" : deal.kontrakt_status.charAt(0)}
+                              </Badge>
+                            )}
                             <div className={`w-2 h-2 rounded-full shrink-0 ${signal.color}`} title={signal.label} />
                           </div>
                           {missingNeste && (
@@ -473,6 +478,18 @@ export default function Salgsmuligheter() {
                               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                 <div className="w-5 h-5 flex items-center justify-center shrink-0">📣</div>
                                 <span className="truncate">{deal.kilde}</span>
+                              </div>
+                            )}
+
+                            {/* 7. Kontrakt-status */}
+                            {deal.kontrakt_status && deal.kontrakt_status !== "Ikke sendt" && (
+                              <div className="flex items-center gap-2 text-xs">
+                                <div className="w-5 h-5 flex items-center justify-center shrink-0">
+                                  <FileSignature className="w-3.5 h-3.5 text-muted-foreground" />
+                                </div>
+                                <Badge className={`text-[10px] px-1.5 py-0 h-4 ${kontraktStatusColors[deal.kontrakt_status as KontraktStatus]}`}>
+                                  {deal.kontrakt_status}{deal.kontrakt_status === "Signert" && " 🎉"}
+                                </Badge>
                               </div>
                             )}
                           </div>
