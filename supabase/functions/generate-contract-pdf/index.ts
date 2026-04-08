@@ -12,6 +12,8 @@ const BodySchema = z.object({
   valgt_pakke: z.string(),
   pakke_pris: z.number(),
   minutter: z.string(),
+  sla: z.number().nullable().optional(),
+  oppstartskostnad: z.number().nullable().optional(),
 });
 
 const PAKKER_TABLE = [
