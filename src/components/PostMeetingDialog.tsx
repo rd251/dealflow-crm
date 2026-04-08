@@ -18,6 +18,7 @@ interface Props {
   meetingTitle: string;
   salgsmulighet_id: string | null;
   selskap_id: string | null;
+  aktivitet_id?: string | null;
 }
 
 const resultatConfig: { value: Resultat; label: string; icon: React.ReactNode; cls: string }[] = [
