@@ -581,6 +581,9 @@ export default function Salgsmuligheter() {
             ))}
           </div>
         </TabsContent>
+        <TabsContent value="signed">
+          <DealList deals={signedDeals} getSelskapNavn={getSelskapNavn} onSelect={setSelectedSm} label="Signerte kontrakter" onNavigateSelskap={id => navigate(`/selskaper/${id}`)} isMobile={isMobile} showKontraktStatus />
+        </TabsContent>
 
         <TabsContent value="awaiting">
           <DealList deals={awaitingSignature} getSelskapNavn={getSelskapNavn} onSelect={setSelectedSm} label="Venter på signering" onNavigateSelskap={id => navigate(`/selskaper/${id}`)} isMobile={isMobile} showKontraktStatus />
