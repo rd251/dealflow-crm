@@ -600,6 +600,325 @@ export default function Salgsmuligheter() {
               s.id === currentSm.id ? { ...s, [field]: value, sist_aktivitet: today } : s
             ));
           };
+          const updateSelskapField = (field: string, value: any) => {
+            if (!currentSm.selskap_id) return;
+            updateSelskaper(prev => prev.map(s =>
+              s.id === currentSm.selskap_id ? { ...s, [field]: value } : s
+            ));
+          };
+          const arr = currentSm.forventet_mrr * 12;
+          const totalKontraktsverdi = beregnTotalKontraktsverdi(currentSm);
+          const vektetVerdi = beregnVektetPipeline(currentSm);
+          const selskap = selskaper.find(s => s.id === currentSm.selskap_id);
+          const linkedKontakt = currentSm.kontakt_id ? kontakter.find(k => k.id === currentSm.kontakt_id) : null;
+
+          return {
+            detaljer: (
+              <>
+                {/* Seksjon 1 — Pipeline */}
+                <DetailSection title="Pipeline">
+                  <DetailField label="Status">
+                    <select className="w-full border rounded-lg px-3 py-1.5 text-sm bg-background"
+                      value={currentSm.status}
+                      disabled={!canEdit}
+                      onChange={e => {
+                        const newStatus = e.target.value as SalgsmulighetStatus;
+                        if (newStatus === "Vunnet") { vinnSalgsmulighet(currentSm.id); setSelectedSm(null); }
+                        else if (newStatus === "Tapt") { setSelectedSm(null); setLossDialog(currentSm.id); }
+                        else updateField("status", newStatus);
+                      }}>
+                      {[...openStatuses, "Vunnet", "Tapt"].map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </DetailField>
+                  <div className="grid grid-cols-2 gap-2">
+                    <DetailField label="Sannsynlighet">
+                      <Input type="number" min={0} max={100} value={currentSm.sannsynlighet || ""} onChange={e => updateField("sannsynlighet", Number(e.target.value))} className="h-7 text-xs" readOnly={!canEdit} />
+                    </DetailField>
+                    <DetailField label="Lukkedato">
+                      <Input type="date" value={currentSm.forventet_lukkedato} onChange={e => updateField("forventet_lukkedato", e.target.value)} className="h-7 text-xs" readOnly={!canEdit} />
+                    </DetailField>
+                  </div>
+                  <DetailField label="Ansvarlig">
+                    <select className="w-full border rounded-lg px-2 py-1 text-xs bg-background h-7"
+                      value={currentSm.ansvarlig}
+                      disabled={!canEdit}
+                      onChange={e => updateField("ansvarlig", e.target.value)}>
+                      <option value="">Ikke tildelt</option>
+                      {profiles.map(p => (
+                        <option key={p.user_id} value={p.user_id}>
+                          {p.display_name}{p.user_id === user?.id ? " (deg)" : ""}
+                        </option>
+                      ))}
+                    </select>
+                  </DetailField>
+                  <DetailField label="Kilde">
+                    <select className="w-full border rounded-lg px-2 py-1 text-xs bg-background h-7"
+                      value={currentSm.kilde || ""}
+                      disabled={!canEdit}
+                      onChange={e => updateField("kilde", e.target.value)}>
+                      <option value="">Ikke satt</option>
+                      {["Nettside","LinkedIn","Partner","Referanse","Kald outbound","E-post","Telefon","Annet","Organisk","Facebook ads","Instantly kald e-post","Google ads"].map(k => (
+                        <option key={k} value={k}>{k}</option>
+                      ))}
+                    </select>
+                  </DetailField>
+                  {currentSm.status === "Tapt" && currentSm.tapsaarsak && (
+                    <div className="p-2 bg-destructive/10 rounded-lg text-destructive text-xs">
+                      <strong>Tapsårsak:</strong> {currentSm.tapsaarsak} · {currentSm.tapt_dato}
+                    </div>
+                  )}
+                  {currentSm.status === "Vunnet" && (
+                    <div className="p-2 bg-success/10 rounded-lg text-success text-xs">
+                      <strong>Vunnet:</strong> {currentSm.vunnet_dato}
+                    </div>
+                  )}
+                </DetailSection>
+
+                <DetailDivider />
+
+                {/* Seksjon 2 — Økonomi */}
+                <DetailSection title="Økonomi">
+                  <div className="grid grid-cols-2 gap-2">
+                    <DetailField label="MRR">
+                      <Input type="number" value={currentSm.forventet_mrr || ""} onChange={e => updateField("forventet_mrr", Number(e.target.value))} className="h-7 text-xs" readOnly={!canEdit} />
+                    </DetailField>
+                    <DetailField label="ARR">
+                      <div className="text-sm font-medium">{nok(arr)}</div>
+                    </DetailField>
+                    <DetailField label="Oppstart">
+                      <Input type="number" value={currentSm.oppstartskostnad || ""} onChange={e => updateField("oppstartskostnad", Number(e.target.value))} className="h-7 text-xs" readOnly={!canEdit} />
+                    </DetailField>
+                    <DetailField label="Kontraktslengde (Mnd)">
+                      <Input type="number" value={currentSm.kontraktslengde_mnd || ""} onChange={e => updateField("kontraktslengde_mnd", Number(e.target.value))} className="h-7 text-xs" readOnly={!canEdit} />
+                    </DetailField>
+                  </div>
+                  <DetailField label="Vektet verdi">
+                    <div className="text-sm font-medium">{nok(vektetVerdi)}</div>
+                  </DetailField>
+                </DetailSection>
+
+                <DetailDivider />
+
+                {/* Seksjon 3 — Detaljer */}
+                <DetailSection title="Detaljer">
+                  <DetailField label="Use case">
+                    <Input value={currentSm.use_case} onChange={e => updateField("use_case", e.target.value)} className="h-7 text-xs" readOnly={!canEdit} />
+                  </DetailField>
+                  <div className="rounded-lg border p-3 space-y-1">
+                    <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Neste steg</label>
+                    <Input value={currentSm.neste_steg} onChange={e => updateField("neste_steg", e.target.value)} className={`h-8 text-sm ${!currentSm.neste_steg?.trim() ? "border-destructive ring-1 ring-destructive/30" : ""}`} readOnly={!canEdit} placeholder="Hva er neste steg?" />
+                    {!currentSm.neste_steg?.trim() && (
+                      <p className="text-[10px] text-destructive flex items-center gap-1"><AlertTriangle className="w-3 h-3" />Obligatorisk</p>
+                    )}
+                  </div>
+                  <DetailField label="SLA">
+                    <Input type="number" value={currentSm.sla || ""} onChange={e => updateField("sla", Number(e.target.value))} className="h-7 text-xs" readOnly={!canEdit} />
+                  </DetailField>
+                </DetailSection>
+
+                <DetailDivider />
+
+                {/* Seksjon 4 — Kontrakt */}
+                <DetailSection title="Kontrakt">
+                  <div className="flex items-center gap-2">
+                    <Badge className={`text-xs ${kontraktStatusColors[currentSm.kontrakt_status as KontraktStatus] || kontraktStatusColors["Ikke sendt"]}`}>
+                      <FileSignature className="w-3 h-3 mr-1" />{currentSm.kontrakt_status || "Ikke sendt"}
+                    </Badge>
+                    {currentSm.kontrakt_status === "Signert" && currentSm.kontrakt_signert_dato && (
+                      <span className="text-xs text-success flex items-center gap-1">
+                        🎉 {new Date(currentSm.kontrakt_signert_dato).toLocaleDateString("nb-NO")}
+                      </span>
+                    )}
+                  </div>
+                  {canEdit && (
+                    <div className="flex flex-wrap gap-2">
+                      <Button size="sm" variant="outline" className="text-xs" onClick={() => {
+                        const params = new URLSearchParams({
+                          companyname: selskap?.firmanavn || "",
+                          customername: currentSm.kontaktperson || "",
+                          email: currentSm.e_post || "",
+                          phonenumber: currentSm.telefon || "",
+                          orgnumber: selskap?.orgnr || "",
+                          address: selskap?.postadresse || "",
+                          visitaddress: selskap?.firmaadresse || "",
+                          CRMid: currentSm.id,
+                        });
+                        window.open(`https://app.dealbuilder.io/contract/createnewcontractexternal?${params.toString()}`, "_blank");
+                        updateSalgsmuligheter(prev => prev.map(s =>
+                          s.id === currentSm.id ? { ...s, kontrakt_status: "Sendt" as const } : s
+                        ));
+                      }}>
+                        <FileSignature className="w-3.5 h-3.5 mr-1.5" />Send kontrakt
+                      </Button>
+                      {(currentSm.kontrakt_status === "Sendt" || currentSm.kontrakt_status === "Åpnet") && (
+                        <Button size="sm" variant="outline" className="text-xs" onClick={() => {
+                          const params = new URLSearchParams({
+                            companyname: selskap?.firmanavn || "",
+                            customername: currentSm.kontaktperson || "",
+                            email: currentSm.e_post || "",
+                            phonenumber: currentSm.telefon || "",
+                            orgnumber: selskap?.orgnr || "",
+                            address: selskap?.postadresse || "",
+                            visitaddress: selskap?.firmaadresse || "",
+                            CRMid: currentSm.id,
+                          });
+                          window.open(`https://app.dealbuilder.io/contract/createnewcontractexternal?${params.toString()}`, "_blank");
+                        }}>
+                          <Mail className="w-3.5 h-3.5 mr-1.5" />Send påminnelse
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </DetailSection>
+
+                {canEdit && (
+                  <Button size="sm" variant="ghost" className="w-full text-destructive hover:bg-destructive/10 text-xs" onClick={() => {
+                    updateSalgsmuligheter(prev => prev.filter(s => s.id !== currentSm.id));
+                    setSelectedSm(null);
+                  }}>
+                    <Trash2 className="w-3 h-3 mr-1" />Slett
+                  </Button>
+                )}
+              </>
+            ),
+            selskap: (
+              <>
+                <DetailSection title="Selskapsinformasjon">
+                  {selskap ? (
+                    <>
+                      <DetailField label="Selskapsnavn" value={selskap.firmanavn} />
+                      <DetailField label="Organisasjonsnummer">
+                        <Input value={selskap.orgnr || ""} onChange={e => updateSelskapField("orgnr", e.target.value)} className="h-7 text-xs" readOnly={!canEdit} placeholder="Org.nr" />
+                      </DetailField>
+                      <DetailField label="Firmaadresse (besøk)">
+                        <Input value={selskap.firmaadresse || ""} onChange={e => updateSelskapField("firmaadresse", e.target.value)} className="h-7 text-xs" readOnly={!canEdit} placeholder="Besøksadresse" />
+                      </DetailField>
+                      <DetailField label="Postadresse">
+                        <Input value={selskap.postadresse || ""} onChange={e => updateSelskapField("postadresse", e.target.value)} className="h-7 text-xs" readOnly={!canEdit} placeholder="Postadresse" />
+                      </DetailField>
+                      <DetailField label="Bransje">
+                        <Input value={selskap.bransje || ""} onChange={e => updateSelskapField("bransje", e.target.value)} className="h-7 text-xs" readOnly={!canEdit} />
+                      </DetailField>
+                      <DetailField label="Nettside">
+                        {selskap.domene ? (
+                          <a href={`https://${selskap.domene}`} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1">
+                            <Globe className="w-3 h-3" />{selskap.domene}
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">–</span>
+                        )}
+                      </DetailField>
+                    </>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">Ingen selskap koblet til denne salgsmuligheten.</p>
+                  )}
+                </DetailSection>
+
+                {selskap && (
+                  <>
+                    <DetailDivider />
+                    <Button size="sm" variant="outline" className="w-full text-xs" onClick={() => navigate(`/selskaper/${selskap.id}`)}>
+                      <Building2 className="w-3.5 h-3.5 mr-1.5" />Gå til selskapsprofil
+                    </Button>
+                  </>
+                )}
+
+                <SelskapInnsikt
+                  domene={getSelskapDomain(currentSm.selskap_id)}
+                  firmanavn={getSelskapNavn(currentSm.selskap_id || "")}
+                  e_post={currentSm.e_post}
+                />
+              </>
+            ),
+            kontakt: (
+              <>
+                <DetailSection title="Kontaktperson">
+                  <div className="grid grid-cols-2 gap-2">
+                    <DetailField label="Navn">
+                      <Input value={currentSm.kontaktperson} onChange={e => updateField("kontaktperson", e.target.value)} className="h-7 text-xs" readOnly={!canEdit} />
+                    </DetailField>
+                    <DetailField label="Rolle">
+                      <Input value={currentSm.rolle_i_firma} onChange={e => updateField("rolle_i_firma", e.target.value)} className="h-7 text-xs" readOnly={!canEdit} />
+                    </DetailField>
+                    <DetailField label="E-post">
+                      <Input value={currentSm.e_post} onChange={e => updateField("e_post", e.target.value)} className="h-7 text-xs" readOnly={!canEdit} />
+                    </DetailField>
+                    <DetailField label="Telefon">
+                      <Input value={currentSm.telefon} onChange={e => updateField("telefon", e.target.value)} className="h-7 text-xs" readOnly={!canEdit} />
+                    </DetailField>
+                  </div>
+                  {linkedKontakt?.linkedin && (
+                    <DetailField label="LinkedIn">
+                      <a href={linkedKontakt.linkedin.startsWith("http") ? linkedKontakt.linkedin : `https://linkedin.com/in/${linkedKontakt.linkedin}`} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1">
+                        <Linkedin className="w-3 h-3" />{linkedKontakt.linkedin}
+                      </a>
+                    </DetailField>
+                  )}
+                </DetailSection>
+
+                <DetailDivider />
+
+                {canEdit && (
+                  <DetailSection title="Koble til kontakt">
+                    <EntityLinkPicker
+                      options={(() => {
+                        const sameCompany = kontakter
+                          .filter(k => currentSm.selskap_id && k.selskap_id === currentSm.selskap_id)
+                          .map(k => ({ id: k.id, label: k.navn, sublabel: k.e_post || k.rolle || undefined }));
+                        const others = kontakter
+                          .filter(k => !currentSm.selskap_id || k.selskap_id !== currentSm.selskap_id)
+                          .map(k => ({ id: k.id, label: k.navn, sublabel: k.e_post || k.rolle || undefined }));
+                        return [...sameCompany, ...others];
+                      })()}
+                      value={currentSm.kontakt_id || null}
+                      onChange={(id) => {
+                        if (id) {
+                          const kontakt = kontakter.find(k => k.id === id);
+                          if (kontakt) {
+                            updateField("kontakt_id", kontakt.id);
+                            updateField("kontaktperson", kontakt.navn);
+                            updateField("e_post", kontakt.e_post);
+                            updateField("telefon", kontakt.telefon);
+                            updateField("rolle_i_firma", kontakt.rolle);
+                          }
+                        } else {
+                          updateField("kontakt_id", "");
+                        }
+                      }}
+                      placeholder="Koble til kontakt..."
+                    />
+                  </DetailSection>
+                )}
+              </>
+            ),
+            interaksjoner: (
+              <>
+                <InlineTaskForm salgsmulighet_id={currentSm.id} selskap_id={currentSm.selskap_id} />
+                <ActivityLog salgsmulighet_id={currentSm.id} onActivityLogged={() => {
+                  updateSalgsmuligheter(prev => prev.map(s => s.id === currentSm.id ? { ...s, sist_aktivitet: new Date().toISOString().split("T")[0] } : s));
+                }} />
+                <MeetingNotesList
+                  salgsmulighet_id={currentSm.id}
+                  dealName={currentSm.navn}
+                  companyName={getSelskapNavn(currentSm.selskap_id)}
+                  onSuggestNesteSteg={(text) => updateField("neste_steg", text)}
+                />
+                <EntityChangelog entity_type="salgsmulighet" entity_id={currentSm.id} />
+              </>
+            ),
+            notater: (
+              <DetailField label="Notater">
+                <Textarea value={currentSm.notater} onChange={e => updateField("notater", e.target.value)} rows={6} readOnly={!canEdit} />
+              </DetailField>
+            ),
+            kalender: (
+              <EntityCalendarTab salgsmulighet_id={currentSm.id} />
+            ),
+          };
+        })() : undefined}
+            ));
+          };
           const arr = currentSm.forventet_mrr * 12;
           const slaArr = (currentSm.sla || 0) * 12;
           const totalKontraktsverdi = beregnTotalKontraktsverdi(currentSm);
