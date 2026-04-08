@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
     // Find salgsmulighet by ID (CRMid)
     const { data: deal, error: findError } = await supabase
       .from("salgsmuligheter")
-      .select("id, navn, selskap_id, forventet_mrr, oppstartskostnad, ansvarlig")
+      .select("id, navn, selskap_id, forventet_mrr, oppstartskostnad, ansvarlig, kontaktperson, e_post")
       .eq("id", CRMid)
       .maybeSingle();
 
@@ -142,6 +142,31 @@ Deno.serve(async (req) => {
         old_value: null,
         new_value: "Signert",
       });
+
+      // Send welcome email to customer
+      const recipientEmail = deal.e_post;
+      if (recipientEmail) {
+        // Get company name for the email
+        const { data: selskap } = await supabase
+          .from("selskaper")
+          .select("firmanavn")
+          .eq("id", deal.selskap_id)
+          .maybeSingle();
+
+        await supabase.functions.invoke("send-transactional-email", {
+          body: {
+            templateName: "welcome-customer",
+            recipientEmail,
+            idempotencyKey: `welcome-customer-${CRMid}`,
+            templateData: {
+              firmanavn: selskap?.firmanavn || deal.navn,
+              kontaktperson: deal.kontaktperson || undefined,
+              ansvarlig: deal.ansvarlig || undefined,
+              prosjektnavn: deal.navn,
+            },
+          },
+        });
+      }
     }
 
     return new Response(JSON.stringify({ received: true, event, CRMid }), {
