@@ -150,8 +150,7 @@ export default function PostMeetingDialog({ open, onOpenChange, meetingTitle, sa
             const stageAdvance: Record<string, string> = {
               "Møte booket": "Behov avklart",
               "Behov avklart": "Løsning presentert",
-              "Løsning presentert": "Tilbud sendt",
-              "Tilbud sendt": "Beslutning",
+              "Løsning presentert": "Kontrakt sendt",
             };
             const next = stageAdvance[sm.status || ""];
             if (next) updates.status = next;

@@ -330,9 +330,8 @@ function getLeadAction(lead: any, lastAct: any): string {
 function getSmAction(sm: any, lastAct: any): string {
   if (sm.status === "Møte booket") return "Avklar behov med kunden";
   if (sm.status === "Behov avklart") return "Presenter løsning";
-  if (sm.status === "Løsning presentert") return "Send tilbud";
-  if (sm.status === "Tilbud sendt") return "Følg opp tilbud";
-  if (sm.status === "Beslutning") return "Lukk avtalen";
+  if (sm.status === "Løsning presentert") return "Send kontrakt";
+  if (sm.status === "Kontrakt sendt") return "Følg opp kontrakt";
   if (!lastAct) return "Ta kontakt";
   return "Send oppfølging";
 }

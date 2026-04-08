@@ -426,8 +426,8 @@ export const template = {
     stageBreakdown: [
       { stage: 'Møte booket', totalVerdi: 45000, antall: 3 },
       { stage: 'Behov avklart', totalVerdi: 60000, antall: 4 },
-      { stage: 'Tilbud sendt', totalVerdi: 85000, antall: 2 },
-      { stage: 'Forhandling', totalVerdi: 55000, antall: 2 },
+      { stage: 'Løsning presentert', totalVerdi: 85000, antall: 2 },
+      { stage: 'Kontrakt sendt', totalVerdi: 55000, antall: 2 },
     ],
     nearClosing: [
       { selskap: 'Nova AS', verdi: 12000, sistAktivitet: '30. mars 2026' },
