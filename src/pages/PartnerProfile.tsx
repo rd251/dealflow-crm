@@ -12,10 +12,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import {
   Handshake, ArrowLeft, DollarSign, TrendingUp, Users, FileText,
-  Mail, Phone, Plus, X,
+  Mail, Phone, Plus, X, Building2,
 } from "lucide-react";
 import { Partnerstatus, Partnertype, Provisjonstype, Kontakt, PartnerPipelineStatus, Selskap, Salgsmulighet, Kilde } from "@/data/crm-data";
 import ActivityLog from "@/components/ActivityLog";
+import SelskapInnsikt from "@/components/SelskapInnsikt";
 
 const partnertypeOptions: Partnertype[] = ["Provisjonspartner", "Integrasjonspartner", "Salgspartner", "Strategisk partner"];
 const partnerstatusOptions: Partnerstatus[] = ["Aktiv", "Under onboarding", "Inaktiv"];
@@ -334,6 +335,65 @@ export default function PartnerProfile() {
                   <span className="text-muted-foreground block text-xs mb-1">Ansvarlig</span>
                   <Input value={partner.ansvarlig} onChange={e => updateField("ansvarlig", e.target.value)} className="h-8 text-sm" />
                 </div>
+
+                {/* Koblet selskap */}
+                {(() => {
+                  const selskap = partner.selskap_id ? selskaper.find(s => s.id === partner.selskap_id) : null;
+                  if (!selskap) return null;
+                  const updateSelskapField = (field: string, value: any) => {
+                    updateSelskaper(prev => prev.map(s => s.id === selskap.id ? { ...s, [field]: value } : s));
+                  };
+                  return (
+                    <div className="border rounded-lg p-3 space-y-2 bg-muted/20">
+                      <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                        <Building2 className="w-3.5 h-3.5" />
+                        Selskapsinfo
+                      </div>
+                      <div className="text-sm font-medium cursor-pointer hover:text-primary hover:underline" onClick={() => navigate(`/selskaper/${selskap.id}`)}>
+                        {selskap.firmanavn}
+                      </div>
+                      <SelskapInnsikt
+                        domene={selskap.domene}
+                        firmanavn={selskap.firmanavn}
+                        e_post={partner.e_post}
+                        onEnriched={(data) => {
+                          const needsOrgnr = data.orgnr && !selskap.orgnr;
+                          const needsBransje = data.bransje && !selskap.bransje;
+                          const needsFirmaadresse = data.firmaadresse && !selskap.firmaadresse;
+                          const needsPostadresse = data.postadresse && !selskap.postadresse;
+                          if (needsOrgnr || needsBransje || needsFirmaadresse || needsPostadresse) {
+                            updateSelskaper(prev => prev.map(s => s.id === selskap.id ? {
+                              ...s,
+                              ...(needsOrgnr ? { orgnr: data.orgnr } : {}),
+                              ...(needsBransje ? { bransje: data.bransje } : {}),
+                              ...(needsFirmaadresse ? { firmaadresse: data.firmaadresse } : {}),
+                              ...(needsPostadresse ? { postadresse: data.postadresse } : {}),
+                            } : s));
+                          }
+                        }}
+                      />
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <span className="text-muted-foreground block text-xs mb-1">Org.nr</span>
+                          <Input value={selskap.orgnr || ""} onChange={e => updateSelskapField("orgnr", e.target.value)} className="h-7 text-xs" />
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground block text-xs mb-1">Bransje</span>
+                          <Input value={selskap.bransje || ""} onChange={e => updateSelskapField("bransje", e.target.value)} className="h-7 text-xs" />
+                        </div>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground block text-xs mb-1">Firmaadresse</span>
+                        <Input value={selskap.firmaadresse || ""} onChange={e => updateSelskapField("firmaadresse", e.target.value)} className="h-7 text-xs" />
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground block text-xs mb-1">Postadresse</span>
+                        <Input value={selskap.postadresse || ""} onChange={e => updateSelskapField("postadresse", e.target.value)} className="h-7 text-xs" />
+                      </div>
+                    </div>
+                  );
+                })()}
+
                 <div>
                   <span className="text-muted-foreground block text-xs mb-1">Notater</span>
                   <Textarea value={partner.notater} onChange={e => updateField("notater", e.target.value)} rows={3} />
