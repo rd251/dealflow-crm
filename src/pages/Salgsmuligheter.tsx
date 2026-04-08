@@ -769,7 +769,7 @@ export default function Salgsmuligheter() {
                   </div>
                   {canEdit && (
                     <div className="flex flex-wrap gap-2">
-                      <Button size="sm" variant="outline" className="text-xs" onClick={() => {
+                      <Button size="default" variant="destructive" className="text-sm gap-2" onClick={() => {
                         const params = new URLSearchParams({
                           companyname: selskap?.firmanavn || "",
                           customername: currentSm.kontaktperson || "",
@@ -786,7 +786,7 @@ export default function Salgsmuligheter() {
                           s.id === currentSm.id ? { ...s, kontrakt_status: "Sendt" as const, status: "Kontrakt sendt" as SalgsmulighetStatus, sist_aktivitet: new Date().toISOString().split("T")[0] } : s
                         ));
                       }}>
-                        <FileSignature className="w-3.5 h-3.5 mr-1.5" />Send kontrakt
+                        <FileSignature className="w-4 h-4" />Send kontrakt
                       </Button>
                       {(currentSm.kontrakt_status === "Sendt" || currentSm.kontrakt_status === "Åpnet") && (
                         <Button size="sm" variant="outline" className="text-xs" onClick={() => {
