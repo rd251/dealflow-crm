@@ -58,14 +58,6 @@ export default function CompanyDocuments({ selskapId }: { selskapId: string }) {
     const fetchDealDocs = async () => {
       setLoadingDeal(true);
       try {
-        const { data, error } = await supabase.functions.invoke("dealbuilder-documents", {
-          body: null,
-          method: "GET",
-          headers: {},
-        });
-        // supabase.functions.invoke doesn't support query params well for GET,
-        // so we use fetch directly
-        const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
         const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
         const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
         const session = (await supabase.auth.getSession()).data.session;
