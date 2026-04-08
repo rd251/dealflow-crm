@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { ThumbsUp, Minus, ThumbsDown, Loader2 } from "lucide-react";
+import { ThumbsUp, Minus, ThumbsDown, Loader2, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -32,6 +32,82 @@ export default function PostMeetingDialog({ open, onOpenChange, meetingTitle, sa
   const [nesteSteg, setNesteSteg] = useState("");
   const [moetenotater, setMoetenotater] = useState("");
   const [saving, setSaving] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiSuggested, setAiSuggested] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Debounced AI call when meeting notes change
+  const triggerAi = useCallback(async (notes: string) => {
+    if (notes.trim().length < 15) return;
+    setAiLoading(true);
+    try {
+      // Fetch deal context if available
+      let dealName: string | undefined;
+      let companyName: string | undefined;
+      let dealActivities: any[] = [];
+
+      if (salgsmulighet_id) {
+        const { data: sm } = await supabase
+          .from("salgsmuligheter")
+          .select("navn, selskap_id")
+          .eq("id", salgsmulighet_id)
+          .maybeSingle();
+        if (sm) dealName = sm.navn;
+
+        const { data: acts } = await supabase
+          .from("aktiviteter")
+          .select("type, dato, tittel, beskrivelse, moetenotater")
+          .eq("salgsmulighet_id", salgsmulighet_id)
+          .order("dato", { ascending: false })
+          .limit(10);
+        if (acts) dealActivities = acts;
+      }
+
+      if (selskap_id) {
+        const { data: sel } = await supabase
+          .from("selskaper")
+          .select("firmanavn")
+          .eq("id", selskap_id)
+          .maybeSingle();
+        if (sel) companyName = sel.firmanavn;
+      }
+
+      const { data, error } = await supabase.functions.invoke("meeting-summary", {
+        body: {
+          meetingNotes: notes,
+          meetingTitle,
+          dealName,
+          companyName,
+          dealActivities,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.foreslatt_neste_steg_tekst) {
+        setNesteSteg(data.foreslatt_neste_steg_tekst);
+        setAiSuggested(true);
+      }
+    } catch (err) {
+      console.error("AI summary error:", err);
+      // Silently fail - user can still type manually
+    } finally {
+      setAiLoading(false);
+    }
+  }, [salgsmulighet_id, selskap_id, meetingTitle]);
+
+  // Debounce: trigger AI 1.5s after user stops typing in notes
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (moetenotater.trim().length >= 15) {
+      debounceRef.current = setTimeout(() => {
+        triggerAi(moetenotater);
+      }, 1500);
+    }
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [moetenotater, triggerAi]);
 
   const handleSave = async () => {
     if (!resultat || !nesteSteg.trim()) return;
@@ -61,7 +137,7 @@ export default function PostMeetingDialog({ open, onOpenChange, meetingTitle, sa
             .from("salgsmuligheter")
             .select("status")
             .eq("id", salgsmulighet_id)
-            .single();
+            .maybeSingle();
           if (sm) {
             const stageAdvance: Record<string, string> = {
               "Møte booket": "Behov avklart",
@@ -81,6 +157,7 @@ export default function PostMeetingDialog({ open, onOpenChange, meetingTitle, sa
       setResultat(null);
       setNesteSteg("");
       setMoetenotater("");
+      setAiSuggested(false);
     } catch (err) {
       console.error(err);
       toast.error("Noe gikk galt");
@@ -123,21 +200,39 @@ export default function PostMeetingDialog({ open, onOpenChange, meetingTitle, sa
               id="moetenotater"
               placeholder="Skriv et sammendrag av møtet..."
               value={moetenotater}
-              onChange={(e) => setMoetenotater(e.target.value)}
+              onChange={(e) => {
+                setMoetenotater(e.target.value);
+                setAiSuggested(false);
+              }}
               className="mt-2 min-h-[80px]"
             />
           </div>
 
           <div>
-            <Label htmlFor="neste-steg" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-              Neste steg
-            </Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="neste-steg" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                Neste steg
+              </Label>
+              {aiLoading && (
+                <span className="flex items-center gap-1 text-xs text-muted-foreground animate-pulse">
+                  <Sparkles className="w-3 h-3" /> AI foreslår...
+                </span>
+              )}
+              {aiSuggested && !aiLoading && (
+                <span className="flex items-center gap-1 text-xs text-primary">
+                  <Sparkles className="w-3 h-3" /> AI-forslag
+                </span>
+              )}
+            </div>
             <Textarea
               id="neste-steg"
               placeholder="Hva er neste handling etter møtet?"
               value={nesteSteg}
-              onChange={(e) => setNesteSteg(e.target.value)}
-              className="mt-2 min-h-[80px]"
+              onChange={(e) => {
+                setNesteSteg(e.target.value);
+                setAiSuggested(false);
+              }}
+              className={cn("mt-2 min-h-[80px]", aiSuggested && "ring-1 ring-primary/30")}
             />
           </div>
         </div>
