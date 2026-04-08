@@ -36,6 +36,7 @@ export default function PostMeetingDialog({ open, onOpenChange, meetingTitle, sa
   const [aiSuggested, setAiSuggested] = useState(false);
   const [aiOppsummering, setAiOppsummering] = useState("");
   const [aiKundesignal, setAiKundesignal] = useState("");
+  const [aiNesteStegOptions, setAiNesteStegOptions] = useState<string[]>([]);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Debounced AI call when meeting notes change
