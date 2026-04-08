@@ -671,6 +671,9 @@ export default function Companies() {
             kalender: (
               <EntityCalendarTab selskap_id={currentSelskap.id} />
             ),
+            dokumenter: (
+              <CompanyDocuments selskapId={currentSelskap.id} />
+            ),
           };
         })() : undefined}
       />
