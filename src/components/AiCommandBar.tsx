@@ -448,7 +448,7 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
         telefon: conversion.telefon || "",
         use_case: conversion.use_case || "",
         forventet_mrr: conversion.forventet_mrr || 0,
-        status: "Ny mulighet",
+        status: "Møte booket",
         opprettet_dato: today,
         sist_aktivitet: today,
       });
