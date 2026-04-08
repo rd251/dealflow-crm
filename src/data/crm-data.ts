@@ -127,6 +127,8 @@ export interface Selskap {
   lukkedato: string;
   domene: string;
   orgnr: string;
+  firmaadresse: string;
+  postadresse: string;
 }
 
 export interface Kontakt {
