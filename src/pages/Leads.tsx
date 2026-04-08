@@ -232,6 +232,13 @@ export default function Leads() {
             <DialogDescription>Gi salgsmuligheten et navn (use case) for {convertDialogLead?.firmanavn}.</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
+            {convertDialogLead && (
+              <SelskapInnsikt
+                domene={undefined}
+                firmanavn={convertDialogLead.firmanavn}
+                e_post={convertDialogLead.e_post}
+              />
+            )}
             <Input
               placeholder="Navn på salgsmulighet / use case"
               value={convertNavn}
@@ -251,6 +258,37 @@ export default function Leads() {
               }}
             >
               Konverter
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Convert to partner dialog */}
+      <Dialog open={!!partnerDialogLead} onOpenChange={open => { if (!open) setPartnerDialogLead(null); }}>
+        <DialogContent className="max-w-[95vw] sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Konverter til partner</DialogTitle>
+            <DialogDescription>Bekreft konvertering av {partnerDialogLead?.firmanavn} til partner.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            {partnerDialogLead && (
+              <SelskapInnsikt
+                domene={undefined}
+                firmanavn={partnerDialogLead.firmanavn}
+                e_post={partnerDialogLead.e_post}
+              />
+            )}
+            <Button
+              className="w-full"
+              onClick={() => {
+                if (partnerDialogLead) {
+                  konverterTilPartner(partnerDialogLead.id);
+                  if (selectedLead?.id === partnerDialogLead.id) setSelectedLead(null);
+                  setPartnerDialogLead(null);
+                }
+              }}
+            >
+              Konverter til partner
             </Button>
           </div>
         </DialogContent>
