@@ -210,7 +210,12 @@ Deno.serve(async (req) => {
     doc.setFont("helvetica", "normal");
     y += 4;
     doc.text(`Inkluderte ringeminutter: ${data.minutter}`, margin, y);
-    y += 8;
+    y += 5;
+    if (data.oppstartskostnad) {
+      doc.text(`Oppstartskostnad: ${nok(data.oppstartskostnad)} (engangsbeløp)`, margin, y);
+      y += 5;
+    }
+    y += 4;
 
     // Betalingsvilkår bullet list
     doc.setFont("helvetica", "bold");
@@ -307,7 +312,9 @@ Deno.serve(async (req) => {
       "Henvendelser besvares normalt innen 48 timer på virkedager",
       "Gjelder veiledning, feilsøking og generelle spørsmål knyttet til plattformen",
       "Support leveres via e-post",
-      "SLA: Utvidet SLA eller prioritert support kan avtales særskilt og prises basert på kundens behov",
+      data.sla
+        ? `SLA: Avtalt SLA på ${nok(data.sla)}/mnd — utvidet support inkludert`
+        : "SLA: Utvidet SLA eller prioritert support kan avtales særskilt og prises basert på kundens behov",
     ];
     for (const item of supportItems) {
       checkPage(8);
