@@ -31,6 +31,7 @@ import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Unsubscribe from "./pages/Unsubscribe";
 import Ringeliste from "./pages/Ringeliste";
+import Onboarding from "./pages/Onboarding";
 
 const queryClient = new QueryClient();
 
@@ -105,6 +106,7 @@ function AppRoutes() {
       <Route path="/login" element={<LoginRoute />} />
       <Route path="/~oauth" element={<OAuthCallbackRoute />} />
       <Route path="/unsubscribe" element={<Unsubscribe />} />
+      <Route path="/onboarding" element={<Onboarding />} />
       <Route
         path="/*"
         element={
