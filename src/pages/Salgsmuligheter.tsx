@@ -835,15 +835,19 @@ export default function Salgsmuligheter() {
                       if (selskap) {
                         const needsOrgnr = innsikt.orgnr && (!selskap.orgnr || selskap.orgnr === "");
                         const needsBransje = innsikt.bransje && (!selskap.bransje || selskap.bransje === "");
-                        if (needsOrgnr || needsBransje) {
+                        const needsFirmaadresse = innsikt.firmaadresse && (!selskap.firmaadresse || selskap.firmaadresse === "");
+                        const needsPostadresse = innsikt.postadresse && (!selskap.postadresse || selskap.postadresse === "");
+                        if (needsOrgnr || needsBransje || needsFirmaadresse || needsPostadresse) {
                           updateSelskaper(prev => prev.map(s =>
                             s.id === currentSm.selskap_id ? {
                               ...s,
                               ...(needsOrgnr ? { orgnr: innsikt.orgnr! } : {}),
                               ...(needsBransje ? { bransje: innsikt.bransje! } : {}),
+                              ...(needsFirmaadresse ? { firmaadresse: innsikt.firmaadresse! } : {}),
+                              ...(needsPostadresse ? { postadresse: innsikt.postadresse! } : {}),
                             } : s
                           ));
-                          toast.success("Org.nr og bransje oppdatert fra selskapsinnsikt");
+                          toast.success("Selskapsfelt oppdatert fra selskapsinnsikt");
                         }
                       }
                     }

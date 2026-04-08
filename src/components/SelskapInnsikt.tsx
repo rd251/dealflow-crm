@@ -17,6 +17,8 @@ interface InnsiktData {
   estimert_ansatte?: string | null;
   estimert_omsetning?: string | null;
   orgnr?: string | null;
+  firmaadresse?: string | null;
+  postadresse?: string | null;
 }
 
 function extractDomain(email?: string, domene?: string): string {

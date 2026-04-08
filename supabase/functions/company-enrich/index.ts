@@ -111,6 +111,19 @@ Deno.serve(async (req) => {
             const best = enheter.find((e: any) =>
               e.navn?.toLowerCase().includes(searchName.toLowerCase())
             ) || enheter[0];
+
+            // Build address from brreg
+            const forretningsadresse = best.forretningsadresse;
+            const postadresse = best.postadresse;
+            const formatAddr = (a: any) => {
+              if (!a) return null;
+              const parts = [
+                ...(a.adresse || []),
+                [a.postnummer, a.poststed].filter(Boolean).join(" "),
+              ].filter(Boolean);
+              return parts.length > 0 ? parts.join(", ") : null;
+            };
+
             brregData = {
               organisasjonsnummer: best.organisasjonsnummer,
               navn: best.navn,
@@ -119,6 +132,8 @@ Deno.serve(async (req) => {
               organisasjonsform: best.organisasjonsform?.beskrivelse,
               stiftelsesdato: best.stiftelsesdato,
               hjemmeside: best.hjemmeside,
+              firmaadresse: formatAddr(forretningsadresse),
+              postadresse: formatAddr(postadresse),
             };
             kildeData.brreg = brregData;
           }
@@ -153,11 +168,13 @@ RETURNER kun et JSON-objekt med disse feltene:
   "beskrivelse": "kort beskrivelse av hva selskapet gjør, maks 2 setninger",
   "stoerrelse": "Mikro|Liten|Mellomstor|Stor",
   "estimert_ansatte": "estimert antall ansatte som tekst, f.eks. '1-10', '10-50', '50-200', '200+'",
-  "estimert_omsetning": "estimert omsetning som tekst, f.eks. '~5 MNOK', '~50 MNOK', eller 'Ukjent'"
+  "estimert_omsetning": "estimert omsetning som tekst, f.eks. '~5 MNOK', '~50 MNOK', eller 'Ukjent'",
+  "firmaadresse": "besøksadresse/forretningsadresse hvis funnet, ellers null",
+  "postadresse": "postadresse hvis funnet og ulik firmaadresse, ellers null"
 }
 
 Regler:
-- Bruk Brønnøysund-data som primærkilde for ansatte hvis tilgjengelig
+- Bruk Brønnøysund-data som primærkilde for ansatte og adresser hvis tilgjengelig
 - Bruk nettside-info for bransje og beskrivelse
 - Hvis lite data: estimer størrelse basert på domene-kvalitet og merkevare
 - Mikro = 1-10 ansatte, Liten = 10-50, Mellomstor = 50-250, Stor = 250+
@@ -201,6 +218,8 @@ Regler:
       estimert_ansatte: enriched.estimert_ansatte || (brregData?.antallAnsatte != null ? String(brregData.antallAnsatte) : null),
       estimert_omsetning: enriched.estimert_omsetning || null,
       orgnr: brregData?.organisasjonsnummer || null,
+      firmaadresse: brregData?.firmaadresse || enriched.firmaadresse || null,
+      postadresse: brregData?.postadresse || enriched.postadresse || null,
       kilde_data: kildeData,
     };
 

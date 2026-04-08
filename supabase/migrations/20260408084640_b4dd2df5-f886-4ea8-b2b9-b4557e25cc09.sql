@@ -1,0 +1,1 @@
+ALTER TABLE public.selskap_innsikt ADD COLUMN IF NOT EXISTS firmaadresse text, ADD COLUMN IF NOT EXISTS postadresse text;
