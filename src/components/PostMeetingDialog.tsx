@@ -91,6 +91,9 @@ export default function PostMeetingDialog({ open, onOpenChange, meetingTitle, sa
         setNesteSteg(data.foreslatt_neste_steg_tekst);
         setAiSuggested(true);
       }
+      if (data?.neste_steg && Array.isArray(data.neste_steg) && data.neste_steg.length > 0) {
+        setAiNesteStegOptions(data.neste_steg);
+      }
       if (data?.oppsummering) setAiOppsummering(data.oppsummering);
       if (data?.kundesignal) setAiKundesignal(data.kundesignal);
     } catch (err) {
