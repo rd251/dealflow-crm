@@ -43,6 +43,7 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
+    // 1. Generate PDF
     const pdfRes = await fetch(`${SUPABASE_URL}/functions/v1/generate-contract-pdf`, {
       method: "POST",
       headers: {
@@ -72,29 +73,55 @@ Deno.serve(async (req) => {
     const pdfBuffer = await pdfRes.arrayBuffer();
     const pdfBytes = new Uint8Array(pdfBuffer);
 
-    const fileName = `${data.salgsmulighet_id}/${Date.now()}-kontrakt-${data.firmanavn.replace(/\s+/g, "-")}.pdf`;
+    // 2. Upload PDF to DealBuilder via their upload endpoint
+    const pdfFileName = `kontrakt-${data.firmanavn.replace(/\s+/g, "-")}.pdf`;
 
-    const { error: uploadError } = await supabase.storage
+    const formData = new FormData();
+    const blob = new Blob([pdfBytes], { type: "application/pdf" });
+    formData.append("file", blob, pdfFileName);
+
+    console.log("Uploading PDF to DealBuilder...");
+
+    const uploadRes = await fetch("https://api.dealbuilder.io/v1/Uploads", {
+      method: "POST",
+      headers: {
+        "x-api-key": DEALBUILDER_API_KEY,
+      },
+      body: formData,
+    });
+
+    if (!uploadRes.ok) {
+      const errText = await uploadRes.text();
+      console.error("DealBuilder Upload error", {
+        status: uploadRes.status,
+        body: errText,
+      });
+      throw new Error(`DealBuilder Upload failed (${uploadRes.status}): ${errText}`);
+    }
+
+    const uploadResult = await uploadRes.json();
+    const uploadedPdfUrl = uploadResult.url || uploadResult.fileUrl || uploadResult.path;
+
+    console.log("DealBuilder upload result:", JSON.stringify(uploadResult));
+
+    if (!uploadedPdfUrl) {
+      throw new Error(`DealBuilder Upload returned no URL: ${JSON.stringify(uploadResult)}`);
+    }
+
+    // 3. Also store in Supabase Storage for our records
+    const fileName = `${data.salgsmulighet_id}/${Date.now()}-${pdfFileName}`;
+    await supabase.storage
       .from("contract-pdfs")
       .upload(fileName, pdfBytes, {
         contentType: "application/pdf",
         upsert: false,
       });
 
-    if (uploadError) {
-      throw new Error(`Upload failed: ${uploadError.message}`);
-    }
-
-    const { data: publicUrlData } = supabase.storage
-      .from("contract-pdfs")
-      .getPublicUrl(fileName);
-
-    const pdfUrl = publicUrlData.publicUrl;
-
+    // 4. Send for signing via DealBuilder Documents API
     const dealBuilderPayload = {
       mode: "SendByEmail",
       templateId: "73bebc18-b668-4266-b323-3797b3e7ceab",
-      uploadedPdfUrl: pdfUrl,
+      uploadedPdfUrl,
       title: `Avtale om bruk av Snakk Teknologi AS - ${data.firmanavn}`,
       creatorEmail: data.sender_email,
       senderEmail: data.sender_email,
@@ -111,11 +138,7 @@ Deno.serve(async (req) => {
       ],
     };
 
-    console.log("Calling DealBuilder Documents API", {
-      endpoint: "https://api.dealbuilder.io/v1/Documents",
-      hasApiKey: true,
-      keyLength: DEALBUILDER_API_KEY.length,
-    });
+    console.log("Calling DealBuilder Documents API with uploaded PDF URL:", uploadedPdfUrl);
 
     const dbRes = await fetch("https://api.dealbuilder.io/v1/Documents", {
       method: "POST",
@@ -131,7 +154,6 @@ Deno.serve(async (req) => {
       console.error("DealBuilder API error", {
         status: dbRes.status,
         statusText: dbRes.statusText,
-        responseHeaders: Object.fromEntries(dbRes.headers.entries()),
         responseBody: errText,
       });
       throw new Error(`DealBuilder API failed (${dbRes.status}): ${errText}`);
@@ -140,6 +162,7 @@ Deno.serve(async (req) => {
     const dbResult = await dbRes.json();
     const dokumentId = dbResult.id || dbResult.documentId || null;
 
+    // 5. Update salgsmulighet
     const updateData: Record<string, unknown> = {
       kontrakt_status: "Sendt",
       status: "Kontrakt sendt",
@@ -158,6 +181,7 @@ Deno.serve(async (req) => {
       console.error("Failed to update salgsmulighet:", updateError);
     }
 
+    // 6. Log activity
     await supabase.from("aktiviteter").insert({
       type: "Notat",
       beskrivelse: `Kontrakt sendt til ${data.kontaktperson} (${data.e_post}) — ${data.valgt_pakke}`,
@@ -169,7 +193,6 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({
       success: true,
       dokumentId,
-      pdfUrl,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
