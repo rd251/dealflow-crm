@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
     // Find salgsmulighet by ID (CRMid)
     const { data: deal, error: findError } = await supabase
       .from("salgsmuligheter")
-      .select("id, navn, selskap_id")
+      .select("id, navn, selskap_id, forventet_mrr, oppstartskostnad, ansvarlig")
       .eq("id", CRMid)
       .maybeSingle();
 
