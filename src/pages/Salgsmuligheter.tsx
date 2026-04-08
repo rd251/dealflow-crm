@@ -787,6 +787,20 @@ export default function Salgsmuligheter() {
                   </div>
                 )}
 
+                {/* Kontrakt-status */}
+                <div className="space-y-2">
+                  <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Kontrakt</p>
+                  <div className="flex items-center gap-2">
+                    <Badge className={`text-xs ${kontraktStatusColors[currentSm.kontrakt_status as KontraktStatus] || kontraktStatusColors["Ikke sendt"]}`}>
+                      <FileSignature className="w-3 h-3 mr-1" />{currentSm.kontrakt_status || "Ikke sendt"}
+                    </Badge>
+                    {currentSm.kontrakt_status === "Signert" && currentSm.kontrakt_signert_dato && (
+                      <span className="text-xs text-success flex items-center gap-1">
+                        🎉 {new Date(currentSm.kontrakt_signert_dato).toLocaleDateString("nb-NO")}
+                      </span>
+                    )}
+                  </div>
+                </div>
                 {canEdit && (
                   <Button size="sm" variant="ghost" className="w-full text-destructive hover:bg-destructive/10 text-xs" onClick={() => {
                     updateSalgsmuligheter(prev => prev.filter(s => s.id !== currentSm.id));
