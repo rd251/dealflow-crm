@@ -214,7 +214,29 @@ export default function PostMeetingDialog({ open, onOpenChange, meetingTitle, sa
             />
           </div>
 
-          <div>
+          {/* AI Summary Section */}
+          {(aiOppsummering || aiKundesignal || aiLoading) && (
+            <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 space-y-2">
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-primary uppercase tracking-wide">
+                <Sparkles className="w-3.5 h-3.5" />
+                AI-oppsummering
+              </div>
+              {aiLoading && !aiOppsummering && (
+                <p className="text-xs text-muted-foreground animate-pulse">Analyserer møtenotater...</p>
+              )}
+              {aiOppsummering && (
+                <p className="text-sm text-foreground leading-relaxed">{aiOppsummering}</p>
+              )}
+              {aiKundesignal && (
+                <div className="flex items-center gap-1.5 pt-1 border-t border-primary/10">
+                  <span className="text-xs font-medium text-muted-foreground">Kundesignal:</span>
+                  <span className="text-xs font-semibold text-foreground">{aiKundesignal}</span>
+                </div>
+              )}
+            </div>
+          )}
+
+
             <div className="flex items-center justify-between">
               <Label htmlFor="neste-steg" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                 Neste steg
