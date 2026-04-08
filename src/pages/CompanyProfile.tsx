@@ -522,6 +522,10 @@ export default function CompanyProfile() {
               }} />
               <EntityChangelog entity_type="selskap" entity_id={id!} />
             </div>
+
+            <div className="bg-card border rounded-xl p-4 sm:p-5">
+              <CompanyDocuments selskapId={id!} />
+            </div>
           </div>
         </div>
       </main>
