@@ -15,7 +15,7 @@ import EntityCalendarTab from "@/components/EntityCalendarTab";
 import { Switch } from "@/components/ui/switch";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { cn } from "@/lib/utils";
+import { cn, nok } from "@/lib/utils";
 import { Plus, Search, Building2, ChevronRight, CalendarIcon, X, Upload, Trash2, ArrowRightLeft, Undo2, DollarSign, TrendingUp, Target, PieChart, Users, BarChart3, ArrowDownRight, ArrowUpRight, Trophy, XCircle, UserMinus, AlertTriangle, ArrowUp, ArrowDown, ChevronsUpDown, Rocket, FileText } from "lucide-react";
 import CompanyLogo from "@/components/CompanyLogo";
 import { beregnTotalKontraktsverdi } from "@/data/crm-data";
@@ -278,7 +278,7 @@ export default function Companies() {
 
       {/* ─── KPI ─── */}
       {(() => {
-        const nok = (n: number) => n.toLocaleString("nb-NO", { maximumFractionDigits: 0 }) + " kr";
+        
         const liveSelskaper = selskaper.filter(s => s.kundestatus === "Live");
         const aktiveKunder = liveSelskaper.length;
         const totalMRR = liveSelskaper.reduce((sum, s) => sum + s.mrr, 0);

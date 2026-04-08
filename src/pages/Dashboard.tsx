@@ -7,6 +7,7 @@ import FocusCard from "@/components/FocusCard";
 import { useCrmStore } from "@/hooks/use-crm-store";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { beregnTotalKontraktsverdi } from "@/data/crm-data";
+import { nok } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -59,7 +60,7 @@ export default function Dashboard() {
     return map;
   }, [profiles]);
   const today = now.toISOString().split("T")[0];
-  const nok = (v: number) => v.toLocaleString("no-NO") + " kr";
+  
 
   // ─── MEETINGS STATE ───
   const [meetings, setMeetings] = useState<MeetingItem[]>([]);

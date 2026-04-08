@@ -8,6 +8,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { nok } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Building2, TrendingUp, Clock, ExternalLink, Phone, Mail, MessageSquare,
@@ -111,7 +112,7 @@ export default function MeetingPrepPanel({ meeting, open, onOpenChange }: Props)
   const [postMeetingOpen, setPostMeetingOpen] = useState(false);
 
   const now = new Date();
-  const nok = (v: number) => v.toLocaleString("no-NO") + " kr";
+  
 
   useEffect(() => {
     if (!meeting || !open) return;
