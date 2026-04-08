@@ -48,11 +48,15 @@ export default function PostMeetingDialog({ open, onOpenChange, meetingTitle, sa
       });
       if (taskError) throw taskError;
 
-      // 2. Update salgsmulighet neste_steg if linked
+      // 2. Save meeting notes to activity if available
+      if (aktivitet_id && moetenotater.trim()) {
+        await supabase.from("aktiviteter").update({ moetenotater: moetenotater.trim() }).eq("id", aktivitet_id);
+      }
+
+      // 3. Update salgsmulighet neste_steg if linked
       if (salgsmulighet_id) {
         const updates: Record<string, any> = { neste_steg: nesteSteg.trim() };
         if (resultat === "bra") {
-          // Advance stage if appropriate
           const { data: sm } = await supabase
             .from("salgsmuligheter")
             .select("status")
@@ -76,6 +80,7 @@ export default function PostMeetingDialog({ open, onOpenChange, meetingTitle, sa
       onOpenChange(false);
       setResultat(null);
       setNesteSteg("");
+      setMoetenotater("");
     } catch (err) {
       console.error(err);
       toast.error("Noe gikk galt");
