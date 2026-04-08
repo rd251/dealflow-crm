@@ -84,7 +84,7 @@ export default function CompanyDocuments({ selskapId }: { selskapId: string }) {
     fetchDealDocs();
   }, [selskapId]);
 
-  // Fetch uploaded documents
+  // Fetch uploaded/synced documents from DB
   useEffect(() => {
     const fetchUploaded = async () => {
       setLoadingUploaded(true);
@@ -94,7 +94,33 @@ export default function CompanyDocuments({ selskapId }: { selskapId: string }) {
         .eq("selskap_id", selskapId)
         .order("created_at", { ascending: false });
       if (!error && data) {
-        setUploadedDocs(data as UploadedDoc[]);
+        // Split synced DealBuilder docs vs manual uploads
+        const manual: UploadedDoc[] = [];
+        const synced: DealBuilderDoc[] = [];
+        for (const d of data as any[]) {
+          if (d.kilde === "dealbuilder" && d.dealbuilder_dokument_id) {
+            synced.push({
+              id: d.dealbuilder_dokument_id,
+              title: d.tittel || d.fil_navn,
+              status: d.status || "Ukjent",
+              sentAt: d.opprettet_dato,
+              signedAt: d.status === "Signert" ? d.opprettet_dato : null,
+              appUrl: null,
+              downloadUrl: null,
+              dealName: "",
+              dealId: "",
+            });
+          } else {
+            manual.push(d as UploadedDoc);
+          }
+        }
+        setUploadedDocs(manual);
+        // Merge synced DB docs with live API docs (API takes priority by id)
+        setDealDocs(prev => {
+          const apiIds = new Set(prev.map(d => d.id));
+          const extra = synced.filter(s => !apiIds.has(s.id));
+          return [...prev, ...extra];
+        });
       }
       setLoadingUploaded(false);
     };
