@@ -679,9 +679,37 @@ export default function Salgsmuligheter() {
 
                 {/* Seksjon 2 — Økonomi */}
                 <DetailSection title="Økonomi">
+                  <DetailField label="Pakke">
+                    <select className="w-full border rounded-lg px-2 py-1 text-xs bg-background h-7"
+                      value={currentSm.valgt_pakke || ""}
+                      disabled={!canEdit}
+                      onChange={e => {
+                        const pakkeNavn = e.target.value;
+                        const pakke = PAKKER.find(p => p.navn === pakkeNavn);
+                        updateField("valgt_pakke", pakkeNavn);
+                        if (pakke?.mrr != null) {
+                          updateField("forventet_mrr", pakke.mrr);
+                        }
+                      }}>
+                      <option value="">Velg pakke…</option>
+                      {PAKKER.map(p => (
+                        <option key={p.navn} value={p.navn}>
+                          {p.navn} {p.mrr != null ? `— ${nok(p.mrr)} kr/mnd` : p.navn === "Enterprise" ? "— kontakt for pris" : "— fritekst"}{p.minutter ? ` (${p.minutter})` : ""}
+                        </option>
+                      ))}
+                    </select>
+                  </DetailField>
+                  {currentSm.valgt_pakke && (() => {
+                    const pakke = PAKKER.find(p => p.navn === currentSm.valgt_pakke);
+                    return pakke?.minutter ? (
+                      <div className="text-xs text-muted-foreground bg-muted/30 rounded-md px-2 py-1">
+                        📞 {pakke.minutter} inkludert
+                      </div>
+                    ) : null;
+                  })()}
                   <div className="grid grid-cols-2 gap-2">
                     <DetailField label="MRR">
-                      <Input type="number" value={currentSm.forventet_mrr || ""} onChange={e => updateField("forventet_mrr", Number(e.target.value))} className="h-7 text-xs" readOnly={!canEdit} />
+                      <Input type="number" value={currentSm.forventet_mrr || ""} onChange={e => updateField("forventet_mrr", Number(e.target.value))} className="h-7 text-xs" readOnly={!canEdit || (!!currentSm.valgt_pakke && PAKKER.find(p => p.navn === currentSm.valgt_pakke)?.mrr != null)} />
                     </DetailField>
                     <DetailField label="ARR">
                       <div className="text-sm font-medium">{nok(arr)}</div>
