@@ -251,7 +251,7 @@ export default function Salgsmuligheter() {
 
   const currentSm = selectedSm ? salgsmuligheter.find(s => s.id === selectedSm.id) || selectedSm : null;
 
-  const nok = (v: number) => v.toLocaleString("no-NO");
+  const nok = (v: number) => v.toLocaleString("no-NO") + " kr";
 
   return (
     <PageShell
