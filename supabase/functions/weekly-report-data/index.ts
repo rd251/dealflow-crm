@@ -70,7 +70,7 @@ Deno.serve(async (req) => {
   const pipelineEndring = estimatedPrevPipeline > 0 ? Math.round(((totalPipeline - estimatedPrevPipeline) / estimatedPrevPipeline) * 100) : null
 
   // Stage breakdown
-  const stageOrder = ['Møte booket', 'Behov avklart', 'Løsning presentert', 'Tilbud sendt', 'Forhandling', 'Beslutning']
+  const stageOrder = ['Møte booket', 'Behov avklart', 'Løsning presentert', 'Kontrakt sendt']
   const stageMap = new Map<string, { total: number; count: number }>()
   for (const d of activeDeals || []) {
     if (!d.status) continue
@@ -82,7 +82,7 @@ Deno.serve(async (req) => {
   const stageBreakdown = stageOrder.filter(s => stageMap.has(s)).map(s => ({ stage: s, totalVerdi: stageMap.get(s)!.total, antall: stageMap.get(s)!.count }))
 
   // Near closing
-  const closingStages = ['Beslutning', 'Forhandling', 'Tilbud sendt']
+  const closingStages = ['Kontrakt sendt', 'Løsning presentert']
   const nearClosing = (activeDeals || []).filter(d => d.status && closingStages.includes(d.status)).slice(0, 5).map(d => ({
     selskap: getSelskapNavn(d.selskap_id) || d.navn, verdi: d.forventet_mrr, sistAktivitet: d.sist_aktivitet || null,
   }))

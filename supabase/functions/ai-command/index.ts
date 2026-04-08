@@ -186,7 +186,7 @@ serve(async (req) => {
                         entity_type: { type: "string", enum: ["salgsmulighet", "lead"], description: "Type of entity to update" },
                         entity_id: { type: "string", description: "ID of the entity to update. MUST come from CRM context." },
                         entity_name: { type: "string", description: "Name of the entity for display" },
-                        new_status: { type: "string", description: "New status value. For salgsmulighet: Ny mulighet|Møte booket|Demo gjennomført|Behov avklart|Løsning presentert|Tilbud sendt|Forhandling|Beslutning|Vunnet|Tapt. For lead: Ny|Kontaktet|Kvalifisert|Ikke aktuelt" },
+                        new_status: { type: "string", description: "New status value. For salgsmulighet: Møte booket|Behov avklart|Løsning presentert|Kontrakt sendt|Vunnet|Tapt. For lead: Ny|Kontaktet|Kvalifisert|Ikke aktuelt" },
                         neste_steg: { type: "string", description: "Optional next step to set" },
                         auto_apply: { type: "boolean", description: "Set true when user explicitly asks to update status. Applied automatically." },
                       },
@@ -542,15 +542,15 @@ async function buildEmailContext(supabase: any, userId: string, context: any): P
       detail = `Mottatt ${entry.totalReceived} e-post(er), vi har ikke svart`;
     }
 
-    // Check for "tilbud sendt" pattern
+    // Check for "kontrakt sendt" pattern
     const salgsmulighet = entry.entityType === "salgsmulighet"
       ? context?.salgsmuligheter?.find((s: any) => s.id === entry.entityId)
       : null;
-    if (salgsmulighet?.status === "Tilbud sendt" && status === "Ingen svar") {
-      status = "Tilbud sendt uten svar";
-      detail = `Tilbud sendt, ingen respons etter ${Math.round(lastSentH)}t`;
-    } else if (salgsmulighet?.status === "Tilbud sendt" && status === "Venter på kunde") {
-      status = "Tilbud sendt – venter på kunde";
+    if (salgsmulighet?.status === "Kontrakt sendt" && status === "Ingen svar") {
+      status = "Kontrakt sendt uten svar";
+      detail = `Kontrakt sendt, ingen respons etter ${Math.round(lastSentH)}t`;
+    } else if (salgsmulighet?.status === "Kontrakt sendt" && status === "Venter på kunde") {
+      status = "Kontrakt sendt – venter på kunde";
     }
 
     dialogStatuses.push({
@@ -568,12 +568,12 @@ async function buildEmailContext(supabase: any, userId: string, context: any): P
 
   // Sort: most urgent first
   const statusPriority: Record<string, number> = {
-    "Tilbud sendt uten svar": 1,
+    "Kontrakt sendt uten svar": 1,
     "Innkommende – ikke besvart": 2,
     "Venter på oss": 3,
     "Ingen svar": 4,
     "Aktiv dialog": 5,
-    "Tilbud sendt – venter på kunde": 6,
+    "Kontrakt sendt – venter på kunde": 6,
     "Venter på kunde": 7,
     "Ukjent": 8,
   };
