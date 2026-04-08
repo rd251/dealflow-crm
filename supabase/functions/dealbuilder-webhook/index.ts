@@ -112,7 +112,7 @@ Deno.serve(async (req) => {
       }).eq("id", deal.selskap_id);
 
       // Create onboarding project
-      await supabase.from("prosjekter").insert({
+      const { data: newProject } = await supabase.from("prosjekter").insert({
         prosjektnavn: deal.navn,
         selskap_id: deal.selskap_id,
         salgsmulighet_id: CRMid,
@@ -120,7 +120,7 @@ Deno.serve(async (req) => {
         status: "Ny",
         startdato: today,
         oppstartskostnad: Number(deal.oppstartskostnad) || 0,
-      });
+      }).select("id").maybeSingle();
 
       // Log activity
       await supabase.from("aktiviteter").insert({
@@ -153,6 +153,11 @@ Deno.serve(async (req) => {
           .eq("id", deal.selskap_id)
           .maybeSingle();
 
+        // Get ansvarlig profile for email
+        const { data: ansvarligProfile } = deal.ansvarlig
+          ? await supabase.from("profiles").select("email").eq("display_name", deal.ansvarlig).maybeSingle()
+          : { data: null };
+
         await supabase.functions.invoke("send-transactional-email", {
           body: {
             templateName: "welcome-customer",
@@ -162,7 +167,8 @@ Deno.serve(async (req) => {
               firmanavn: selskap?.firmanavn || deal.navn,
               kontaktperson: deal.kontaktperson || undefined,
               ansvarlig: deal.ansvarlig || undefined,
-              prosjektnavn: deal.navn,
+              ansvarlig_epost: ansvarligProfile?.email || undefined,
+              prosjekt_id: newProject?.id || undefined,
             },
           },
         });

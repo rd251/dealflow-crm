@@ -512,6 +512,47 @@ export type Database = {
         }
         Relationships: []
       }
+      onboarding_svar: {
+        Row: {
+          created_at: string
+          filer: string[]
+          firmanavn: string
+          id: string
+          kontakt_epost: string
+          kontakt_navn: string
+          prosjekt_id: string | null
+          svar: Json
+        }
+        Insert: {
+          created_at?: string
+          filer?: string[]
+          firmanavn?: string
+          id?: string
+          kontakt_epost?: string
+          kontakt_navn?: string
+          prosjekt_id?: string | null
+          svar?: Json
+        }
+        Update: {
+          created_at?: string
+          filer?: string[]
+          firmanavn?: string
+          id?: string
+          kontakt_epost?: string
+          kontakt_navn?: string
+          prosjekt_id?: string | null
+          svar?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_svar_prosjekt_id_fkey"
+            columns: ["prosjekt_id"]
+            isOneToOne: false
+            referencedRelation: "prosjekter"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       oppgaver: {
         Row: {
           ansvarlig: string | null
@@ -1454,6 +1495,7 @@ export type Database = {
       prioritet: "Lav" | "Medium" | "Høy"
       prosjekt_status:
         | "Ny"
+        | "Skjema mottatt"
         | "I produksjon"
         | "Test med kunde"
         | "Live"
@@ -1678,6 +1720,7 @@ export const Constants = {
       prioritet: ["Lav", "Medium", "Høy"],
       prosjekt_status: [
         "Ny",
+        "Skjema mottatt",
         "I produksjon",
         "Test med kunde",
         "Live",

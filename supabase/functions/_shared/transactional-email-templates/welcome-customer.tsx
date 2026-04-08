@@ -5,7 +5,7 @@ import {
 import type { TemplateEntry } from './registry.ts'
 
 const SITE_NAME = "Snakk"
-const BRAND_RED = '#da291c'
+const BRAND_RED = '#c0392b'
 const BRAND_DARK = '#1a1917'
 const LOGO_URL = 'https://tchmujgzcklwgptocbno.supabase.co/storage/v1/object/public/email-assets/snakk-logo-dark.svg'
 const APP_URL = 'https://snakk-ai-crm.lovable.app'
@@ -14,109 +14,115 @@ interface WelcomeCustomerProps {
   firmanavn?: string
   kontaktperson?: string
   ansvarlig?: string
-  prosjektnavn?: string
+  ansvarlig_epost?: string
+  prosjekt_id?: string
 }
 
 const WelcomeCustomerEmail = ({
   firmanavn = 'Kunde',
   kontaktperson,
   ansvarlig,
-  prosjektnavn,
-}: WelcomeCustomerProps) => (
-  <Html lang="no" dir="ltr">
-    <Head>
-      <style>{`
-        @media only screen and (max-width: 480px) {
-          .email-container { width: 100% !important; }
-          .content-section { padding: 20px 16px !important; }
-          .header-section { padding: 18px 0 !important; }
-          .footer-section { padding: 16px 16px !important; }
-          .cta-button { padding: 12px 20px !important; font-size: 14px !important; }
-        }
-      `}</style>
-    </Head>
-    <Preview>Velkommen som kunde hos {SITE_NAME}! 🎉</Preview>
-    <Body style={main}>
-      <Container style={container} className="email-container">
-        {/* Header */}
-        <Section style={headerSection} className="header-section">
-          <Img src={LOGO_URL} alt="Snakk" width="120" height="auto" style={logoImg} />
-        </Section>
+  ansvarlig_epost,
+  prosjekt_id,
+}: WelcomeCustomerProps) => {
+  const onboardingUrl = prosjekt_id
+    ? `${APP_URL}/onboarding?prosjekt=${prosjekt_id}`
+    : `${APP_URL}/onboarding`
 
-        {/* Content */}
-        <Section style={contentSection} className="content-section">
-          <Heading style={h1}>
-            Velkommen som kunde, {firmanavn}! 🎉
-          </Heading>
-
-          <Text style={text}>
-            {kontaktperson ? `Hei ${kontaktperson},` : 'Hei,'} 
-          </Text>
-
-          <Text style={text}>
-            Vi er veldig glade for å ha dere med som kunde hos {SITE_NAME}. 
-            Kontrakten er nå signert og vi er klare til å komme i gang!
-          </Text>
-
-          {prosjektnavn && (
-            <Section style={highlightBox}>
-              <Text style={highlightLabel}>Ditt onboarding-prosjekt</Text>
-              <Text style={highlightValue}>{prosjektnavn}</Text>
-            </Section>
-          )}
-
-          <Hr style={divider} />
-
-          <Heading as="h2" style={sectionHeading}>Hva skjer videre?</Heading>
-
-          <Section style={stepBox}>
-            <Text style={stepItem}>
-              <span style={stepNumber}>1</span>
-              <span>Vi setter opp onboarding-prosjektet ditt</span>
-            </Text>
-            <Text style={stepItem}>
-              <span style={stepNumber}>2</span>
-              <span>Du vil bli kontaktet av din kundeansvarlig for oppstartsmøte</span>
-            </Text>
-            <Text style={stepItem}>
-              <span style={stepNumber}>3</span>
-              <span>Vi konfigurerer løsningen sammen</span>
-            </Text>
-            <Text style={stepItem}>
-              <span style={stepNumber}>4</span>
-              <span>Go live! 🚀</span>
-            </Text>
+  return (
+    <Html lang="no" dir="ltr">
+      <Head>
+        <style>{`
+          @media only screen and (max-width: 480px) {
+            .email-container { width: 100% !important; }
+            .content-section { padding: 20px 16px !important; }
+            .header-section { padding: 18px 0 !important; }
+            .footer-section { padding: 16px 16px !important; }
+            .cta-button { padding: 12px 20px !important; font-size: 14px !important; }
+          }
+        `}</style>
+      </Head>
+      <Preview>Velkommen som kunde hos {SITE_NAME}! 🎉</Preview>
+      <Body style={main}>
+        <Container style={container} className="email-container">
+          {/* Header */}
+          <Section style={headerSection} className="header-section">
+            <Img src={LOGO_URL} alt="Snakk" width="120" height="auto" style={logoImg} />
           </Section>
 
-          {ansvarlig && (
-            <>
-              <Hr style={divider} />
-              <Text style={text}>
-                Din kontaktperson hos oss er <strong>{ansvarlig}</strong>. 
-                Ikke nøl med å ta kontakt om du har spørsmål!
+          {/* Content */}
+          <Section style={contentSection} className="content-section">
+            <Heading style={h1}>
+              Velkommen, {kontaktperson || firmanavn}! 🎉
+            </Heading>
+
+            <Text style={text}>
+              Vi er glade for å ha {firmanavn} med på laget. Her er hva som skjer videre:
+            </Text>
+
+            <Hr style={divider} />
+
+            {/* Step 1 */}
+            <Section style={stepBox}>
+              <Text style={stepItem}>
+                <span style={stepNumber}>1</span>
+                <span style={stepContent}>
+                  <span style={stepTitle}>Fyll ut onboarding-skjema</span>
+                  <span style={stepDesc}>Hjelper oss å forstå virksomheten din og trene agenten riktig.</span>
+                </span>
               </Text>
-            </>
-          )}
+            </Section>
 
-          <Hr style={divider} />
+            <Section style={{ textAlign: 'center', margin: '4px 0 20px' }}>
+              <Button style={ctaButton} className="cta-button" href={onboardingUrl}>
+                Start skjema →
+              </Button>
+            </Section>
 
-          <Section style={{ textAlign: 'center', margin: '8px 0' }}>
-            <Button style={ctaButton} className="cta-button" href={APP_URL}>
-              Logg inn i Snakk
-            </Button>
+            {/* Step 2 */}
+            <Section style={stepBox}>
+              <Text style={stepItem}>
+                <span style={stepNumber}>2</span>
+                <span style={stepContent}>
+                  <span style={stepTitle}>Vi setter opp agenten din</span>
+                  <span style={stepDesc}>Teamet vårt konfigurerer og trener AI-agenten basert på informasjonen du gir oss.</span>
+                </span>
+              </Text>
+            </Section>
+
+            {/* Step 3 */}
+            <Section style={stepBox}>
+              <Text style={stepItem}>
+                <span style={stepNumber}>3</span>
+                <span style={stepContent}>
+                  <span style={stepTitle}>Test og go live</span>
+                  <span style={stepDesc}>Du får tilgang til å teste agenten før den går live. Vi er der hele veien.</span>
+                </span>
+              </Text>
+            </Section>
+
+            {ansvarlig && (
+              <>
+                <Hr style={divider} />
+                <Text style={text}>
+                  Din kontaktperson hos Snakk er <strong>{ansvarlig}</strong>.
+                  {ansvarlig_epost ? ` Ta gjerne kontakt på ${ansvarlig_epost}.` : ' Ikke nøl med å ta kontakt!'}
+                </Text>
+              </>
+            )}
           </Section>
-        </Section>
 
-        {/* Footer */}
-        <Section style={footerSection} className="footer-section">
-          <Img src={LOGO_URL} alt="Snakk" width="80" height="auto" style={{ margin: '0 auto 8px' }} />
-          <Text style={footerText}>Takk for tilliten – vi gleder oss til samarbeidet!</Text>
-          <Text style={footerCopy}>©2026 Snakk. Alle rettigheter reservert.</Text>
-        </Section>
-      </Container>
-    </Body>
-  </Html>
-)
+          {/* Footer */}
+          <Section style={footerSection} className="footer-section">
+            <Img src={LOGO_URL} alt="Snakk" width="80" height="auto" style={{ margin: '0 auto 8px' }} />
+            <Text style={footerText}>Snakk Teknologi AS — snakk.ai</Text>
+            <Text style={footerCopy}>©2026 Snakk. Alle rettigheter reservert.</Text>
+          </Section>
+        </Container>
+      </Body>
+    </Html>
+  )
+}
 
 export const template = {
   component: WelcomeCustomerEmail,
@@ -127,7 +133,8 @@ export const template = {
     firmanavn: 'Acme Corp',
     kontaktperson: 'Kari Nordmann',
     ansvarlig: 'Robin',
-    prosjektnavn: 'Acme Corp – Onboarding',
+    ansvarlig_epost: 'robin@snakk.ai',
+    prosjekt_id: 'abc-123',
   },
 } satisfies TemplateEntry
 
@@ -140,19 +147,17 @@ const contentSection: React.CSSProperties = { backgroundColor: '#ffffff', paddin
 const h1: React.CSSProperties = { fontSize: '22px', fontWeight: 700, color: BRAND_DARK, margin: '0 0 16px' }
 const text: React.CSSProperties = { fontSize: '14px', color: '#555555', lineHeight: '1.6', margin: '0 0 14px' }
 const divider: React.CSSProperties = { borderColor: '#e8e6e3', margin: '18px 0' }
-const sectionHeading: React.CSSProperties = { fontSize: '12px', fontWeight: 700, color: BRAND_DARK, margin: '0 0 12px', textTransform: 'uppercase', letterSpacing: '0.5px' }
 
-const highlightBox: React.CSSProperties = { backgroundColor: '#f8f7f5', borderRadius: '8px', padding: '14px 18px', borderLeft: `3px solid ${BRAND_RED}`, margin: '16px 0' }
-const highlightLabel: React.CSSProperties = { fontSize: '11px', fontWeight: 600, color: '#999', margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.5px' }
-const highlightValue: React.CSSProperties = { fontSize: '16px', fontWeight: 700, color: BRAND_DARK, margin: '0' }
-
-const stepBox: React.CSSProperties = { padding: '0' }
-const stepItem: React.CSSProperties = { fontSize: '14px', color: '#555555', margin: '0 0 12px', lineHeight: '1.5', display: 'flex', alignItems: 'center' }
+const stepBox: React.CSSProperties = { padding: '0', marginBottom: '8px' }
+const stepItem: React.CSSProperties = { fontSize: '14px', color: '#555555', margin: '0', lineHeight: '1.5', display: 'flex', alignItems: 'flex-start' }
 const stepNumber: React.CSSProperties = {
-  display: 'inline-block', width: '24px', height: '24px', borderRadius: '50%',
-  backgroundColor: BRAND_RED, color: '#ffffff', fontSize: '12px', fontWeight: 700,
-  textAlign: 'center', lineHeight: '24px', marginRight: '12px', flexShrink: 0,
+  display: 'inline-block', width: '28px', height: '28px', borderRadius: '50%',
+  backgroundColor: BRAND_RED, color: '#ffffff', fontSize: '13px', fontWeight: 700,
+  textAlign: 'center', lineHeight: '28px', marginRight: '14px', flexShrink: 0,
 }
+const stepContent: React.CSSProperties = { display: 'inline-flex', flexDirection: 'column' }
+const stepTitle: React.CSSProperties = { fontWeight: 700, color: BRAND_DARK, fontSize: '14px' }
+const stepDesc: React.CSSProperties = { fontSize: '13px', color: '#777', marginTop: '2px' }
 
 const ctaButton: React.CSSProperties = {
   backgroundColor: BRAND_RED, color: '#ffffff', padding: '14px 28px',

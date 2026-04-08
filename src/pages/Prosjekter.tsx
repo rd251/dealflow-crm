@@ -15,11 +15,13 @@ import InlineTaskForm from "@/components/InlineTaskForm";
 import ActivityLog from "@/components/ActivityLog";
 import { Prosjekt, ProsjektStatus, Integrasjon } from "@/data/crm-data";
 import { toast } from "sonner";
+import OnboardingAnswers from "@/components/OnboardingAnswers";
 
-const statuses: ProsjektStatus[] = ["Ny", "I produksjon", "Test med kunde", "Live", "Blokkert"];
+const statuses: ProsjektStatus[] = ["Ny", "Skjema mottatt", "I produksjon", "Test med kunde", "Live", "Blokkert"];
 
 const statusColors: Record<ProsjektStatus, string> = {
   "Ny": "bg-stage-new-lead",
+  "Skjema mottatt": "bg-blue-400",
   "I produksjon": "bg-stage-contacted",
   "Test med kunde": "bg-stage-demo",
   "Live": "bg-stage-won",
@@ -138,6 +140,12 @@ export default function Prosjekter() {
                   <DetailStatCard label="Oppstart" value={`${currentP.oppstartskostnad.toLocaleString("no-NO")} kr`} />
                   <DetailStatCard label="Fakturert / Betalt" value={`${currentP.oppstart_fakturert ? "✓" : "✗"} / ${currentP.oppstart_betalt ? "✓" : "✗"}`} />
                 </DetailStatGrid>
+              </DetailSection>
+
+              <DetailDivider />
+
+              <DetailSection title="Onboarding-svar">
+                <OnboardingAnswers prosjektId={currentP.id} />
               </DetailSection>
             </>
           ),

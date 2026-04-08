@@ -6,7 +6,7 @@ export type LeadKilde = "Nettside" | "LinkedIn" | "Partner" | "Referanse" | "Kal
 export type SalgsmulighetStatus = "Møte booket" | "Behov avklart" | "Løsning presentert" | "Kontrakt sendt" | "Vunnet" | "Tapt";
 export type Tapsaarsak = "Pris" | "Ikke riktig timing" | "Valgte annen leverandør" | "Ikke behov" | "Teknisk / integrasjon" | "Annet";
 
-export type ProsjektStatus = "Ny" | "I produksjon" | "Test med kunde" | "Live" | "Blokkert";
+export type ProsjektStatus = "Ny" | "Skjema mottatt" | "I produksjon" | "Test med kunde" | "Live" | "Blokkert";
 export type Integrasjon = "Ingen" | "GastroPlanner" | "HubSpot" | "Lime" | "Salesforce" | "API" | "Annet";
 
 export type Kundestatus = "Ikke kunde" | "Pilot" | "Live" | "Pause" | "Kansellert";
