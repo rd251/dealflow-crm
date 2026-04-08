@@ -116,6 +116,19 @@ export default function PostMeetingDialog({ open, onOpenChange, meetingTitle, sa
           </div>
 
           <div>
+            <Label htmlFor="moetenotater" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+              Møtenotater
+            </Label>
+            <Textarea
+              id="moetenotater"
+              placeholder="Skriv et sammendrag av møtet..."
+              value={moetenotater}
+              onChange={(e) => setMoetenotater(e.target.value)}
+              className="mt-2 min-h-[80px]"
+            />
+          </div>
+
+          <div>
             <Label htmlFor="neste-steg" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
               Neste steg
             </Label>
