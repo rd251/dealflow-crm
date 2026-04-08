@@ -92,10 +92,13 @@ Deno.serve(async (req) => {
     const pdfUrl = publicUrlData.publicUrl;
 
     const dealBuilderPayload = {
-      mode: "SendForSigning",
+      mode: "SendByEmail",
+      templateId: "73bebc18-b668-4266-b323-3797b3e7ceab",
       uploadedPdfUrl: pdfUrl,
       title: `Avtale om bruk av Snakk Teknologi AS - ${data.firmanavn}`,
+      creatorEmail: data.sender_email,
       senderEmail: data.sender_email,
+      validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
       externalSignatories: [{
         name: data.kontaktperson,
         email: data.e_post,
