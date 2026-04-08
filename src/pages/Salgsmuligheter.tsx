@@ -1061,7 +1061,7 @@ export default function Salgsmuligheter() {
   );
 }
 
-function DealList({ deals, getSelskapNavn, onSelect, label, onNavigateSelskap, isMobile }: { deals: Salgsmulighet[]; getSelskapNavn: (id: string) => string; onSelect: (s: Salgsmulighet) => void; label: string; onNavigateSelskap?: (id: string) => void; isMobile: boolean }) {
+function DealList({ deals, getSelskapNavn, onSelect, label, onNavigateSelskap, isMobile, showKontraktStatus, showLukkedato }: { deals: Salgsmulighet[]; getSelskapNavn: (id: string) => string; onSelect: (s: Salgsmulighet) => void; label: string; onNavigateSelskap?: (id: string) => void; isMobile: boolean; showKontraktStatus?: boolean; showLukkedato?: boolean }) {
   if (deals.length === 0) return <div className="text-center py-12 text-muted-foreground text-sm">{label}: ingen</div>;
 
   if (isMobile) {
@@ -1072,7 +1072,15 @@ function DealList({ deals, getSelskapNavn, onSelect, label, onNavigateSelskap, i
             <p className="font-semibold text-sm truncate">{d.kontaktperson || "–"}</p>
             {d.use_case && <p className="text-xs text-muted-foreground">{d.use_case}</p>}
             <p className="text-xs text-muted-foreground cursor-pointer" onClick={e => { e.stopPropagation(); onNavigateSelskap?.(d.selskap_id); }}>{getSelskapNavn(d.selskap_id)}</p>
-            {d.oppstartskostnad > 0 && <p className="text-xs font-mono">{d.oppstartskostnad.toLocaleString("no-NO")} oppstart</p>}
+            <div className="flex items-center gap-2">
+              {d.oppstartskostnad > 0 && <p className="text-xs font-mono">{d.oppstartskostnad.toLocaleString("no-NO")} oppstart</p>}
+              {showKontraktStatus && d.kontrakt_status && (
+                <Badge className={`text-[10px] px-1.5 py-0 h-4 ${kontraktStatusColors[d.kontrakt_status as KontraktStatus] || ""}`}>{d.kontrakt_status}</Badge>
+              )}
+              {showLukkedato && d.forventet_lukkedato && (
+                <span className="text-[10px] text-destructive font-medium">Frist: {new Date(d.forventet_lukkedato).toLocaleDateString("nb-NO")}</span>
+              )}
+            </div>
           </div>
         ))}
       </div>
@@ -1087,7 +1095,10 @@ function DealList({ deals, getSelskapNavn, onSelect, label, onNavigateSelskap, i
             <th className="text-left px-4 py-3 font-medium">Kontaktperson</th>
             <th className="text-left px-4 py-3 font-medium">Use case</th>
             <th className="text-left px-4 py-3 font-medium">Selskap</th>
-            <th className="text-right px-4 py-3 font-medium">Oppstartskostnad</th>
+            <th className="text-left px-4 py-3 font-medium">Status</th>
+            {showKontraktStatus && <th className="text-left px-4 py-3 font-medium">Kontrakt</th>}
+            {showLukkedato && <th className="text-left px-4 py-3 font-medium">Lukkedato</th>}
+            <th className="text-right px-4 py-3 font-medium">MRR</th>
           </tr>
         </thead>
         <tbody>
@@ -1096,7 +1107,16 @@ function DealList({ deals, getSelskapNavn, onSelect, label, onNavigateSelskap, i
               <td className="px-4 py-3 font-medium">{d.kontaktperson || "–"}</td>
               <td className="px-4 py-3 text-muted-foreground">{d.use_case || "–"}</td>
               <td className="px-4 py-3 text-muted-foreground"><span className="cursor-pointer hover:text-primary hover:underline" onClick={e => { e.stopPropagation(); onNavigateSelskap?.(d.selskap_id); }}>{getSelskapNavn(d.selskap_id)}</span></td>
-              <td className="px-4 py-3 text-right font-mono">{d.oppstartskostnad ? d.oppstartskostnad.toLocaleString("no-NO") : "–"}</td>
+              <td className="px-4 py-3"><Badge variant="secondary" className="text-[10px]">{d.status}</Badge></td>
+              {showKontraktStatus && (
+                <td className="px-4 py-3">
+                  <Badge className={`text-[10px] px-1.5 py-0 h-4 ${kontraktStatusColors[d.kontrakt_status as KontraktStatus] || ""}`}>{d.kontrakt_status || "–"}</Badge>
+                </td>
+              )}
+              {showLukkedato && (
+                <td className="px-4 py-3 text-destructive text-xs font-medium">{d.forventet_lukkedato ? new Date(d.forventet_lukkedato).toLocaleDateString("nb-NO") : "–"}</td>
+              )}
+              <td className="px-4 py-3 text-right font-mono">{nok(d.forventet_mrr)}</td>
             </tr>
           ))}
         </tbody>
