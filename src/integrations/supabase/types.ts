@@ -915,6 +915,7 @@ export type Database = {
         Row: {
           ansvarlig: string | null
           created_at: string
+          dealbuilder_dokument_id: string | null
           e_post: string | null
           forventet_lukkedato: string | null
           forventet_mrr: number | null
@@ -922,6 +923,8 @@ export type Database = {
           kilde: Database["public"]["Enums"]["kilde"] | null
           kontakt_id: string | null
           kontaktperson: string | null
+          kontrakt_signert_dato: string | null
+          kontrakt_status: string
           kontraktslengde_mnd: number | null
           navn: string
           neste_steg: string | null
@@ -948,6 +951,7 @@ export type Database = {
         Insert: {
           ansvarlig?: string | null
           created_at?: string
+          dealbuilder_dokument_id?: string | null
           e_post?: string | null
           forventet_lukkedato?: string | null
           forventet_mrr?: number | null
@@ -955,6 +959,8 @@ export type Database = {
           kilde?: Database["public"]["Enums"]["kilde"] | null
           kontakt_id?: string | null
           kontaktperson?: string | null
+          kontrakt_signert_dato?: string | null
+          kontrakt_status?: string
           kontraktslengde_mnd?: number | null
           navn: string
           neste_steg?: string | null
@@ -981,6 +987,7 @@ export type Database = {
         Update: {
           ansvarlig?: string | null
           created_at?: string
+          dealbuilder_dokument_id?: string | null
           e_post?: string | null
           forventet_lukkedato?: string | null
           forventet_mrr?: number | null
@@ -988,6 +995,8 @@ export type Database = {
           kilde?: Database["public"]["Enums"]["kilde"] | null
           kontakt_id?: string | null
           kontaktperson?: string | null
+          kontrakt_signert_dato?: string | null
+          kontrakt_status?: string
           kontraktslengde_mnd?: number | null
           navn?: string
           neste_steg?: string | null

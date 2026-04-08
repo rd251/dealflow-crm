@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import DetailPanelShell, { DetailSection, DetailField, DetailDivider, DetailStatGrid, DetailStatCard } from "@/components/DetailPanelShell";
 import EntityCalendarTab from "@/components/EntityCalendarTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, GripVertical, Trophy, XCircle, Trash2, Phone, User, AlertTriangle, Clock, Building2, DollarSign, Mail } from "lucide-react";
+import { Plus, GripVertical, Trophy, XCircle, Trash2, Phone, User, AlertTriangle, Clock, Building2, DollarSign, Mail, FileSignature, PartyPopper } from "lucide-react";
 import SendEmailDialog from "@/components/SendEmailDialog";
 import SelskapInnsikt from "@/components/SelskapInnsikt";
 import CompanyLogo from "@/components/CompanyLogo";
@@ -20,7 +20,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { gravatarUrl } from "@/lib/gravatar";
 import EntityLinkPicker from "@/components/EntityLinkPicker";
 import { Badge } from "@/components/ui/badge";
-import { Salgsmulighet, SalgsmulighetStatus, Tapsaarsak, beregnTotalKontraktsverdi, beregnVektetPipeline } from "@/data/crm-data";
+import { Salgsmulighet, SalgsmulighetStatus, Tapsaarsak, KontraktStatus, beregnTotalKontraktsverdi, beregnVektetPipeline } from "@/data/crm-data";
 import InlineTaskForm from "@/components/InlineTaskForm";
 import ActivityLog from "@/components/ActivityLog";
 import EntityChangelog from "@/components/EntityChangelog";
@@ -29,6 +29,14 @@ import MeetingNotesList from "@/components/MeetingNotesList";
 const allStatuses: SalgsmulighetStatus[] = ["Møte booket", "Behov avklart", "Løsning presentert", "Tilbud sendt", "Beslutning"];
 const openStatuses = allStatuses;
 const tapsaarsaker: Tapsaarsak[] = ["Pris", "Ikke riktig timing", "Valgte annen leverandør", "Ikke behov", "Teknisk / integrasjon", "Annet"];
+
+const kontraktStatusColors: Record<KontraktStatus, string> = {
+  "Ikke sendt": "bg-muted text-muted-foreground",
+  "Sendt": "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+  "Åpnet": "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
+  "Signert": "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+  "Utløpt": "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+};
 
 function MobileSwipeCard({ deal, stage, onMove, onClick, signal, missingNeste, isBlocked, children }: {
   deal: Salgsmulighet; stage: SalgsmulighetStatus; onMove: (dealId: string, newStage: SalgsmulighetStatus) => void;
@@ -219,6 +227,7 @@ export default function Salgsmuligheter() {
       kilde: form.kilde as any, partner_id: "", partner_provisjon: 0, partner_kostnad: 0, netto_inntekt: 0,
       rolle_i_firma: form.rolle_i_firma, use_case: form.use_case,
       kontaktperson: form.kontaktperson, e_post: form.e_post, telefon: form.telefon,
+      kontrakt_status: "Ikke sendt", kontrakt_signert_dato: "", dealbuilder_dokument_id: "",
     };
     updateSalgsmuligheter(prev => [...prev, nySm]);
     setDialogOpen(false);
@@ -541,6 +550,9 @@ export default function Salgsmuligheter() {
           <>
             <Badge variant="secondary" className="text-xs">{currentSm.status}</Badge>
             {currentSm.sannsynlighet != null && <Badge variant="outline" className="text-xs">{currentSm.sannsynlighet}%</Badge>}
+            <Badge className={`text-[10px] ${kontraktStatusColors[currentSm.kontrakt_status as KontraktStatus] || kontraktStatusColors["Ikke sendt"]}`}>
+              <FileSignature className="w-3 h-3 mr-0.5" />{currentSm.kontrakt_status || "Ikke sendt"}
+            </Badge>
             {(() => {
               const sig = activitySignal(currentSm.sist_aktivitet);
               return <Badge className={`text-[10px] gap-1 ${sig.color === "bg-destructive" ? "bg-destructive/10 text-destructive" : sig.color === "bg-warning" ? "bg-warning/10 text-warning" : "bg-success/10 text-success"}`}>
@@ -556,6 +568,23 @@ export default function Salgsmuligheter() {
                 <Mail className="w-3.5 h-3.5 mr-1.5" />E-post
               </Button>
             )}
+            <Button size="sm" variant="outline" onClick={() => {
+              const selskap = selskaper.find(s => s.id === currentSm.selskap_id);
+              const params = new URLSearchParams({
+                companyname: selskap?.firmanavn || "",
+                customername: currentSm.kontaktperson || "",
+                email: currentSm.e_post || "",
+                phonenumber: currentSm.telefon || "",
+                orgnumber: selskap?.orgnr || "",
+                CRMid: currentSm.id,
+              });
+              window.open(`https://app.dealbuilder.io/contract/createnewcontractexternal?${params.toString()}`, "_blank");
+              updateSalgsmuligheter(prev => prev.map(s =>
+                s.id === currentSm.id ? { ...s, kontrakt_status: "Sendt" as const } : s
+              ));
+            }}>
+              <FileSignature className="w-3.5 h-3.5 mr-1.5" />Send kontrakt
+            </Button>
             <Button size="sm" className="bg-success hover:bg-success/90 text-success-foreground" onClick={() => { vinnSalgsmulighet(currentSm.id); setSelectedSm(null); }}>
               <Trophy className="w-3.5 h-3.5 mr-1.5" />Vunnet
             </Button>
@@ -758,6 +787,20 @@ export default function Salgsmuligheter() {
                   </div>
                 )}
 
+                {/* Kontrakt-status */}
+                <div className="space-y-2">
+                  <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Kontrakt</p>
+                  <div className="flex items-center gap-2">
+                    <Badge className={`text-xs ${kontraktStatusColors[currentSm.kontrakt_status as KontraktStatus] || kontraktStatusColors["Ikke sendt"]}`}>
+                      <FileSignature className="w-3 h-3 mr-1" />{currentSm.kontrakt_status || "Ikke sendt"}
+                    </Badge>
+                    {currentSm.kontrakt_status === "Signert" && currentSm.kontrakt_signert_dato && (
+                      <span className="text-xs text-success flex items-center gap-1">
+                        🎉 {new Date(currentSm.kontrakt_signert_dato).toLocaleDateString("nb-NO")}
+                      </span>
+                    )}
+                  </div>
+                </div>
                 {canEdit && (
                   <Button size="sm" variant="ghost" className="w-full text-destructive hover:bg-destructive/10 text-xs" onClick={() => {
                     updateSalgsmuligheter(prev => prev.filter(s => s.id !== currentSm.id));

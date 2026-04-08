@@ -52,6 +52,9 @@ function rowToSalgsmulighet(r: any): Salgsmulighet {
     partner_kostnad: Number(r.partner_kostnad) || 0, netto_inntekt: Number(r.netto_inntekt) || 0,
     rolle_i_firma: r.rolle_i_firma || "", use_case: r.use_case || "",
     kontaktperson: r.kontaktperson || "", e_post: r.e_post || "", telefon: r.telefon || "",
+    kontrakt_status: r.kontrakt_status || "Ikke sendt",
+    kontrakt_signert_dato: r.kontrakt_signert_dato || "",
+    dealbuilder_dokument_id: r.dealbuilder_dokument_id || "",
   };
 }
 function rowToProsjekt(r: any): Prosjekt {
@@ -752,6 +755,7 @@ function useCrmStoreInternal() {
       kilde: "Direkte salg", partner_id: "", partner_provisjon: 0, partner_kostnad: 0, netto_inntekt: 0,
       rolle_i_firma: lead.rolle_i_firma || "", use_case: lead.use_case || "",
       kontaktperson: lead.kontaktperson || "", e_post: lead.e_post || "", telefon: lead.telefon || "",
+      kontrakt_status: "Ikke sendt", kontrakt_signert_dato: "", dealbuilder_dokument_id: "",
     };
     updateSalgsmuligheter(prev => [...prev, nySm]);
 
