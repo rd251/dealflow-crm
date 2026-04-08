@@ -1050,33 +1050,48 @@ export type Database = {
       selskap_dokumenter: {
         Row: {
           created_at: string
+          dealbuilder_dokument_id: string | null
           fil_navn: string
           fil_sti: string
           fil_type: string
           id: string
+          kilde: string | null
           opplastet_av: string
           opplastet_av_user_id: string | null
+          opprettet_dato: string | null
           selskap_id: string
+          status: string | null
+          tittel: string | null
         }
         Insert: {
           created_at?: string
+          dealbuilder_dokument_id?: string | null
           fil_navn: string
           fil_sti: string
           fil_type?: string
           id?: string
+          kilde?: string | null
           opplastet_av?: string
           opplastet_av_user_id?: string | null
+          opprettet_dato?: string | null
           selskap_id: string
+          status?: string | null
+          tittel?: string | null
         }
         Update: {
           created_at?: string
+          dealbuilder_dokument_id?: string | null
           fil_navn?: string
           fil_sti?: string
           fil_type?: string
           id?: string
+          kilde?: string | null
           opplastet_av?: string
           opplastet_av_user_id?: string | null
+          opprettet_dato?: string | null
           selskap_id?: string
+          status?: string | null
+          tittel?: string | null
         }
         Relationships: []
       }

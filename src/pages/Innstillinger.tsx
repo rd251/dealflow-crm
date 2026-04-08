@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { CalendarDays, Mail, RefreshCw, Unlink, CheckCircle2, XCircle, Loader2, Globe, Copy, Check } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import DeletedItemsLog from "@/components/DeletedItemsLog";
+import DealBuilderSyncCard from "@/components/DealBuilderSyncCard";
 
 interface ConnectionData {
   last_synced_at: string | null;
@@ -356,6 +357,8 @@ export default function Innstillinger() {
             </div>
           </CardContent>
         </Card>
+        {/* DealBuilder sync */}
+        <DealBuilderSyncCard />
         {/* Deleted items log */}
         <DeletedItemsLog />
       </div>
