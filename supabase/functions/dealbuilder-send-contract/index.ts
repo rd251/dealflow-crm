@@ -54,6 +54,8 @@ Deno.serve(async (req) => {
         valgt_pakke: data.valgt_pakke,
         pakke_pris: data.pakke_pris,
         minutter: data.minutter,
+        sla: data.sla ?? null,
+        oppstartskostnad: data.oppstartskostnad ?? null,
       }),
     });
 
