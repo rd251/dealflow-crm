@@ -5,7 +5,7 @@ import { useCrmStore } from "@/hooks/use-crm-store";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Badge } from "@/components/ui/badge";
 import { PartnerPipelineStatus } from "@/data/crm-data";
-import { GripVertical } from "lucide-react";
+import { GripVertical, Briefcase } from "lucide-react";
 
 const pipelineStatuses: PartnerPipelineStatus[] = ["Ny partnermulighet", "Introduksjon", "Demo / gjennomgang", "Forhandling", "Aktiv partner"];
 
