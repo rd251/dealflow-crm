@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
     // Find salgsmulighet by ID (CRMid)
     const { data: deal, error: findError } = await supabase
       .from("salgsmuligheter")
-      .select("id, navn, selskap_id")
+      .select("id, navn, selskap_id, forventet_mrr, oppstartskostnad, ansvarlig")
       .eq("id", CRMid)
       .maybeSingle();
 
@@ -94,8 +94,35 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Log activity if signed
-    if (logActivity) {
+    // If signed: update company to Pilot, create project, log activity
+    if (logActivity && deal.selskap_id) {
+      const today = new Date().toISOString().split("T")[0];
+      const mrr = Number(deal.forventet_mrr) || 0;
+
+      // Update selskap to "Pilot" (Kundeforhold)
+      await supabase.from("selskaper").update({
+        kundestatus: "Pilot",
+        live_status: false,
+        onboarding_status: "Ikke startet",
+        mrr: mrr,
+        arr: mrr * 12,
+        oppstartskostnad: Number(deal.oppstartskostnad) || 0,
+        sist_aktivitet: today,
+        lukkedato: today,
+      }).eq("id", deal.selskap_id);
+
+      // Create onboarding project
+      await supabase.from("prosjekter").insert({
+        prosjektnavn: deal.navn,
+        selskap_id: deal.selskap_id,
+        salgsmulighet_id: CRMid,
+        ansvarlig: deal.ansvarlig || "",
+        status: "Ny",
+        startdato: today,
+        oppstartskostnad: Number(deal.oppstartskostnad) || 0,
+      });
+
+      // Log activity
       await supabase.from("aktiviteter").insert({
         type: "Notat",
         beskrivelse: activityDescription,
