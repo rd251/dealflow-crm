@@ -27,6 +27,7 @@ import InlineTaskForm from "@/components/InlineTaskForm";
 import ActivityLog from "@/components/ActivityLog";
 import EntityChangelog from "@/components/EntityChangelog";
 import MeetingNotesList from "@/components/MeetingNotesList";
+import SendContractModal from "@/components/SendContractModal";
 
 const allStatuses: SalgsmulighetStatus[] = ["Møte booket", "Behov avklart", "Løsning presentert", "Kontrakt sendt"];
 const openStatuses = allStatuses;
@@ -164,6 +165,7 @@ export default function Salgsmuligheter() {
   const [moveBlockedId, setMoveBlockedId] = useState<string | null>(null);
   const [form, setForm] = useState({ selskap_id: "", kontakt_id: "", forventet_mrr: 0, sla: 0, oppstartskostnad: 0, kontraktslengde_mnd: 12, sannsynlighet: 50, forventet_lukkedato: "", neste_steg: "", rolle_i_firma: "", use_case: "", kontaktperson: "", e_post: "", telefon: "", ansvarlig: "", kilde: "Nettside" as string });
   const [filterUtenAktivitet, setFilterUtenAktivitet] = useState(false);
+  const [contractModalOpen, setContractModalOpen] = useState(false);
 
   useEffect(() => {
     const openId = searchParams.get("open");
@@ -769,23 +771,7 @@ export default function Salgsmuligheter() {
                   </div>
                   {canEdit && (
                     <div className="flex flex-wrap gap-2">
-                      <Button size="default" variant="destructive" className="text-sm gap-2" onClick={() => {
-                        const params = new URLSearchParams({
-                          companyname: selskap?.firmanavn || "",
-                          customername: currentSm.kontaktperson || "",
-                          email: currentSm.e_post || "",
-                          phonenumber: currentSm.telefon || "",
-                          orgnumber: selskap?.orgnr || "",
-                          address: selskap?.postadresse || "",
-                          visitaddress: selskap?.firmaadresse || "",
-                          CRMid: currentSm.id,
-                          pakke: currentSm.valgt_pakke || "",
-                        });
-                        window.open(`https://app.dealbuilder.io/contract/createnewcontractexternal?${params.toString()}`, "_blank");
-                        updateSalgsmuligheter(prev => prev.map(s =>
-                          s.id === currentSm.id ? { ...s, kontrakt_status: "Sendt" as const, status: "Kontrakt sendt" as SalgsmulighetStatus, sist_aktivitet: new Date().toISOString().split("T")[0] } : s
-                        ));
-                      }}>
+                      <Button size="default" variant="destructive" className="text-sm gap-2" onClick={() => setContractModalOpen(true)}>
                         <FileSignature className="w-4 h-4" />Send kontrakt
                       </Button>
                       {(currentSm.kontrakt_status === "Sendt" || currentSm.kontrakt_status === "Åpnet") && (
@@ -808,6 +794,39 @@ export default function Salgsmuligheter() {
                       )}
                     </div>
                   )}
+                  {currentSm && (() => {
+                    const pakke = PAKKER.find(p => p.navn === currentSm.valgt_pakke);
+                    return (
+                      <SendContractModal
+                        open={contractModalOpen}
+                        onOpenChange={setContractModalOpen}
+                        contractData={{
+                          salgsmulighet_id: currentSm.id,
+                          firmanavn: selskap?.firmanavn || "",
+                          orgnr: selskap?.orgnr || "",
+                          adresse: selskap?.postadresse || selskap?.firmaadresse || "",
+                          kontaktperson: currentSm.kontaktperson || "",
+                          telefon: currentSm.telefon || "",
+                          e_post: currentSm.e_post || "",
+                          valgt_pakke: currentSm.valgt_pakke || "",
+                          pakke_pris: pakke?.mrr || currentSm.forventet_mrr || 0,
+                          minutter: pakke?.minutter || "",
+                        }}
+                        senderEmail={user?.email || ""}
+                        onContractSent={(dokumentId) => {
+                          updateSalgsmuligheter(prev => prev.map(s =>
+                            s.id === currentSm.id ? {
+                              ...s,
+                              kontrakt_status: "Sendt" as const,
+                              status: "Kontrakt sendt" as SalgsmulighetStatus,
+                              sist_aktivitet: new Date().toISOString().split("T")[0],
+                              ...(dokumentId ? { dealbuilder_dokument_id: dokumentId } : {}),
+                            } : s
+                          ));
+                        }}
+                      />
+                    );
+                  })()}
                 </DetailSection>
 
                 {canEdit && (
