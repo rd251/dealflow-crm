@@ -36,6 +36,7 @@ export default function PostMeetingDialog({ open, onOpenChange, meetingTitle, sa
   const [aiSuggested, setAiSuggested] = useState(false);
   const [aiOppsummering, setAiOppsummering] = useState("");
   const [aiKundesignal, setAiKundesignal] = useState("");
+  const [aiNesteStegOptions, setAiNesteStegOptions] = useState<string[]>([]);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Debounced AI call when meeting notes change
@@ -89,6 +90,9 @@ export default function PostMeetingDialog({ open, onOpenChange, meetingTitle, sa
       if (data?.foreslatt_neste_steg_tekst) {
         setNesteSteg(data.foreslatt_neste_steg_tekst);
         setAiSuggested(true);
+      }
+      if (data?.neste_steg && Array.isArray(data.neste_steg) && data.neste_steg.length > 0) {
+        setAiNesteStegOptions(data.neste_steg);
       }
       if (data?.oppsummering) setAiOppsummering(data.oppsummering);
       if (data?.kundesignal) setAiKundesignal(data.kundesignal);
@@ -164,6 +168,7 @@ export default function PostMeetingDialog({ open, onOpenChange, meetingTitle, sa
       setAiSuggested(false);
       setAiOppsummering("");
       setAiKundesignal("");
+      setAiNesteStegOptions([]);
     } catch (err) {
       console.error(err);
       toast.error("Noe gikk galt");
@@ -263,6 +268,28 @@ export default function PostMeetingDialog({ open, onOpenChange, meetingTitle, sa
               }}
               className={cn("mt-2 min-h-[80px]", aiSuggested && "ring-1 ring-primary/30")}
             />
+            {aiNesteStegOptions.length > 1 && (
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {aiNesteStegOptions.map((opt, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => {
+                      setNesteSteg(opt);
+                      setAiSuggested(true);
+                    }}
+                    className={cn(
+                      "text-xs px-2.5 py-1.5 rounded-md border transition-all text-left",
+                      nesteSteg === opt
+                        ? "border-primary bg-primary/10 text-primary font-medium"
+                        : "border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground"
+                    )}
+                  >
+                    {opt}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
