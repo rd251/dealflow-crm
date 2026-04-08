@@ -228,7 +228,7 @@ export default function Salgsmuligheter() {
       kilde: form.kilde as any, partner_id: "", partner_provisjon: 0, partner_kostnad: 0, netto_inntekt: 0,
       rolle_i_firma: form.rolle_i_firma, use_case: form.use_case,
       kontaktperson: form.kontaktperson, e_post: form.e_post, telefon: form.telefon,
-      kontrakt_status: "Ikke sendt", kontrakt_signert_dato: "", dealbuilder_dokument_id: "",
+      kontrakt_status: "Ikke sendt", kontrakt_signert_dato: "", dealbuilder_dokument_id: "", valgt_pakke: "",
     };
     updateSalgsmuligheter(prev => [...prev, nySm]);
     setDialogOpen(false);
