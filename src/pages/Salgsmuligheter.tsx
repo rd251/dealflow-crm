@@ -402,7 +402,7 @@ export default function Salgsmuligheter() {
                               <p className="text-xs font-semibold text-foreground truncate">{getSelskapNavn(deal.selskap_id || "")}</p>
                               {deal.kontaktperson && <p className="text-[10px] text-muted-foreground truncate">{deal.kontaktperson}</p>}
                             </div>
-                            <span className="text-xs font-medium text-foreground shrink-0">{nok(deal.forventet_mrr)}</span>
+                            <span className="text-xs font-medium text-foreground shrink-0">{nok(deal.forventet_mrr)}{deal.valgt_pakke ? ` · ${deal.valgt_pakke}` : ""}</span>
                             {deal.kontrakt_status && deal.kontrakt_status !== "Ikke sendt" && (
                               <Badge className={`text-[8px] px-1 py-0 h-3.5 shrink-0 ${kontraktStatusColors[deal.kontrakt_status as KontraktStatus]}`}>
                                 {deal.kontrakt_status === "Signert" ? "✅" : deal.kontrakt_status.charAt(0)}
@@ -456,12 +456,20 @@ export default function Salgsmuligheter() {
                               </div>
                             )}
 
-                            {/* 4. MRR */}
+                            {/* 4. MRR + Package */}
                             <div className="flex items-center gap-2 text-xs text-muted-foreground">
                               <div className="w-5 h-5 flex items-center justify-center shrink-0">
                                 <DollarSign className="w-3.5 h-3.5" />
                               </div>
                               <span className="font-medium text-foreground">{nok(deal.forventet_mrr)}</span>
+                              {deal.valgt_pakke && (() => {
+                                const pakke = PAKKER.find(p => p.navn === deal.valgt_pakke);
+                                return (
+                                  <span className="text-[10px] text-muted-foreground">
+                                    · {deal.valgt_pakke}{pakke?.minutter ? ` (${pakke.minutter})` : ""}
+                                  </span>
+                                );
+                              })()}
                             </div>
 
                             {/* 5. Deal owner */}
