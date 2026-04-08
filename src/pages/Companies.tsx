@@ -25,6 +25,7 @@ import { Selskap, Kundestatus, OnboardingStatus, Kundetilstand, Kanselleringsaar
 import { Badge } from "@/components/ui/badge";
 import DataImportDialog from "@/components/DataImportDialog";
 import LastActivityBadge from "@/components/LastActivityBadge";
+import CompanyDocuments from "@/components/CompanyDocuments";
 
 const kundestatuser: Kundestatus[] = ["Ikke kunde", "Pilot", "Live", "Pause", "Kansellert"];
 const onboardingStatuser: OnboardingStatus[] = ["Ikke startet", "Pågår", "Venter på kunde", "Klar for live", "Ferdig"];
@@ -670,6 +671,9 @@ export default function Companies() {
             ),
             kalender: (
               <EntityCalendarTab selskap_id={currentSelskap.id} />
+            ),
+            dokumenter: (
+              <CompanyDocuments selskapId={currentSelskap.id} />
             ),
           };
         })() : undefined}

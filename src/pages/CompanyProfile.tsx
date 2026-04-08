@@ -23,6 +23,7 @@ import SelskapInnsikt from "@/components/SelskapInnsikt";
 import { Kundestatus, OnboardingStatus, Kundetilstand, SalgsmulighetStatus, Kontakt } from "@/data/crm-data";
 import { Rocket } from "lucide-react";
 import { toast } from "sonner";
+import CompanyDocuments from "@/components/CompanyDocuments";
 
 const kundestatuser: Kundestatus[] = ["Ikke kunde", "Pilot", "Live", "Pause", "Kansellert"];
 const onboardingStatuser: OnboardingStatus[] = ["Ikke startet", "Pågår", "Venter på kunde", "Klar for live", "Ferdig"];
@@ -520,6 +521,10 @@ export default function CompanyProfile() {
                 updateSelskaper(prev => prev.map(s => s.id === id ? { ...s, sist_aktivitet: new Date().toISOString().split("T")[0] } : s));
               }} />
               <EntityChangelog entity_type="selskap" entity_id={id!} />
+            </div>
+
+            <div className="bg-card border rounded-xl p-4 sm:p-5">
+              <CompanyDocuments selskapId={id!} />
             </div>
           </div>
         </div>
