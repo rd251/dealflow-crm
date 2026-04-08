@@ -252,6 +252,27 @@ export default function Salgsmuligheter() {
   const lostThisMonth = salgsmuligheter.filter(s => s.status === "Tapt" && thisMonth(s.tapt_dato));
   const allClosed = salgsmuligheter.filter(s => s.status === "Vunnet" || s.status === "Tapt");
 
+  // Venter på signering: kontrakt sendt/åpnet men ikke signert, og deal er fortsatt åpen
+  const awaitingSignature = salgsmuligheter.filter(s =>
+    openStatuses.includes(s.status) &&
+    (s.kontrakt_status === "Sendt" || s.kontrakt_status === "Åpnet")
+  );
+
+  // Forfalt: deals med forventet lukkedato som har passert
+  const overdueDeals = salgsmuligheter.filter(s =>
+    openStatuses.includes(s.status) &&
+    s.forventet_lukkedato &&
+    new Date(s.forventet_lukkedato) < now
+  );
+
+  // Inaktive: ingen aktivitet siste 7 dager
+  const inactiveDeals = salgsmuligheter.filter(s => {
+    if (!openStatuses.includes(s.status)) return false;
+    if (!s.sist_aktivitet) return true;
+    const days = Math.floor((now.getTime() - new Date(s.sist_aktivitet).getTime()) / (1000 * 60 * 60 * 24));
+    return days > 7;
+  });
+
   const currentSm = selectedSm ? salgsmuligheter.find(s => s.id === selectedSm.id) || selectedSm : null;
 
   
