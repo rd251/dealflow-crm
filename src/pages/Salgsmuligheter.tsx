@@ -350,6 +350,9 @@ export default function Salgsmuligheter() {
       <Tabs defaultValue="pipeline">
         <TabsList className="mb-4 flex-wrap h-auto gap-1">
           <TabsTrigger value="pipeline" className="text-xs sm:text-sm">Pipeline</TabsTrigger>
+          <TabsTrigger value="awaiting" className="text-xs sm:text-sm">Venter på signering ({awaitingSignature.length})</TabsTrigger>
+          <TabsTrigger value="overdue" className="text-xs sm:text-sm">Forfalt ({overdueDeals.length})</TabsTrigger>
+          <TabsTrigger value="inactive" className="text-xs sm:text-sm">Inaktive ({inactiveDeals.length})</TabsTrigger>
           <TabsTrigger value="won" className="text-xs sm:text-sm">Vunnet ({wonThisMonth.length})</TabsTrigger>
           <TabsTrigger value="lost" className="text-xs sm:text-sm">Tapt ({lostThisMonth.length})</TabsTrigger>
           <TabsTrigger value="all" className="text-xs sm:text-sm">Avsluttede</TabsTrigger>
