@@ -2,7 +2,7 @@ import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { z } from "npm:zod@3";
 
 // PDF generation using jsPDF
-import jsPDF from "npm:jspdf@2";
+import { jsPDF } from "npm:jspdf@2";
 
 const BodySchema = z.object({
   firmanavn: z.string().min(1),
