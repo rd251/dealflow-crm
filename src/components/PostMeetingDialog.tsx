@@ -237,6 +237,7 @@ export default function PostMeetingDialog({ open, onOpenChange, meetingTitle, sa
           )}
 
 
+          <div>
             <div className="flex items-center justify-between">
               <Label htmlFor="neste-steg" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                 Neste steg
