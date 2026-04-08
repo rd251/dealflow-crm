@@ -268,6 +268,28 @@ export default function PostMeetingDialog({ open, onOpenChange, meetingTitle, sa
               }}
               className={cn("mt-2 min-h-[80px]", aiSuggested && "ring-1 ring-primary/30")}
             />
+            {aiNesteStegOptions.length > 1 && (
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {aiNesteStegOptions.map((opt, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => {
+                      setNesteSteg(opt);
+                      setAiSuggested(true);
+                    }}
+                    className={cn(
+                      "text-xs px-2.5 py-1.5 rounded-md border transition-all text-left",
+                      nesteSteg === opt
+                        ? "border-primary bg-primary/10 text-primary font-medium"
+                        : "border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground"
+                    )}
+                  >
+                    {opt}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
