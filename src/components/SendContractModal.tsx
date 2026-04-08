@@ -19,6 +19,8 @@ interface ContractData {
   valgt_pakke: string;
   pakke_pris: number;
   minutter: string;
+  sla?: number | null;
+  oppstartskostnad?: number | null;
 }
 
 interface SendContractModalProps {
@@ -65,6 +67,8 @@ export default function SendContractModal({
           valgt_pakke: contractData.valgt_pakke,
           pakke_pris: contractData.pakke_pris,
           minutter: contractData.minutter,
+          sla: contractData.sla ?? null,
+          oppstartskostnad: contractData.oppstartskostnad ?? null,
         }),
       });
 

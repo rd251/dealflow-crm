@@ -811,6 +811,8 @@ export default function Salgsmuligheter() {
                           valgt_pakke: currentSm.valgt_pakke || "",
                           pakke_pris: pakke?.mrr || currentSm.forventet_mrr || 0,
                           minutter: pakke?.minutter || "",
+                          sla: currentSm.sla ?? null,
+                          oppstartskostnad: currentSm.oppstartskostnad ?? null,
                         }}
                         senderEmail={user?.email || ""}
                         onContractSent={(dokumentId) => {
