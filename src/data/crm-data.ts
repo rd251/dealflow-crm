@@ -47,6 +47,8 @@ export interface Lead {
   use_case: string;
 }
 
+export type KontraktStatus = "Ikke sendt" | "Sendt" | "Åpnet" | "Signert" | "Utløpt";
+
 export interface Salgsmulighet {
   id: string;
   navn: string;
@@ -77,6 +79,9 @@ export interface Salgsmulighet {
   kontaktperson: string;
   e_post: string;
   telefon: string;
+  kontrakt_status: KontraktStatus;
+  kontrakt_signert_dato: string;
+  dealbuilder_dokument_id: string;
 }
 
 export interface Prosjekt {
