@@ -27,9 +27,10 @@ const resultatConfig: { value: Resultat; label: string; icon: React.ReactNode; c
   { value: "dårlig", label: "Dårlig", icon: <ThumbsDown className="w-4 h-4" />, cls: "border-destructive/30 bg-destructive/10 text-destructive" },
 ];
 
-export default function PostMeetingDialog({ open, onOpenChange, meetingTitle, salgsmulighet_id, selskap_id }: Props) {
+export default function PostMeetingDialog({ open, onOpenChange, meetingTitle, salgsmulighet_id, selskap_id, aktivitet_id }: Props) {
   const [resultat, setResultat] = useState<Resultat | null>(null);
   const [nesteSteg, setNesteSteg] = useState("");
+  const [moetenotater, setMoetenotater] = useState("");
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
