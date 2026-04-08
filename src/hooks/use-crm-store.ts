@@ -776,26 +776,49 @@ function useCrmStoreInternal() {
     ));
   }, [leads, selskaper, kontakter, updateLeads, updateSalgsmuligheter, updateSelskaper, updateKontakter]);
 
-  const konverterTilPartner = useCallback((leadId: string) => {
+  const konverterTilPartner = useCallback((leadId: string, enrichment?: { orgnr?: string; bransje?: string; firmaadresse?: string; postadresse?: string }) => {
     const lead = leads.find(l => l.id === leadId);
     if (!lead) return;
     const today = new Date().toISOString().split("T")[0];
 
-    // Only create partner – no selskap in kundeforhold for partner leads
+    // Create selskap for partner
+    let selskapId = selskaper.find(s => s.firmanavn.toLowerCase() === lead.firmanavn.toLowerCase())?.id;
+    if (!selskapId) {
+      selskapId = crypto.randomUUID();
+      const nyttSelskap: Selskap = {
+        id: selskapId, firmanavn: lead.firmanavn, bransje: enrichment?.bransje || "", kundeansvarlig: lead.ansvarlig,
+        kundestatus: "Ikke kunde", live_status: false, onboarding_status: "Ikke startet",
+        mrr: 0, arr: 0, oppstartskostnad: 0, go_live_dato: "", kansellert_dato: "",
+        kanselleringsaarsak: "", kanselleringsnotat: "", kundetilstand: "Bra",
+        sist_aktivitet: today, neste_steg: "", notater: "",
+        kilde: "Partner", partner_id: "", lukkedato: "", domene: "", orgnr: enrichment?.orgnr || "",
+        firmaadresse: enrichment?.firmaadresse || "", postadresse: enrichment?.postadresse || "",
+      };
+      updateSelskaper(prev => [...prev, nyttSelskap]);
+    } else if (enrichment) {
+      updateSelskaper(prev => prev.map(s => s.id === selskapId ? {
+        ...s,
+        ...(enrichment.orgnr && !s.orgnr ? { orgnr: enrichment.orgnr } : {}),
+        ...(enrichment.bransje && !s.bransje ? { bransje: enrichment.bransje } : {}),
+        ...(enrichment.firmaadresse && !s.firmaadresse ? { firmaadresse: enrichment.firmaadresse } : {}),
+        ...(enrichment.postadresse && !s.postadresse ? { postadresse: enrichment.postadresse } : {}),
+      } : s));
+    }
+
     const partnerId = crypto.randomUUID();
     const nyPartner: Partner = {
       id: partnerId, partnernavn: lead.firmanavn, partnertype: "Salgspartner",
       kontaktperson: lead.kontaktperson, e_post: lead.e_post, telefon: lead.telefon,
       partnerstatus: "Under onboarding", pipeline_status: "Ny partnermulighet",
       ansvarlig: lead.ansvarlig, provisjonsprosent: 0, provisjonstype: "",
-      selskap_id: "", opprettet_dato: today, sist_aktivitet: today, notater: lead.notater,
+      selskap_id: selskapId || "", opprettet_dato: today, sist_aktivitet: today, notater: lead.notater,
     };
     updatePartnere(prev => [...prev, nyPartner]);
 
     updateLeads(prev => prev.map(l =>
       l.id === leadId ? { ...l, status: "Kvalifisert" as LeadStatus, konvertert_til: "partner" as const, konvertert_dato: today, sist_aktivitet: today } : l
     ));
-  }, [leads, updateLeads, updatePartnere]);
+  }, [leads, selskaper, updateLeads, updatePartnere, updateSelskaper]);
 
   const vinnSalgsmulighet = useCallback((smId: string) => {
     const sm = salgsmuligheter.find(s => s.id === smId);
