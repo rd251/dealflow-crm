@@ -252,6 +252,27 @@ export default function Salgsmuligheter() {
   const lostThisMonth = salgsmuligheter.filter(s => s.status === "Tapt" && thisMonth(s.tapt_dato));
   const allClosed = salgsmuligheter.filter(s => s.status === "Vunnet" || s.status === "Tapt");
 
+  // Venter på signering: kontrakt sendt/åpnet men ikke signert, og deal er fortsatt åpen
+  const awaitingSignature = salgsmuligheter.filter(s =>
+    openStatuses.includes(s.status) &&
+    (s.kontrakt_status === "Sendt" || s.kontrakt_status === "Åpnet")
+  );
+
+  // Forfalt: deals med forventet lukkedato som har passert
+  const overdueDeals = salgsmuligheter.filter(s =>
+    openStatuses.includes(s.status) &&
+    s.forventet_lukkedato &&
+    new Date(s.forventet_lukkedato) < now
+  );
+
+  // Inaktive: ingen aktivitet siste 7 dager
+  const inactiveDeals = salgsmuligheter.filter(s => {
+    if (!openStatuses.includes(s.status)) return false;
+    if (!s.sist_aktivitet) return true;
+    const days = Math.floor((now.getTime() - new Date(s.sist_aktivitet).getTime()) / (1000 * 60 * 60 * 24));
+    return days > 7;
+  });
+
   const currentSm = selectedSm ? salgsmuligheter.find(s => s.id === selectedSm.id) || selectedSm : null;
 
   
@@ -329,6 +350,9 @@ export default function Salgsmuligheter() {
       <Tabs defaultValue="pipeline">
         <TabsList className="mb-4 flex-wrap h-auto gap-1">
           <TabsTrigger value="pipeline" className="text-xs sm:text-sm">Pipeline</TabsTrigger>
+          <TabsTrigger value="awaiting" className="text-xs sm:text-sm">Venter på signering ({awaitingSignature.length})</TabsTrigger>
+          <TabsTrigger value="overdue" className="text-xs sm:text-sm">Forfalt ({overdueDeals.length})</TabsTrigger>
+          <TabsTrigger value="inactive" className="text-xs sm:text-sm">Inaktive ({inactiveDeals.length})</TabsTrigger>
           <TabsTrigger value="won" className="text-xs sm:text-sm">Vunnet ({wonThisMonth.length})</TabsTrigger>
           <TabsTrigger value="lost" className="text-xs sm:text-sm">Tapt ({lostThisMonth.length})</TabsTrigger>
           <TabsTrigger value="all" className="text-xs sm:text-sm">Avsluttede</TabsTrigger>
@@ -554,6 +578,15 @@ export default function Salgsmuligheter() {
           </div>
         </TabsContent>
 
+        <TabsContent value="awaiting">
+          <DealList deals={awaitingSignature} getSelskapNavn={getSelskapNavn} onSelect={setSelectedSm} label="Venter på signering" onNavigateSelskap={id => navigate(`/selskaper/${id}`)} isMobile={isMobile} showKontraktStatus />
+        </TabsContent>
+        <TabsContent value="overdue">
+          <DealList deals={overdueDeals} getSelskapNavn={getSelskapNavn} onSelect={setSelectedSm} label="Forfalt lukkedato" onNavigateSelskap={id => navigate(`/selskaper/${id}`)} isMobile={isMobile} showLukkedato />
+        </TabsContent>
+        <TabsContent value="inactive">
+          <DealList deals={inactiveDeals} getSelskapNavn={getSelskapNavn} onSelect={setSelectedSm} label="Inaktive deals (>7 dager)" onNavigateSelskap={id => navigate(`/selskaper/${id}`)} isMobile={isMobile} />
+        </TabsContent>
         <TabsContent value="won">
           <DealList deals={wonThisMonth} getSelskapNavn={getSelskapNavn} onSelect={setSelectedSm} label="Vunnet denne måneden" onNavigateSelskap={id => navigate(`/selskaper/${id}`)} isMobile={isMobile} />
         </TabsContent>
@@ -1028,7 +1061,7 @@ export default function Salgsmuligheter() {
   );
 }
 
-function DealList({ deals, getSelskapNavn, onSelect, label, onNavigateSelskap, isMobile }: { deals: Salgsmulighet[]; getSelskapNavn: (id: string) => string; onSelect: (s: Salgsmulighet) => void; label: string; onNavigateSelskap?: (id: string) => void; isMobile: boolean }) {
+function DealList({ deals, getSelskapNavn, onSelect, label, onNavigateSelskap, isMobile, showKontraktStatus, showLukkedato }: { deals: Salgsmulighet[]; getSelskapNavn: (id: string) => string; onSelect: (s: Salgsmulighet) => void; label: string; onNavigateSelskap?: (id: string) => void; isMobile: boolean; showKontraktStatus?: boolean; showLukkedato?: boolean }) {
   if (deals.length === 0) return <div className="text-center py-12 text-muted-foreground text-sm">{label}: ingen</div>;
 
   if (isMobile) {
@@ -1039,7 +1072,15 @@ function DealList({ deals, getSelskapNavn, onSelect, label, onNavigateSelskap, i
             <p className="font-semibold text-sm truncate">{d.kontaktperson || "–"}</p>
             {d.use_case && <p className="text-xs text-muted-foreground">{d.use_case}</p>}
             <p className="text-xs text-muted-foreground cursor-pointer" onClick={e => { e.stopPropagation(); onNavigateSelskap?.(d.selskap_id); }}>{getSelskapNavn(d.selskap_id)}</p>
-            {d.oppstartskostnad > 0 && <p className="text-xs font-mono">{d.oppstartskostnad.toLocaleString("no-NO")} oppstart</p>}
+            <div className="flex items-center gap-2">
+              {d.oppstartskostnad > 0 && <p className="text-xs font-mono">{d.oppstartskostnad.toLocaleString("no-NO")} oppstart</p>}
+              {showKontraktStatus && d.kontrakt_status && (
+                <Badge className={`text-[10px] px-1.5 py-0 h-4 ${kontraktStatusColors[d.kontrakt_status as KontraktStatus] || ""}`}>{d.kontrakt_status}</Badge>
+              )}
+              {showLukkedato && d.forventet_lukkedato && (
+                <span className="text-[10px] text-destructive font-medium">Frist: {new Date(d.forventet_lukkedato).toLocaleDateString("nb-NO")}</span>
+              )}
+            </div>
           </div>
         ))}
       </div>
@@ -1054,7 +1095,10 @@ function DealList({ deals, getSelskapNavn, onSelect, label, onNavigateSelskap, i
             <th className="text-left px-4 py-3 font-medium">Kontaktperson</th>
             <th className="text-left px-4 py-3 font-medium">Use case</th>
             <th className="text-left px-4 py-3 font-medium">Selskap</th>
-            <th className="text-right px-4 py-3 font-medium">Oppstartskostnad</th>
+            <th className="text-left px-4 py-3 font-medium">Status</th>
+            {showKontraktStatus && <th className="text-left px-4 py-3 font-medium">Kontrakt</th>}
+            {showLukkedato && <th className="text-left px-4 py-3 font-medium">Lukkedato</th>}
+            <th className="text-right px-4 py-3 font-medium">MRR</th>
           </tr>
         </thead>
         <tbody>
@@ -1063,7 +1107,16 @@ function DealList({ deals, getSelskapNavn, onSelect, label, onNavigateSelskap, i
               <td className="px-4 py-3 font-medium">{d.kontaktperson || "–"}</td>
               <td className="px-4 py-3 text-muted-foreground">{d.use_case || "–"}</td>
               <td className="px-4 py-3 text-muted-foreground"><span className="cursor-pointer hover:text-primary hover:underline" onClick={e => { e.stopPropagation(); onNavigateSelskap?.(d.selskap_id); }}>{getSelskapNavn(d.selskap_id)}</span></td>
-              <td className="px-4 py-3 text-right font-mono">{d.oppstartskostnad ? d.oppstartskostnad.toLocaleString("no-NO") : "–"}</td>
+              <td className="px-4 py-3"><Badge variant="secondary" className="text-[10px]">{d.status}</Badge></td>
+              {showKontraktStatus && (
+                <td className="px-4 py-3">
+                  <Badge className={`text-[10px] px-1.5 py-0 h-4 ${kontraktStatusColors[d.kontrakt_status as KontraktStatus] || ""}`}>{d.kontrakt_status || "–"}</Badge>
+                </td>
+              )}
+              {showLukkedato && (
+                <td className="px-4 py-3 text-destructive text-xs font-medium">{d.forventet_lukkedato ? new Date(d.forventet_lukkedato).toLocaleDateString("nb-NO") : "–"}</td>
+              )}
+              <td className="px-4 py-3 text-right font-mono">{nok(d.forventet_mrr)}</td>
             </tr>
           ))}
         </tbody>
