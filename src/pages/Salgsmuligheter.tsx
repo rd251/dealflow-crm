@@ -779,6 +779,7 @@ export default function Salgsmuligheter() {
                           address: selskap?.postadresse || "",
                           visitaddress: selskap?.firmaadresse || "",
                           CRMid: currentSm.id,
+                          pakke: currentSm.valgt_pakke || "",
                         });
                         window.open(`https://app.dealbuilder.io/contract/createnewcontractexternal?${params.toString()}`, "_blank");
                         updateSalgsmuligheter(prev => prev.map(s =>
@@ -798,6 +799,7 @@ export default function Salgsmuligheter() {
                             address: selskap?.postadresse || "",
                             visitaddress: selskap?.firmaadresse || "",
                             CRMid: currentSm.id,
+                            pakke: currentSm.valgt_pakke || "",
                           });
                           window.open(`https://app.dealbuilder.io/contract/createnewcontractexternal?${params.toString()}`, "_blank");
                         }}>
