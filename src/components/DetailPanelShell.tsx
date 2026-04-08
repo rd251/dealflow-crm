@@ -95,7 +95,7 @@ export default function DetailPanelShell({
 
           {/* Tabs bar */}
           {useTabs && visibleTabs.length > 1 && (
-            <div className="border-b px-6 flex gap-0">
+            <div className="border-b px-6 flex flex-wrap gap-0">
               {visibleTabs.map(key => (
                 <button
                   key={key}
