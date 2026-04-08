@@ -585,23 +585,6 @@ export default function Salgsmuligheter() {
                 <Mail className="w-3.5 h-3.5 mr-1.5" />E-post
               </Button>
             )}
-            <Button size="sm" variant="outline" onClick={() => {
-              const selskap = selskaper.find(s => s.id === currentSm.selskap_id);
-              const params = new URLSearchParams({
-                companyname: selskap?.firmanavn || "",
-                customername: currentSm.kontaktperson || "",
-                email: currentSm.e_post || "",
-                phonenumber: currentSm.telefon || "",
-                orgnumber: selskap?.orgnr || "",
-                CRMid: currentSm.id,
-              });
-              window.open(`https://app.dealbuilder.io/contract/createnewcontractexternal?${params.toString()}`, "_blank");
-              updateSalgsmuligheter(prev => prev.map(s =>
-                s.id === currentSm.id ? { ...s, kontrakt_status: "Sendt" as const } : s
-              ));
-            }}>
-              <FileSignature className="w-3.5 h-3.5 mr-1.5" />Send kontrakt
-            </Button>
             <Button size="sm" className="bg-success hover:bg-success/90 text-success-foreground" onClick={() => { vinnSalgsmulighet(currentSm.id); setSelectedSm(null); }}>
               <Trophy className="w-3.5 h-3.5 mr-1.5" />Vunnet
             </Button>
@@ -625,42 +608,8 @@ export default function Salgsmuligheter() {
           return {
             detaljer: (
               <>
-                {/* Neste steg – always visible at top */}
-                <div className="rounded-lg border p-3 space-y-1">
-                  <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Neste steg</label>
-                  <Input value={currentSm.neste_steg} onChange={e => updateField("neste_steg", e.target.value)} className={`h-8 text-sm ${!currentSm.neste_steg?.trim() ? "border-destructive ring-1 ring-destructive/30" : ""}`} readOnly={!canEdit} placeholder="Hva er neste steg?" />
-                  {!currentSm.neste_steg?.trim() && (
-                    <p className="text-[10px] text-destructive flex items-center gap-1"><AlertTriangle className="w-3 h-3" />Obligatorisk</p>
-                  )}
-                </div>
-
-                {/* Compact key metrics row */}
-                <div className="grid grid-cols-4 gap-2">
-                  <div className="text-center p-2 rounded-lg bg-muted/50">
-                    <p className="text-xs font-bold">{nok(arr)}</p>
-                    <p className="text-[10px] text-muted-foreground">ARR</p>
-                  </div>
-                  <div className="text-center p-2 rounded-lg bg-muted/50">
-                    <p className="text-xs font-bold">{nok(slaArr)}</p>
-                    <p className="text-[10px] text-muted-foreground">SLA</p>
-                  </div>
-                  <div className="text-center p-2 rounded-lg bg-muted/50">
-                    <p className="text-xs font-bold">{nok(totalKontraktsverdi)}</p>
-                    <p className="text-[10px] text-muted-foreground">Kontrakt</p>
-                  </div>
-                  <div className="text-center p-2 rounded-lg bg-muted/50">
-                    <p className="text-xs font-bold">{nok(vektetVerdi)}</p>
-                    <p className="text-[10px] text-muted-foreground">Vektet</p>
-                  </div>
-                </div>
-
-                {/* Sales details – compact inline grid */}
-                <div className="space-y-2">
-                  <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Salgsdetaljer</p>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground text-xs">Selskap</span>
-                    <span className="cursor-pointer hover:text-primary hover:underline text-xs font-medium" onClick={() => navigate(`/selskaper/${currentSm.selskap_id}`)}>{getSelskapNavn(currentSm.selskap_id)}</span>
-                  </div>
+                {/* Seksjon 1 — Pipeline */}
+                <DetailSection title="Pipeline">
                   <DetailField label="Status">
                     <select className="w-full border rounded-lg px-3 py-1.5 text-sm bg-background"
                       value={currentSm.status}
@@ -675,18 +624,6 @@ export default function Salgsmuligheter() {
                     </select>
                   </DetailField>
                   <div className="grid grid-cols-2 gap-2">
-                    <DetailField label="MRR">
-                      <Input type="number" value={currentSm.forventet_mrr || ""} onChange={e => updateField("forventet_mrr", Number(e.target.value))} className="h-7 text-xs" readOnly={!canEdit} />
-                    </DetailField>
-                    <DetailField label="SLA">
-                      <Input type="number" value={currentSm.sla || ""} onChange={e => updateField("sla", Number(e.target.value))} className="h-7 text-xs" readOnly={!canEdit} />
-                    </DetailField>
-                    <DetailField label="Oppstart">
-                      <Input type="number" value={currentSm.oppstartskostnad || ""} onChange={e => updateField("oppstartskostnad", Number(e.target.value))} className="h-7 text-xs" readOnly={!canEdit} />
-                    </DetailField>
-                    <DetailField label="Mnd">
-                      <Input type="number" value={currentSm.kontraktslengde_mnd || ""} onChange={e => updateField("kontraktslengde_mnd", Number(e.target.value))} className="h-7 text-xs" readOnly={!canEdit} />
-                    </DetailField>
                     <DetailField label="Sannsynlighet">
                       <Input type="number" min={0} max={100} value={currentSm.sannsynlighet || ""} onChange={e => updateField("sannsynlighet", Number(e.target.value))} className="h-7 text-xs" readOnly={!canEdit} />
                     </DetailField>
@@ -694,9 +631,6 @@ export default function Salgsmuligheter() {
                       <Input type="date" value={currentSm.forventet_lukkedato} onChange={e => updateField("forventet_lukkedato", e.target.value)} className="h-7 text-xs" readOnly={!canEdit} />
                     </DetailField>
                   </div>
-                  <DetailField label="Use case">
-                    <Input value={currentSm.use_case} onChange={e => updateField("use_case", e.target.value)} className="h-7 text-xs" readOnly={!canEdit} />
-                  </DetailField>
                   <DetailField label="Ansvarlig">
                     <select className="w-full border rounded-lg px-2 py-1 text-xs bg-background h-7"
                       value={currentSm.ansvarlig}
@@ -721,11 +655,49 @@ export default function Salgsmuligheter() {
                       ))}
                     </select>
                   </DetailField>
-                </div>
+                  {currentSm.status === "Tapt" && currentSm.tapsaarsak && (
+                    <div className="p-2 bg-destructive/10 rounded-lg text-destructive text-xs">
+                      <strong>Tapsårsak:</strong> {currentSm.tapsaarsak} · {currentSm.tapt_dato}
+                    </div>
+                  )}
+                  {currentSm.status === "Vunnet" && (
+                    <div className="p-2 bg-success/10 rounded-lg text-success text-xs">
+                      <strong>Vunnet:</strong> {currentSm.vunnet_dato}
+                    </div>
+                  )}
+                </DetailSection>
 
-                {/* Kontakt – compact */}
-                <div className="space-y-2">
-                  <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Kontakt</p>
+                <DetailDivider />
+
+                {/* Seksjon 2 — Økonomi */}
+                <DetailSection title="Økonomi">
+                  <div className="grid grid-cols-2 gap-2">
+                    <DetailField label="MRR">
+                      <Input type="number" value={currentSm.forventet_mrr || ""} onChange={e => updateField("forventet_mrr", Number(e.target.value))} className="h-7 text-xs" readOnly={!canEdit} />
+                    </DetailField>
+                    <DetailField label="ARR">
+                      <div className="text-sm font-medium">{nok(arr)}</div>
+                    </DetailField>
+                    <DetailField label="Oppstart">
+                      <Input type="number" value={currentSm.oppstartskostnad || ""} onChange={e => updateField("oppstartskostnad", Number(e.target.value))} className="h-7 text-xs" readOnly={!canEdit} />
+                    </DetailField>
+                    <DetailField label="Kontraktslengde (Mnd)">
+                      <Input type="number" value={currentSm.kontraktslengde_mnd || ""} onChange={e => updateField("kontraktslengde_mnd", Number(e.target.value))} className="h-7 text-xs" readOnly={!canEdit} />
+                    </DetailField>
+                  </div>
+                  <DetailField label="Vektet verdi">
+                    <div className="text-sm font-medium">{nok(vektetVerdi)}</div>
+                  </DetailField>
+                </DetailSection>
+
+                <DetailDivider />
+
+                {/* Seksjon 3 — Kontakt */}
+                <DetailSection title="Kontakt">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground text-xs">Selskap</span>
+                    <span className="cursor-pointer hover:text-primary hover:underline text-xs font-medium" onClick={() => navigate(`/selskaper/${currentSm.selskap_id}`)}>{getSelskapNavn(currentSm.selskap_id)}</span>
+                  </div>
                   <div className="grid grid-cols-2 gap-2">
                     <DetailField label="Kontaktperson">
                       <Input value={currentSm.kontaktperson} onChange={e => updateField("kontaktperson", e.target.value)} className="h-7 text-xs" readOnly={!canEdit} />
@@ -769,7 +741,79 @@ export default function Salgsmuligheter() {
                       placeholder="Koble til kontakt..."
                     />
                   )}
-                </div>
+                </DetailSection>
+
+                <DetailDivider />
+
+                {/* Seksjon 4 — Detaljer */}
+                <DetailSection title="Detaljer">
+                  <DetailField label="Use case">
+                    <Input value={currentSm.use_case} onChange={e => updateField("use_case", e.target.value)} className="h-7 text-xs" readOnly={!canEdit} />
+                  </DetailField>
+                  <div className="rounded-lg border p-3 space-y-1">
+                    <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Neste steg</label>
+                    <Input value={currentSm.neste_steg} onChange={e => updateField("neste_steg", e.target.value)} className={`h-8 text-sm ${!currentSm.neste_steg?.trim() ? "border-destructive ring-1 ring-destructive/30" : ""}`} readOnly={!canEdit} placeholder="Hva er neste steg?" />
+                    {!currentSm.neste_steg?.trim() && (
+                      <p className="text-[10px] text-destructive flex items-center gap-1"><AlertTriangle className="w-3 h-3" />Obligatorisk</p>
+                    )}
+                  </div>
+                  <DetailField label="SLA">
+                    <Input type="number" value={currentSm.sla || ""} onChange={e => updateField("sla", Number(e.target.value))} className="h-7 text-xs" readOnly={!canEdit} />
+                  </DetailField>
+                </DetailSection>
+
+                <DetailDivider />
+
+                {/* Seksjon 5 — Kontrakt */}
+                <DetailSection title="Kontrakt">
+                  <div className="flex items-center gap-2">
+                    <Badge className={`text-xs ${kontraktStatusColors[currentSm.kontrakt_status as KontraktStatus] || kontraktStatusColors["Ikke sendt"]}`}>
+                      <FileSignature className="w-3 h-3 mr-1" />{currentSm.kontrakt_status || "Ikke sendt"}
+                    </Badge>
+                    {currentSm.kontrakt_status === "Signert" && currentSm.kontrakt_signert_dato && (
+                      <span className="text-xs text-success flex items-center gap-1">
+                        🎉 {new Date(currentSm.kontrakt_signert_dato).toLocaleDateString("nb-NO")}
+                      </span>
+                    )}
+                  </div>
+                  {canEdit && (
+                    <div className="flex flex-wrap gap-2">
+                      <Button size="sm" variant="outline" className="text-xs" onClick={() => {
+                        const selskap = selskaper.find(s => s.id === currentSm.selskap_id);
+                        const params = new URLSearchParams({
+                          companyname: selskap?.firmanavn || "",
+                          customername: currentSm.kontaktperson || "",
+                          email: currentSm.e_post || "",
+                          phonenumber: currentSm.telefon || "",
+                          orgnumber: selskap?.orgnr || "",
+                          CRMid: currentSm.id,
+                        });
+                        window.open(`https://app.dealbuilder.io/contract/createnewcontractexternal?${params.toString()}`, "_blank");
+                        updateSalgsmuligheter(prev => prev.map(s =>
+                          s.id === currentSm.id ? { ...s, kontrakt_status: "Sendt" as const } : s
+                        ));
+                      }}>
+                        <FileSignature className="w-3.5 h-3.5 mr-1.5" />Send kontrakt
+                      </Button>
+                      {(currentSm.kontrakt_status === "Sendt" || currentSm.kontrakt_status === "Åpnet") && (
+                        <Button size="sm" variant="outline" className="text-xs" onClick={() => {
+                          const selskap = selskaper.find(s => s.id === currentSm.selskap_id);
+                          const params = new URLSearchParams({
+                            companyname: selskap?.firmanavn || "",
+                            customername: currentSm.kontaktperson || "",
+                            email: currentSm.e_post || "",
+                            phonenumber: currentSm.telefon || "",
+                            orgnumber: selskap?.orgnr || "",
+                            CRMid: currentSm.id,
+                          });
+                          window.open(`https://app.dealbuilder.io/contract/createnewcontractexternal?${params.toString()}`, "_blank");
+                        }}>
+                          <Mail className="w-3.5 h-3.5 mr-1.5" />Send påminnelse
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </DetailSection>
 
                 <SelskapInnsikt
                   domene={getSelskapDomain(currentSm.selskap_id)}
@@ -793,31 +837,6 @@ export default function Salgsmuligheter() {
                   }}
                 />
 
-                {currentSm.status === "Tapt" && currentSm.tapsaarsak && (
-                  <div className="p-2 bg-destructive/10 rounded-lg text-destructive text-xs">
-                    <strong>Tapsårsak:</strong> {currentSm.tapsaarsak} · {currentSm.tapt_dato}
-                  </div>
-                )}
-                {currentSm.status === "Vunnet" && (
-                  <div className="p-2 bg-success/10 rounded-lg text-success text-xs">
-                    <strong>Vunnet:</strong> {currentSm.vunnet_dato}
-                  </div>
-                )}
-
-                {/* Kontrakt-status */}
-                <div className="space-y-2">
-                  <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Kontrakt</p>
-                  <div className="flex items-center gap-2">
-                    <Badge className={`text-xs ${kontraktStatusColors[currentSm.kontrakt_status as KontraktStatus] || kontraktStatusColors["Ikke sendt"]}`}>
-                      <FileSignature className="w-3 h-3 mr-1" />{currentSm.kontrakt_status || "Ikke sendt"}
-                    </Badge>
-                    {currentSm.kontrakt_status === "Signert" && currentSm.kontrakt_signert_dato && (
-                      <span className="text-xs text-success flex items-center gap-1">
-                        🎉 {new Date(currentSm.kontrakt_signert_dato).toLocaleDateString("nb-NO")}
-                      </span>
-                    )}
-                  </div>
-                </div>
                 {canEdit && (
                   <Button size="sm" variant="ghost" className="w-full text-destructive hover:bg-destructive/10 text-xs" onClick={() => {
                     updateSalgsmuligheter(prev => prev.filter(s => s.id !== currentSm.id));
