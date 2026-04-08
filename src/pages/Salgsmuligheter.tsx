@@ -21,7 +21,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { gravatarUrl } from "@/lib/gravatar";
 import EntityLinkPicker from "@/components/EntityLinkPicker";
 import { Badge } from "@/components/ui/badge";
-import { Salgsmulighet, SalgsmulighetStatus, Tapsaarsak, KontraktStatus, beregnTotalKontraktsverdi, beregnVektetPipeline } from "@/data/crm-data";
+import { Salgsmulighet, SalgsmulighetStatus, Tapsaarsak, KontraktStatus, beregnTotalKontraktsverdi, beregnVektetPipeline, PAKKER } from "@/data/crm-data";
 import InlineTaskForm from "@/components/InlineTaskForm";
 import ActivityLog from "@/components/ActivityLog";
 import EntityChangelog from "@/components/EntityChangelog";
@@ -228,7 +228,7 @@ export default function Salgsmuligheter() {
       kilde: form.kilde as any, partner_id: "", partner_provisjon: 0, partner_kostnad: 0, netto_inntekt: 0,
       rolle_i_firma: form.rolle_i_firma, use_case: form.use_case,
       kontaktperson: form.kontaktperson, e_post: form.e_post, telefon: form.telefon,
-      kontrakt_status: "Ikke sendt", kontrakt_signert_dato: "", dealbuilder_dokument_id: "",
+      kontrakt_status: "Ikke sendt", kontrakt_signert_dato: "", dealbuilder_dokument_id: "", valgt_pakke: "",
     };
     updateSalgsmuligheter(prev => [...prev, nySm]);
     setDialogOpen(false);
@@ -402,7 +402,7 @@ export default function Salgsmuligheter() {
                               <p className="text-xs font-semibold text-foreground truncate">{getSelskapNavn(deal.selskap_id || "")}</p>
                               {deal.kontaktperson && <p className="text-[10px] text-muted-foreground truncate">{deal.kontaktperson}</p>}
                             </div>
-                            <span className="text-xs font-medium text-foreground shrink-0">{nok(deal.forventet_mrr)}</span>
+                            <span className="text-xs font-medium text-foreground shrink-0">{nok(deal.forventet_mrr)}{deal.valgt_pakke ? ` · ${deal.valgt_pakke}` : ""}</span>
                             {deal.kontrakt_status && deal.kontrakt_status !== "Ikke sendt" && (
                               <Badge className={`text-[8px] px-1 py-0 h-3.5 shrink-0 ${kontraktStatusColors[deal.kontrakt_status as KontraktStatus]}`}>
                                 {deal.kontrakt_status === "Signert" ? "✅" : deal.kontrakt_status.charAt(0)}
@@ -456,12 +456,20 @@ export default function Salgsmuligheter() {
                               </div>
                             )}
 
-                            {/* 4. MRR */}
+                            {/* 4. MRR + Package */}
                             <div className="flex items-center gap-2 text-xs text-muted-foreground">
                               <div className="w-5 h-5 flex items-center justify-center shrink-0">
                                 <DollarSign className="w-3.5 h-3.5" />
                               </div>
                               <span className="font-medium text-foreground">{nok(deal.forventet_mrr)}</span>
+                              {deal.valgt_pakke && (() => {
+                                const pakke = PAKKER.find(p => p.navn === deal.valgt_pakke);
+                                return (
+                                  <span className="text-[10px] text-muted-foreground">
+                                    · {deal.valgt_pakke}{pakke?.minutter ? ` (${pakke.minutter})` : ""}
+                                  </span>
+                                );
+                              })()}
                             </div>
 
                             {/* 5. Deal owner */}
@@ -679,9 +687,37 @@ export default function Salgsmuligheter() {
 
                 {/* Seksjon 2 — Økonomi */}
                 <DetailSection title="Økonomi">
+                  <DetailField label="Pakke">
+                    <select className="w-full border rounded-lg px-2 py-1 text-xs bg-background h-7"
+                      value={currentSm.valgt_pakke || ""}
+                      disabled={!canEdit}
+                      onChange={e => {
+                        const pakkeNavn = e.target.value;
+                        const pakke = PAKKER.find(p => p.navn === pakkeNavn);
+                        updateField("valgt_pakke", pakkeNavn);
+                        if (pakke?.mrr != null) {
+                          updateField("forventet_mrr", pakke.mrr);
+                        }
+                      }}>
+                      <option value="">Velg pakke…</option>
+                      {PAKKER.map(p => (
+                        <option key={p.navn} value={p.navn}>
+                          {p.navn} {p.mrr != null ? `— ${nok(p.mrr)} kr/mnd` : p.navn === "Enterprise" ? "— kontakt for pris" : "— fritekst"}{p.minutter ? ` (${p.minutter})` : ""}
+                        </option>
+                      ))}
+                    </select>
+                  </DetailField>
+                  {currentSm.valgt_pakke && (() => {
+                    const pakke = PAKKER.find(p => p.navn === currentSm.valgt_pakke);
+                    return pakke?.minutter ? (
+                      <div className="text-xs text-muted-foreground bg-muted/30 rounded-md px-2 py-1">
+                        📞 {pakke.minutter} inkludert
+                      </div>
+                    ) : null;
+                  })()}
                   <div className="grid grid-cols-2 gap-2">
                     <DetailField label="MRR">
-                      <Input type="number" value={currentSm.forventet_mrr || ""} onChange={e => updateField("forventet_mrr", Number(e.target.value))} className="h-7 text-xs" readOnly={!canEdit} />
+                      <Input type="number" value={currentSm.forventet_mrr || ""} onChange={e => updateField("forventet_mrr", Number(e.target.value))} className="h-7 text-xs" readOnly={!canEdit || (!!currentSm.valgt_pakke && PAKKER.find(p => p.navn === currentSm.valgt_pakke)?.mrr != null)} />
                     </DetailField>
                     <DetailField label="ARR">
                       <div className="text-sm font-medium">{nok(arr)}</div>
@@ -743,6 +779,7 @@ export default function Salgsmuligheter() {
                           address: selskap?.postadresse || "",
                           visitaddress: selskap?.firmaadresse || "",
                           CRMid: currentSm.id,
+                          pakke: currentSm.valgt_pakke || "",
                         });
                         window.open(`https://app.dealbuilder.io/contract/createnewcontractexternal?${params.toString()}`, "_blank");
                         updateSalgsmuligheter(prev => prev.map(s =>
@@ -762,6 +799,7 @@ export default function Salgsmuligheter() {
                             address: selskap?.postadresse || "",
                             visitaddress: selskap?.firmaadresse || "",
                             CRMid: currentSm.id,
+                            pakke: currentSm.valgt_pakke || "",
                           });
                           window.open(`https://app.dealbuilder.io/contract/createnewcontractexternal?${params.toString()}`, "_blank");
                         }}>

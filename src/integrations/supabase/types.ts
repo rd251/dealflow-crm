@@ -946,6 +946,7 @@ export type Database = {
           telefon: string | null
           updated_at: string
           use_case: string | null
+          valgt_pakke: string
           vunnet_dato: string | null
         }
         Insert: {
@@ -982,6 +983,7 @@ export type Database = {
           telefon?: string | null
           updated_at?: string
           use_case?: string | null
+          valgt_pakke?: string
           vunnet_dato?: string | null
         }
         Update: {
@@ -1018,6 +1020,7 @@ export type Database = {
           telefon?: string | null
           updated_at?: string
           use_case?: string | null
+          valgt_pakke?: string
           vunnet_dato?: string | null
         }
         Relationships: [

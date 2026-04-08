@@ -106,7 +106,7 @@ export default function PartnerProfile() {
       opprettet_dato: today, sist_aktivitet: today,
       kilde: "Partner", partner_id: id!, partner_provisjon: 0, partner_kostnad: 0, netto_inntekt: 0,
       rolle_i_firma: "", use_case: "", kontaktperson: "", e_post: "", telefon: "",
-      kontrakt_status: "Ikke sendt", kontrakt_signert_dato: "", dealbuilder_dokument_id: "",
+      kontrakt_status: "Ikke sendt", kontrakt_signert_dato: "", dealbuilder_dokument_id: "", valgt_pakke: "",
     };
     updateSalgsmuligheter(prev => [...prev, nySm]);
     setDealForm({ navn: "", selskap_id: "", forventet_mrr: 0, oppstartskostnad: 0 });

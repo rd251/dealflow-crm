@@ -1,0 +1,1 @@
+ALTER TABLE public.salgsmuligheter ADD COLUMN valgt_pakke text DEFAULT '' NOT NULL;
