@@ -1070,6 +1070,7 @@ export default function Kalender() {
           meetingTitle={selectedEvent.title}
           salgsmulighet_id={selectedEvent.raw?.salgsmulighet_id || null}
           selskap_id={selectedEvent.raw?.selskap_id || null}
+          aktivitet_id={selectedEvent.id || null}
         />
       )}
 
