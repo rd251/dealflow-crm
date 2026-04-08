@@ -349,22 +349,22 @@ export default function Salgsmuligheter() {
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
                 <div className="bg-card border rounded-lg p-3">
                   <p className="text-xs text-muted-foreground font-medium">Total pipeline</p>
-                  <p className="text-lg font-bold tracking-tight">{nok(totalPipeline)} kr</p>
+                  <p className="text-lg font-bold tracking-tight">{nok(totalPipeline)}</p>
                   <p className="text-[11px] text-muted-foreground">{openDeals.length} åpne deals</p>
                 </div>
                 <div className="bg-card border rounded-lg p-3">
                   <p className="text-xs text-muted-foreground font-medium">Vektet verdi</p>
-                  <p className="text-lg font-bold tracking-tight">{nok(totalVektet)} kr</p>
+                  <p className="text-lg font-bold tracking-tight">{nok(totalVektet)}</p>
                   <p className="text-[11px] text-muted-foreground">justert for sannsynlighet</p>
                 </div>
                 <div className="bg-card border rounded-lg p-3">
                   <p className="text-xs text-muted-foreground font-medium">Nær closing</p>
                   <p className="text-lg font-bold tracking-tight">{nearClosing.length} deals</p>
-                  <p className="text-[11px] text-muted-foreground">{nok(nearClosingValue)} kr i verdi</p>
+                  <p className="text-[11px] text-muted-foreground">{nok(nearClosingValue)} i verdi</p>
                 </div>
                 <div className="bg-card border rounded-lg p-3">
                   <p className="text-xs text-muted-foreground font-medium">Snitt MRR</p>
-                  <p className="text-lg font-bold tracking-tight">{nok(openDeals.length ? Math.round(openDeals.reduce((s, d) => s + d.forventet_mrr, 0) / openDeals.length) : 0)} kr</p>
+                  <p className="text-lg font-bold tracking-tight">{nok(openDeals.length ? Math.round(openDeals.reduce((s, d) => s + d.forventet_mrr, 0) / openDeals.length) : 0)}</p>
                   <p className="text-[11px] text-muted-foreground">per deal</p>
                 </div>
               </div>
@@ -701,7 +701,7 @@ export default function Salgsmuligheter() {
                       <option value="">Velg pakke…</option>
                       {PAKKER.map(p => (
                         <option key={p.navn} value={p.navn}>
-                          {p.navn} {p.mrr != null ? `— ${nok(p.mrr)} kr/mnd` : p.navn === "Enterprise" ? "— kontakt for pris" : "— fritekst"}{p.minutter ? ` (${p.minutter})` : ""}
+                          {p.navn} {p.mrr != null ? `— ${nok(p.mrr)}/mnd` : p.navn === "Enterprise" ? "— kontakt for pris" : "— fritekst"}{p.minutter ? ` (${p.minutter})` : ""}
                         </option>
                       ))}
                     </select>

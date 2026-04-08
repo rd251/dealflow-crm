@@ -111,7 +111,7 @@ export default function MeetingPrepPanel({ meeting, open, onOpenChange }: Props)
   const [postMeetingOpen, setPostMeetingOpen] = useState(false);
 
   const now = new Date();
-  const nok = (v: number) => v.toLocaleString("no-NO");
+  const nok = (v: number) => v.toLocaleString("no-NO") + " kr";
 
   useEffect(() => {
     if (!meeting || !open) return;

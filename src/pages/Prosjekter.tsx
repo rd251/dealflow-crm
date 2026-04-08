@@ -135,7 +135,7 @@ export default function Prosjekter() {
 
               <DetailSection title="Økonomi">
                 <DetailStatGrid>
-                  <DetailStatCard label="Oppstart" value={`${currentP.oppstartskostnad.toLocaleString("no-NO")} NOK`} />
+                  <DetailStatCard label="Oppstart" value={`${currentP.oppstartskostnad.toLocaleString("no-NO")} kr`} />
                   <DetailStatCard label="Fakturert / Betalt" value={`${currentP.oppstart_fakturert ? "✓" : "✗"} / ${currentP.oppstart_betalt ? "✓" : "✗"}`} />
                 </DetailStatGrid>
               </DetailSection>

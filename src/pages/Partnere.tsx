@@ -123,7 +123,7 @@ export default function Partnere() {
     >
       {/* ─── KPI ─── */}
       {(() => {
-        const nok = (n: number) => n.toLocaleString("nb-NO", { maximumFractionDigits: 0 }) + " NOK";
+        const nok = (n: number) => n.toLocaleString("nb-NO", { maximumFractionDigits: 0 }) + " kr";
         const totalPartnere = partnere.length;
         const aktivePartnere = partnere.filter(p => p.partnerstatus === "Aktiv").length;
         const partnerKunder = selskaper.filter(s => s.partner_id && partnere.some(p => p.id === s.partner_id) && s.kundestatus === "Live");

@@ -278,7 +278,7 @@ export default function Companies() {
 
       {/* ─── KPI ─── */}
       {(() => {
-        const nok = (n: number) => n.toLocaleString("nb-NO", { maximumFractionDigits: 0 }) + " NOK";
+        const nok = (n: number) => n.toLocaleString("nb-NO", { maximumFractionDigits: 0 }) + " kr";
         const liveSelskaper = selskaper.filter(s => s.kundestatus === "Live");
         const aktiveKunder = liveSelskaper.length;
         const totalMRR = liveSelskaper.reduce((sum, s) => sum + s.mrr, 0);

@@ -79,7 +79,7 @@ export default function PartnerProfile() {
     ));
   };
 
-  const nok = (v: number) => v.toLocaleString("no-NO");
+  const nok = (v: number) => v.toLocaleString("no-NO") + " kr";
 
   const addCustomer = () => {
     const selskapId = crypto.randomUUID();
@@ -143,9 +143,9 @@ export default function PartnerProfile() {
         {/* KPI cards */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
           <StatCard label="Kunder fra partner" value={antallKunder} icon={<Users className="w-5 h-5" />} />
-          <StatCard label="Aktiv MRR" value={`${nok(aktivMrr)} kr`} icon={<DollarSign className="w-5 h-5" />} />
-          <StatCard label="ARR" value={`${nok(arr)} kr`} icon={<TrendingUp className="w-5 h-5" />} />
-          <StatCard label="Total kontrakt" value={`${nok(totalKontraktsverdi)} kr`} icon={<FileText className="w-5 h-5" />} />
+          <StatCard label="Aktiv MRR" value={nok(aktivMrr)} icon={<DollarSign className="w-5 h-5" />} />
+          <StatCard label="ARR" value={nok(arr)} icon={<TrendingUp className="w-5 h-5" />} />
+          <StatCard label="Total kontrakt" value={nok(totalKontraktsverdi)} icon={<FileText className="w-5 h-5" />} />
           <StatCard label="Aktive avtaler" value={aktiveAvtaler.length} icon={<Handshake className="w-5 h-5" />} />
         </div>
 
