@@ -162,6 +162,8 @@ export default function PostMeetingDialog({ open, onOpenChange, meetingTitle, sa
       setNesteSteg("");
       setMoetenotater("");
       setAiSuggested(false);
+      setAiOppsummering("");
+      setAiKundesignal("");
     } catch (err) {
       console.error(err);
       toast.error("Noe gikk galt");
