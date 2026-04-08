@@ -46,6 +46,7 @@ export default function Leads() {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [convertDialogLead, setConvertDialogLead] = useState<Lead | null>(null);
   const [convertNavn, setConvertNavn] = useState("");
+  const [partnerDialogLead, setPartnerDialogLead] = useState<Lead | null>(null);
   const [form, setForm] = useState<Partial<Lead>>({ firmanavn: "", kontaktperson: "", e_post: "", telefon: "", kilde: "Nettside", status: "Ny", ansvarlig: "", neste_steg: "", notater: "", rolle_i_firma: "", use_case: "" });
   const [filterUtenOppfolging, setFilterUtenOppfolging] = useState(false);
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
