@@ -5,7 +5,7 @@ import { useCrmStore } from "@/hooks/use-crm-store";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Badge } from "@/components/ui/badge";
 import { PartnerPipelineStatus } from "@/data/crm-data";
-import { GripVertical } from "lucide-react";
+import { GripVertical, Briefcase } from "lucide-react";
 
 const pipelineStatuses: PartnerPipelineStatus[] = ["Ny partnermulighet", "Introduksjon", "Demo / gjennomgang", "Forhandling", "Aktiv partner"];
 
@@ -20,7 +20,7 @@ const stageColors: Record<PartnerPipelineStatus, string> = {
 export default function PartnerPipeline() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const { partnere, updatePartnere } = useCrmStore();
+  const { partnere, updatePartnere, selskaper } = useCrmStore();
   const [draggedId, setDraggedId] = useState<string | null>(null);
 
   const handleDrop = (e: React.DragEvent, stage: PartnerPipelineStatus) => {
@@ -53,7 +53,9 @@ export default function PartnerPipeline() {
                 <span className="text-xs text-muted-foreground ml-auto">{stagePartners.length}</span>
               </div>
               <div className="space-y-2.5">
-                {stagePartners.map(partner => (
+                {stagePartners.map(partner => {
+                  const selskap = partner.selskap_id ? selskaper.find(s => s.id === partner.selskap_id) : null;
+                  return (
                   <div key={partner.id} draggable onDragStart={e => { setDraggedId(partner.id); e.dataTransfer.effectAllowed = "move"; }}
                     onClick={() => navigate(`/partnere/${partner.id}`)}
                     className="bg-card border rounded-lg p-3 sm:p-3.5 cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow group">
@@ -64,11 +66,18 @@ export default function PartnerPipeline() {
                         <p className="text-xs text-muted-foreground mt-0.5">{partner.kontaktperson}</p>
                         <div className="flex items-center gap-2 mt-2 flex-wrap">
                           <Badge variant="secondary" className="text-[10px]">{partner.partnertype}</Badge>
+                          {selskap?.bransje && (
+                            <Badge variant="outline" className="text-[10px] gap-0.5">
+                              <Briefcase className="w-2.5 h-2.5" />
+                              {selskap.bransje}
+                            </Badge>
+                          )}
                         </div>
                       </div>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
                 {stagePartners.length === 0 && (
                   <div className="border-2 border-dashed rounded-lg p-6 text-center text-xs text-muted-foreground">Dra hit</div>
                 )}
