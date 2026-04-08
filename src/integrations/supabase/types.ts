@@ -1412,17 +1412,12 @@ export type Database = {
         | "Blokkert"
       provisjonstype: "Engangsprovisjon" | "Løpende provisjon" | "Hybrid"
       salgsmulighet_status:
-        | "Ny mulighet"
         | "Møte booket"
-        | "Demo gjennomført"
-        | "Tilbud sendt"
-        | "Forhandling"
-        | "Vunnet"
-        | "Tapt"
         | "Behov avklart"
         | "Løsning presentert"
-        | "Beslutning"
         | "Kontrakt sendt"
+        | "Vunnet"
+        | "Tapt"
       tapsaarsak:
         | "Pris"
         | "Ikke riktig timing"
@@ -1642,17 +1637,12 @@ export const Constants = {
       ],
       provisjonstype: ["Engangsprovisjon", "Løpende provisjon", "Hybrid"],
       salgsmulighet_status: [
-        "Ny mulighet",
         "Møte booket",
-        "Demo gjennomført",
-        "Tilbud sendt",
-        "Forhandling",
-        "Vunnet",
-        "Tapt",
         "Behov avklart",
         "Løsning presentert",
-        "Beslutning",
         "Kontrakt sendt",
+        "Vunnet",
+        "Tapt",
       ],
       tapsaarsak: [
         "Pris",
