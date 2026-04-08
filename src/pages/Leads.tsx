@@ -46,6 +46,7 @@ export default function Leads() {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [convertDialogLead, setConvertDialogLead] = useState<Lead | null>(null);
   const [convertNavn, setConvertNavn] = useState("");
+  const [partnerDialogLead, setPartnerDialogLead] = useState<Lead | null>(null);
   const [form, setForm] = useState<Partial<Lead>>({ firmanavn: "", kontaktperson: "", e_post: "", telefon: "", kilde: "Nettside", status: "Ny", ansvarlig: "", neste_steg: "", notater: "", rolle_i_firma: "", use_case: "" });
   const [filterUtenOppfolging, setFilterUtenOppfolging] = useState(false);
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
@@ -231,6 +232,13 @@ export default function Leads() {
             <DialogDescription>Gi salgsmuligheten et navn (use case) for {convertDialogLead?.firmanavn}.</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
+            {convertDialogLead && (
+              <SelskapInnsikt
+                domene={undefined}
+                firmanavn={convertDialogLead.firmanavn}
+                e_post={convertDialogLead.e_post}
+              />
+            )}
             <Input
               placeholder="Navn på salgsmulighet / use case"
               value={convertNavn}
@@ -250,6 +258,37 @@ export default function Leads() {
               }}
             >
               Konverter
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Convert to partner dialog */}
+      <Dialog open={!!partnerDialogLead} onOpenChange={open => { if (!open) setPartnerDialogLead(null); }}>
+        <DialogContent className="max-w-[95vw] sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Konverter til partner</DialogTitle>
+            <DialogDescription>Bekreft konvertering av {partnerDialogLead?.firmanavn} til partner.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            {partnerDialogLead && (
+              <SelskapInnsikt
+                domene={undefined}
+                firmanavn={partnerDialogLead.firmanavn}
+                e_post={partnerDialogLead.e_post}
+              />
+            )}
+            <Button
+              className="w-full"
+              onClick={() => {
+                if (partnerDialogLead) {
+                  konverterTilPartner(partnerDialogLead.id);
+                  if (selectedLead?.id === partnerDialogLead.id) setSelectedLead(null);
+                  setPartnerDialogLead(null);
+                }
+              }}
+            >
+              Konverter til partner
             </Button>
           </div>
         </DialogContent>
@@ -286,7 +325,7 @@ export default function Leads() {
                       <Button size="sm" variant="ghost" className="text-xs gap-1 flex-1" onClick={e => { e.stopPropagation(); setConvertDialogLead(lead); setConvertNavn(lead.use_case || lead.firmanavn); }}>
                         <ArrowRightCircle className="w-3.5 h-3.5" />Salg
                       </Button>
-                      <Button size="sm" variant="ghost" className="text-xs gap-1 flex-1" onClick={e => { e.stopPropagation(); konverterTilPartner(lead.id); }}>
+                      <Button size="sm" variant="ghost" className="text-xs gap-1 flex-1" onClick={e => { e.stopPropagation(); setPartnerDialogLead(lead); }}>
                         <Users2 className="w-3.5 h-3.5" />Partner
                       </Button>
                     </div>
@@ -347,7 +386,7 @@ export default function Leads() {
                             <Button size="sm" variant="ghost" className="text-xs gap-1" onClick={() => { setConvertDialogLead(lead); setConvertNavn(lead.use_case || lead.firmanavn); }}>
                               <ArrowRightCircle className="w-3.5 h-3.5" />Salg
                             </Button>
-                            <Button size="sm" variant="ghost" className="text-xs gap-1" onClick={() => konverterTilPartner(lead.id)}>
+                            <Button size="sm" variant="ghost" className="text-xs gap-1" onClick={() => setPartnerDialogLead(lead)}>
                               <Users2 className="w-3.5 h-3.5" />Partner
                             </Button>
                           </div>
@@ -388,7 +427,7 @@ export default function Leads() {
             <Button size="sm" onClick={() => { setConvertDialogLead(currentLead); setConvertNavn(currentLead.use_case || currentLead.firmanavn); }}>
               <ArrowRightCircle className="w-4 h-4 mr-1.5" />Til salg
             </Button>
-            <Button size="sm" variant="secondary" onClick={() => { konverterTilPartner(currentLead.id); setSelectedLead(null); }}>
+            <Button size="sm" variant="secondary" onClick={() => setPartnerDialogLead(currentLead)}>
               <Users2 className="w-4 h-4 mr-1.5" />Til partner
             </Button>
           </>
