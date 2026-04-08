@@ -14,6 +14,8 @@ const BodySchema = z.object({
   pakke_pris: z.number(),
   minutter: z.string(),
   sender_email: z.string().email(),
+  sla: z.number().nullable().optional(),
+  oppstartskostnad: z.number().nullable().optional(),
 });
 
 Deno.serve(async (req) => {
@@ -33,11 +35,14 @@ Deno.serve(async (req) => {
     const data = parsed.data;
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const DEALBUILDER_API_KEY = Deno.env.get("DEALBUILDER_API_KEY")!;
+    const DEALBUILDER_API_KEY = Deno.env.get("DEALBUILDER_API_KEY")?.trim();
+
+    if (!DEALBUILDER_API_KEY) {
+      throw new Error("DEALBUILDER_API_KEY is not configured");
+    }
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // 1. Generate PDF by calling the generate-contract-pdf function
     const pdfRes = await fetch(`${SUPABASE_URL}/functions/v1/generate-contract-pdf`, {
       method: "POST",
       headers: {
@@ -67,7 +72,6 @@ Deno.serve(async (req) => {
     const pdfBuffer = await pdfRes.arrayBuffer();
     const pdfBytes = new Uint8Array(pdfBuffer);
 
-    // 2. Upload PDF to Supabase Storage
     const fileName = `${data.salgsmulighet_id}/${Date.now()}-kontrakt-${data.firmanavn.replace(/\s+/g, "-")}.pdf`;
 
     const { error: uploadError } = await supabase.storage
@@ -81,14 +85,12 @@ Deno.serve(async (req) => {
       throw new Error(`Upload failed: ${uploadError.message}`);
     }
 
-    // 3. Get public URL
     const { data: publicUrlData } = supabase.storage
       .from("contract-pdfs")
       .getPublicUrl(fileName);
 
     const pdfUrl = publicUrlData.publicUrl;
 
-    // 4. Send to DealBuilder
     const dealBuilderPayload = {
       mode: "SendForSigning",
       uploadedPdfUrl: pdfUrl,
@@ -106,24 +108,35 @@ Deno.serve(async (req) => {
       ],
     };
 
+    console.log("Calling DealBuilder Documents API", {
+      endpoint: "https://api.dealbuilder.io/v1/Documents",
+      hasApiKey: true,
+      keyLength: DEALBUILDER_API_KEY.length,
+    });
+
     const dbRes = await fetch("https://api.dealbuilder.io/v1/Documents", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${DEALBUILDER_API_KEY}`,
+        "x-api-key": DEALBUILDER_API_KEY,
       },
       body: JSON.stringify(dealBuilderPayload),
     });
 
     if (!dbRes.ok) {
       const errText = await dbRes.text();
+      console.error("DealBuilder API error", {
+        status: dbRes.status,
+        statusText: dbRes.statusText,
+        responseHeaders: Object.fromEntries(dbRes.headers.entries()),
+        responseBody: errText,
+      });
       throw new Error(`DealBuilder API failed (${dbRes.status}): ${errText}`);
     }
 
     const dbResult = await dbRes.json();
     const dokumentId = dbResult.id || dbResult.documentId || null;
 
-    // 5. Update salgsmulighet with DealBuilder document ID and status
     const updateData: Record<string, unknown> = {
       kontrakt_status: "Sendt",
       status: "Kontrakt sendt",
@@ -142,7 +155,6 @@ Deno.serve(async (req) => {
       console.error("Failed to update salgsmulighet:", updateError);
     }
 
-    // 6. Log activity
     await supabase.from("aktiviteter").insert({
       type: "Notat",
       beskrivelse: `Kontrakt sendt til ${data.kontaktperson} (${data.e_post}) — ${data.valgt_pakke}`,
@@ -159,8 +171,9 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
     console.error("Send contract error:", err);
-    return new Response(JSON.stringify({ error: err.message }), {
+    return new Response(JSON.stringify({ error: message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
