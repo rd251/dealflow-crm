@@ -100,7 +100,7 @@ Deno.serve(async (req) => {
     }
 
     const uploadResult = await uploadRes.json();
-    const uploadedPdfUrl = uploadResult.url || uploadResult.fileUrl || uploadResult.path || uploadResult.urls?.[0] || uploadResult.files?.[0]?.url;
+    const uploadedPdfUrl = uploadResult.fileUrls?.[0] || uploadResult.url || uploadResult.fileUrl || uploadResult.path || uploadResult.urls?.[0] || uploadResult.files?.[0]?.url;
 
     console.log("DealBuilder upload result:", JSON.stringify(uploadResult));
 
