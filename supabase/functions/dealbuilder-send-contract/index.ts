@@ -78,11 +78,11 @@ Deno.serve(async (req) => {
 
     const formData = new FormData();
     const blob = new Blob([pdfBytes], { type: "application/pdf" });
-    formData.append("file", blob, pdfFileName);
+    formData.append("files", blob, pdfFileName);
 
     console.log("Uploading PDF to DealBuilder...");
 
-    const uploadRes = await fetch("https://api.dealbuilder.io/v1/Uploads", {
+    const uploadRes = await fetch("https://api.dealbuilder.io/v1/uploads", {
       method: "POST",
       headers: {
         "x-api-key": DEALBUILDER_API_KEY,
@@ -100,7 +100,7 @@ Deno.serve(async (req) => {
     }
 
     const uploadResult = await uploadRes.json();
-    const uploadedPdfUrl = uploadResult.url || uploadResult.fileUrl || uploadResult.path;
+    const uploadedPdfUrl = uploadResult.fileUrls?.[0] || uploadResult.url || uploadResult.fileUrl || uploadResult.path || uploadResult.urls?.[0] || uploadResult.files?.[0]?.url;
 
     console.log("DealBuilder upload result:", JSON.stringify(uploadResult));
 
