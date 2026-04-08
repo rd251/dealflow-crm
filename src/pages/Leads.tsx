@@ -47,6 +47,7 @@ export default function Leads() {
   const [convertDialogLead, setConvertDialogLead] = useState<Lead | null>(null);
   const [convertNavn, setConvertNavn] = useState("");
   const [partnerDialogLead, setPartnerDialogLead] = useState<Lead | null>(null);
+  const [enrichFields, setEnrichFields] = useState({ orgnr: "", bransje: "", firmaadresse: "", postadresse: "" });
   const [form, setForm] = useState<Partial<Lead>>({ firmanavn: "", kontaktperson: "", e_post: "", telefon: "", kilde: "Nettside", status: "Ny", ansvarlig: "", neste_steg: "", notater: "", rolle_i_firma: "", use_case: "" });
   const [filterUtenOppfolging, setFilterUtenOppfolging] = useState(false);
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
@@ -225,11 +226,11 @@ export default function Leads() {
       />
 
       {/* Convert to sale dialog */}
-      <Dialog open={!!convertDialogLead} onOpenChange={open => { if (!open) { setConvertDialogLead(null); setConvertNavn(""); } }}>
-        <DialogContent className="max-w-[95vw] sm:max-w-md">
+      <Dialog open={!!convertDialogLead} onOpenChange={open => { if (!open) { setConvertDialogLead(null); setConvertNavn(""); setEnrichFields({ orgnr: "", bransje: "", firmaadresse: "", postadresse: "" }); } }}>
+        <DialogContent className="max-w-[95vw] sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Konverter til salgsmulighet</DialogTitle>
-            <DialogDescription>Gi salgsmuligheten et navn (use case) for {convertDialogLead?.firmanavn}.</DialogDescription>
+            <DialogDescription>Gi salgsmuligheten et navn og fyll inn selskapsinfo for {convertDialogLead?.firmanavn}.</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             {convertDialogLead && (
@@ -237,6 +238,14 @@ export default function Leads() {
                 domene={undefined}
                 firmanavn={convertDialogLead.firmanavn}
                 e_post={convertDialogLead.e_post}
+                onEnriched={(data) => {
+                  setEnrichFields(prev => ({
+                    orgnr: prev.orgnr || data.orgnr || "",
+                    bransje: prev.bransje || data.bransje || "",
+                    firmaadresse: prev.firmaadresse || data.firmaadresse || "",
+                    postadresse: prev.postadresse || data.postadresse || "",
+                  }));
+                }}
               />
             )}
             <Input
@@ -245,14 +254,33 @@ export default function Leads() {
               onChange={e => setConvertNavn(e.target.value)}
               autoFocus
             />
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">Org.nr</label>
+                <Input placeholder="Org.nr" value={enrichFields.orgnr} onChange={e => setEnrichFields(p => ({ ...p, orgnr: e.target.value }))} />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">Bransje</label>
+                <Input placeholder="Bransje" value={enrichFields.bransje} onChange={e => setEnrichFields(p => ({ ...p, bransje: e.target.value }))} />
+              </div>
+              <div className="col-span-2">
+                <label className="text-xs text-muted-foreground mb-1 block">Firmaadresse</label>
+                <Input placeholder="Firmaadresse" value={enrichFields.firmaadresse} onChange={e => setEnrichFields(p => ({ ...p, firmaadresse: e.target.value }))} />
+              </div>
+              <div className="col-span-2">
+                <label className="text-xs text-muted-foreground mb-1 block">Postadresse</label>
+                <Input placeholder="Postadresse" value={enrichFields.postadresse} onChange={e => setEnrichFields(p => ({ ...p, postadresse: e.target.value }))} />
+              </div>
+            </div>
             <Button
               className="w-full"
               disabled={!convertNavn.trim()}
               onClick={() => {
                 if (convertDialogLead) {
-                  konverterLead(convertDialogLead.id, convertNavn.trim());
+                  konverterLead(convertDialogLead.id, convertNavn.trim(), enrichFields);
                   setConvertDialogLead(null);
                   setConvertNavn("");
+                  setEnrichFields({ orgnr: "", bransje: "", firmaadresse: "", postadresse: "" });
                   if (selectedLead?.id === convertDialogLead.id) setSelectedLead(null);
                 }
               }}
@@ -264,8 +292,8 @@ export default function Leads() {
       </Dialog>
 
       {/* Convert to partner dialog */}
-      <Dialog open={!!partnerDialogLead} onOpenChange={open => { if (!open) setPartnerDialogLead(null); }}>
-        <DialogContent className="max-w-[95vw] sm:max-w-md">
+      <Dialog open={!!partnerDialogLead} onOpenChange={open => { if (!open) { setPartnerDialogLead(null); setEnrichFields({ orgnr: "", bransje: "", firmaadresse: "", postadresse: "" }); } }}>
+        <DialogContent className="max-w-[95vw] sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Konverter til partner</DialogTitle>
             <DialogDescription>Bekreft konvertering av {partnerDialogLead?.firmanavn} til partner.</DialogDescription>
@@ -276,8 +304,34 @@ export default function Leads() {
                 domene={undefined}
                 firmanavn={partnerDialogLead.firmanavn}
                 e_post={partnerDialogLead.e_post}
+                onEnriched={(data) => {
+                  setEnrichFields(prev => ({
+                    orgnr: prev.orgnr || data.orgnr || "",
+                    bransje: prev.bransje || data.bransje || "",
+                    firmaadresse: prev.firmaadresse || data.firmaadresse || "",
+                    postadresse: prev.postadresse || data.postadresse || "",
+                  }));
+                }}
               />
             )}
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">Org.nr</label>
+                <Input placeholder="Org.nr" value={enrichFields.orgnr} onChange={e => setEnrichFields(p => ({ ...p, orgnr: e.target.value }))} />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">Bransje</label>
+                <Input placeholder="Bransje" value={enrichFields.bransje} onChange={e => setEnrichFields(p => ({ ...p, bransje: e.target.value }))} />
+              </div>
+              <div className="col-span-2">
+                <label className="text-xs text-muted-foreground mb-1 block">Firmaadresse</label>
+                <Input placeholder="Firmaadresse" value={enrichFields.firmaadresse} onChange={e => setEnrichFields(p => ({ ...p, firmaadresse: e.target.value }))} />
+              </div>
+              <div className="col-span-2">
+                <label className="text-xs text-muted-foreground mb-1 block">Postadresse</label>
+                <Input placeholder="Postadresse" value={enrichFields.postadresse} onChange={e => setEnrichFields(p => ({ ...p, postadresse: e.target.value }))} />
+              </div>
+            </div>
             <Button
               className="w-full"
               onClick={() => {
@@ -285,6 +339,7 @@ export default function Leads() {
                   konverterTilPartner(partnerDialogLead.id);
                   if (selectedLead?.id === partnerDialogLead.id) setSelectedLead(null);
                   setPartnerDialogLead(null);
+                  setEnrichFields({ orgnr: "", bransje: "", firmaadresse: "", postadresse: "" });
                 }
               }}
             >

@@ -717,7 +717,7 @@ function useCrmStoreInternal() {
   }, []);
 
   // Convert lead → salgsmulighet + selskap + kontakt
-  const konverterLead = useCallback((leadId: string, customNavn?: string) => {
+  const konverterLead = useCallback((leadId: string, customNavn?: string, enrichment?: { orgnr?: string; bransje?: string; firmaadresse?: string; postadresse?: string }) => {
     const lead = leads.find(l => l.id === leadId);
     if (!lead) return;
     const today = new Date().toISOString().split("T")[0];
@@ -726,15 +726,24 @@ function useCrmStoreInternal() {
     if (!selskapId) {
       selskapId = crypto.randomUUID();
       const nyttSelskap: Selskap = {
-        id: selskapId, firmanavn: lead.firmanavn, bransje: "", kundeansvarlig: lead.ansvarlig,
+        id: selskapId, firmanavn: lead.firmanavn, bransje: enrichment?.bransje || "", kundeansvarlig: lead.ansvarlig,
         kundestatus: "Ikke kunde", live_status: false, onboarding_status: "Ikke startet",
         mrr: 0, arr: 0, oppstartskostnad: 0, go_live_dato: "", kansellert_dato: "",
         kanselleringsaarsak: "", kanselleringsnotat: "", kundetilstand: "Bra",
         sist_aktivitet: today, neste_steg: "", notater: "",
-        kilde: "Direkte salg", partner_id: "", lukkedato: "", domene: "", orgnr: "",
-        firmaadresse: "", postadresse: "",
+        kilde: "Direkte salg", partner_id: "", lukkedato: "", domene: "", orgnr: enrichment?.orgnr || "",
+        firmaadresse: enrichment?.firmaadresse || "", postadresse: enrichment?.postadresse || "",
       };
       updateSelskaper(prev => [...prev, nyttSelskap]);
+    } else if (enrichment) {
+      // Update existing selskap with enrichment data if fields are empty
+      updateSelskaper(prev => prev.map(s => s.id === selskapId ? {
+        ...s,
+        ...(enrichment.orgnr && !s.orgnr ? { orgnr: enrichment.orgnr } : {}),
+        ...(enrichment.bransje && !s.bransje ? { bransje: enrichment.bransje } : {}),
+        ...(enrichment.firmaadresse && !s.firmaadresse ? { firmaadresse: enrichment.firmaadresse } : {}),
+        ...(enrichment.postadresse && !s.postadresse ? { postadresse: enrichment.postadresse } : {}),
+      } : s));
     }
 
     let kontaktId = kontakter.find(k => k.e_post.toLowerCase() === lead.e_post.toLowerCase())?.id;
