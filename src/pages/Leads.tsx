@@ -386,7 +386,7 @@ export default function Leads() {
                             <Button size="sm" variant="ghost" className="text-xs gap-1" onClick={() => { setConvertDialogLead(lead); setConvertNavn(lead.use_case || lead.firmanavn); }}>
                               <ArrowRightCircle className="w-3.5 h-3.5" />Salg
                             </Button>
-                            <Button size="sm" variant="ghost" className="text-xs gap-1" onClick={() => konverterTilPartner(lead.id)}>
+                            <Button size="sm" variant="ghost" className="text-xs gap-1" onClick={() => setPartnerDialogLead(lead)}>
                               <Users2 className="w-3.5 h-3.5" />Partner
                             </Button>
                           </div>
@@ -427,7 +427,7 @@ export default function Leads() {
             <Button size="sm" onClick={() => { setConvertDialogLead(currentLead); setConvertNavn(currentLead.use_case || currentLead.firmanavn); }}>
               <ArrowRightCircle className="w-4 h-4 mr-1.5" />Til salg
             </Button>
-            <Button size="sm" variant="secondary" onClick={() => { konverterTilPartner(currentLead.id); setSelectedLead(null); }}>
+            <Button size="sm" variant="secondary" onClick={() => setPartnerDialogLead(currentLead)}>
               <Users2 className="w-4 h-4 mr-1.5" />Til partner
             </Button>
           </>
