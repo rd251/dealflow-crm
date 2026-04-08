@@ -34,6 +34,8 @@ export default function PostMeetingDialog({ open, onOpenChange, meetingTitle, sa
   const [saving, setSaving] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiSuggested, setAiSuggested] = useState(false);
+  const [aiOppsummering, setAiOppsummering] = useState("");
+  const [aiKundesignal, setAiKundesignal] = useState("");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Debounced AI call when meeting notes change
@@ -88,6 +90,8 @@ export default function PostMeetingDialog({ open, onOpenChange, meetingTitle, sa
         setNesteSteg(data.foreslatt_neste_steg_tekst);
         setAiSuggested(true);
       }
+      if (data?.oppsummering) setAiOppsummering(data.oppsummering);
+      if (data?.kundesignal) setAiKundesignal(data.kundesignal);
     } catch (err) {
       console.error("AI summary error:", err);
       // Silently fail - user can still type manually
@@ -158,6 +162,8 @@ export default function PostMeetingDialog({ open, onOpenChange, meetingTitle, sa
       setNesteSteg("");
       setMoetenotater("");
       setAiSuggested(false);
+      setAiOppsummering("");
+      setAiKundesignal("");
     } catch (err) {
       console.error(err);
       toast.error("Noe gikk galt");
@@ -207,6 +213,29 @@ export default function PostMeetingDialog({ open, onOpenChange, meetingTitle, sa
               className="mt-2 min-h-[80px]"
             />
           </div>
+
+          {/* AI Summary Section */}
+          {(aiOppsummering || aiKundesignal || aiLoading) && (
+            <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 space-y-2">
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-primary uppercase tracking-wide">
+                <Sparkles className="w-3.5 h-3.5" />
+                AI-oppsummering
+              </div>
+              {aiLoading && !aiOppsummering && (
+                <p className="text-xs text-muted-foreground animate-pulse">Analyserer møtenotater...</p>
+              )}
+              {aiOppsummering && (
+                <p className="text-sm text-foreground leading-relaxed">{aiOppsummering}</p>
+              )}
+              {aiKundesignal && (
+                <div className="flex items-center gap-1.5 pt-1 border-t border-primary/10">
+                  <span className="text-xs font-medium text-muted-foreground">Kundesignal:</span>
+                  <span className="text-xs font-semibold text-foreground">{aiKundesignal}</span>
+                </div>
+              )}
+            </div>
+          )}
+
 
           <div>
             <div className="flex items-center justify-between">
