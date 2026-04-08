@@ -90,6 +90,8 @@ export default function PostMeetingDialog({ open, onOpenChange, meetingTitle, sa
         setNesteSteg(data.foreslatt_neste_steg_tekst);
         setAiSuggested(true);
       }
+      if (data?.oppsummering) setAiOppsummering(data.oppsummering);
+      if (data?.kundesignal) setAiKundesignal(data.kundesignal);
     } catch (err) {
       console.error("AI summary error:", err);
       // Silently fail - user can still type manually
