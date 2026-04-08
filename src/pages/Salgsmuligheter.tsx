@@ -550,6 +550,9 @@ export default function Salgsmuligheter() {
           <>
             <Badge variant="secondary" className="text-xs">{currentSm.status}</Badge>
             {currentSm.sannsynlighet != null && <Badge variant="outline" className="text-xs">{currentSm.sannsynlighet}%</Badge>}
+            <Badge className={`text-[10px] ${kontraktStatusColors[currentSm.kontrakt_status as KontraktStatus] || kontraktStatusColors["Ikke sendt"]}`}>
+              <FileSignature className="w-3 h-3 mr-0.5" />{currentSm.kontrakt_status || "Ikke sendt"}
+            </Badge>
             {(() => {
               const sig = activitySignal(currentSm.sist_aktivitet);
               return <Badge className={`text-[10px] gap-1 ${sig.color === "bg-destructive" ? "bg-destructive/10 text-destructive" : sig.color === "bg-warning" ? "bg-warning/10 text-warning" : "bg-success/10 text-success"}`}>
