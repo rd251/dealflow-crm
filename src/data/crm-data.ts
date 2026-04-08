@@ -82,7 +82,27 @@ export interface Salgsmulighet {
   kontrakt_status: KontraktStatus;
   kontrakt_signert_dato: string;
   dealbuilder_dokument_id: string;
+  valgt_pakke: string;
 }
+
+// Package definitions
+export interface PakkeDef {
+  navn: string;
+  mrr: number | null; // null = custom
+  minutter: string;
+}
+
+export const PAKKER: PakkeDef[] = [
+  { navn: "Chatbot + 100 min", mrr: 990, minutter: "100 min" },
+  { navn: "Starter", mrr: 2500, minutter: "500 min" },
+  { navn: "800 min", mrr: 4000, minutter: "800 min" },
+  { navn: "Vekst", mrr: 7500, minutter: "1 500 min" },
+  { navn: "Pro", mrr: 12500, minutter: "2 500 min" },
+  { navn: "Team", mrr: 15000, minutter: "3 000 min" },
+  { navn: "Bedrift", mrr: 30000, minutter: "6 000 min" },
+  { navn: "Enterprise", mrr: null, minutter: "Tilpasset" },
+  { navn: "Tilpasset", mrr: null, minutter: "" },
+];
 
 export interface Prosjekt {
   id: string;
