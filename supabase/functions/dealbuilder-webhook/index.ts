@@ -6,17 +6,27 @@ const corsHeaders = {
 };
 
 Deno.serve(async (req) => {
+  // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
+  }
+
+  // For GET requests, return a simple health check
+  if (req.method === "GET") {
+    return new Response(JSON.stringify({ received: true, status: "active" }), {
+      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 
   try {
     const body = await req.json();
     const { event, CRMid, document_id, signer_name } = body;
 
+    // If no event/CRMid, just acknowledge receipt
     if (!event || !CRMid) {
-      return new Response(JSON.stringify({ error: "Missing event or CRMid" }), {
-        status: 400,
+      return new Response(JSON.stringify({ received: true, warning: "Missing event or CRMid" }), {
+        status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -34,8 +44,8 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (findError || !deal) {
-      return new Response(JSON.stringify({ error: "Deal not found", CRMid }), {
-        status: 404,
+      return new Response(JSON.stringify({ received: true, error: "Deal not found", CRMid }), {
+        status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -63,8 +73,8 @@ Deno.serve(async (req) => {
         break;
 
       default:
-        return new Response(JSON.stringify({ error: "Unknown event", event }), {
-          status: 400,
+        return new Response(JSON.stringify({ received: true, warning: "Unknown event", event }), {
+          status: 200,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
     }
@@ -76,8 +86,8 @@ Deno.serve(async (req) => {
       .eq("id", CRMid);
 
     if (updateError) {
-      return new Response(JSON.stringify({ error: "Update failed", details: updateError.message }), {
-        status: 500,
+      return new Response(JSON.stringify({ received: true, error: "Update failed", details: updateError.message }), {
+        status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -94,7 +104,6 @@ Deno.serve(async (req) => {
         dato: new Date().toISOString(),
       });
 
-      // Also log to changelog
       await supabase.from("crm_changelog").insert({
         event_type: "updated",
         entity_type: "salgsmulighet",
@@ -106,13 +115,13 @@ Deno.serve(async (req) => {
       });
     }
 
-    return new Response(JSON.stringify({ success: true, event, CRMid }), {
+    return new Response(JSON.stringify({ received: true, event, CRMid }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
-    return new Response(JSON.stringify({ error: "Invalid request", details: String(err) }), {
-      status: 400,
+    return new Response(JSON.stringify({ received: true, error: "Invalid request", details: String(err) }), {
+      status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
