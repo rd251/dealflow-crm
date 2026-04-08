@@ -78,7 +78,7 @@ Deno.serve(async (req) => {
 
   // ── Stage breakdown ──
   const stageMap = new Map<string, { total: number; count: number }>()
-  const stageOrder = ['Møte booket', 'Behov avklart', 'Løsning presentert', 'Tilbud sendt', 'Forhandling', 'Beslutning']
+  const stageOrder = ['Møte booket', 'Behov avklart', 'Løsning presentert', 'Kontrakt sendt']
   for (const d of activeDeals || []) {
     if (!d.status) continue
     const existing = stageMap.get(d.status) || { total: 0, count: 0 }
@@ -89,7 +89,7 @@ Deno.serve(async (req) => {
   const stageBreakdown = stageOrder.filter(s => stageMap.has(s)).map(s => ({ stage: s, totalVerdi: stageMap.get(s)!.total, antall: stageMap.get(s)!.count }))
 
   // ── Near closing ──
-  const closingStages = ['Beslutning', 'Forhandling', 'Tilbud sendt']
+  const closingStages = ['Kontrakt sendt']
   const nearClosing = (activeDeals || [])
     .filter(d => d.status && closingStages.includes(d.status))
     .slice(0, 5)

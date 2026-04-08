@@ -27,7 +27,7 @@ import ActivityLog from "@/components/ActivityLog";
 import EntityChangelog from "@/components/EntityChangelog";
 import MeetingNotesList from "@/components/MeetingNotesList";
 
-const allStatuses: SalgsmulighetStatus[] = ["Møte booket", "Behov avklart", "Løsning presentert", "Tilbud sendt", "Beslutning"];
+const allStatuses: SalgsmulighetStatus[] = ["Møte booket", "Behov avklart", "Løsning presentert", "Kontrakt sendt"];
 const openStatuses = allStatuses;
 const tapsaarsaker: Tapsaarsak[] = ["Pris", "Ikke riktig timing", "Valgte annen leverandør", "Ikke behov", "Teknisk / integrasjon", "Annet"];
 
@@ -120,8 +120,7 @@ const statusColors: Record<SalgsmulighetStatus, string> = {
   "Møte booket": "bg-stage-contacted",
   "Behov avklart": "bg-stage-qualified",
   "Løsning presentert": "bg-stage-demo",
-  "Tilbud sendt": "bg-stage-proposal",
-  "Beslutning": "bg-stage-negotiation",
+  "Kontrakt sendt": "bg-stage-proposal",
   "Vunnet": "bg-stage-won",
   "Tapt": "bg-stage-lost",
 };
@@ -344,7 +343,7 @@ export default function Salgsmuligheter() {
           {(() => {
             const totalPipeline = openDeals.reduce((s, d) => s + beregnTotalKontraktsverdi(d), 0);
             const totalVektet = openDeals.reduce((s, d) => s + beregnVektetPipeline(d), 0);
-            const nearClosing = openDeals.filter(d => d.status === "Tilbud sendt" || d.status === "Beslutning");
+            const nearClosing = openDeals.filter(d => d.status === "Kontrakt sendt");
             const nearClosingValue = nearClosing.reduce((s, d) => s + beregnTotalKontraktsverdi(d), 0);
             return (
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
@@ -783,7 +782,7 @@ export default function Salgsmuligheter() {
                         });
                         window.open(`https://app.dealbuilder.io/contract/createnewcontractexternal?${params.toString()}`, "_blank");
                         updateSalgsmuligheter(prev => prev.map(s =>
-                          s.id === currentSm.id ? { ...s, kontrakt_status: "Sendt" as const } : s
+                          s.id === currentSm.id ? { ...s, kontrakt_status: "Sendt" as const, status: "Kontrakt sendt" as SalgsmulighetStatus, sist_aktivitet: new Date().toISOString().split("T")[0] } : s
                         ));
                       }}>
                         <FileSignature className="w-3.5 h-3.5 mr-1.5" />Send kontrakt

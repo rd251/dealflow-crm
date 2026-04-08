@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import {
-  Lead, LeadStatus, Salgsmulighet, Prosjekt, Selskap, Kontakt, Oppgave, Partner,
+  Lead, LeadStatus, Salgsmulighet, SalgsmulighetStatus, Prosjekt, Selskap, Kontakt, Oppgave, Partner,
 } from "@/data/crm-data";
 
 // Map DB row to app type (handle nulls)
@@ -893,11 +893,11 @@ function useCrmStoreInternal() {
     const today = new Date().toISOString().split("T")[0];
     // Find linked salgsmuligheter that were won for this selskap
     const vunnetSm = salgsmuligheter.filter(sm => sm.selskap_id === selskapId && sm.status === "Vunnet");
-    // Reopen them back to "Beslutning"
+    // Reopen them back to "Kontrakt sendt"
     if (vunnetSm.length > 0) {
       updateSalgsmuligheter(prev => prev.map(sm =>
         sm.selskap_id === selskapId && sm.status === "Vunnet"
-          ? { ...sm, status: "Beslutning" as const, vunnet_dato: "", sist_aktivitet: today }
+          ? { ...sm, status: "Kontrakt sendt" as SalgsmulighetStatus, vunnet_dato: "", sist_aktivitet: today }
           : sm
       ));
     }
