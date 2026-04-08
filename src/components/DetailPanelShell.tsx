@@ -21,10 +21,11 @@ interface DetailPanelShellProps {
     interaksjoner?: ReactNode;
     notater?: ReactNode;
     kalender?: ReactNode;
+    dokumenter?: ReactNode;
   };
 }
 
-const TAB_KEYS = ["detaljer", "selskap", "kontakt", "interaksjoner", "notater", "kalender"] as const;
+const TAB_KEYS = ["detaljer", "selskap", "kontakt", "interaksjoner", "notater", "kalender", "dokumenter"] as const;
 const TAB_LABELS: Record<(typeof TAB_KEYS)[number], string> = {
   detaljer: "Detaljer",
   selskap: "Selskap",
@@ -32,6 +33,7 @@ const TAB_LABELS: Record<(typeof TAB_KEYS)[number], string> = {
   interaksjoner: "Interaksjoner",
   notater: "Notater",
   kalender: "Kalender",
+  dokumenter: "Dokumenter",
 };
 
 export default function DetailPanelShell({
