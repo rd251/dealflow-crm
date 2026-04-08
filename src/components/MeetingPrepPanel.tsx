@@ -441,6 +441,7 @@ export default function MeetingPrepPanel({ meeting, open, onOpenChange }: Props)
         meetingTitle={meeting?.tittel || meeting?.beskrivelse || "Møte"}
         salgsmulighet_id={meeting?.salgsmulighet_id || null}
         selskap_id={meeting?.selskap_id || null}
+        aktivitet_id={meeting?.id || null}
       />
     </>
   );

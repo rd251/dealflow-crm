@@ -18,6 +18,7 @@ interface Props {
   meetingTitle: string;
   salgsmulighet_id: string | null;
   selskap_id: string | null;
+  aktivitet_id?: string | null;
 }
 
 const resultatConfig: { value: Resultat; label: string; icon: React.ReactNode; cls: string }[] = [
@@ -26,9 +27,10 @@ const resultatConfig: { value: Resultat; label: string; icon: React.ReactNode; c
   { value: "dårlig", label: "Dårlig", icon: <ThumbsDown className="w-4 h-4" />, cls: "border-destructive/30 bg-destructive/10 text-destructive" },
 ];
 
-export default function PostMeetingDialog({ open, onOpenChange, meetingTitle, salgsmulighet_id, selskap_id }: Props) {
+export default function PostMeetingDialog({ open, onOpenChange, meetingTitle, salgsmulighet_id, selskap_id, aktivitet_id }: Props) {
   const [resultat, setResultat] = useState<Resultat | null>(null);
   const [nesteSteg, setNesteSteg] = useState("");
+  const [moetenotater, setMoetenotater] = useState("");
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
@@ -46,11 +48,15 @@ export default function PostMeetingDialog({ open, onOpenChange, meetingTitle, sa
       });
       if (taskError) throw taskError;
 
-      // 2. Update salgsmulighet neste_steg if linked
+      // 2. Save meeting notes to activity if available
+      if (aktivitet_id && moetenotater.trim()) {
+        await supabase.from("aktiviteter").update({ moetenotater: moetenotater.trim() }).eq("id", aktivitet_id);
+      }
+
+      // 3. Update salgsmulighet neste_steg if linked
       if (salgsmulighet_id) {
         const updates: Record<string, any> = { neste_steg: nesteSteg.trim() };
         if (resultat === "bra") {
-          // Advance stage if appropriate
           const { data: sm } = await supabase
             .from("salgsmuligheter")
             .select("status")
@@ -74,6 +80,7 @@ export default function PostMeetingDialog({ open, onOpenChange, meetingTitle, sa
       onOpenChange(false);
       setResultat(null);
       setNesteSteg("");
+      setMoetenotater("");
     } catch (err) {
       console.error(err);
       toast.error("Noe gikk galt");
@@ -106,6 +113,19 @@ export default function PostMeetingDialog({ open, onOpenChange, meetingTitle, sa
                 </button>
               ))}
             </div>
+          </div>
+
+          <div>
+            <Label htmlFor="moetenotater" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+              Møtenotater
+            </Label>
+            <Textarea
+              id="moetenotater"
+              placeholder="Skriv et sammendrag av møtet..."
+              value={moetenotater}
+              onChange={(e) => setMoetenotater(e.target.value)}
+              className="mt-2 min-h-[80px]"
+            />
           </div>
 
           <div>
