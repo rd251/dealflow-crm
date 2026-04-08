@@ -52,6 +52,9 @@ function rowToSalgsmulighet(r: any): Salgsmulighet {
     partner_kostnad: Number(r.partner_kostnad) || 0, netto_inntekt: Number(r.netto_inntekt) || 0,
     rolle_i_firma: r.rolle_i_firma || "", use_case: r.use_case || "",
     kontaktperson: r.kontaktperson || "", e_post: r.e_post || "", telefon: r.telefon || "",
+    kontrakt_status: r.kontrakt_status || "Ikke sendt",
+    kontrakt_signert_dato: r.kontrakt_signert_dato || "",
+    dealbuilder_dokument_id: r.dealbuilder_dokument_id || "",
   };
 }
 function rowToProsjekt(r: any): Prosjekt {
