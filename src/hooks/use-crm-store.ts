@@ -860,7 +860,7 @@ function useCrmStoreInternal() {
     ));
   }, [updateSalgsmuligheter]);
 
-  const settProsjektLive = useCallback((pId: string) => {
+  const settProsjektLive = useCallback(async (pId: string) => {
     const prosjekt = prosjekter.find(p => p.id === pId);
     if (!prosjekt) return;
     const today = new Date().toISOString().split("T")[0];
@@ -876,6 +876,17 @@ function useCrmStoreInternal() {
         go_live_dato: s.go_live_dato || today, sist_aktivitet: today,
       } : s
     ));
+
+    // Auto-delete KB files from storage when project goes live
+    try {
+      const { data: files } = await supabase.storage.from("projekt-kb").list(pId);
+      if (files && files.length > 0) {
+        const paths = files.map(f => `${pId}/${f.name}`);
+        await supabase.storage.from("projekt-kb").remove(paths);
+      }
+    } catch (err) {
+      console.warn("Could not clean KB files:", err);
+    }
   }, [prosjekter, updateProsjekter, updateSelskaper]);
 
   const kansellerSelskap = useCallback((selskapId: string, aarsak: Selskap["kanselleringsaarsak"], notat: string) => {
