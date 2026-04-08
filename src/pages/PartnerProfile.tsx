@@ -79,7 +79,7 @@ export default function PartnerProfile() {
     ));
   };
 
-  const nok = (v: number) => v.toLocaleString("no-NO");
+  const nok = (v: number) => v.toLocaleString("no-NO") + " kr";
 
   const addCustomer = () => {
     const selskapId = crypto.randomUUID();

@@ -62,7 +62,7 @@ export default function Rapporter() {
     }
   };
 
-  const nok = (v: number) => v.toLocaleString("no-NO");
+  const nok = (v: number) => v.toLocaleString("no-NO") + " kr";
   const months = getMonthsBetween(fromDate, toDate);
 
   // --- MRR over tid ---

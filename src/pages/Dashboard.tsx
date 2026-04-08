@@ -59,7 +59,7 @@ export default function Dashboard() {
     return map;
   }, [profiles]);
   const today = now.toISOString().split("T")[0];
-  const nok = (v: number) => v.toLocaleString("no-NO");
+  const nok = (v: number) => v.toLocaleString("no-NO") + " kr";
 
   // ─── MEETINGS STATE ───
   const [meetings, setMeetings] = useState<MeetingItem[]>([]);
