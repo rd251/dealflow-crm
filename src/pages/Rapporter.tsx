@@ -102,8 +102,8 @@ export default function Rapporter() {
 
   // --- Pipeline per status (snapshot, not date-filtered) ---
   const openSm = salgsmuligheter.filter(s => s.status !== "Vunnet" && s.status !== "Tapt");
-  const pipelineStatuses = ["Møte booket", "Behov avklart", "Løsning presentert", "Tilbud sendt", "Beslutning"];
-  const pipelineColors = ["hsl(220, 70%, 55%)", "hsl(38, 92%, 50%)", "hsl(199, 89%, 48%)", "hsl(262, 60%, 55%)", "hsl(38, 70%, 50%)"];
+  const pipelineStatuses = ["Møte booket", "Behov avklart", "Løsning presentert", "Kontrakt sendt"];
+  const pipelineColors = ["hsl(220, 70%, 55%)", "hsl(38, 92%, 50%)", "hsl(199, 89%, 48%)", "hsl(262, 60%, 55%)"];
   const pipelineData = pipelineStatuses.map(s => ({
     status: s.length > 12 ? s.substring(0, 12) + "…" : s,
     verdi: openSm.filter(sm => sm.status === s).reduce((sum, sm) => sum + beregnTotalKontraktsverdi(sm), 0),
