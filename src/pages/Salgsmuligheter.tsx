@@ -252,6 +252,9 @@ export default function Salgsmuligheter() {
   const lostThisMonth = salgsmuligheter.filter(s => s.status === "Tapt" && thisMonth(s.tapt_dato));
   const allClosed = salgsmuligheter.filter(s => s.status === "Vunnet" || s.status === "Tapt");
 
+  // Signerte kontrakter (nylig signert)
+  const signedDeals = salgsmuligheter.filter(s => s.kontrakt_status === "Signert");
+
   // Venter på signering: kontrakt sendt/åpnet men ikke signert, og deal er fortsatt åpen
   const awaitingSignature = salgsmuligheter.filter(s =>
     openStatuses.includes(s.status) &&
