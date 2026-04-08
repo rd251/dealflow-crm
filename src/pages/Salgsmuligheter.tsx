@@ -828,6 +828,25 @@ export default function Salgsmuligheter() {
                   domene={getSelskapDomain(currentSm.selskap_id)}
                   firmanavn={getSelskapNavn(currentSm.selskap_id || "")}
                   e_post={currentSm.e_post}
+                  onEnriched={(innsikt) => {
+                    if (currentSm.selskap_id) {
+                      const selskap = selskaper.find(s => s.id === currentSm.selskap_id);
+                      if (selskap) {
+                        const needsOrgnr = innsikt.orgnr && (!selskap.orgnr || selskap.orgnr === "");
+                        const needsBransje = innsikt.bransje && (!selskap.bransje || selskap.bransje === "");
+                        if (needsOrgnr || needsBransje) {
+                          updateSelskaper(prev => prev.map(s =>
+                            s.id === currentSm.selskap_id ? {
+                              ...s,
+                              ...(needsOrgnr ? { orgnr: innsikt.orgnr! } : {}),
+                              ...(needsBransje ? { bransje: innsikt.bransje! } : {}),
+                            } : s
+                          ));
+                          toast.success("Org.nr og bransje oppdatert fra selskapsinnsikt");
+                        }
+                      }
+                    }
+                  }}
                 />
               </>
             ),
