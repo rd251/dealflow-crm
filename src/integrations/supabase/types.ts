@@ -1052,10 +1052,12 @@ export type Database = {
           domene: string
           estimert_ansatte: string | null
           estimert_omsetning: string | null
+          firmaadresse: string | null
           firmanavn: string
           id: string
           kilde_data: Json | null
           orgnr: string | null
+          postadresse: string | null
           stoerrelse: string | null
           updated_at: string
         }
@@ -1066,10 +1068,12 @@ export type Database = {
           domene?: string
           estimert_ansatte?: string | null
           estimert_omsetning?: string | null
+          firmaadresse?: string | null
           firmanavn?: string
           id?: string
           kilde_data?: Json | null
           orgnr?: string | null
+          postadresse?: string | null
           stoerrelse?: string | null
           updated_at?: string
         }
@@ -1080,10 +1084,12 @@ export type Database = {
           domene?: string
           estimert_ansatte?: string | null
           estimert_omsetning?: string | null
+          firmaadresse?: string | null
           firmanavn?: string
           id?: string
           kilde_data?: Json | null
           orgnr?: string | null
+          postadresse?: string | null
           stoerrelse?: string | null
           updated_at?: string
         }
