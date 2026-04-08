@@ -330,12 +330,16 @@ export default function CompanyProfile() {
               onEnriched={(innsikt) => {
                 const needsBransje = innsikt.bransje && (!selskap.bransje || selskap.bransje === "");
                 const needsOrgnr = innsikt.orgnr && (!selskap.orgnr || selskap.orgnr === "");
-                if (needsBransje || needsOrgnr) {
+                const needsFirmaadresse = innsikt.firmaadresse && (!selskap.firmaadresse || selskap.firmaadresse === "");
+                const needsPostadresse = innsikt.postadresse && (!selskap.postadresse || selskap.postadresse === "");
+                if (needsBransje || needsOrgnr || needsFirmaadresse || needsPostadresse) {
                   updateSelskaper(prev => prev.map(s =>
                     s.id === selskap.id ? {
                       ...s,
                       ...(needsBransje ? { bransje: innsikt.bransje! } : {}),
                       ...(needsOrgnr ? { orgnr: innsikt.orgnr! } : {}),
+                      ...(needsFirmaadresse ? { firmaadresse: innsikt.firmaadresse! } : {}),
+                      ...(needsPostadresse ? { postadresse: innsikt.postadresse! } : {}),
                     } : s
                   ));
                   toast.success("Selskapsfelt oppdatert fra berikelsesdata");
