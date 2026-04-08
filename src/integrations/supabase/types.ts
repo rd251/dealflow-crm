@@ -1095,6 +1095,7 @@ export type Database = {
           bransje: string | null
           created_at: string
           domene: string
+          firmaadresse: string
           firmanavn: string
           go_live_dato: string | null
           id: string
@@ -1118,6 +1119,7 @@ export type Database = {
           oppstartskostnad: number | null
           orgnr: string
           partner_id: string | null
+          postadresse: string
           sist_aktivitet: string | null
           updated_at: string
         }
@@ -1126,6 +1128,7 @@ export type Database = {
           bransje?: string | null
           created_at?: string
           domene?: string
+          firmaadresse?: string
           firmanavn: string
           go_live_dato?: string | null
           id?: string
@@ -1149,6 +1152,7 @@ export type Database = {
           oppstartskostnad?: number | null
           orgnr?: string
           partner_id?: string | null
+          postadresse?: string
           sist_aktivitet?: string | null
           updated_at?: string
         }
@@ -1157,6 +1161,7 @@ export type Database = {
           bransje?: string | null
           created_at?: string
           domene?: string
+          firmaadresse?: string
           firmanavn?: string
           go_live_dato?: string | null
           id?: string
@@ -1180,6 +1185,7 @@ export type Database = {
           oppstartskostnad?: number | null
           orgnr?: string
           partner_id?: string | null
+          postadresse?: string
           sist_aktivitet?: string | null
           updated_at?: string
         }

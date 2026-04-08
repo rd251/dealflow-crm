@@ -30,6 +30,7 @@ function rowToSelskap(r: any): Selskap {
     neste_steg: r.neste_steg || "", notater: r.notater || "",
     kilde: r.kilde || "Direkte salg", partner_id: r.partner_id || "",
     lukkedato: r.lukkedato || "", domene: r.domene || "", orgnr: r.orgnr || "",
+    firmaadresse: r.firmaadresse || "", postadresse: r.postadresse || "",
   };
 }
 function rowToKontakt(r: any): Kontakt {
@@ -731,6 +732,7 @@ function useCrmStoreInternal() {
         kanselleringsaarsak: "", kanselleringsnotat: "", kundetilstand: "Bra",
         sist_aktivitet: today, neste_steg: "", notater: "",
         kilde: "Direkte salg", partner_id: "", lukkedato: "", domene: "", orgnr: "",
+        firmaadresse: "", postadresse: "",
       };
       updateSelskaper(prev => [...prev, nyttSelskap]);
     }
