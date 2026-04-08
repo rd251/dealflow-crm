@@ -336,7 +336,7 @@ export default function Leads() {
               className="w-full"
               onClick={() => {
                 if (partnerDialogLead) {
-                  konverterTilPartner(partnerDialogLead.id);
+                  konverterTilPartner(partnerDialogLead.id, enrichFields);
                   if (selectedLead?.id === partnerDialogLead.id) setSelectedLead(null);
                   setPartnerDialogLead(null);
                   setEnrichFields({ orgnr: "", bransje: "", firmaadresse: "", postadresse: "" });
