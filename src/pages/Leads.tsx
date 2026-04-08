@@ -325,7 +325,7 @@ export default function Leads() {
                       <Button size="sm" variant="ghost" className="text-xs gap-1 flex-1" onClick={e => { e.stopPropagation(); setConvertDialogLead(lead); setConvertNavn(lead.use_case || lead.firmanavn); }}>
                         <ArrowRightCircle className="w-3.5 h-3.5" />Salg
                       </Button>
-                      <Button size="sm" variant="ghost" className="text-xs gap-1 flex-1" onClick={e => { e.stopPropagation(); konverterTilPartner(lead.id); }}>
+                      <Button size="sm" variant="ghost" className="text-xs gap-1 flex-1" onClick={e => { e.stopPropagation(); setPartnerDialogLead(lead); }}>
                         <Users2 className="w-3.5 h-3.5" />Partner
                       </Button>
                     </div>
