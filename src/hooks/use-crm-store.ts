@@ -491,6 +491,8 @@ function useCrmStoreInternal() {
       if (!prevIds.has(item.id)) {
         await dbUpsert("selskaper", {
           id: item.id, firmanavn: item.firmanavn, bransje: emptyToNull(item.bransje),
+          orgnr: item.orgnr || "", domene: item.domene || "",
+          firmaadresse: item.firmaadresse || "", postadresse: item.postadresse || "",
           kundeansvarlig: emptyToNull(item.kundeansvarlig), kundestatus: item.kundestatus,
           live_status: item.live_status, onboarding_status: item.onboarding_status,
           mrr: item.mrr, arr: item.arr, oppstartskostnad: item.oppstartskostnad,
@@ -509,6 +511,8 @@ function useCrmStoreInternal() {
       if (old && JSON.stringify(old) !== JSON.stringify(item)) {
         await dbUpdate("selskaper", item.id, {
           firmanavn: item.firmanavn, bransje: emptyToNull(item.bransje),
+          orgnr: item.orgnr || "", domene: item.domene || "",
+          firmaadresse: item.firmaadresse || "", postadresse: item.postadresse || "",
           kundeansvarlig: emptyToNull(item.kundeansvarlig), kundestatus: item.kundestatus,
           live_status: item.live_status, onboarding_status: item.onboarding_status,
           mrr: item.mrr, arr: item.arr, oppstartskostnad: item.oppstartskostnad,
