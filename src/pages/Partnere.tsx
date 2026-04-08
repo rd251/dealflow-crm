@@ -4,6 +4,7 @@ import PageShell from "@/components/PageShell";
 import { useCrmStore } from "@/hooks/use-crm-store";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/use-auth";
+import { nok } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -123,7 +124,7 @@ export default function Partnere() {
     >
       {/* ─── KPI ─── */}
       {(() => {
-        const nok = (n: number) => n.toLocaleString("nb-NO", { maximumFractionDigits: 0 }) + " kr";
+        
         const totalPartnere = partnere.length;
         const aktivePartnere = partnere.filter(p => p.partnerstatus === "Aktiv").length;
         const partnerKunder = selskaper.filter(s => s.partner_id && partnere.some(p => p.id === s.partner_id) && s.kundestatus === "Live");

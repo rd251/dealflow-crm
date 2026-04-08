@@ -11,7 +11,7 @@ import { ArrowLeft, CalendarIcon, Download, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
+import { cn, nok } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { generateWeeklyReportPDF } from "@/lib/weekly-report-pdf";
 import { toast } from "sonner";
@@ -62,7 +62,7 @@ export default function Rapporter() {
     }
   };
 
-  const nok = (v: number) => v.toLocaleString("no-NO") + " kr";
+  
   const months = getMonthsBetween(fromDate, toDate);
 
   // --- MRR over tid ---

@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useCrmStore } from "@/hooks/use-crm-store";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { beregnTotalKontraktsverdi } from "@/data/crm-data";
+import { nok } from "@/lib/utils";
 import StatCard from "@/components/StatCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -79,7 +80,7 @@ export default function PartnerProfile() {
     ));
   };
 
-  const nok = (v: number) => v.toLocaleString("no-NO") + " kr";
+  
 
   const addCustomer = () => {
     const selskapId = crypto.randomUUID();
