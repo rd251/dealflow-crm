@@ -568,6 +568,23 @@ export default function Salgsmuligheter() {
                 <Mail className="w-3.5 h-3.5 mr-1.5" />E-post
               </Button>
             )}
+            <Button size="sm" variant="outline" onClick={() => {
+              const selskap = selskaper.find(s => s.id === currentSm.selskap_id);
+              const params = new URLSearchParams({
+                companyname: selskap?.firmanavn || "",
+                customername: currentSm.kontaktperson || "",
+                email: currentSm.e_post || "",
+                phonenumber: currentSm.telefon || "",
+                orgnumber: selskap?.orgnr || "",
+                CRMid: currentSm.id,
+              });
+              window.open(`https://app.dealbuilder.io/contract/createnewcontractexternal?${params.toString()}`, "_blank");
+              updateSalgsmuligheter(prev => prev.map(s =>
+                s.id === currentSm.id ? { ...s, kontrakt_status: "Sendt" as const } : s
+              ));
+            }}>
+              <FileSignature className="w-3.5 h-3.5 mr-1.5" />Send kontrakt
+            </Button>
             <Button size="sm" className="bg-success hover:bg-success/90 text-success-foreground" onClick={() => { vinnSalgsmulighet(currentSm.id); setSelectedSm(null); }}>
               <Trophy className="w-3.5 h-3.5 mr-1.5" />Vunnet
             </Button>
