@@ -58,6 +58,8 @@ Deno.serve(async (req) => {
       case "document_signed":
         updateData.kontrakt_status = "Signert";
         updateData.kontrakt_signert_dato = new Date().toISOString();
+        updateData.status = "Vunnet";
+        updateData.vunnet_dato = new Date().toISOString().split("T")[0];
         if (document_id) updateData.dealbuilder_dokument_id = document_id;
         logActivity = true;
         activityDescription = `Kontrakt signert av ${signer_name || "ukjent"}`;
