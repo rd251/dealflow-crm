@@ -20,7 +20,7 @@ const stageColors: Record<PartnerPipelineStatus, string> = {
 export default function PartnerPipeline() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const { partnere, updatePartnere } = useCrmStore();
+  const { partnere, updatePartnere, selskaper } = useCrmStore();
   const [draggedId, setDraggedId] = useState<string | null>(null);
 
   const handleDrop = (e: React.DragEvent, stage: PartnerPipelineStatus) => {
