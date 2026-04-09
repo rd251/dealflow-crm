@@ -50,6 +50,8 @@ export default function PartnerProfile() {
   const [showAddDeal, setShowAddDeal] = useState(false);
   const [dealForm, setDealForm] = useState({ navn: "", selskap_id: "", forventet_mrr: 0, oppstartskostnad: 0 });
   const [showPartnerContract, setShowPartnerContract] = useState(false);
+  const [standaloneOrgnr, setStandaloneOrgnr] = useState("");
+  const [standaloneAdresse, setStandaloneAdresse] = useState("");
 
   const partner = partnere.find(p => p.id === id);
   if (!partner) {
