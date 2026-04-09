@@ -50,6 +50,8 @@ export default function PartnerProfile() {
   const [showAddDeal, setShowAddDeal] = useState(false);
   const [dealForm, setDealForm] = useState({ navn: "", selskap_id: "", forventet_mrr: 0, oppstartskostnad: 0 });
   const [showPartnerContract, setShowPartnerContract] = useState(false);
+  const [standaloneOrgnr, setStandaloneOrgnr] = useState("");
+  const [standaloneAdresse, setStandaloneAdresse] = useState("");
 
   const partner = partnere.find(p => p.id === id);
   if (!partner) {
@@ -380,10 +382,36 @@ export default function PartnerProfile() {
                   <Input value={partner.ansvarlig} onChange={e => updateField("ansvarlig", e.target.value)} className="h-8 text-sm" />
                 </div>
 
-                {/* Koblet selskap */}
+                {/* Koblet selskap — or standalone org.nr if no linked selskap */}
                 {(() => {
                   const selskap = partner.selskap_id ? selskaper.find(s => s.id === partner.selskap_id) : null;
-                  if (!selskap) return null;
+                  if (!selskap) return (
+                    <div className="border rounded-lg p-3 space-y-2 bg-muted/20">
+                      <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                        <Building2 className="w-3.5 h-3.5" />
+                        Selskapsinfo
+                      </div>
+                      <SelskapInnsikt
+                        domene=""
+                        firmanavn={partner.partnernavn}
+                        e_post={partner.e_post}
+                        onEnriched={(data) => {
+                          if (data.orgnr && !standaloneOrgnr) setStandaloneOrgnr(data.orgnr);
+                          if (data.firmaadresse && !standaloneAdresse) setStandaloneAdresse(data.firmaadresse);
+                        }}
+                      />
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <span className="text-muted-foreground block text-xs mb-1">Org.nr</span>
+                          <Input value={standaloneOrgnr} onChange={e => setStandaloneOrgnr(e.target.value)} className="h-7 text-xs" placeholder="Fyll inn org.nr" />
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground block text-xs mb-1">Adresse</span>
+                          <Input value={standaloneAdresse} onChange={e => setStandaloneAdresse(e.target.value)} className="h-7 text-xs" placeholder="Firmaadresse" />
+                        </div>
+                      </div>
+                    </div>
+                  );
                   const updateSelskapField = (field: string, value: any) => {
                     updateSelskaper(prev => prev.map(s => s.id === selskap.id ? { ...s, [field]: value } : s));
                   };
@@ -505,8 +533,8 @@ export default function PartnerProfile() {
         contractData={{
           partner_id: partner.id,
           firmanavn: linkedSelskap?.firmanavn || partner.partnernavn,
-          orgnr: linkedSelskap?.orgnr || "",
-          adresse: linkedSelskap?.firmaadresse || "",
+          orgnr: linkedSelskap?.orgnr || standaloneOrgnr || "",
+          adresse: linkedSelskap?.firmaadresse || standaloneAdresse || "",
           kontaktperson: resolvedKontaktperson,
           telefon: resolvedTelefon,
           e_post: resolvedEpost,
