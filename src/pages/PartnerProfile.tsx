@@ -507,12 +507,12 @@ export default function PartnerProfile() {
             onOpenChange={setShowPartnerContract}
             contractData={{
               partner_id: partner.id,
-              firmanavn: selskap?.firmanavn || partner.partnernavn,
-              orgnr: selskap?.orgnr || "",
-              adresse: selskap?.firmaadresse || "",
-              kontaktperson: partner.kontaktperson || "",
-              telefon: partner.telefon || "",
-              e_post: partner.e_post || "",
+              firmanavn: linkedSelskap?.firmanavn || partner.partnernavn,
+              orgnr: linkedSelskap?.orgnr || "",
+              adresse: linkedSelskap?.firmaadresse || "",
+              kontaktperson: resolvedKontaktperson,
+              telefon: resolvedTelefon,
+              e_post: resolvedEpost,
             }}
             senderEmail={user?.email || ""}
             onContractSent={() => {
