@@ -533,8 +533,8 @@ export default function PartnerProfile() {
         contractData={{
           partner_id: partner.id,
           firmanavn: linkedSelskap?.firmanavn || partner.partnernavn,
-          orgnr: linkedSelskap?.orgnr || "",
-          adresse: linkedSelskap?.firmaadresse || "",
+          orgnr: linkedSelskap?.orgnr || standaloneOrgnr || "",
+          adresse: linkedSelskap?.firmaadresse || standaloneAdresse || "",
           kontaktperson: resolvedKontaktperson,
           telefon: resolvedTelefon,
           e_post: resolvedEpost,
