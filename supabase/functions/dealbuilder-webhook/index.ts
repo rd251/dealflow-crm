@@ -146,17 +146,11 @@ Deno.serve(async (req) => {
       // Send welcome email to customer
       const recipientEmail = deal.e_post;
       if (recipientEmail) {
-        // Get company name for the email
         const { data: selskap } = await supabase
           .from("selskaper")
           .select("firmanavn")
           .eq("id", deal.selskap_id)
           .maybeSingle();
-
-        // Get ansvarlig profile for email
-        const { data: ansvarligProfile } = deal.ansvarlig
-          ? await supabase.from("profiles").select("email").eq("display_name", deal.ansvarlig).maybeSingle()
-          : { data: null };
 
         await supabase.functions.invoke("send-transactional-email", {
           body: {
@@ -166,8 +160,6 @@ Deno.serve(async (req) => {
             templateData: {
               firmanavn: selskap?.firmanavn || deal.navn,
               kontaktperson: deal.kontaktperson || undefined,
-              ansvarlig: deal.ansvarlig || undefined,
-              ansvarlig_epost: ansvarligProfile?.email || undefined,
             },
           },
         });

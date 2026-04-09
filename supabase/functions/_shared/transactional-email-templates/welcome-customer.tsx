@@ -12,15 +12,11 @@ const LOGO_URL = 'https://tchmujgzcklwgptocbno.supabase.co/storage/v1/object/pub
 interface WelcomeCustomerProps {
   firmanavn?: string
   kontaktperson?: string
-  ansvarlig?: string
-  ansvarlig_epost?: string
 }
 
 const WelcomeCustomerEmail = ({
   firmanavn = 'Kunde',
   kontaktperson,
-  ansvarlig,
-  ansvarlig_epost,
 }: WelcomeCustomerProps) => {
   return (
     <Html lang="no" dir="ltr">
@@ -53,18 +49,8 @@ const WelcomeCustomerEmail = ({
             </Text>
 
             <Text style={text}>
-              Vi kontakter deg snart med neste steg. I mellomtiden er det bare å ta kontakt om du har spørsmål.
+              Vi kontakter deg innen 1–2 dager med neste steg. I mellomtiden er det bare å ta kontakt om du har spørsmål.
             </Text>
-
-            {ansvarlig && (
-              <>
-                <Hr style={divider} />
-                <Text style={text}>
-                  Din kontaktperson hos Snakk er <strong>{ansvarlig}</strong>.
-                  {ansvarlig_epost ? ` Du kan nå oss på ${ansvarlig_epost}.` : ''}
-                </Text>
-              </>
-            )}
           </Section>
 
           {/* Footer */}
@@ -87,8 +73,6 @@ export const template = {
   previewData: {
     firmanavn: 'Acme Corp',
     kontaktperson: 'Kari Nordmann',
-    ansvarlig: 'Robin',
-    ansvarlig_epost: 'robin@snakk.ai',
   },
 } satisfies TemplateEntry
 
@@ -100,7 +84,6 @@ const logoImg: React.CSSProperties = { margin: '0 auto', display: 'block' }
 const contentSection: React.CSSProperties = { backgroundColor: '#ffffff', padding: '24px 28px' }
 const h1: React.CSSProperties = { fontSize: '22px', fontWeight: 700, color: BRAND_DARK, margin: '0 0 16px' }
 const text: React.CSSProperties = { fontSize: '14px', color: '#555555', lineHeight: '1.6', margin: '0 0 14px' }
-const divider: React.CSSProperties = { borderColor: '#e8e6e3', margin: '18px 0' }
 const footerSection: React.CSSProperties = { padding: '18px 28px', textAlign: 'center', borderRadius: '0 0 8px 8px', backgroundColor: '#ffffff', borderTop: `2px solid ${BRAND_RED}` }
 const footerText: React.CSSProperties = { fontSize: '12px', color: '#999999', margin: '0 0 4px' }
 const footerCopy: React.CSSProperties = { fontSize: '11px', color: '#bbbbbb', margin: '6px 0 0' }
