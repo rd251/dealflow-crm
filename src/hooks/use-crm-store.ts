@@ -403,6 +403,7 @@ function useCrmStoreInternal() {
     kontakterRef.current = next;
     setKontakter(next);
     kontakterSyncQueueRef.current = kontakterSyncQueueRef.current
+      .then(() => selskaperSyncQueueRef.current)
       .then(() => syncKontakter(prev, next))
       .catch(syncErrorHandler("Kontakter"));
   }, []);
