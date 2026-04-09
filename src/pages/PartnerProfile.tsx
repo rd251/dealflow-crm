@@ -462,6 +462,32 @@ export default function PartnerProfile() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Partner Contract Modal */}
+      {(() => {
+        const selskap = partner.selskap_id ? selskaper.find(s => s.id === partner.selskap_id) : null;
+        return (
+          <SendPartnerContractModal
+            open={showPartnerContract}
+            onOpenChange={setShowPartnerContract}
+            contractData={{
+              partner_id: partner.id,
+              firmanavn: selskap?.firmanavn || partner.partnernavn,
+              orgnr: selskap?.orgnr || "",
+              adresse: selskap?.firmaadresse || "",
+              kontaktperson: partner.kontaktperson || "",
+              telefon: partner.telefon || "",
+              e_post: partner.e_post || "",
+            }}
+            senderEmail={user?.email || ""}
+            onContractSent={() => {
+              updatePartnere(prev => prev.map(p =>
+                p.id === id ? { ...p, sist_aktivitet: new Date().toISOString().split("T")[0] } : p
+              ));
+            }}
+          />
+        );
+      })()}
     </div>
   );
 }
