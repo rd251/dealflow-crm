@@ -174,7 +174,14 @@ export default function PartnerProfile() {
             <ActivityLog partner_id={id} kontaktListe={kontakter.map(k => ({ id: k.id, navn: k.navn }))} />
           </TabsContent>
 
-          {/* Kunder tab */}
+          {/* Dokumenter tab */}
+          <TabsContent value="dokumenter">
+            <div className="bg-card border rounded-xl p-4 sm:p-5">
+              <PartnerDocuments partnerId={id!} />
+            </div>
+          </TabsContent>
+
+
           <TabsContent value="kunder">
             <div className="flex items-center gap-2 mb-4">
               <Button size="sm" variant="outline" onClick={() => setShowAddCustomer(true)}>
