@@ -31,11 +31,16 @@ export default function SendPartnerContractModal({
   onContractSent,
 }: SendPartnerContractModalProps) {
   const [sending, setSending] = useState(false);
+  const missingOrgnr = !contractData.orgnr?.trim();
 
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
   const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
   const handleSendContract = async () => {
+    if (missingOrgnr) {
+      toast.error("Org.nr mangler. Fyll inn org.nr på selskapet før du sender avtale.");
+      return;
+    }
     setSending(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
