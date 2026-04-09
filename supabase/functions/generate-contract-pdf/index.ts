@@ -19,9 +19,9 @@ const BodySchema = z.object({
 const PAKKER_TABLE = [
   { navn: "Chatbot + 100 min", pris: 990, minutter: "100 min" },
   { navn: "Starter", pris: 2500, minutter: "500 min" },
+  { navn: "800 min", pris: 4000, minutter: "800 min" },
   { navn: "Vekst", pris: 7500, minutter: "1 500 min" },
   { navn: "Pro", pris: 12500, minutter: "2 500 min" },
-  { navn: "800 min", pris: 4000, minutter: "800 min" },
   { navn: "Team", pris: 15000, minutter: "3 000 min" },
   { navn: "Bedrift", pris: 30000, minutter: "6 000 min" },
 ];
