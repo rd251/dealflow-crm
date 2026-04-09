@@ -141,6 +141,10 @@ export default function PartnerProfile() {
               </div>
             </div>
           </div>
+          <Button variant="destructive" size="lg" onClick={() => setShowPartnerContract(true)}>
+            <FileSignature className="w-4 h-4 mr-2" />
+            Send samarbeidsavtale
+          </Button>
         </div>
       </header>
 
