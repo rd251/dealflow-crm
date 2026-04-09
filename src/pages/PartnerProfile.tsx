@@ -499,28 +499,25 @@ export default function PartnerProfile() {
       </Dialog>
 
       {/* Partner Contract Modal */}
-      {(
-          <SendPartnerContractModal
-            open={showPartnerContract}
-            onOpenChange={setShowPartnerContract}
-            contractData={{
-              partner_id: partner.id,
-              firmanavn: linkedSelskap?.firmanavn || partner.partnernavn,
-              orgnr: linkedSelskap?.orgnr || "",
-              adresse: linkedSelskap?.firmaadresse || "",
-              kontaktperson: resolvedKontaktperson,
-              telefon: resolvedTelefon,
-              e_post: resolvedEpost,
-            }}
-            senderEmail={user?.email || ""}
-            onContractSent={() => {
-              updatePartnere(prev => prev.map(p =>
-                p.id === id ? { ...p, sist_aktivitet: new Date().toISOString().split("T")[0] } : p
-              ));
-            }}
-          />
-        );
-      })()}
+      <SendPartnerContractModal
+        open={showPartnerContract}
+        onOpenChange={setShowPartnerContract}
+        contractData={{
+          partner_id: partner.id,
+          firmanavn: linkedSelskap?.firmanavn || partner.partnernavn,
+          orgnr: linkedSelskap?.orgnr || "",
+          adresse: linkedSelskap?.firmaadresse || "",
+          kontaktperson: resolvedKontaktperson,
+          telefon: resolvedTelefon,
+          e_post: resolvedEpost,
+        }}
+        senderEmail={user?.email || ""}
+        onContractSent={() => {
+          updatePartnere(prev => prev.map(p =>
+            p.id === id ? { ...p, sist_aktivitet: new Date().toISOString().split("T")[0] } : p
+          ));
+        }}
+      />
     </div>
   );
 }
