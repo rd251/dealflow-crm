@@ -12,8 +12,6 @@ const LOGO_URL = 'https://tchmujgzcklwgptocbno.supabase.co/storage/v1/object/pub
 interface WelcomeCustomerProps {
   firmanavn?: string
   kontaktperson?: string
-  ansvarlig?: string
-  ansvarlig_epost?: string
 }
 
 const WelcomeCustomerEmail = ({
