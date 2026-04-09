@@ -1449,7 +1449,23 @@ export type Database = {
         | "Byttet leverandør"
         | "Midlertidig stopp"
         | "Annet"
-      kilde: "Direkte salg" | "Partner" | "Inbound" | "Outbound"
+      kilde:
+        | "Direkte salg"
+        | "Partner"
+        | "Inbound"
+        | "Outbound"
+        | "Nettside"
+        | "LinkedIn"
+        | "Referanse"
+        | "Kald outbound"
+        | "E-post"
+        | "Telefon"
+        | "Annet"
+        | "Organisk"
+        | "Facebook ads"
+        | "Instantly kald e-post"
+        | "Google ads"
+        | "Kasoleads"
       kundestatus: "Ikke kunde" | "Pilot" | "Live" | "Pause" | "Kansellert"
       kundetilstand: "Bra" | "Usikker" | "Risiko"
       lead_kilde:
@@ -1669,7 +1685,24 @@ export const Constants = {
         "Midlertidig stopp",
         "Annet",
       ],
-      kilde: ["Direkte salg", "Partner", "Inbound", "Outbound"],
+      kilde: [
+        "Direkte salg",
+        "Partner",
+        "Inbound",
+        "Outbound",
+        "Nettside",
+        "LinkedIn",
+        "Referanse",
+        "Kald outbound",
+        "E-post",
+        "Telefon",
+        "Annet",
+        "Organisk",
+        "Facebook ads",
+        "Instantly kald e-post",
+        "Google ads",
+        "Kasoleads",
+      ],
       kundestatus: ["Ikke kunde", "Pilot", "Live", "Pause", "Kansellert"],
       kundetilstand: ["Bra", "Usikker", "Risiko"],
       lead_kilde: [

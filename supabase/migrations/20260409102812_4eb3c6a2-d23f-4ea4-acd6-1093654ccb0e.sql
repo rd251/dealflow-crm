@@ -1,0 +1,12 @@
+ALTER TYPE public.kilde ADD VALUE IF NOT EXISTS 'Nettside';
+ALTER TYPE public.kilde ADD VALUE IF NOT EXISTS 'LinkedIn';
+ALTER TYPE public.kilde ADD VALUE IF NOT EXISTS 'Referanse';
+ALTER TYPE public.kilde ADD VALUE IF NOT EXISTS 'Kald outbound';
+ALTER TYPE public.kilde ADD VALUE IF NOT EXISTS 'E-post';
+ALTER TYPE public.kilde ADD VALUE IF NOT EXISTS 'Telefon';
+ALTER TYPE public.kilde ADD VALUE IF NOT EXISTS 'Annet';
+ALTER TYPE public.kilde ADD VALUE IF NOT EXISTS 'Organisk';
+ALTER TYPE public.kilde ADD VALUE IF NOT EXISTS 'Facebook ads';
+ALTER TYPE public.kilde ADD VALUE IF NOT EXISTS 'Instantly kald e-post';
+ALTER TYPE public.kilde ADD VALUE IF NOT EXISTS 'Google ads';
+ALTER TYPE public.kilde ADD VALUE IF NOT EXISTS 'Kasoleads';
