@@ -19,6 +19,7 @@ import { Partnerstatus, Partnertype, Provisjonstype, Kontakt, PartnerPipelineSta
 import ActivityLog from "@/components/ActivityLog";
 import SelskapInnsikt from "@/components/SelskapInnsikt";
 import SendPartnerContractModal from "@/components/SendPartnerContractModal";
+import PartnerDocuments from "@/components/PartnerDocuments";
 import { useAuth } from "@/hooks/use-auth";
 
 const partnertypeOptions: Partnertype[] = ["Provisjonspartner", "Integrasjonspartner", "Salgspartner", "Strategisk partner"];
