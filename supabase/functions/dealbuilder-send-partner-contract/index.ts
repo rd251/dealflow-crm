@@ -98,7 +98,7 @@ Deno.serve(async (req) => {
         email: data.e_post,
         ...(data.telefon?.replace(/\s/g, "").length >= 8 ? { phoneNumber: data.telefon.replace(/\s/g, "") } : {}),
         companyName: data.firmanavn,
-        companyOrgNumber: data.orgnr,
+        ...(data.orgnr?.trim() ? { companyOrgNumber: data.orgnr.trim() } : {}),
       }],
       customFieldValues: [
         { id: "CRMid", value: data.partner_id },
