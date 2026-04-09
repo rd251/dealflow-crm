@@ -139,7 +139,7 @@ export default function SendPartnerContractModal({
 
           {missingOrgnr && (
             <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
-              ⚠️ Org.nr mangler — fyll inn org.nr på selskapet før du sender avtale.
+              ⚠️ Fyll inn org.nr i feltet over før du sender avtalen.
             </div>
           )}
 
