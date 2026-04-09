@@ -71,6 +71,13 @@ export default function PartnerProfile() {
   const partnerAvtaler = salgsmuligheter.filter(s => s.partner_id === id);
   const aktiveAvtaler = partnerAvtaler.filter(a => a.status !== "Tapt");
   const partnerKontakter = kontakter.filter(k => partner.selskap_id && k.selskap_id === partner.selskap_id);
+  const linkedSelskap = partner.selskap_id ? selskaper.find(s => s.id === partner.selskap_id) : null;
+  // Primary contact from linked selskap's kontakter (first one with email)
+  const primaryKontakt = partnerKontakter.find(k => k.e_post) || partnerKontakter[0] || null;
+  // Resolved contact info: prefer kontakt from selskap, fallback to partner fields
+  const resolvedKontaktperson = primaryKontakt?.navn || partner.kontaktperson || "";
+  const resolvedEpost = primaryKontakt?.e_post || partner.e_post || "";
+  const resolvedTelefon = primaryKontakt?.telefon || partner.telefon || "";
 
   // KPIs
   const antallKunder = partnerKunder.length;
