@@ -129,7 +129,7 @@ Deno.serve(async (req) => {
       externalSignatories: [{
         name: data.kontaktperson,
         email: data.e_post,
-        phoneNumber: data.telefon,
+        ...(data.telefon?.replace(/\s/g, "").length >= 8 ? { phoneNumber: data.telefon.replace(/\s/g, "") } : {}),
         companyName: data.firmanavn,
         companyOrgNumber: data.orgnr,
       }],
