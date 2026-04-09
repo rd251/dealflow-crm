@@ -5,7 +5,7 @@ import { z } from "npm:zod@3";
 const BodySchema = z.object({
   partner_id: z.string().uuid(),
   firmanavn: z.string().min(1),
-  orgnr: z.string(),
+  orgnr: z.string().optional().default(""),
   adresse: z.string(),
   kontaktperson: z.string().min(1),
   telefon: z.string().optional().default(""),
