@@ -499,9 +499,7 @@ export default function PartnerProfile() {
       </Dialog>
 
       {/* Partner Contract Modal */}
-      {(() => {
-        const selskap = partner.selskap_id ? selskaper.find(s => s.id === partner.selskap_id) : null;
-        return (
+      {(
           <SendPartnerContractModal
             open={showPartnerContract}
             onOpenChange={setShowPartnerContract}
