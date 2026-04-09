@@ -73,7 +73,10 @@ export default function PartnerProfile() {
   const partnerAvtaler = salgsmuligheter.filter(s => s.partner_id === id);
   const aktiveAvtaler = partnerAvtaler.filter(a => a.status !== "Tapt");
   const partnerKontakter = kontakter.filter(k => partner.selskap_id && k.selskap_id === partner.selskap_id);
-  const linkedSelskap = partner.selskap_id ? selskaper.find(s => s.id === partner.selskap_id) : null;
+  // Try linked selskap first, then auto-match by firmanavn
+  const linkedSelskap = partner.selskap_id
+    ? selskaper.find(s => s.id === partner.selskap_id)
+    : selskaper.find(s => s.firmanavn.toLowerCase().trim() === partner.partnernavn.toLowerCase().trim()) || null;
   // Primary contact from linked selskap's kontakter (first one with email)
   const primaryKontakt = partnerKontakter.find(k => k.e_post) || partnerKontakter[0] || null;
   // Resolved contact info: prefer kontakt from selskap, fallback to partner fields
@@ -384,13 +387,14 @@ export default function PartnerProfile() {
 
                 {/* Koblet selskap — or standalone org.nr if no linked selskap */}
                 {(() => {
-                  const selskap = partner.selskap_id ? selskaper.find(s => s.id === partner.selskap_id) : null;
+                  const selskap = linkedSelskap;
                   if (!selskap) return (
                     <div className="border rounded-lg p-3 space-y-2 bg-muted/20">
                       <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">
                         <Building2 className="w-3.5 h-3.5" />
                         Selskapsinfo
                       </div>
+                      <p className="text-xs text-muted-foreground">Ingen selskap funnet med navn «{partner.partnernavn}» i CRM.</p>
                       <SelskapInnsikt
                         domene=""
                         firmanavn={partner.partnernavn}
@@ -424,6 +428,9 @@ export default function PartnerProfile() {
                       <div className="text-sm font-medium cursor-pointer hover:text-primary hover:underline" onClick={() => navigate(`/selskaper/${selskap.id}`)}>
                         {selskap.firmanavn}
                       </div>
+                      {!partner.selskap_id && (
+                        <p className="text-[10px] text-muted-foreground">Auto-koblet via firmanavn</p>
+                      )}
                       <SelskapInnsikt
                         domene={selskap.domene}
                         firmanavn={selskap.firmanavn}
