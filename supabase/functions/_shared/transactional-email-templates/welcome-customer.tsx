@@ -7,7 +7,7 @@ import type { TemplateEntry } from './registry.ts'
 const SITE_NAME = "Snakk"
 const BRAND_RED = '#c0392b'
 const BRAND_DARK = '#1a1917'
-const LOGO_URL = 'https://tchmujgzcklwgptocbno.supabase.co/storage/v1/object/public/email-assets/snakk-logo-dark.svg'
+const LOGO_URL = 'https://tchmujgzcklwgptocbno.supabase.co/storage/v1/object/public/email-assets/snakk-logo-full.svg'
 
 interface WelcomeCustomerProps {
   firmanavn?: string
