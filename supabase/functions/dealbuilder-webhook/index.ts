@@ -168,7 +168,6 @@ Deno.serve(async (req) => {
               kontaktperson: deal.kontaktperson || undefined,
               ansvarlig: deal.ansvarlig || undefined,
               ansvarlig_epost: ansvarligProfile?.email || undefined,
-              prosjekt_id: newProject?.id || undefined,
             },
           },
         });
