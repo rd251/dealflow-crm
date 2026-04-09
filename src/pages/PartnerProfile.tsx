@@ -71,6 +71,13 @@ export default function PartnerProfile() {
   const partnerAvtaler = salgsmuligheter.filter(s => s.partner_id === id);
   const aktiveAvtaler = partnerAvtaler.filter(a => a.status !== "Tapt");
   const partnerKontakter = kontakter.filter(k => partner.selskap_id && k.selskap_id === partner.selskap_id);
+  const linkedSelskap = partner.selskap_id ? selskaper.find(s => s.id === partner.selskap_id) : null;
+  // Primary contact from linked selskap's kontakter (first one with email)
+  const primaryKontakt = partnerKontakter.find(k => k.e_post) || partnerKontakter[0] || null;
+  // Resolved contact info: prefer kontakt from selskap, fallback to partner fields
+  const resolvedKontaktperson = primaryKontakt?.navn || partner.kontaktperson || "";
+  const resolvedEpost = primaryKontakt?.e_post || partner.e_post || "";
+  const resolvedTelefon = primaryKontakt?.telefon || partner.telefon || "";
 
   // KPIs
   const antallKunder = partnerKunder.length;
@@ -337,16 +344,35 @@ export default function PartnerProfile() {
                 </div>
                 <div>
                   <span className="text-muted-foreground block text-xs mb-1">Kontaktperson</span>
-                  <Input value={partner.kontaktperson} onChange={e => updateField("kontaktperson", e.target.value)} className="h-8 text-sm" />
+                  <Input value={resolvedKontaktperson} onChange={e => {
+                    const val = e.target.value;
+                    updateField("kontaktperson", val);
+                    if (primaryKontakt) {
+                      updateKontakter(prev => prev.map(k => k.id === primaryKontakt.id ? { ...k, navn: val } : k));
+                    }
+                  }} className="h-8 text-sm" />
+                  {primaryKontakt && <span className="text-[10px] text-muted-foreground">Synkronisert fra kontakt på selskapet</span>}
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <span className="text-muted-foreground block text-xs mb-1">E-post</span>
-                    <Input value={partner.e_post} onChange={e => updateField("e_post", e.target.value)} className="h-8 text-sm" />
+                    <Input value={resolvedEpost} onChange={e => {
+                      const val = e.target.value;
+                      updateField("e_post", val);
+                      if (primaryKontakt) {
+                        updateKontakter(prev => prev.map(k => k.id === primaryKontakt.id ? { ...k, e_post: val } : k));
+                      }
+                    }} className="h-8 text-sm" />
                   </div>
                   <div>
                     <span className="text-muted-foreground block text-xs mb-1">Telefon</span>
-                    <Input value={partner.telefon} onChange={e => updateField("telefon", e.target.value)} className="h-8 text-sm" />
+                    <Input value={resolvedTelefon} onChange={e => {
+                      const val = e.target.value;
+                      updateField("telefon", val);
+                      if (primaryKontakt) {
+                        updateKontakter(prev => prev.map(k => k.id === primaryKontakt.id ? { ...k, telefon: val } : k));
+                      }
+                    }} className="h-8 text-sm" />
                   </div>
                 </div>
                 <div>
@@ -473,30 +499,25 @@ export default function PartnerProfile() {
       </Dialog>
 
       {/* Partner Contract Modal */}
-      {(() => {
-        const selskap = partner.selskap_id ? selskaper.find(s => s.id === partner.selskap_id) : null;
-        return (
-          <SendPartnerContractModal
-            open={showPartnerContract}
-            onOpenChange={setShowPartnerContract}
-            contractData={{
-              partner_id: partner.id,
-              firmanavn: selskap?.firmanavn || partner.partnernavn,
-              orgnr: selskap?.orgnr || "",
-              adresse: selskap?.firmaadresse || "",
-              kontaktperson: partner.kontaktperson || "",
-              telefon: partner.telefon || "",
-              e_post: partner.e_post || "",
-            }}
-            senderEmail={user?.email || ""}
-            onContractSent={() => {
-              updatePartnere(prev => prev.map(p =>
-                p.id === id ? { ...p, sist_aktivitet: new Date().toISOString().split("T")[0] } : p
-              ));
-            }}
-          />
-        );
-      })()}
+      <SendPartnerContractModal
+        open={showPartnerContract}
+        onOpenChange={setShowPartnerContract}
+        contractData={{
+          partner_id: partner.id,
+          firmanavn: linkedSelskap?.firmanavn || partner.partnernavn,
+          orgnr: linkedSelskap?.orgnr || "",
+          adresse: linkedSelskap?.firmaadresse || "",
+          kontaktperson: resolvedKontaktperson,
+          telefon: resolvedTelefon,
+          e_post: resolvedEpost,
+        }}
+        senderEmail={user?.email || ""}
+        onContractSent={() => {
+          updatePartnere(prev => prev.map(p =>
+            p.id === id ? { ...p, sist_aktivitet: new Date().toISOString().split("T")[0] } : p
+          ));
+        }}
+      />
     </div>
   );
 }
