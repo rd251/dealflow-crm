@@ -8,7 +8,7 @@ const BodySchema = z.object({
   orgnr: z.string(),
   adresse: z.string(),
   kontaktperson: z.string(),
-  telefon: z.string(),
+  telefon: z.string().optional().default(""),
   e_post: z.string().email(),
   valgt_pakke: z.string(),
   pakke_pris: z.number(),
