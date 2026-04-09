@@ -41,12 +41,14 @@ export default function PartnerProfile() {
     kontakter, updateKontakter, generateId,
   } = useCrmStore();
 
+  const { user } = useAuth();
   const [showAddContact, setShowAddContact] = useState(false);
   const [contactForm, setContactForm] = useState({ navn: "", rolle: "", e_post: "", telefon: "" });
   const [showAddCustomer, setShowAddCustomer] = useState(false);
   const [customerForm, setCustomerForm] = useState({ firmanavn: "", bransje: "" });
   const [showAddDeal, setShowAddDeal] = useState(false);
   const [dealForm, setDealForm] = useState({ navn: "", selskap_id: "", forventet_mrr: 0, oppstartskostnad: 0 });
+  const [showPartnerContract, setShowPartnerContract] = useState(false);
 
   const partner = partnere.find(p => p.id === id);
   if (!partner) {
