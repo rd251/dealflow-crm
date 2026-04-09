@@ -58,6 +58,7 @@ export default function SendPartnerContractModal({
         },
         body: JSON.stringify({
           ...contractData,
+          orgnr: editOrgnr.trim(),
           sender_email: senderEmail,
         }),
       });
