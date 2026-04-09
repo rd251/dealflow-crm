@@ -51,13 +51,22 @@ export default function SelskapInnsikt({ domene, firmanavn, e_post, onEnriched }
     if (!cleanDomain && !firmanavn) return;
     setLoading(true);
 
-    // Check cache first (client-side)
-    if (!forceRefresh && cleanDomain) {
-      const { data: cached } = await supabase
+    // Check cache first (client-side) — by domain or firmanavn
+    if (!forceRefresh) {
+      let cacheQuery = supabase
         .from("selskap_innsikt")
-        .select("bransje, beskrivelse, stoerrelse, estimert_ansatte, estimert_omsetning, orgnr, updated_at")
-        .eq("domene", cleanDomain)
-        .single();
+        .select("bransje, beskrivelse, stoerrelse, estimert_ansatte, estimert_omsetning, orgnr, firmaadresse, postadresse, updated_at");
+
+      if (cleanDomain) {
+        cacheQuery = cacheQuery.eq("domene", cleanDomain);
+      } else if (firmanavn) {
+        cacheQuery = cacheQuery.ilike("firmanavn", firmanavn.trim());
+      } else {
+        // No lookup key — skip cache
+        cacheQuery = null as any;
+      }
+
+      const { data: cached } = cacheQuery ? await cacheQuery.single() : { data: null };
 
       if (cached) {
         const age = Date.now() - new Date(cached.updated_at).getTime();
