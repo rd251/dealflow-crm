@@ -147,7 +147,7 @@ export default function SendPartnerContractModal({
               variant="destructive"
               className="flex-1"
               onClick={handleSendContract}
-              disabled={sending || missingFields}
+              disabled={sending || missingFields || missingOrgnr}
             >
               {sending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
               Send til signering
