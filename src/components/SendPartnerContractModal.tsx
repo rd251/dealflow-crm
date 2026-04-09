@@ -31,11 +31,16 @@ export default function SendPartnerContractModal({
   onContractSent,
 }: SendPartnerContractModalProps) {
   const [sending, setSending] = useState(false);
+  const missingOrgnr = !contractData.orgnr?.trim();
 
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
   const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
   const handleSendContract = async () => {
+    if (missingOrgnr) {
+      toast.error("Org.nr mangler. Fyll inn org.nr på selskapet før du sender avtale.");
+      return;
+    }
     setSending(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -121,6 +126,12 @@ export default function SendPartnerContractModal({
             </div>
           </div>
 
+          {missingOrgnr && (
+            <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+              ⚠️ Org.nr mangler — fyll inn org.nr på selskapet før du sender avtale.
+            </div>
+          )}
+
           {missingFields && (
             <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
               ⚠️ Manglende informasjon:
@@ -136,7 +147,7 @@ export default function SendPartnerContractModal({
               variant="destructive"
               className="flex-1"
               onClick={handleSendContract}
-              disabled={sending || missingFields}
+              disabled={sending || missingFields || missingOrgnr}
             >
               {sending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
               Send til signering

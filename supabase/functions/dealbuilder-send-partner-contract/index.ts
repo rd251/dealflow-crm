@@ -5,7 +5,7 @@ import { z } from "npm:zod@3";
 const BodySchema = z.object({
   partner_id: z.string().uuid(),
   firmanavn: z.string().min(1),
-  orgnr: z.string(),
+  orgnr: z.string().optional().default(""),
   adresse: z.string(),
   kontaktperson: z.string().min(1),
   telefon: z.string().optional().default(""),
@@ -98,7 +98,7 @@ Deno.serve(async (req) => {
         email: data.e_post,
         ...(data.telefon?.replace(/\s/g, "").length >= 8 ? { phoneNumber: data.telefon.replace(/\s/g, "") } : {}),
         companyName: data.firmanavn,
-        companyOrgNumber: data.orgnr,
+        ...(data.orgnr?.trim() ? { companyOrgNumber: data.orgnr.trim() } : {}),
       }],
       customFieldValues: [
         { id: "CRMid", value: data.partner_id },
