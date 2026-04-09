@@ -344,16 +344,35 @@ export default function PartnerProfile() {
                 </div>
                 <div>
                   <span className="text-muted-foreground block text-xs mb-1">Kontaktperson</span>
-                  <Input value={partner.kontaktperson} onChange={e => updateField("kontaktperson", e.target.value)} className="h-8 text-sm" />
+                  <Input value={resolvedKontaktperson} onChange={e => {
+                    const val = e.target.value;
+                    updateField("kontaktperson", val);
+                    if (primaryKontakt) {
+                      updateKontakter(prev => prev.map(k => k.id === primaryKontakt.id ? { ...k, navn: val } : k));
+                    }
+                  }} className="h-8 text-sm" />
+                  {primaryKontakt && <span className="text-[10px] text-muted-foreground">Synkronisert fra kontakt på selskapet</span>}
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <span className="text-muted-foreground block text-xs mb-1">E-post</span>
-                    <Input value={partner.e_post} onChange={e => updateField("e_post", e.target.value)} className="h-8 text-sm" />
+                    <Input value={resolvedEpost} onChange={e => {
+                      const val = e.target.value;
+                      updateField("e_post", val);
+                      if (primaryKontakt) {
+                        updateKontakter(prev => prev.map(k => k.id === primaryKontakt.id ? { ...k, e_post: val } : k));
+                      }
+                    }} className="h-8 text-sm" />
                   </div>
                   <div>
                     <span className="text-muted-foreground block text-xs mb-1">Telefon</span>
-                    <Input value={partner.telefon} onChange={e => updateField("telefon", e.target.value)} className="h-8 text-sm" />
+                    <Input value={resolvedTelefon} onChange={e => {
+                      const val = e.target.value;
+                      updateField("telefon", val);
+                      if (primaryKontakt) {
+                        updateKontakter(prev => prev.map(k => k.id === primaryKontakt.id ? { ...k, telefon: val } : k));
+                      }
+                    }} className="h-8 text-sm" />
                   </div>
                 </div>
                 <div>
