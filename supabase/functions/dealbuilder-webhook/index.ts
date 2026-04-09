@@ -36,14 +36,74 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Find salgsmulighet by ID (CRMid)
+    // First try salgsmulighet
     const { data: deal, error: findError } = await supabase
       .from("salgsmuligheter")
       .select("id, navn, selskap_id, forventet_mrr, oppstartskostnad, ansvarlig, kontaktperson, e_post")
       .eq("id", CRMid)
       .maybeSingle();
 
-    if (findError || !deal) {
+    // If not a deal, check if it's a partner
+    const { data: partner } = !deal ? await supabase
+      .from("partnere")
+      .select("id, partnernavn, kontaktperson, e_post, selskap_id")
+      .eq("id", CRMid)
+      .maybeSingle() : { data: null };
+
+    if (!deal && !partner) {
+      return new Response(JSON.stringify({ received: true, error: "Entity not found", CRMid }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // --- PARTNER flow ---
+    if (partner) {
+      switch (event) {
+        case "document_signed": {
+          await supabase.from("partnere").update({
+            partnerstatus: "Aktiv",
+            pipeline_status: "Aktiv partner",
+            sist_aktivitet: new Date().toISOString().split("T")[0],
+          }).eq("id", CRMid);
+
+          await supabase.from("aktiviteter").insert({
+            type: "Notat",
+            beskrivelse: `Samarbeidsavtale signert av ${signer_name || partner.kontaktperson || "ukjent"}`,
+            tittel: "Samarbeidsavtale signert",
+            partner_id: CRMid,
+            selskap_id: partner.selskap_id || null,
+            aktivitet_kilde: "dealbuilder",
+            dato: new Date().toISOString(),
+          });
+
+          await supabase.from("crm_changelog").insert({
+            event_type: "updated",
+            entity_type: "partner",
+            entity_id: CRMid,
+            entity_name: partner.partnernavn,
+            field_name: "partnerstatus",
+            old_value: null,
+            new_value: "Aktiv",
+          });
+          break;
+        }
+        case "document_opened":
+        case "document_expired":
+          // No status change needed for partners on these events
+          break;
+        default:
+          break;
+      }
+
+      return new Response(JSON.stringify({ received: true, event, CRMid, entity: "partner" }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // --- DEAL flow (existing logic) ---
+    if (findError) {
       return new Response(JSON.stringify({ received: true, error: "Deal not found", CRMid }), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -81,7 +141,6 @@ Deno.serve(async (req) => {
         });
     }
 
-    // Update salgsmulighet
     const { error: updateError } = await supabase
       .from("salgsmuligheter")
       .update(updateData)
@@ -94,41 +153,37 @@ Deno.serve(async (req) => {
       });
     }
 
-    // If signed: update company to Pilot, create project, log activity
-    if (logActivity && deal.selskap_id) {
+    if (logActivity && deal!.selskap_id) {
       const today = new Date().toISOString().split("T")[0];
-      const mrr = Number(deal.forventet_mrr) || 0;
+      const mrr = Number(deal!.forventet_mrr) || 0;
 
-      // Update selskap to "Pilot" (Kundeforhold)
       await supabase.from("selskaper").update({
         kundestatus: "Pilot",
         live_status: false,
         onboarding_status: "Ikke startet",
         mrr: mrr,
         arr: mrr * 12,
-        oppstartskostnad: Number(deal.oppstartskostnad) || 0,
+        oppstartskostnad: Number(deal!.oppstartskostnad) || 0,
         sist_aktivitet: today,
         lukkedato: today,
-      }).eq("id", deal.selskap_id);
+      }).eq("id", deal!.selskap_id);
 
-      // Create onboarding project
       const { data: newProject } = await supabase.from("prosjekter").insert({
-        prosjektnavn: deal.navn,
-        selskap_id: deal.selskap_id,
+        prosjektnavn: deal!.navn,
+        selskap_id: deal!.selskap_id,
         salgsmulighet_id: CRMid,
-        ansvarlig: deal.ansvarlig || "",
+        ansvarlig: deal!.ansvarlig || "",
         status: "Ny",
         startdato: today,
-        oppstartskostnad: Number(deal.oppstartskostnad) || 0,
+        oppstartskostnad: Number(deal!.oppstartskostnad) || 0,
       }).select("id").maybeSingle();
 
-      // Log activity
       await supabase.from("aktiviteter").insert({
         type: "Notat",
         beskrivelse: activityDescription,
         tittel: "Kontrakt signert",
         salgsmulighet_id: CRMid,
-        selskap_id: deal.selskap_id,
+        selskap_id: deal!.selskap_id,
         aktivitet_kilde: "dealbuilder",
         dato: new Date().toISOString(),
       });
@@ -137,19 +192,18 @@ Deno.serve(async (req) => {
         event_type: "updated",
         entity_type: "salgsmulighet",
         entity_id: CRMid,
-        entity_name: deal.navn,
+        entity_name: deal!.navn,
         field_name: "kontrakt_status",
         old_value: null,
         new_value: "Signert",
       });
 
-      // Send welcome email to customer
-      const recipientEmail = deal.e_post;
+      const recipientEmail = deal!.e_post;
       if (recipientEmail) {
         const { data: selskap } = await supabase
           .from("selskaper")
           .select("firmanavn")
-          .eq("id", deal.selskap_id)
+          .eq("id", deal!.selskap_id)
           .maybeSingle();
 
         await supabase.functions.invoke("send-transactional-email", {
@@ -158,14 +212,13 @@ Deno.serve(async (req) => {
             recipientEmail,
             idempotencyKey: `welcome-customer-${CRMid}`,
             templateData: {
-              firmanavn: selskap?.firmanavn || deal.navn,
-              kontaktperson: deal.kontaktperson || undefined,
+              firmanavn: selskap?.firmanavn || deal!.navn,
+              kontaktperson: deal!.kontaktperson || undefined,
             },
           },
         });
       }
     }
-
     return new Response(JSON.stringify({ received: true, event, CRMid }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
