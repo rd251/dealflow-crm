@@ -501,7 +501,7 @@ function useCrmStoreInternal() {
           kanselleringsnotat: emptyToNull(item.kanselleringsnotat),
           kundetilstand: item.kundetilstand, sist_aktivitet: emptyToNull(item.sist_aktivitet),
           neste_steg: emptyToNull(item.neste_steg), notater: emptyToNull(item.notater),
-          kilde: item.kilde, partner_id: emptyToNull(item.partner_id),
+          kilde: emptyToNull(item.kilde), partner_id: emptyToNull(item.partner_id),
           lukkedato: emptyToNull(item.lukkedato),
         });
       }
@@ -521,7 +521,7 @@ function useCrmStoreInternal() {
           kanselleringsnotat: emptyToNull(item.kanselleringsnotat),
           kundetilstand: item.kundetilstand, sist_aktivitet: emptyToNull(item.sist_aktivitet),
           neste_steg: emptyToNull(item.neste_steg), notater: emptyToNull(item.notater),
-          kilde: item.kilde, partner_id: emptyToNull(item.partner_id),
+          kilde: emptyToNull(item.kilde), partner_id: emptyToNull(item.partner_id),
           lukkedato: emptyToNull(item.lukkedato),
         });
       }
