@@ -19,6 +19,7 @@ import { Partnerstatus, Partnertype, Provisjonstype, Kontakt, PartnerPipelineSta
 import ActivityLog from "@/components/ActivityLog";
 import SelskapInnsikt from "@/components/SelskapInnsikt";
 import SendPartnerContractModal from "@/components/SendPartnerContractModal";
+import PartnerDocuments from "@/components/PartnerDocuments";
 import { useAuth } from "@/hooks/use-auth";
 
 const partnertypeOptions: Partnertype[] = ["Provisjonspartner", "Integrasjonspartner", "Salgspartner", "Strategisk partner"];
@@ -162,6 +163,7 @@ export default function PartnerProfile() {
         <Tabs defaultValue="aktiviteter">
           <TabsList className="flex-wrap h-auto gap-1">
              <TabsTrigger value="aktiviteter" className="text-xs sm:text-sm">Aktiviteter</TabsTrigger>
+             <TabsTrigger value="dokumenter" className="text-xs sm:text-sm">Dokumenter</TabsTrigger>
              <TabsTrigger value="kunder" className="text-xs sm:text-sm">Kunder ({partnerKunder.length})</TabsTrigger>
              <TabsTrigger value="kontakter" className="text-xs sm:text-sm">Kontakter ({partnerKontakter.length})</TabsTrigger>
              <TabsTrigger value="info" className="text-xs sm:text-sm">Info</TabsTrigger>
@@ -172,7 +174,14 @@ export default function PartnerProfile() {
             <ActivityLog partner_id={id} kontaktListe={kontakter.map(k => ({ id: k.id, navn: k.navn }))} />
           </TabsContent>
 
-          {/* Kunder tab */}
+          {/* Dokumenter tab */}
+          <TabsContent value="dokumenter">
+            <div className="bg-card border rounded-xl p-4 sm:p-5">
+              <PartnerDocuments partnerId={id!} />
+            </div>
+          </TabsContent>
+
+
           <TabsContent value="kunder">
             <div className="flex items-center gap-2 mb-4">
               <Button size="sm" variant="outline" onClick={() => setShowAddCustomer(true)}>
