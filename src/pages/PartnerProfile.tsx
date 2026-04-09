@@ -13,11 +13,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import {
   Handshake, ArrowLeft, DollarSign, TrendingUp, Users, FileText,
-  Mail, Phone, Plus, X, Building2,
+  Mail, Phone, Plus, X, Building2, FileSignature,
 } from "lucide-react";
 import { Partnerstatus, Partnertype, Provisjonstype, Kontakt, PartnerPipelineStatus, Selskap, Salgsmulighet, Kilde } from "@/data/crm-data";
 import ActivityLog from "@/components/ActivityLog";
 import SelskapInnsikt from "@/components/SelskapInnsikt";
+import SendPartnerContractModal from "@/components/SendPartnerContractModal";
+import { useAuth } from "@/hooks/use-auth";
 
 const partnertypeOptions: Partnertype[] = ["Provisjonspartner", "Integrasjonspartner", "Salgspartner", "Strategisk partner"];
 const partnerstatusOptions: Partnerstatus[] = ["Aktiv", "Under onboarding", "Inaktiv"];
@@ -39,12 +41,14 @@ export default function PartnerProfile() {
     kontakter, updateKontakter, generateId,
   } = useCrmStore();
 
+  const { user } = useAuth();
   const [showAddContact, setShowAddContact] = useState(false);
   const [contactForm, setContactForm] = useState({ navn: "", rolle: "", e_post: "", telefon: "" });
   const [showAddCustomer, setShowAddCustomer] = useState(false);
   const [customerForm, setCustomerForm] = useState({ firmanavn: "", bransje: "" });
   const [showAddDeal, setShowAddDeal] = useState(false);
   const [dealForm, setDealForm] = useState({ navn: "", selskap_id: "", forventet_mrr: 0, oppstartskostnad: 0 });
+  const [showPartnerContract, setShowPartnerContract] = useState(false);
 
   const partner = partnere.find(p => p.id === id);
   if (!partner) {
@@ -137,6 +141,10 @@ export default function PartnerProfile() {
               </div>
             </div>
           </div>
+          <Button variant="destructive" size="lg" onClick={() => setShowPartnerContract(true)}>
+            <FileSignature className="w-4 h-4 mr-2" />
+            Send samarbeidsavtale
+          </Button>
         </div>
       </header>
 
@@ -454,6 +462,32 @@ export default function PartnerProfile() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Partner Contract Modal */}
+      {(() => {
+        const selskap = partner.selskap_id ? selskaper.find(s => s.id === partner.selskap_id) : null;
+        return (
+          <SendPartnerContractModal
+            open={showPartnerContract}
+            onOpenChange={setShowPartnerContract}
+            contractData={{
+              partner_id: partner.id,
+              firmanavn: selskap?.firmanavn || partner.partnernavn,
+              orgnr: selskap?.orgnr || "",
+              adresse: selskap?.firmaadresse || "",
+              kontaktperson: partner.kontaktperson || "",
+              telefon: partner.telefon || "",
+              e_post: partner.e_post || "",
+            }}
+            senderEmail={user?.email || ""}
+            onContractSent={() => {
+              updatePartnere(prev => prev.map(p =>
+                p.id === id ? { ...p, sist_aktivitet: new Date().toISOString().split("T")[0] } : p
+              ));
+            }}
+          />
+        );
+      })()}
     </div>
   );
 }
