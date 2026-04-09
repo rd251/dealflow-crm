@@ -8,7 +8,7 @@ const BodySchema = z.object({
   orgnr: z.string(),
   adresse: z.string(),
   kontaktperson: z.string(),
-  telefon: z.string(),
+  telefon: z.string().optional().default(""),
   e_post: z.string().email(),
   valgt_pakke: z.string(),
   pakke_pris: z.number(),
@@ -129,7 +129,7 @@ Deno.serve(async (req) => {
       externalSignatories: [{
         name: data.kontaktperson,
         email: data.e_post,
-        phoneNumber: data.telefon,
+        ...(data.telefon?.replace(/\s/g, "").length >= 8 ? { phoneNumber: data.telefon.replace(/\s/g, "") } : {}),
         companyName: data.firmanavn,
         companyOrgNumber: data.orgnr,
       }],
