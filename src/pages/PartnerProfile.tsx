@@ -13,11 +13,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import {
   Handshake, ArrowLeft, DollarSign, TrendingUp, Users, FileText,
-  Mail, Phone, Plus, X, Building2,
+  Mail, Phone, Plus, X, Building2, FileSignature,
 } from "lucide-react";
 import { Partnerstatus, Partnertype, Provisjonstype, Kontakt, PartnerPipelineStatus, Selskap, Salgsmulighet, Kilde } from "@/data/crm-data";
 import ActivityLog from "@/components/ActivityLog";
 import SelskapInnsikt from "@/components/SelskapInnsikt";
+import SendPartnerContractModal from "@/components/SendPartnerContractModal";
+import { useAuth } from "@/hooks/use-auth";
 
 const partnertypeOptions: Partnertype[] = ["Provisjonspartner", "Integrasjonspartner", "Salgspartner", "Strategisk partner"];
 const partnerstatusOptions: Partnerstatus[] = ["Aktiv", "Under onboarding", "Inaktiv"];
