@@ -33,7 +33,8 @@ export default function SendPartnerContractModal({
   onContractSent,
 }: SendPartnerContractModalProps) {
   const [sending, setSending] = useState(false);
-  const missingOrgnr = !contractData.orgnr?.trim();
+  const [editOrgnr, setEditOrgnr] = useState(contractData.orgnr || "");
+  const missingOrgnr = !editOrgnr?.trim();
 
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
   const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
