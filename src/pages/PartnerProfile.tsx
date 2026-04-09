@@ -428,6 +428,9 @@ export default function PartnerProfile() {
                       <div className="text-sm font-medium cursor-pointer hover:text-primary hover:underline" onClick={() => navigate(`/selskaper/${selskap.id}`)}>
                         {selskap.firmanavn}
                       </div>
+                      {!partner.selskap_id && (
+                        <p className="text-[10px] text-muted-foreground">Auto-koblet via firmanavn</p>
+                      )}
                       <SelskapInnsikt
                         domene={selskap.domene}
                         firmanavn={selskap.firmanavn}
