@@ -34,6 +34,7 @@ export default function SendPartnerContractModal({
 }: SendPartnerContractModalProps) {
   const [sending, setSending] = useState(false);
   const [editOrgnr, setEditOrgnr] = useState(contractData.orgnr || "");
+  useEffect(() => { setEditOrgnr(contractData.orgnr || ""); }, [contractData.orgnr]);
   const missingOrgnr = !editOrgnr?.trim();
 
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
