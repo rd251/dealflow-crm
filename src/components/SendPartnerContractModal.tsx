@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { FileSignature, Send, Loader2, Building2, User, Phone, Mail } from "lucide-react";
@@ -14,6 +14,8 @@ interface PartnerContractData {
   telefon: string;
   e_post: string;
 }
+
+import { Input } from "@/components/ui/input";
 
 interface SendPartnerContractModalProps {
   open: boolean;
@@ -31,7 +33,9 @@ export default function SendPartnerContractModal({
   onContractSent,
 }: SendPartnerContractModalProps) {
   const [sending, setSending] = useState(false);
-  const missingOrgnr = !contractData.orgnr?.trim();
+  const [editOrgnr, setEditOrgnr] = useState(contractData.orgnr || "");
+  useEffect(() => { setEditOrgnr(contractData.orgnr || ""); }, [contractData.orgnr]);
+  const missingOrgnr = !editOrgnr?.trim();
 
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
   const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
@@ -55,6 +59,7 @@ export default function SendPartnerContractModal({
         },
         body: JSON.stringify({
           ...contractData,
+          orgnr: editOrgnr.trim(),
           sender_email: senderEmail,
         }),
       });
@@ -99,9 +104,15 @@ export default function SendPartnerContractModal({
                   <Building2 className="w-3 h-3" /> Partner / Selskap
                 </div>
                 <p className="font-medium">{contractData.firmanavn}</p>
-                {contractData.orgnr && (
-                  <p className="text-xs text-muted-foreground">Org.nr: {contractData.orgnr}</p>
-                )}
+                <div className="flex items-center gap-1 mt-1">
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">Org.nr:</span>
+                  <Input
+                    value={editOrgnr}
+                    onChange={e => setEditOrgnr(e.target.value)}
+                    placeholder="Fyll inn org.nr"
+                    className="h-6 text-xs px-1.5 py-0"
+                  />
+                </div>
                 {contractData.adresse && (
                   <p className="text-xs text-muted-foreground">{contractData.adresse}</p>
                 )}
@@ -128,7 +139,7 @@ export default function SendPartnerContractModal({
 
           {missingOrgnr && (
             <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
-              ⚠️ Org.nr mangler — fyll inn org.nr på selskapet før du sender avtale.
+              ⚠️ Fyll inn org.nr i feltet over før du sender avtalen.
             </div>
           )}
 
