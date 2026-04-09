@@ -15,6 +15,8 @@ interface PartnerContractData {
   e_post: string;
 }
 
+import { Input } from "@/components/ui/input";
+
 interface SendPartnerContractModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
