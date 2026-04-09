@@ -387,13 +387,14 @@ export default function PartnerProfile() {
 
                 {/* Koblet selskap — or standalone org.nr if no linked selskap */}
                 {(() => {
-                  const selskap = partner.selskap_id ? selskaper.find(s => s.id === partner.selskap_id) : null;
+                  const selskap = linkedSelskap;
                   if (!selskap) return (
                     <div className="border rounded-lg p-3 space-y-2 bg-muted/20">
                       <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">
                         <Building2 className="w-3.5 h-3.5" />
                         Selskapsinfo
                       </div>
+                      <p className="text-xs text-muted-foreground">Ingen selskap funnet med navn «{partner.partnernavn}» i CRM.</p>
                       <SelskapInnsikt
                         domene=""
                         firmanavn={partner.partnernavn}
