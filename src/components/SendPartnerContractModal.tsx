@@ -103,12 +103,15 @@ export default function SendPartnerContractModal({
                   <Building2 className="w-3 h-3" /> Partner / Selskap
                 </div>
                 <p className="font-medium">{contractData.firmanavn}</p>
-                {contractData.orgnr && (
-                  <p className="text-xs text-muted-foreground">Org.nr: {contractData.orgnr}</p>
-                )}
-                {contractData.adresse && (
-                  <p className="text-xs text-muted-foreground">{contractData.adresse}</p>
-                )}
+                <div className="flex items-center gap-1 mt-1">
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">Org.nr:</span>
+                  <Input
+                    value={editOrgnr}
+                    onChange={e => setEditOrgnr(e.target.value)}
+                    placeholder="Fyll inn org.nr"
+                    className="h-6 text-xs px-1.5 py-0"
+                  />
+                </div>
               </div>
 
               <div className="space-y-1">
