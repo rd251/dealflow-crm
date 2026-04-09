@@ -112,6 +112,9 @@ export default function SendPartnerContractModal({
                     className="h-6 text-xs px-1.5 py-0"
                   />
                 </div>
+                {contractData.adresse && (
+                  <p className="text-xs text-muted-foreground">{contractData.adresse}</p>
+                )}
               </div>
 
               <div className="space-y-1">
