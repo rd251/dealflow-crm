@@ -4,7 +4,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Phone, Mail, MessageSquare, MessageCircle, Users, FileText, Plus, Clock, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { Phone, Mail, MessageSquare, MessageCircle, Users, FileText, Plus, Clock, MoreHorizontal, Pencil, Trash2, X } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import MeetingFields from "@/components/MeetingFields";
 import { useAuth } from "@/hooks/use-auth";
@@ -91,6 +92,7 @@ export default function ActivityLog(props: ActivityLogProps) {
   const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [viewingEmail, setViewingEmail] = useState<Aktivitet | null>(null);
   const [meetingTittel, setMeetingTittel] = useState("");
   const [meetingDato, setMeetingDato] = useState("");
   const [meetingStartTid, setMeetingStartTid] = useState("");
@@ -251,7 +253,11 @@ export default function ActivityLog(props: ActivityLogProps) {
             const isExternal = a.ekstern_provider === 'gmail' || a.ekstern_provider === 'google_calendar';
             const displayTitle = a.tittel || a.type;
             return (
-              <div key={a.id} className="flex items-start gap-2.5 py-1.5 group">
+              <div
+                key={a.id}
+                className={`flex items-start gap-2.5 py-1.5 group ${isGmail ? 'cursor-pointer rounded-md hover:bg-muted/50 px-1 -mx-1 transition-colors' : ''}`}
+                onClick={() => { if (isGmail) setViewingEmail(a); }}
+              >
                 <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${typeColors[a.type]}`}>
                   <Icon className="w-3.5 h-3.5" />
                 </div>
@@ -268,7 +274,6 @@ export default function ActivityLog(props: ActivityLogProps) {
                         {a.ekstern_provider === 'gmail' ? 'Gmail' : 'GCal'}
                       </span>
                     )}
-                    {/* Owner avatar */}
                     {a.user_id && profiles[a.user_id] && (
                       <Tooltip>
                         <TooltipTrigger asChild>
@@ -359,6 +364,24 @@ export default function ActivityLog(props: ActivityLogProps) {
               {loading ? "Lagrer..." : editingId ? "Lagre endringer" : "Logg aktivitet"}
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Email Viewer Dialog */}
+      <Dialog open={!!viewingEmail} onOpenChange={open => !open && setViewingEmail(null)}>
+        <DialogContent className="max-w-[95vw] sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-sm">
+              <Mail className="w-4 h-4 text-blue-600" />
+              {viewingEmail?.tittel || 'E-post'}
+            </DialogTitle>
+            <DialogDescription className="flex items-center gap-2 text-xs">
+              {viewingEmail?.aktivitet_kilde === 'gmail_sendt' ? 'Sendt' : 'Mottatt'} · {viewingEmail ? formatDato(viewingEmail.dato) : ''}
+            </DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="max-h-[60vh]">
+            <p className="text-sm whitespace-pre-line leading-relaxed">{viewingEmail?.beskrivelse}</p>
+          </ScrollArea>
         </DialogContent>
       </Dialog>
 
