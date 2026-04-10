@@ -425,6 +425,7 @@ function useCrmStoreInternal() {
     prosjekterRef.current = next;
     setProsjekter(next);
     prosjekterSyncQueueRef.current = prosjekterSyncQueueRef.current
+      .then(() => selskaperSyncQueueRef.current)
       .then(() => syncProsjekter(prev, next))
       .catch(syncErrorHandler("Prosjekter"));
   }, []);
@@ -435,6 +436,7 @@ function useCrmStoreInternal() {
     oppgaverRef.current = next;
     setOppgaver(next);
     oppgaverSyncQueueRef.current = oppgaverSyncQueueRef.current
+      .then(() => selskaperSyncQueueRef.current)
       .then(() => syncOppgaver(prev, next))
       .catch(syncErrorHandler("Oppgaver"));
   }, []);
