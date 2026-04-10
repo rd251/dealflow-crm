@@ -5,12 +5,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { ThumbsUp, Minus, ThumbsDown, Loader2, Sparkles } from "lucide-react";
+import { ThumbsUp, Minus, ThumbsDown, Loader2, Sparkles, UserX } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-type Resultat = "bra" | "nøytral" | "dårlig";
+type Resultat = "bra" | "nøytral" | "dårlig" | "no_show";
 
 interface Props {
   open: boolean;
@@ -25,6 +25,7 @@ const resultatConfig: { value: Resultat; label: string; icon: React.ReactNode; c
   { value: "bra", label: "Bra", icon: <ThumbsUp className="w-4 h-4" />, cls: "border-emerald-300 bg-emerald-500/10 text-emerald-700" },
   { value: "nøytral", label: "Nøytral", icon: <Minus className="w-4 h-4" />, cls: "border-amber-300 bg-amber-500/10 text-amber-700" },
   { value: "dårlig", label: "Dårlig", icon: <ThumbsDown className="w-4 h-4" />, cls: "border-destructive/30 bg-destructive/10 text-destructive" },
+  { value: "no_show", label: "No-show", icon: <UserX className="w-4 h-4" />, cls: "border-orange-300 bg-orange-500/10 text-orange-700" },
 ];
 
 export default function PostMeetingDialog({ open, onOpenChange, meetingTitle, salgsmulighet_id, selskap_id, aktivitet_id }: Props) {
