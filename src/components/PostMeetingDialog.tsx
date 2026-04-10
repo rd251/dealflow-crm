@@ -5,12 +5,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { ThumbsUp, Minus, ThumbsDown, Loader2, Sparkles } from "lucide-react";
+import { ThumbsUp, Minus, ThumbsDown, Loader2, Sparkles, UserX } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-type Resultat = "bra" | "nøytral" | "dårlig";
+type Resultat = "bra" | "nøytral" | "dårlig" | "no_show";
 
 interface Props {
   open: boolean;
@@ -25,6 +25,7 @@ const resultatConfig: { value: Resultat; label: string; icon: React.ReactNode; c
   { value: "bra", label: "Bra", icon: <ThumbsUp className="w-4 h-4" />, cls: "border-emerald-300 bg-emerald-500/10 text-emerald-700" },
   { value: "nøytral", label: "Nøytral", icon: <Minus className="w-4 h-4" />, cls: "border-amber-300 bg-amber-500/10 text-amber-700" },
   { value: "dårlig", label: "Dårlig", icon: <ThumbsDown className="w-4 h-4" />, cls: "border-destructive/30 bg-destructive/10 text-destructive" },
+  { value: "no_show", label: "No-show", icon: <UserX className="w-4 h-4" />, cls: "border-orange-300 bg-orange-500/10 text-orange-700" },
 ];
 
 export default function PostMeetingDialog({ open, onOpenChange, meetingTitle, salgsmulighet_id, selskap_id, aktivitet_id }: Props) {
@@ -117,28 +118,36 @@ export default function PostMeetingDialog({ open, onOpenChange, meetingTitle, sa
     };
   }, [moetenotater, triggerAi]);
 
+  const isNoShow = resultat === "no_show";
+
   const handleSave = async () => {
-    if (!resultat || !nesteSteg.trim()) return;
+    if (!resultat) return;
+    if (!isNoShow && !nesteSteg.trim()) return;
     setSaving(true);
 
     try {
-      // 1. Create task
-      const { error: taskError } = await supabase.from("oppgaver").insert({
-        oppgave: nesteSteg.trim(),
-        selskap_id,
-        salgsmulighet_id,
-        prioritet: resultat === "bra" ? "Høy" : resultat === "nøytral" ? "Medium" : "Høy",
-        status: "Åpen",
-      });
-      if (taskError) throw taskError;
-
-      // 2. Save meeting notes to activity if available
-      if (aktivitet_id && moetenotater.trim()) {
-        await supabase.from("aktiviteter").update({ moetenotater: moetenotater.trim() }).eq("id", aktivitet_id);
+      // 0. Mark no_show on activity if applicable
+      if (aktivitet_id) {
+        const actUpdate: Record<string, any> = {};
+        if (moetenotater.trim()) actUpdate.moetenotater = moetenotater.trim();
+        actUpdate.no_show = isNoShow;
+        await supabase.from("aktiviteter").update(actUpdate).eq("id", aktivitet_id);
       }
 
-      // 3. Update salgsmulighet neste_steg if linked
-      if (salgsmulighet_id) {
+      // 1. Create task (skip for no-show unless user typed a next step)
+      if (nesteSteg.trim()) {
+        const { error: taskError } = await supabase.from("oppgaver").insert({
+          oppgave: nesteSteg.trim(),
+          selskap_id,
+          salgsmulighet_id,
+          prioritet: resultat === "bra" ? "Høy" : resultat === "nøytral" ? "Medium" : "Høy",
+          status: "Åpen",
+        });
+        if (taskError) throw taskError;
+      }
+
+      // 2. Update salgsmulighet neste_steg if linked (skip for no-show)
+      if (salgsmulighet_id && !isNoShow) {
         const updates: Record<string, any> = { neste_steg: nesteSteg.trim() };
         if (resultat === "bra") {
           const { data: sm } = await supabase
@@ -159,7 +168,7 @@ export default function PostMeetingDialog({ open, onOpenChange, meetingTitle, sa
         await supabase.from("salgsmuligheter").update(updates).eq("id", salgsmulighet_id);
       }
 
-      toast.success("Oppfølging registrert og oppgave opprettet");
+      toast.success(isNoShow ? "No-show registrert" : "Oppfølging registrert og oppgave opprettet");
       onOpenChange(false);
       setResultat(null);
       setNesteSteg("");
@@ -294,9 +303,9 @@ export default function PostMeetingDialog({ open, onOpenChange, meetingTitle, sa
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Avbryt</Button>
-          <Button onClick={handleSave} disabled={!resultat || !nesteSteg.trim() || saving}>
+          <Button onClick={handleSave} disabled={!resultat || (!isNoShow && !nesteSteg.trim()) || saving}>
             {saving && <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />}
-            Lagre og opprett oppgave
+            {isNoShow ? "Registrer no-show" : "Lagre og opprett oppgave"}
           </Button>
         </DialogFooter>
       </DialogContent>
