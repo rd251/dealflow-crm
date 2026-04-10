@@ -45,6 +45,20 @@ export default function Rapporter() {
   const [fromDate, setFromDate] = useState<Date>(subMonths(startOfMonth(now), 11));
   const [toDate, setToDate] = useState<Date>(startOfMonth(now));
   const [downloadingPdf, setDownloadingPdf] = useState(false);
+  const [meetings, setMeetings] = useState<{ dato: string; no_show: boolean }[]>([]);
+
+  useEffect(() => {
+    const fetchMeetings = async () => {
+      const { data } = await supabase
+        .from("aktiviteter")
+        .select("dato, no_show")
+        .eq("type", "Møte")
+        .gte("dato", fromDate.toISOString())
+        .lte("dato", endOfMonth(toDate).toISOString());
+      setMeetings(data || []);
+    };
+    fetchMeetings();
+  }, [fromDate, toDate]);
 
   const handleDownloadPDF = async () => {
     setDownloadingPdf(true);
