@@ -186,7 +186,24 @@ export default function Rapporter() {
     antall: partnere.filter(p => p.partnertype === t).length,
   })).filter(d => d.antall > 0);
 
-  const chartCard = (title: string, children: React.ReactNode) => (
+  // --- Møter og No-shows per måned ---
+  const meetingsByMonth = months.map(({ date, label }) => {
+    const m = date.getMonth(), y = date.getFullYear();
+    const inMonth = meetings.filter(mt => {
+      const d = new Date(mt.dato);
+      return d.getMonth() === m && d.getFullYear() === y;
+    });
+    const total = inMonth.length;
+    const noShows = inMonth.filter(mt => mt.no_show).length;
+    return {
+      mnd: label,
+      møter: total,
+      noShow: noShows,
+      noShowRate: total > 0 ? Math.round((noShows / total) * 100) : 0,
+    };
+  });
+
+
     <div className="bg-card border rounded-xl p-4 sm:p-6">
       <h2 className="text-base sm:text-lg font-semibold mb-4">{title}</h2>
       {children}
