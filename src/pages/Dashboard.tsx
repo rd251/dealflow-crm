@@ -268,7 +268,8 @@ export default function Dashboard() {
     return `${days}d siden`;
   };
 
-  const { user } = useAuth();
+
+
   const currentUserName = useMemo(() => {
     if (!user) return undefined;
     const profile = profiles.find((p) => p.user_id === user.id);
