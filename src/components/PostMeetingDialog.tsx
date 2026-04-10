@@ -146,13 +146,8 @@ export default function PostMeetingDialog({ open, onOpenChange, meetingTitle, sa
         if (taskError) throw taskError;
       }
 
-      // 2. Save meeting notes to activity if available
-      if (aktivitet_id && moetenotater.trim()) {
-        await supabase.from("aktiviteter").update({ moetenotater: moetenotater.trim() }).eq("id", aktivitet_id);
-      }
-
-      // 3. Update salgsmulighet neste_steg if linked
-      if (salgsmulighet_id) {
+      // 2. Update salgsmulighet neste_steg if linked (skip for no-show)
+      if (salgsmulighet_id && !isNoShow) {
         const updates: Record<string, any> = { neste_steg: nesteSteg.trim() };
         if (resultat === "bra") {
           const { data: sm } = await supabase
