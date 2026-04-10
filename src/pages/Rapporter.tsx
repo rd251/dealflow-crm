@@ -416,6 +416,28 @@ export default function Rapporter() {
             </BarChart>
           </ResponsiveContainer>
         ))}
+
+        {chartCard("Møter og No-shows per måned", (
+          <ResponsiveContainer width="100%" height={isMobile ? 250 : 340}>
+            <BarChart data={meetingsByMonth}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="mnd" tick={{ fontSize: isMobile ? 8 : 11 }} />
+              <YAxis yAxisId="left" tick={{ fontSize: 11 }} allowDecimals={false} />
+              <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} tickFormatter={v => `${v}%`} domain={[0, 100]} />
+              <Tooltip
+                formatter={(value: number, name: string) => [
+                  name === "No-show %" ? `${value}%` : value,
+                  name
+                ]}
+                contentStyle={{ borderRadius: "8px", fontSize: "13px" }}
+              />
+              <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: "12px" }} />
+              <Bar yAxisId="left" dataKey="møter" name="Møter booket" fill="hsl(220, 70%, 55%)" radius={[6, 6, 0, 0]} />
+              <Bar yAxisId="left" dataKey="noShow" name="No-shows" fill="hsl(25, 95%, 53%)" radius={[6, 6, 0, 0]} />
+              <Line yAxisId="right" type="monotone" dataKey="noShowRate" name="No-show %" stroke="hsl(0, 72%, 51%)" strokeWidth={2} dot={{ r: 4 }} />
+            </BarChart>
+          </ResponsiveContainer>
+        ))}
       </div>
     </PageShell>
   );
