@@ -4,10 +4,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Phone, Mail, MessageSquare, MessageCircle, Users, FileText, Plus, Clock, MoreHorizontal, Pencil, Trash2, X } from "lucide-react";
+import { Phone, Mail, MessageSquare, MessageCircle, Users, FileText, Plus, Clock, MoreHorizontal, Pencil, Trash2, X, Reply } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import MeetingFields from "@/components/MeetingFields";
+import SendEmailDialog from "@/components/SendEmailDialog";
 import { useAuth } from "@/hooks/use-auth";
 
 const API_URL = import.meta.env.VITE_SUPABASE_URL + '/rest/v1';
@@ -80,6 +81,8 @@ interface ActivityLogProps {
   email?: string;
   onActivityLogged?: () => void;
   kontaktListe?: KontaktOption[];
+  entityName?: string;
+  kontaktperson?: string;
 }
 
 export default function ActivityLog(props: ActivityLogProps) {
@@ -98,6 +101,9 @@ export default function ActivityLog(props: ActivityLogProps) {
   const [meetingStartTid, setMeetingStartTid] = useState("");
   const [meetingSluttTid, setMeetingSluttTid] = useState("");
   const [meetingDeltakere, setMeetingDeltakere] = useState<string[]>([]);
+  const [replyOpen, setReplyOpen] = useState(false);
+  const [replyTo, setReplyTo] = useState("");
+  const [replySubject, setReplySubject] = useState("");
 
   const buildFilter = useCallback(() => {
     const filters: string[] = [];
@@ -382,8 +388,47 @@ export default function ActivityLog(props: ActivityLogProps) {
           <ScrollArea className="max-h-[60vh]">
             <p className="text-sm whitespace-pre-line leading-relaxed">{viewingEmail?.beskrivelse}</p>
           </ScrollArea>
+          <div className="flex justify-end pt-2 border-t">
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-1.5"
+              onClick={() => {
+                const subject = viewingEmail?.tittel || '';
+                setReplyTo(props.email || '');
+                setReplySubject(subject.startsWith('Re: ') ? subject : `Re: ${subject}`);
+                setViewingEmail(null);
+                setReplyOpen(true);
+              }}
+            >
+              <Reply className="w-3.5 h-3.5" /> Svar
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
+
+      {/* Reply Email Dialog */}
+      {replyOpen && (
+        <SendEmailDialog
+          open={replyOpen}
+          onOpenChange={setReplyOpen}
+          defaultTo={replyTo}
+          defaultSubject={replySubject}
+          context={{
+            entityType: props.lead_id ? "lead" : props.salgsmulighet_id ? "salgsmulighet" : "lead",
+            entityId: props.lead_id || props.salgsmulighet_id || props.selskap_id || '',
+            selskapNavn: props.entityName || '',
+            kontaktperson: props.kontaktperson,
+            selskapId: props.selskap_id,
+            kontaktId: props.kontakt_id,
+          }}
+          onSent={() => {
+            setReplyOpen(false);
+            fetchAktiviteter();
+            props.onActivityLogged?.();
+          }}
+        />
+      )}
 
       {/* Delete Confirmation */}
       <AlertDialog open={!!deleteId} onOpenChange={open => !open && setDeleteId(null)}>
