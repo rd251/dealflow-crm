@@ -1,0 +1,1 @@
+ALTER TABLE public.aktiviteter ADD COLUMN no_show boolean NOT NULL DEFAULT false;

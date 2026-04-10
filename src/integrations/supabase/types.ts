@@ -27,6 +27,7 @@ export type Database = {
           kontakt_id: string | null
           lead_id: string | null
           moetenotater: string | null
+          no_show: boolean
           partner_id: string | null
           prosjekt_id: string | null
           salgsmulighet_id: string | null
@@ -50,6 +51,7 @@ export type Database = {
           kontakt_id?: string | null
           lead_id?: string | null
           moetenotater?: string | null
+          no_show?: boolean
           partner_id?: string | null
           prosjekt_id?: string | null
           salgsmulighet_id?: string | null
@@ -73,6 +75,7 @@ export type Database = {
           kontakt_id?: string | null
           lead_id?: string | null
           moetenotater?: string | null
+          no_show?: boolean
           partner_id?: string | null
           prosjekt_id?: string | null
           salgsmulighet_id?: string | null
