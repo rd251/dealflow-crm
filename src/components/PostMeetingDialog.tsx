@@ -118,20 +118,33 @@ export default function PostMeetingDialog({ open, onOpenChange, meetingTitle, sa
     };
   }, [moetenotater, triggerAi]);
 
+  const isNoShow = resultat === "no_show";
+
   const handleSave = async () => {
-    if (!resultat || !nesteSteg.trim()) return;
+    if (!resultat) return;
+    if (!isNoShow && !nesteSteg.trim()) return;
     setSaving(true);
 
     try {
-      // 1. Create task
-      const { error: taskError } = await supabase.from("oppgaver").insert({
-        oppgave: nesteSteg.trim(),
-        selskap_id,
-        salgsmulighet_id,
-        prioritet: resultat === "bra" ? "Høy" : resultat === "nøytral" ? "Medium" : "Høy",
-        status: "Åpen",
-      });
-      if (taskError) throw taskError;
+      // 0. Mark no_show on activity if applicable
+      if (aktivitet_id) {
+        const actUpdate: Record<string, any> = {};
+        if (moetenotater.trim()) actUpdate.moetenotater = moetenotater.trim();
+        actUpdate.no_show = isNoShow;
+        await supabase.from("aktiviteter").update(actUpdate).eq("id", aktivitet_id);
+      }
+
+      // 1. Create task (skip for no-show unless user typed a next step)
+      if (nesteSteg.trim()) {
+        const { error: taskError } = await supabase.from("oppgaver").insert({
+          oppgave: nesteSteg.trim(),
+          selskap_id,
+          salgsmulighet_id,
+          prioritet: resultat === "bra" ? "Høy" : resultat === "nøytral" ? "Medium" : "Høy",
+          status: "Åpen",
+        });
+        if (taskError) throw taskError;
+      }
 
       // 2. Save meeting notes to activity if available
       if (aktivitet_id && moetenotater.trim()) {
