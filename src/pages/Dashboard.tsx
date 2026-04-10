@@ -427,9 +427,14 @@ export default function Dashboard() {
         <div className="bg-card border rounded-xl overflow-hidden">
           <div className="px-4 sm:px-6 py-4 border-b flex items-center justify-between">
             <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Møter</h2>
-            <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={() => navigate("/kalender")}>
-              Kalender <ChevronRight className="w-3 h-3" />
-            </Button>
+            <div className="flex items-center gap-1">
+              <Button variant="outline" size="sm" className="text-xs gap-1 h-7" onClick={() => setShowNewMeeting(true)}>
+                <Plus className="w-3 h-3" /> Møte
+              </Button>
+              <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={() => navigate("/kalender")}>
+                Kalender <ChevronRight className="w-3 h-3" />
+              </Button>
+            </div>
           </div>
 
           {meetings.length === 0 ? (
