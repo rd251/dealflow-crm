@@ -12,8 +12,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   AlertTriangle, CalendarDays, PhoneOff, Target, Clock, Building2,
-  BarChart3, ChevronRight, ListTodo, Activity, CheckCircle2, NotebookPen, Save,
+  BarChart3, ChevronRight, ListTodo, Activity, CheckCircle2, NotebookPen, Save, Plus,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import MeetingPrepPanel from "@/components/MeetingPrepPanel";
@@ -50,6 +54,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { selskaper, salgsmuligheter, leads, kontakter } = useCrmStore();
+  const { user } = useAuth();
 
   const now = new Date();
   const { followUps, loading: followUpsLoading, dismiss: dismissFollowUp } = useFollowUps(leads, salgsmuligheter, selskaper);
@@ -71,6 +76,11 @@ export default function Dashboard() {
   const [notesSaving, setNotesSaving] = useState(false);
   const [oppgaver, setOppgaver] = useState<Tables<"oppgaver">[]>([]);
   const [changelogEntries, setChangelogEntries] = useState<Array<{ id: string; event_type: string; entity_type: string; entity_id: string; entity_name: string; field_name: string | null; old_value: string | null; new_value: string | null; related_entity_type: string | null; related_entity_name: string | null; user_id: string | null; created_at: string }>>([]);
+
+  // ─── NEW MEETING STATE ───
+  const [showNewMeeting, setShowNewMeeting] = useState(false);
+  const [newMeeting, setNewMeeting] = useState({ tittel: "", dato: today, startTid: "09:00", sluttTid: "10:00", selskapId: "", salgsmulId: "" });
+  const [creatingSaving, setCreatingSaving] = useState(false);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -149,6 +159,45 @@ export default function Dashboard() {
     }
   }, [notesMeeting, notesText]);
 
+  const createMeeting = useCallback(async () => {
+    if (!newMeeting.tittel.trim()) { toast.error("Legg til en tittel"); return; }
+    setCreatingSaving(true);
+    try {
+      const datoStr = newMeeting.dato + "T00:00:00";
+      const startStr = newMeeting.dato + "T" + newMeeting.startTid + ":00";
+      const sluttStr = newMeeting.dato + "T" + newMeeting.sluttTid + ":00";
+      const body: Record<string, any> = {
+        type: "Møte",
+        tittel: newMeeting.tittel,
+        beskrivelse: "",
+        dato: datoStr,
+        start_tid: startStr,
+        slutt_tid: sluttStr,
+        user_id: user?.id || null,
+      };
+      if (newMeeting.selskapId) body.selskap_id = newMeeting.selskapId;
+      if (newMeeting.salgsmulId) body.salgsmulighet_id = newMeeting.salgsmulId;
+      const res = await fetch(`${API_URL}/aktiviteter`, {
+        method: "POST",
+        headers: { ...API_HEADERS, Prefer: "return=representation" },
+        body: JSON.stringify(body),
+      });
+      if (res.ok) {
+        const [created] = await res.json();
+        toast.success("Møte opprettet");
+        setMeetings(prev => [...prev, created].sort((a, b) => new Date(a.dato).getTime() - new Date(b.dato).getTime()));
+        setShowNewMeeting(false);
+        setNewMeeting({ tittel: "", dato: today, startTid: "09:00", sluttTid: "10:00", selskapId: "", salgsmulId: "" });
+      } else {
+        toast.error("Kunne ikke opprette møte");
+      }
+    } catch {
+      toast.error("Feil ved opprettelse");
+    } finally {
+      setCreatingSaving(false);
+    }
+  }, [newMeeting, user, today]);
+
 
   const leadsUtenOppfolging = useMemo(() => {
     const cutoff = new Date(now.getTime() - 24 * 60 * 60 * 1000);
@@ -219,7 +268,8 @@ export default function Dashboard() {
     return `${days}d siden`;
   };
 
-  const { user } = useAuth();
+
+
   const currentUserName = useMemo(() => {
     if (!user) return undefined;
     const profile = profiles.find((p) => p.user_id === user.id);
@@ -377,9 +427,14 @@ export default function Dashboard() {
         <div className="bg-card border rounded-xl overflow-hidden">
           <div className="px-4 sm:px-6 py-4 border-b flex items-center justify-between">
             <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Møter</h2>
-            <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={() => navigate("/kalender")}>
-              Kalender <ChevronRight className="w-3 h-3" />
-            </Button>
+            <div className="flex items-center gap-1">
+              <Button variant="outline" size="sm" className="text-xs gap-1 h-7" onClick={() => setShowNewMeeting(true)}>
+                <Plus className="w-3 h-3" /> Møte
+              </Button>
+              <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={() => navigate("/kalender")}>
+                Kalender <ChevronRight className="w-3 h-3" />
+              </Button>
+            </div>
           </div>
 
           {meetings.length === 0 ? (
@@ -677,6 +732,87 @@ export default function Dashboard() {
             <Save className="w-3.5 h-3.5" />
             {notesSaving ? "Lagrer..." : "Lagre"}
           </Button>
+        </DialogContent>
+      </Dialog>
+
+      {/* ─── NEW MEETING DIALOG ─── */}
+      <Dialog open={showNewMeeting} onOpenChange={setShowNewMeeting}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-sm">Nytt møte</DialogTitle>
+            <DialogDescription className="text-xs">Opprett et nytt møte direkte fra dashboardet</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label className="text-xs">Tittel *</Label>
+              <Input
+                placeholder="F.eks. Demo med kunde"
+                value={newMeeting.tittel}
+                onChange={e => setNewMeeting(prev => ({ ...prev, tittel: e.target.value }))}
+                className="h-8 text-sm"
+                autoFocus
+              />
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              <div>
+                <Label className="text-xs">Dato</Label>
+                <Input
+                  type="date"
+                  value={newMeeting.dato}
+                  onChange={e => setNewMeeting(prev => ({ ...prev, dato: e.target.value }))}
+                  className="h-8 text-sm"
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Fra</Label>
+                <Input
+                  type="time"
+                  value={newMeeting.startTid}
+                  onChange={e => setNewMeeting(prev => ({ ...prev, startTid: e.target.value }))}
+                  className="h-8 text-sm"
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Til</Label>
+                <Input
+                  type="time"
+                  value={newMeeting.sluttTid}
+                  onChange={e => setNewMeeting(prev => ({ ...prev, sluttTid: e.target.value }))}
+                  className="h-8 text-sm"
+                />
+              </div>
+            </div>
+            <div>
+              <Label className="text-xs">Selskap (valgfritt)</Label>
+              <Select value={newMeeting.selskapId} onValueChange={v => setNewMeeting(prev => ({ ...prev, selskapId: v }))}>
+                <SelectTrigger className="h-8 text-sm">
+                  <SelectValue placeholder="Velg selskap" />
+                </SelectTrigger>
+                <SelectContent>
+                  {selskaper.map(s => (
+                    <SelectItem key={s.id} value={s.id} className="text-sm">{s.firmanavn}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs">Salgsmulighet (valgfritt)</Label>
+              <Select value={newMeeting.salgsmulId} onValueChange={v => setNewMeeting(prev => ({ ...prev, salgsmulId: v }))}>
+                <SelectTrigger className="h-8 text-sm">
+                  <SelectValue placeholder="Velg salgsmulighet" />
+                </SelectTrigger>
+                <SelectContent>
+                  {salgsmuligheter.filter(s => s.status !== "Vunnet" && s.status !== "Tapt").map(s => (
+                    <SelectItem key={s.id} value={s.id} className="text-sm">{s.navn}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button onClick={createMeeting} className="w-full gap-2" size="sm" disabled={creatingSaving}>
+              <Plus className="w-3.5 h-3.5" />
+              {creatingSaving ? "Oppretter..." : "Opprett møte"}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </PageShell>
