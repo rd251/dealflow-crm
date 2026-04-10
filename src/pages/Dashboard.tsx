@@ -76,6 +76,11 @@ export default function Dashboard() {
   const [oppgaver, setOppgaver] = useState<Tables<"oppgaver">[]>([]);
   const [changelogEntries, setChangelogEntries] = useState<Array<{ id: string; event_type: string; entity_type: string; entity_id: string; entity_name: string; field_name: string | null; old_value: string | null; new_value: string | null; related_entity_type: string | null; related_entity_name: string | null; user_id: string | null; created_at: string }>>([]);
 
+  // ─── NEW MEETING STATE ───
+  const [showNewMeeting, setShowNewMeeting] = useState(false);
+  const [newMeeting, setNewMeeting] = useState({ tittel: "", dato: today, startTid: "09:00", sluttTid: "10:00", selskapId: "", salgsmulId: "" });
+  const [creatingSaving, setCreatingSaving] = useState(false);
+
   useEffect(() => {
     const fetchDashboardData = async () => {
       // Fetch upcoming tasks
