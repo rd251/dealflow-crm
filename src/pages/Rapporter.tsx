@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { format, startOfMonth, subMonths, isWithinInterval, startOfDay, endOfMonth } from "date-fns";
 import { nb } from "date-fns/locale";
 import PageShell from "@/components/PageShell";
 import { useCrmStore } from "@/hooks/use-crm-store";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, CartesianGrid, LineChart, Line, PieChart, Pie, Legend } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, CartesianGrid, LineChart, Line, PieChart, Pie, Legend, ComposedChart } from "recharts";
 import { beregnTotalKontraktsverdi } from "@/data/crm-data";
 import { ArrowLeft, CalendarIcon, Download, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -45,6 +45,20 @@ export default function Rapporter() {
   const [fromDate, setFromDate] = useState<Date>(subMonths(startOfMonth(now), 11));
   const [toDate, setToDate] = useState<Date>(startOfMonth(now));
   const [downloadingPdf, setDownloadingPdf] = useState(false);
+  const [meetings, setMeetings] = useState<{ dato: string; no_show: boolean }[]>([]);
+
+  useEffect(() => {
+    const fetchMeetings = async () => {
+      const { data } = await supabase
+        .from("aktiviteter")
+        .select("dato, no_show")
+        .eq("type", "Møte")
+        .gte("dato", fromDate.toISOString())
+        .lte("dato", endOfMonth(toDate).toISOString());
+      setMeetings(data || []);
+    };
+    fetchMeetings();
+  }, [fromDate, toDate]);
 
   const handleDownloadPDF = async () => {
     setDownloadingPdf(true);
@@ -171,6 +185,23 @@ export default function Rapporter() {
     type: t.length > 14 ? t.substring(0, 14) + "…" : t,
     antall: partnere.filter(p => p.partnertype === t).length,
   })).filter(d => d.antall > 0);
+
+  // --- Møter og No-shows per måned ---
+  const meetingsByMonth = months.map(({ date, label }) => {
+    const m = date.getMonth(), y = date.getFullYear();
+    const inMonth = meetings.filter(mt => {
+      const d = new Date(mt.dato);
+      return d.getMonth() === m && d.getFullYear() === y;
+    });
+    const total = inMonth.length;
+    const noShows = inMonth.filter(mt => mt.no_show).length;
+    return {
+      mnd: label,
+      møter: total,
+      noShow: noShows,
+      noShowRate: total > 0 ? Math.round((noShows / total) * 100) : 0,
+    };
+  });
 
   const chartCard = (title: string, children: React.ReactNode) => (
     <div className="bg-card border rounded-xl p-4 sm:p-6">
@@ -383,6 +414,28 @@ export default function Rapporter() {
               <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: "12px" }} />
               <Bar dataKey="antall" name="Partnere" fill="hsl(262, 60%, 55%)" radius={[6, 6, 0, 0]} />
             </BarChart>
+          </ResponsiveContainer>
+        ))}
+
+        {chartCard("Møter og No-shows per måned", (
+          <ResponsiveContainer width="100%" height={isMobile ? 250 : 340}>
+            <ComposedChart data={meetingsByMonth}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="mnd" tick={{ fontSize: isMobile ? 8 : 11 }} />
+              <YAxis yAxisId="left" tick={{ fontSize: 11 }} allowDecimals={false} />
+              <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} tickFormatter={v => `${v}%`} domain={[0, 100]} />
+              <Tooltip
+                formatter={(value: number, name: string) => [
+                  name === "No-show %" ? `${value}%` : value,
+                  name
+                ]}
+                contentStyle={{ borderRadius: "8px", fontSize: "13px" }}
+              />
+              <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: "12px" }} />
+              <Bar yAxisId="left" dataKey="møter" name="Møter booket" fill="hsl(220, 70%, 55%)" radius={[6, 6, 0, 0]} />
+              <Bar yAxisId="left" dataKey="noShow" name="No-shows" fill="hsl(25, 95%, 53%)" radius={[6, 6, 0, 0]} />
+              <Line yAxisId="right" type="monotone" dataKey="noShowRate" name="No-show %" stroke="hsl(0, 72%, 51%)" strokeWidth={2} dot={{ r: 4 }} />
+            </ComposedChart>
           </ResponsiveContainer>
         ))}
       </div>
