@@ -158,6 +158,45 @@ export default function Dashboard() {
     }
   }, [notesMeeting, notesText]);
 
+  const createMeeting = useCallback(async () => {
+    if (!newMeeting.tittel.trim()) { toast.error("Legg til en tittel"); return; }
+    setCreatingSaving(true);
+    try {
+      const datoStr = newMeeting.dato + "T00:00:00";
+      const startStr = newMeeting.dato + "T" + newMeeting.startTid + ":00";
+      const sluttStr = newMeeting.dato + "T" + newMeeting.sluttTid + ":00";
+      const body: Record<string, any> = {
+        type: "Møte",
+        tittel: newMeeting.tittel,
+        beskrivelse: "",
+        dato: datoStr,
+        start_tid: startStr,
+        slutt_tid: sluttStr,
+        user_id: user?.id || null,
+      };
+      if (newMeeting.selskapId) body.selskap_id = newMeeting.selskapId;
+      if (newMeeting.salgsmulId) body.salgsmulighet_id = newMeeting.salgsmulId;
+      const res = await fetch(`${API_URL}/aktiviteter`, {
+        method: "POST",
+        headers: { ...API_HEADERS, Prefer: "return=representation" },
+        body: JSON.stringify(body),
+      });
+      if (res.ok) {
+        const [created] = await res.json();
+        toast.success("Møte opprettet");
+        setMeetings(prev => [...prev, created].sort((a, b) => new Date(a.dato).getTime() - new Date(b.dato).getTime()));
+        setShowNewMeeting(false);
+        setNewMeeting({ tittel: "", dato: today, startTid: "09:00", sluttTid: "10:00", selskapId: "", salgsmulId: "" });
+      } else {
+        toast.error("Kunne ikke opprette møte");
+      }
+    } catch {
+      toast.error("Feil ved opprettelse");
+    } finally {
+      setCreatingSaving(false);
+    }
+  }, [newMeeting, user, today]);
+
 
   const leadsUtenOppfolging = useMemo(() => {
     const cutoff = new Date(now.getTime() - 24 * 60 * 60 * 1000);
