@@ -203,7 +203,7 @@ export default function Rapporter() {
     };
   });
 
-
+  const chartCard = (title: string, children: React.ReactNode) => (
     <div className="bg-card border rounded-xl p-4 sm:p-6">
       <h2 className="text-base sm:text-lg font-semibold mb-4">{title}</h2>
       {children}
