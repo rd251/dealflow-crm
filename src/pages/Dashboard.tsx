@@ -734,6 +734,87 @@ export default function Dashboard() {
           </Button>
         </DialogContent>
       </Dialog>
+
+      {/* ─── NEW MEETING DIALOG ─── */}
+      <Dialog open={showNewMeeting} onOpenChange={setShowNewMeeting}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-sm">Nytt møte</DialogTitle>
+            <DialogDescription className="text-xs">Opprett et nytt møte direkte fra dashboardet</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label className="text-xs">Tittel *</Label>
+              <Input
+                placeholder="F.eks. Demo med kunde"
+                value={newMeeting.tittel}
+                onChange={e => setNewMeeting(prev => ({ ...prev, tittel: e.target.value }))}
+                className="h-8 text-sm"
+                autoFocus
+              />
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              <div>
+                <Label className="text-xs">Dato</Label>
+                <Input
+                  type="date"
+                  value={newMeeting.dato}
+                  onChange={e => setNewMeeting(prev => ({ ...prev, dato: e.target.value }))}
+                  className="h-8 text-sm"
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Fra</Label>
+                <Input
+                  type="time"
+                  value={newMeeting.startTid}
+                  onChange={e => setNewMeeting(prev => ({ ...prev, startTid: e.target.value }))}
+                  className="h-8 text-sm"
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Til</Label>
+                <Input
+                  type="time"
+                  value={newMeeting.sluttTid}
+                  onChange={e => setNewMeeting(prev => ({ ...prev, sluttTid: e.target.value }))}
+                  className="h-8 text-sm"
+                />
+              </div>
+            </div>
+            <div>
+              <Label className="text-xs">Selskap (valgfritt)</Label>
+              <Select value={newMeeting.selskapId} onValueChange={v => setNewMeeting(prev => ({ ...prev, selskapId: v }))}>
+                <SelectTrigger className="h-8 text-sm">
+                  <SelectValue placeholder="Velg selskap" />
+                </SelectTrigger>
+                <SelectContent>
+                  {selskaper.map(s => (
+                    <SelectItem key={s.id} value={s.id} className="text-sm">{s.firmanavn}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs">Salgsmulighet (valgfritt)</Label>
+              <Select value={newMeeting.salgsmulId} onValueChange={v => setNewMeeting(prev => ({ ...prev, salgsmulId: v }))}>
+                <SelectTrigger className="h-8 text-sm">
+                  <SelectValue placeholder="Velg salgsmulighet" />
+                </SelectTrigger>
+                <SelectContent>
+                  {salgsmuligheter.filter(s => s.status !== "Vunnet" && s.status !== "Tapt").map(s => (
+                    <SelectItem key={s.id} value={s.id} className="text-sm">{s.navn}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button onClick={createMeeting} className="w-full gap-2" size="sm" disabled={creatingSaving}>
+              <Plus className="w-3.5 h-3.5" />
+              {creatingSaving ? "Oppretter..." : "Opprett møte"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </PageShell>
   );
 }
