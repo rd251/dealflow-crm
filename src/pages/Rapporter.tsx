@@ -5,7 +5,7 @@ import { nb } from "date-fns/locale";
 import PageShell from "@/components/PageShell";
 import { useCrmStore } from "@/hooks/use-crm-store";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, CartesianGrid, LineChart, Line, PieChart, Pie, Legend } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, CartesianGrid, LineChart, Line, PieChart, Pie, Legend, ComposedChart } from "recharts";
 import { beregnTotalKontraktsverdi } from "@/data/crm-data";
 import { ArrowLeft, CalendarIcon, Download, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -419,7 +419,7 @@ export default function Rapporter() {
 
         {chartCard("Møter og No-shows per måned", (
           <ResponsiveContainer width="100%" height={isMobile ? 250 : 340}>
-            <BarChart data={meetingsByMonth}>
+            <ComposedChart data={meetingsByMonth}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="mnd" tick={{ fontSize: isMobile ? 8 : 11 }} />
               <YAxis yAxisId="left" tick={{ fontSize: 11 }} allowDecimals={false} />
@@ -435,7 +435,7 @@ export default function Rapporter() {
               <Bar yAxisId="left" dataKey="møter" name="Møter booket" fill="hsl(220, 70%, 55%)" radius={[6, 6, 0, 0]} />
               <Bar yAxisId="left" dataKey="noShow" name="No-shows" fill="hsl(25, 95%, 53%)" radius={[6, 6, 0, 0]} />
               <Line yAxisId="right" type="monotone" dataKey="noShowRate" name="No-show %" stroke="hsl(0, 72%, 51%)" strokeWidth={2} dot={{ r: 4 }} />
-            </BarChart>
+            </ComposedChart>
           </ResponsiveContainer>
         ))}
       </div>
