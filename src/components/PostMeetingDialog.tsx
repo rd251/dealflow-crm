@@ -303,9 +303,9 @@ export default function PostMeetingDialog({ open, onOpenChange, meetingTitle, sa
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Avbryt</Button>
-          <Button onClick={handleSave} disabled={!resultat || !nesteSteg.trim() || saving}>
+          <Button onClick={handleSave} disabled={!resultat || (!isNoShow && !nesteSteg.trim()) || saving}>
             {saving && <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />}
-            Lagre og opprett oppgave
+            {isNoShow ? "Registrer no-show" : "Lagre og opprett oppgave"}
           </Button>
         </DialogFooter>
       </DialogContent>
