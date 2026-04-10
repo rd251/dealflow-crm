@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Calendar, Clock, Users, ChevronDown, ChevronUp, FileText } from "lucide-react";
+import { Calendar, Clock, Users, ChevronDown, ChevronUp, FileText, UserX } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format, isPast, isToday, parseISO } from "date-fns";
 import { nb } from "date-fns/locale";
@@ -24,6 +24,7 @@ interface Meeting {
   deltakere: string[] | null;
   moetenotater: string | null;
   type: string;
+  no_show: boolean;
 }
 
 export default function EntityCalendarTab(props: EntityCalendarTabProps) {
@@ -35,7 +36,7 @@ export default function EntityCalendarTab(props: EntityCalendarTabProps) {
       setLoading(true);
       let query = supabase
         .from("aktiviteter")
-        .select("id, tittel, beskrivelse, dato, start_tid, slutt_tid, deltakere, moetenotater, type")
+        .select("id, tittel, beskrivelse, dato, start_tid, slutt_tid, deltakere, moetenotater, type, no_show")
         .eq("type", "Møte")
         .order("dato", { ascending: false })
         .order("start_tid", { ascending: false })
@@ -136,6 +137,12 @@ function MeetingRow({ meeting, variant }: { meeting: Meeting; variant: "upcoming
             {meeting.tittel || meeting.beskrivelse || "Møte"}
           </p>
           <div className="flex items-center gap-1 shrink-0">
+            {meeting.no_show && (
+              <Badge variant="destructive" className="text-[10px] shrink-0 gap-0.5 bg-orange-500/15 text-orange-700 border-orange-300 hover:bg-orange-500/20">
+                <UserX className="w-2.5 h-2.5" />
+                No-show
+              </Badge>
+            )}
             {hasNotes && (
               <Badge variant="outline" className="text-[10px] shrink-0 gap-0.5">
                 <FileText className="w-2.5 h-2.5" />
