@@ -168,7 +168,7 @@ export default function PostMeetingDialog({ open, onOpenChange, meetingTitle, sa
         await supabase.from("salgsmuligheter").update(updates).eq("id", salgsmulighet_id);
       }
 
-      toast.success("Oppfølging registrert og oppgave opprettet");
+      toast.success(isNoShow ? "No-show registrert" : "Oppfølging registrert og oppgave opprettet");
       onOpenChange(false);
       setResultat(null);
       setNesteSteg("");
