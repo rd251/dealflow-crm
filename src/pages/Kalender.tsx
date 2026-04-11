@@ -158,14 +158,14 @@ export default function Kalender() {
       .catch(() => {});
 
     // Fetch user profiles for ownership display
-    fetch(`${API_URL}/profiles?select=user_id,display_name,avatar_url`, { headers: API_HEADERS })
-      .then(r => r.ok ? r.json() : [])
-      .then((data: UserProfile[]) => {
+    supabase
+      .from("profiles")
+      .select("user_id, display_name, avatar_url")
+      .then(({ data }) => {
         const map: Record<string, UserProfile> = {};
-        data.forEach(p => { map[p.user_id] = p; });
+        (data || []).forEach((p: any) => { map[p.user_id] = p; });
         setProfiles(map);
-      })
-      .catch(() => {});
+      });
   }, []);
 
   // Fetch entity lists for linking
