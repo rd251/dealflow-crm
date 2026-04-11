@@ -279,7 +279,7 @@ async function pushToGoogle(supabase: any, connection: any, accessToken: string)
     .select('*')
     .eq('type', 'Møte')
     .is('ekstern_id', null)
-    .eq('aktivitet_kilde', 'manuell')
+    .in('aktivitet_kilde', ['manuell', 'ai-assistent'])
     .not('start_tid', 'is', null);
 
   if (!localMeetings || localMeetings.length === 0) return 0;
