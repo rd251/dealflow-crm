@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Building2, Users, TrendingUp, Briefcase, Sparkles, Loader2, RefreshCw } from "lucide-react";
+import { Building2, Users, TrendingUp, Briefcase, Sparkles, Loader2, RefreshCw, ChevronDown, ChevronUp, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface SelskapInnsiktProps {
@@ -44,6 +44,7 @@ export default function SelskapInnsikt({ domene, firmanavn, e_post, onEnriched }
   const [data, setData] = useState<InnsiktData | null>(null);
   const [loading, setLoading] = useState(false);
   const [hasChecked, setHasChecked] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   const cleanDomain = extractDomain(e_post, domene);
 
@@ -133,18 +134,29 @@ export default function SelskapInnsikt({ domene, firmanavn, e_post, onEnriched }
           <Sparkles className="w-3 h-3 text-primary" />
           Selskap innsikt
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-5 w-5"
-          onClick={() => fetchInnsikt(true)}
-          title="Oppdater innsikt"
-        >
-          <RefreshCw className="w-3 h-3" />
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-5 w-5"
+            onClick={() => setExpanded(e => !e)}
+            title={expanded ? "Vis mindre" : "Vis alt"}
+          >
+            {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-5 w-5"
+            onClick={() => fetchInnsikt(true)}
+            title="Oppdater innsikt"
+          >
+            <RefreshCw className="w-3 h-3" />
+          </Button>
+        </div>
       </div>
 
-      {data.beskrivelse && (
+      {data.beskrivelse && expanded && (
         <p className="text-xs text-foreground/80 leading-relaxed">{data.beskrivelse}</p>
       )}
 
@@ -152,7 +164,7 @@ export default function SelskapInnsikt({ domene, firmanavn, e_post, onEnriched }
         {data.bransje && (
           <div className="flex items-center gap-1.5 text-xs rounded-md bg-background/60 px-2 py-1.5">
             <Briefcase className="w-3 h-3 text-muted-foreground shrink-0" />
-            <span className="truncate">{data.bransje}</span>
+            <span className={expanded ? "" : "truncate"}>{data.bransje}</span>
           </div>
         )}
         {data.stoerrelse && (
@@ -175,7 +187,36 @@ export default function SelskapInnsikt({ domene, firmanavn, e_post, onEnriched }
         )}
       </div>
 
-      {data.orgnr && (
+      {expanded && (
+        <div className="space-y-1 pt-1 border-t border-border/50">
+          {data.orgnr && (
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <span className="font-medium min-w-[70px]">Org.nr:</span>
+              <span className="text-foreground/80">{data.orgnr}</span>
+            </div>
+          )}
+          {data.firmaadresse && (
+            <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
+              <MapPin className="w-3 h-3 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-medium">Besøksadresse: </span>
+                <span className="text-foreground/80">{data.firmaadresse}</span>
+              </div>
+            </div>
+          )}
+          {data.postadresse && (
+            <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
+              <MapPin className="w-3 h-3 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-medium">Postadresse: </span>
+                <span className="text-foreground/80">{data.postadresse}</span>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {!expanded && data.orgnr && (
         <div className="text-[10px] text-muted-foreground">Org.nr: {data.orgnr}</div>
       )}
     </div>
