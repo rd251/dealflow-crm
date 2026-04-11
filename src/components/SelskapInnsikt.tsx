@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Building2, Users, TrendingUp, Briefcase, Sparkles, Loader2, RefreshCw, ChevronDown, ChevronUp, MapPin } from "lucide-react";
+import { Building2, Users, TrendingUp, Briefcase, Sparkles, Loader2, RefreshCw, ChevronDown, ChevronUp, MapPin, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "@/hooks/use-toast";
 
 interface SelskapInnsiktProps {
   domene?: string;
@@ -45,6 +46,14 @@ export default function SelskapInnsikt({ domene, firmanavn, e_post, onEnriched }
   const [loading, setLoading] = useState(false);
   const [hasChecked, setHasChecked] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [copied, setCopied] = useState<string | null>(null);
+
+  const copyToClipboard = useCallback((value: string, label: string) => {
+    navigator.clipboard.writeText(value);
+    setCopied(label);
+    toast({ title: `${label} kopiert`, description: value });
+    setTimeout(() => setCopied(null), 2000);
+  }, []);
 
   const cleanDomain = extractDomain(e_post, domene);
 
@@ -190,34 +199,56 @@ export default function SelskapInnsikt({ domene, firmanavn, e_post, onEnriched }
       {expanded && (
         <div className="space-y-1 pt-1 border-t border-border/50">
           {data.orgnr && (
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <div
+              className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer hover:text-foreground transition-colors group"
+              onClick={() => copyToClipboard(data.orgnr!, "Org.nr")}
+              title="Klikk for å kopiere"
+            >
               <span className="font-medium min-w-[70px]">Org.nr:</span>
               <span className="text-foreground/80">{data.orgnr}</span>
+              {copied === "Org.nr" ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />}
             </div>
           )}
           {data.firmaadresse && (
-            <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
+            <div
+              className="flex items-start gap-1.5 text-xs text-muted-foreground cursor-pointer hover:text-foreground transition-colors group"
+              onClick={() => copyToClipboard(data.firmaadresse!, "Besøksadresse")}
+              title="Klikk for å kopiere"
+            >
               <MapPin className="w-3 h-3 shrink-0 mt-0.5" />
               <div>
                 <span className="font-medium">Besøksadresse: </span>
                 <span className="text-foreground/80">{data.firmaadresse}</span>
               </div>
+              {copied === "Besøksadresse" ? <Check className="w-3 h-3 shrink-0 mt-0.5 text-green-500" /> : <Copy className="w-3 h-3 shrink-0 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity" />}
             </div>
           )}
           {data.postadresse && (
-            <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
+            <div
+              className="flex items-start gap-1.5 text-xs text-muted-foreground cursor-pointer hover:text-foreground transition-colors group"
+              onClick={() => copyToClipboard(data.postadresse!, "Postadresse")}
+              title="Klikk for å kopiere"
+            >
               <MapPin className="w-3 h-3 shrink-0 mt-0.5" />
               <div>
                 <span className="font-medium">Postadresse: </span>
                 <span className="text-foreground/80">{data.postadresse}</span>
               </div>
+              {copied === "Postadresse" ? <Check className="w-3 h-3 shrink-0 mt-0.5 text-green-500" /> : <Copy className="w-3 h-3 shrink-0 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity" />}
             </div>
           )}
         </div>
       )}
 
       {!expanded && data.orgnr && (
-        <div className="text-[10px] text-muted-foreground">Org.nr: {data.orgnr}</div>
+        <div
+          className="text-[10px] text-muted-foreground cursor-pointer hover:text-foreground transition-colors group inline-flex items-center gap-1"
+          onClick={() => copyToClipboard(data.orgnr!, "Org.nr")}
+          title="Klikk for å kopiere"
+        >
+          Org.nr: {data.orgnr}
+          {copied === "Org.nr" ? <Check className="w-2.5 h-2.5 text-green-500" /> : <Copy className="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 transition-opacity" />}
+        </div>
       )}
     </div>
   );
