@@ -37,12 +37,7 @@ const getUserColor = (userId: string) => {
   return USER_COLORS[Math.abs(hash) % USER_COLORS.length];
 };
 
-const API_URL = import.meta.env.VITE_SUPABASE_URL + '/rest/v1';
-const API_HEADERS = {
-  'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-  'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-  'Content-Type': 'application/json',
-};
+// All data fetching uses the supabase client for proper auth & RLS
 
 interface CalendarEvent {
   id: string;
@@ -147,15 +142,13 @@ export default function Kalender() {
   }, [currentDate, monthStart]);
 
   useEffect(() => {
-    fetch(`${API_URL}/kontakter?select=id,navn`, { headers: API_HEADERS })
-      .then(r => r.ok ? r.json() : [])
-      .then((data: any[]) => {
-        const map: Record<string, string> = {};
-        data.forEach(k => { map[k.id] = k.navn; });
-        setKontakter(map);
-        setKontaktListe(data.map(k => ({ id: k.id, navn: k.navn })));
-      })
-      .catch(() => {});
+    supabase.from("kontakter").select("id, navn").then(({ data }) => {
+      const items = data || [];
+      const map: Record<string, string> = {};
+      items.forEach((k: any) => { map[k.id] = k.navn; });
+      setKontakter(map);
+      setKontaktListe(items.map((k: any) => ({ id: k.id, navn: k.navn })));
+    });
 
     // Fetch user profiles for ownership display
     supabase
@@ -170,11 +163,9 @@ export default function Kalender() {
 
   // Fetch entity lists for linking
   useEffect(() => {
-    Promise.all([
-      fetch(`${API_URL}/selskaper?select=id,firmanavn&order=firmanavn`, { headers: API_HEADERS }).then(r => r.ok ? r.json() : []),
-    ]).then(([s]) => {
-      setSelskapListe(s);
-    }).catch(() => {});
+    supabase.from("selskaper").select("id, firmanavn").order("firmanavn").then(({ data }) => {
+      setSelskapListe(data || []);
+    });
   }, []);
 
   // Check Google Calendar connection
@@ -235,40 +226,40 @@ export default function Kalender() {
     const allEvents: CalendarEvent[] = [];
 
     try {
-      const meetingsRes = await fetch(
-        `${API_URL}/aktiviteter?type=eq.Møte&start_tid=gte.${from}&start_tid=lte.${to}&select=id,tittel,beskrivelse,start_tid,slutt_tid,type,deltakere,lead_id,salgsmulighet_id,selskap_id,kontakt_id,user_id`,
-        { headers: API_HEADERS }
-      );
-      if (meetingsRes.ok) {
-        const meetings = await meetingsRes.json();
-        meetings.forEach((m: any) => {
-          const deltakereNavn = (m.deltakere || []).map((id: string) => kontakter[id] || "").filter(Boolean);
-          allEvents.push({
-            id: m.id, title: m.tittel || m.beskrivelse || "Møte", description: m.beskrivelse || "",
-            start: new Date(m.start_tid), end: m.slutt_tid ? new Date(m.slutt_tid) : undefined,
-            type: "meeting", color: MEETING_COLOR, raw: m,
-            kontaktNavn: deltakereNavn.length > 0 ? deltakereNavn.join(", ") : (m.kontakt_id ? kontakter[m.kontakt_id] : undefined),
-            ownerUserId: m.user_id,
-          });
-        });
-      }
+      const { data: meetings } = await supabase
+        .from("aktiviteter")
+        .select("id, tittel, beskrivelse, start_tid, slutt_tid, type, deltakere, lead_id, salgsmulighet_id, selskap_id, kontakt_id, user_id")
+        .eq("type", "Møte")
+        .gte("start_tid", from)
+        .lte("start_tid", to);
 
-      const tasksRes = await fetch(
-        `${API_URL}/oppgaver?frist=gte.${fromDate}&frist=lte.${toDate}&status=neq.Ferdig&select=id,oppgave,frist,prioritet,ansvarlig,notater,selskap_id,lead_id,salgsmulighet_id`,
-        { headers: API_HEADERS }
-      );
-      if (tasksRes.ok) {
-        const tasks = await tasksRes.json();
-        tasks.forEach((t: any) => {
-          if (t.frist) {
-            allEvents.push({
-              id: t.id, title: t.oppgave, description: t.notater || "",
-              start: new Date(t.frist + "T09:00:00"), type: "task",
-              color: t.prioritet === "Høy" ? TASK_HIGH_COLOR : TASK_COLOR, raw: t,
-            });
-          }
+      (meetings || []).forEach((m: any) => {
+        const deltakereNavn = (m.deltakere || []).map((id: string) => kontakter[id] || "").filter(Boolean);
+        allEvents.push({
+          id: m.id, title: m.tittel || m.beskrivelse || "Møte", description: m.beskrivelse || "",
+          start: new Date(m.start_tid), end: m.slutt_tid ? new Date(m.slutt_tid) : undefined,
+          type: "meeting", color: MEETING_COLOR, raw: m,
+          kontaktNavn: deltakereNavn.length > 0 ? deltakereNavn.join(", ") : (m.kontakt_id ? kontakter[m.kontakt_id] : undefined),
+          ownerUserId: m.user_id,
         });
-      }
+      });
+
+      const { data: tasks } = await supabase
+        .from("oppgaver")
+        .select("id, oppgave, frist, prioritet, ansvarlig, notater, selskap_id, lead_id, salgsmulighet_id")
+        .gte("frist", fromDate)
+        .lte("frist", toDate)
+        .neq("status", "Ferdig");
+
+      (tasks || []).forEach((t: any) => {
+        if (t.frist) {
+          allEvents.push({
+            id: t.id, title: t.oppgave, description: t.notater || "",
+            start: new Date(t.frist + "T09:00:00"), type: "task",
+            color: t.prioritet === "Høy" ? TASK_HIGH_COLOR : TASK_COLOR, raw: t,
+          });
+        }
+      });
 
       // Activities excluded from calendar view
 
@@ -366,8 +357,8 @@ export default function Kalender() {
     setLinkedSelskap(null);
 
     if (raw.selskap_id) {
-      fetch(`${API_URL}/selskaper?id=eq.${raw.selskap_id}&select=id,firmanavn,kundestatus,bransje`, { headers: API_HEADERS })
-        .then(r => r.ok ? r.json() : []).then(d => { if (d[0]) setLinkedSelskap(d[0]); });
+      supabase.from("selskaper").select("id, firmanavn, kundestatus, bransje").eq("id", raw.selskap_id).maybeSingle()
+        .then(({ data }) => { if (data) setLinkedSelskap(data); });
     }
   }, []);
 
@@ -406,33 +397,23 @@ export default function Kalender() {
     setEditSaving(true);
     try {
       if (selectedEvent.type === "meeting") {
-        await fetch(`${API_URL}/aktiviteter?id=eq.${selectedEvent.id}`, {
-          method: 'PATCH',
-          headers: { ...API_HEADERS, 'Prefer': 'return=minimal' },
-          body: JSON.stringify({
-            tittel: editTittel.trim(),
-            beskrivelse: editBeskrivelse.trim(),
-            start_tid: `${editDato}T${editStartTid}:00`,
-            slutt_tid: `${editDato}T${editSluttTid}:00`,
-            deltakere: editDeltakere,
-          }),
-        });
+        await supabase.from("aktiviteter").update({
+          tittel: editTittel.trim(),
+          beskrivelse: editBeskrivelse.trim(),
+          start_tid: `${editDato}T${editStartTid}:00`,
+          slutt_tid: `${editDato}T${editSluttTid}:00`,
+          deltakere: editDeltakere,
+        }).eq("id", selectedEvent.id);
       } else if (selectedEvent.type === "task") {
-        await fetch(`${API_URL}/oppgaver?id=eq.${selectedEvent.id}`, {
-          method: 'PATCH',
-          headers: { ...API_HEADERS, 'Prefer': 'return=minimal' },
-          body: JSON.stringify({
-            oppgave: editTittel.trim(),
-            notater: editBeskrivelse.trim(),
-            frist: editDato || null,
-          }),
-        });
+        await supabase.from("oppgaver").update({
+          oppgave: editTittel.trim(),
+          notater: editBeskrivelse.trim(),
+          frist: editDato || null,
+        }).eq("id", selectedEvent.id);
       } else {
-        await fetch(`${API_URL}/aktiviteter?id=eq.${selectedEvent.id}`, {
-          method: 'PATCH',
-          headers: { ...API_HEADERS, 'Prefer': 'return=minimal' },
-          body: JSON.stringify({ beskrivelse: editBeskrivelse.trim() }),
-        });
+        await supabase.from("aktiviteter").update({
+          beskrivelse: editBeskrivelse.trim(),
+        }).eq("id", selectedEvent.id);
       }
       setEditing(false);
       setDrawerOpen(false);
@@ -459,18 +440,14 @@ export default function Kalender() {
     if (!newMeetingTittel.trim()) return;
     setSaving(true);
     try {
-      await fetch(`${API_URL}/aktiviteter`, {
-        method: 'POST',
-        headers: { ...API_HEADERS, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({
-          type: "Møte",
-          tittel: newMeetingTittel.trim(),
-          beskrivelse: newMeetingBeskrivelse.trim(),
-          start_tid: `${newMeetingDato}T${newMeetingStartTid}:00`,
-          slutt_tid: `${newMeetingDato}T${newMeetingSluttTid}:00`,
-          deltakere: newMeetingDeltakere,
-          user_id: user?.id || null,
-        }),
+      await supabase.from("aktiviteter").insert({
+        type: "Møte",
+        tittel: newMeetingTittel.trim(),
+        beskrivelse: newMeetingBeskrivelse.trim(),
+        start_tid: `${newMeetingDato}T${newMeetingStartTid}:00`,
+        slutt_tid: `${newMeetingDato}T${newMeetingSluttTid}:00`,
+        deltakere: newMeetingDeltakere,
+        user_id: user?.id || null,
       });
       setCreateOpen(false);
       await fetchEvents();
@@ -483,12 +460,12 @@ export default function Kalender() {
 
   const handleDeleteEvent = async () => {
     if (!selectedEvent) return;
-    const table = selectedEvent.type === "task" ? "oppgaver" : "aktiviteter";
     try {
-      await fetch(`${API_URL}/${table}?id=eq.${selectedEvent.id}`, {
-        method: 'DELETE',
-        headers: { ...API_HEADERS, 'Prefer': 'return=minimal' },
-      });
+      if (selectedEvent.type === "task") {
+        await supabase.from("oppgaver").delete().eq("id", selectedEvent.id);
+      } else {
+        await supabase.from("aktiviteter").delete().eq("id", selectedEvent.id);
+      }
       setDrawerOpen(false);
       setSelectedEvent(null);
       await fetchEvents();
@@ -531,14 +508,10 @@ export default function Kalender() {
     const newEndTime = format(newEnd, "HH:mm");
 
     try {
-      await fetch(`${API_URL}/aktiviteter?id=eq.${dragEvent.id}`, {
-        method: 'PATCH',
-        headers: { ...API_HEADERS, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({
-          start_tid: `${newStartDate}T${newStartTime}:00`,
-          slutt_tid: `${newStartDate}T${newEndTime}:00`,
-        }),
-      });
+      await supabase.from("aktiviteter").update({
+        start_tid: `${newStartDate}T${newStartTime}:00`,
+        slutt_tid: `${newStartDate}T${newEndTime}:00`,
+      }).eq("id", dragEvent.id);
       await fetchEvents();
     } catch (e) {
       console.error("Error moving event:", e);
