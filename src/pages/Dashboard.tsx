@@ -113,7 +113,7 @@ export default function Dashboard() {
     weekEnd.setDate(weekEnd.getDate() + 7);
 
     fetch(
-      `${API_URL}/aktiviteter?type=eq.Møte&dato=gte.${todayStart.toISOString()}&dato=lt.${weekEnd.toISOString()}&order=dato.asc,start_tid.asc&limit=20&select=id,tittel,beskrivelse,dato,start_tid,slutt_tid,selskap_id,salgsmulighet_id,ekstern_id,ekstern_provider,moetenotater`,
+      `${API_URL}/aktiviteter?type=eq.Møte&dato=gte.${todayStart.toISOString()}&dato=lt.${weekEnd.toISOString()}&order=dato.asc,start_tid.asc&limit=20&select=id,tittel,beskrivelse,dato,start_tid,slutt_tid,selskap_id,salgsmulighet_id,kontakt_id,ekstern_id,ekstern_provider,moetenotater,deltakere`,
       { headers: API_HEADERS }
     )
       .then((r) => (r.ok ? r.json() : []))
@@ -121,6 +121,7 @@ export default function Dashboard() {
         setMeetings(data);
         const sIds = [...new Set(data.map((d) => d.selskap_id).filter(Boolean))] as string[];
         const smIds = [...new Set(data.map((d) => d.salgsmulighet_id).filter(Boolean))] as string[];
+        const kIds = [...new Set(data.map((d) => d.kontakt_id).filter(Boolean))] as string[];
         const names: Record<string, string> = {};
         const fetches: Promise<void>[] = [];
         if (sIds.length)
@@ -131,9 +132,15 @@ export default function Dashboard() {
           );
         if (smIds.length)
           fetches.push(
-            fetch(`${API_URL}/salgsmuligheter?id=in.(${smIds.join(",")})&select=id,navn`, { headers: API_HEADERS })
+            fetch(`${API_URL}/salgsmuligheter?id=in.(${smIds.join(",")})&select=id,navn,e_post,kontaktperson`, { headers: API_HEADERS })
               .then((r) => (r.ok ? r.json() : []))
               .then((rows: any[]) => rows.forEach((r) => (names[r.id] = r.navn)))
+          );
+        if (kIds.length)
+          fetches.push(
+            fetch(`${API_URL}/kontakter?id=in.(${kIds.join(",")})&select=id,navn,e_post`, { headers: API_HEADERS })
+              .then((r) => (r.ok ? r.json() : []))
+              .then((rows: any[]) => rows.forEach((r) => { names[`k_${r.id}`] = r.navn; if (r.e_post) names[`ke_${r.id}`] = r.e_post; }))
           );
         Promise.all(fetches).then(() => setEntityNames(names));
       })
