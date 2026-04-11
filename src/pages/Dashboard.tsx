@@ -543,47 +543,82 @@ export default function Dashboard() {
                   <div className="space-y-2">
                     {upcomingMeetings.map((m) => {
                       const meetDate = new Date(m.dato);
+                      const kontaktNavn = m.kontakt_id ? entityNames[`k_${m.kontakt_id}`] : null;
+                      const kontaktEpost = m.kontakt_id ? entityNames[`ke_${m.kontakt_id}`] : null;
+                      const selskapNavn = m.selskap_id ? entityNames[m.selskap_id] : null;
+                      const salgsNavn = m.salgsmulighet_id ? entityNames[m.salgsmulighet_id] : null;
                       return (
-                        <div key={m.id} className="flex items-center gap-3 p-3 rounded-lg border bg-muted/20 hover:bg-muted/40 transition-colors">
+                        <div key={m.id} className="flex items-start gap-3 p-3 rounded-lg border bg-muted/20 hover:bg-muted/40 transition-colors">
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium truncate">{m.tittel || m.beskrivelse || "Møte"}</p>
-                            <div className="flex items-center gap-2 mt-1 flex-wrap">
-                              {m.selskap_id && entityNames[m.selskap_id] && (
-                                <span className="text-xs text-muted-foreground flex items-center gap-1">
-                                  <Building2 className="w-3 h-3" />
-                                  {entityNames[m.selskap_id]}
-                                </span>
-                              )}
-                              <span className="text-xs text-muted-foreground">
+                            <div className="flex items-center gap-x-3 gap-y-0.5 mt-1 flex-wrap text-xs text-muted-foreground">
+                              <span>
                                 {isTomorrow(meetDate)
                                   ? "I morgen"
                                   : format(meetDate, "EEEE d. MMM", { locale: nb })}
                               </span>
                               {m.start_tid && (
-                                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                <span className="flex items-center gap-1">
                                   <Clock className="w-3 h-3" />
                                   {format(new Date(m.start_tid), "HH:mm")}
+                                  {m.slutt_tid && ` – ${format(new Date(m.slutt_tid), "HH:mm")}`}
+                                </span>
+                              )}
+                              {selskapNavn && (
+                                <button onClick={(e) => { e.stopPropagation(); navigate(`/selskaper/${m.selskap_id}`); }} className="flex items-center gap-1 text-primary hover:underline">
+                                  <Building2 className="w-3 h-3" />
+                                  {selskapNavn}
+                                </button>
+                              )}
+                              {salgsNavn && (
+                                <span className="flex items-center gap-1">
+                                  <Briefcase className="w-3 h-3" />
+                                  {salgsNavn}
                                 </span>
                               )}
                             </div>
+                            {(kontaktNavn || (m.deltakere && m.deltakere.length > 0)) && (
+                              <div className="flex items-center gap-x-3 gap-y-0.5 mt-0.5 flex-wrap text-xs text-muted-foreground">
+                                {kontaktNavn && (
+                                  <span className="flex items-center gap-1">
+                                    <Users className="w-3 h-3" />
+                                    {kontaktNavn}
+                                  </span>
+                                )}
+                                {kontaktEpost && (
+                                  <span className="flex items-center gap-1">
+                                    <Mail className="w-3 h-3" />
+                                    {kontaktEpost}
+                                  </span>
+                                )}
+                                {!kontaktNavn && m.deltakere && m.deltakere.length > 0 && (
+                                  <span className="flex items-center gap-1">
+                                    <Users className="w-3 h-3" />
+                                    {m.deltakere.slice(0, 3).join(", ")}{m.deltakere.length > 3 ? ` +${m.deltakere.length - 3}` : ""}
+                                  </span>
+                                )}
+                              </div>
+                            )}
                           </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="text-xs h-7 shrink-0 hidden sm:flex gap-1"
-                            onClick={(e) => { e.stopPropagation(); setNotesMeeting(m); setNotesText(m.moetenotater || ""); }}
-                          >
-                            <NotebookPen className="w-3 h-3" />
-                            {m.moetenotater?.trim() ? "Notat" : "+ Notat"}
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="text-xs h-7 shrink-0 hidden sm:flex"
-                            onClick={(e) => { e.stopPropagation(); setPrepMeeting(m); }}
-                          >
-                            Prep
-                          </Button>
+                          <div className="flex items-center gap-1 shrink-0">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-xs h-7 hidden sm:flex gap-1"
+                              onClick={(e) => { e.stopPropagation(); setNotesMeeting(m); setNotesText(m.moetenotater || ""); }}
+                            >
+                              <NotebookPen className="w-3 h-3" />
+                              {m.moetenotater?.trim() ? "Notat" : "+ Notat"}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-xs h-7 hidden sm:flex"
+                              onClick={(e) => { e.stopPropagation(); setPrepMeeting(m); }}
+                            >
+                              Prep
+                            </Button>
+                          </div>
                         </div>
                       );
                     })}
