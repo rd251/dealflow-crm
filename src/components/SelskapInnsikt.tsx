@@ -46,6 +46,14 @@ export default function SelskapInnsikt({ domene, firmanavn, e_post, onEnriched }
   const [loading, setLoading] = useState(false);
   const [hasChecked, setHasChecked] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [copied, setCopied] = useState<string | null>(null);
+
+  const copyToClipboard = useCallback((value: string, label: string) => {
+    navigator.clipboard.writeText(value);
+    setCopied(label);
+    toast({ title: `${label} kopiert`, description: value });
+    setTimeout(() => setCopied(null), 2000);
+  }, []);
 
   const cleanDomain = extractDomain(e_post, domene);
 
