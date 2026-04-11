@@ -47,9 +47,11 @@ interface MeetingItem {
   slutt_tid: string | null;
   selskap_id: string | null;
   salgsmulighet_id: string | null;
+  kontakt_id: string | null;
   ekstern_id: string | null;
   ekstern_provider: string | null;
   moetenotater: string | null;
+  deltakere: string[] | null;
 }
 
 export default function Dashboard() {
