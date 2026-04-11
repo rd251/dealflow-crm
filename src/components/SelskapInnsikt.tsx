@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Building2, Users, TrendingUp, Briefcase, Sparkles, Loader2, RefreshCw } from "lucide-react";
+import { Building2, Users, TrendingUp, Briefcase, Sparkles, Loader2, RefreshCw, ChevronDown, ChevronUp, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface SelskapInnsiktProps {
@@ -44,6 +44,7 @@ export default function SelskapInnsikt({ domene, firmanavn, e_post, onEnriched }
   const [data, setData] = useState<InnsiktData | null>(null);
   const [loading, setLoading] = useState(false);
   const [hasChecked, setHasChecked] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   const cleanDomain = extractDomain(e_post, domene);
 
