@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Building2, Users, TrendingUp, Briefcase, Sparkles, Loader2, RefreshCw, ChevronDown, ChevronUp, MapPin } from "lucide-react";
+import { Building2, Users, TrendingUp, Briefcase, Sparkles, Loader2, RefreshCw, ChevronDown, ChevronUp, MapPin, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "@/hooks/use-toast";
 
 interface SelskapInnsiktProps {
   domene?: string;
