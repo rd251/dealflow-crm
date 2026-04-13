@@ -430,7 +430,7 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* ─── TWO-COLUMN LAYOUT ─── */}
+      {/* ─── NESTE STEG + ENDRINGSLOGG SIDE-BY-SIDE ─── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 items-start">
         {/* LEFT: NESTE STEG */}
         <div className="bg-card border rounded-xl overflow-hidden">
