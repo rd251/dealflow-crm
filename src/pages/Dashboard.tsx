@@ -363,7 +363,7 @@ export default function Dashboard() {
       <FollowUpSection items={followUps} loading={followUpsLoading} onDismiss={dismissFollowUp} />
 
       {/* ─── TWO-COLUMN LAYOUT ─── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 items-start">
         {/* LEFT: NESTE STEG */}
         <div className="bg-card border rounded-xl overflow-hidden">
           <div className="px-4 sm:px-6 py-4 border-b flex items-center justify-between">
