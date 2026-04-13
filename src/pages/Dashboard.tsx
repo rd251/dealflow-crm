@@ -324,6 +324,9 @@ export default function Dashboard() {
       {/* ─── AI COMMAND BAR (includes greeting) ─── */}
       <AiCommandBar context={aiContext} userName={currentUserName} />
 
+      {/* ─── SECTION: OPPFØLGING ─── */}
+      <FollowUpSection items={followUps} loading={followUpsLoading} onDismiss={dismissFollowUp} />
+
       {/* ─── SECTION 1: FOKUS I DAG ─── */}
       <div className="mb-6">
         <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">Fokus i dag</h2>
@@ -358,9 +361,6 @@ export default function Dashboard() {
           />
         </div>
       </div>
-
-      {/* ─── SECTION: OPPFØLGING ─── */}
-      <FollowUpSection items={followUps} loading={followUpsLoading} onDismiss={dismissFollowUp} />
 
       {/* ─── TWO-COLUMN LAYOUT ─── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 items-start">
