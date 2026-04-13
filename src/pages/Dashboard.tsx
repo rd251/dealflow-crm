@@ -698,77 +698,8 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* ─── ROW 2: OPPGAVER + AKTIVITET SIDE-BY-SIDE ─── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        {/* LEFT: KOMMENDE OPPGAVER */}
-        <div className="bg-card border rounded-xl overflow-hidden">
-          <div className="px-4 sm:px-6 py-4 border-b flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
-              <ListTodo className="w-4 h-4" /> Kommende oppgaver
-            </h2>
-            <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={() => navigate("/oppgaver")}>
-              Se alle <ChevronRight className="w-3 h-3" />
-            </Button>
-          </div>
-          {oppgaver.length === 0 ? (
-            <p className="px-4 py-8 text-center text-muted-foreground text-sm">Ingen åpne oppgaver</p>
-          ) : (
-            <div className="divide-y">
-              {oppgaver.map((o) => {
-                const isOverdue = o.frist && new Date(o.frist) < now;
-                const prioritetColor = o.prioritet === "Høy" ? "text-destructive" : o.prioritet === "Medium" ? "text-amber-600" : "text-muted-foreground";
-                return (
-                  <div
-                    key={o.id}
-                    onClick={() => navigate("/oppgaver")}
-                    className="px-4 sm:px-6 py-3 flex items-start gap-3 hover:bg-muted/30 cursor-pointer transition-colors"
-                  >
-                    <button
-                      onClick={async (e) => {
-                        e.stopPropagation();
-                        await supabase.from("oppgaver").update({ status: "Ferdig" }).eq("id", o.id);
-                        setOppgaver((prev) => prev.filter((t) => t.id !== o.id));
-                      }}
-                      className="mt-0.5 shrink-0 w-4 h-4 rounded-full border-2 border-muted-foreground/40 hover:border-primary hover:bg-primary/10 transition-colors"
-                      title="Merk som ferdig"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{o.oppgave}</p>
-                      <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                        {o.frist && (
-                          <span className={`text-xs ${isOverdue ? "text-destructive font-medium" : "text-muted-foreground"}`}>
-                            {isOverdue ? "Forfalt: " : ""}{format(new Date(o.frist), "d. MMM", { locale: nb })}
-                          </span>
-                        )}
-                        {o.ansvarlig && (
-                          <span className="text-xs text-muted-foreground">· {profileMap.get(o.ansvarlig) || o.ansvarlig}</span>
-                        )}
-                        {o.selskap_id && selskaper.find(s => s.id === o.selskap_id) && (
-                          <span className="text-xs text-muted-foreground flex items-center gap-0.5">
-                            · <Building2 className="w-3 h-3" /> {selskaper.find(s => s.id === o.selskap_id)?.firmanavn}
-                          </span>
-                        )}
-                        {o.salgsmulighet_id && salgsmuligheter.find(sm => sm.id === o.salgsmulighet_id) && (
-                          <span className="text-xs text-muted-foreground">· {salgsmuligheter.find(sm => sm.id === o.salgsmulighet_id)?.navn}</span>
-                        )}
-                        {o.lead_id && leads.find(l => l.id === o.lead_id) && (
-                          <span className="text-xs text-muted-foreground">· {leads.find(l => l.id === o.lead_id)?.firmanavn}</span>
-                        )}
-                        {o.prioritet && (
-                          <Badge variant="outline" className={`text-[10px] ${prioritetColor}`}>
-                            {o.prioritet}
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* RIGHT: ENDRINGSLOGG */}
+      {/* ─── ENDRINGSLOGG ─── */}
+      <div className="mb-6">
         <div className="bg-card border rounded-xl overflow-hidden">
           <div className="px-4 sm:px-6 py-4 border-b flex items-center justify-between">
             <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
@@ -810,7 +741,6 @@ export default function Dashboard() {
                   desc += ` → ${entry.related_entity_name}`;
                 }
 
-                // Resolve company/contact context
                 let contextSelskap: string | null = null;
                 let contextKontakt: string | null = null;
                 if (entry.entity_type === "salgsmulighet") {
