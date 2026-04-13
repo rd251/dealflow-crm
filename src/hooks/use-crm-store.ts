@@ -447,6 +447,7 @@ function useCrmStoreInternal() {
     partnereRef.current = next;
     setPartnere(next);
     partnereSyncQueueRef.current = partnereSyncQueueRef.current
+      .then(() => selskaperSyncQueueRef.current)
       .then(() => syncPartnere(prev, next))
       .catch(syncErrorHandler("Partnere"));
   }, []);
