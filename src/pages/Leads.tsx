@@ -96,6 +96,8 @@ export default function Leads() {
     return "";
   };
 
+  const normalizedSearch = search.trim().toLowerCase();
+
   const filteredUnsorted = leads.filter(l => {
     // Hide converted leads to avoid duplication with salgsmuligheter/partnere
     if (isConverted(l)) return false;
@@ -104,9 +106,12 @@ export default function Leads() {
       const cutoff = new Date(now.getTime() - 24 * 60 * 60 * 1000);
       if (l.sist_aktivitet && new Date(l.sist_aktivitet) >= cutoff) return false;
     }
+    if (!normalizedSearch) return true;
     return (
-      l.firmanavn.toLowerCase().includes(search.toLowerCase()) ||
-      l.kontaktperson.toLowerCase().includes(search.toLowerCase())
+      l.firmanavn.toLowerCase().includes(normalizedSearch) ||
+      l.kontaktperson.toLowerCase().includes(normalizedSearch) ||
+      l.e_post.toLowerCase().includes(normalizedSearch) ||
+      l.telefon.toLowerCase().includes(normalizedSearch)
     );
   });
 
