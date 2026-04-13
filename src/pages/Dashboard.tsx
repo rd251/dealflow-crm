@@ -359,6 +359,9 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* ─── SECTION: OPPFØLGING ─── */}
+      <FollowUpSection items={followUps} loading={followUpsLoading} onDismiss={dismissFollowUp} />
+
       {/* ─── KOMMENDE OPPGAVER (full width) ─── */}
       <div className="bg-card border rounded-xl overflow-hidden mb-6">
         <div className="px-4 sm:px-6 py-4 border-b flex items-center justify-between">
