@@ -53,8 +53,8 @@ export default function Leads() {
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
 
   type LeadSortKey = "firmanavn" | "kontaktperson" | "kilde" | "status" | "neste_steg" | "sist_aktivitet" | "opprettet_dato";
-  const [sortKey, setSortKey] = useState<LeadSortKey | null>(null);
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const [sortKey, setSortKey] = useState<LeadSortKey | null>("opprettet_dato");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
   const toggleSort = (key: LeadSortKey) => {
     if (sortKey === key) {
