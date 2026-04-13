@@ -502,7 +502,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* RIGHT: MØTER */}
+        {/* RIGHT: ENDRINGSLOGG */}
         <div className="bg-card border rounded-xl overflow-hidden">
           <div className="px-4 sm:px-6 py-4 border-b flex items-center justify-between">
             <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Møter</h2>
