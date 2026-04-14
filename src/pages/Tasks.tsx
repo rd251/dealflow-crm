@@ -191,6 +191,10 @@ export default function Tasks() {
                   {(["Lav", "Medium", "Høy"] as Prioritet[]).map(p => <option key={p}>{p}</option>)}
                 </select>
               </div>
+              <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background" value={form.lead_id} onChange={e => setForm(f => ({ ...f, lead_id: e.target.value }))}>
+                <option value="">Knytt til lead (valgfritt)</option>
+                {leads.map(l => <option key={l.id} value={l.id}>{l.firmanavn}{l.kontaktperson ? ` – ${l.kontaktperson}` : ""}</option>)}
+              </select>
               <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background" value={form.selskap_id} onChange={e => setForm(f => ({ ...f, selskap_id: e.target.value }))}>
                 <option value="">Knytt til selskap (valgfritt)</option>
                 {selskaper.map(s => <option key={s.id} value={s.id}>{s.firmanavn}</option>)}
@@ -313,6 +317,10 @@ export default function Tasks() {
               </div>
               <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background" value={editingTask.status} onChange={e => setEditingTask(t => t ? { ...t, status: e.target.value as OppgaveStatus } : t)}>
                 {statusOptions.map(s => <option key={s}>{s}</option>)}
+              </select>
+              <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background" value={editingTask.lead_id} onChange={e => setEditingTask(t => t ? { ...t, lead_id: e.target.value } : t)}>
+                <option value="">Knytt til lead (valgfritt)</option>
+                {leads.map(l => <option key={l.id} value={l.id}>{l.firmanavn}{l.kontaktperson ? ` – ${l.kontaktperson}` : ""}</option>)}
               </select>
               <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background" value={editingTask.selskap_id} onChange={e => setEditingTask(t => t ? { ...t, selskap_id: e.target.value } : t)}>
                 <option value="">Knytt til selskap (valgfritt)</option>
