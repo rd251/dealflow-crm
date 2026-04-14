@@ -421,7 +421,7 @@ export default function ActivityLog(props: ActivityLogProps) {
       </Dialog>
 
       {/* Email Viewer Dialog */}
-      <Dialog open={!!viewingEmail} onOpenChange={open => !open && setViewingEmail(null)}>
+      <Dialog open={!!viewingEmail} onOpenChange={open => { if (!open) { setViewingEmail(null); setAiResult(null); } }}>
         <DialogContent className="max-w-[95vw] sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-sm">
@@ -432,10 +432,59 @@ export default function ActivityLog(props: ActivityLogProps) {
               {viewingEmail?.aktivitet_kilde === 'gmail_sendt' ? 'Sendt' : 'Mottatt'} · {viewingEmail ? formatDato(viewingEmail.dato) : ''}
             </DialogDescription>
           </DialogHeader>
-          <ScrollArea className="max-h-[60vh]">
+          <ScrollArea className="max-h-[40vh]">
             <p className="text-sm whitespace-pre-line leading-relaxed">{viewingEmail?.beskrivelse}</p>
           </ScrollArea>
-          <div className="flex justify-end pt-2 border-t">
+
+          {/* AI Result */}
+          {aiResult && (
+            <div className="border rounded-lg p-3 bg-muted/30 space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  {aiResult.type === 'summarize' ? '✨ AI-oppsummering' : '🔍 Viktig informasjon'}
+                </span>
+                <Button size="sm" variant="ghost" className="h-5 w-5 p-0" onClick={() => setAiResult(null)}>
+                  <X className="w-3 h-3" />
+                </Button>
+              </div>
+              <ScrollArea className="max-h-[20vh]">
+                <p className="text-xs whitespace-pre-line leading-relaxed">{aiResult.content}</p>
+              </ScrollArea>
+            </div>
+          )}
+
+          <div className="flex items-center gap-1.5 pt-2 border-t flex-wrap">
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-1.5 text-xs"
+              disabled={!!aiLoading}
+              onClick={() => handleThreadAi("summarize")}
+            >
+              {aiLoading === "summarize" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+              Oppsummer
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-1.5 text-xs"
+              disabled={!!aiLoading}
+              onClick={() => handleThreadAi("extract")}
+            >
+              {aiLoading === "extract" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileSearch className="w-3.5 h-3.5" />}
+              Viktig info
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-1.5 text-xs"
+              disabled={!!aiLoading}
+              onClick={() => handleThreadAi("draft")}
+            >
+              {aiLoading === "draft" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <PenLine className="w-3.5 h-3.5" />}
+              Skriv utkast
+            </Button>
+            <div className="flex-1" />
             <Button
               size="sm"
               variant="outline"
@@ -444,6 +493,7 @@ export default function ActivityLog(props: ActivityLogProps) {
                 const subject = viewingEmail?.tittel || '';
                 setReplyTo(props.email || '');
                 setReplySubject(subject.startsWith('Re: ') ? subject : `Re: ${subject}`);
+                setReplyDefaultBody("");
                 setViewingEmail(null);
                 setReplyOpen(true);
               }}
@@ -461,6 +511,7 @@ export default function ActivityLog(props: ActivityLogProps) {
           onOpenChange={setReplyOpen}
           defaultTo={replyTo}
           defaultSubject={replySubject}
+          defaultBody={replyDefaultBody}
           context={{
             entityType: props.lead_id ? "lead" : props.salgsmulighet_id ? "salgsmulighet" : "lead",
             entityId: props.lead_id || props.salgsmulighet_id || props.selskap_id || '',
