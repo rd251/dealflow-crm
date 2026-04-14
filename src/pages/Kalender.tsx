@@ -872,6 +872,7 @@ export default function Kalender() {
                 const taskRaw = selectedEvent.raw;
                 const ansvarligProfile = taskRaw.ansvarlig ? profiles[taskRaw.ansvarlig] : null;
                 const taskSelskap = taskRaw.selskap_id ? selskapListe.find(s => s.id === taskRaw.selskap_id) : null;
+                const taskLead = taskRaw.lead_id ? leadListe.find(l => l.id === taskRaw.lead_id) : null;
                 return (
                   <div className="space-y-2">
                     {taskRaw.prioritet && (
