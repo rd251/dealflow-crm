@@ -230,6 +230,48 @@ export default function ActivityLog(props: ActivityLogProps) {
     }
   };
 
+  const handleThreadAi = async (action: "summarize" | "extract" | "draft") => {
+    if (!viewingEmail) return;
+    // Extract threadId from beskrivelse — gmail-sync stores it as [threadId:xxx]
+    const threadMatch = viewingEmail.beskrivelse.match(/\[threadId:([^\]]+)\]/);
+    // Fallback: use ekstern_id
+    const threadId = threadMatch?.[1] || viewingEmail.id;
+
+    // For draft, we need the ekstern_id which is the Gmail message id
+    // The threadId for Gmail is typically the first message id in the thread
+    // We'll try ekstern_id first as it's more reliable
+    const gmailThreadId = threadMatch?.[1];
+    if (!gmailThreadId) {
+      toast.error("Kunne ikke finne tråd-ID for denne e-posten. Tråd-AI krever en synkronisert Gmail-melding.");
+      return;
+    }
+
+    setAiLoading(action);
+    setAiResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("gmail-thread-ai", {
+        body: { threadId: gmailThreadId, action },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      if (action === "draft") {
+        const subject = viewingEmail.tittel || '';
+        setReplyTo(props.email || '');
+        setReplySubject(subject.startsWith('Re: ') ? subject : `Re: ${subject}`);
+        setReplyDefaultBody(data.result);
+        setViewingEmail(null);
+        setReplyOpen(true);
+      } else {
+        setAiResult({ type: action, content: data.result });
+      }
+    } catch (e: any) {
+      toast.error(e?.message || "AI-analyse feilet");
+    } finally {
+      setAiLoading(null);
+    }
+  };
+
   const formatDato = (d: string) => {
     const date = new Date(d);
     const now = new Date();
