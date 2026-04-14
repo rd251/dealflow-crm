@@ -651,7 +651,7 @@ async function syncGmailForUser(supabase: any, connection: any) {
     .eq('ekstern_provider', 'gmail')
     .not('ekstern_id', 'is', null)
     .not('beskrivelse', 'ilike', '%[threadId:%')
-    .limit(200);
+    .limit(50);
 
   if (missingThreadId && missingThreadId.length > 0) {
     let backfilled = 0;
