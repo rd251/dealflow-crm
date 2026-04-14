@@ -21,7 +21,6 @@ async function getGmailAccessToken(supabase: any, userId: string): Promise<strin
   const expiresAt = new Date(data.token_expires_at).getTime();
   if (Date.now() < expiresAt - 60_000) return data.access_token;
 
-  // Refresh token
   const clientId = Deno.env.get("GOOGLE_CLIENT_ID")!;
   const clientSecret = Deno.env.get("GOOGLE_CLIENT_SECRET")!;
   const res = await fetch("https://oauth2.googleapis.com/token", {
@@ -76,6 +75,7 @@ function extractThreadMessages(thread: any): string[] {
   for (const message of thread.messages || []) {
     const headers = message.payload?.headers || [];
     const from = headers.find((h: any) => h.name.toLowerCase() === "from")?.value || "Ukjent";
+    const to = headers.find((h: any) => h.name.toLowerCase() === "to")?.value || "";
     const date = headers.find((h: any) => h.name.toLowerCase() === "date")?.value || "";
     const subject = headers.find((h: any) => h.name.toLowerCase() === "subject")?.value || "";
 
@@ -86,18 +86,80 @@ function extractThreadMessages(thread: any): string[] {
       body = decodeBody(message.payload);
     }
 
-    msgs.push(`Fra: ${from}\nDato: ${date}\nEmne: ${subject}\n\n${body.trim()}`);
+    msgs.push(`Fra: ${from}\nTil: ${to}\nDato: ${date}\nEmne: ${subject}\n\n${body.trim()}`);
   }
   return msgs;
 }
 
 const PROMPTS: Record<string, (msgs: string) => string> = {
   summarize: (msgs) =>
-    `Du er en CRM-assistent. Oppsummer følgende e-posttråd på norsk i 3-5 korte punkter. Fokuser på hva som ble diskutert, beslutninger tatt, og eventuelle åpne spørsmål.\n\nE-posttråd:\n${msgs}`,
+    `Du er en CRM-assistent for et norsk SaaS-selskap. Analyser følgende e-posttråd grundig og gi en oppsummering på norsk.
+
+Strukturér svaret slik:
+
+**Hovedpunkter:**
+- (de viktigste temaene/beslutningene i tråden)
+
+**Status i dialogen:**
+- Hvem venter på hvem? Er ballen hos oss eller kunden?
+- Er det ubesvarte spørsmål?
+
+**Kundesignal:**
+- Vurder kundens interesse/hastegrad basert på tone og responstid
+- Er det tegn på positivt momentum, nøling eller avvisning?
+
+**Viktige detaljer:**
+- Nevnte datoer, beløp, navn eller avtaler
+
+**Anbefalt neste handling:**
+- Én konkret ting å gjøre basert på tråden
+
+E-posttråd:
+${msgs}`,
+
   extract: (msgs) =>
-    `Du er en CRM-assistent. Analyser følgende e-posttråd og trekk ut viktig informasjon på norsk. Returner i følgende format:\n\n**Datoer/frister:** (eventuelle nevnte datoer)\n**Beløp:** (eventuelle nevnte beløp/priser)\n**Avtaler/løfter:** (hva som er avtalt)\n**Kontaktinfo:** (nevnte telefonnumre, e-poster, navn)\n**Neste steg:** (planlagte handlinger)\n\nHvis en kategori ikke har relevant info, skriv "Ingen funnet".\n\nE-posttråd:\n${msgs}`,
+    `Du er en CRM-assistent. Analyser følgende e-posttråd og trekk ut ALL viktig forretningsinformasjon på norsk.
+
+Returner i følgende format:
+
+**Kontaktpersoner nevnt:**
+- Navn, rolle, e-post, telefon (hvis nevnt)
+
+**Datoer og frister:**
+- Alle nevnte datoer med kontekst
+
+**Beløp og økonomi:**
+- Priser, budsjetter, MRR, kostnader nevnt
+
+**Avtaler og beslutninger:**
+- Hva er avtalt eller besluttet
+- Hva er fortsatt åpent
+
+**Tekniske krav:**
+- Integrasjoner, systemer, spesifikasjoner nevnt
+
+**Konkurrenter:**
+- Andre leverandører/løsninger nevnt
+
+**Neste steg:**
+- Planlagte handlinger med dato hvis nevnt
+
+Hvis en kategori ikke har relevant info, skriv "Ingen funnet".
+
+E-posttråd:
+${msgs}`,
+
   draft: (msgs) =>
-    `Du er en profesjonell CRM-assistent som skriver e-poster på norsk. Basert på følgende e-posttråd, skriv et profesjonelt svar. Svaret skal:\n- Være kort og presist (3-5 setninger)\n- Adressere de viktigste punktene fra tråden\n- Foreslå et konkret neste steg\n- Ha en profesjonell men vennlig tone\n\nSkriv KUN selve e-postteksten, ingen emne eller hilsen-forslag.\n\nE-posttråd:\n${msgs}`,
+    `Du er en profesjonell CRM-assistent som skriver e-poster på norsk. Basert på følgende e-posttråd, skriv et profesjonelt svar. Svaret skal:
+- Være kort og presist (3-5 setninger)
+- Adressere de viktigste punktene fra tråden
+- Foreslå et konkret neste steg
+- Ha en profesjonell men vennlig tone
+
+Skriv KUN selve e-postteksten, ingen emne eller hilsen-forslag.
+
+E-posttråd:
+${msgs}`,
 };
 
 serve(async (req) => {
@@ -136,10 +198,8 @@ serve(async (req) => {
       });
     }
 
-    // Get Gmail access token
     const accessToken = await getGmailAccessToken(supabase, userId);
 
-    // Fetch thread from Gmail
     const gmailRes = await fetch(
       `https://gmail.googleapis.com/gmail/v1/users/me/threads/${threadId}?format=full`,
       { headers: { Authorization: `Bearer ${accessToken}` } }
@@ -162,8 +222,8 @@ serve(async (req) => {
       });
     }
 
-    // Truncate to avoid token limits
-    const threadText = messages.join("\n---\n").substring(0, 15000);
+    // Increase truncation limit for richer context
+    const threadText = messages.join("\n---\n").substring(0, 25000);
     const prompt = PROMPTS[action](threadText);
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -178,7 +238,7 @@ serve(async (req) => {
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
         messages: [
-          { role: "system", content: "Du er en profesjonell CRM-assistent for et norsk selskap. Svar alltid på norsk." },
+          { role: "system", content: "Du er en profesjonell CRM-assistent for et norsk SaaS-selskap. Svar alltid på norsk. Vær grundig og trekk ut all relevant forretningsinformasjon." },
           { role: "user", content: prompt },
         ],
         temperature: 0,
