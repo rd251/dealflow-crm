@@ -167,6 +167,9 @@ export default function Kalender() {
     supabase.from("selskaper").select("id, firmanavn").order("firmanavn").then(({ data }) => {
       setSelskapListe(data || []);
     });
+    supabase.from("leads").select("id, firmanavn, kontaktperson").order("firmanavn").then(({ data }) => {
+      setLeadListe(data || []);
+    });
   }, []);
 
   // Check Google Calendar connection
