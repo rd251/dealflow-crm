@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Bell, BellOff, Calendar, AlertTriangle, Pencil, Trash2, Building2, Target, User } from "lucide-react";
+import { Plus, Bell, BellOff, Calendar, AlertTriangle, Pencil, Trash2, Building2, Target, User, PhoneForwarded } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { Oppgave, OppgaveStatus, Prioritet } from "@/data/crm-data";
 import { toast } from "sonner";
