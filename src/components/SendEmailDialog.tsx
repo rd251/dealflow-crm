@@ -16,6 +16,8 @@ interface SendEmailDialogProps {
   defaultTo?: string;
   /** Pre-filled subject */
   defaultSubject?: string;
+  /** Pre-filled body content (e.g. from AI draft) */
+  defaultBody?: string;
   /** Context for AI generation */
   context: {
     entityType: "lead" | "salgsmulighet" | "ringeliste";
