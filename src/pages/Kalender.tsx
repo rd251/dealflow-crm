@@ -908,10 +908,10 @@ export default function Kalender() {
                         </button>
                       </div>
                     )}
-                    {taskRaw.lead_id && (
+                    {taskLead && (
                       <div className="flex items-center gap-2 text-sm">
                         <span className="text-muted-foreground">Lead:</span>
-                        <span>{taskRaw.lead_id}</span>
+                        <span>{taskLead.firmanavn}{taskLead.kontaktperson ? ` – ${taskLead.kontaktperson}` : ""}</span>
                       </div>
                     )}
                   </div>
