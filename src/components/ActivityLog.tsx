@@ -422,7 +422,7 @@ export default function ActivityLog(props: ActivityLogProps) {
 
       {/* Email Viewer Dialog */}
       <Dialog open={!!viewingEmail} onOpenChange={open => { if (!open) { setViewingEmail(null); setAiResult(null); } }}>
-        <DialogContent className="max-w-[95vw] sm:max-w-2xl p-0 gap-0 max-h-[85vh] overflow-hidden flex flex-col">
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl p-0 gap-0">
           <DialogHeader className="sr-only">
             <DialogTitle>Vis e-post</DialogTitle>
             <DialogDescription>E-postvisning</DialogDescription>
@@ -480,7 +480,7 @@ export default function ActivityLog(props: ActivityLogProps) {
                 </div>
 
                 {/* Body */}
-                <ScrollArea className="flex-1 min-h-0 px-5 py-4">
+                <ScrollArea className="max-h-[50vh] px-5 py-4">
                   <p className="text-sm whitespace-pre-line leading-relaxed">{cleanBody}</p>
                 </ScrollArea>
 
