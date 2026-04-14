@@ -864,22 +864,54 @@ export default function Kalender() {
                   <p className="text-sm whitespace-pre-line">{selectedEvent.description}</p>
                 </div>
               )}
-              {selectedEvent.type === "task" && selectedEvent.raw && (
-                <div className="space-y-2">
-                  {selectedEvent.raw.prioritet && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <span className="text-muted-foreground">Prioritet:</span>
-                      <Badge variant="outline">{selectedEvent.raw.prioritet}</Badge>
-                    </div>
-                  )}
-                  {selectedEvent.raw.ansvarlig && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <span className="text-muted-foreground">Ansvarlig:</span>
-                      <span>{selectedEvent.raw.ansvarlig}</span>
-                    </div>
-                  )}
-                </div>
-              )}
+              {selectedEvent.type === "task" && selectedEvent.raw && (() => {
+                const taskRaw = selectedEvent.raw;
+                const ansvarligProfile = taskRaw.ansvarlig ? profiles[taskRaw.ansvarlig] : null;
+                const taskSelskap = taskRaw.selskap_id ? selskapListe.find(s => s.id === taskRaw.selskap_id) : null;
+                return (
+                  <div className="space-y-2">
+                    {taskRaw.prioritet && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <span className="text-muted-foreground">Prioritet:</span>
+                        <Badge variant="outline">{taskRaw.prioritet}</Badge>
+                      </div>
+                    )}
+                    {taskRaw.ansvarlig && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <span className="text-muted-foreground">Ansvarlig:</span>
+                        {ansvarligProfile ? (
+                          <div className="flex items-center gap-1.5">
+                            <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-bold text-white ${getUserColor(taskRaw.ansvarlig)}`}>
+                              {ansvarligProfile.display_name.split(" ").map((n: string) => n[0]).join("").substring(0, 2).toUpperCase()}
+                            </div>
+                            <span>{ansvarligProfile.display_name}</span>
+                          </div>
+                        ) : (
+                          <span>{taskRaw.ansvarlig}</span>
+                        )}
+                      </div>
+                    )}
+                    {taskSelskap && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <Building2 className="w-4 h-4 text-muted-foreground" />
+                        <button
+                          className="text-primary hover:underline flex items-center gap-1"
+                          onClick={() => { setDrawerOpen(false); navigate(`/kundeforhold/${taskSelskap.id}`); }}
+                        >
+                          {taskSelskap.firmanavn}
+                          <ExternalLink className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
+                    {taskRaw.lead_id && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <span className="text-muted-foreground">Lead:</span>
+                        <span>{taskRaw.lead_id}</span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
               <Badge variant="secondary" className="text-xs">
                 {selectedEvent.type === "meeting" ? "Møte" : selectedEvent.type === "task" ? "Oppgave" : "Aktivitet"}
               </Badge>
