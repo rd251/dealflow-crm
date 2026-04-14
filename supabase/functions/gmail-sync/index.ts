@@ -665,11 +665,6 @@ async function syncGmailForUser(supabase: any, connection: any) {
         const msgData = await res.json();
         const tid = msgData.threadId;
         if (tid) {
-          await supabase
-            .from('aktiviteter')
-            .update({ beskrivelse: supabase.rpc ? undefined : undefined })
-            .eq('id', akt.id);
-          // Use raw SQL-style update to prepend threadId tag
           const { data: current } = await supabase.from('aktiviteter').select('beskrivelse').eq('id', akt.id).single();
           if (current) {
             await supabase.from('aktiviteter').update({
