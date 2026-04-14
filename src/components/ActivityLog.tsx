@@ -4,7 +4,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Phone, Mail, MessageSquare, MessageCircle, Users, FileText, Plus, Clock, MoreHorizontal, Pencil, Trash2, X, Reply } from "lucide-react";
+import { Phone, Mail, MessageSquare, MessageCircle, Users, FileText, Plus, Clock, MoreHorizontal, Pencil, Trash2, X, Reply, Sparkles, FileSearch, PenLine, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import MeetingFields from "@/components/MeetingFields";
@@ -104,6 +106,9 @@ export default function ActivityLog(props: ActivityLogProps) {
   const [replyOpen, setReplyOpen] = useState(false);
   const [replyTo, setReplyTo] = useState("");
   const [replySubject, setReplySubject] = useState("");
+  const [replyDefaultBody, setReplyDefaultBody] = useState("");
+  const [aiLoading, setAiLoading] = useState<string | null>(null);
+  const [aiResult, setAiResult] = useState<{ type: string; content: string } | null>(null);
 
   const buildFilter = useCallback(() => {
     const filters: string[] = [];
@@ -222,6 +227,48 @@ export default function ActivityLog(props: ActivityLogProps) {
       setDeleteId(null);
     } catch (e) {
       console.error("Error deleting aktivitet:", e);
+    }
+  };
+
+  const handleThreadAi = async (action: "summarize" | "extract" | "draft") => {
+    if (!viewingEmail) return;
+    // Extract threadId from beskrivelse — gmail-sync stores it as [threadId:xxx]
+    const threadMatch = viewingEmail.beskrivelse.match(/\[threadId:([^\]]+)\]/);
+    // Fallback: use ekstern_id
+    const threadId = threadMatch?.[1] || viewingEmail.id;
+
+    // For draft, we need the ekstern_id which is the Gmail message id
+    // The threadId for Gmail is typically the first message id in the thread
+    // We'll try ekstern_id first as it's more reliable
+    const gmailThreadId = threadMatch?.[1];
+    if (!gmailThreadId) {
+      toast.error("Kunne ikke finne tråd-ID for denne e-posten. Tråd-AI krever en synkronisert Gmail-melding.");
+      return;
+    }
+
+    setAiLoading(action);
+    setAiResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("gmail-thread-ai", {
+        body: { threadId: gmailThreadId, action },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      if (action === "draft") {
+        const subject = viewingEmail.tittel || '';
+        setReplyTo(props.email || '');
+        setReplySubject(subject.startsWith('Re: ') ? subject : `Re: ${subject}`);
+        setReplyDefaultBody(data.result);
+        setViewingEmail(null);
+        setReplyOpen(true);
+      } else {
+        setAiResult({ type: action, content: data.result });
+      }
+    } catch (e: any) {
+      toast.error(e?.message || "AI-analyse feilet");
+    } finally {
+      setAiLoading(null);
     }
   };
 
@@ -374,7 +421,7 @@ export default function ActivityLog(props: ActivityLogProps) {
       </Dialog>
 
       {/* Email Viewer Dialog */}
-      <Dialog open={!!viewingEmail} onOpenChange={open => !open && setViewingEmail(null)}>
+      <Dialog open={!!viewingEmail} onOpenChange={open => { if (!open) { setViewingEmail(null); setAiResult(null); } }}>
         <DialogContent className="max-w-[95vw] sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-sm">
@@ -385,10 +432,59 @@ export default function ActivityLog(props: ActivityLogProps) {
               {viewingEmail?.aktivitet_kilde === 'gmail_sendt' ? 'Sendt' : 'Mottatt'} · {viewingEmail ? formatDato(viewingEmail.dato) : ''}
             </DialogDescription>
           </DialogHeader>
-          <ScrollArea className="max-h-[60vh]">
+          <ScrollArea className="max-h-[40vh]">
             <p className="text-sm whitespace-pre-line leading-relaxed">{viewingEmail?.beskrivelse}</p>
           </ScrollArea>
-          <div className="flex justify-end pt-2 border-t">
+
+          {/* AI Result */}
+          {aiResult && (
+            <div className="border rounded-lg p-3 bg-muted/30 space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  {aiResult.type === 'summarize' ? '✨ AI-oppsummering' : '🔍 Viktig informasjon'}
+                </span>
+                <Button size="sm" variant="ghost" className="h-5 w-5 p-0" onClick={() => setAiResult(null)}>
+                  <X className="w-3 h-3" />
+                </Button>
+              </div>
+              <ScrollArea className="max-h-[20vh]">
+                <p className="text-xs whitespace-pre-line leading-relaxed">{aiResult.content}</p>
+              </ScrollArea>
+            </div>
+          )}
+
+          <div className="flex items-center gap-1.5 pt-2 border-t flex-wrap">
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-1.5 text-xs"
+              disabled={!!aiLoading}
+              onClick={() => handleThreadAi("summarize")}
+            >
+              {aiLoading === "summarize" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+              Oppsummer
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-1.5 text-xs"
+              disabled={!!aiLoading}
+              onClick={() => handleThreadAi("extract")}
+            >
+              {aiLoading === "extract" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileSearch className="w-3.5 h-3.5" />}
+              Viktig info
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-1.5 text-xs"
+              disabled={!!aiLoading}
+              onClick={() => handleThreadAi("draft")}
+            >
+              {aiLoading === "draft" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <PenLine className="w-3.5 h-3.5" />}
+              Skriv utkast
+            </Button>
+            <div className="flex-1" />
             <Button
               size="sm"
               variant="outline"
@@ -397,6 +493,7 @@ export default function ActivityLog(props: ActivityLogProps) {
                 const subject = viewingEmail?.tittel || '';
                 setReplyTo(props.email || '');
                 setReplySubject(subject.startsWith('Re: ') ? subject : `Re: ${subject}`);
+                setReplyDefaultBody("");
                 setViewingEmail(null);
                 setReplyOpen(true);
               }}
@@ -414,6 +511,7 @@ export default function ActivityLog(props: ActivityLogProps) {
           onOpenChange={setReplyOpen}
           defaultTo={replyTo}
           defaultSubject={replySubject}
+          defaultBody={replyDefaultBody}
           context={{
             entityType: props.lead_id ? "lead" : props.salgsmulighet_id ? "salgsmulighet" : "lead",
             entityId: props.lead_id || props.salgsmulighet_id || props.selskap_id || '',

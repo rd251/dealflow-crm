@@ -473,7 +473,7 @@ async function syncGmailForUser(supabase: any, connection: any) {
     const aktivitetData: Record<string, any> = {
       type: 'E-post',
       tittel: `${isSent ? '→' : '←'} ${subject}`,
-      beskrivelse: emailTags ? `${emailTags} ${snippet}` : snippet,
+      beskrivelse: `[threadId:${msg.threadId}] ${emailTags ? `${emailTags} ${snippet}` : snippet}`,
       dato,
       ekstern_id: eksternId,
       ekstern_provider: 'gmail',

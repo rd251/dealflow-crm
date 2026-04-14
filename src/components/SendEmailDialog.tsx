@@ -16,6 +16,8 @@ interface SendEmailDialogProps {
   defaultTo?: string;
   /** Pre-filled subject */
   defaultSubject?: string;
+  /** Pre-filled body content (e.g. from AI draft) */
+  defaultBody?: string;
   /** Context for AI generation */
   context: {
     entityType: "lead" | "salgsmulighet" | "ringeliste";
@@ -32,7 +34,7 @@ interface SendEmailDialogProps {
   onSent?: () => void;
 }
 
-export default function SendEmailDialog({ open, onOpenChange, defaultTo, defaultSubject, context, onSent }: SendEmailDialogProps) {
+export default function SendEmailDialog({ open, onOpenChange, defaultTo, defaultSubject, defaultBody, context, onSent }: SendEmailDialogProps) {
   const [emailTo, setEmailTo] = useState(defaultTo || "");
   const [emailSubject, setEmailSubject] = useState(defaultSubject || "");
   const [emailBody, setEmailBody] = useState("");
@@ -47,7 +49,7 @@ export default function SendEmailDialog({ open, onOpenChange, defaultTo, default
     if (val) {
       setEmailTo(defaultTo || "");
       setEmailSubject(defaultSubject || `Oppfølging – ${context.selskapNavn}`);
-      setEmailBody("");
+      setEmailBody(defaultBody || "");
       setEditMode(true);
       setShowPrompt(false);
       setCustomPrompt(buildDefaultPrompt());
