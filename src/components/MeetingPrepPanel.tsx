@@ -106,6 +106,7 @@ export default function MeetingPrepPanel({ meeting, open, onOpenChange }: Props)
   // AI state
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [aiNextAction, setAiNextAction] = useState<string | null>(null);
+  const [aiTalkingPoints, setAiTalkingPoints] = useState<string[]>([]);
   const [aiLoading, setAiLoading] = useState(false);
 
   // Post-meeting dialog
@@ -122,6 +123,7 @@ export default function MeetingPrepPanel({ meeting, open, onOpenChange }: Props)
     setActivities([]);
     setAiSummary(null);
     setAiNextAction(null);
+    setAiTalkingPoints([]);
 
     let selskapData: SelskapData | null = null;
     let smData: SmData | null = null;
@@ -147,57 +149,91 @@ export default function MeetingPrepPanel({ meeting, open, onOpenChange }: Props)
 
     if (meeting.selskap_id) {
       fetches.push(
-        fetch(`${API_URL}/aktiviteter?selskap_id=eq.${meeting.selskap_id}&order=dato.desc&limit=5&select=id,type,beskrivelse,dato,tittel`, { headers: API_HEADERS })
+        fetch(`${API_URL}/aktiviteter?selskap_id=eq.${meeting.selskap_id}&order=dato.desc&limit=15&select=id,type,beskrivelse,dato,tittel,moetenotater`, { headers: API_HEADERS })
           .then(r => r.ok ? r.json() : [])
-          .then((rows: Activity[]) => { setActivities(rows); actData = rows; })
+          .then((rows: Activity[]) => { setActivities(rows.slice(0, 5)); actData = rows; })
       );
     } else if (meeting.salgsmulighet_id) {
       fetches.push(
-        fetch(`${API_URL}/aktiviteter?salgsmulighet_id=eq.${meeting.salgsmulighet_id}&order=dato.desc&limit=5&select=id,type,beskrivelse,dato,tittel`, { headers: API_HEADERS })
+        fetch(`${API_URL}/aktiviteter?salgsmulighet_id=eq.${meeting.salgsmulighet_id}&order=dato.desc&limit=15&select=id,type,beskrivelse,dato,tittel,moetenotater`, { headers: API_HEADERS })
           .then(r => r.ok ? r.json() : [])
-          .then((rows: Activity[]) => { setActivities(rows); actData = rows; })
+          .then((rows: Activity[]) => { setActivities(rows.slice(0, 5)); actData = rows; })
       );
     }
 
     Promise.all(fetches).then(async () => {
       setLoading(false);
-      // Fetch enrichment data for the company
+
+      // Fetch enrichment, contacts and emails in parallel
       let enrichment: any = null;
-      const domain = selskapData?.firmanavn ? "" : "";
+      let kontakter: any[] = [];
       const selskapId = meeting.selskap_id;
-      if (selskapId) {
-        try {
-          const { data: innsikt } = await supabase
+
+      const extraFetches: Promise<void>[] = [];
+
+      if (selskapId && selskapData) {
+        extraFetches.push(
+          supabase
             .from("selskap_innsikt")
             .select("bransje, beskrivelse, stoerrelse, estimert_ansatte, estimert_omsetning")
-            .or(`firmanavn.ilike.%${selskapData?.firmanavn || ""}%`)
+            .or(`firmanavn.ilike.%${selskapData.firmanavn}%`)
             .limit(1)
-            .maybeSingle();
-          if (innsikt) enrichment = innsikt;
-        } catch {}
+            .maybeSingle()
+            .then(({ data }) => { if (data) enrichment = data; })
+        );
+        extraFetches.push(
+          fetch(`${API_URL}/kontakter?selskap_id=eq.${selskapId}&select=navn,rolle,e_post,telefon&limit=5`, { headers: API_HEADERS })
+            .then(r => r.ok ? r.json() : [])
+            .then((rows: any[]) => { kontakter = rows; })
+        );
       }
-      fetchAiSummary(actData, selskapData, smData, enrichment);
+
+      await Promise.all(extraFetches);
+
+      // Separate emails and meeting notes from activities
+      const emails = actData.filter((a: any) => a.type === "E-post");
+      const meetingNotesData = actData.filter((a: any) => a.type === "Møte" && a.moetenotater);
+
+      fetchAiSummary(actData, selskapData, smData, enrichment, kontakter, emails, meetingNotesData);
     });
   }, [meeting, open]);
 
-  const fetchAiSummary = async (acts: Activity[], s: SelskapData | null, sm: SmData | null, enrichment?: any) => {
+  const fetchAiSummary = async (
+    acts: Activity[], s: SelskapData | null, sm: SmData | null,
+    enrichment?: any, kontakter?: any[], emails?: any[], meetingNotesData?: any[]
+  ) => {
     setAiLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("meeting-prep-ai", {
         body: {
-          activities: acts.map(a => ({ type: a.type, dato: a.dato, tittel: a.tittel, beskrivelse: a.beskrivelse })),
+          activities: acts.map((a: any) => ({
+            type: a.type, dato: a.dato, tittel: a.tittel,
+            beskrivelse: a.beskrivelse, moetenotater: a.moetenotater,
+          })),
           selskapNavn: s?.firmanavn || null,
+          selskapMrr: s?.mrr || null,
+          selskapKundestatus: s?.kundestatus || null,
           smNavn: sm?.navn || null,
           smStatus: sm?.status || null,
           smNesteSteg: sm?.neste_steg || null,
+          smForventetMrr: sm?.forventet_mrr || null,
+          smLukkedato: sm?.forventet_lukkedato || null,
           meetingTitle: meeting?.tittel || meeting?.beskrivelse || null,
           meetingDate: meeting?.dato || null,
           selskapInnsikt: enrichment || null,
+          kontakter: kontakter || [],
+          emails: (emails || []).map((e: any) => ({
+            dato: e.dato, tittel: e.tittel, beskrivelse: e.beskrivelse,
+          })),
+          meetingNotes: (meetingNotesData || []).map((m: any) => ({
+            dato: m.dato, tittel: m.tittel, moetenotater: m.moetenotater,
+          })),
         },
       });
       if (!error && data) {
         setAiSummary(data.summary || null);
         setAiNextAction(data.nextAction || null);
+        setAiTalkingPoints(data.talkingPoints || []);
       }
     } catch (err) {
       console.error("AI summary error:", err);
