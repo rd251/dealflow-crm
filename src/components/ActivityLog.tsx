@@ -422,7 +422,7 @@ export default function ActivityLog(props: ActivityLogProps) {
 
       {/* Email Viewer Dialog */}
       <Dialog open={!!viewingEmail} onOpenChange={open => { if (!open) { setViewingEmail(null); setAiResult(null); } }}>
-        <DialogContent className="max-w-[95vw] sm:max-w-2xl p-0 gap-0 max-h-[85vh] overflow-hidden flex flex-col">
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl p-0 gap-0">
           <DialogHeader className="sr-only">
             <DialogTitle>Vis e-post</DialogTitle>
             <DialogDescription>E-postvisning</DialogDescription>
