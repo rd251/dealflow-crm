@@ -644,6 +644,47 @@ async function syncGmailForUser(supabase: any, connection: any) {
     }
   }
 
+  // ─── Backfill threadId on existing aktiviteter that lack it ───
+  const { data: missingThreadId } = await supabase
+    .from('aktiviteter')
+    .select('id, ekstern_id')
+    .eq('ekstern_provider', 'gmail')
+    .not('ekstern_id', 'is', null)
+    .not('beskrivelse', 'ilike', '%[threadId:%')
+    .limit(200);
+
+  if (missingThreadId && missingThreadId.length > 0) {
+    let backfilled = 0;
+    for (const akt of missingThreadId) {
+      try {
+        const res = await fetch(
+          `https://gmail.googleapis.com/gmail/v1/users/me/messages/${akt.ekstern_id}?format=metadata&metadataHeaders=Subject`,
+          { headers: { Authorization: `Bearer ${accessToken}` } }
+        );
+        if (!res.ok) { await res.text(); continue; }
+        const msgData = await res.json();
+        const tid = msgData.threadId;
+        if (tid) {
+          await supabase
+            .from('aktiviteter')
+            .update({ beskrivelse: supabase.rpc ? undefined : undefined })
+            .eq('id', akt.id);
+          // Use raw SQL-style update to prepend threadId tag
+          const { data: current } = await supabase.from('aktiviteter').select('beskrivelse').eq('id', akt.id).single();
+          if (current) {
+            await supabase.from('aktiviteter').update({
+              beskrivelse: `[threadId:${tid}] ${current.beskrivelse}`,
+            }).eq('id', akt.id);
+            backfilled++;
+          }
+        }
+      } catch (e) {
+        console.error(`Backfill threadId error for ${akt.id}:`, e);
+      }
+    }
+    if (backfilled > 0) console.log(`Backfilled threadId for ${backfilled} aktiviteter`);
+  }
+
   // Update connection
   const updateData: Record<string, any> = { gmail_last_synced_at: new Date().toISOString() };
   if (result.newHistoryId) updateData.gmail_history_id = result.newHistoryId;
