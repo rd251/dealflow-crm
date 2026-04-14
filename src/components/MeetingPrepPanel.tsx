@@ -180,6 +180,7 @@ export default function MeetingPrepPanel({ meeting, open, onOpenChange }: Props)
             .limit(1)
             .maybeSingle()
             .then(({ data }) => { if (data) enrichment = data; })
+            .catch(() => {})
         );
         extraFetches.push(
           fetch(`${API_URL}/kontakter?selskap_id=eq.${selskapId}&select=navn,rolle,e_post,telefon&limit=5`, { headers: API_HEADERS })
