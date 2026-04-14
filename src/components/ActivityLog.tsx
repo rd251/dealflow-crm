@@ -422,85 +422,114 @@ export default function ActivityLog(props: ActivityLogProps) {
 
       {/* Email Viewer Dialog */}
       <Dialog open={!!viewingEmail} onOpenChange={open => { if (!open) { setViewingEmail(null); setAiResult(null); } }}>
-        <DialogContent className="max-w-[95vw] sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-sm">
-              <Mail className="w-4 h-4 text-blue-600" />
-              {viewingEmail?.tittel || 'E-post'}
-            </DialogTitle>
-            <DialogDescription className="flex items-center gap-2 text-xs">
-              {viewingEmail?.aktivitet_kilde === 'gmail_sendt' ? 'Sendt' : 'Mottatt'} · {viewingEmail ? formatDato(viewingEmail.dato) : ''}
-            </DialogDescription>
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl p-0 gap-0">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Vis e-post</DialogTitle>
+            <DialogDescription>E-postvisning</DialogDescription>
           </DialogHeader>
-          <ScrollArea className="max-h-[40vh]">
-            <p className="text-sm whitespace-pre-line leading-relaxed">{viewingEmail?.beskrivelse}</p>
-          </ScrollArea>
+          {(() => {
+            if (!viewingEmail) return null;
+            const isSent = viewingEmail.aktivitet_kilde === 'gmail_sendt';
+            const rawDesc = viewingEmail.beskrivelse || '';
+            // Extract email addresses from [xxx@yyy.zz] tags
+            const emailTags = rawDesc.match(/\[[^\]]+@[^\]]+\]/g) || [];
+            const addresses = emailTags.map(t => t.slice(1, -1));
+            // Clean body: remove [threadId:...] and [email] tags
+            const cleanBody = rawDesc
+              .replace(/\[threadId:[^\]]+\]\s*/g, '')
+              .replace(/\[[^\]]+@[^\]]+\]\s*/g, '')
+              .trim();
+            const subject = viewingEmail.tittel || 'E-post';
+            const dateStr = new Date(viewingEmail.dato).toLocaleDateString("no-NO", {
+              day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit",
+            });
 
-          {/* AI Result */}
-          {aiResult && (
-            <div className="border rounded-lg p-3 bg-muted/30 space-y-1.5">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                  {aiResult.type === 'summarize' ? '✨ AI-oppsummering' : '🔍 Viktig informasjon'}
-                </span>
-                <Button size="sm" variant="ghost" className="h-5 w-5 p-0" onClick={() => setAiResult(null)}>
-                  <X className="w-3 h-3" />
-                </Button>
-              </div>
-              <ScrollArea className="max-h-[20vh]">
-                <p className="text-xs whitespace-pre-line leading-relaxed">{aiResult.content}</p>
-              </ScrollArea>
-            </div>
-          )}
+            return (
+              <>
+                {/* Header */}
+                <div className="px-5 pt-5 pb-3 border-b space-y-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <h2 className="text-base font-semibold leading-snug flex-1">{subject}</h2>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full shrink-0 ${isSent ? 'bg-blue-500/10 text-blue-600' : 'bg-emerald-500/10 text-emerald-600'}`}>
+                      {isSent ? 'Sendt' : 'Mottatt'}
+                    </span>
+                  </div>
 
-          <div className="flex items-center gap-1.5 pt-2 border-t flex-wrap">
-            <Button
-              size="sm"
-              variant="outline"
-              className="gap-1.5 text-xs"
-              disabled={!!aiLoading}
-              onClick={() => handleThreadAi("summarize")}
-            >
-              {aiLoading === "summarize" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-              Oppsummer
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="gap-1.5 text-xs"
-              disabled={!!aiLoading}
-              onClick={() => handleThreadAi("extract")}
-            >
-              {aiLoading === "extract" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileSearch className="w-3.5 h-3.5" />}
-              Viktig info
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="gap-1.5 text-xs"
-              disabled={!!aiLoading}
-              onClick={() => handleThreadAi("draft")}
-            >
-              {aiLoading === "draft" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <PenLine className="w-3.5 h-3.5" />}
-              Skriv utkast
-            </Button>
-            <div className="flex-1" />
-            <Button
-              size="sm"
-              variant="outline"
-              className="gap-1.5"
-              onClick={() => {
-                const subject = viewingEmail?.tittel || '';
-                setReplyTo(props.email || '');
-                setReplySubject(subject.startsWith('Re: ') ? subject : `Re: ${subject}`);
-                setReplyDefaultBody("");
-                setViewingEmail(null);
-                setReplyOpen(true);
-              }}
-            >
-              <Reply className="w-3.5 h-3.5" /> Svar
-            </Button>
-          </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                      <Mail className="w-4 h-4 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      {addresses.length > 0 ? (
+                        <div className="space-y-0.5">
+                          <p className="text-sm font-medium truncate">{addresses[0]}</p>
+                          {addresses.length > 1 && (
+                            <p className="text-xs text-muted-foreground truncate">
+                              {isSent ? 'Til' : 'Til'}: {addresses.slice(1).join(', ')}
+                            </p>
+                          )}
+                        </div>
+                      ) : (
+                        <p className="text-sm font-medium">
+                          {isSent ? 'Sendt e-post' : 'Mottatt e-post'}
+                        </p>
+                      )}
+                    </div>
+                    <span className="text-xs text-muted-foreground shrink-0">{dateStr}</span>
+                  </div>
+                </div>
+
+                {/* Body */}
+                <ScrollArea className="max-h-[40vh] px-5 py-4">
+                  <p className="text-sm whitespace-pre-line leading-relaxed">{cleanBody}</p>
+                </ScrollArea>
+
+                {/* AI Result */}
+                {aiResult && (
+                  <div className="mx-5 border rounded-lg p-3 bg-muted/30 space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                        {aiResult.type === 'summarize' ? '✨ AI-oppsummering' : '🔍 Viktig informasjon'}
+                      </span>
+                      <Button size="sm" variant="ghost" className="h-5 w-5 p-0" onClick={() => setAiResult(null)}>
+                        <X className="w-3 h-3" />
+                      </Button>
+                    </div>
+                    <ScrollArea className="max-h-[20vh]">
+                      <p className="text-xs whitespace-pre-line leading-relaxed">{aiResult.content}</p>
+                    </ScrollArea>
+                  </div>
+                )}
+
+                {/* Actions */}
+                <div className="flex items-center gap-1.5 px-5 py-3 border-t flex-wrap">
+                  <Button size="sm" variant="outline" className="gap-1.5 text-xs" disabled={!!aiLoading} onClick={() => handleThreadAi("summarize")}>
+                    {aiLoading === "summarize" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+                    Oppsummer
+                  </Button>
+                  <Button size="sm" variant="outline" className="gap-1.5 text-xs" disabled={!!aiLoading} onClick={() => handleThreadAi("extract")}>
+                    {aiLoading === "extract" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileSearch className="w-3.5 h-3.5" />}
+                    Viktig info
+                  </Button>
+                  <Button size="sm" variant="outline" className="gap-1.5 text-xs" disabled={!!aiLoading} onClick={() => handleThreadAi("draft")}>
+                    {aiLoading === "draft" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <PenLine className="w-3.5 h-3.5" />}
+                    Skriv utkast
+                  </Button>
+                  <div className="flex-1" />
+                  <Button size="sm" variant="outline" className="gap-1.5" onClick={() => {
+                    const s = viewingEmail?.tittel || '';
+                    setReplyTo(props.email || '');
+                    setReplySubject(s.startsWith('Re: ') ? s : `Re: ${s}`);
+                    setReplyDefaultBody("");
+                    setViewingEmail(null);
+                    setReplyOpen(true);
+                  }}>
+                    <Reply className="w-3.5 h-3.5" /> Svar
+                  </Button>
+                </div>
+              </>
+            );
+          })()}
         </DialogContent>
       </Dialog>
 
