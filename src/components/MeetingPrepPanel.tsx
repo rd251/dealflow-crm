@@ -173,14 +173,17 @@ export default function MeetingPrepPanel({ meeting, open, onOpenChange }: Props)
 
       if (selskapId && selskapData) {
         extraFetches.push(
-          supabase
-            .from("selskap_innsikt")
-            .select("bransje, beskrivelse, stoerrelse, estimert_ansatte, estimert_omsetning")
-            .or(`firmanavn.ilike.%${selskapData.firmanavn}%`)
-            .limit(1)
-            .maybeSingle()
-            .then(({ data }) => { if (data) enrichment = data; })
-            .catch(() => {})
+          (async () => {
+            try {
+              const { data } = await supabase
+                .from("selskap_innsikt")
+                .select("bransje, beskrivelse, stoerrelse, estimert_ansatte, estimert_omsetning")
+                .or(`firmanavn.ilike.%${selskapData.firmanavn}%`)
+                .limit(1)
+                .maybeSingle();
+              if (data) enrichment = data;
+            } catch {}
+          })()
         );
         extraFetches.push(
           fetch(`${API_URL}/kontakter?selskap_id=eq.${selskapId}&select=navn,rolle,e_post,telefon&limit=5`, { headers: API_HEADERS })
