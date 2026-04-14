@@ -480,7 +480,7 @@ export default function ActivityLog(props: ActivityLogProps) {
                 </div>
 
                 {/* Body */}
-                <ScrollArea className="flex-1 min-h-0 px-5 py-4">
+                <ScrollArea className="max-h-[50vh] px-5 py-4">
                   <p className="text-sm whitespace-pre-line leading-relaxed">{cleanBody}</p>
                 </ScrollArea>
 
