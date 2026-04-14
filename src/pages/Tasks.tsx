@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Bell, BellOff, Calendar, AlertTriangle, Pencil, Trash2, Building2, Target, User } from "lucide-react";
+import { Plus, Bell, BellOff, Calendar, AlertTriangle, Pencil, Trash2, Building2, Target, User, PhoneForwarded } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { Oppgave, OppgaveStatus, Prioritet } from "@/data/crm-data";
 import { toast } from "sonner";
@@ -28,7 +28,7 @@ export default function Tasks() {
   const isMobile = useIsMobile();
   const { user, canEdit } = useAuth();
   const { profiles } = useProfiles();
-  const { oppgaver, selskaper, salgsmuligheter, kontakter, updateOppgaver, generateId } = useCrmStore();
+  const { oppgaver, selskaper, salgsmuligheter, kontakter, leads, updateOppgaver, generateId } = useCrmStore();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Oppgave | null>(null);
@@ -222,10 +222,11 @@ export default function Tasks() {
           const isOverdue = task.status !== "Ferdig" && task.frist && task.frist < today;
           const selskap = selskaper.find(s => s.id === task.selskap_id);
           const salgsmulighet = salgsmuligheter.find(s => s.id === task.salgsmulighet_id);
+          const lead = leads.find(l => l.id === task.lead_id);
           const kontakt = kontakter.find(k => k.id === task.kontakt_id);
           const emailKontakt = !kontakt && task.kontakt_id ? emailContacts.find(ec => ec.id === task.kontakt_id) : null;
           const personNavn = kontakt?.navn || emailKontakt?.display_name || emailKontakt?.primary_email || null;
-          const ansvarligNavn = task.ansvarlig ? getProfileName(task.ansvarlig) : null;
+          const ansvarligNavn = task.ansvarlig ? (getProfileName(task.ansvarlig) || task.ansvarlig) : null;
           return (
             <div key={task.id} className={`bg-card border rounded-xl p-4 flex items-center gap-3 animate-slide-in transition-opacity cursor-pointer hover:border-primary/30 ${task.status === "Ferdig" ? "opacity-50" : ""}`} onClick={() => canEdit && openEdit(task)}>
               <Checkbox checked={task.status === "Ferdig"} onCheckedChange={() => canEdit && changeStatus(task.id, task.status === "Ferdig" ? "Åpen" : "Ferdig")} className="shrink-0" disabled={!canEdit} onClick={e => e.stopPropagation()} />
@@ -254,6 +255,7 @@ export default function Tasks() {
                   )}
                   {selskap && <span className="truncate flex items-center gap-0.5"><Building2 className="w-3 h-3" /> {selskap.firmanavn}</span>}
                   {salgsmulighet && <span className="truncate flex items-center gap-0.5"><Target className="w-3 h-3" /> {salgsmulighet.navn}</span>}
+                  {lead && <span className="truncate flex items-center gap-0.5"><PhoneForwarded className="w-3 h-3" /> {lead.firmanavn}</span>}
                   {personNavn && <span className="truncate flex items-center gap-0.5"><User className="w-3 h-3" /> {personNavn}</span>}
                   {canEdit ? (
                     <span className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
