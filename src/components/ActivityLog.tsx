@@ -159,6 +159,11 @@ export default function ActivityLog(props: ActivityLogProps) {
     setDialogOpen(true);
   };
 
+  // Expose openCreate to parent via ref
+  if (props.onOpenCreateRef) {
+    props.onOpenCreateRef.current = openCreate;
+  }
+
   const openEdit = (a: Aktivitet) => {
     setEditingId(a.id);
     setType(a.type);
