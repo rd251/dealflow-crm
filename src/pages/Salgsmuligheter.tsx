@@ -1022,7 +1022,7 @@ export default function Salgsmuligheter() {
             interaksjoner: (
               <>
                 <InlineTaskForm salgsmulighet_id={currentSm.id} selskap_id={currentSm.selskap_id} />
-                <ActivityLog salgsmulighet_id={currentSm.id} onActivityLogged={() => {
+                <ActivityLog salgsmulighet_id={currentSm.id} onOpenCreateRef={openCreateActivityRef} onActivityLogged={() => {
                   updateSalgsmuligheter(prev => prev.map(s => s.id === currentSm.id ? { ...s, sist_aktivitet: new Date().toISOString().split("T")[0] } : s));
                 }} />
                 <MeetingNotesList
