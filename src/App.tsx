@@ -152,6 +152,7 @@ function App() {
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <ScrollToTop />
           <AuthProvider>
             <AppRoutes />
           </AuthProvider>
