@@ -1,0 +1,66 @@
+# Project Memory
+
+## Core
+- UI language must be Norwegian (bokmål).
+- `src/hooks/use-auth.tsx` is locked. Do not modify.
+- Strict Test/Live separation. Never sync actual data between environments.
+- Lovable preview blocks Google OAuth (iframe). Test on published URL.
+- Primary brand color: Maroon (0 100% 15% / RGB 80,0,0). Logo: `snakk-logo-full.svg`.
+- Database ops via Supabase client only (no REST). Convert empty strings to null via `emptyToNull()`.
+- Currency format: Always use `nok(v)` from `src/lib/utils.ts` (e.g. '10 000 kr'). Never use '$' or 'NOK'.
+
+## Memories
+- [Project identity](mem://project/identity) — Snakk CRM context and purpose
+- [Tech stack constraints](mem://tech/stack) — Supabase Edge Functions, 'npm:' imports, jsPDF
+- [Navigation UI](mem://style/navigation-ui) — Responsive nav, maroon sidebar, header layout
+- [RBAC & Auth](mem://auth/rbac) — Roles (Admin, Bruker, Viewer), access limits, useAuth timeouts
+- [Task visibility](mem://auth/task-visibility) — Users see own tasks, admins see all
+- [Kanban UI](mem://style/kanban-ui) — Card layout rules and swipe blocks
+- [AI Integration](mem://tech/ai-integration) — Lovable Gateway, Gemini, temperature 0, debounced calls
+- [Responsive UI](mem://style/responsive-ui) — Mobile tables to cards, max-h-[90vh] dialogs
+- [Deep linking](mem://style/deep-linking-ui) — Query params for views and auto-filters
+- [Layout standards](mem://style/layout-standarder) — PageShell, sticky header, actions section
+- [Email templates](mem://auth/email-templates) — Branded Norwegian emails via notify.snakk.ai
+- [Entity details UI](mem://style/entity-details-ui) — Standard sidepanels, tabs, prioritized next step
+- [AI command bar](mem://features/ai-command-bar) — NLP commands, list generation priority
+- [Stats API](mem://tech/stats-api) — /api/stats REST API, X-API-Key, JSON mapping
+- [Google Calendar sync](mem://integrations/google/calendar) — Two-way sync, matching logic
+- [Gmail sync](mem://integrations/google/gmail) — Thread AI, 25k chars context, threadId tags
+- [Google OAuth config](mem://integrations/google/oauth-config) — Cloud Console setup, scopes, redirects
+- [Company profile](mem://features/company/profile) — Fields, enrichment, Favicons API
+- [SLA metrics](mem://features/billing/sla-metrics) — SLA/setup costs separated from MRR
+- [Data quality rules](mem://features/data/quality-rules) — Duplicate handling, orphaned projects
+- [Deduplication logic](mem://features/data/deduplication-logic) — Merging keeps oldest, moves relations
+- [Contacts functionality](mem://features/contacts/functionality) — Inline edit, safe delete, intelligent sorting
+- [Lead intake API](mem://features/leads/intake-api) — Public endpoint, Gemini source detection
+- [Calendar visibility](mem://features/calendar/visibility) — Global view, user_id tracking, filters
+- [Calendar layout](mem://features/calendar/layout-logic) — Absolute positioning, task virtual duration
+- [Calendar linked info](mem://features/calendar/linked-info) — Auto-linking, no manual dropdowns
+- [Partner system](mem://features/partner/system) — DealBuilder, standalone fields, auto-linking
+- [Follow-up automation](mem://features/follow-up/automation) — Inactivity thresholds (48h/72h), db triggers
+- [Sales pipeline](mem://features/sales/pipeline) — 6 stages, auto MRR, webhook transitions
+- [Calendar scheduling](mem://features/calendar/scheduling) — 0-23h week view, auto-scroll to 07:00
+- [Branding](mem://style/branding) — Maroon color, logo, status colors
+- [Lead conversion](mem://features/leads/conversion) — Explicit status routing, state persistence
+- [Contact matching](mem://features/search/contact-matching) — Grouping excludes generic emails
+- [Follow-up UI](mem://features/follow-up/ui) — Badges (Red/Amber), smart routing
+- [Deleted items](mem://features/admin/deleted-items) — 30 day retention in deleted_items table
+- [Operational dashboard](mem://features/dashboard/operational-view) — Vertical layout priorities
+- [Daily brief](mem://features/reporting/daily-brief) — 07:00 email sections, operational data
+- [Weekly report](mem://features/reporting/weekly-report) — Monday 08:00 email, KPIs
+- [Project management](mem://features/projects/management) — 'p-' prefix, inherits manager
+- [Company enrichment](mem://features/company/enrichment) — Brønnøysund, 7 day cache
+- [Ringeliste UI](mem://features/leads/ringeliste) — Progress bars, auto-updates on email
+- [Cancelled purge](mem://features/billing/cancelled-purge) — End of month cron job for churned
+- [DealBuilder contracts](mem://integrations/dealbuilder/contracts) — Template ID, jsPDF, validation
+- [Table sorting](mem://features/ui/table-sorting) — Leads default sort is opprettet_dato desc
+- [Changelog filters](mem://features/activities/changelog-filters) — Ignores auto-sources (Gmail/Cal)
+- [Ringeliste schema](mem://tech/database/ringeliste-schema) — No lead_id column
+- [Sales detail tabs](mem://features/sales/detail-tabs) — Flex-wrap, 5 sections in Detaljer
+- [Formatting utils](mem://tech/utils/formatting) — nok() function for currency
+- [Onboarding system](mem://features/onboarding/system) — Typeform-like, storage lifecycle
+- [Database sync logic](mem://tech/sync/database-logic) — Queues for dependent entities, emptyToNull
+- [Email viewing](mem://features/activities/email-viewing) — UI rules for thread viewing, prefix Re:
+- [No-show tracking](mem://features/reporting/no-show-tracking) — Removes next step requirement
+- [Lead sources](mem://features/leads/sources) — Enum explicit values, 📣 icon
+- [Trale integration](mem://integrations/trale) — Webhook for meeting notes, AI next step, notifications
