@@ -632,6 +632,9 @@ export default function Salgsmuligheter() {
         ) : undefined}
         actions={canEdit && currentSm && openStatuses.includes(currentSm.status as any) ? (
           <>
+            <Button size="sm" variant="outline" onClick={() => openCreateActivityRef.current?.()}>
+              <PenLine className="w-3.5 h-3.5 mr-1.5" />Logg aktivitet
+            </Button>
             {currentSm.e_post && (
               <Button size="sm" variant="outline" onClick={() => setEmailDialogOpen(true)}>
                 <Mail className="w-3.5 h-3.5 mr-1.5" />E-post
