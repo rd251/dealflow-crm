@@ -32,7 +32,7 @@ const statusColors: Record<ProsjektStatus, string> = {
 export default function Prosjekter() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const { prosjekter, selskaper, updateProsjekter, settProsjektLive, generateId } = useCrmStore();
+  const { prosjekter, selskaper, kontakter, updateProsjekter, settProsjektLive, generateId } = useCrmStore();
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [selectedP, setSelectedP] = useState<Prosjekt | null>(null);
   const [newOpen, setNewOpen] = useState(false);
@@ -88,7 +88,7 @@ export default function Prosjekter() {
                       className="bg-card border rounded-lg p-3 sm:p-3.5 cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow group">
                       <div className="flex items-start gap-2">
                         {!isMobile && <GripVertical className="w-4 h-4 text-muted-foreground/40 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity" />}
-                        <CompanyLogo domain={getSelskap(p.selskap_id)?.domene} firmanavn={getSelskapNavn(p.selskap_id)} size="sm" />
+                        <CompanyLogo domain={getSelskap(p.selskap_id)?.domene} firmanavn={getSelskapNavn(p.selskap_id)} kontaktEmails={kontakter.filter(k => k.selskap_id === p.selskap_id).map(k => k.e_post)} size="sm" />
                         <div className="flex-1 min-w-0">
                           <p className="font-semibold text-sm truncate">{p.prosjektnavn}</p>
                           <p className="text-xs text-muted-foreground mt-0.5 cursor-pointer hover:text-primary hover:underline" onClick={e => { e.stopPropagation(); navigate(`/selskaper/${p.selskap_id}`); }}>{getSelskapNavn(p.selskap_id)}</p>
