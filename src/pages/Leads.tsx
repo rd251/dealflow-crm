@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import PageShell from "@/components/PageShell";
 import { useCrmStore } from "@/hooks/use-crm-store";
@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import DetailPanelShell, { DetailSection, DetailField, DetailDivider } from "@/components/DetailPanelShell";
 import EntityCalendarTab from "@/components/EntityCalendarTab";
-import { Plus, Search, ArrowRightCircle, Trash2, Users2, Upload, Lock, Mail, ArrowUp, ArrowDown, ChevronsUpDown } from "lucide-react";
+import { Plus, Search, ArrowRightCircle, Trash2, Users2, Upload, Lock, Mail, ArrowUp, ArrowDown, ChevronsUpDown, PenLine } from "lucide-react";
 import SendEmailDialog from "@/components/SendEmailDialog";
 import SelskapInnsikt from "@/components/SelskapInnsikt";
 import { Lead, LeadStatus, LeadKilde } from "@/data/crm-data";
@@ -48,6 +48,7 @@ export default function Leads() {
   const [convertNavn, setConvertNavn] = useState("");
   const [partnerDialogLead, setPartnerDialogLead] = useState<Lead | null>(null);
   const [enrichFields, setEnrichFields] = useState({ orgnr: "", bransje: "", firmaadresse: "", postadresse: "" });
+  const openCreateActivityRef = useRef<(() => void) | null>(null);
   const [form, setForm] = useState<Partial<Lead>>({ firmanavn: "", kontaktperson: "", e_post: "", telefon: "", kilde: "Nettside", status: "Ny", ansvarlig: "", neste_steg: "", notater: "", rolle_i_firma: "", use_case: "" });
   const [filterUtenOppfolging, setFilterUtenOppfolging] = useState(false);
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
@@ -479,6 +480,9 @@ export default function Leads() {
         ) : undefined}
         actions={canEdit && currentLead && !currentIsLocked && currentLead.status !== "Ikke aktuelt" ? (
           <>
+            <Button size="sm" variant="outline" onClick={() => openCreateActivityRef.current?.()}>
+              <PenLine className="w-3.5 h-3.5 mr-1.5" />Logg aktivitet
+            </Button>
             {currentLead.e_post && (
               <Button size="sm" variant="outline" onClick={() => setEmailDialogOpen(true)}>
                 <Mail className="w-4 h-4 mr-1.5" />E-post
@@ -583,7 +587,7 @@ export default function Leads() {
             interaksjoner: (
               <>
                 <InlineTaskForm lead_id={currentLead.id} selskap_id="" />
-                <ActivityLog lead_id={currentLead.id} onActivityLogged={() => {
+                <ActivityLog lead_id={currentLead.id} onOpenCreateRef={openCreateActivityRef} onActivityLogged={() => {
                   updateLeads(prev => prev.map(l => l.id === currentLead.id ? { ...l, sist_aktivitet: new Date().toISOString().split("T")[0] } : l));
                 }} />
                 <EntityChangelog entity_type="lead" entity_id={currentLead.id} />
