@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
-import { CalendarDays, Mail, RefreshCw, Unlink, CheckCircle2, XCircle, Loader2, Globe, Copy, Check } from "lucide-react";
+import { CalendarDays, Mail, RefreshCw, Unlink, CheckCircle2, XCircle, Loader2, Globe, Copy, Check, Mic } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import DeletedItemsLog from "@/components/DeletedItemsLog";
 import DealBuilderSyncCard from "@/components/DealBuilderSyncCard";
