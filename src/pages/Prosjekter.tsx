@@ -32,7 +32,7 @@ const statusColors: Record<ProsjektStatus, string> = {
 export default function Prosjekter() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const { prosjekter, selskaper, updateProsjekter, settProsjektLive, generateId } = useCrmStore();
+  const { prosjekter, selskaper, kontakter, updateProsjekter, settProsjektLive, generateId } = useCrmStore();
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [selectedP, setSelectedP] = useState<Prosjekt | null>(null);
   const [newOpen, setNewOpen] = useState(false);
