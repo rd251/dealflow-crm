@@ -480,6 +480,9 @@ export default function Leads() {
         ) : undefined}
         actions={canEdit && currentLead && !currentIsLocked && currentLead.status !== "Ikke aktuelt" ? (
           <>
+            <Button size="sm" variant="outline" onClick={() => openCreateActivityRef.current?.()}>
+              <PenLine className="w-3.5 h-3.5 mr-1.5" />Logg aktivitet
+            </Button>
             {currentLead.e_post && (
               <Button size="sm" variant="outline" onClick={() => setEmailDialogOpen(true)}>
                 <Mail className="w-4 h-4 mr-1.5" />E-post
@@ -584,7 +587,7 @@ export default function Leads() {
             interaksjoner: (
               <>
                 <InlineTaskForm lead_id={currentLead.id} selskap_id="" />
-                <ActivityLog lead_id={currentLead.id} onActivityLogged={() => {
+                <ActivityLog lead_id={currentLead.id} onOpenCreateRef={openCreateActivityRef} onActivityLogged={() => {
                   updateLeads(prev => prev.map(l => l.id === currentLead.id ? { ...l, sist_aktivitet: new Date().toISOString().split("T")[0] } : l));
                 }} />
                 <EntityChangelog entity_type="lead" entity_id={currentLead.id} />
