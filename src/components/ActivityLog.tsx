@@ -85,6 +85,7 @@ interface ActivityLogProps {
   kontaktListe?: KontaktOption[];
   entityName?: string;
   kontaktperson?: string;
+  onOpenCreateRef?: React.MutableRefObject<(() => void) | null>;
 }
 
 export default function ActivityLog(props: ActivityLogProps) {
