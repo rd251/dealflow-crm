@@ -8,6 +8,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { CrmProvider } from "@/hooks/use-crm-store";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import AppSidebar from "@/components/AppSidebar";
+import ScrollToTop from "@/components/ScrollToTop";
 import Dashboard from "./pages/Dashboard";
 import Leads from "./pages/Leads";
 import Salgsmuligheter from "./pages/Salgsmuligheter";
