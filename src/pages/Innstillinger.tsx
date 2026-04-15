@@ -34,6 +34,7 @@ export default function Innstillinger() {
 
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
   const leadApiUrl = `${supabaseUrl}/functions/v1/lead-intake`;
+  const traleWebhookUrl = `${supabaseUrl}/functions/v1/trale-webhook`;
 
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
@@ -357,6 +358,56 @@ export default function Innstillinger() {
             </div>
           </CardContent>
         </Card>
+        {/* Trale møtenotater */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Mic className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <CardTitle className="text-lg">Trale – Møtenotater</CardTitle>
+                <CardDescription>Motta AI-genererte møtenotater automatisk fra Trale</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label className="text-xs text-muted-foreground mb-1 block">Webhook-URL (lim inn i Trale)</Label>
+              <div className="flex gap-2">
+                <Input value={traleWebhookUrl} readOnly className="font-mono text-xs" />
+                <Button size="icon" variant="outline" onClick={() => copyToClipboard(traleWebhookUrl, "trale-url")}>
+                  {copied === "trale-url" ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                </Button>
+              </div>
+            </div>
+
+            <div className="text-xs text-muted-foreground space-y-2">
+              <p className="font-medium text-foreground">Slik setter du opp:</p>
+              <ol className="list-decimal pl-5 space-y-1">
+                <li>Gå til <strong>Innstillinger → Integrasjoner → Webhooks</strong> i Trale</li>
+                <li>Lim inn webhook-URL-en over</li>
+                <li>Velg alle felt (sammendrag, deltakere, transkripsjon)</li>
+                <li>Klikk «Opprett Webhook»</li>
+              </ol>
+            </div>
+
+            <div className="text-xs text-muted-foreground space-y-1">
+              <p className="font-medium text-foreground">Hva skjer automatisk:</p>
+              <ul className="list-disc pl-5 space-y-0.5">
+                <li>Møtesammendraget lagres som en <strong>aktivitet</strong> i CRM-et</li>
+                <li>Kobles til riktig salgsmulighet basert på deltakernes e-post</li>
+                <li>AI foreslår <strong>neste steg</strong> basert på sammendraget</li>
+                <li>Ansvarlig selger mottar et <strong>varsel</strong></li>
+              </ul>
+            </div>
+
+            <div className="rounded-lg border bg-warning/5 border-warning/30 p-3 text-xs">
+              <p><strong>Tips:</strong> For signaturverifisering, kontakt admin for å konfigurere en webhook-hemmelighet.</p>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* DealBuilder sync */}
         <DealBuilderSyncCard />
         {/* Deleted items log */}
