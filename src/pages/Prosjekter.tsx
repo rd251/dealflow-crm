@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PageShell from "@/components/PageShell";
+import CompanyLogo from "@/components/CompanyLogo";
 import { useCrmStore } from "@/hooks/use-crm-store";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
@@ -37,7 +38,8 @@ export default function Prosjekter() {
   const [newOpen, setNewOpen] = useState(false);
   const [form, setForm] = useState({ prosjektnavn: "", selskap_id: "", integrasjon: "Ingen" as Integrasjon });
 
-  const getSelskapNavn = (id: string) => selskaper.find(s => s.id === id)?.firmanavn || "–";
+  const getSelskap = (id: string) => selskaper.find(s => s.id === id);
+  const getSelskapNavn = (id: string) => getSelskap(id)?.firmanavn || "–";
 
   const handleDrop = (e: React.DragEvent, status: ProsjektStatus) => {
     e.preventDefault();
@@ -86,6 +88,7 @@ export default function Prosjekter() {
                       className="bg-card border rounded-lg p-3 sm:p-3.5 cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow group">
                       <div className="flex items-start gap-2">
                         {!isMobile && <GripVertical className="w-4 h-4 text-muted-foreground/40 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity" />}
+                        <CompanyLogo domain={getSelskap(p.selskap_id)?.domene} firmanavn={getSelskapNavn(p.selskap_id)} size="sm" />
                         <div className="flex-1 min-w-0">
                           <p className="font-semibold text-sm truncate">{p.prosjektnavn}</p>
                           <p className="text-xs text-muted-foreground mt-0.5 cursor-pointer hover:text-primary hover:underline" onClick={e => { e.stopPropagation(); navigate(`/selskaper/${p.selskap_id}`); }}>{getSelskapNavn(p.selskap_id)}</p>
