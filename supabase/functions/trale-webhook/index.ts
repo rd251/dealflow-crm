@@ -1,0 +1,288 @@
+import { createClient } from "npm:@supabase/supabase-js@2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-signature",
+};
+
+async function verifySignature(body: string, signatureHeader: string | null, secret: string | null): Promise<boolean> {
+  if (!secret || !signatureHeader) return true; // Skip if no secret configured
+  const expectedSig = signatureHeader.replace("sha256=", "");
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    "raw", encoder.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]
+  );
+  const sig = await crypto.subtle.sign("HMAC", key, encoder.encode(body));
+  const hexSig = Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, "0")).join("");
+  return hexSig === expectedSig;
+}
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
+  if (req.method === "GET") {
+    return new Response(JSON.stringify({ status: "active", service: "trale-webhook" }), {
+      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  const rawBody = await req.text();
+
+  try {
+    // Verify signature if secret is configured
+    const webhookSecret = Deno.env.get("TRALE_WEBHOOK_SECRET");
+    const signatureHeader = req.headers.get("x-signature");
+
+    if (webhookSecret && !await verifySignature(rawBody, signatureHeader, webhookSecret)) {
+      console.error("Trale webhook: Signature verification failed");
+      return new Response(JSON.stringify({ error: "Invalid signature" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const body = JSON.parse(rawBody);
+    const { event, meeting, attendees, summary, transcript } = body;
+
+    if (event !== "meeting.completed") {
+      return new Response(JSON.stringify({ received: true, skipped: true, reason: "Not meeting.completed" }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (!meeting || !attendees) {
+      return new Response(JSON.stringify({ received: true, warning: "Missing meeting or attendees data" }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
+    // Build transcript text
+    const transcriptText = Array.isArray(transcript)
+      ? transcript.map((t: any) => `[${t.speaker}]: ${t.text}`).join("\n")
+      : "";
+
+    // Build full meeting notes
+    const meetingNotes = [
+      summary || "",
+      transcriptText ? `\n---\n**Transkripsjon:**\n${transcriptText}` : "",
+    ].filter(Boolean).join("\n");
+
+    // Extract attendee emails
+    const attendeeEmails: string[] = (attendees || [])
+      .map((a: any) => a.email?.toLowerCase())
+      .filter(Boolean);
+
+    // Find matching kontakter by email
+    let matchedKontakter: any[] = [];
+    if (attendeeEmails.length > 0) {
+      const { data: kontakter } = await supabase
+        .from("kontakter")
+        .select("id, navn, e_post, selskap_id")
+        .in("e_post", attendeeEmails);
+      matchedKontakter = kontakter || [];
+    }
+
+    // Find matching salgsmuligheter by email or kontakt
+    let matchedSm: any = null;
+    if (attendeeEmails.length > 0) {
+      const { data: smByEmail } = await supabase
+        .from("salgsmuligheter")
+        .select("id, navn, ansvarlig, selskap_id, kontakt_id, neste_steg")
+        .in("e_post", attendeeEmails)
+        .not("status", "in", '("Vunnet","Tapt")')
+        .order("updated_at", { ascending: false })
+        .limit(1);
+      if (smByEmail && smByEmail.length > 0) {
+        matchedSm = smByEmail[0];
+      }
+    }
+
+    // Fallback: match via kontakt_id
+    if (!matchedSm && matchedKontakter.length > 0) {
+      const kontaktIds = matchedKontakter.map(k => k.id);
+      const { data: smByKontakt } = await supabase
+        .from("salgsmuligheter")
+        .select("id, navn, ansvarlig, selskap_id, kontakt_id, neste_steg")
+        .in("kontakt_id", kontaktIds)
+        .not("status", "in", '("Vunnet","Tapt")')
+        .order("updated_at", { ascending: false })
+        .limit(1);
+      if (smByKontakt && smByKontakt.length > 0) {
+        matchedSm = smByKontakt[0];
+      }
+    }
+
+    // Determine selskap_id from salgsmulighet or kontakt
+    const selskapId = matchedSm?.selskap_id
+      || (matchedKontakter.length > 0 ? matchedKontakter[0].selskap_id : null);
+
+    const kontaktId = matchedSm?.kontakt_id
+      || (matchedKontakter.length > 0 ? matchedKontakter[0].id : null);
+
+    const today = new Date().toISOString();
+    const todayDate = today.split("T")[0];
+
+    // 1. Create aktivitet (Møte)
+    const aktivitetData: any = {
+      type: "Møte",
+      tittel: meeting.name || "Trale-møte",
+      beskrivelse: `Deltakere: ${(attendees || []).map((a: any) => `${a.name} (${a.email})`).join(", ")}`,
+      moetenotater: meetingNotes,
+      dato: meeting.createdAt || today,
+      start_tid: meeting.createdAt || null,
+      slutt_tid: meeting.duration
+        ? new Date(new Date(meeting.createdAt || today).getTime() + meeting.duration * 1000).toISOString()
+        : null,
+      aktivitet_kilde: "trale",
+      ekstern_id: meeting.id || null,
+      ekstern_provider: "trale",
+      salgsmulighet_id: matchedSm?.id || null,
+      selskap_id: selskapId,
+      kontakt_id: kontaktId,
+    };
+
+    const { data: createdActivity, error: activityError } = await supabase
+      .from("aktiviteter")
+      .insert(aktivitetData)
+      .select("id")
+      .single();
+
+    if (activityError) {
+      console.error("Trale webhook: Error creating activity:", activityError);
+    }
+
+    // 2. Update salgsmulighet with meeting notes + AI neste steg
+    let aiNesteSteg: string | null = null;
+
+    if (matchedSm && summary) {
+      // Use AI to suggest next step
+      const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+      if (LOVABLE_API_KEY) {
+        try {
+          const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${LOVABLE_API_KEY}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              model: "google/gemini-3-flash-preview",
+              messages: [
+                {
+                  role: "system",
+                  content: "Du er en salgsrådgiver for et norsk SaaS-selskap. Basert på et møtesammendrag, foreslå ett konkret og handlingsrettet neste steg. Svar med kun én setning på norsk, maks 100 tegn. Ikke bruk anførselstegn."
+                },
+                {
+                  role: "user",
+                  content: `Møtesammendrag:\n${summary}\n\nForeslå neste steg:`
+                }
+              ],
+              temperature: 0,
+            }),
+          });
+
+          if (aiResponse.ok) {
+            const aiData = await aiResponse.json();
+            aiNesteSteg = aiData.choices?.[0]?.message?.content?.trim() || null;
+          }
+        } catch (aiErr) {
+          console.error("Trale webhook: AI neste steg failed:", aiErr);
+        }
+      }
+
+      // Update salgsmulighet
+      const updateData: any = {
+        sist_aktivitet: todayDate,
+      };
+      if (aiNesteSteg) {
+        updateData.neste_steg = aiNesteSteg;
+      }
+
+      await supabase
+        .from("salgsmuligheter")
+        .update(updateData)
+        .eq("id", matchedSm.id);
+
+      // Also update moetenotater on the salgsmulighet's notater (append)
+      const notePrefix = `\n\n---\n📝 Trale møtenotat (${todayDate}):\n`;
+      const { data: currentSm } = await supabase
+        .from("salgsmuligheter")
+        .select("notater")
+        .eq("id", matchedSm.id)
+        .single();
+
+      await supabase
+        .from("salgsmuligheter")
+        .update({
+          notater: (currentSm?.notater || "") + notePrefix + (summary || ""),
+        })
+        .eq("id", matchedSm.id);
+    }
+
+    // 3. Notify responsible user
+    if (matchedSm?.ansvarlig) {
+      // Find user_id by display_name
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("user_id")
+        .eq("display_name", matchedSm.ansvarlig)
+        .maybeSingle();
+
+      if (profile?.user_id) {
+        await supabase.from("varsler").insert({
+          user_id: profile.user_id,
+          type: "trale_meeting",
+          tittel: `Møtenotat fra Trale: ${meeting.name || "Møte"}`,
+          beskrivelse: aiNesteSteg
+            ? `Foreslått neste steg: ${aiNesteSteg}`
+            : `Møtesammendrag er lagret for ${matchedSm.navn}`,
+          lenke: `/salgsmuligheter?id=${matchedSm.id}`,
+        });
+      }
+    }
+
+    // Update selskap sist_aktivitet
+    if (selskapId) {
+      await supabase
+        .from("selskaper")
+        .update({ sist_aktivitet: todayDate })
+        .eq("id", selskapId);
+    }
+
+    console.log("Trale webhook processed:", {
+      meetingName: meeting.name,
+      matchedSm: matchedSm?.navn || "none",
+      kontaktMatches: matchedKontakter.length,
+      aiNesteSteg,
+      activityId: createdActivity?.id,
+    });
+
+    return new Response(JSON.stringify({
+      received: true,
+      activity_id: createdActivity?.id,
+      matched_deal: matchedSm?.navn || null,
+      matched_contacts: matchedKontakter.length,
+      ai_neste_steg: aiNesteSteg,
+    }), {
+      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+
+  } catch (err) {
+    console.error("Trale webhook error:", err);
+    return new Response(JSON.stringify({ error: "Internal error", message: err instanceof Error ? err.message : "Unknown" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+});
