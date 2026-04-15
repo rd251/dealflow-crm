@@ -38,7 +38,8 @@ export default function Prosjekter() {
   const [newOpen, setNewOpen] = useState(false);
   const [form, setForm] = useState({ prosjektnavn: "", selskap_id: "", integrasjon: "Ingen" as Integrasjon });
 
-  const getSelskapNavn = (id: string) => selskaper.find(s => s.id === id)?.firmanavn || "–";
+  const getSelskap = (id: string) => selskaper.find(s => s.id === id);
+  const getSelskapNavn = (id: string) => getSelskap(id)?.firmanavn || "–";
 
   const handleDrop = (e: React.DragEvent, status: ProsjektStatus) => {
     e.preventDefault();
