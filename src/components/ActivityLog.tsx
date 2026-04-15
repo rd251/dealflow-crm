@@ -85,6 +85,7 @@ interface ActivityLogProps {
   kontaktListe?: KontaktOption[];
   entityName?: string;
   kontaktperson?: string;
+  onOpenCreateRef?: React.MutableRefObject<(() => void) | null>;
 }
 
 export default function ActivityLog(props: ActivityLogProps) {
@@ -157,6 +158,11 @@ export default function ActivityLog(props: ActivityLogProps) {
     setMeetingDeltakere([]);
     setDialogOpen(true);
   };
+
+  // Expose openCreate to parent via ref
+  if (props.onOpenCreateRef) {
+    props.onOpenCreateRef.current = openCreate;
+  }
 
   const openEdit = (a: Aktivitet) => {
     setEditingId(a.id);

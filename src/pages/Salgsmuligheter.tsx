@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import DetailPanelShell, { DetailSection, DetailField, DetailDivider, DetailStatGrid, DetailStatCard } from "@/components/DetailPanelShell";
 import EntityCalendarTab from "@/components/EntityCalendarTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, GripVertical, Trophy, XCircle, Trash2, Phone, User, AlertTriangle, Clock, Building2, DollarSign, Mail, FileSignature, PartyPopper, Globe, ExternalLink, Linkedin } from "lucide-react";
+import { Plus, GripVertical, Trophy, XCircle, Trash2, Phone, User, AlertTriangle, Clock, Building2, DollarSign, Mail, FileSignature, PartyPopper, Globe, ExternalLink, Linkedin, PenLine } from "lucide-react";
 import SendEmailDialog from "@/components/SendEmailDialog";
 import SelskapInnsikt from "@/components/SelskapInnsikt";
 import CompanyLogo from "@/components/CompanyLogo";
@@ -277,6 +277,7 @@ export default function Salgsmuligheter() {
   });
 
   const currentSm = selectedSm ? salgsmuligheter.find(s => s.id === selectedSm.id) || selectedSm : null;
+  const openCreateActivityRef = useRef<(() => void) | null>(null);
 
   
 
@@ -631,6 +632,9 @@ export default function Salgsmuligheter() {
         ) : undefined}
         actions={canEdit && currentSm && openStatuses.includes(currentSm.status as any) ? (
           <>
+            <Button size="sm" variant="outline" onClick={() => openCreateActivityRef.current?.()}>
+              <PenLine className="w-3.5 h-3.5 mr-1.5" />Logg aktivitet
+            </Button>
             {currentSm.e_post && (
               <Button size="sm" variant="outline" onClick={() => setEmailDialogOpen(true)}>
                 <Mail className="w-3.5 h-3.5 mr-1.5" />E-post
@@ -1018,7 +1022,7 @@ export default function Salgsmuligheter() {
             interaksjoner: (
               <>
                 <InlineTaskForm salgsmulighet_id={currentSm.id} selskap_id={currentSm.selskap_id} />
-                <ActivityLog salgsmulighet_id={currentSm.id} onActivityLogged={() => {
+                <ActivityLog salgsmulighet_id={currentSm.id} onOpenCreateRef={openCreateActivityRef} onActivityLogged={() => {
                   updateSalgsmuligheter(prev => prev.map(s => s.id === currentSm.id ? { ...s, sist_aktivitet: new Date().toISOString().split("T")[0] } : s));
                 }} />
                 <MeetingNotesList
