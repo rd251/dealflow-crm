@@ -48,7 +48,7 @@ async function fetchDealContext(salgsmulighet_id: string) {
     const [activitiesRes, emailsRes, upcomingRes] = await Promise.all([
       // All past activities on the deal
       fetch(
-        `${API_URL}/aktiviteter?salgsmulighet_id=eq.${salgsmulighet_id}&order=dato.desc&limit=20&select=id,tittel,beskrivelse,moetenotater,dato,type`,
+        `${API_URL}/aktiviteter?salgsmulighet_id=eq.${salgsmulighet_id}&order=dato.desc&limit=20&select=id,tittel,beskrivelse,moetenotater,dato,type,aktivitet_kilde`,
         { headers: API_HEADERS }
       ),
       // Emails on the deal
@@ -94,7 +94,7 @@ export default function MeetingNotesList({ salgsmulighet_id, selskap_id, lead_id
 
     try {
       const res = await fetch(
-        `${API_URL}/aktiviteter?${filters.join("&")}&order=dato.desc&select=id,tittel,beskrivelse,moetenotater,dato,start_tid`,
+        `${API_URL}/aktiviteter?${filters.join("&")}&order=dato.desc&select=id,tittel,beskrivelse,moetenotater,dato,start_tid,aktivitet_kilde`,
         { headers: API_HEADERS }
       );
       if (res.ok) setMeetings(await res.json());
@@ -241,7 +241,7 @@ export default function MeetingNotesList({ salgsmulighet_id, selskap_id, lead_id
               {isExpanded && (
                 <div className="px-3 pb-2 space-y-2">
                   {hasNotes && (
-                    <p className="text-xs text-muted-foreground whitespace-pre-line bg-muted/50 rounded p-2">{m.moetenotater}</p>
+                    <MeetingNotesRenderer notes={m.moetenotater!} source={m.aktivitet_kilde} />
                   )}
 
                   {isLoadingAi && (
