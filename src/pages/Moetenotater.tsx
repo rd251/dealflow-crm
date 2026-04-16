@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import PageShell from "@/components/PageShell";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -51,6 +52,7 @@ interface AiSummary {
 }
 
 export default function Moetenotater() {
+  const navigate = useNavigate();
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [entities, setEntities] = useState<Record<string, RelatedEntity>>({});
   const [selectedMeeting, setSelectedMeeting] = useState<Meeting | null>(null);
@@ -318,19 +320,19 @@ export default function Moetenotater() {
                         </div>
                         <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                           {m.selskap_id && entities[m.selskap_id] && (
-                            <Badge variant="secondary" className="text-[10px] gap-1">
+                            <Badge variant="secondary" className="text-[10px] gap-1 cursor-pointer hover:bg-secondary/80" onClick={(e) => { e.stopPropagation(); navigate(`/selskaper/${m.selskap_id}`); }}>
                               <Building2 className="w-2.5 h-2.5" />
                               {entities[m.selskap_id].name}
                             </Badge>
                           )}
                           {m.salgsmulighet_id && entities[m.salgsmulighet_id] && (
-                            <Badge variant="outline" className="text-[10px] gap-1 bg-blue-500/10 text-blue-600 border-blue-200">
+                            <Badge variant="outline" className="text-[10px] gap-1 bg-blue-500/10 text-blue-600 border-blue-200 cursor-pointer hover:bg-blue-500/20" onClick={(e) => { e.stopPropagation(); navigate(`/salgsmuligheter?id=${m.salgsmulighet_id}`); }}>
                               <ArrowRight className="w-2.5 h-2.5" />
                               {entities[m.salgsmulighet_id].name}
                             </Badge>
                           )}
                           {!m.selskap_id && !m.salgsmulighet_id && linked && (
-                            <Badge variant="secondary" className="text-[10px] gap-1">
+                            <Badge variant="secondary" className="text-[10px] gap-1 cursor-pointer hover:bg-secondary/80" onClick={(e) => { e.stopPropagation(); navigate(linked.type === "selskap" ? `/selskaper/${linked.id}` : linked.type === "salgsmulighet" ? `/salgsmuligheter?id=${linked.id}` : `/leads?id=${linked.id}`); }}>
                               <Building2 className="w-2.5 h-2.5" />
                               {linked.name}
                             </Badge>
