@@ -52,6 +52,7 @@ interface AiSummary {
 }
 
 export default function Moetenotater() {
+  const navigate = useNavigate();
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [entities, setEntities] = useState<Record<string, RelatedEntity>>({});
   const [selectedMeeting, setSelectedMeeting] = useState<Meeting | null>(null);
