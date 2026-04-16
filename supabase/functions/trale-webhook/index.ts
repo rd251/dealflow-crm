@@ -6,7 +6,7 @@ const corsHeaders = {
 };
 
 async function verifySignature(body: string, signatureHeader: string | null, secret: string | null): Promise<boolean> {
-  if (!secret || !signatureHeader) return true; // Skip if no secret configured
+  if (!secret || !signatureHeader) return true;
   const expectedSig = signatureHeader.replace("sha256=", "");
   const encoder = new TextEncoder();
   const key = await crypto.subtle.importKey(
@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
   const rawBody = await req.text();
 
   try {
-    // Verify signature if secret is configured
+    // Verify signature
     const webhookSecret = Deno.env.get("TRALE_WEBHOOK_SECRET");
     const signatureHeader = req.headers.get("x-signature");
 
@@ -66,12 +66,34 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
+    // 0. Duplikatsjekk — skip hvis møtet allerede er lagret
+    if (meeting.id) {
+      const { data: existing } = await supabase
+        .from("aktiviteter")
+        .select("id")
+        .eq("ekstern_id", meeting.id)
+        .eq("ekstern_provider", "trale")
+        .maybeSingle();
+
+      if (existing) {
+        console.log("Trale webhook: Duplicate meeting skipped:", meeting.id);
+        return new Response(JSON.stringify({
+          received: true,
+          skipped: true,
+          reason: "Duplicate meeting (ekstern_id already exists)",
+          existing_activity_id: existing.id,
+        }), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     // Build transcript text
     const transcriptText = Array.isArray(transcript)
       ? transcript.map((t: any) => `[${t.speaker}]: ${t.text}`).join("\n")
       : "";
 
-    // Build full meeting notes
     const meetingNotes = [
       summary || "",
       transcriptText ? `\n---\n**Transkripsjon:**\n${transcriptText}` : "",
@@ -87,9 +109,28 @@ Deno.serve(async (req) => {
     if (attendeeEmails.length > 0) {
       const { data: kontakter } = await supabase
         .from("kontakter")
-        .select("id, navn, e_post, selskap_id")
+        .select("id, navn, e_post, selskap_id, linkedin")
         .in("e_post", attendeeEmails);
       matchedKontakter = kontakter || [];
+    }
+
+    // 1. LinkedIn-berikelse — oppdater kontakter med LinkedIn-URL fra Trale
+    const linkedinUpdates: string[] = [];
+    for (const attendee of (attendees || [])) {
+      const linkedinUrl = attendee.linkedinUrl || attendee.linkedin_url || attendee.linkedin;
+      if (!linkedinUrl || !attendee.email) continue;
+
+      const matchedKontakt = matchedKontakter.find(
+        k => k.e_post?.toLowerCase() === attendee.email.toLowerCase()
+      );
+
+      if (matchedKontakt && !matchedKontakt.linkedin) {
+        await supabase
+          .from("kontakter")
+          .update({ linkedin: linkedinUrl })
+          .eq("id", matchedKontakt.id);
+        linkedinUpdates.push(`${matchedKontakt.navn}: ${linkedinUrl}`);
+      }
     }
 
     // Find matching salgsmuligheter by email or kontakt
@@ -122,7 +163,6 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Determine selskap_id from salgsmulighet or kontakt
     const selskapId = matchedSm?.selskap_id
       || (matchedKontakter.length > 0 ? matchedKontakter[0].selskap_id : null);
 
@@ -132,7 +172,7 @@ Deno.serve(async (req) => {
     const today = new Date().toISOString();
     const todayDate = today.split("T")[0];
 
-    // 1. Create aktivitet (Møte)
+    // 2. Create aktivitet (Møte)
     const aktivitetData: any = {
       type: "Møte",
       tittel: meeting.name || "Trale-møte",
@@ -161,11 +201,10 @@ Deno.serve(async (req) => {
       console.error("Trale webhook: Error creating activity:", activityError);
     }
 
-    // 2. Update salgsmulighet with meeting notes + AI neste steg
+    // 3. AI neste steg + auto-oppgave
     let aiNesteSteg: string | null = null;
 
     if (matchedSm && summary) {
-      // Use AI to suggest next step
       const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
       if (LOVABLE_API_KEY) {
         try {
@@ -201,9 +240,7 @@ Deno.serve(async (req) => {
       }
 
       // Update salgsmulighet
-      const updateData: any = {
-        sist_aktivitet: todayDate,
-      };
+      const updateData: any = { sist_aktivitet: todayDate };
       if (aiNesteSteg) {
         updateData.neste_steg = aiNesteSteg;
       }
@@ -213,7 +250,7 @@ Deno.serve(async (req) => {
         .update(updateData)
         .eq("id", matchedSm.id);
 
-      // Also update moetenotater on the salgsmulighet's notater (append)
+      // Append meeting note to salgsmulighet
       const notePrefix = `\n\n---\n📝 Trale møtenotat (${todayDate}):\n`;
       const { data: currentSm } = await supabase
         .from("salgsmuligheter")
@@ -229,9 +266,51 @@ Deno.serve(async (req) => {
         .eq("id", matchedSm.id);
     }
 
-    // 3. Notify responsible user
+    // 4. Auto-oppgave fra AI neste steg
+    let createdTaskId: string | null = null;
+    if (aiNesteSteg && matchedSm) {
+      // Finn user_id for ansvarlig
+      let ansvarligUserId: string | null = null;
+      if (matchedSm.ansvarlig) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("user_id")
+          .eq("display_name", matchedSm.ansvarlig)
+          .maybeSingle();
+        ansvarligUserId = profile?.user_id || null;
+      }
+
+      // Sett frist til 2 virkedager frem
+      const frist = new Date();
+      let daysAdded = 0;
+      while (daysAdded < 2) {
+        frist.setDate(frist.getDate() + 1);
+        const day = frist.getDay();
+        if (day !== 0 && day !== 6) daysAdded++;
+      }
+
+      const { data: task } = await supabase
+        .from("oppgaver")
+        .insert({
+          oppgave: aiNesteSteg,
+          ansvarlig: matchedSm.ansvarlig || null,
+          user_id: ansvarligUserId,
+          salgsmulighet_id: matchedSm.id,
+          selskap_id: selskapId,
+          kontakt_id: kontaktId,
+          frist: frist.toISOString().split("T")[0],
+          prioritet: "Høy",
+          status: "Åpen",
+          notater: `Automatisk opprettet fra Trale-møte: ${meeting.name || "Møte"}`,
+        })
+        .select("id")
+        .single();
+
+      createdTaskId = task?.id || null;
+    }
+
+    // 5. Notify responsible user
     if (matchedSm?.ansvarlig) {
-      // Find user_id by display_name
       const { data: profile } = await supabase
         .from("profiles")
         .select("user_id")
@@ -265,6 +344,8 @@ Deno.serve(async (req) => {
       kontaktMatches: matchedKontakter.length,
       aiNesteSteg,
       activityId: createdActivity?.id,
+      taskId: createdTaskId,
+      linkedinUpdates: linkedinUpdates.length,
     });
 
     return new Response(JSON.stringify({
@@ -273,6 +354,8 @@ Deno.serve(async (req) => {
       matched_deal: matchedSm?.navn || null,
       matched_contacts: matchedKontakter.length,
       ai_neste_steg: aiNesteSteg,
+      task_id: createdTaskId,
+      linkedin_updates: linkedinUpdates.length,
     }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
