@@ -32,6 +32,7 @@ interface Meeting {
   partner_id: string | null;
   prosjekt_id: string | null;
   kontakt_id: string | null;
+  aktivitet_kilde: string | null;
 }
 
 interface RelatedEntity {
@@ -64,7 +65,7 @@ export default function Moetenotater() {
   const fetchMeetings = useCallback(async () => {
     try {
       const res = await fetch(
-        `${API_URL}/aktiviteter?type=eq.Møte&order=dato.desc&select=id,tittel,beskrivelse,moetenotater,dato,start_tid,slutt_tid,deltakere,lead_id,salgsmulighet_id,selskap_id,partner_id,prosjekt_id,kontakt_id`,
+        `${API_URL}/aktiviteter?type=eq.Møte&order=dato.desc&select=id,tittel,beskrivelse,moetenotater,dato,start_tid,slutt_tid,deltakere,lead_id,salgsmulighet_id,selskap_id,partner_id,prosjekt_id,kontakt_id,aktivitet_kilde`,
         { headers: API_HEADERS }
       );
       if (res.ok) setMeetings(await res.json());
