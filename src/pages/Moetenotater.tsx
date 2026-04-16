@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Users, Clock, Building2, FileText, Save, ChevronDown, ChevronUp, Sparkles, ArrowRight, Loader2, Search, Filter, CalendarDays } from "lucide-react";
+import MeetingNotesRenderer from "@/components/MeetingNotesRenderer";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -314,7 +315,7 @@ export default function Moetenotater() {
                       <div className="mt-3 space-y-3">
                         {hasNotes && (
                           <div className="p-3 bg-muted/50 rounded-md">
-                            <p className="text-xs whitespace-pre-line">{m.moetenotater}</p>
+                            <MeetingNotesRenderer notes={m.moetenotater!} source={m.aktivitet_kilde} />
                           </div>
                         )}
 
