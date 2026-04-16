@@ -45,6 +45,9 @@ Deno.serve(async (req) => {
     }
 
     const body = JSON.parse(rawBody);
+    // Midlertidig: logg hele payloaden for å kartlegge Trale-felter
+    console.log("Trale webhook RAW payload keys:", JSON.stringify(Object.keys(body)));
+    console.log("Trale webhook FULL payload:", JSON.stringify(body, null, 2));
     const { event, meeting, attendees, summary, transcript } = body;
 
     if (event !== "meeting.completed") {
