@@ -4,12 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Users, Clock, Building2, FileText, Save, ChevronDown, ChevronUp, Sparkles, ArrowRight, Loader2, Search, Filter, CalendarDays } from "lucide-react";
+import { Users, Clock, Building2, FileText, Save, ChevronDown, ChevronUp, Sparkles, ArrowRight, Loader2, Search, Filter, CalendarDays, Mic, MoreVertical, CheckCircle2, AlertCircle } from "lucide-react";
 import MeetingNotesRenderer from "@/components/MeetingNotesRenderer";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 const API_URL = import.meta.env.VITE_SUPABASE_URL + '/rest/v1';
 const API_HEADERS = {
@@ -162,7 +163,6 @@ export default function Moetenotater() {
   const formatDate = (d: string) => new Date(d).toLocaleDateString("no-NO", { day: "numeric", month: "short", year: "numeric" });
   const formatTime = (d: string | null) => d ? new Date(d).toLocaleTimeString("no-NO", { hour: "2-digit", minute: "2-digit" }) : null;
 
-  // Unique linked entity names for filter dropdown
   const entityOptions = Array.from(new Set(
     meetings.map(m => {
       const linked = getLinkedEntity(m);
@@ -170,12 +170,9 @@ export default function Moetenotater() {
     }).filter(Boolean) as string[]
   )).sort();
 
-  // Filter meetings
   const filteredMeetings = meetings.filter(m => {
     const linked = getLinkedEntity(m);
     const hasNotes = !!m.moetenotater?.trim();
-
-    // Search filter
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       const matchTitle = (m.tittel || "").toLowerCase().includes(q);
@@ -184,28 +181,54 @@ export default function Moetenotater() {
       const matchBeskrivelse = (m.beskrivelse || "").toLowerCase().includes(q);
       if (!matchTitle && !matchEntity && !matchNotes && !matchBeskrivelse) return false;
     }
-
-    // Note status filter
     if (noteFilter === "with" && !hasNotes) return false;
     if (noteFilter === "without" && hasNotes) return false;
-
-    // Entity filter
     if (entityFilter !== "all") {
       if (!linked || linked.name !== entityFilter) return false;
     }
-
-    // Date filter
     if (dateFilter === "today") {
       const today = new Date().toISOString().split("T")[0];
       const meetingDate = new Date(m.dato).toISOString().split("T")[0];
       if (meetingDate !== today) return false;
     }
-
     return true;
   });
 
+  const getStatusBadge = (m: Meeting) => {
+    const hasNotes = !!m.moetenotater?.trim();
+    const isTrale = m.aktivitet_kilde === "trale";
+    const hasSummary = !!aiSummaries[m.id];
+
+    if (hasSummary) {
+      return (
+        <Badge className="text-[10px] gap-1 bg-primary/10 text-primary border-0 hover:bg-primary/20">
+          <Sparkles className="w-2.5 h-2.5" /> AI-oppsummert
+        </Badge>
+      );
+    }
+    if (hasNotes) {
+      return (
+        <Badge className="text-[10px] gap-1 bg-emerald-500/10 text-emerald-600 border-0 hover:bg-emerald-500/20">
+          <CheckCircle2 className="w-2.5 h-2.5" /> Notater
+        </Badge>
+      );
+    }
+    if (isTrale) {
+      return (
+        <Badge variant="outline" className="text-[10px] gap-1 bg-violet-500/10 text-violet-600 border-violet-200">
+          <Mic className="w-2.5 h-2.5" /> Trale
+        </Badge>
+      );
+    }
+    return (
+      <Badge variant="outline" className="text-[10px] gap-1 text-muted-foreground">
+        <AlertCircle className="w-2.5 h-2.5" /> Mangler
+      </Badge>
+    );
+  };
+
   return (
-    <PageShell title="Møtenotater" subtitle="Detaljerte notater fra møter for bedre AI-kontekst">
+    <PageShell title="Møtenotater" subtitle="Oversikt over alle møter med notater og AI-oppsummeringer">
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-2 mb-4">
         <div className="relative flex-1 min-w-[200px] max-w-sm">
@@ -242,9 +265,6 @@ export default function Moetenotater() {
             </SelectContent>
           </Select>
         )}
-        {(searchQuery || noteFilter !== "all" || entityFilter !== "all" || dateFilter !== "all") && (
-          <span className="text-[10px] text-muted-foreground">{filteredMeetings.length} av {meetings.length} møter</span>
-        )}
         <Button
           size="sm"
           variant={dateFilter === "today" ? "default" : "outline"}
@@ -254,131 +274,161 @@ export default function Moetenotater() {
           <CalendarDays className="w-3 h-3" />
           I dag
         </Button>
+        {(searchQuery || noteFilter !== "all" || entityFilter !== "all" || dateFilter !== "all") && (
+          <span className="text-[10px] text-muted-foreground">{filteredMeetings.length} av {meetings.length} møter</span>
+        )}
       </div>
 
-      <div className="space-y-3">
-        {filteredMeetings.length === 0 ? (
-          <p className="text-sm text-muted-foreground italic py-8 text-center">
-            {meetings.length === 0 ? "Ingen møter registrert ennå" : "Ingen møter matcher filteret"}
-          </p>
-        ) : (
-          filteredMeetings.map(m => {
-            const linked = getLinkedEntity(m);
-            const hasNotes = !!m.moetenotater?.trim();
-            const isExpanded = expandedId === m.id;
-            const summary = aiSummaries[m.id];
-            const isLoadingAi = aiLoading === m.id;
-            return (
-              <div key={m.id} className="border rounded-lg bg-card">
-                <div className="p-4 flex items-start gap-3">
-                  <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 bg-amber-500/10 text-amber-600">
-                    <Users className="w-4 h-4" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-sm font-medium">{m.tittel || "Møte"}</span>
-                      {linked && (
-                        <Badge variant="secondary" className="text-[10px] gap-1">
-                          <Building2 className="w-2.5 h-2.5" />
-                          {linked.name}
-                        </Badge>
-                      )}
-                      {hasNotes ? (
-                        <Badge variant="default" className="text-[10px] gap-1 bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 border-0">
-                          <FileText className="w-2.5 h-2.5" /> Notater
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline" className="text-[10px] gap-1 text-muted-foreground">
-                          <FileText className="w-2.5 h-2.5" /> Ingen notater
-                        </Badge>
-                      )}
-                      {summary && (
-                        <Badge variant="default" className="text-[10px] gap-1 bg-primary/10 text-primary hover:bg-primary/20 border-0">
-                          <Sparkles className="w-2.5 h-2.5" /> AI
-                        </Badge>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        {formatDate(m.dato)}
-                        {m.start_tid && ` kl. ${formatTime(m.start_tid)}`}
-                        {m.slutt_tid && `–${formatTime(m.slutt_tid)}`}
-                      </span>
-                    </div>
-                    {m.beskrivelse && (
-                      <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{m.beskrivelse}</p>
-                    )}
+      {filteredMeetings.length === 0 ? (
+        <p className="text-sm text-muted-foreground italic py-8 text-center">
+          {meetings.length === 0 ? "Ingen møter registrert ennå" : "Ingen møter matcher filteret"}
+        </p>
+      ) : (
+        <div className="border rounded-lg overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/30">
+                <TableHead className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Møte</TableHead>
+                <TableHead className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground w-[160px]">Dato</TableHead>
+                <TableHead className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground w-[120px]">Status</TableHead>
+                <TableHead className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground w-[140px] text-right">Handlinger</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredMeetings.map(m => {
+                const linked = getLinkedEntity(m);
+                const hasNotes = !!m.moetenotater?.trim();
+                const isExpanded = expandedId === m.id;
+                const summary = aiSummaries[m.id];
+                const isLoadingAi = aiLoading === m.id;
+                const isTrale = m.aktivitet_kilde === "trale";
 
-                    {/* Expanded content */}
-                    {isExpanded && (
-                      <div className="mt-3 space-y-3">
-                        {hasNotes && (
-                          <div className="p-3 bg-muted/50 rounded-md">
-                            <MeetingNotesRenderer notes={m.moetenotater!} source={m.aktivitet_kilde} />
+                return (
+                  <>
+                    <TableRow
+                      key={m.id}
+                      className="group cursor-pointer hover:bg-muted/30 transition-colors"
+                      onClick={() => (hasNotes || summary) && setExpandedId(isExpanded ? null : m.id)}
+                    >
+                      <TableCell className="py-3">
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="text-sm font-medium truncate">{m.tittel || "Møte"}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                          {linked && (
+                            <Badge variant="secondary" className="text-[10px] gap-1">
+                              <Building2 className="w-2.5 h-2.5" />
+                              {linked.name}
+                            </Badge>
+                          )}
+                          {isTrale && (
+                            <Badge variant="outline" className="text-[10px] gap-1 bg-violet-500/10 text-violet-600 border-violet-200">
+                              <Mic className="w-2.5 h-2.5" /> Trale
+                            </Badge>
+                          )}
+                          {m.deltakere && m.deltakere.length > 0 && (
+                            <span className="text-[10px] text-muted-foreground">
+                              {m.deltakere.length} deltaker{m.deltakere.length > 1 ? "e" : ""}
+                            </span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="py-3">
+                        <div className="text-xs font-medium">{formatDate(m.dato)}</div>
+                        {m.start_tid && (
+                          <div className="text-[11px] text-muted-foreground">
+                            {formatTime(m.start_tid)}
+                            {m.slutt_tid && ` – ${formatTime(m.slutt_tid)}`}
                           </div>
                         )}
+                      </TableCell>
+                      <TableCell className="py-3">
+                        {getStatusBadge(m)}
+                      </TableCell>
+                      <TableCell className="py-3 text-right" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center justify-end gap-1">
+                          {hasNotes && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 w-7 p-0"
+                              disabled={isLoadingAi}
+                              onClick={() => generateSummary(m)}
+                              title="AI-oppsummering"
+                            >
+                              {isLoadingAi ? <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" /> : <Sparkles className="w-3.5 h-3.5 text-primary" />}
+                            </Button>
+                          )}
+                          <Button size="sm" variant="outline" className="text-xs h-7 px-2" onClick={() => openNotes(m)}>
+                            {hasNotes ? "Rediger" : "+ Notat"}
+                          </Button>
+                          {(hasNotes || summary) && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 w-7 p-0"
+                              onClick={() => setExpandedId(isExpanded ? null : m.id)}
+                            >
+                              {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
 
-                        {/* AI Summary */}
-                        {summary && (
-                          <div className="rounded-md border border-primary/20 bg-primary/5 p-3 space-y-2">
-                            <div className="flex items-center gap-1.5">
-                              <Sparkles className="w-3.5 h-3.5 text-primary" />
-                              <span className="text-[11px] font-semibold uppercase tracking-wide text-primary">AI-oppsummering</span>
-                              {summary.kundesignal && (
-                                <Badge variant="secondary" className="text-[10px] ml-auto">{summary.kundesignal}</Badge>
-                              )}
-                            </div>
-                            <p className="text-xs">{summary.oppsummering}</p>
-                            {summary.neste_steg.length > 0 && (
-                              <div className="space-y-1">
-                                <span className="text-[10px] font-medium text-muted-foreground uppercase">Foreslåtte neste steg:</span>
-                                {summary.neste_steg.map((step, i) => (
-                                  <div key={i} className="flex items-start gap-1.5 text-xs">
-                                    <ArrowRight className="w-3 h-3 text-primary shrink-0 mt-0.5" />
-                                    <span>{step}</span>
+                    {isExpanded && (
+                      <TableRow key={`${m.id}-expanded`}>
+                        <TableCell colSpan={4} className="p-0 border-b">
+                          <div className="px-6 py-4 bg-muted/20 space-y-3">
+                            {hasNotes && (
+                              <div className="p-3 bg-background rounded-md border">
+                                <MeetingNotesRenderer notes={m.moetenotater!} source={m.aktivitet_kilde} />
+                              </div>
+                            )}
+
+                            {isLoadingAi && (
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground py-2">
+                                <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
+                                <span>Genererer AI-oppsummering...</span>
+                              </div>
+                            )}
+
+                            {summary && (
+                              <div className="rounded-md border border-primary/20 bg-primary/5 p-3 space-y-2">
+                                <div className="flex items-center gap-1.5">
+                                  <Sparkles className="w-3.5 h-3.5 text-primary" />
+                                  <span className="text-[11px] font-semibold uppercase tracking-wide text-primary">AI-oppsummering</span>
+                                  {summary.kundesignal && (
+                                    <Badge variant="secondary" className="text-[10px] ml-auto">{summary.kundesignal}</Badge>
+                                  )}
+                                </div>
+                                <p className="text-xs">{summary.oppsummering}</p>
+                                {summary.neste_steg.length > 0 && (
+                                  <div className="space-y-1">
+                                    <span className="text-[10px] font-medium text-muted-foreground uppercase">Foreslåtte neste steg:</span>
+                                    {summary.neste_steg.map((step, i) => (
+                                      <div key={i} className="flex items-start gap-1.5 text-xs">
+                                        <ArrowRight className="w-3 h-3 text-primary shrink-0 mt-0.5" />
+                                        <span>{step}</span>
+                                      </div>
+                                    ))}
                                   </div>
-                                ))}
+                                )}
                               </div>
                             )}
                           </div>
-                        )}
-                      </div>
+                        </TableCell>
+                      </TableRow>
                     )}
-                  </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    {hasNotes && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-7 w-7 p-0"
-                        disabled={isLoadingAi}
-                        onClick={() => generateSummary(m)}
-                        title="AI-oppsummering"
-                      >
-                        {isLoadingAi ? <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" /> : <Sparkles className="w-3.5 h-3.5 text-primary" />}
-                      </Button>
-                    )}
-                    {(hasNotes || summary) && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-7 w-7 p-0"
-                        onClick={() => setExpandedId(isExpanded ? null : m.id)}
-                      >
-                        {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                      </Button>
-                    )}
-                    <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => openNotes(m)}>
-                      {hasNotes ? "Rediger" : "Legg til notater"}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            );
-          })
-        )}
-      </div>
+                  </>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
+      )}
 
       <Dialog open={!!selectedMeeting} onOpenChange={open => !open && setSelectedMeeting(null)}>
         <DialogContent className="max-w-lg">
