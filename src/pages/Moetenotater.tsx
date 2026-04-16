@@ -317,7 +317,19 @@ export default function Moetenotater() {
                           </div>
                         </div>
                         <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                          {linked && (
+                          {m.selskap_id && entities[m.selskap_id] && (
+                            <Badge variant="secondary" className="text-[10px] gap-1">
+                              <Building2 className="w-2.5 h-2.5" />
+                              {entities[m.selskap_id].name}
+                            </Badge>
+                          )}
+                          {m.salgsmulighet_id && entities[m.salgsmulighet_id] && (
+                            <Badge variant="outline" className="text-[10px] gap-1 bg-blue-500/10 text-blue-600 border-blue-200">
+                              <ArrowRight className="w-2.5 h-2.5" />
+                              {entities[m.salgsmulighet_id].name}
+                            </Badge>
+                          )}
+                          {!m.selskap_id && !m.salgsmulighet_id && linked && (
                             <Badge variant="secondary" className="text-[10px] gap-1">
                               <Building2 className="w-2.5 h-2.5" />
                               {linked.name}
