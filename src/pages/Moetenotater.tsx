@@ -441,8 +441,9 @@ export default function Moetenotater() {
           </DialogHeader>
           <div className="space-y-3">
             {selectedMeeting?.beskrivelse && (
-              <div className="p-2 bg-muted/50 rounded text-xs text-muted-foreground">
-                <span className="font-medium">Beskrivelse:</span> {selectedMeeting.beskrivelse}
+              <div className="p-2 bg-muted/50 rounded text-xs text-muted-foreground overflow-hidden">
+                <span className="font-medium">Beskrivelse:</span>
+                <p className="mt-0.5 break-all line-clamp-3">{selectedMeeting.beskrivelse}</p>
               </div>
             )}
             <Textarea
