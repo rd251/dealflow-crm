@@ -4,6 +4,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Users, Clock, FileText, Save, ChevronDown, ChevronUp, NotebookPen, Sparkles, ArrowRight, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import MeetingNotesRenderer from "@/components/MeetingNotesRenderer";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -21,6 +22,7 @@ interface MeetingNote {
   moetenotater: string | null;
   dato: string;
   start_tid: string | null;
+  aktivitet_kilde: string | null;
 }
 
 interface AiSummary {
