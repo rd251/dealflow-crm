@@ -322,6 +322,62 @@ export default function Dashboard() {
     });
   }, [salgsmuligheter]);
 
+  // ─── SALGSMULIGHET-FOKUS ───
+  const openSalg = useMemo(
+    () => salgsmuligheter.filter((s) => s.status !== "Vunnet" && s.status !== "Tapt"),
+    [salgsmuligheter]
+  );
+
+  const hotDeals = useMemo(() => {
+    const cutoff30 = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+    return openSalg
+      .filter((s) => s.forventet_lukkedato && new Date(s.forventet_lukkedato) <= cutoff30)
+      .map((s) => ({
+        ...s,
+        selskapNavn: selskaper.find((x) => x.id === s.selskap_id)?.firmanavn || "—",
+        verdi: beregnTotalKontraktsverdi(s),
+      }))
+      .sort((a, b) => b.verdi - a.verdi)
+      .slice(0, 5);
+  }, [openSalg, selskaper]);
+
+  const trengerHandling = useMemo(() => {
+    const cutoff48h = new Date(now.getTime() - 48 * 60 * 60 * 1000);
+    return openSalg
+      .filter((s) => !s.sist_aktivitet || new Date(s.sist_aktivitet) < cutoff48h)
+      .map((s) => ({
+        ...s,
+        selskapNavn: selskaper.find((x) => x.id === s.selskap_id)?.firmanavn || "—",
+        daysSince: s.sist_aktivitet ? differenceInDays(now, new Date(s.sist_aktivitet)) : 999,
+      }))
+      .sort((a, b) => b.daysSince - a.daysSince)
+      .slice(0, 5);
+  }, [openSalg, selskaper]);
+
+  const kontraktSendt = useMemo(
+    () =>
+      openSalg
+        .filter((s) => s.status === "Kontrakt sendt")
+        .map((s) => ({
+          ...s,
+          selskapNavn: selskaper.find((x) => x.id === s.selskap_id)?.firmanavn || "—",
+          verdi: beregnTotalKontraktsverdi(s),
+        }))
+        .sort((a, b) => b.verdi - a.verdi),
+    [openSalg, selskaper]
+  );
+
+  const pipelineByStage = useMemo(() => {
+    const stages: Array<"Møte booket" | "Behov avklart" | "Løsning presentert" | "Kontrakt sendt"> = [
+      "Møte booket", "Behov avklart", "Løsning presentert", "Kontrakt sendt",
+    ];
+    return stages.map((stage) => {
+      const items = openSalg.filter((s) => s.status === stage);
+      const verdi = items.reduce((sum, s) => sum + beregnTotalKontraktsverdi(s), 0);
+      return { stage, count: items.length, verdi };
+    });
+  }, [openSalg]);
+
   // ─── SECTION 2: NESTE STEG ───
   const nesteStegListe = useMemo(() => {
     const open = salgsmuligheter.filter((s) => s.status !== "Vunnet" && s.status !== "Tapt");
