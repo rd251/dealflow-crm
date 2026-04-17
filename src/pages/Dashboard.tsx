@@ -492,6 +492,126 @@ export default function Dashboard() {
             onClick={() => navigate("/salgsmuligheter")}
           />
         </div>
+
+        {/* ─── SALGSMULIGHET-FOKUS ─── */}
+        <div className="mt-5 grid grid-cols-1 lg:grid-cols-3 gap-3">
+          {/* Hot deals */}
+          <div className="bg-card border rounded-xl overflow-hidden">
+            <div className="px-4 py-3 border-b flex items-center justify-between bg-muted/30">
+              <div className="flex items-center gap-2">
+                <Target className="w-4 h-4 text-destructive" />
+                <h3 className="text-xs uppercase tracking-wider font-semibold text-muted-foreground">Hot deals</h3>
+              </div>
+              <Badge variant="secondary" className="text-[10px] h-5">{hotDeals.length}</Badge>
+            </div>
+            {hotDeals.length === 0 ? (
+              <p className="px-4 py-6 text-center text-xs text-muted-foreground">Ingen deals nær closing</p>
+            ) : (
+              <ul className="divide-y">
+                {hotDeals.map((d) => (
+                  <li
+                    key={d.id}
+                    className="px-4 py-2.5 hover:bg-muted/40 cursor-pointer transition-colors"
+                    onClick={() => navigate(`/salgsmuligheter?id=${d.id}`)}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm font-medium truncate">{d.selskapNavn}</div>
+                        <div className="text-[11px] text-muted-foreground truncate">
+                          {d.navn} · {d.forventet_lukkedato ? format(new Date(d.forventet_lukkedato), "d. MMM", { locale: nb }) : "—"}
+                        </div>
+                      </div>
+                      <div className="text-xs font-semibold text-foreground shrink-0">{nok(d.verdi)}</div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {/* Trenger handling */}
+          <div className="bg-card border rounded-xl overflow-hidden">
+            <div className="px-4 py-3 border-b flex items-center justify-between bg-muted/30">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-amber-600" />
+                <h3 className="text-xs uppercase tracking-wider font-semibold text-muted-foreground">Trenger handling</h3>
+              </div>
+              <Badge variant="secondary" className="text-[10px] h-5">{trengerHandling.length}</Badge>
+            </div>
+            {trengerHandling.length === 0 ? (
+              <p className="px-4 py-6 text-center text-xs text-muted-foreground">Alle deals er aktive</p>
+            ) : (
+              <ul className="divide-y">
+                {trengerHandling.map((d) => (
+                  <li
+                    key={d.id}
+                    className="px-4 py-2.5 hover:bg-muted/40 cursor-pointer transition-colors"
+                    onClick={() => navigate(`/salgsmuligheter?id=${d.id}`)}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm font-medium truncate">{d.selskapNavn}</div>
+                        <div className="text-[11px] text-muted-foreground truncate">{d.status}</div>
+                      </div>
+                      <Badge variant="outline" className="text-[10px] h-5 shrink-0 border-amber-300 text-amber-700 dark:text-amber-400">
+                        {d.daysSince >= 999 ? "Aldri" : `${d.daysSince}d`}
+                      </Badge>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {/* Kontrakt sendt */}
+          <div className="bg-card border rounded-xl overflow-hidden">
+            <div className="px-4 py-3 border-b flex items-center justify-between bg-muted/30">
+              <div className="flex items-center gap-2">
+                <FileText className="w-4 h-4 text-primary" />
+                <h3 className="text-xs uppercase tracking-wider font-semibold text-muted-foreground">Kontrakt sendt</h3>
+              </div>
+              <Badge variant="secondary" className="text-[10px] h-5">{kontraktSendt.length}</Badge>
+            </div>
+            {kontraktSendt.length === 0 ? (
+              <p className="px-4 py-6 text-center text-xs text-muted-foreground">Ingen kontrakter ute</p>
+            ) : (
+              <ul className="divide-y">
+                {kontraktSendt.slice(0, 5).map((d) => (
+                  <li
+                    key={d.id}
+                    className="px-4 py-2.5 hover:bg-muted/40 cursor-pointer transition-colors"
+                    onClick={() => navigate(`/salgsmuligheter?id=${d.id}`)}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm font-medium truncate">{d.selskapNavn}</div>
+                        <div className="text-[11px] text-muted-foreground truncate">{d.navn}</div>
+                      </div>
+                      <div className="text-xs font-semibold text-foreground shrink-0">{nok(d.verdi)}</div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+
+        {/* ─── PIPELINE PER STADIUM ─── */}
+        <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-3">
+          {pipelineByStage.map((p) => (
+            <button
+              key={p.stage}
+              onClick={() => navigate(`/salgsmuligheter?status=${encodeURIComponent(p.stage)}`)}
+              className="bg-card border rounded-xl px-4 py-3 text-left hover:border-primary/40 hover:shadow-sm transition-all"
+            >
+              <div className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground truncate">{p.stage}</div>
+              <div className="mt-1 flex items-baseline justify-between gap-2">
+                <span className="text-xl font-semibold text-foreground">{p.count}</span>
+                <span className="text-[11px] text-muted-foreground truncate">{nok(p.verdi)}</span>
+              </div>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* ─── MØTER (flyttet opp – synlig over fold) ─── */}
