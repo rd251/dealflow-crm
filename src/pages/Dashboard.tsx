@@ -541,8 +541,8 @@ export default function Dashboard() {
                           <Sparkles className="w-2.5 h-2.5" /> AI-oppsummert
                         </Badge>
                       ) : missingNotes ? (
-                        <Badge variant="destructive" className="text-[10px] gap-1 h-5 px-1.5">
-                          <AlertCircle className="w-2.5 h-2.5" /> Mangler notat
+                        <Badge variant="destructive" className="text-[10px] gap-1 h-5 px-2 whitespace-nowrap inline-flex items-center w-fit">
+                          <AlertCircle className="w-2.5 h-2.5 shrink-0" /> Mangler notat
                         </Badge>
                       ) : hasNotes ? (
                         <Badge variant="outline" className="text-[10px] gap-1 h-5 px-1.5">
