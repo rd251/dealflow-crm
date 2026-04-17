@@ -603,7 +603,7 @@ export default function Dashboard() {
                                         {isCreating ? (
                                           <Loader2 className="w-3 h-3 animate-spin" />
                                         ) : isCreated ? (
-                                          <><CheckCircle2 className="w-3 h-3 mr-1 text-green-600" />Opprettet</>
+                                          <><CheckCircle2 className="w-3 h-3 mr-1 text-primary" />Opprettet</>
                                         ) : (
                                           <><Plus className="w-3 h-3 mr-1" />Lag oppgave</>
                                         )}
