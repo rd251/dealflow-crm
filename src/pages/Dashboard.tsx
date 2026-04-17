@@ -405,7 +405,7 @@ export default function Dashboard() {
                               </Badge>
                             )}
                             {hasNotes && (
-                              <Badge variant="secondary" className="text-[10px] gap-0.5 h-5 px-1.5 bg-emerald-500/15 text-emerald-700 border-emerald-300 hover:bg-emerald-500/20">
+                              <Badge variant="outline" className="text-[10px] gap-0.5 h-5 px-1.5">
                                 <FileText className="w-2.5 h-2.5" />
                                 Notat
                               </Badge>
