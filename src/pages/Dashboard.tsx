@@ -380,187 +380,116 @@ export default function Dashboard() {
         {meetings.length === 0 ? (
           <p className="px-4 py-8 text-center text-muted-foreground text-sm">Ingen kommende møter</p>
         ) : (
-          <div className="divide-y">
-            {todayMeetings.length > 0 && (
-              <div className="px-4 sm:px-6 py-3">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-                  I dag – {format(now, "EEEE d. MMMM", { locale: nb })}
-                </p>
-                <div className="space-y-2">
-                  {todayMeetings.map((m) => {
-                    const kontaktNavn = m.kontakt_id ? entityNames[`k_${m.kontakt_id}`] : null;
-                    const kontaktEpost = m.kontakt_id ? entityNames[`ke_${m.kontakt_id}`] : null;
-                    const selskapNavn = m.selskap_id ? entityNames[m.selskap_id] : null;
-                    const salgsNavn = m.salgsmulighet_id ? entityNames[m.salgsmulighet_id] : null;
-                    const hasNotes = !!m.moetenotater?.trim();
-                    const meetingStarted = m.start_tid ? new Date(m.start_tid) < now : false;
-                    const missingNotes = meetingStarted && !hasNotes;
-                    return (
-                      <div key={m.id} className="flex items-start gap-3 p-3 rounded-lg border bg-muted/20 hover:bg-muted/40 transition-colors">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <p className="text-sm font-medium truncate">{m.tittel || m.beskrivelse || "Møte"}</p>
-                            {missingNotes && (
-                              <Badge variant="destructive" className="text-[10px] gap-0.5 h-5 px-1.5">
-                                <AlertCircle className="w-2.5 h-2.5" />
-                                Mangler notat
-                              </Badge>
-                            )}
-                            {hasNotes && (
-                              <Badge variant="outline" className="text-[10px] gap-0.5 h-5 px-1.5">
-                                <FileText className="w-2.5 h-2.5" />
-                                Notat
-                              </Badge>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-x-3 gap-y-0.5 mt-1 flex-wrap text-xs text-muted-foreground">
-                            {m.start_tid && (
-                              <span className="flex items-center gap-1">
-                                <Clock className="w-3 h-3" />
-                                {format(new Date(m.start_tid), "HH:mm")}
-                                {m.slutt_tid && ` – ${format(new Date(m.slutt_tid), "HH:mm")}`}
-                              </span>
-                            )}
-                            {selskapNavn && (
-                              <button onClick={(e) => { e.stopPropagation(); navigate(`/selskaper/${m.selskap_id}`); }} className="flex items-center gap-1 text-primary hover:underline">
-                                <Building2 className="w-3 h-3" />
-                                {selskapNavn}
-                              </button>
-                            )}
-                            {salgsNavn && (
-                              <span className="flex items-center gap-1">
-                                <Briefcase className="w-3 h-3" />
-                                {salgsNavn}
-                              </span>
-                            )}
-                          </div>
-                          {(kontaktNavn || (m.deltakere && m.deltakere.length > 0)) && (
-                            <div className="flex items-center gap-x-3 gap-y-0.5 mt-0.5 flex-wrap text-xs text-muted-foreground">
-                              {kontaktNavn && (
-                                <span className="flex items-center gap-1">
-                                  <Users className="w-3 h-3" />
-                                  {kontaktNavn}
-                                </span>
-                              )}
-                              {kontaktEpost && (
-                                <span className="flex items-center gap-1">
-                                  <Mail className="w-3 h-3" />
-                                  {kontaktEpost}
-                                </span>
-                              )}
-                              {!kontaktNavn && m.deltakere && m.deltakere.length > 0 && (
-                                <span className="flex items-center gap-1">
-                                  <Users className="w-3 h-3" />
-                                  {m.deltakere.slice(0, 3).join(", ")}{m.deltakere.length > 3 ? ` +${m.deltakere.length - 3}` : ""}
-                                </span>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-1 shrink-0">
-                          <Button variant="outline" size="sm" className="text-xs h-7 hidden sm:flex gap-1" onClick={(e) => { e.stopPropagation(); setNotesMeeting(m); setNotesText(m.moetenotater || ""); }}>
-                            <NotebookPen className="w-3 h-3" />
-                            {m.moetenotater?.trim() ? "Notat" : "+ Notat"}
-                          </Button>
-                          <Button variant="outline" size="sm" className="text-xs h-7 hidden sm:flex" onClick={(e) => { e.stopPropagation(); setPrepMeeting(m); }}>
-                            Prep
-                          </Button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/30">
+                <TableHead className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Møte</TableHead>
+                <TableHead className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground w-[160px]">Dato</TableHead>
+                <TableHead className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground w-[120px]">Status</TableHead>
+                <TableHead className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground w-[160px] text-right">Handlinger</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {meetings.map((m) => {
+                const meetDate = new Date(m.dato);
+                const kontaktNavn = m.kontakt_id ? entityNames[`k_${m.kontakt_id}`] : null;
+                const selskapNavn = m.selskap_id ? entityNames[m.selskap_id] : null;
+                const salgsNavn = m.salgsmulighet_id ? entityNames[m.salgsmulighet_id] : null;
+                const hasNotes = !!m.moetenotater?.trim();
+                const meetingStarted = m.start_tid ? new Date(m.start_tid) < now : meetDate < now;
+                const missingNotes = meetingStarted && !hasNotes;
+                const dateLabel = isToday(meetDate)
+                  ? "I dag"
+                  : isTomorrow(meetDate)
+                    ? "I morgen"
+                    : format(meetDate, "EEEE d. MMM", { locale: nb });
 
-            {upcomingMeetings.length > 0 && (
-              <div className="px-4 sm:px-6 py-3">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Kommende</p>
-                <div className="space-y-2">
-                  {upcomingMeetings.map((m) => {
-                    const meetDate = new Date(m.dato);
-                    const kontaktNavn = m.kontakt_id ? entityNames[`k_${m.kontakt_id}`] : null;
-                    const kontaktEpost = m.kontakt_id ? entityNames[`ke_${m.kontakt_id}`] : null;
-                    const selskapNavn = m.selskap_id ? entityNames[m.selskap_id] : null;
-                    const salgsNavn = m.salgsmulighet_id ? entityNames[m.salgsmulighet_id] : null;
-                    const hasNotes = !!m.moetenotater?.trim();
-                    return (
-                      <div key={m.id} className="flex items-start gap-3 p-3 rounded-lg border bg-muted/20 hover:bg-muted/40 transition-colors">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <p className="text-sm font-medium truncate">{m.tittel || m.beskrivelse || "Møte"}</p>
-                            {hasNotes && (
-                              <Badge variant="outline" className="text-[10px] gap-0.5 h-5 px-1.5">
-                                <FileText className="w-2.5 h-2.5" />
-                                Notat
-                              </Badge>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-x-3 gap-y-0.5 mt-1 flex-wrap text-xs text-muted-foreground">
-                            <span>
-                              {isTomorrow(meetDate)
-                                ? "I morgen"
-                                : format(meetDate, "EEEE d. MMM", { locale: nb })}
-                            </span>
-                            {m.start_tid && (
-                              <span className="flex items-center gap-1">
-                                <Clock className="w-3 h-3" />
-                                {format(new Date(m.start_tid), "HH:mm")}
-                                {m.slutt_tid && ` – ${format(new Date(m.slutt_tid), "HH:mm")}`}
-                              </span>
-                            )}
-                            {selskapNavn && (
-                              <button onClick={(e) => { e.stopPropagation(); navigate(`/selskaper/${m.selskap_id}`); }} className="flex items-center gap-1 text-primary hover:underline">
-                                <Building2 className="w-3 h-3" />
-                                {selskapNavn}
-                              </button>
-                            )}
-                            {salgsNavn && (
-                              <span className="flex items-center gap-1">
-                                <Briefcase className="w-3 h-3" />
-                                {salgsNavn}
-                              </span>
-                            )}
-                          </div>
-                          {(kontaktNavn || (m.deltakere && m.deltakere.length > 0)) && (
-                            <div className="flex items-center gap-x-3 gap-y-0.5 mt-0.5 flex-wrap text-xs text-muted-foreground">
-                              {kontaktNavn && (
-                                <span className="flex items-center gap-1">
-                                  <Users className="w-3 h-3" />
-                                  {kontaktNavn}
-                                </span>
-                              )}
-                              {kontaktEpost && (
-                                <span className="flex items-center gap-1">
-                                  <Mail className="w-3 h-3" />
-                                  {kontaktEpost}
-                                </span>
-                              )}
-                              {!kontaktNavn && m.deltakere && m.deltakere.length > 0 && (
-                                <span className="flex items-center gap-1">
-                                  <Users className="w-3 h-3" />
-                                  {m.deltakere.slice(0, 3).join(", ")}{m.deltakere.length > 3 ? ` +${m.deltakere.length - 3}` : ""}
-                                </span>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-1 shrink-0">
-                          <Button variant="outline" size="sm" className="text-xs h-7 hidden sm:flex gap-1" onClick={(e) => { e.stopPropagation(); setNotesMeeting(m); setNotesText(m.moetenotater || ""); }}>
-                            <NotebookPen className="w-3 h-3" />
-                            {m.moetenotater?.trim() ? "Notat" : "+ Notat"}
-                          </Button>
-                          <Button variant="outline" size="sm" className="text-xs h-7 hidden sm:flex" onClick={(e) => { e.stopPropagation(); setPrepMeeting(m); }}>
-                            Prep
-                          </Button>
-                        </div>
+                return (
+                  <TableRow key={m.id} className="group hover:bg-muted/30 transition-colors">
+                    <TableCell className="py-3">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-sm font-medium truncate">{m.tittel || m.beskrivelse || "Møte"}</span>
                       </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
+                      <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                        {selskapNavn && (
+                          <Badge
+                            variant="secondary"
+                            className="text-[10px] gap-1 cursor-pointer hover:bg-secondary/80"
+                            onClick={(e) => { e.stopPropagation(); navigate(`/selskaper/${m.selskap_id}`); }}
+                          >
+                            <Building2 className="w-2.5 h-2.5" />
+                            {selskapNavn}
+                          </Badge>
+                        )}
+                        {salgsNavn && (
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] gap-1 bg-blue-500/10 text-blue-600 border-blue-200 cursor-pointer hover:bg-blue-500/20"
+                            onClick={(e) => { e.stopPropagation(); navigate(`/salgsmuligheter?id=${m.salgsmulighet_id}`); }}
+                          >
+                            <ArrowRight className="w-2.5 h-2.5" />
+                            {salgsNavn}
+                          </Badge>
+                        )}
+                        {kontaktNavn && (
+                          <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                            <Users className="w-2.5 h-2.5" />
+                            {kontaktNavn}
+                          </span>
+                        )}
+                        {!kontaktNavn && m.deltakere && m.deltakere.length > 0 && (
+                          <span className="text-[10px] text-muted-foreground">
+                            {m.deltakere.length} deltaker{m.deltakere.length > 1 ? "e" : ""}
+                          </span>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-3">
+                      <div className="text-xs font-medium">{dateLabel}</div>
+                      {m.start_tid && (
+                        <div className="text-[11px] text-muted-foreground">
+                          {format(new Date(m.start_tid), "HH:mm")}
+                          {m.slutt_tid && ` – ${format(new Date(m.slutt_tid), "HH:mm")}`}
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell className="py-3">
+                      {missingNotes ? (
+                        <Badge variant="destructive" className="text-[10px] gap-1 h-5 px-1.5">
+                          <AlertCircle className="w-2.5 h-2.5" /> Mangler notat
+                        </Badge>
+                      ) : hasNotes ? (
+                        <Badge variant="outline" className="text-[10px] gap-1 h-5 px-1.5">
+                          <FileText className="w-2.5 h-2.5" /> Notat
+                        </Badge>
+                      ) : null}
+                    </TableCell>
+                    <TableCell className="py-3 text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-xs h-7 px-2 gap-1"
+                          onClick={(e) => { e.stopPropagation(); setNotesMeeting(m); setNotesText(m.moetenotater || ""); }}
+                        >
+                          <NotebookPen className="w-3 h-3" />
+                          {hasNotes ? "Rediger" : "+ Notat"}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-xs h-7 px-2"
+                          onClick={(e) => { e.stopPropagation(); setPrepMeeting(m); }}
+                        >
+                          Prep
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
         )}
       </div>
 
