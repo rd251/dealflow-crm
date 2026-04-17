@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import {
   AlertTriangle, CalendarDays, PhoneOff, Target, Clock, Building2,
   BarChart3, ChevronRight, ListTodo, Activity, CheckCircle2, NotebookPen, Save, Plus,
-  Users, Briefcase, Mail, AlertCircle, FileText,
+  Users, Briefcase, Mail, AlertCircle, FileText, Sparkles, Loader2,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
