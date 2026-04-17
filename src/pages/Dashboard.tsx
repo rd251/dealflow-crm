@@ -614,215 +614,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* ─── MØTER (flyttet opp – synlig over fold) ─── */}
-      <div className="bg-card border rounded-xl overflow-hidden mb-6">
-        <div className="px-4 sm:px-6 py-4 border-b flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
-            <CalendarDays className="w-4 h-4" /> Møter
-          </h2>
-          <div className="flex items-center gap-1">
-            <Button variant="outline" size="sm" className="text-xs gap-1 h-7" onClick={() => setShowNewMeeting(true)}>
-              <Plus className="w-3 h-3" /> Møte
-            </Button>
-            <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={() => navigate("/kalender")}>
-              Kalender <ChevronRight className="w-3 h-3" />
-            </Button>
-          </div>
-        </div>
-
-        {meetings.length === 0 ? (
-          <p className="px-4 py-8 text-center text-muted-foreground text-sm">Ingen kommende møter</p>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-muted/30">
-                <TableHead className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Møte</TableHead>
-                <TableHead className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground w-[160px]">Dato</TableHead>
-                <TableHead className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground w-[120px]">Status</TableHead>
-                <TableHead className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground w-[160px] text-right">Handlinger</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {meetings.map((m) => {
-                const meetDate = new Date(m.dato);
-                const kontaktNavn = m.kontakt_id ? entityNames[`k_${m.kontakt_id}`] : null;
-                const selskapNavn = m.selskap_id ? entityNames[m.selskap_id] : null;
-                const salgsNavn = m.salgsmulighet_id ? entityNames[m.salgsmulighet_id] : null;
-                const hasNotes = !!m.moetenotater?.trim();
-                const meetingStarted = m.start_tid ? new Date(m.start_tid) < now : meetDate < now;
-                const missingNotes = meetingStarted && !hasNotes;
-                const dateLabel = isToday(meetDate)
-                  ? "I dag"
-                  : isTomorrow(meetDate)
-                    ? "I morgen"
-                    : format(meetDate, "EEEE d. MMM", { locale: nb });
-
-                const summary = aiSummaries[m.id];
-                const isLoadingAi = aiLoading === m.id;
-                const isExpanded = expandedMeetingId === m.id;
-
-                return (
-                  <>
-                  <TableRow
-                    key={m.id}
-                    className="group hover:bg-muted/30 transition-colors cursor-pointer"
-                    onClick={() => { setNotesMeeting(m); setNotesText(m.moetenotater || ""); }}
-                  >
-                    <TableCell className="py-3">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span className="text-sm font-medium truncate">{m.tittel || m.beskrivelse || "Møte"}</span>
-                      </div>
-                      <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                        {selskapNavn && (
-                          <Badge
-                            variant="secondary"
-                            className="text-[10px] gap-1 cursor-pointer hover:bg-secondary/80"
-                            onClick={(e) => { e.stopPropagation(); navigate(`/selskaper/${m.selskap_id}`); }}
-                          >
-                            <Building2 className="w-2.5 h-2.5" />
-                            {selskapNavn}
-                          </Badge>
-                        )}
-                        {salgsNavn && (
-                          <Badge
-                            variant="outline"
-                            className="text-[10px] gap-1 bg-blue-500/10 text-blue-600 border-blue-200 cursor-pointer hover:bg-blue-500/20"
-                            onClick={(e) => { e.stopPropagation(); navigate(`/salgsmuligheter?id=${m.salgsmulighet_id}`); }}
-                          >
-                            <ArrowRight className="w-2.5 h-2.5" />
-                            {salgsNavn}
-                          </Badge>
-                        )}
-                        {kontaktNavn && (
-                          <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                            <Users className="w-2.5 h-2.5" />
-                            {kontaktNavn}
-                          </span>
-                        )}
-                        {!kontaktNavn && m.deltakere && m.deltakere.length > 0 && (
-                          <span className="text-[10px] text-muted-foreground">
-                            {m.deltakere.length} deltaker{m.deltakere.length > 1 ? "e" : ""}
-                          </span>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="py-3">
-                      <div className="text-xs font-medium">{dateLabel}</div>
-                      {m.start_tid && (
-                        <div className="text-[11px] text-muted-foreground">
-                          {format(new Date(m.start_tid), "HH:mm")}
-                          {m.slutt_tid && ` – ${format(new Date(m.slutt_tid), "HH:mm")}`}
-                        </div>
-                      )}
-                    </TableCell>
-                    <TableCell className="py-3">
-                      {summary ? (
-                        <Badge className="text-[10px] gap-1 bg-primary/10 text-primary border-0 hover:bg-primary/20">
-                          <Sparkles className="w-2.5 h-2.5" /> AI-oppsummert
-                        </Badge>
-                      ) : missingNotes ? (
-                        <Badge variant="destructive" className="text-[10px] gap-1 h-5 px-2 whitespace-nowrap inline-flex items-center w-fit">
-                          <AlertCircle className="w-2.5 h-2.5 shrink-0" /> Mangler notat
-                        </Badge>
-                      ) : hasNotes ? (
-                        <Badge variant="outline" className="text-[10px] gap-1 h-5 px-1.5">
-                          <FileText className="w-2.5 h-2.5" /> Notat
-                        </Badge>
-                      ) : null}
-                    </TableCell>
-                    <TableCell className="py-3 text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        {hasNotes && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-7 w-7 p-0"
-                            disabled={isLoadingAi}
-                            onClick={(e) => { e.stopPropagation(); generateMeetingSummary(m); }}
-                            title="AI-oppsummering"
-                          >
-                            {isLoadingAi
-                              ? <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
-                              : <Sparkles className="w-3.5 h-3.5 text-primary" />}
-                          </Button>
-                        )}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-xs h-7 px-2 gap-1"
-                          onClick={(e) => { e.stopPropagation(); setNotesMeeting(m); setNotesText(m.moetenotater || ""); }}
-                        >
-                          <NotebookPen className="w-3 h-3" />
-                          {hasNotes ? "Rediger" : "+ Notat"}
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-xs h-7 px-2"
-                          onClick={(e) => { e.stopPropagation(); setPrepMeeting(m); }}
-                        >
-                          Prep
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                  {isExpanded && summary && (
-                    <TableRow key={`${m.id}-ai`}>
-                      <TableCell colSpan={4} className="p-0 border-b">
-                        <div className="px-6 py-4 bg-muted/20">
-                          <div className="rounded-md border border-primary/20 bg-primary/5 p-3 space-y-2">
-                            <div className="flex items-center gap-1.5">
-                              <Sparkles className="w-3.5 h-3.5 text-primary" />
-                              <span className="text-[11px] font-semibold uppercase tracking-wide text-primary">AI-oppsummering</span>
-                              {summary.kundesignal && (
-                                <Badge variant="secondary" className="text-[10px] ml-auto">{summary.kundesignal}</Badge>
-                              )}
-                            </div>
-                            <p className="text-xs">{summary.oppsummering}</p>
-                            {summary.neste_steg.length > 0 && (
-                              <div className="space-y-1">
-                                <span className="text-[10px] font-medium text-muted-foreground uppercase">Foreslåtte neste steg:</span>
-                                {summary.neste_steg.map((step, i) => {
-                                  const stepKey = `${m.id}-${i}`;
-                                  const isCreated = createdStepKeys.has(stepKey);
-                                  const isCreating = creatingStepKey === stepKey;
-                                  return (
-                                    <div key={i} className="flex items-start gap-1.5 text-xs">
-                                      <ArrowRight className="w-3 h-3 text-primary shrink-0 mt-0.5" />
-                                      <span className="flex-1">{step}</span>
-                                      <Button
-                                        size="sm"
-                                        variant={isCreated ? "ghost" : "outline"}
-                                        className="h-6 px-2 text-[10px] shrink-0"
-                                        disabled={isCreated || isCreating}
-                                        onClick={(e) => { e.stopPropagation(); createTaskFromStep(m, step, i); }}
-                                      >
-                                        {isCreating ? (
-                                          <Loader2 className="w-3 h-3 animate-spin" />
-                                        ) : isCreated ? (
-                                          <><CheckCircle2 className="w-3 h-3 mr-1 text-primary" />Opprettet</>
-                                        ) : (
-                                          <><Plus className="w-3 h-3 mr-1" />Lag oppgave</>
-                                        )}
-                                      </Button>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  )}
-                  </>
-                );
-              })}
-            </TableBody>
-          </Table>
-        )}
-      </div>
-
       {/* ─── SECTION: OPPFØLGING ─── */}
       <FollowUpSection items={followUps} loading={followUpsLoading} onDismiss={dismissFollowUp} />
 
@@ -1049,6 +840,215 @@ export default function Dashboard() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* ─── MØTER (flyttet ned – salgsmuligheter er hovedfokus) ─── */}
+      <div className="bg-card border rounded-xl overflow-hidden mb-6 mt-6">
+        <div className="px-4 sm:px-6 py-4 border-b flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+            <CalendarDays className="w-4 h-4" /> Møter
+          </h2>
+          <div className="flex items-center gap-1">
+            <Button variant="outline" size="sm" className="text-xs gap-1 h-7" onClick={() => setShowNewMeeting(true)}>
+              <Plus className="w-3 h-3" /> Møte
+            </Button>
+            <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={() => navigate("/kalender")}>
+              Kalender <ChevronRight className="w-3 h-3" />
+            </Button>
+          </div>
+        </div>
+
+        {meetings.length === 0 ? (
+          <p className="px-4 py-8 text-center text-muted-foreground text-sm">Ingen kommende møter</p>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/30">
+                <TableHead className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Møte</TableHead>
+                <TableHead className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground w-[160px]">Dato</TableHead>
+                <TableHead className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground w-[120px]">Status</TableHead>
+                <TableHead className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground w-[160px] text-right">Handlinger</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {meetings.map((m) => {
+                const meetDate = new Date(m.dato);
+                const kontaktNavn = m.kontakt_id ? entityNames[`k_${m.kontakt_id}`] : null;
+                const selskapNavn = m.selskap_id ? entityNames[m.selskap_id] : null;
+                const salgsNavn = m.salgsmulighet_id ? entityNames[m.salgsmulighet_id] : null;
+                const hasNotes = !!m.moetenotater?.trim();
+                const meetingStarted = m.start_tid ? new Date(m.start_tid) < now : meetDate < now;
+                const missingNotes = meetingStarted && !hasNotes;
+                const dateLabel = isToday(meetDate)
+                  ? "I dag"
+                  : isTomorrow(meetDate)
+                    ? "I morgen"
+                    : format(meetDate, "EEEE d. MMM", { locale: nb });
+
+                const summary = aiSummaries[m.id];
+                const isLoadingAi = aiLoading === m.id;
+                const isExpanded = expandedMeetingId === m.id;
+
+                return (
+                  <>
+                  <TableRow
+                    key={m.id}
+                    className="group hover:bg-muted/30 transition-colors cursor-pointer"
+                    onClick={() => { setNotesMeeting(m); setNotesText(m.moetenotater || ""); }}
+                  >
+                    <TableCell className="py-3">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-sm font-medium truncate">{m.tittel || m.beskrivelse || "Møte"}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                        {selskapNavn && (
+                          <Badge
+                            variant="secondary"
+                            className="text-[10px] gap-1 cursor-pointer hover:bg-secondary/80"
+                            onClick={(e) => { e.stopPropagation(); navigate(`/selskaper/${m.selskap_id}`); }}
+                          >
+                            <Building2 className="w-2.5 h-2.5" />
+                            {selskapNavn}
+                          </Badge>
+                        )}
+                        {salgsNavn && (
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] gap-1 bg-blue-500/10 text-blue-600 border-blue-200 cursor-pointer hover:bg-blue-500/20"
+                            onClick={(e) => { e.stopPropagation(); navigate(`/salgsmuligheter?id=${m.salgsmulighet_id}`); }}
+                          >
+                            <ArrowRight className="w-2.5 h-2.5" />
+                            {salgsNavn}
+                          </Badge>
+                        )}
+                        {kontaktNavn && (
+                          <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                            <Users className="w-2.5 h-2.5" />
+                            {kontaktNavn}
+                          </span>
+                        )}
+                        {!kontaktNavn && m.deltakere && m.deltakere.length > 0 && (
+                          <span className="text-[10px] text-muted-foreground">
+                            {m.deltakere.length} deltaker{m.deltakere.length > 1 ? "e" : ""}
+                          </span>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-3">
+                      <div className="text-xs font-medium">{dateLabel}</div>
+                      {m.start_tid && (
+                        <div className="text-[11px] text-muted-foreground">
+                          {format(new Date(m.start_tid), "HH:mm")}
+                          {m.slutt_tid && ` – ${format(new Date(m.slutt_tid), "HH:mm")}`}
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell className="py-3">
+                      {summary ? (
+                        <Badge className="text-[10px] gap-1 bg-primary/10 text-primary border-0 hover:bg-primary/20">
+                          <Sparkles className="w-2.5 h-2.5" /> AI-oppsummert
+                        </Badge>
+                      ) : missingNotes ? (
+                        <Badge variant="destructive" className="text-[10px] gap-1 h-5 px-2 whitespace-nowrap inline-flex items-center w-fit">
+                          <AlertCircle className="w-2.5 h-2.5 shrink-0" /> Mangler notat
+                        </Badge>
+                      ) : hasNotes ? (
+                        <Badge variant="outline" className="text-[10px] gap-1 h-5 px-1.5">
+                          <FileText className="w-2.5 h-2.5" /> Notat
+                        </Badge>
+                      ) : null}
+                    </TableCell>
+                    <TableCell className="py-3 text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        {hasNotes && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 w-7 p-0"
+                            disabled={isLoadingAi}
+                            onClick={(e) => { e.stopPropagation(); generateMeetingSummary(m); }}
+                            title="AI-oppsummering"
+                          >
+                            {isLoadingAi
+                              ? <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
+                              : <Sparkles className="w-3.5 h-3.5 text-primary" />}
+                          </Button>
+                        )}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-xs h-7 px-2 gap-1"
+                          onClick={(e) => { e.stopPropagation(); setNotesMeeting(m); setNotesText(m.moetenotater || ""); }}
+                        >
+                          <NotebookPen className="w-3 h-3" />
+                          {hasNotes ? "Rediger" : "+ Notat"}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-xs h-7 px-2"
+                          onClick={(e) => { e.stopPropagation(); setPrepMeeting(m); }}
+                        >
+                          Prep
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                  {isExpanded && summary && (
+                    <TableRow key={`${m.id}-ai`}>
+                      <TableCell colSpan={4} className="p-0 border-b">
+                        <div className="px-6 py-4 bg-muted/20">
+                          <div className="rounded-md border border-primary/20 bg-primary/5 p-3 space-y-2">
+                            <div className="flex items-center gap-1.5">
+                              <Sparkles className="w-3.5 h-3.5 text-primary" />
+                              <span className="text-[11px] font-semibold uppercase tracking-wide text-primary">AI-oppsummering</span>
+                              {summary.kundesignal && (
+                                <Badge variant="secondary" className="text-[10px] ml-auto">{summary.kundesignal}</Badge>
+                              )}
+                            </div>
+                            <p className="text-xs">{summary.oppsummering}</p>
+                            {summary.neste_steg.length > 0 && (
+                              <div className="space-y-1">
+                                <span className="text-[10px] font-medium text-muted-foreground uppercase">Foreslåtte neste steg:</span>
+                                {summary.neste_steg.map((step, i) => {
+                                  const stepKey = `${m.id}-${i}`;
+                                  const isCreated = createdStepKeys.has(stepKey);
+                                  const isCreating = creatingStepKey === stepKey;
+                                  return (
+                                    <div key={i} className="flex items-start gap-1.5 text-xs">
+                                      <ArrowRight className="w-3 h-3 text-primary shrink-0 mt-0.5" />
+                                      <span className="flex-1">{step}</span>
+                                      <Button
+                                        size="sm"
+                                        variant={isCreated ? "ghost" : "outline"}
+                                        className="h-6 px-2 text-[10px] shrink-0"
+                                        disabled={isCreated || isCreating}
+                                        onClick={(e) => { e.stopPropagation(); createTaskFromStep(m, step, i); }}
+                                      >
+                                        {isCreating ? (
+                                          <Loader2 className="w-3 h-3 animate-spin" />
+                                        ) : isCreated ? (
+                                          <><CheckCircle2 className="w-3 h-3 mr-1 text-primary" />Opprettet</>
+                                        ) : (
+                                          <><Plus className="w-3 h-3 mr-1" />Lag oppgave</>
+                                        )}
+                                      </Button>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  </>
+                );
+              })}
+            </TableBody>
+          </Table>
+        )}
       </div>
 
 
