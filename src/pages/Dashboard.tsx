@@ -481,10 +481,19 @@ export default function Dashboard() {
                     const kontaktEpost = m.kontakt_id ? entityNames[`ke_${m.kontakt_id}`] : null;
                     const selskapNavn = m.selskap_id ? entityNames[m.selskap_id] : null;
                     const salgsNavn = m.salgsmulighet_id ? entityNames[m.salgsmulighet_id] : null;
+                    const hasNotes = !!m.moetenotater?.trim();
                     return (
                       <div key={m.id} className="flex items-start gap-3 p-3 rounded-lg border bg-muted/20 hover:bg-muted/40 transition-colors">
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{m.tittel || m.beskrivelse || "Møte"}</p>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="text-sm font-medium truncate">{m.tittel || m.beskrivelse || "Møte"}</p>
+                            {hasNotes && (
+                              <Badge variant="outline" className="text-[10px] gap-0.5 h-5 px-1.5">
+                                <FileText className="w-2.5 h-2.5" />
+                                Notat
+                              </Badge>
+                            )}
+                          </div>
                           <div className="flex items-center gap-x-3 gap-y-0.5 mt-1 flex-wrap text-xs text-muted-foreground">
                             <span>
                               {isTomorrow(meetDate)
