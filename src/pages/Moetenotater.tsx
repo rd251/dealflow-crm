@@ -200,6 +200,9 @@ export default function Moetenotater() {
     const hasNotes = !!m.moetenotater?.trim();
     const isTrale = m.aktivitet_kilde === "trale";
     const hasSummary = !!aiSummaries[m.id];
+    const meetingStarted = m.start_tid
+      ? new Date(m.start_tid) < new Date()
+      : new Date(m.dato) < new Date();
 
     if (hasSummary) {
       return (
@@ -210,8 +213,15 @@ export default function Moetenotater() {
     }
     if (hasNotes) {
       return (
-        <Badge className="text-[10px] gap-1 bg-emerald-500/10 text-emerald-600 border-0 hover:bg-emerald-500/20">
-          <CheckCircle2 className="w-2.5 h-2.5" /> Notater
+        <Badge variant="outline" className="text-[10px] gap-1 h-5 px-1.5">
+          <FileText className="w-2.5 h-2.5" /> Notat
+        </Badge>
+      );
+    }
+    if (meetingStarted) {
+      return (
+        <Badge variant="destructive" className="text-[10px] gap-1 h-5 px-1.5">
+          <AlertCircle className="w-2.5 h-2.5" /> Mangler notat
         </Badge>
       );
     }
@@ -222,11 +232,7 @@ export default function Moetenotater() {
         </Badge>
       );
     }
-    return (
-      <Badge variant="outline" className="text-[10px] gap-1 text-muted-foreground">
-        <AlertCircle className="w-2.5 h-2.5" /> Mangler
-      </Badge>
-    );
+    return null;
   };
 
   return (
