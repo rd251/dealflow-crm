@@ -585,12 +585,32 @@ export default function Dashboard() {
                             {summary.neste_steg.length > 0 && (
                               <div className="space-y-1">
                                 <span className="text-[10px] font-medium text-muted-foreground uppercase">Foreslåtte neste steg:</span>
-                                {summary.neste_steg.map((step, i) => (
-                                  <div key={i} className="flex items-start gap-1.5 text-xs">
-                                    <ArrowRight className="w-3 h-3 text-primary shrink-0 mt-0.5" />
-                                    <span>{step}</span>
-                                  </div>
-                                ))}
+                                {summary.neste_steg.map((step, i) => {
+                                  const stepKey = `${m.id}-${i}`;
+                                  const isCreated = createdStepKeys.has(stepKey);
+                                  const isCreating = creatingStepKey === stepKey;
+                                  return (
+                                    <div key={i} className="flex items-start gap-1.5 text-xs">
+                                      <ArrowRight className="w-3 h-3 text-primary shrink-0 mt-0.5" />
+                                      <span className="flex-1">{step}</span>
+                                      <Button
+                                        size="sm"
+                                        variant={isCreated ? "ghost" : "outline"}
+                                        className="h-6 px-2 text-[10px] shrink-0"
+                                        disabled={isCreated || isCreating}
+                                        onClick={(e) => { e.stopPropagation(); createTaskFromStep(m, step, i); }}
+                                      >
+                                        {isCreating ? (
+                                          <Loader2 className="w-3 h-3 animate-spin" />
+                                        ) : isCreated ? (
+                                          <><CheckCircle2 className="w-3 h-3 mr-1 text-green-600" />Opprettet</>
+                                        ) : (
+                                          <><Plus className="w-3 h-3 mr-1" />Lag oppgave</>
+                                        )}
+                                      </Button>
+                                    </div>
+                                  );
+                                })}
                               </div>
                             )}
                           </div>
