@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       aktiviteter: {
         Row: {
+          ai_oppsummering: Json | null
           aktivitet_kilde: string | null
           beskrivelse: string
           created_at: string
@@ -40,6 +41,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          ai_oppsummering?: Json | null
           aktivitet_kilde?: string | null
           beskrivelse?: string
           created_at?: string
@@ -64,6 +66,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          ai_oppsummering?: Json | null
           aktivitet_kilde?: string | null
           beskrivelse?: string
           created_at?: string
