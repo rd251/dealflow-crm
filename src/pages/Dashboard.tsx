@@ -54,7 +54,10 @@ interface MeetingItem {
   ekstern_provider: string | null;
   moetenotater: string | null;
   deltakere: string[] | null;
+  ai_oppsummering?: AiSummary | null;
 }
+
+interface AiSummary { oppsummering: string; neste_steg: string[]; kundesignal: string; foreslatt_neste_steg_tekst: string; }
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -84,7 +87,6 @@ export default function Dashboard() {
   const [changelogEntries, setChangelogEntries] = useState<Array<{ id: string; event_type: string; entity_type: string; entity_id: string; entity_name: string; field_name: string | null; old_value: string | null; new_value: string | null; related_entity_type: string | null; related_entity_name: string | null; user_id: string | null; created_at: string }>>([]);
 
   // ─── AI SUMMARY STATE ───
-  interface AiSummary { oppsummering: string; neste_steg: string[]; kundesignal: string; foreslatt_neste_steg_tekst: string; }
   const [aiSummaries, setAiSummaries] = useState<Record<string, AiSummary>>({});
   const [aiLoading, setAiLoading] = useState<string | null>(null);
   const [expandedMeetingId, setExpandedMeetingId] = useState<string | null>(null);
@@ -132,8 +134,15 @@ export default function Dashboard() {
       });
       if (error) throw error;
       if (data?.error) { toast.error(data.error); return; }
-      setAiSummaries(prev => ({ ...prev, [m.id]: data as AiSummary }));
+      const summary = data as AiSummary;
+      setAiSummaries(prev => ({ ...prev, [m.id]: summary }));
       setExpandedMeetingId(m.id);
+      // Persist to database so it survives reloads
+      const { error: persistError } = await supabase
+        .from("aktiviteter")
+        .update({ ai_oppsummering: summary as any })
+        .eq("id", m.id);
+      if (persistError) console.error("Persist AI summary error:", persistError);
       toast.success("AI-oppsummering klar");
     } catch (e) {
       console.error("AI summary error:", e);
@@ -175,12 +184,20 @@ export default function Dashboard() {
     weekEnd.setDate(weekEnd.getDate() + 7);
 
     fetch(
-      `${API_URL}/aktiviteter?type=eq.Møte&dato=gte.${todayStart.toISOString()}&dato=lt.${weekEnd.toISOString()}&order=dato.asc,start_tid.asc&limit=20&select=id,tittel,beskrivelse,dato,start_tid,slutt_tid,selskap_id,salgsmulighet_id,kontakt_id,ekstern_id,ekstern_provider,moetenotater,deltakere`,
+      `${API_URL}/aktiviteter?type=eq.Møte&dato=gte.${todayStart.toISOString()}&dato=lt.${weekEnd.toISOString()}&order=dato.asc,start_tid.asc&limit=20&select=id,tittel,beskrivelse,dato,start_tid,slutt_tid,selskap_id,salgsmulighet_id,kontakt_id,ekstern_id,ekstern_provider,moetenotater,deltakere,ai_oppsummering`,
       { headers: API_HEADERS }
     )
       .then((r) => (r.ok ? r.json() : []))
       .then((data: MeetingItem[]) => {
         setMeetings(data);
+        // Hydrate cached AI summaries from database
+        const cached: Record<string, AiSummary> = {};
+        for (const m of data) {
+          if (m.ai_oppsummering && typeof m.ai_oppsummering === "object") {
+            cached[m.id] = m.ai_oppsummering as AiSummary;
+          }
+        }
+        if (Object.keys(cached).length) setAiSummaries(prev => ({ ...cached, ...prev }));
         const sIds = [...new Set(data.map((d) => d.selskap_id).filter(Boolean))] as string[];
         const smIds = [...new Set(data.map((d) => d.salgsmulighet_id).filter(Boolean))] as string[];
         const kIds = [...new Set(data.map((d) => d.kontakt_id).filter(Boolean))] as string[];
