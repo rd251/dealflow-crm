@@ -88,6 +88,32 @@ export default function Dashboard() {
   const [aiSummaries, setAiSummaries] = useState<Record<string, AiSummary>>({});
   const [aiLoading, setAiLoading] = useState<string | null>(null);
   const [expandedMeetingId, setExpandedMeetingId] = useState<string | null>(null);
+  const [createdStepKeys, setCreatedStepKeys] = useState<Set<string>>(new Set());
+  const [creatingStepKey, setCreatingStepKey] = useState<string | null>(null);
+
+  const createTaskFromStep = useCallback(async (m: MeetingItem, step: string, idx: number) => {
+    const key = `${m.id}-${idx}`;
+    setCreatingStepKey(key);
+    try {
+      const { error } = await supabase.from("oppgaver").insert({
+        oppgave: step,
+        status: "Åpen",
+        prioritet: "Medium",
+        frist: new Date(Date.now() + 2 * 86400000).toISOString().split("T")[0],
+        selskap_id: m.selskap_id || null,
+        salgsmulighet_id: m.salgsmulighet_id || null,
+        user_id: user?.id || null,
+      });
+      if (error) throw error;
+      setCreatedStepKeys(prev => new Set([...prev, key]));
+      toast.success("Oppgave opprettet");
+    } catch (e) {
+      console.error("Create task error:", e);
+      toast.error("Kunne ikke opprette oppgave");
+    } finally {
+      setCreatingStepKey(null);
+    }
+  }, [user?.id]);
 
   const generateMeetingSummary = useCallback(async (m: MeetingItem) => {
     if (!m.moetenotater?.trim()) {
@@ -559,12 +585,32 @@ export default function Dashboard() {
                             {summary.neste_steg.length > 0 && (
                               <div className="space-y-1">
                                 <span className="text-[10px] font-medium text-muted-foreground uppercase">Foreslåtte neste steg:</span>
-                                {summary.neste_steg.map((step, i) => (
-                                  <div key={i} className="flex items-start gap-1.5 text-xs">
-                                    <ArrowRight className="w-3 h-3 text-primary shrink-0 mt-0.5" />
-                                    <span>{step}</span>
-                                  </div>
-                                ))}
+                                {summary.neste_steg.map((step, i) => {
+                                  const stepKey = `${m.id}-${i}`;
+                                  const isCreated = createdStepKeys.has(stepKey);
+                                  const isCreating = creatingStepKey === stepKey;
+                                  return (
+                                    <div key={i} className="flex items-start gap-1.5 text-xs">
+                                      <ArrowRight className="w-3 h-3 text-primary shrink-0 mt-0.5" />
+                                      <span className="flex-1">{step}</span>
+                                      <Button
+                                        size="sm"
+                                        variant={isCreated ? "ghost" : "outline"}
+                                        className="h-6 px-2 text-[10px] shrink-0"
+                                        disabled={isCreated || isCreating}
+                                        onClick={(e) => { e.stopPropagation(); createTaskFromStep(m, step, i); }}
+                                      >
+                                        {isCreating ? (
+                                          <Loader2 className="w-3 h-3 animate-spin" />
+                                        ) : isCreated ? (
+                                          <><CheckCircle2 className="w-3 h-3 mr-1 text-primary" />Opprettet</>
+                                        ) : (
+                                          <><Plus className="w-3 h-3 mr-1" />Lag oppgave</>
+                                        )}
+                                      </Button>
+                                    </div>
+                                  );
+                                })}
                               </div>
                             )}
                           </div>
