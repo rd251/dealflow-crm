@@ -487,7 +487,11 @@ export default function Dashboard() {
 
                 return (
                   <>
-                  <TableRow key={m.id} className="group hover:bg-muted/30 transition-colors">
+                  <TableRow
+                    key={m.id}
+                    className="group hover:bg-muted/30 transition-colors cursor-pointer"
+                    onClick={() => { setNotesMeeting(m); setNotesText(m.moetenotater || ""); }}
+                  >
                     <TableCell className="py-3">
                       <div className="flex items-center gap-2 min-w-0">
                         <span className="text-sm font-medium truncate">{m.tittel || m.beskrivelse || "Møte"}</span>
