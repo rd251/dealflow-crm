@@ -83,6 +83,40 @@ export default function Dashboard() {
   const [oppgaver, setOppgaver] = useState<Tables<"oppgaver">[]>([]);
   const [changelogEntries, setChangelogEntries] = useState<Array<{ id: string; event_type: string; entity_type: string; entity_id: string; entity_name: string; field_name: string | null; old_value: string | null; new_value: string | null; related_entity_type: string | null; related_entity_name: string | null; user_id: string | null; created_at: string }>>([]);
 
+  // ─── AI SUMMARY STATE ───
+  interface AiSummary { oppsummering: string; neste_steg: string[]; kundesignal: string; foreslatt_neste_steg_tekst: string; }
+  const [aiSummaries, setAiSummaries] = useState<Record<string, AiSummary>>({});
+  const [aiLoading, setAiLoading] = useState<string | null>(null);
+  const [expandedMeetingId, setExpandedMeetingId] = useState<string | null>(null);
+
+  const generateMeetingSummary = useCallback(async (m: MeetingItem) => {
+    if (!m.moetenotater?.trim()) {
+      toast.error("Legg til møtenotater først");
+      return;
+    }
+    setAiLoading(m.id);
+    try {
+      const { data, error } = await supabase.functions.invoke("meeting-summary", {
+        body: {
+          meetingNotes: m.moetenotater,
+          meetingTitle: m.tittel,
+          dealName: m.salgsmulighet_id ? entityNames[m.salgsmulighet_id] : undefined,
+          companyName: m.selskap_id ? entityNames[m.selskap_id] : undefined,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) { toast.error(data.error); return; }
+      setAiSummaries(prev => ({ ...prev, [m.id]: data as AiSummary }));
+      setExpandedMeetingId(m.id);
+      toast.success("AI-oppsummering klar");
+    } catch (e) {
+      console.error("AI summary error:", e);
+      toast.error("Kunne ikke generere oppsummering");
+    } finally {
+      setAiLoading(null);
+    }
+  }, [entityNames]);
+
   // ─── NEW MEETING STATE ───
   const [showNewMeeting, setShowNewMeeting] = useState(false);
   const [newMeeting, setNewMeeting] = useState({ tittel: "", dato: today, startTid: "09:00", sluttTid: "10:00", selskapId: "", salgsmulId: "" });
