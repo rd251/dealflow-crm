@@ -57,7 +57,8 @@ function rowToSalgsmulighet(r: any): Salgsmulighet {
     kontrakt_signert_dato: r.kontrakt_signert_dato || "",
     dealbuilder_dokument_id: r.dealbuilder_dokument_id || "",
     valgt_pakke: r.valgt_pakke || "",
-  };
+    ai_recap: r.ai_recap || null,
+  } as Salgsmulighet;
 }
 function rowToProsjekt(r: any): Prosjekt {
   return {
