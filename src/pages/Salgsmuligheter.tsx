@@ -28,6 +28,7 @@ import ActivityLog from "@/components/ActivityLog";
 import EntityChangelog from "@/components/EntityChangelog";
 import MeetingNotesList from "@/components/MeetingNotesList";
 import SendContractModal from "@/components/SendContractModal";
+import DealRecapCard from "@/components/DealRecapCard";
 
 const allStatuses: SalgsmulighetStatus[] = ["Møte booket", "Behov avklart", "Løsning presentert", "Kontrakt sendt"];
 const openStatuses = allStatuses;
@@ -670,6 +671,18 @@ export default function Salgsmuligheter() {
           return {
             detaljer: (
               <>
+                {/* AI Recap (auto-genereres ved nye aktiviteter) */}
+                <DealRecapCard
+                  salgsmulighetId={currentSm.id}
+                  initialRecap={(currentSm as any).ai_recap || null}
+                  autoGenerateIfStale={{ lastAktivitetDato: currentSm.sist_aktivitet }}
+                  onUpdated={(recap) => updateSalgsmuligheter(prev => prev.map(s =>
+                    s.id === currentSm.id ? { ...s, ai_recap: recap } as any : s
+                  ))}
+                />
+
+                <DetailDivider />
+
                 {/* Seksjon 1 — Pipeline */}
                 <DetailSection title="Pipeline">
                   <DetailField label="Status">
