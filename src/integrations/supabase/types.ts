@@ -960,6 +960,7 @@ export type Database = {
       }
       salgsmuligheter: {
         Row: {
+          ai_recap: Json | null
           ansvarlig: string | null
           created_at: string
           dealbuilder_dokument_id: string | null
@@ -997,6 +998,7 @@ export type Database = {
           vunnet_dato: string | null
         }
         Insert: {
+          ai_recap?: Json | null
           ansvarlig?: string | null
           created_at?: string
           dealbuilder_dokument_id?: string | null
@@ -1034,6 +1036,7 @@ export type Database = {
           vunnet_dato?: string | null
         }
         Update: {
+          ai_recap?: Json | null
           ansvarlig?: string | null
           created_at?: string
           dealbuilder_dokument_id?: string | null
