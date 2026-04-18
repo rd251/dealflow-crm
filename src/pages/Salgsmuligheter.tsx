@@ -22,6 +22,8 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { gravatarUrl } from "@/lib/gravatar";
 import EntityLinkPicker from "@/components/EntityLinkPicker";
 import { Badge } from "@/components/ui/badge";
+import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui/hover-card";
+import { Sparkles } from "lucide-react";
 import { Salgsmulighet, SalgsmulighetStatus, Tapsaarsak, KontraktStatus, beregnTotalKontraktsverdi, beregnVektetPipeline, PAKKER } from "@/data/crm-data";
 import InlineTaskForm from "@/components/InlineTaskForm";
 import ActivityLog from "@/components/ActivityLog";
@@ -452,7 +454,9 @@ export default function Salgsmuligheter() {
                         </MobileSwipeCard>
                       ) : (
                         /* ── Full desktop card ── */
-                        <div key={deal.id} draggable onDragStart={e => { setDraggedId(deal.id); e.dataTransfer.effectAllowed = "move"; }}
+                        <HoverCard key={deal.id} openDelay={350} closeDelay={100}>
+                          <HoverCardTrigger asChild>
+                          <div draggable onDragStart={e => { setDraggedId(deal.id); e.dataTransfer.effectAllowed = "move"; }}
                           onClick={() => setSelectedSm(deal)}
                           className={`bg-card border rounded-xl p-3.5 cursor-grab active:cursor-grabbing hover:shadow-md transition-all group ${isBlocked ? "ring-2 ring-destructive animate-pulse" : ""}`}>
                           
@@ -462,6 +466,9 @@ export default function Salgsmuligheter() {
                             <span className="text-sm font-semibold text-foreground truncate flex-1 cursor-pointer hover:text-primary hover:underline" onClick={e => { e.stopPropagation(); if (deal.selskap_id) navigate(`/selskaper/${deal.selskap_id}`); }}>
                               {getSelskapNavn(deal.selskap_id || "")}
                             </span>
+                            {(deal as any).ai_recap && (
+                              <Sparkles className="w-3 h-3 text-primary/70 shrink-0" />
+                            )}
                             <GripVertical className="w-4 h-4 text-muted-foreground/30 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
                           </div>
 
@@ -554,7 +561,49 @@ export default function Salgsmuligheter() {
                           {isBlocked && (
                             <p className="text-[10px] text-destructive mt-1 font-medium">⛔ Fyll inn neste steg før flytting</p>
                           )}
-                        </div>
+                          </div>
+                          </HoverCardTrigger>
+                          {(() => {
+                            const recap = (deal as any).ai_recap as { sammendrag?: string; kundesignal?: string; neste_steg?: string; risikofaktorer?: string[]; generert_dato?: string } | null;
+                            if (!recap) return null;
+                            const signalStyle = recap.kundesignal === "Høy" ? "bg-success/15 text-success border-success/30"
+                              : recap.kundesignal === "Medium" ? "bg-warning/15 text-warning border-warning/30"
+                              : recap.kundesignal === "Lav" ? "bg-destructive/15 text-destructive border-destructive/30"
+                              : "bg-muted text-muted-foreground border-border";
+                            return (
+                              <HoverCardContent side="right" align="start" className="w-80 p-3 space-y-2">
+                                <div className="flex items-center gap-2">
+                                  <Sparkles className="w-3.5 h-3.5 text-primary" />
+                                  <span className="text-xs font-semibold">AI Recap</span>
+                                  {recap.kundesignal && (
+                                    <Badge variant="outline" className={`text-[10px] px-1.5 py-0 border ${signalStyle}`}>
+                                      {recap.kundesignal} interesse
+                                    </Badge>
+                                  )}
+                                </div>
+                                {recap.sammendrag && (
+                                  <p className="text-xs leading-relaxed text-foreground">{recap.sammendrag}</p>
+                                )}
+                                {recap.neste_steg && (
+                                  <div className="rounded-md bg-muted/50 border p-2">
+                                    <div className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-0.5">Foreslått neste steg</div>
+                                    <div className="text-xs">{recap.neste_steg}</div>
+                                  </div>
+                                )}
+                                {recap.risikofaktorer && recap.risikofaktorer.length > 0 && (
+                                  <div className="rounded-md bg-destructive/5 border border-destructive/20 p-2">
+                                    <div className="text-[10px] font-medium text-destructive uppercase tracking-wide mb-0.5 flex items-center gap-1">
+                                      <AlertTriangle className="w-2.5 h-2.5" /> Risiko
+                                    </div>
+                                    <ul className="text-[11px] space-y-0.5 list-disc list-inside text-foreground/80">
+                                      {recap.risikofaktorer.slice(0, 3).map((r, i) => <li key={i}>{r}</li>)}
+                                    </ul>
+                                  </div>
+                                )}
+                              </HoverCardContent>
+                            );
+                          })()}
+                        </HoverCard>
                       );
                     })}
                     {stageDeals.length === 0 && (
