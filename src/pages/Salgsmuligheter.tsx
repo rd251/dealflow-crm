@@ -573,6 +573,7 @@ export default function Salgsmuligheter() {
                             <p className="text-[10px] text-destructive mt-1 font-medium">⛔ Fyll inn neste steg før flytting</p>
                           )}
                           </div>
+                          ); })()}
                           </HoverCardTrigger>
                           {(() => {
                             const recap = (deal as any).ai_recap as { sammendrag?: string; kundesignal?: string; neste_steg?: string; risikofaktorer?: string[]; generert_dato?: string } | null;
