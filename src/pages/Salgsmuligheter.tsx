@@ -415,7 +415,7 @@ export default function Salgsmuligheter() {
             </div>
           </div>
           {pipelineView === "table" ? (
-            <DealList deals={sortDeals(openDeals)} getSelskapNavn={getSelskapNavn} onSelect={setSelectedSm} label="Åpne salgsmuligheter" onNavigateSelskap={id => navigate(`/selskaper/${id}`)} isMobile={isMobile} showKontraktStatus showLukkedato />
+            <DealList deals={sortDeals(openDeals)} getSelskapNavn={getSelskapNavn} onSelect={setSelectedSm} label="Åpne salgsmuligheter" onNavigateSelskap={id => navigate(`/selskaper/${id}`)} isMobile={isMobile} showKontraktStatus showLukkedato showSignalAndNextStep />
           ) : (
           <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-4 scrollbar-thin items-start">
             {openStatuses.map(stage => {
