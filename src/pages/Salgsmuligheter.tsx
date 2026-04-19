@@ -408,6 +408,15 @@ export default function Salgsmuligheter() {
               </div>
             );
           })()}
+          <div className="flex items-center justify-end mb-3">
+            <div className="inline-flex rounded-md border bg-card p-0.5">
+              <button type="button" onClick={() => setPipelineView("kanban")} className={`px-3 py-1 text-xs font-medium rounded ${pipelineView === "kanban" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>Kanban</button>
+              <button type="button" onClick={() => setPipelineView("table")} className={`px-3 py-1 text-xs font-medium rounded ${pipelineView === "table" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>Tabell</button>
+            </div>
+          </div>
+          {pipelineView === "table" ? (
+            <DealList deals={sortDeals(openDeals)} getSelskapNavn={getSelskapNavn} onSelect={setSelectedSm} label="Åpne salgsmuligheter" onNavigateSelskap={id => navigate(`/selskaper/${id}`)} isMobile={isMobile} showKontraktStatus showLukkedato />
+          ) : (
           <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-4 scrollbar-thin items-start">
             {openStatuses.map(stage => {
               const stageDeals = sortDeals(openDeals.filter(d => d.status === stage));
