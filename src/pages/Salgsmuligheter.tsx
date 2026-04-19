@@ -415,7 +415,7 @@ export default function Salgsmuligheter() {
             </div>
           </div>
           {pipelineView === "table" ? (
-            <DealList deals={sortDeals(openDeals)} getSelskapNavn={getSelskapNavn} onSelect={setSelectedSm} label="Åpne salgsmuligheter" onNavigateSelskap={id => navigate(`/selskaper/${id}`)} isMobile={isMobile} showKontraktStatus showLukkedato />
+            <DealList deals={sortDeals(openDeals)} getSelskapNavn={getSelskapNavn} onSelect={setSelectedSm} label="Åpne salgsmuligheter" onNavigateSelskap={id => navigate(`/selskaper/${id}`)} isMobile={isMobile} showKontraktStatus showLukkedato showSignalAndNextStep />
           ) : (
           <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-4 scrollbar-thin items-start">
             {openStatuses.map(stage => {
@@ -1196,7 +1196,23 @@ export default function Salgsmuligheter() {
   );
 }
 
-function DealList({ deals, getSelskapNavn, onSelect, label, onNavigateSelskap, isMobile, showKontraktStatus, showLukkedato }: { deals: Salgsmulighet[]; getSelskapNavn: (id: string) => string; onSelect: (s: Salgsmulighet) => void; label: string; onNavigateSelskap?: (id: string) => void; isMobile: boolean; showKontraktStatus?: boolean; showLukkedato?: boolean }) {
+function getSignalDotClass(deal: Salgsmulighet): string {
+  const signal = ((deal as any).ai_recap?.kundesignal || "").toLowerCase();
+  if (signal === "høy" || signal === "hoy") return "bg-success";
+  if (signal === "medium") return "bg-warning";
+  if (signal === "lav") return "bg-destructive";
+  return "bg-muted-foreground/30";
+}
+
+function getSignalLabel(deal: Salgsmulighet): string {
+  const signal = ((deal as any).ai_recap?.kundesignal || "").toLowerCase();
+  if (signal === "høy" || signal === "hoy") return "Høy";
+  if (signal === "medium") return "Medium";
+  if (signal === "lav") return "Lav";
+  return "Ingen AI-recap";
+}
+
+function DealList({ deals, getSelskapNavn, onSelect, label, onNavigateSelskap, isMobile, showKontraktStatus, showLukkedato, showSignalAndNextStep }: { deals: Salgsmulighet[]; getSelskapNavn: (id: string) => string; onSelect: (s: Salgsmulighet) => void; label: string; onNavigateSelskap?: (id: string) => void; isMobile: boolean; showKontraktStatus?: boolean; showLukkedato?: boolean; showSignalAndNextStep?: boolean }) {
   if (deals.length === 0) return <div className="text-center py-12 text-muted-foreground text-sm">{label}: ingen</div>;
 
   if (isMobile) {
@@ -1227,10 +1243,12 @@ function DealList({ deals, getSelskapNavn, onSelect, label, onNavigateSelskap, i
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b bg-muted/50">
+            {showSignalAndNextStep && <th className="text-left px-2 py-3 font-medium w-8" title="Kundesignal"></th>}
             <th className="text-left px-4 py-3 font-medium">Kontaktperson</th>
             <th className="text-left px-4 py-3 font-medium">Use case</th>
             <th className="text-left px-4 py-3 font-medium">Selskap</th>
             <th className="text-left px-4 py-3 font-medium">Status</th>
+            {showSignalAndNextStep && <th className="text-left px-4 py-3 font-medium">Neste steg</th>}
             {showKontraktStatus && <th className="text-left px-4 py-3 font-medium">Kontrakt</th>}
             {showLukkedato && <th className="text-left px-4 py-3 font-medium">Lukkedato</th>}
             <th className="text-right px-4 py-3 font-medium">MRR</th>
@@ -1239,10 +1257,18 @@ function DealList({ deals, getSelskapNavn, onSelect, label, onNavigateSelskap, i
         <tbody>
           {deals.map(d => (
             <tr key={d.id} className="border-b last:border-0 hover:bg-muted/30 cursor-pointer" onClick={() => onSelect(d)}>
+              {showSignalAndNextStep && (
+                <td className="px-2 py-3">
+                  <div className={`h-2.5 w-2.5 rounded-full ${getSignalDotClass(d)}`} title={`Kundesignal: ${getSignalLabel(d)}`} />
+                </td>
+              )}
               <td className="px-4 py-3 font-medium">{d.kontaktperson || "–"}</td>
               <td className="px-4 py-3 text-muted-foreground">{d.use_case || "–"}</td>
               <td className="px-4 py-3 text-muted-foreground"><span className="cursor-pointer hover:text-primary hover:underline" onClick={e => { e.stopPropagation(); onNavigateSelskap?.(d.selskap_id); }}>{getSelskapNavn(d.selskap_id)}</span></td>
               <td className="px-4 py-3"><Badge variant="secondary" className="text-[10px]">{d.status}</Badge></td>
+              {showSignalAndNextStep && (
+                <td className="px-4 py-3 text-muted-foreground text-xs max-w-[240px] truncate" title={d.neste_steg || ""}>{d.neste_steg || "–"}</td>
+              )}
               {showKontraktStatus && (
                 <td className="px-4 py-3">
                   <Badge className={`text-[10px] px-1.5 py-0 h-4 ${kontraktStatusColors[d.kontrakt_status as KontraktStatus] || ""}`}>{d.kontrakt_status || "–"}</Badge>
