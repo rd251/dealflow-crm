@@ -23,7 +23,8 @@ import { gravatarUrl } from "@/lib/gravatar";
 import EntityLinkPicker from "@/components/EntityLinkPicker";
 import { Badge } from "@/components/ui/badge";
 import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui/hover-card";
-import { Sparkles } from "lucide-react";
+import { Sparkles, ArrowRight, Check } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { Salgsmulighet, SalgsmulighetStatus, Tapsaarsak, KontraktStatus, beregnTotalKontraktsverdi, beregnVektetPipeline, PAKKER } from "@/data/crm-data";
 import InlineTaskForm from "@/components/InlineTaskForm";
 import ActivityLog from "@/components/ActivityLog";
@@ -584,12 +585,46 @@ export default function Salgsmuligheter() {
                                 {recap.sammendrag && (
                                   <p className="text-xs leading-relaxed text-foreground">{recap.sammendrag}</p>
                                 )}
-                                {recap.neste_steg && (
-                                  <div className="rounded-md bg-muted/50 border p-2">
-                                    <div className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-0.5">Foreslått neste steg</div>
-                                    <div className="text-xs">{recap.neste_steg}</div>
-                                  </div>
-                                )}
+                                {recap.neste_steg && (() => {
+                                  const alreadyApplied = (deal.neste_steg || "").trim() === recap.neste_steg.trim();
+                                  return (
+                                    <div className="rounded-md bg-muted/50 border p-2">
+                                      <div className="flex items-center justify-between gap-2 mb-0.5">
+                                        <div className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Foreslått neste steg</div>
+                                        <Button
+                                          size="sm"
+                                          variant={alreadyApplied ? "ghost" : "outline"}
+                                          className="h-5 px-1.5 text-[10px]"
+                                          disabled={alreadyApplied}
+                                          onClick={async (e) => {
+                                            e.stopPropagation();
+                                            try {
+                                              const { error } = await supabase
+                                                .from("salgsmuligheter")
+                                                .update({ neste_steg: recap.neste_steg })
+                                                .eq("id", deal.id);
+                                              if (error) throw error;
+                                              updateSalgsmuligheter(prev => prev.map(s =>
+                                                s.id === deal.id ? { ...s, neste_steg: recap.neste_steg! } : s
+                                              ));
+                                              toast.success("Neste steg oppdatert");
+                                            } catch (err) {
+                                              console.error(err);
+                                              toast.error("Kunne ikke oppdatere neste steg");
+                                            }
+                                          }}
+                                        >
+                                          {alreadyApplied ? (
+                                            <><Check className="w-2.5 h-2.5 mr-0.5" /> Brukt</>
+                                          ) : (
+                                            <>Bruk <ArrowRight className="w-2.5 h-2.5 ml-0.5" /></>
+                                          )}
+                                        </Button>
+                                      </div>
+                                      <div className="text-xs">{recap.neste_steg}</div>
+                                    </div>
+                                  );
+                                })()}
                                 {recap.risikofaktorer && recap.risikofaktorer.length > 0 && (
                                   <div className="rounded-md bg-destructive/5 border border-destructive/20 p-2">
                                     <div className="text-[10px] font-medium text-destructive uppercase tracking-wide mb-0.5 flex items-center gap-1">
