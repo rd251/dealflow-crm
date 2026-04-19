@@ -1196,7 +1196,23 @@ export default function Salgsmuligheter() {
   );
 }
 
-function DealList({ deals, getSelskapNavn, onSelect, label, onNavigateSelskap, isMobile, showKontraktStatus, showLukkedato }: { deals: Salgsmulighet[]; getSelskapNavn: (id: string) => string; onSelect: (s: Salgsmulighet) => void; label: string; onNavigateSelskap?: (id: string) => void; isMobile: boolean; showKontraktStatus?: boolean; showLukkedato?: boolean }) {
+function getSignalDotClass(deal: Salgsmulighet): string {
+  const signal = ((deal as any).ai_recap?.kundesignal || "").toLowerCase();
+  if (signal === "høy" || signal === "hoy") return "bg-success";
+  if (signal === "medium") return "bg-warning";
+  if (signal === "lav") return "bg-destructive";
+  return "bg-muted-foreground/30";
+}
+
+function getSignalLabel(deal: Salgsmulighet): string {
+  const signal = ((deal as any).ai_recap?.kundesignal || "").toLowerCase();
+  if (signal === "høy" || signal === "hoy") return "Høy";
+  if (signal === "medium") return "Medium";
+  if (signal === "lav") return "Lav";
+  return "Ingen AI-recap";
+}
+
+function DealList({ deals, getSelskapNavn, onSelect, label, onNavigateSelskap, isMobile, showKontraktStatus, showLukkedato, showSignalAndNextStep }: { deals: Salgsmulighet[]; getSelskapNavn: (id: string) => string; onSelect: (s: Salgsmulighet) => void; label: string; onNavigateSelskap?: (id: string) => void; isMobile: boolean; showKontraktStatus?: boolean; showLukkedato?: boolean; showSignalAndNextStep?: boolean }) {
   if (deals.length === 0) return <div className="text-center py-12 text-muted-foreground text-sm">{label}: ingen</div>;
 
   if (isMobile) {
