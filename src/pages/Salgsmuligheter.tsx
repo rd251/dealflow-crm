@@ -1253,7 +1253,9 @@ function DealList({ deals, getSelskapNavn, onSelect, label, onNavigateSelskap, i
             {showLukkedato && <th className="text-left px-4 py-3 font-medium">Lukkedato</th>}
             <th className="text-right px-4 py-3 font-medium">MRR</th>
           </tr>
-...
+        </thead>
+        <tbody>
+          {deals.map(d => (
             <tr key={d.id} className="border-b last:border-0 hover:bg-muted/30 cursor-pointer" onClick={() => onSelect(d)}>
               {showSignalAndNextStep && (
                 <td className="px-2 py-3">
