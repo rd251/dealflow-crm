@@ -457,9 +457,19 @@ export default function Salgsmuligheter() {
                         /* ── Full desktop card ── */
                         <HoverCard key={deal.id} openDelay={350} closeDelay={100}>
                           <HoverCardTrigger asChild>
+                          {(() => {
+                            const signal = ((deal as any).ai_recap?.kundesignal || "").toLowerCase();
+                            const signalBorderClass = signal === "høy" || signal === "hoy"
+                              ? "border-l-4 border-l-success"
+                              : signal === "medium"
+                              ? "border-l-4 border-l-warning"
+                              : signal === "lav"
+                              ? "border-l-4 border-l-destructive"
+                              : "";
+                            return (
                           <div draggable onDragStart={e => { setDraggedId(deal.id); e.dataTransfer.effectAllowed = "move"; }}
                           onClick={() => setSelectedSm(deal)}
-                          className={`bg-card border rounded-xl p-3.5 cursor-grab active:cursor-grabbing hover:shadow-md transition-all group ${isBlocked ? "ring-2 ring-destructive animate-pulse" : ""}`}>
+                          className={`bg-card border rounded-xl p-3.5 cursor-grab active:cursor-grabbing hover:shadow-md transition-all group ${signalBorderClass} ${isBlocked ? "ring-2 ring-destructive animate-pulse" : ""}`}>
                           
                           {/* 1. Company with logo */}
                           <div className="flex items-center gap-2 mb-2.5">
