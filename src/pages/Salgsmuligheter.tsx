@@ -725,8 +725,12 @@ export default function Salgsmuligheter() {
                   salgsmulighetId={currentSm.id}
                   initialRecap={(currentSm as any).ai_recap || null}
                   autoGenerateIfStale={{ lastAktivitetDato: currentSm.sist_aktivitet }}
+                  currentNesteSteg={currentSm.neste_steg}
                   onUpdated={(recap) => updateSalgsmuligheter(prev => prev.map(s =>
                     s.id === currentSm.id ? { ...s, ai_recap: recap } as any : s
+                  ))}
+                  onNesteStegUpdated={(ns) => updateSalgsmuligheter(prev => prev.map(s =>
+                    s.id === currentSm.id ? { ...s, neste_steg: ns } : s
                   ))}
                 />
 

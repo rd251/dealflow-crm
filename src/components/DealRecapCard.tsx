@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, RefreshCw, AlertTriangle } from "lucide-react";
+import { Sparkles, RefreshCw, AlertTriangle, ArrowRight, Check } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -20,7 +20,9 @@ interface Props {
   initialRecap?: AiRecap | null;
   /** Når true: be om regenerering automatisk hvis recap mangler eller er eldre enn siste aktivitet */
   autoGenerateIfStale?: { lastAktivitetDato?: string | null };
+  currentNesteSteg?: string | null;
   onUpdated?: (recap: AiRecap) => void;
+  onNesteStegUpdated?: (nesteSteg: string) => void;
 }
 
 const signalStyles: Record<AiRecap["kundesignal"], string> = {
@@ -30,9 +32,10 @@ const signalStyles: Record<AiRecap["kundesignal"], string> = {
   "Ukjent": "bg-muted text-muted-foreground border-border",
 };
 
-export default function DealRecapCard({ salgsmulighetId, initialRecap, autoGenerateIfStale, onUpdated }: Props) {
+export default function DealRecapCard({ salgsmulighetId, initialRecap, autoGenerateIfStale, currentNesteSteg, onUpdated, onNesteStegUpdated }: Props) {
   const [recap, setRecap] = useState<AiRecap | null>(initialRecap || null);
   const [loading, setLoading] = useState(false);
+  const [applying, setApplying] = useState(false);
 
   // Hold lokal state i sync når detaljpanelet bytter deal
   useEffect(() => {
@@ -134,7 +137,43 @@ export default function DealRecapCard({ salgsmulighetId, initialRecap, autoGener
       <p className="text-sm leading-relaxed">{recap.sammendrag}</p>
 
       <div className="rounded-lg bg-background/60 border p-2.5">
-        <div className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide mb-1">Foreslått neste steg</div>
+        <div className="flex items-center justify-between mb-1 gap-2">
+          <div className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Foreslått neste steg</div>
+          {recap.neste_steg && (() => {
+            const alreadyApplied = (currentNesteSteg || "").trim() === recap.neste_steg.trim();
+            return (
+              <Button
+                size="sm"
+                variant={alreadyApplied ? "ghost" : "outline"}
+                className="h-6 px-2 text-[11px]"
+                disabled={applying || alreadyApplied}
+                onClick={async () => {
+                  setApplying(true);
+                  try {
+                    const { error } = await supabase
+                      .from("salgsmuligheter")
+                      .update({ neste_steg: recap.neste_steg })
+                      .eq("id", salgsmulighetId);
+                    if (error) throw error;
+                    onNesteStegUpdated?.(recap.neste_steg);
+                    toast.success("Neste steg oppdatert");
+                  } catch (e) {
+                    console.error(e);
+                    toast.error("Kunne ikke oppdatere neste steg");
+                  } finally {
+                    setApplying(false);
+                  }
+                }}
+              >
+                {alreadyApplied ? (
+                  <><Check className="w-3 h-3 mr-1" /> Brukt</>
+                ) : (
+                  <>Bruk <ArrowRight className="w-3 h-3 ml-1" /></>
+                )}
+              </Button>
+            );
+          })()}
+        </div>
         <div className="text-sm">{recap.neste_steg}</div>
       </div>
 
