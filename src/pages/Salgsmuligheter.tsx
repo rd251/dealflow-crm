@@ -170,6 +170,8 @@ export default function Salgsmuligheter() {
   const [form, setForm] = useState({ selskap_id: "", kontakt_id: "", forventet_mrr: 0, sla: 0, oppstartskostnad: 0, kontraktslengde_mnd: 12, sannsynlighet: 50, forventet_lukkedato: "", neste_steg: "", rolle_i_firma: "", use_case: "", kontaktperson: "", e_post: "", telefon: "", ansvarlig: "", kilde: "Nettside" as string });
   const [filterUtenAktivitet, setFilterUtenAktivitet] = useState(false);
   const [contractModalOpen, setContractModalOpen] = useState(false);
+  const [pipelineView, setPipelineView] = useState<"kanban" | "table">(() => (localStorage.getItem("pipelineView") as "kanban" | "table") || "kanban");
+  useEffect(() => { localStorage.setItem("pipelineView", pipelineView); }, [pipelineView]);
 
   useEffect(() => {
     const openId = searchParams.get("open");
