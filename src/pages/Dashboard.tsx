@@ -25,6 +25,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ArrowRight } from "lucide-react";
 import MeetingPrepPanel from "@/components/MeetingPrepPanel";
+import DealHoverCard from "@/components/DealHoverCard";
 import FollowUpSection from "@/components/FollowUpSection";
 import AiCommandBar from "@/components/AiCommandBar";
 import { useFollowUps } from "@/hooks/use-follow-ups";
@@ -509,21 +510,22 @@ export default function Dashboard() {
             ) : (
               <ul className="divide-y">
                 {hotDeals.map((d) => (
-                  <li
-                    key={d.id}
-                    className="px-4 py-2.5 hover:bg-muted/40 cursor-pointer transition-colors"
-                    onClick={() => navigate(`/salgsmuligheter?open=${d.id}`)}
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="min-w-0 flex-1">
-                        <div className="text-sm font-medium truncate">{d.selskapNavn}</div>
-                        <div className="text-[11px] text-muted-foreground truncate">
-                          {d.navn} · {d.forventet_lukkedato ? format(new Date(d.forventet_lukkedato), "d. MMM", { locale: nb }) : "—"}
+                  <DealHoverCard key={d.id} recap={(d as any).ai_recap} nesteSteg={d.neste_steg}>
+                    <li
+                      className="px-4 py-2.5 hover:bg-muted/40 cursor-pointer transition-colors"
+                      onClick={() => navigate(`/salgsmuligheter?open=${d.id}`)}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <div className="text-sm font-medium truncate">{d.selskapNavn}</div>
+                          <div className="text-[11px] text-muted-foreground truncate">
+                            {d.navn} · {d.forventet_lukkedato ? format(new Date(d.forventet_lukkedato), "d. MMM", { locale: nb }) : "—"}
+                          </div>
                         </div>
+                        <div className="text-xs font-semibold text-foreground shrink-0">{nok(d.verdi)}</div>
                       </div>
-                      <div className="text-xs font-semibold text-foreground shrink-0">{nok(d.verdi)}</div>
-                    </div>
-                  </li>
+                    </li>
+                  </DealHoverCard>
                 ))}
               </ul>
             )}
@@ -543,21 +545,22 @@ export default function Dashboard() {
             ) : (
               <ul className="divide-y">
                 {trengerHandling.map((d) => (
-                  <li
-                    key={d.id}
-                    className="px-4 py-2.5 hover:bg-muted/40 cursor-pointer transition-colors"
-                    onClick={() => navigate(`/salgsmuligheter?open=${d.id}`)}
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="min-w-0 flex-1">
-                        <div className="text-sm font-medium truncate">{d.selskapNavn}</div>
-                        <div className="text-[11px] text-muted-foreground truncate">{d.status}</div>
+                  <DealHoverCard key={d.id} recap={(d as any).ai_recap} nesteSteg={d.neste_steg}>
+                    <li
+                      className="px-4 py-2.5 hover:bg-muted/40 cursor-pointer transition-colors"
+                      onClick={() => navigate(`/salgsmuligheter?open=${d.id}`)}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <div className="text-sm font-medium truncate">{d.selskapNavn}</div>
+                          <div className="text-[11px] text-muted-foreground truncate">{d.status}</div>
+                        </div>
+                        <Badge variant="outline" className="text-[10px] h-5 shrink-0 border-amber-300 text-amber-700 dark:text-amber-400">
+                          {d.daysSince >= 999 ? "Aldri" : `${d.daysSince}d`}
+                        </Badge>
                       </div>
-                      <Badge variant="outline" className="text-[10px] h-5 shrink-0 border-amber-300 text-amber-700 dark:text-amber-400">
-                        {d.daysSince >= 999 ? "Aldri" : `${d.daysSince}d`}
-                      </Badge>
-                    </div>
-                  </li>
+                    </li>
+                  </DealHoverCard>
                 ))}
               </ul>
             )}
@@ -577,19 +580,20 @@ export default function Dashboard() {
             ) : (
               <ul className="divide-y">
                 {kontraktSendt.slice(0, 5).map((d) => (
-                  <li
-                    key={d.id}
-                    className="px-4 py-2.5 hover:bg-muted/40 cursor-pointer transition-colors"
-                    onClick={() => navigate(`/salgsmuligheter?open=${d.id}`)}
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="min-w-0 flex-1">
-                        <div className="text-sm font-medium truncate">{d.selskapNavn}</div>
-                        <div className="text-[11px] text-muted-foreground truncate">{d.navn}</div>
+                  <DealHoverCard key={d.id} recap={(d as any).ai_recap} nesteSteg={d.neste_steg}>
+                    <li
+                      className="px-4 py-2.5 hover:bg-muted/40 cursor-pointer transition-colors"
+                      onClick={() => navigate(`/salgsmuligheter?open=${d.id}`)}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <div className="text-sm font-medium truncate">{d.selskapNavn}</div>
+                          <div className="text-[11px] text-muted-foreground truncate">{d.navn}</div>
+                        </div>
+                        <div className="text-xs font-semibold text-foreground shrink-0">{nok(d.verdi)}</div>
                       </div>
-                      <div className="text-xs font-semibold text-foreground shrink-0">{nok(d.verdi)}</div>
-                    </div>
-                  </li>
+                    </li>
+                  </DealHoverCard>
                 ))}
               </ul>
             )}
