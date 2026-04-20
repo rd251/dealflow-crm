@@ -25,6 +25,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ArrowRight } from "lucide-react";
 import MeetingPrepPanel from "@/components/MeetingPrepPanel";
+import DealHoverCard from "@/components/DealHoverCard";
 import FollowUpSection from "@/components/FollowUpSection";
 import AiCommandBar from "@/components/AiCommandBar";
 import { useFollowUps } from "@/hooks/use-follow-ups";
