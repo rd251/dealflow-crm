@@ -545,21 +545,22 @@ export default function Dashboard() {
             ) : (
               <ul className="divide-y">
                 {trengerHandling.map((d) => (
-                  <li
-                    key={d.id}
-                    className="px-4 py-2.5 hover:bg-muted/40 cursor-pointer transition-colors"
-                    onClick={() => navigate(`/salgsmuligheter?open=${d.id}`)}
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="min-w-0 flex-1">
-                        <div className="text-sm font-medium truncate">{d.selskapNavn}</div>
-                        <div className="text-[11px] text-muted-foreground truncate">{d.status}</div>
+                  <DealHoverCard key={d.id} recap={(d as any).ai_recap} nesteSteg={d.neste_steg}>
+                    <li
+                      className="px-4 py-2.5 hover:bg-muted/40 cursor-pointer transition-colors"
+                      onClick={() => navigate(`/salgsmuligheter?open=${d.id}`)}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <div className="text-sm font-medium truncate">{d.selskapNavn}</div>
+                          <div className="text-[11px] text-muted-foreground truncate">{d.status}</div>
+                        </div>
+                        <Badge variant="outline" className="text-[10px] h-5 shrink-0 border-amber-300 text-amber-700 dark:text-amber-400">
+                          {d.daysSince >= 999 ? "Aldri" : `${d.daysSince}d`}
+                        </Badge>
                       </div>
-                      <Badge variant="outline" className="text-[10px] h-5 shrink-0 border-amber-300 text-amber-700 dark:text-amber-400">
-                        {d.daysSince >= 999 ? "Aldri" : `${d.daysSince}d`}
-                      </Badge>
-                    </div>
-                  </li>
+                    </li>
+                  </DealHoverCard>
                 ))}
               </ul>
             )}
