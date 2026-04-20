@@ -510,21 +510,22 @@ export default function Dashboard() {
             ) : (
               <ul className="divide-y">
                 {hotDeals.map((d) => (
-                  <li
-                    key={d.id}
-                    className="px-4 py-2.5 hover:bg-muted/40 cursor-pointer transition-colors"
-                    onClick={() => navigate(`/salgsmuligheter?open=${d.id}`)}
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="min-w-0 flex-1">
-                        <div className="text-sm font-medium truncate">{d.selskapNavn}</div>
-                        <div className="text-[11px] text-muted-foreground truncate">
-                          {d.navn} · {d.forventet_lukkedato ? format(new Date(d.forventet_lukkedato), "d. MMM", { locale: nb }) : "—"}
+                  <DealHoverCard key={d.id} recap={(d as any).ai_recap} nesteSteg={d.neste_steg}>
+                    <li
+                      className="px-4 py-2.5 hover:bg-muted/40 cursor-pointer transition-colors"
+                      onClick={() => navigate(`/salgsmuligheter?open=${d.id}`)}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <div className="text-sm font-medium truncate">{d.selskapNavn}</div>
+                          <div className="text-[11px] text-muted-foreground truncate">
+                            {d.navn} · {d.forventet_lukkedato ? format(new Date(d.forventet_lukkedato), "d. MMM", { locale: nb }) : "—"}
+                          </div>
                         </div>
+                        <div className="text-xs font-semibold text-foreground shrink-0">{nok(d.verdi)}</div>
                       </div>
-                      <div className="text-xs font-semibold text-foreground shrink-0">{nok(d.verdi)}</div>
-                    </div>
-                  </li>
+                    </li>
+                  </DealHoverCard>
                 ))}
               </ul>
             )}
