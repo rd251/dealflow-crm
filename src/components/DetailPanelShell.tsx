@@ -23,7 +23,11 @@ interface DetailPanelShellProps {
     kalender?: ReactNode;
     dokumenter?: ReactNode;
   };
+  activeTab?: TabKey;
+  onActiveTabChange?: (tab: TabKey) => void;
 }
+
+export type TabKey = "detaljer" | "selskap" | "kontakt" | "interaksjoner" | "notater" | "kalender" | "dokumenter";
 
 const TAB_KEYS = ["detaljer", "selskap", "kontakt", "interaksjoner", "notater", "kalender", "dokumenter"] as const;
 const TAB_LABELS: Record<(typeof TAB_KEYS)[number], string> = {
