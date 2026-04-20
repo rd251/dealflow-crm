@@ -496,7 +496,14 @@ export default function Leads() {
         ) : undefined}
         actions={canEdit && currentLead && !currentIsLocked && currentLead.status !== "Ikke aktuelt" ? (
           <>
-            <Button size="sm" variant="outline" onClick={() => openCreateActivityRef.current?.()}>
+            <Button size="sm" variant="outline" onClick={() => {
+              if (detailTab === "interaksjoner") {
+                openCreateActivityRef.current?.();
+              } else {
+                setPendingOpenActivity(true);
+                setDetailTab("interaksjoner");
+              }
+            }}>
               <PenLine className="w-3.5 h-3.5 mr-1.5" />Logg aktivitet
             </Button>
             {currentLead.e_post && (
