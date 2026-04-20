@@ -49,6 +49,8 @@ export default function Leads() {
   const [partnerDialogLead, setPartnerDialogLead] = useState<Lead | null>(null);
   const [enrichFields, setEnrichFields] = useState({ orgnr: "", bransje: "", firmaadresse: "", postadresse: "" });
   const openCreateActivityRef = useRef<(() => void) | null>(null);
+  const [detailTab, setDetailTab] = useState<"detaljer" | "selskap" | "kontakt" | "interaksjoner" | "notater" | "kalender" | "dokumenter">("detaljer");
+  const [pendingOpenActivity, setPendingOpenActivity] = useState(false);
   const [form, setForm] = useState<Partial<Lead>>({ firmanavn: "", kontaktperson: "", e_post: "", telefon: "", kilde: "Nettside", status: "Ny", ansvarlig: "", neste_steg: "", notater: "", rolle_i_firma: "", use_case: "" });
   const [filterUtenOppfolging, setFilterUtenOppfolging] = useState(false);
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
@@ -153,6 +155,18 @@ export default function Leads() {
 
   const currentLead = selectedLead ? leads.find(l => l.id === selectedLead.id) || selectedLead : null;
   const currentIsLocked = currentLead ? isConverted(currentLead) : false;
+
+  useEffect(() => {
+    if (pendingOpenActivity && detailTab === "interaksjoner") {
+      const t = setTimeout(() => {
+        openCreateActivityRef.current?.();
+        setPendingOpenActivity(false);
+      }, 50);
+      return () => clearTimeout(t);
+    }
+  }, [pendingOpenActivity, detailTab]);
+
+  useEffect(() => { setDetailTab("detaljer"); }, [selectedLead?.id]);
 
   return (
     <PageShell
@@ -464,6 +478,8 @@ export default function Leads() {
       <DetailPanelShell
         open={!!currentLead}
         onClose={() => setSelectedLead(null)}
+        activeTab={detailTab}
+        onActiveTabChange={(t) => setDetailTab(t)}
         title={currentLead?.firmanavn || ""}
         subtitle={currentLead?.kontaktperson || undefined}
         badges={currentLead ? (
@@ -480,7 +496,14 @@ export default function Leads() {
         ) : undefined}
         actions={canEdit && currentLead && !currentIsLocked && currentLead.status !== "Ikke aktuelt" ? (
           <>
-            <Button size="sm" variant="outline" onClick={() => openCreateActivityRef.current?.()}>
+            <Button size="sm" variant="outline" onClick={() => {
+              if (detailTab === "interaksjoner") {
+                openCreateActivityRef.current?.();
+              } else {
+                setPendingOpenActivity(true);
+                setDetailTab("interaksjoner");
+              }
+            }}>
               <PenLine className="w-3.5 h-3.5 mr-1.5" />Logg aktivitet
             </Button>
             {currentLead.e_post && (

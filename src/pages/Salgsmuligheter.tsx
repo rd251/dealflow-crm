@@ -284,6 +284,20 @@ export default function Salgsmuligheter() {
 
   const currentSm = selectedSm ? salgsmuligheter.find(s => s.id === selectedSm.id) || selectedSm : null;
   const openCreateActivityRef = useRef<(() => void) | null>(null);
+  const [detailTab, setDetailTab] = useState<"detaljer" | "selskap" | "kontakt" | "interaksjoner" | "notater" | "kalender" | "dokumenter">("detaljer");
+  const [pendingOpenActivity, setPendingOpenActivity] = useState(false);
+
+  useEffect(() => {
+    if (pendingOpenActivity && detailTab === "interaksjoner") {
+      const t = setTimeout(() => {
+        openCreateActivityRef.current?.();
+        setPendingOpenActivity(false);
+      }, 50);
+      return () => clearTimeout(t);
+    }
+  }, [pendingOpenActivity, detailTab]);
+
+  useEffect(() => { setDetailTab("detaljer"); }, [selectedSm?.id]);
 
   
 
@@ -717,6 +731,8 @@ export default function Salgsmuligheter() {
       <DetailPanelShell
         open={!!currentSm}
         onClose={() => setSelectedSm(null)}
+        activeTab={detailTab}
+        onActiveTabChange={(t) => setDetailTab(t)}
         title={currentSm?.navn || ""}
         onTitleChange={canEdit && currentSm ? (value) => {
           const today = new Date().toISOString().split("T")[0];
@@ -740,7 +756,14 @@ export default function Salgsmuligheter() {
         ) : undefined}
         actions={canEdit && currentSm && openStatuses.includes(currentSm.status as any) ? (
           <>
-            <Button size="sm" variant="outline" onClick={() => openCreateActivityRef.current?.()}>
+            <Button size="sm" variant="outline" onClick={() => {
+              if (detailTab === "interaksjoner") {
+                openCreateActivityRef.current?.();
+              } else {
+                setPendingOpenActivity(true);
+                setDetailTab("interaksjoner");
+              }
+            }}>
               <PenLine className="w-3.5 h-3.5 mr-1.5" />Logg aktivitet
             </Button>
             {currentSm.e_post && (

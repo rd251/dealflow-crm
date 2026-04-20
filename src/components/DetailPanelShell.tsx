@@ -23,7 +23,11 @@ interface DetailPanelShellProps {
     kalender?: ReactNode;
     dokumenter?: ReactNode;
   };
+  activeTab?: TabKey;
+  onActiveTabChange?: (tab: TabKey) => void;
 }
+
+export type TabKey = "detaljer" | "selskap" | "kontakt" | "interaksjoner" | "notater" | "kalender" | "dokumenter";
 
 const TAB_KEYS = ["detaljer", "selskap", "kontakt", "interaksjoner", "notater", "kalender", "dokumenter"] as const;
 const TAB_LABELS: Record<(typeof TAB_KEYS)[number], string> = {
@@ -47,8 +51,15 @@ export default function DetailPanelShell({
   actions,
   children,
   tabContent,
+  activeTab: controlledTab,
+  onActiveTabChange,
 }: DetailPanelShellProps) {
-  const [activeTab, setActiveTab] = useState<(typeof TAB_KEYS)[number]>("detaljer");
+  const [internalTab, setInternalTab] = useState<TabKey>("detaljer");
+  const activeTab = controlledTab ?? internalTab;
+  const setActiveTab = (t: TabKey) => {
+    if (onActiveTabChange) onActiveTabChange(t);
+    else setInternalTab(t);
+  };
 
   const useTabs = !!tabContent;
   // Only show tabs that have content
