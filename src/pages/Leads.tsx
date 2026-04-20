@@ -478,6 +478,8 @@ export default function Leads() {
       <DetailPanelShell
         open={!!currentLead}
         onClose={() => setSelectedLead(null)}
+        activeTab={detailTab}
+        onActiveTabChange={(t) => setDetailTab(t)}
         title={currentLead?.firmanavn || ""}
         subtitle={currentLead?.kontaktperson || undefined}
         badges={currentLead ? (
