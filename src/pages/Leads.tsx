@@ -156,6 +156,18 @@ export default function Leads() {
   const currentLead = selectedLead ? leads.find(l => l.id === selectedLead.id) || selectedLead : null;
   const currentIsLocked = currentLead ? isConverted(currentLead) : false;
 
+  useEffect(() => {
+    if (pendingOpenActivity && detailTab === "interaksjoner") {
+      const t = setTimeout(() => {
+        openCreateActivityRef.current?.();
+        setPendingOpenActivity(false);
+      }, 50);
+      return () => clearTimeout(t);
+    }
+  }, [pendingOpenActivity, detailTab]);
+
+  useEffect(() => { setDetailTab("detaljer"); }, [selectedLead?.id]);
+
   return (
     <PageShell
       title="Leads"
