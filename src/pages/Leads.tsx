@@ -49,6 +49,8 @@ export default function Leads() {
   const [partnerDialogLead, setPartnerDialogLead] = useState<Lead | null>(null);
   const [enrichFields, setEnrichFields] = useState({ orgnr: "", bransje: "", firmaadresse: "", postadresse: "" });
   const openCreateActivityRef = useRef<(() => void) | null>(null);
+  const [detailTab, setDetailTab] = useState<"detaljer" | "selskap" | "kontakt" | "interaksjoner" | "notater" | "kalender" | "dokumenter">("detaljer");
+  const [pendingOpenActivity, setPendingOpenActivity] = useState(false);
   const [form, setForm] = useState<Partial<Lead>>({ firmanavn: "", kontaktperson: "", e_post: "", telefon: "", kilde: "Nettside", status: "Ny", ansvarlig: "", neste_steg: "", notater: "", rolle_i_firma: "", use_case: "" });
   const [filterUtenOppfolging, setFilterUtenOppfolging] = useState(false);
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
