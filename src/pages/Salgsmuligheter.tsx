@@ -284,6 +284,20 @@ export default function Salgsmuligheter() {
 
   const currentSm = selectedSm ? salgsmuligheter.find(s => s.id === selectedSm.id) || selectedSm : null;
   const openCreateActivityRef = useRef<(() => void) | null>(null);
+  const [detailTab, setDetailTab] = useState<"detaljer" | "selskap" | "kontakt" | "interaksjoner" | "notater" | "kalender" | "dokumenter">("detaljer");
+  const [pendingOpenActivity, setPendingOpenActivity] = useState(false);
+
+  useEffect(() => {
+    if (pendingOpenActivity && detailTab === "interaksjoner") {
+      const t = setTimeout(() => {
+        openCreateActivityRef.current?.();
+        setPendingOpenActivity(false);
+      }, 50);
+      return () => clearTimeout(t);
+    }
+  }, [pendingOpenActivity, detailTab]);
+
+  useEffect(() => { setDetailTab("detaljer"); }, [selectedSm?.id]);
 
   
 
