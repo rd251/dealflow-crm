@@ -756,7 +756,14 @@ export default function Salgsmuligheter() {
         ) : undefined}
         actions={canEdit && currentSm && openStatuses.includes(currentSm.status as any) ? (
           <>
-            <Button size="sm" variant="outline" onClick={() => openCreateActivityRef.current?.()}>
+            <Button size="sm" variant="outline" onClick={() => {
+              if (detailTab === "interaksjoner") {
+                openCreateActivityRef.current?.();
+              } else {
+                setPendingOpenActivity(true);
+                setDetailTab("interaksjoner");
+              }
+            }}>
               <PenLine className="w-3.5 h-3.5 mr-1.5" />Logg aktivitet
             </Button>
             {currentSm.e_post && (
