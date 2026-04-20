@@ -51,8 +51,15 @@ export default function DetailPanelShell({
   actions,
   children,
   tabContent,
+  activeTab: controlledTab,
+  onActiveTabChange,
 }: DetailPanelShellProps) {
-  const [activeTab, setActiveTab] = useState<(typeof TAB_KEYS)[number]>("detaljer");
+  const [internalTab, setInternalTab] = useState<TabKey>("detaljer");
+  const activeTab = controlledTab ?? internalTab;
+  const setActiveTab = (t: TabKey) => {
+    if (onActiveTabChange) onActiveTabChange(t);
+    else setInternalTab(t);
+  };
 
   const useTabs = !!tabContent;
   // Only show tabs that have content
