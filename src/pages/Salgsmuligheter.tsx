@@ -731,6 +731,8 @@ export default function Salgsmuligheter() {
       <DetailPanelShell
         open={!!currentSm}
         onClose={() => setSelectedSm(null)}
+        activeTab={detailTab}
+        onActiveTabChange={(t) => setDetailTab(t)}
         title={currentSm?.navn || ""}
         onTitleChange={canEdit && currentSm ? (value) => {
           const today = new Date().toISOString().split("T")[0];
