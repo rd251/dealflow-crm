@@ -22,7 +22,7 @@ const typeConfig = {
   lead: { icon: Users, label: "Lead", color: "text-amber-600 bg-amber-500/10", path: () => `/leads` },
   salgsmulighet: { icon: Briefcase, label: "Salg", color: "text-emerald-600 bg-emerald-500/10", path: () => `/salgsmuligheter` },
   partner: { icon: Handshake, label: "Partner", color: "text-violet-600 bg-violet-500/10", path: (id: string) => `/partnere/${id}` },
-  moete: { icon: Calendar, label: "Møte", color: "text-orange-600 bg-orange-500/10", path: () => `/moetenotater` },
+  moete: { icon: Calendar, label: "Møte", color: "text-orange-600 bg-orange-500/10", path: (id: string) => `/moetenotater?meeting=${id}` },
 } as const;
 
 export default function GlobalSearch() {
