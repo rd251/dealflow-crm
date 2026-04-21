@@ -4,6 +4,7 @@ import { format, isToday, isTomorrow } from "date-fns";
 import { nb } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 import { typeIcons, typeColors, AktivitetType } from "@/components/ActivityLog";
+import { GmailIcon, GoogleCalendarIcon } from "@/components/BrandIcons";
 import { useNavigate } from "react-router-dom";
 
 const API_URL = import.meta.env.VITE_SUPABASE_URL + '/rest/v1';
@@ -26,6 +27,7 @@ interface UpcomingItem {
   salgsmulighet_id: string | null;
   partner_id: string | null;
   kontakt_id: string | null;
+  ekstern_provider?: string | null;
 }
 
 export default function UpcomingMeetings() {
@@ -41,7 +43,7 @@ export default function UpcomingMeetings() {
     const fromDate = today.toISOString();
     const toDate = dayAfterTomorrow.toISOString();
     fetch(
-      `${API_URL}/aktiviteter?dato=gte.${fromDate}&dato=lt.${toDate}&order=dato.asc,start_tid.asc&limit=20&select=id,type,tittel,beskrivelse,dato,start_tid,slutt_tid,selskap_id,lead_id,salgsmulighet_id,partner_id,kontakt_id`,
+      `${API_URL}/aktiviteter?dato=gte.${fromDate}&dato=lt.${toDate}&order=dato.asc,start_tid.asc&limit=20&select=id,type,tittel,beskrivelse,dato,start_tid,slutt_tid,selskap_id,lead_id,salgsmulighet_id,partner_id,kontakt_id,ekstern_provider`,
       { headers: API_HEADERS }
     )
       .then(r => r.ok ? r.json() : [])
@@ -116,11 +118,14 @@ export default function UpcomingMeetings() {
     const Icon = typeIcons[item.type] || CalendarDays;
     const colorClass = typeColors[item.type] || "text-muted-foreground bg-muted";
     const entity = getEntityInfo(item);
+    const isGmail = item.ekstern_provider === 'gmail';
+    const isGCal = item.ekstern_provider === 'google_calendar';
+    const isExternal = isGmail || isGCal;
 
     return (
-      <div key={item.id} className="flex items-start gap-3 p-2.5 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors">
-        <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${colorClass}`}>
-          <Icon className="w-4 h-4" />
+      <div key={item.id} className="flex items-start gap-3 p-2.5 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors min-w-0">
+        <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${isExternal ? 'bg-white border' : colorClass}`}>
+          {isGmail ? <GmailIcon size={16} /> : isGCal ? <GoogleCalendarIcon size={16} /> : <Icon className="w-4 h-4" />}
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium truncate">

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Phone, Mail, MessageSquare, MessageCircle, Users, FileText, Clock } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { GmailIcon, GoogleCalendarIcon } from "@/components/BrandIcons";
 import type { AktivitetType } from "@/components/ActivityLog";
 
 const API_URL = import.meta.env.VITE_SUPABASE_URL + '/rest/v1';
@@ -40,6 +41,7 @@ interface LastActivityBadgeProps {
 
 export default function LastActivityBadge(props: LastActivityBadgeProps) {
   const [lastType, setLastType] = useState<AktivitetType | null>(null);
+  const [lastProvider, setLastProvider] = useState<string | null>(null);
 
   useEffect(() => {
     const filters: string[] = [];
@@ -51,9 +53,14 @@ export default function LastActivityBadge(props: LastActivityBadgeProps) {
     if (props.kontakt_id) filters.push(`kontakt_id=eq.${props.kontakt_id}`);
     if (!filters.length) return;
 
-    fetch(`${API_URL}/aktiviteter?${filters.join("&")}&order=dato.desc&limit=1&select=type`, { headers: API_HEADERS })
+    fetch(`${API_URL}/aktiviteter?${filters.join("&")}&order=dato.desc&limit=1&select=type,ekstern_provider`, { headers: API_HEADERS })
       .then(r => r.ok ? r.json() : [])
-      .then(data => { if (data.length) setLastType(data[0].type); })
+      .then(data => {
+        if (data.length) {
+          setLastType(data[0].type);
+          setLastProvider(data[0].ekstern_provider || null);
+        }
+      })
       .catch(() => {});
   }, [props.lead_id, props.salgsmulighet_id, props.selskap_id, props.partner_id, props.prosjekt_id, props.kontakt_id]);
 
@@ -69,6 +76,8 @@ export default function LastActivityBadge(props: LastActivityBadgeProps) {
     return date.toLocaleDateString("no-NO", { day: "numeric", month: "short" });
   };
 
+  const isGmail = lastProvider === 'gmail';
+  const isGCal = lastProvider === 'google_calendar';
   const Icon = lastType ? typeIcons[lastType] : Clock;
   const color = lastType ? typeColors[lastType] : "text-muted-foreground";
 
@@ -76,7 +85,7 @@ export default function LastActivityBadge(props: LastActivityBadgeProps) {
     <Tooltip>
       <TooltipTrigger asChild>
         <span className={`inline-flex items-center gap-1 text-xs ${color}`}>
-          <Icon className="w-3.5 h-3.5" />
+          {isGmail ? <GmailIcon size={14} /> : isGCal ? <GoogleCalendarIcon size={14} /> : <Icon className="w-3.5 h-3.5" />}
           {formatDate(props.sist_aktivitet)}
         </span>
       </TooltipTrigger>
