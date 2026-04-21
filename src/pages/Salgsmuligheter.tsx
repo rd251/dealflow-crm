@@ -20,8 +20,6 @@ import SelskapInnsikt from "@/components/SelskapInnsikt";
 import CompanyLogo from "@/components/CompanyLogo";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { gravatarUrl } from "@/lib/gravatar";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { gravatarUrl } from "@/lib/gravatar";
 import EntityLinkPicker from "@/components/EntityLinkPicker";
 import { Badge } from "@/components/ui/badge";
 import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui/hover-card";
