@@ -127,6 +127,21 @@ async function matchDeltakere(supabase: any, attendees: any[]): Promise<string[]
   return (kontakter || []).map((k: any) => k.id);
 }
 
+async function matchLeadByEmail(supabase: any, attendees: any[]): Promise<string | null> {
+  const externals = getExternalAttendees(attendees);
+  if (externals.length === 0) return null;
+  const emails = externals.map((a: any) => a.email?.toLowerCase()).filter(Boolean);
+  if (emails.length === 0) return null;
+  const { data } = await supabase
+    .from('leads')
+    .select('id, e_post, status, updated_at')
+    .in('e_post', emails)
+    .not('status', 'in', '("Konvertert til salg","Konvertert til partner","Ikke aktuelt")')
+    .order('updated_at', { ascending: false })
+    .limit(1);
+  return data && data.length > 0 ? data[0].id : null;
+}
+
 async function findOpenSalgsmulighetForSelskap(supabase: any, selskapId: string): Promise<string | null> {
   const { data } = await supabase
     .from('salgsmuligheter')
