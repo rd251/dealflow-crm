@@ -11,7 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Bell, BellOff, Calendar, AlertTriangle, Pencil, Trash2, Building2, Target, User, PhoneForwarded } from "lucide-react";
+import { Plus, Bell, BellOff, Calendar, AlertTriangle, Pencil, Trash2, Building2, Target, User, PhoneForwarded, ChevronDown, ChevronRight } from "lucide-react";
+import CompanyLogo from "@/components/CompanyLogo";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { Oppgave, OppgaveStatus, Prioritet } from "@/data/crm-data";
 import { toast } from "sonner";
@@ -33,6 +34,7 @@ export default function Tasks() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Oppgave | null>(null);
   const [filter, setFilter] = useState<"alle" | "forfalte" | "idag" | "uke">("alle");
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
   const [form, setForm] = useState({ oppgave: "", frist: "", prioritet: "Medium" as Prioritet, lead_id: "", selskap_id: "", salgsmulighet_id: "", kontakt_id: "", ansvarlig: "", notater: "" });
 
   // Fetch email contacts and merge with CRM kontakter for a unified person picker
@@ -221,8 +223,67 @@ export default function Tasks() {
         ))}
       </div>
 
-      <div className="space-y-2">
-        {visibleTasks.map(task => {
+      {(() => {
+        // Group visible tasks by selskap_id (or lead's firmanavn fallback / "Uten selskap")
+        const groups = new Map<string, { key: string; label: string; domene?: string; tasks: Oppgave[] }>();
+        for (const task of visibleTasks) {
+          let key = "__none__";
+          let label = "Uten selskap";
+          let domene: string | undefined;
+          if (task.selskap_id) {
+            const sel = selskaper.find(s => s.id === task.selskap_id);
+            if (sel) { key = `s:${sel.id}`; label = sel.firmanavn; domene = sel.domene; }
+          } else if (task.lead_id) {
+            const ld = leads.find(l => l.id === task.lead_id);
+            if (ld) { key = `l:${ld.id}`; label = ld.firmanavn; }
+          }
+          if (!groups.has(key)) groups.set(key, { key, label, domene, tasks: [] });
+          groups.get(key)!.tasks.push(task);
+        }
+        const sortedGroups = Array.from(groups.values()).sort((a, b) => {
+          if (a.key === "__none__") return 1;
+          if (b.key === "__none__") return -1;
+          return b.tasks.length - a.tasks.length;
+        });
+
+        const toggleGroup = (key: string) => {
+          setCollapsedGroups(prev => {
+            const next = new Set(prev);
+            if (next.has(key)) next.delete(key); else next.add(key);
+            return next;
+          });
+        };
+
+        return (
+          <div className="space-y-4">
+            {sortedGroups.map(group => {
+              const collapsed = collapsedGroups.has(group.key);
+              const openCount = group.tasks.filter(t => t.status !== "Ferdig").length;
+              const overdueCount = group.tasks.filter(t => t.status !== "Ferdig" && t.frist && t.frist < today).length;
+              const showHeader = group.tasks.length > 1 || group.key !== "__none__";
+              return (
+                <div key={group.key} className="space-y-2">
+                  {showHeader && (
+                    <button
+                      onClick={() => toggleGroup(group.key)}
+                      className="w-full flex items-center gap-2 px-3 py-2 bg-muted/40 hover:bg-muted/60 rounded-lg transition-colors text-left"
+                    >
+                      {collapsed ? <ChevronRight className="w-4 h-4 shrink-0" /> : <ChevronDown className="w-4 h-4 shrink-0" />}
+                      {group.key.startsWith("s:") ? (
+                        <CompanyLogo domain={group.domene} firmanavn={group.label} size="sm" />
+                      ) : (
+                        <Building2 className="w-4 h-4 text-muted-foreground" />
+                      )}
+                      <span className="font-semibold text-sm flex-1 truncate">{group.label}</span>
+                      <span className="text-xs text-muted-foreground">{openCount} åpne · {group.tasks.length} totalt</span>
+                      {overdueCount > 0 && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium bg-destructive/10 text-destructive">{overdueCount} forfalt</span>
+                      )}
+                    </button>
+                  )}
+                  {!collapsed && (
+                    <div className={`space-y-2 ${showHeader ? "pl-4 border-l-2 border-border ml-2" : ""}`}>
+                      {group.tasks.map(task => {
           const isOverdue = task.status !== "Ferdig" && task.frist && task.frist < today;
           const selskap = selskaper.find(s => s.id === task.selskap_id);
           const salgsmulighet = salgsmuligheter.find(s => s.id === task.salgsmulighet_id);
@@ -257,9 +318,9 @@ export default function Tasks() {
                       {task.frist}
                     </span>
                   )}
-                  {selskap && <span className="truncate flex items-center gap-0.5"><Building2 className="w-3 h-3" /> {selskap.firmanavn}</span>}
+                  {!showHeader && selskap && <span className="truncate flex items-center gap-0.5"><Building2 className="w-3 h-3" /> {selskap.firmanavn}</span>}
                   {salgsmulighet && <span className="truncate flex items-center gap-0.5"><Target className="w-3 h-3" /> {salgsmulighet.navn}</span>}
-                  {lead && <span className="truncate flex items-center gap-0.5"><PhoneForwarded className="w-3 h-3" /> {lead.firmanavn}</span>}
+                  {!showHeader && lead && <span className="truncate flex items-center gap-0.5"><PhoneForwarded className="w-3 h-3" /> {lead.firmanavn}</span>}
                   {personNavn && <span className="truncate flex items-center gap-0.5"><User className="w-3 h-3" /> {personNavn}</span>}
                   {canEdit ? (
                     <span className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
@@ -293,11 +354,18 @@ export default function Tasks() {
               )}
             </div>
           );
-        })}
-        {visibleTasks.length === 0 && (
-          <div className="text-center py-16 text-muted-foreground"><p className="text-sm">Ingen oppgaver å vise</p></div>
-        )}
-      </div>
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+            {visibleTasks.length === 0 && (
+              <div className="text-center py-16 text-muted-foreground"><p className="text-sm">Ingen oppgaver å vise</p></div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* Edit dialog */}
       <Dialog open={editDialogOpen} onOpenChange={o => { setEditDialogOpen(o); if (!o) setEditingTask(null); }}>
