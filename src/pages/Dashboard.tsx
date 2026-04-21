@@ -30,6 +30,8 @@ import FollowUpSection from "@/components/FollowUpSection";
 import AiCommandBar from "@/components/AiCommandBar";
 import GlobalSearch from "@/components/GlobalSearch";
 import CompanyLogo from "@/components/CompanyLogo";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { gravatarUrl } from "@/lib/gravatar";
 import MeetingMismatchAlert from "@/components/MeetingMismatchAlert";
 import { useFollowUps } from "@/hooks/use-follow-ups";
 import { useProfiles } from "@/hooks/use-profiles";
@@ -77,6 +79,12 @@ export default function Dashboard() {
     for (const p of profiles) map.set(p.user_id, p.display_name);
     return map;
   }, [profiles]);
+  const profileFullMap = useMemo(() => {
+    const map = new Map<string, { display_name: string; email: string; avatar_url?: string }>();
+    for (const p of profiles) map.set(p.user_id, { display_name: p.display_name, email: p.email, avatar_url: p.avatar_url });
+    return map;
+  }, [profiles]);
+  const initials = (name: string) => name.split(" ").map(n => n[0]).filter(Boolean).slice(0, 2).join("").toUpperCase();
   const today = now.toISOString().split("T")[0];
   
 
