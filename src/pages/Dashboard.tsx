@@ -716,16 +716,16 @@ export default function Dashboard() {
       </div>
 
       {/* ─── NESTE STEG + ENDRINGSLOGG SIDE-BY-SIDE ─── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 items-stretch">
         {/* LEFT: NESTE STEG */}
-        <div className="bg-card border rounded-xl overflow-hidden">
-          <div className="px-4 sm:px-6 py-4 border-b flex items-center justify-between">
+        <div className="bg-card border rounded-xl overflow-hidden flex flex-col h-[520px]">
+          <div className="px-4 sm:px-6 py-4 border-b flex items-center justify-between shrink-0">
             <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Neste steg</h2>
             <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={() => navigate("/salgsmuligheter")}>
               Se alle <ChevronRight className="w-3 h-3" />
             </Button>
           </div>
-          <div className="overflow-x-auto">
+          <div className="overflow-auto flex-1">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b bg-muted/30">
