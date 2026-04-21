@@ -1276,7 +1276,7 @@ function getSignalLabel(deal: Salgsmulighet): string {
   return "Ingen AI-recap";
 }
 
-function DealList({ deals, getSelskapNavn, onSelect, label, onNavigateSelskap, isMobile, showKontraktStatus, showLukkedato, showSignalAndNextStep }: { deals: Salgsmulighet[]; getSelskapNavn: (id: string) => string; onSelect: (s: Salgsmulighet) => void; label: string; onNavigateSelskap?: (id: string) => void; isMobile: boolean; showKontraktStatus?: boolean; showLukkedato?: boolean; showSignalAndNextStep?: boolean }) {
+function DealList({ deals, getSelskapNavn, getSelskapDomain, onSelect, label, onNavigateSelskap, isMobile, showKontraktStatus, showLukkedato, showSignalAndNextStep }: { deals: Salgsmulighet[]; getSelskapNavn: (id: string) => string; getSelskapDomain?: (id: string | null) => string; onSelect: (s: Salgsmulighet) => void; label: string; onNavigateSelskap?: (id: string) => void; isMobile: boolean; showKontraktStatus?: boolean; showLukkedato?: boolean; showSignalAndNextStep?: boolean }) {
   if (deals.length === 0) return <div className="text-center py-12 text-muted-foreground text-sm">{label}: ingen</div>;
 
   if (isMobile) {
@@ -1328,7 +1328,12 @@ function DealList({ deals, getSelskapNavn, onSelect, label, onNavigateSelskap, i
               )}
               <td className="px-4 py-3 font-medium">{d.kontaktperson || "–"}</td>
               <td className="px-4 py-3 text-muted-foreground">{d.use_case || "–"}</td>
-              <td className="px-4 py-3 text-muted-foreground"><span className="cursor-pointer hover:text-primary hover:underline" onClick={e => { e.stopPropagation(); onNavigateSelskap?.(d.selskap_id); }}>{getSelskapNavn(d.selskap_id)}</span></td>
+              <td className="px-4 py-3 text-muted-foreground">
+                <div className="flex items-center gap-2 min-w-0">
+                  <CompanyLogo domain={getSelskapDomain?.(d.selskap_id) || ""} firmanavn={getSelskapNavn(d.selskap_id)} kontaktEmails={d.e_post ? [d.e_post] : undefined} size="sm" className="w-6 h-6 rounded shrink-0" />
+                  <span className="cursor-pointer hover:text-primary hover:underline truncate" onClick={e => { e.stopPropagation(); onNavigateSelskap?.(d.selskap_id); }}>{getSelskapNavn(d.selskap_id)}</span>
+                </div>
+              </td>
               <td className="px-4 py-3"><Badge variant="secondary" className="text-[10px]">{d.status}</Badge></td>
               {showSignalAndNextStep && (
                 <td className="px-4 py-3 text-muted-foreground text-xs max-w-[240px] truncate" title={d.neste_steg || ""}>{d.neste_steg || "–"}</td>
