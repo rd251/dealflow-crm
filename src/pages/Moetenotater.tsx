@@ -341,7 +341,7 @@ export default function Moetenotater() {
                       key={m.id}
                       id={`meeting-row-${m.id}`}
                       className="group cursor-pointer hover:bg-muted/30 transition-colors"
-                      onClick={() => (hasNotes || summary) && setExpandedId(isExpanded ? null : m.id)}
+                      onClick={() => openNotes(m)}
                     >
                       <TableCell className="py-3">
                         <div className="flex items-center gap-3">
