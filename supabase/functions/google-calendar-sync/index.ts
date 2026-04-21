@@ -93,9 +93,25 @@ async function fetchCalendarEvents(accessToken: string, syncToken?: string | nul
   return { events: allEvents, syncToken: newSyncToken, needFullSync: false };
 }
 
+// Domains considered internal (own organization) — never used for selskap-matching
+const INTERNAL_DOMAINS = new Set<string>(['snakk.ai', 'snakk.no']);
+
+function isInternalEmail(email?: string | null): boolean {
+  if (!email) return true;
+  const domain = email.toLowerCase().split('@')[1] || '';
+  return INTERNAL_DOMAINS.has(domain);
+}
+
+function getExternalAttendees(attendees: any[] | undefined): any[] {
+  if (!attendees) return [];
+  return attendees.filter((a: any) => !a.self && !isInternalEmail(a.email) && !a.organizer);
+}
+
 async function matchDeltakere(supabase: any, attendees: any[]): Promise<string[]> {
   if (!attendees || attendees.length === 0) return [];
 
+  // Include both internal and external participants in deltakere (as kontakter),
+  // but matching of selskap/kontakt for the meeting itself uses external only.
   const emails = attendees
     .filter((a: any) => !a.self)
     .map((a: any) => a.email?.toLowerCase())
@@ -109,6 +125,48 @@ async function matchDeltakere(supabase: any, attendees: any[]): Promise<string[]
     .in('e_post', emails);
 
   return (kontakter || []).map((k: any) => k.id);
+}
+
+async function findOpenSalgsmulighetForSelskap(supabase: any, selskapId: string): Promise<string | null> {
+  const { data } = await supabase
+    .from('salgsmuligheter')
+    .select('id, status, updated_at')
+    .eq('selskap_id', selskapId)
+    .not('status', 'in', '("Vunnet","Tapt")')
+    .order('updated_at', { ascending: false })
+    .limit(1);
+  return data && data.length > 0 ? data[0].id : null;
+}
+
+async function matchSelskapByEmailDomain(supabase: any, attendees: any[]): Promise<{ selskapId: string | null; kontaktId: string | null }> {
+  const externals = getExternalAttendees(attendees);
+  if (externals.length === 0) return { selskapId: null, kontaktId: null };
+
+  // 1) Try to match a kontakt directly by email
+  for (const a of externals) {
+    const email = a.email?.toLowerCase();
+    if (!email) continue;
+    const { data: kontakt } = await supabase
+      .from('kontakter')
+      .select('id, selskap_id')
+      .eq('e_post', email)
+      .maybeSingle();
+    if (kontakt) {
+      return { selskapId: kontakt.selskap_id || null, kontaktId: kontakt.id };
+    }
+  }
+
+  // 2) Match by company domain
+  const domains = Array.from(new Set(externals.map((a: any) => (a.email || '').toLowerCase().split('@')[1]).filter(Boolean)));
+  if (domains.length > 0) {
+    const { data: selskaper } = await supabase
+      .from('selskaper')
+      .select('id, domene')
+      .in('domene', domains);
+    if (selskaper && selskaper.length > 0) return { selskapId: selskaper[0].id, kontaktId: null };
+  }
+
+  return { selskapId: null, kontaktId: null };
 }
 
 async function matchSelskapByTitle(supabase: any, title: string): Promise<string | null> {
@@ -186,32 +244,25 @@ async function syncForUser(supabase: any, connection: any) {
 
     const deltakere = await matchDeltakere(supabase, event.attendees || []);
 
-    // Find matching kontakt and selskap by attendee emails (try all until match)
-    let kontaktId: string | null = null;
-    let selskapIdFromKontakt: string | null = null;
-    if (event.attendees) {
-      const externalAttendees = event.attendees.filter((a: any) => !a.self);
-      for (const attendee of externalAttendees) {
-        const email = attendee.email?.toLowerCase();
-        if (!email) continue;
-        const { data: kontakt } = await supabase
-          .from('kontakter')
-          .select('id, selskap_id')
-          .eq('e_post', email)
-          .maybeSingle();
-        if (kontakt) {
-          kontaktId = kontakt.id;
-          selskapIdFromKontakt = kontakt.selskap_id || null;
-          break;
-        }
-      }
+    // Match company/contact ONLY using external attendees (not own employees)
+    const { selskapId: selskapIdFromExt, kontaktId: kontaktIdFromExt } =
+      await matchSelskapByEmailDomain(supabase, event.attendees || []);
+
+    // Fallback: title match (still skip if no external participants)
+    const meetingTitle = event.summary || '';
+    const externalCount = getExternalAttendees(event.attendees || []).length;
+    let selskapId = selskapIdFromExt;
+    if (!selskapId && externalCount > 0) {
+      selskapId = await matchSelskapByTitle(supabase, meetingTitle);
     }
 
-    // Match selskap by meeting title if not found via kontakt
-    const meetingTitle = event.summary || '';
-    const selskapId = selskapIdFromKontakt || await matchSelskapByTitle(supabase, meetingTitle);
+    // Auto-link to open sales opportunity if company matched
+    let salgsmulighetId: string | null = null;
+    if (selskapId) {
+      salgsmulighetId = await findOpenSalgsmulighetForSelskap(supabase, selskapId);
+    }
 
-    const aktivitetData = {
+    const aktivitetData: any = {
       type: 'Møte' as const,
       tittel: meetingTitle || 'Google Calendar-møte',
       beskrivelse: event.description || '',
@@ -222,8 +273,9 @@ async function syncForUser(supabase: any, connection: any) {
       ekstern_provider: 'google_calendar',
       aktivitet_kilde: 'google_calendar',
       deltakere: deltakere.length > 0 ? deltakere : [],
-      kontakt_id: kontaktId,
+      kontakt_id: kontaktIdFromExt,
       selskap_id: selskapId,
+      salgsmulighet_id: salgsmulighetId,
     };
 
     // Upsert: check if exists
@@ -238,14 +290,15 @@ async function syncForUser(supabase: any, connection: any) {
       // Fetch current record to avoid overwriting manually-set links
       const { data: current } = await supabase
         .from('aktiviteter')
-        .select('kontakt_id, selskap_id')
+        .select('kontakt_id, selskap_id, salgsmulighet_id')
         .eq('id', existing.id)
         .maybeSingle();
 
-      // Don't overwrite kontakt_id / selskap_id if already set
+      // Don't overwrite manually-set links
       const updateData = { ...aktivitetData };
       if (current?.kontakt_id) updateData.kontakt_id = current.kontakt_id;
       if (current?.selskap_id) updateData.selskap_id = current.selskap_id;
+      if (current?.salgsmulighet_id) updateData.salgsmulighet_id = current.salgsmulighet_id;
 
       await supabase
         .from('aktiviteter')
