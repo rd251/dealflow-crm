@@ -121,7 +121,29 @@ export default function EntityChangelog({ entity_type, entity_id }: EntityChange
 
   if (entries.length === 0) return null;
 
-  const visible = showAll ? entries : entries.slice(0, 5);
+  // Group consecutive duplicate entries (same event/related/user/field) within 24h
+  type Grouped = ChangelogEntry & { count: number; lastAt: string };
+  const grouped: Grouped[] = [];
+  for (const e of entries) {
+    const last = grouped[grouped.length - 1];
+    const sameKey = last
+      && last.event_type === e.event_type
+      && last.entity_type === e.entity_type
+      && last.related_entity_type === e.related_entity_type
+      && last.related_entity_name === e.related_entity_name
+      && last.field_name === e.field_name
+      && last.new_value === e.new_value
+      && last.user_id === e.user_id;
+    const within24h = last && Math.abs(new Date(last.lastAt).getTime() - new Date(e.created_at).getTime()) < 24 * 60 * 60 * 1000;
+    if (sameKey && within24h) {
+      last.count += 1;
+      last.lastAt = e.created_at < last.lastAt ? e.created_at : last.lastAt;
+    } else {
+      grouped.push({ ...e, count: 1, lastAt: e.created_at });
+    }
+  }
+
+  const visible = showAll ? grouped : grouped.slice(0, 5);
 
   return (
     <div className="border-t pt-3 mt-3 space-y-1.5">
@@ -150,6 +172,9 @@ export default function EntityChangelog({ entity_type, entity_id }: EntityChange
                   </Tooltip>
                 )}
                 <span className="text-xs">{desc}</span>
+                {entry.count > 1 && (
+                  <Badge variant="secondary" className="text-[9px] h-4 px-1.5">×{entry.count}</Badge>
+                )}
                 <span className="text-[10px] text-muted-foreground flex items-center gap-0.5 ml-auto shrink-0">
                   <Clock className="w-2.5 h-2.5" />{time}
                 </span>
@@ -158,9 +183,9 @@ export default function EntityChangelog({ entity_type, entity_id }: EntityChange
           );
         })}
       </div>
-      {entries.length > 5 && (
+      {grouped.length > 5 && (
         <button onClick={() => setShowAll(!showAll)} className="text-xs text-primary hover:underline">
-          {showAll ? "Vis mindre" : `Vis alle (${entries.length})`}
+          {showAll ? "Vis mindre" : `Vis alle (${grouped.length})`}
         </button>
       )}
     </div>
