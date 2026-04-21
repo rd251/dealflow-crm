@@ -29,6 +29,7 @@ import DealHoverCard from "@/components/DealHoverCard";
 import FollowUpSection from "@/components/FollowUpSection";
 import AiCommandBar from "@/components/AiCommandBar";
 import GlobalSearch from "@/components/GlobalSearch";
+import CompanyLogo from "@/components/CompanyLogo";
 import MeetingMismatchAlert from "@/components/MeetingMismatchAlert";
 import { useFollowUps } from "@/hooks/use-follow-ups";
 import { useProfiles } from "@/hooks/use-profiles";
@@ -335,11 +336,15 @@ export default function Dashboard() {
     const cutoff30 = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
     return openSalg
       .filter((s) => s.forventet_lukkedato && new Date(s.forventet_lukkedato) <= cutoff30)
-      .map((s) => ({
-        ...s,
-        selskapNavn: selskaper.find((x) => x.id === s.selskap_id)?.firmanavn || "—",
-        verdi: beregnTotalKontraktsverdi(s),
-      }))
+      .map((s) => {
+        const sel = selskaper.find((x) => x.id === s.selskap_id);
+        return {
+          ...s,
+          selskapNavn: sel?.firmanavn || "—",
+          selskapDomene: sel?.domene || "",
+          verdi: beregnTotalKontraktsverdi(s),
+        };
+      })
       .sort((a, b) => b.verdi - a.verdi)
       .slice(0, 5);
   }, [openSalg, selskaper]);
@@ -348,11 +353,15 @@ export default function Dashboard() {
     const cutoff48h = new Date(now.getTime() - 48 * 60 * 60 * 1000);
     return openSalg
       .filter((s) => !s.sist_aktivitet || new Date(s.sist_aktivitet) < cutoff48h)
-      .map((s) => ({
-        ...s,
-        selskapNavn: selskaper.find((x) => x.id === s.selskap_id)?.firmanavn || "—",
-        daysSince: s.sist_aktivitet ? differenceInDays(now, new Date(s.sist_aktivitet)) : 999,
-      }))
+      .map((s) => {
+        const sel = selskaper.find((x) => x.id === s.selskap_id);
+        return {
+          ...s,
+          selskapNavn: sel?.firmanavn || "—",
+          selskapDomene: sel?.domene || "",
+          daysSince: s.sist_aktivitet ? differenceInDays(now, new Date(s.sist_aktivitet)) : 999,
+        };
+      })
       .sort((a, b) => b.daysSince - a.daysSince)
       .slice(0, 5);
   }, [openSalg, selskaper]);
@@ -361,11 +370,15 @@ export default function Dashboard() {
     () =>
       openSalg
         .filter((s) => s.status === "Kontrakt sendt")
-        .map((s) => ({
-          ...s,
-          selskapNavn: selskaper.find((x) => x.id === s.selskap_id)?.firmanavn || "—",
-          verdi: beregnTotalKontraktsverdi(s),
-        }))
+        .map((s) => {
+          const sel = selskaper.find((x) => x.id === s.selskap_id);
+          return {
+            ...s,
+            selskapNavn: sel?.firmanavn || "—",
+            selskapDomene: sel?.domene || "",
+            verdi: beregnTotalKontraktsverdi(s),
+          };
+        })
         .sort((a, b) => b.verdi - a.verdi),
     [openSalg, selskaper]
   );
@@ -525,7 +538,8 @@ export default function Dashboard() {
                       className="px-4 py-2.5 hover:bg-muted/40 cursor-pointer transition-colors"
                       onClick={() => navigate(`/salgsmuligheter?open=${d.id}`)}
                     >
-                      <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2.5">
+                        <CompanyLogo domain={(d as any).selskapDomene} firmanavn={d.selskapNavn} size="sm" />
                         <div className="min-w-0 flex-1">
                           <div className="text-sm font-medium truncate">{d.selskapNavn}</div>
                           <div className="text-[11px] text-muted-foreground truncate">
@@ -560,7 +574,8 @@ export default function Dashboard() {
                       className="px-4 py-2.5 hover:bg-muted/40 cursor-pointer transition-colors"
                       onClick={() => navigate(`/salgsmuligheter?open=${d.id}`)}
                     >
-                      <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2.5">
+                        <CompanyLogo domain={(d as any).selskapDomene} firmanavn={d.selskapNavn} size="sm" />
                         <div className="min-w-0 flex-1">
                           <div className="text-sm font-medium truncate">{d.selskapNavn}</div>
                           <div className="text-[11px] text-muted-foreground truncate">{d.status}</div>
@@ -595,7 +610,8 @@ export default function Dashboard() {
                       className="px-4 py-2.5 hover:bg-muted/40 cursor-pointer transition-colors"
                       onClick={() => navigate(`/salgsmuligheter?open=${d.id}`)}
                     >
-                      <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2.5">
+                        <CompanyLogo domain={(d as any).selskapDomene} firmanavn={d.selskapNavn} size="sm" />
                         <div className="min-w-0 flex-1">
                           <div className="text-sm font-medium truncate">{d.selskapNavn}</div>
                           <div className="text-[11px] text-muted-foreground truncate">{d.navn}</div>
