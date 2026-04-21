@@ -82,16 +82,18 @@ export default function Moetenotater() {
   const fetchEntities = useCallback(async () => {
     const map: Record<string, RelatedEntity> = {};
     try {
-      const [selskaper, leads, salg, partnere] = await Promise.all([
+      const [selskaper, leads, salg, partnere, kontakter] = await Promise.all([
         fetch(`${API_URL}/selskaper?select=id,firmanavn`, { headers: API_HEADERS }).then(r => r.json()),
         fetch(`${API_URL}/leads?select=id,firmanavn`, { headers: API_HEADERS }).then(r => r.json()),
         fetch(`${API_URL}/salgsmuligheter?select=id,navn`, { headers: API_HEADERS }).then(r => r.json()),
         fetch(`${API_URL}/partnere?select=id,partnernavn`, { headers: API_HEADERS }).then(r => r.json()),
+        fetch(`${API_URL}/kontakter?select=id,navn,e_post,rolle,selskap_id`, { headers: API_HEADERS }).then(r => r.json()),
       ]);
       selskaper.forEach((s: any) => { map[s.id] = { id: s.id, name: s.firmanavn, type: "Selskap" }; });
       leads.forEach((l: any) => { map[l.id] = { id: l.id, name: l.firmanavn, type: "Lead" }; });
       salg.forEach((s: any) => { map[s.id] = { id: s.id, name: s.navn, type: "Salgsmulighet" }; });
       partnere.forEach((p: any) => { map[p.id] = { id: p.id, name: p.partnernavn, type: "Partner" }; });
+      kontakter.forEach((k: any) => { map[k.id] = { id: k.id, name: k.navn, type: "Kontakt", email: k.e_post, rolle: k.rolle, selskap_id: k.selskap_id } as any; });
       setEntities(map);
     } catch (e) {
       console.error("Error fetching entities:", e);
