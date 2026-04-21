@@ -127,6 +127,21 @@ async function matchDeltakere(supabase: any, attendees: any[]): Promise<string[]
   return (kontakter || []).map((k: any) => k.id);
 }
 
+async function matchLeadByEmail(supabase: any, attendees: any[]): Promise<string | null> {
+  const externals = getExternalAttendees(attendees);
+  if (externals.length === 0) return null;
+  const emails = externals.map((a: any) => a.email?.toLowerCase()).filter(Boolean);
+  if (emails.length === 0) return null;
+  const { data } = await supabase
+    .from('leads')
+    .select('id, e_post, status, updated_at')
+    .in('e_post', emails)
+    .not('status', 'in', '("Konvertert til salg","Konvertert til partner","Ikke aktuelt")')
+    .order('updated_at', { ascending: false })
+    .limit(1);
+  return data && data.length > 0 ? data[0].id : null;
+}
+
 async function findOpenSalgsmulighetForSelskap(supabase: any, selskapId: string): Promise<string | null> {
   const { data } = await supabase
     .from('salgsmuligheter')
@@ -262,6 +277,12 @@ async function syncForUser(supabase: any, connection: any) {
       salgsmulighetId = await findOpenSalgsmulighetForSelskap(supabase, selskapId);
     }
 
+    // Auto-link to lead if no company/deal matched but external email matches a lead
+    let leadId: string | null = null;
+    if (!selskapId && !salgsmulighetId) {
+      leadId = await matchLeadByEmail(supabase, event.attendees || []);
+    }
+
     const aktivitetData: any = {
       type: 'Møte' as const,
       tittel: meetingTitle || 'Google Calendar-møte',
@@ -276,6 +297,7 @@ async function syncForUser(supabase: any, connection: any) {
       kontakt_id: kontaktIdFromExt,
       selskap_id: selskapId,
       salgsmulighet_id: salgsmulighetId,
+      lead_id: leadId,
     };
 
     // Upsert: check if exists
@@ -290,7 +312,7 @@ async function syncForUser(supabase: any, connection: any) {
       // Fetch current record to avoid overwriting manually-set links
       const { data: current } = await supabase
         .from('aktiviteter')
-        .select('kontakt_id, selskap_id, salgsmulighet_id')
+        .select('kontakt_id, selskap_id, salgsmulighet_id, lead_id')
         .eq('id', existing.id)
         .maybeSingle();
 
@@ -299,6 +321,7 @@ async function syncForUser(supabase: any, connection: any) {
       if (current?.kontakt_id) updateData.kontakt_id = current.kontakt_id;
       if (current?.selskap_id) updateData.selskap_id = current.selskap_id;
       if (current?.salgsmulighet_id) updateData.salgsmulighet_id = current.salgsmulighet_id;
+      if (current?.lead_id) updateData.lead_id = current.lead_id;
 
       await supabase
         .from('aktiviteter')
