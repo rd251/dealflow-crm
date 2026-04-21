@@ -28,6 +28,7 @@ import MeetingPrepPanel from "@/components/MeetingPrepPanel";
 import DealHoverCard from "@/components/DealHoverCard";
 import FollowUpSection from "@/components/FollowUpSection";
 import AiCommandBar from "@/components/AiCommandBar";
+import MeetingMismatchAlert from "@/components/MeetingMismatchAlert";
 import { useFollowUps } from "@/hooks/use-follow-ups";
 import { useProfiles } from "@/hooks/use-profiles";
 import { useAuth } from "@/hooks/use-auth";
@@ -459,6 +460,11 @@ export default function Dashboard() {
 
       {/* ─── AI COMMAND BAR (includes greeting) ─── */}
       <AiCommandBar context={aiContext} userName={currentUserName} />
+
+      {/* ─── MØTE-MISMATCH ALERT ─── */}
+      <div className="mb-4">
+        <MeetingMismatchAlert />
+      </div>
 
       {/* ─── SECTION 1: FOKUS I DAG ─── */}
       <div className="mb-6">
