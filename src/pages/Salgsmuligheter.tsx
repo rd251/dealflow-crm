@@ -32,6 +32,7 @@ import EntityChangelog from "@/components/EntityChangelog";
 import MeetingNotesList from "@/components/MeetingNotesList";
 import SendContractModal from "@/components/SendContractModal";
 import DealRecapCard from "@/components/DealRecapCard";
+import LastMeetingCard from "@/components/LastMeetingCard";
 
 const allStatuses: SalgsmulighetStatus[] = ["Møte booket", "Behov avklart", "Løsning presentert", "Kontrakt sendt"];
 const openStatuses = allStatuses;
@@ -813,6 +814,14 @@ export default function Salgsmuligheter() {
                   onNesteStegUpdated={(ns) => updateSalgsmuligheter(prev => prev.map(s =>
                     s.id === currentSm.id ? { ...s, neste_steg: ns } : s
                   ))}
+                />
+
+                <LastMeetingCard
+                  salgsmulighetId={currentSm.id}
+                  selskapId={currentSm.selskap_id}
+                  kontaktId={currentSm.kontakt_id}
+                  ansvarlig={currentSm.ansvarlig}
+                  ansvarligUserId={profiles.find(p => p.display_name === currentSm.ansvarlig)?.user_id || null}
                 />
 
                 <DetailDivider />
