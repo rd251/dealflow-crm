@@ -30,6 +30,8 @@ import FollowUpSection from "@/components/FollowUpSection";
 import AiCommandBar from "@/components/AiCommandBar";
 import GlobalSearch from "@/components/GlobalSearch";
 import CompanyLogo from "@/components/CompanyLogo";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { gravatarUrl } from "@/lib/gravatar";
 import MeetingMismatchAlert from "@/components/MeetingMismatchAlert";
 import { useFollowUps } from "@/hooks/use-follow-ups";
 import { useProfiles } from "@/hooks/use-profiles";
@@ -77,6 +79,12 @@ export default function Dashboard() {
     for (const p of profiles) map.set(p.user_id, p.display_name);
     return map;
   }, [profiles]);
+  const profileFullMap = useMemo(() => {
+    const map = new Map<string, { display_name: string; email: string; avatar_url?: string }>();
+    for (const p of profiles) map.set(p.user_id, { display_name: p.display_name, email: p.email, avatar_url: p.avatar_url });
+    return map;
+  }, [profiles]);
+  const initials = (name: string) => name.split(" ").map(n => n[0]).filter(Boolean).slice(0, 2).join("").toUpperCase();
   const today = now.toISOString().split("T")[0];
   
 
@@ -646,7 +654,7 @@ export default function Dashboard() {
 
       {/* ─── OPPFØLGING + KOMMENDE OPPGAVER (side by side) ─── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 items-stretch">
-        <FollowUpSection items={followUps} loading={followUpsLoading} onDismiss={dismissFollowUp} />
+        <FollowUpSection items={followUps} loading={followUpsLoading} onDismiss={dismissFollowUp} selskaper={selskaper} />
 
       {/* KOMMENDE OPPGAVER */}
       <div className="bg-card border rounded-xl overflow-hidden flex flex-col h-[520px]">
@@ -680,6 +688,17 @@ export default function Dashboard() {
                     className="mt-0.5 shrink-0 w-4 h-4 rounded-full border-2 border-muted-foreground/40 hover:border-primary hover:bg-primary/10 transition-colors"
                     title="Merk som ferdig"
                   />
+                  {(() => {
+                    const ansvarligProfile = o.ansvarlig ? profileFullMap.get(o.ansvarlig) : null;
+                    const avatarSrc = ansvarligProfile ? (ansvarligProfile.avatar_url || gravatarUrl(ansvarligProfile.email) || undefined) : undefined;
+                    const ansvarligName = ansvarligProfile?.display_name || o.ansvarlig || "";
+                    return ansvarligProfile ? (
+                      <Avatar className="w-7 h-7 shrink-0">
+                        {avatarSrc && <AvatarImage src={avatarSrc} alt={ansvarligName} />}
+                        <AvatarFallback className="text-[10px]">{initials(ansvarligName)}</AvatarFallback>
+                      </Avatar>
+                    ) : null;
+                  })()}
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{o.oppgave}</p>
                     <div className="flex items-center gap-2 mt-0.5 flex-wrap">
@@ -755,7 +774,16 @@ export default function Dashboard() {
                         onClick={() => navigate(`/salgsmuligheter?open=${sm.id}`)}
                         className="border-b last:border-0 hover:bg-muted/30 cursor-pointer transition-colors"
                       >
-                        <td className="px-4 py-2.5 font-medium truncate max-w-[140px]">{sm.selskapNavn}</td>
+                        <td className="px-4 py-2.5 font-medium max-w-[180px]">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <CompanyLogo
+                              size="sm"
+                              firmanavn={sm.selskapNavn}
+                              domain={selskaper.find(s => s.id === sm.selskap_id)?.domene}
+                            />
+                            <span className="truncate">{sm.selskapNavn}</span>
+                          </div>
+                        </td>
                         <td className="px-4 py-2.5 truncate max-w-[140px]">{sm.navn}</td>
                         <td className="px-4 py-2.5 text-right tabular-nums hidden sm:table-cell">
                           {nok(sm.forventet_mrr)}

@@ -13,11 +13,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import CompanyLogo from "@/components/CompanyLogo";
 
 interface FollowUpSectionProps {
   items: FollowUpItem[];
   loading: boolean;
   onDismiss: (id: string) => void;
+  selskaper?: Array<{ id: string; domene?: string | null; firmanavn?: string }>;
 }
 
 const typeLabel: Record<string, string> = {
@@ -43,7 +45,7 @@ const formatInactive = (hours: number) => {
   return `${hours}t`;
 };
 
-export default function FollowUpSection({ items, loading, onDismiss }: FollowUpSectionProps) {
+export default function FollowUpSection({ items, loading, onDismiss, selskaper = [] }: FollowUpSectionProps) {
   const navigate = useNavigate();
   const [messageDialog, setMessageDialog] = useState<FollowUpItem | null>(null);
   const [generatedMessage, setGeneratedMessage] = useState("");
@@ -193,7 +195,9 @@ Adresser meldingen til ${contactName.split(' ')[0]}. Vær direkte men høflig. A
         </div>
 
         <div className="divide-y overflow-y-auto flex-1">
-          {displayed.map((item) => (
+          {displayed.map((item) => {
+            const sel = item.selskapId ? selskaper.find(s => s.id === item.selskapId) : null;
+            return (
             <div
               key={item.id}
               className="flex items-center gap-3 px-4 sm:px-6 py-3 hover:bg-muted/30 transition-colors group"
@@ -201,6 +205,13 @@ Adresser meldingen til ${contactName.split(' ')[0]}. Vær direkte men høflig. A
               <div className={`w-2 h-2 rounded-full shrink-0 ${
                 item.priority === "high" ? "bg-destructive" : item.priority === "medium" ? "bg-amber-500" : "bg-muted-foreground"
               }`} />
+
+              <CompanyLogo
+                size="sm"
+                firmanavn={item.selskapNavn}
+                domain={sel?.domene || undefined}
+                kontaktEmails={item.ePost ? [item.ePost] : undefined}
+              />
 
               <div className="flex-1 min-w-0 cursor-pointer" onClick={() => handleNavigate(item)}>
                 <div className="flex items-center gap-2">
@@ -258,7 +269,8 @@ Adresser meldingen til ${contactName.split(' ')[0]}. Vær direkte men høflig. A
                 </Button>
               </div>
             </div>
-          ))}
+          );
+          })}
         </div>
 
         {items.length > 10 && (
