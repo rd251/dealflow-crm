@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Building2, User, Briefcase, Users, Handshake, X, Loader2, Mail, Phone } from "lucide-react";
+import { Search, Building2, User, Briefcase, Users, Handshake, X, Loader2, Mail, Phone, Calendar } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
