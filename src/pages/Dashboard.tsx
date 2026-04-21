@@ -180,7 +180,7 @@ export default function Dashboard() {
         .neq("status", "Ferdig")
         .order("frist", { ascending: true, nullsFirst: false })
         .limit(8)
-        .then(({ data }) => { if (data) setOppgaver(data); });
+        .then(({ data }) => { if (data) setOppgaver(data); setOppgaverLoading(false); });
 
       // Fetch CRM changelog
       fetch(`${API_URL}/crm_changelog?order=created_at.desc&limit=5`, { headers: API_HEADERS })
