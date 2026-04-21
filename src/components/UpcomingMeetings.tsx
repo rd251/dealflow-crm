@@ -4,6 +4,7 @@ import { format, isToday, isTomorrow } from "date-fns";
 import { nb } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 import { typeIcons, typeColors, AktivitetType } from "@/components/ActivityLog";
+import { GmailIcon, GoogleCalendarIcon } from "@/components/BrandIcons";
 import { useNavigate } from "react-router-dom";
 
 const API_URL = import.meta.env.VITE_SUPABASE_URL + '/rest/v1';
@@ -26,6 +27,7 @@ interface UpcomingItem {
   salgsmulighet_id: string | null;
   partner_id: string | null;
   kontakt_id: string | null;
+  ekstern_provider?: string | null;
 }
 
 export default function UpcomingMeetings() {
