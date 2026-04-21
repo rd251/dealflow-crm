@@ -31,6 +31,7 @@ import AiCommandBar from "@/components/AiCommandBar";
 import GlobalSearch from "@/components/GlobalSearch";
 import CompanyLogo from "@/components/CompanyLogo";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
 import { gravatarUrl } from "@/lib/gravatar";
 import MeetingMismatchAlert from "@/components/MeetingMismatchAlert";
 import { useFollowUps } from "@/hooks/use-follow-ups";
@@ -96,6 +97,7 @@ export default function Dashboard() {
   const [notesText, setNotesText] = useState("");
   const [notesSaving, setNotesSaving] = useState(false);
   const [oppgaver, setOppgaver] = useState<Tables<"oppgaver">[]>([]);
+  const [oppgaverLoading, setOppgaverLoading] = useState(true);
   const [changelogEntries, setChangelogEntries] = useState<Array<{ id: string; event_type: string; entity_type: string; entity_id: string; entity_name: string; field_name: string | null; old_value: string | null; new_value: string | null; related_entity_type: string | null; related_entity_name: string | null; user_id: string | null; created_at: string }>>([]);
 
   // ─── AI SUMMARY STATE ───
@@ -178,7 +180,7 @@ export default function Dashboard() {
         .neq("status", "Ferdig")
         .order("frist", { ascending: true, nullsFirst: false })
         .limit(8)
-        .then(({ data }) => { if (data) setOppgaver(data); });
+        .then(({ data }) => { if (data) setOppgaver(data); setOppgaverLoading(false); });
 
       // Fetch CRM changelog
       fetch(`${API_URL}/crm_changelog?order=created_at.desc&limit=5`, { headers: API_HEADERS })
@@ -666,7 +668,20 @@ export default function Dashboard() {
             Se alle <ChevronRight className="w-3 h-3" />
           </Button>
         </div>
-        {oppgaver.length === 0 ? (
+        {oppgaverLoading ? (
+          <div className="divide-y flex-1 overflow-hidden">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="px-4 sm:px-6 py-3 flex items-start gap-3">
+                <Skeleton className="mt-0.5 w-4 h-4 rounded-full shrink-0" />
+                <Skeleton className="w-7 h-7 rounded-full shrink-0" />
+                <div className="flex-1 min-w-0 space-y-2">
+                  <Skeleton className="h-3.5 w-3/4" />
+                  <Skeleton className="h-3 w-1/2" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : oppgaver.length === 0 ? (
           <p className="px-4 py-8 text-center text-muted-foreground text-sm">Ingen åpne oppgaver</p>
         ) : (
           <div className="divide-y overflow-y-auto flex-1">

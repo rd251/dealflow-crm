@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import CompanyLogo from "@/components/CompanyLogo";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface FollowUpSectionProps {
   items: FollowUpItem[];
@@ -165,13 +166,22 @@ Adresser meldingen til ${contactName.split(' ')[0]}. Vær direkte men høflig. A
 
   if (loading) {
     return (
-      <div className="bg-card border rounded-xl mb-6 overflow-hidden">
-        <div className="px-4 sm:px-6 py-4 border-b">
+      <div className="bg-card border rounded-xl overflow-hidden flex flex-col h-[520px]">
+        <div className="px-4 sm:px-6 py-4 border-b shrink-0">
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Oppfølging</h2>
         </div>
-        <div className="px-4 py-8 text-center text-muted-foreground text-sm">
-          <Loader2 className="w-4 h-4 animate-spin mx-auto mb-2" />
-          Laster...
+        <div className="divide-y flex-1 overflow-hidden">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-3 px-4 sm:px-6 py-3">
+              <Skeleton className="w-2 h-2 rounded-full shrink-0" />
+              <Skeleton className="w-8 h-8 rounded-md shrink-0" />
+              <div className="flex-1 min-w-0 space-y-2">
+                <Skeleton className="h-3.5 w-2/3" />
+                <Skeleton className="h-3 w-1/2" />
+              </div>
+              <Skeleton className="h-7 w-24 rounded-md hidden sm:block" />
+            </div>
+          ))}
         </div>
       </div>
     );
