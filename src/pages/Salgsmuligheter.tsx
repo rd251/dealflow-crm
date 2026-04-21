@@ -33,6 +33,7 @@ import MeetingNotesList from "@/components/MeetingNotesList";
 import SendContractModal from "@/components/SendContractModal";
 import DealRecapCard from "@/components/DealRecapCard";
 import LastMeetingCard from "@/components/LastMeetingCard";
+import { useLastMeetingsByDeal } from "@/hooks/use-last-meetings";
 
 const allStatuses: SalgsmulighetStatus[] = ["Møte booket", "Behov avklart", "Løsning presentert", "Kontrakt sendt"];
 const openStatuses = allStatuses;
@@ -284,6 +285,8 @@ export default function Salgsmuligheter() {
   });
 
   const currentSm = selectedSm ? salgsmuligheter.find(s => s.id === selectedSm.id) || selectedSm : null;
+  const openDealIds = openDeals.map(d => d.id);
+  const { byId: lastMeetings } = useLastMeetingsByDeal(openDealIds);
   const openCreateActivityRef = useRef<(() => void) | null>(null);
   const [detailTab, setDetailTab] = useState<"detaljer" | "selskap" | "kontakt" | "interaksjoner" | "notater" | "kalender" | "dokumenter">("detaljer");
   const [pendingOpenActivity, setPendingOpenActivity] = useState(false);
