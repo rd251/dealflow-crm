@@ -23,7 +23,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { aktivitet_id, force } = await req.json();
+    const { aktivitet_id, force, auto_create } = await req.json();
     if (!aktivitet_id || typeof aktivitet_id !== "string") {
       return new Response(JSON.stringify({ error: "aktivitet_id påkrevd" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -188,7 +188,63 @@ serve(async (req) => {
       .update({ ai_oppsummering: suggestion as any })
       .eq("id", aktivitet_id);
 
-    return new Response(JSON.stringify({ ok: true, suggestion, cached: false }), {
+    // Auto-opprett oppgave hvis bedt om (Trale eller eksplisitt opt-in)
+    let createdTaskId: string | null = null;
+    const shouldAutoCreate = auto_create === true || akt.aktivitet_kilde === "trale";
+    if (shouldAutoCreate && (akt.salgsmulighet_id || akt.selskap_id || akt.kontakt_id)) {
+      const { data: existingTask } = await supabase
+        .from("oppgaver")
+        .select("id")
+        .eq("oppgave", suggestion.foreslatt_oppgave.tittel)
+        .eq("salgsmulighet_id", akt.salgsmulighet_id || "00000000-0000-0000-0000-000000000000")
+        .maybeSingle();
+
+      if (!existingTask) {
+        const frist = new Date();
+        let added = 0;
+        const target = Math.max(1, Math.min(14, suggestion.foreslatt_oppgave.frist_dager || 2));
+        while (added < target) {
+          frist.setDate(frist.getDate() + 1);
+          const d = frist.getDay();
+          if (d !== 0 && d !== 6) added++;
+        }
+
+        let ansvarligName: string | null = null;
+        let ansvarligUserId: string | null = null;
+        if (akt.salgsmulighet_id) {
+          const { data: sm } = await supabase
+            .from("salgsmuligheter").select("ansvarlig").eq("id", akt.salgsmulighet_id).maybeSingle();
+          ansvarligName = sm?.ansvarlig || null;
+          if (ansvarligName) {
+            const { data: prof } = await supabase
+              .from("profiles").select("user_id").eq("display_name", ansvarligName).maybeSingle();
+            ansvarligUserId = prof?.user_id || null;
+          }
+        }
+
+        const { data: newTask } = await supabase
+          .from("oppgaver")
+          .insert({
+            oppgave: suggestion.foreslatt_oppgave.tittel,
+            ansvarlig: ansvarligName,
+            user_id: ansvarligUserId,
+            salgsmulighet_id: akt.salgsmulighet_id || null,
+            selskap_id: akt.selskap_id || null,
+            kontakt_id: akt.kontakt_id || null,
+            frist: frist.toISOString().split("T")[0],
+            prioritet: suggestion.foreslatt_oppgave.prioritet || "Medium",
+            status: "Åpen",
+            notater: `AI-foreslått fra møte: ${akt.tittel || "Møte"}`,
+          })
+          .select("id")
+          .single();
+        createdTaskId = newTask?.id || null;
+      } else {
+        createdTaskId = existingTask.id;
+      }
+    }
+
+    return new Response(JSON.stringify({ ok: true, suggestion, cached: false, created_task_id: createdTaskId }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
