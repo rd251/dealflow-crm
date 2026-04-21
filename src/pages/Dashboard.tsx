@@ -472,6 +472,11 @@ export default function Dashboard() {
       }
     >
 
+      {/* ─── LOGO ─── */}
+      <div className="flex justify-center mb-4">
+        <img src={snakkLogo} alt="Snakk" className="h-10 w-auto" />
+      </div>
+
       {/* ─── GLOBAL SEARCH ─── */}
       <GlobalSearch />
 
