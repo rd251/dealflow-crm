@@ -112,7 +112,9 @@ function MeetingRow({ meeting, variant }: { meeting: Meeting; variant: "upcoming
   const [expanded, setExpanded] = useState(false);
   const hasNotes = !!meeting.moetenotater?.trim();
   const hasDescription = !!meeting.beskrivelse?.trim() && meeting.beskrivelse !== meeting.tittel;
-  const hasDeltakere = !!meeting.deltakere && meeting.deltakere.length > 0;
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+  const cleanDeltakere = (meeting.deltakere || []).filter(d => d && !UUID_RE.test(d.trim()));
+  const hasDeltakere = cleanDeltakere.length > 0;
   const canExpand = hasNotes || hasDescription || hasDeltakere;
 
   const dateStr = (() => {
