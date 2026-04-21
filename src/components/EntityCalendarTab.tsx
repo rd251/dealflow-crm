@@ -112,7 +112,9 @@ function MeetingRow({ meeting, variant }: { meeting: Meeting; variant: "upcoming
   const [expanded, setExpanded] = useState(false);
   const hasNotes = !!meeting.moetenotater?.trim();
   const hasDescription = !!meeting.beskrivelse?.trim() && meeting.beskrivelse !== meeting.tittel;
-  const hasDeltakere = !!meeting.deltakere && meeting.deltakere.length > 0;
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+  const cleanDeltakere = (meeting.deltakere || []).filter(d => d && !UUID_RE.test(d.trim()));
+  const hasDeltakere = cleanDeltakere.length > 0;
   const canExpand = hasNotes || hasDescription || hasDeltakere;
 
   const dateStr = (() => {
@@ -170,17 +172,17 @@ function MeetingRow({ meeting, variant }: { meeting: Meeting; variant: "upcoming
               {timeStr}
             </span>
           )}
-          {meeting.deltakere && meeting.deltakere.length > 0 && (
+          {hasDeltakere && (
             <span className="flex items-center gap-1">
               <Users className="w-3 h-3" />
-              {meeting.deltakere.length}
+              {cleanDeltakere.length}
             </span>
           )}
         </div>
         {hasDeltakere && !expanded && (
           <p className="text-[11px] text-muted-foreground truncate">
-            {meeting.deltakere!.slice(0, 3).map(d => d.split("@")[0]).join(", ")}
-            {meeting.deltakere!.length > 3 && ` +${meeting.deltakere!.length - 3}`}
+            {cleanDeltakere.slice(0, 3).map(d => d.split("@")[0]).join(", ")}
+            {cleanDeltakere.length > 3 && ` +${cleanDeltakere.length - 3}`}
           </p>
         )}
       </div>
@@ -196,10 +198,10 @@ function MeetingRow({ meeting, variant }: { meeting: Meeting; variant: "upcoming
           {hasDeltakere && (
             <div>
               <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground mb-1">
-                Deltakere ({meeting.deltakere!.length})
+                Deltakere ({cleanDeltakere.length})
               </p>
               <div className="flex flex-wrap gap-1">
-                {meeting.deltakere!.map((d, i) => (
+                {cleanDeltakere.map((d, i) => (
                   <Badge key={i} variant="secondary" className="text-[10px] font-normal">{d}</Badge>
                 ))}
               </div>
