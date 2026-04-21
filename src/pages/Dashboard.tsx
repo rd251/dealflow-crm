@@ -654,7 +654,7 @@ export default function Dashboard() {
 
       {/* ─── OPPFØLGING + KOMMENDE OPPGAVER (side by side) ─── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 items-stretch">
-        <FollowUpSection items={followUps} loading={followUpsLoading} onDismiss={dismissFollowUp} />
+        <FollowUpSection items={followUps} loading={followUpsLoading} onDismiss={dismissFollowUp} selskaper={selskaper} />
 
       {/* KOMMENDE OPPGAVER */}
       <div className="bg-card border rounded-xl overflow-hidden flex flex-col h-[520px]">
