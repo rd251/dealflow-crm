@@ -873,8 +873,8 @@ export default function Dashboard() {
       </div>
 
       {/* ─── MØTER (flyttet ned – salgsmuligheter er hovedfokus) ─── */}
-      <div className="bg-card border rounded-xl overflow-hidden mb-6 mt-6">
-        <div className="px-4 sm:px-6 py-4 border-b flex items-center justify-between">
+      <div className="bg-card border rounded-xl overflow-hidden mb-6 mt-6 flex flex-col h-[520px]">
+        <div className="px-4 sm:px-6 py-4 border-b flex items-center justify-between shrink-0">
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
             <CalendarDays className="w-4 h-4" /> Møter
           </h2>
@@ -891,7 +891,7 @@ export default function Dashboard() {
         {meetings.length === 0 ? (
           <p className="px-4 py-8 text-center text-muted-foreground text-sm">Ingen kommende møter</p>
         ) : (
-          <ul className="divide-y">
+          <ul className="divide-y overflow-y-auto flex-1">
             {meetings.map((m) => {
               const meetDate = new Date(m.dato);
               const hasNotes = !!m.moetenotater?.trim();
