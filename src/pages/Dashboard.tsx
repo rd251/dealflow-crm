@@ -86,6 +86,23 @@ export default function Dashboard() {
     return map;
   }, [profiles]);
   const initials = (name: string) => name.split(" ").map(n => n[0]).filter(Boolean).slice(0, 2).join("").toUpperCase();
+
+  // Lookup maps to avoid O(n) finds in render
+  const selskaperById = useMemo(() => {
+    const m = new Map<string, typeof selskaper[number]>();
+    for (const s of selskaper) m.set(s.id, s);
+    return m;
+  }, [selskaper]);
+  const salgsmuligheterById = useMemo(() => {
+    const m = new Map<string, typeof salgsmuligheter[number]>();
+    for (const s of salgsmuligheter) m.set(s.id, s);
+    return m;
+  }, [salgsmuligheter]);
+  const leadsById = useMemo(() => {
+    const m = new Map<string, typeof leads[number]>();
+    for (const l of leads) m.set(l.id, l);
+    return m;
+  }, [leads]);
   const today = now.toISOString().split("T")[0];
   
 
