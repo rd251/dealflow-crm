@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import DetailPanelShell, { DetailSection, DetailField, DetailDivider, DetailStatGrid, DetailStatCard } from "@/components/DetailPanelShell";
 import EntityCalendarTab from "@/components/EntityCalendarTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, GripVertical, Trophy, XCircle, Trash2, Phone, User, AlertTriangle, Clock, Building2, DollarSign, Mail, FileSignature, PartyPopper, Globe, ExternalLink, Linkedin, PenLine } from "lucide-react";
+import { Plus, GripVertical, Trophy, XCircle, Trash2, Phone, User, AlertTriangle, Clock, Building2, DollarSign, Mail, FileSignature, PartyPopper, Globe, ExternalLink, Linkedin, PenLine, NotebookPen } from "lucide-react";
 import SendEmailDialog from "@/components/SendEmailDialog";
 import SelskapInnsikt from "@/components/SelskapInnsikt";
 import CompanyLogo from "@/components/CompanyLogo";
@@ -32,6 +32,8 @@ import EntityChangelog from "@/components/EntityChangelog";
 import MeetingNotesList from "@/components/MeetingNotesList";
 import SendContractModal from "@/components/SendContractModal";
 import DealRecapCard from "@/components/DealRecapCard";
+import LastMeetingCard from "@/components/LastMeetingCard";
+import { useLastMeetingsByDeal } from "@/hooks/use-last-meetings";
 
 const allStatuses: SalgsmulighetStatus[] = ["Møte booket", "Behov avklart", "Løsning presentert", "Kontrakt sendt"];
 const openStatuses = allStatuses;
@@ -283,6 +285,8 @@ export default function Salgsmuligheter() {
   });
 
   const currentSm = selectedSm ? salgsmuligheter.find(s => s.id === selectedSm.id) || selectedSm : null;
+  const openDealIds = openDeals.map(d => d.id);
+  const { byId: lastMeetings } = useLastMeetingsByDeal(openDealIds);
   const openCreateActivityRef = useRef<(() => void) | null>(null);
   const [detailTab, setDetailTab] = useState<"detaljer" | "selskap" | "kontakt" | "interaksjoner" | "notater" | "kalender" | "dokumenter">("detaljer");
   const [pendingOpenActivity, setPendingOpenActivity] = useState(false);
@@ -505,6 +509,17 @@ export default function Salgsmuligheter() {
                             {(deal as any).ai_recap && (
                               <Sparkles className="w-3 h-3 text-primary/70 shrink-0" />
                             )}
+                            {(() => {
+                              const lm = lastMeetings[deal.id];
+                              if (!lm) return null;
+                              const days = Math.floor((Date.now() - new Date(lm.dato).getTime()) / 86400000);
+                              return (
+                                <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 gap-0.5 bg-warning/10 text-warning border-warning/30 shrink-0" title={lm.ai_sammendrag || lm.tittel || "Siste møte"}>
+                                  <NotebookPen className="w-2.5 h-2.5" />
+                                  {days === 0 ? "i dag" : `${days}d`}
+                                </Badge>
+                              );
+                            })()}
                             <GripVertical className="w-4 h-4 text-muted-foreground/30 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
                           </div>
 
@@ -621,6 +636,24 @@ export default function Salgsmuligheter() {
                                 {recap.sammendrag && (
                                   <p className="text-xs leading-relaxed text-foreground">{recap.sammendrag}</p>
                                 )}
+                                {(() => {
+                                  const lm = lastMeetings[deal.id];
+                                  if (!lm) return null;
+                                  const days = Math.floor((Date.now() - new Date(lm.dato).getTime()) / 86400000);
+                                  return (
+                                    <div className="rounded-md bg-warning/5 border border-warning/20 p-2">
+                                      <div className="flex items-center gap-1.5 mb-0.5">
+                                        <NotebookPen className="w-2.5 h-2.5 text-warning" />
+                                        <span className="text-[10px] font-medium text-warning uppercase tracking-wide">
+                                          Siste møte · {days === 0 ? "i dag" : `${days}d siden`}
+                                        </span>
+                                      </div>
+                                      <p className="text-[11px] text-foreground/80 line-clamp-3">
+                                        {lm.ai_sammendrag || lm.tittel || "Møtenotater tilgjengelig"}
+                                      </p>
+                                    </div>
+                                  );
+                                })()}
                                 {recap.neste_steg && (() => {
                                   const alreadyApplied = (deal.neste_steg || "").trim() === recap.neste_steg.trim();
                                   return (
@@ -813,6 +846,14 @@ export default function Salgsmuligheter() {
                   onNesteStegUpdated={(ns) => updateSalgsmuligheter(prev => prev.map(s =>
                     s.id === currentSm.id ? { ...s, neste_steg: ns } : s
                   ))}
+                />
+
+                <LastMeetingCard
+                  salgsmulighetId={currentSm.id}
+                  selskapId={currentSm.selskap_id}
+                  kontaktId={currentSm.kontakt_id}
+                  ansvarlig={currentSm.ansvarlig}
+                  ansvarligUserId={profiles.find(p => p.display_name === currentSm.ansvarlig)?.user_id || null}
                 />
 
                 <DetailDivider />
