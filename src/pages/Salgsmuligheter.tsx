@@ -636,6 +636,24 @@ export default function Salgsmuligheter() {
                                 {recap.sammendrag && (
                                   <p className="text-xs leading-relaxed text-foreground">{recap.sammendrag}</p>
                                 )}
+                                {(() => {
+                                  const lm = lastMeetings[deal.id];
+                                  if (!lm) return null;
+                                  const days = Math.floor((Date.now() - new Date(lm.dato).getTime()) / 86400000);
+                                  return (
+                                    <div className="rounded-md bg-warning/5 border border-warning/20 p-2">
+                                      <div className="flex items-center gap-1.5 mb-0.5">
+                                        <NotebookPen className="w-2.5 h-2.5 text-warning" />
+                                        <span className="text-[10px] font-medium text-warning uppercase tracking-wide">
+                                          Siste møte · {days === 0 ? "i dag" : `${days}d siden`}
+                                        </span>
+                                      </div>
+                                      <p className="text-[11px] text-foreground/80 line-clamp-3">
+                                        {lm.ai_sammendrag || lm.tittel || "Møtenotater tilgjengelig"}
+                                      </p>
+                                    </div>
+                                  );
+                                })()}
                                 {recap.neste_steg && (() => {
                                   const alreadyApplied = (deal.neste_steg || "").trim() === recap.neste_steg.trim();
                                   return (
