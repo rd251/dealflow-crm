@@ -441,7 +441,12 @@ export default function Leads() {
                 <tbody>
                   {filtered.map(lead => (
                     <tr key={lead.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => setSelectedLead(lead)}>
-                      <td className="px-4 py-3 font-medium">{lead.firmanavn}</td>
+                      <td className="px-4 py-3 font-medium">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <CompanyLogo firmanavn={lead.firmanavn} kontaktEmails={lead.e_post ? [lead.e_post] : undefined} size="sm" />
+                          <span className="truncate">{lead.firmanavn}</span>
+                        </div>
+                      </td>
                       <td className="px-4 py-3 text-muted-foreground">{lead.kontaktperson}</td>
                       <td className="px-4 py-3"><Badge variant="secondary" className="text-xs">{lead.kilde}</Badge></td>
                       <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
