@@ -788,8 +788,8 @@ export default function Dashboard() {
         </div>
 
         {/* RIGHT: ENDRINGSLOGG */}
-        <div className="bg-card border rounded-xl overflow-hidden">
-          <div className="px-4 sm:px-6 py-4 border-b flex items-center justify-between">
+        <div className="bg-card border rounded-xl overflow-hidden flex flex-col h-[520px]">
+          <div className="px-4 sm:px-6 py-4 border-b flex items-center justify-between shrink-0">
             <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
               <Activity className="w-4 h-4" /> Endringslogg
             </h2>
@@ -800,7 +800,7 @@ export default function Dashboard() {
           {changelogEntries.length === 0 ? (
             <p className="px-4 py-8 text-center text-muted-foreground text-sm">Ingen hendelser ennå</p>
           ) : (
-            <div className="divide-y">
+            <div className="divide-y overflow-y-auto flex-1">
               {changelogEntries.map((entry) => {
                 const eventColors: Record<string, string> = {
                   created: "bg-emerald-500", updated: "bg-blue-500", converted: "bg-violet-500",
