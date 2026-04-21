@@ -269,7 +269,8 @@ Adresser meldingen til ${contactName.split(' ')[0]}. Vær direkte men høflig. A
                 </Button>
               </div>
             </div>
-          ))}
+          );
+          })}
         </div>
 
         {items.length > 10 && (
