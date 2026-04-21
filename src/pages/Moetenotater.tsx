@@ -339,6 +339,7 @@ export default function Moetenotater() {
                   <>
                     <TableRow
                       key={m.id}
+                      id={`meeting-row-${m.id}`}
                       className="group cursor-pointer hover:bg-muted/30 transition-colors"
                       onClick={() => (hasNotes || summary) && setExpandedId(isExpanded ? null : m.id)}
                     >
