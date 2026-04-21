@@ -648,8 +648,8 @@ export default function Dashboard() {
       <FollowUpSection items={followUps} loading={followUpsLoading} onDismiss={dismissFollowUp} />
 
       {/* ─── KOMMENDE OPPGAVER (full width) ─── */}
-      <div className="bg-card border rounded-xl overflow-hidden mb-6">
-        <div className="px-4 sm:px-6 py-4 border-b flex items-center justify-between">
+      <div className="bg-card border rounded-xl overflow-hidden mb-6 flex flex-col h-[520px]">
+        <div className="px-4 sm:px-6 py-4 border-b flex items-center justify-between shrink-0">
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
             <ListTodo className="w-4 h-4" /> Kommende oppgaver
           </h2>
@@ -660,7 +660,7 @@ export default function Dashboard() {
         {oppgaver.length === 0 ? (
           <p className="px-4 py-8 text-center text-muted-foreground text-sm">Ingen åpne oppgaver</p>
         ) : (
-          <div className="divide-y">
+          <div className="divide-y overflow-y-auto flex-1">
             {oppgaver.map((o) => {
               const isOverdue = o.frist && new Date(o.frist) < now;
               const prioritetColor = o.prioritet === "Høy" ? "text-destructive" : o.prioritet === "Medium" ? "text-amber-600" : "text-muted-foreground";
@@ -716,16 +716,16 @@ export default function Dashboard() {
       </div>
 
       {/* ─── NESTE STEG + ENDRINGSLOGG SIDE-BY-SIDE ─── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 items-stretch">
         {/* LEFT: NESTE STEG */}
-        <div className="bg-card border rounded-xl overflow-hidden">
-          <div className="px-4 sm:px-6 py-4 border-b flex items-center justify-between">
+        <div className="bg-card border rounded-xl overflow-hidden flex flex-col h-[520px]">
+          <div className="px-4 sm:px-6 py-4 border-b flex items-center justify-between shrink-0">
             <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Neste steg</h2>
             <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={() => navigate("/salgsmuligheter")}>
               Se alle <ChevronRight className="w-3 h-3" />
             </Button>
           </div>
-          <div className="overflow-x-auto">
+          <div className="overflow-auto flex-1">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b bg-muted/30">
@@ -788,8 +788,8 @@ export default function Dashboard() {
         </div>
 
         {/* RIGHT: ENDRINGSLOGG */}
-        <div className="bg-card border rounded-xl overflow-hidden">
-          <div className="px-4 sm:px-6 py-4 border-b flex items-center justify-between">
+        <div className="bg-card border rounded-xl overflow-hidden flex flex-col h-[520px]">
+          <div className="px-4 sm:px-6 py-4 border-b flex items-center justify-between shrink-0">
             <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
               <Activity className="w-4 h-4" /> Endringslogg
             </h2>
@@ -800,7 +800,7 @@ export default function Dashboard() {
           {changelogEntries.length === 0 ? (
             <p className="px-4 py-8 text-center text-muted-foreground text-sm">Ingen hendelser ennå</p>
           ) : (
-            <div className="divide-y">
+            <div className="divide-y overflow-y-auto flex-1">
               {changelogEntries.map((entry) => {
                 const eventColors: Record<string, string> = {
                   created: "bg-emerald-500", updated: "bg-blue-500", converted: "bg-violet-500",
