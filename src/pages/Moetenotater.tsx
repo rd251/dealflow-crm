@@ -246,8 +246,8 @@ export default function Moetenotater() {
     }
     if (meetingStarted) {
       return (
-        <Badge variant="destructive" className="text-[10px] gap-1 h-5 px-1.5">
-          <AlertCircle className="w-2.5 h-2.5" /> Mangler notat
+        <Badge variant="destructive" className="text-[10px] gap-1 h-5 px-1.5 whitespace-nowrap">
+          <AlertCircle className="w-2.5 h-2.5 shrink-0" /> Mangler notat
         </Badge>
       );
     }
