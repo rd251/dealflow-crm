@@ -538,7 +538,8 @@ export default function Dashboard() {
                       className="px-4 py-2.5 hover:bg-muted/40 cursor-pointer transition-colors"
                       onClick={() => navigate(`/salgsmuligheter?open=${d.id}`)}
                     >
-                      <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2.5">
+                        <CompanyLogo domain={(d as any).selskapDomene} firmanavn={d.selskapNavn} size="sm" />
                         <div className="min-w-0 flex-1">
                           <div className="text-sm font-medium truncate">{d.selskapNavn}</div>
                           <div className="text-[11px] text-muted-foreground truncate">
@@ -573,7 +574,8 @@ export default function Dashboard() {
                       className="px-4 py-2.5 hover:bg-muted/40 cursor-pointer transition-colors"
                       onClick={() => navigate(`/salgsmuligheter?open=${d.id}`)}
                     >
-                      <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2.5">
+                        <CompanyLogo domain={(d as any).selskapDomene} firmanavn={d.selskapNavn} size="sm" />
                         <div className="min-w-0 flex-1">
                           <div className="text-sm font-medium truncate">{d.selskapNavn}</div>
                           <div className="text-[11px] text-muted-foreground truncate">{d.status}</div>
@@ -608,7 +610,8 @@ export default function Dashboard() {
                       className="px-4 py-2.5 hover:bg-muted/40 cursor-pointer transition-colors"
                       onClick={() => navigate(`/salgsmuligheter?open=${d.id}`)}
                     >
-                      <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2.5">
+                        <CompanyLogo domain={(d as any).selskapDomene} firmanavn={d.selskapNavn} size="sm" />
                         <div className="min-w-0 flex-1">
                           <div className="text-sm font-medium truncate">{d.selskapNavn}</div>
                           <div className="text-[11px] text-muted-foreground truncate">{d.navn}</div>
