@@ -976,12 +976,14 @@ export default function Dashboard() {
                   : format(meetDate, "d. MMM", { locale: nb });
               const timeLabel = m.start_tid ? format(new Date(m.start_tid), "HH:mm") : null;
 
+              const sel = m.selskap_id ? selskaperById.get(m.selskap_id) : undefined;
               return (
                 <li
                   key={m.id}
                   className="flex items-center gap-3 px-4 sm:px-6 py-2 hover:bg-muted/30 transition-colors cursor-pointer"
                   onClick={() => { setNotesMeeting(m); setNotesText(m.moetenotater || ""); }}
                 >
+                  <CompanyLogo domain={sel?.domene} firmanavn={sel?.firmanavn} size="sm" />
                   <span className="text-sm font-medium truncate flex-1 min-w-0">
                     {m.tittel || m.beskrivelse || "Møte"}
                   </span>
