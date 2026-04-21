@@ -152,7 +152,7 @@ function MeetingRow({ meeting, variant }: { meeting: Meeting; variant: "upcoming
                 Notater
               </Badge>
             )}
-            {hasNotes && (
+            {canExpand && (
               expanded
                 ? <ChevronUp className="w-3.5 h-3.5 text-muted-foreground" />
                 : <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
