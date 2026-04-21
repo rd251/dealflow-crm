@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -47,6 +47,11 @@ const formatInactive = (hours: number) => {
 };
 
 export default function FollowUpSection({ items, loading, onDismiss, selskaper = [] }: FollowUpSectionProps) {
+  const selskaperById = useMemo(() => {
+    const m = new Map<string, { id: string; domene?: string | null; firmanavn?: string }>();
+    for (const s of selskaper) m.set(s.id, s);
+    return m;
+  }, [selskaper]);
   const navigate = useNavigate();
   const [messageDialog, setMessageDialog] = useState<FollowUpItem | null>(null);
   const [generatedMessage, setGeneratedMessage] = useState("");
@@ -206,7 +211,7 @@ Adresser meldingen til ${contactName.split(' ')[0]}. Vær direkte men høflig. A
 
         <div className="divide-y overflow-y-auto flex-1">
           {displayed.map((item) => {
-            const sel = item.selskapId ? selskaper.find(s => s.id === item.selskapId) : null;
+            const sel = item.selskapId ? selskaperById.get(item.selskapId) : null;
             return (
             <div
               key={item.id}

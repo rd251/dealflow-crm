@@ -86,6 +86,23 @@ export default function Dashboard() {
     return map;
   }, [profiles]);
   const initials = (name: string) => name.split(" ").map(n => n[0]).filter(Boolean).slice(0, 2).join("").toUpperCase();
+
+  // Lookup maps to avoid O(n) finds in render
+  const selskaperById = useMemo(() => {
+    const m = new Map<string, typeof selskaper[number]>();
+    for (const s of selskaper) m.set(s.id, s);
+    return m;
+  }, [selskaper]);
+  const salgsmuligheterById = useMemo(() => {
+    const m = new Map<string, typeof salgsmuligheter[number]>();
+    for (const s of salgsmuligheter) m.set(s.id, s);
+    return m;
+  }, [salgsmuligheter]);
+  const leadsById = useMemo(() => {
+    const m = new Map<string, typeof leads[number]>();
+    for (const l of leads) m.set(l.id, l);
+    return m;
+  }, [leads]);
   const today = now.toISOString().split("T")[0];
   
 
@@ -347,7 +364,7 @@ export default function Dashboard() {
     return openSalg
       .filter((s) => s.forventet_lukkedato && new Date(s.forventet_lukkedato) <= cutoff30)
       .map((s) => {
-        const sel = selskaper.find((x) => x.id === s.selskap_id);
+        const sel = s.selskap_id ? selskaperById.get(s.selskap_id) : undefined;
         return {
           ...s,
           selskapNavn: sel?.firmanavn || "—",
@@ -357,14 +374,14 @@ export default function Dashboard() {
       })
       .sort((a, b) => b.verdi - a.verdi)
       .slice(0, 5);
-  }, [openSalg, selskaper]);
+  }, [openSalg, selskaperById]);
 
   const trengerHandling = useMemo(() => {
     const cutoff48h = new Date(now.getTime() - 48 * 60 * 60 * 1000);
     return openSalg
       .filter((s) => !s.sist_aktivitet || new Date(s.sist_aktivitet) < cutoff48h)
       .map((s) => {
-        const sel = selskaper.find((x) => x.id === s.selskap_id);
+        const sel = s.selskap_id ? selskaperById.get(s.selskap_id) : undefined;
         return {
           ...s,
           selskapNavn: sel?.firmanavn || "—",
@@ -374,14 +391,14 @@ export default function Dashboard() {
       })
       .sort((a, b) => b.daysSince - a.daysSince)
       .slice(0, 5);
-  }, [openSalg, selskaper]);
+  }, [openSalg, selskaperById]);
 
   const kontraktSendt = useMemo(
     () =>
       openSalg
         .filter((s) => s.status === "Kontrakt sendt")
         .map((s) => {
-          const sel = selskaper.find((x) => x.id === s.selskap_id);
+          const sel = s.selskap_id ? selskaperById.get(s.selskap_id) : undefined;
           return {
             ...s,
             selskapNavn: sel?.firmanavn || "—",
@@ -390,7 +407,7 @@ export default function Dashboard() {
           };
         })
         .sort((a, b) => b.verdi - a.verdi),
-    [openSalg, selskaper]
+    [openSalg, selskaperById]
   );
 
   const pipelineByStage = useMemo(() => {
@@ -409,7 +426,7 @@ export default function Dashboard() {
     const open = salgsmuligheter.filter((s) => s.status !== "Vunnet" && s.status !== "Tapt");
     return open
       .map((sm) => {
-        const selskap = selskaper.find((s) => s.id === sm.selskap_id);
+        const selskap = sm.selskap_id ? selskaperById.get(sm.selskap_id) : undefined;
         return { ...sm, selskapNavn: selskap?.firmanavn || "—" };
       })
       .sort((a, b) => {
@@ -421,7 +438,7 @@ export default function Dashboard() {
         return beregnTotalKontraktsverdi(b) - beregnTotalKontraktsverdi(a);
       })
       .slice(0, 15);
-  }, [salgsmuligheter, selskaper]);
+  }, [salgsmuligheter, selskaperById]);
 
   // ─── SECTION 3: MØTER ───
   const todayMeetings = useMemo(() => meetings.filter((m) => isToday(new Date(m.dato))), [meetings]);
@@ -460,7 +477,7 @@ export default function Dashboard() {
       .filter((s) => s.status !== "Vunnet" && s.status !== "Tapt")
       .map((sm) => ({
         ...sm,
-        selskapNavn: selskaper.find((s) => s.id === sm.selskap_id)?.firmanavn || "—",
+        selskapNavn: (sm.selskap_id ? selskaperById.get(sm.selskap_id)?.firmanavn : undefined) || "—",
       })),
     leads: leads.filter((l) => l.status !== "Ikke aktuelt" && l.status !== "Konvertert til salg" && l.status !== "Konvertert til partner" && !l.konvertert_til && !l.konvertert_dato),
     oppgaver,
@@ -725,17 +742,26 @@ export default function Dashboard() {
                       {o.ansvarlig && (
                         <span className="text-xs text-muted-foreground">· {profileMap.get(o.ansvarlig) || o.ansvarlig}</span>
                       )}
-                      {o.selskap_id && selskaper.find(s => s.id === o.selskap_id) && (
-                        <span className="text-xs text-muted-foreground flex items-center gap-0.5">
-                          · <Building2 className="w-3 h-3" /> {selskaper.find(s => s.id === o.selskap_id)?.firmanavn}
-                        </span>
-                      )}
-                      {o.salgsmulighet_id && salgsmuligheter.find(sm => sm.id === o.salgsmulighet_id) && (
-                        <span className="text-xs text-muted-foreground">· {salgsmuligheter.find(sm => sm.id === o.salgsmulighet_id)?.navn}</span>
-                      )}
-                      {o.lead_id && leads.find(l => l.id === o.lead_id) && (
-                        <span className="text-xs text-muted-foreground">· {leads.find(l => l.id === o.lead_id)?.firmanavn}</span>
-                      )}
+                      {(() => {
+                        const sel = o.selskap_id ? selskaperById.get(o.selskap_id) : undefined;
+                        const sm = o.salgsmulighet_id ? salgsmuligheterById.get(o.salgsmulighet_id) : undefined;
+                        const lead = o.lead_id ? leadsById.get(o.lead_id) : undefined;
+                        return (
+                          <>
+                            {sel && (
+                              <span className="text-xs text-muted-foreground flex items-center gap-0.5">
+                                · <Building2 className="w-3 h-3" /> {sel.firmanavn}
+                              </span>
+                            )}
+                            {sm && (
+                              <span className="text-xs text-muted-foreground">· {sm.navn}</span>
+                            )}
+                            {lead && (
+                              <span className="text-xs text-muted-foreground">· {lead.firmanavn}</span>
+                            )}
+                          </>
+                        );
+                      })()}
                       {o.prioritet && (
                         <Badge variant="outline" className={`text-[10px] ${prioritetColor}`}>
                           {o.prioritet}
@@ -794,7 +820,7 @@ export default function Dashboard() {
                             <CompanyLogo
                               size="sm"
                               firmanavn={sm.selskapNavn}
-                              domain={selskaper.find(s => s.id === sm.selskap_id)?.domene}
+                              domain={sm.selskap_id ? selskaperById.get(sm.selskap_id)?.domene : undefined}
                             />
                             <span className="truncate">{sm.selskapNavn}</span>
                           </div>
@@ -877,11 +903,11 @@ export default function Dashboard() {
                 let contextSelskap: string | null = null;
                 let contextKontakt: string | null = null;
                 if (entry.entity_type === "salgsmulighet") {
-                  const sm = salgsmuligheter.find(s => s.id === entry.entity_id);
-                  if (sm?.selskap_id) contextSelskap = selskaper.find(s => s.id === sm.selskap_id)?.firmanavn || null;
+                  const sm = salgsmuligheterById.get(entry.entity_id);
+                  if (sm?.selskap_id) contextSelskap = selskaperById.get(sm.selskap_id)?.firmanavn || null;
                   if (sm?.kontaktperson) contextKontakt = sm.kontaktperson;
                 } else if (entry.entity_type === "lead") {
-                  const lead = leads.find(l => l.id === entry.entity_id);
+                  const lead = leadsById.get(entry.entity_id);
                   if (lead?.kontaktperson) contextKontakt = lead.kontaktperson;
                 }
                 const contextStr = [contextSelskap, contextKontakt].filter(Boolean).join(" · ");
