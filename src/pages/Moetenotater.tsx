@@ -536,16 +536,18 @@ interface MeetingDetailsDialogProps {
   saving: boolean;
   onSave: () => void;
   linked: RelatedEntity | null;
+  entities: Record<string, RelatedEntity>;
   summary?: AiSummary;
   isLoadingAi: boolean;
   onGenerateSummary: () => void;
   formatDate: (d: string) => string;
   formatTime: (d: string | null) => string | null;
+  navigate: (path: string) => void;
 }
 
 function MeetingDetailsDialog({
   meeting, onClose, notes, setNotes, saving, onSave,
-  linked, summary, isLoadingAi, onGenerateSummary, formatDate, formatTime,
+  linked, entities, summary, isLoadingAi, onGenerateSummary, formatDate, formatTime, navigate,
 }: MeetingDetailsDialogProps) {
   const [editing, setEditing] = useState(false);
 
@@ -561,6 +563,15 @@ function MeetingDetailsDialog({
   const duration = durationMinutes(meeting.start_tid, meeting.slutt_tid);
   const hasNotes = !!meeting.moetenotater?.trim();
 
+  // Tilknyttede entiteter
+  const selskap = meeting.selskap_id ? entities[meeting.selskap_id] : null;
+  const salg = meeting.salgsmulighet_id ? entities[meeting.salgsmulighet_id] : null;
+  const kontakt = meeting.kontakt_id ? (entities[meeting.kontakt_id] as any) : null;
+  const lead = meeting.lead_id ? entities[meeting.lead_id] : null;
+  const partner = meeting.partner_id ? entities[meeting.partner_id] : null;
+  const kontaktSelskap = kontakt?.selskap_id ? entities[kontakt.selskap_id] : null;
+  const visSelskap = selskap || kontaktSelskap;
+
   return (
     <Dialog open={!!meeting} onOpenChange={open => !open && onClose()}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-0 gap-0">
@@ -571,27 +582,6 @@ function MeetingDetailsDialog({
               {meeting.tittel || "Møte"}
             </DialogTitle>
             <DialogDescription className="sr-only">Detaljer og notater for møtet</DialogDescription>
-
-            {/* Participant avatars */}
-            {participants.length > 0 && (
-              <div className="flex items-center gap-3 flex-wrap">
-                <div className="flex -space-x-2">
-                  {participants.slice(0, 5).map((p, i) => (
-                    <div
-                      key={i}
-                      className="w-8 h-8 rounded-full bg-primary/10 border-2 border-background flex items-center justify-center text-[11px] font-semibold text-primary"
-                      title={p}
-                    >
-                      {participantInitials(p)}
-                    </div>
-                  ))}
-                </div>
-                <div className="text-xs text-muted-foreground truncate">
-                  {participants.slice(0, 3).map(participantLabel).join(", ")}
-                  {participants.length > 3 && ` +${participants.length - 3}`}
-                </div>
-              </div>
-            )}
 
             {/* Meta row */}
             <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
@@ -606,18 +596,6 @@ function MeetingDetailsDialog({
                   {duration} min
                 </span>
               )}
-              {participants.length > 0 && (
-                <span className="flex items-center gap-1.5">
-                  <Users className="w-3.5 h-3.5" />
-                  {participants.length} deltaker{participants.length > 1 ? "e" : ""}
-                </span>
-              )}
-              {linked && (
-                <Badge variant="secondary" className="text-[10px] gap-1 h-5">
-                  <Building2 className="w-2.5 h-2.5" />
-                  {linked.name}
-                </Badge>
-              )}
               {isTrale && (
                 <Badge variant="outline" className="text-[10px] gap-1 h-5 bg-violet-500/10 text-violet-600 border-violet-200">
                   <Mic className="w-2.5 h-2.5" /> Trale
@@ -626,6 +604,119 @@ function MeetingDetailsDialog({
             </div>
           </DialogHeader>
         </div>
+
+        {/* Tilknyttet info */}
+        {(visSelskap || salg || kontakt || lead || partner) && (
+          <div className="px-6 py-4 border-b bg-muted/20 space-y-3">
+            <h4 className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Tilknyttet</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {visSelskap && (
+                <button
+                  onClick={() => navigate(`/selskaper/${visSelskap.id}`)}
+                  className="flex items-center gap-2 p-2.5 rounded-md border bg-card hover:bg-accent text-left transition-colors group"
+                >
+                  <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
+                    <Building2 className="w-4 h-4 text-primary" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Selskap</div>
+                    <div className="text-sm font-medium truncate group-hover:text-primary transition-colors">{visSelskap.name}</div>
+                  </div>
+                </button>
+              )}
+              {salg && (
+                <button
+                  onClick={() => navigate(`/salgsmuligheter?id=${salg.id}`)}
+                  className="flex items-center gap-2 p-2.5 rounded-md border bg-card hover:bg-accent text-left transition-colors group"
+                >
+                  <div className="w-8 h-8 rounded-md bg-blue-500/10 flex items-center justify-center shrink-0">
+                    <ArrowRight className="w-4 h-4 text-blue-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Salgsmulighet</div>
+                    <div className="text-sm font-medium truncate group-hover:text-primary transition-colors">{salg.name}</div>
+                  </div>
+                </button>
+              )}
+              {kontakt && (
+                <button
+                  onClick={() => navigate(`/kontakter?id=${kontakt.id}`)}
+                  className="flex items-center gap-2 p-2.5 rounded-md border bg-card hover:bg-accent text-left transition-colors group"
+                >
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 text-[11px] font-semibold text-primary">
+                    {participantInitials(kontakt.name)}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                      Kontakt{kontakt.rolle ? ` · ${kontakt.rolle}` : ""}
+                    </div>
+                    <div className="text-sm font-medium truncate group-hover:text-primary transition-colors">{kontakt.name}</div>
+                    {kontakt.email && <div className="text-[11px] text-muted-foreground truncate">{kontakt.email}</div>}
+                  </div>
+                </button>
+              )}
+              {lead && !visSelskap && (
+                <button
+                  onClick={() => navigate(`/leads?id=${lead.id}`)}
+                  className="flex items-center gap-2 p-2.5 rounded-md border bg-card hover:bg-accent text-left transition-colors group"
+                >
+                  <div className="w-8 h-8 rounded-md bg-amber-500/10 flex items-center justify-center shrink-0">
+                    <Building2 className="w-4 h-4 text-amber-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Lead</div>
+                    <div className="text-sm font-medium truncate group-hover:text-primary transition-colors">{lead.name}</div>
+                  </div>
+                </button>
+              )}
+              {partner && (
+                <button
+                  onClick={() => navigate(`/partnere?id=${partner.id}`)}
+                  className="flex items-center gap-2 p-2.5 rounded-md border bg-card hover:bg-accent text-left transition-colors group"
+                >
+                  <div className="w-8 h-8 rounded-md bg-violet-500/10 flex items-center justify-center shrink-0">
+                    <Building2 className="w-4 h-4 text-violet-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Partner</div>
+                    <div className="text-sm font-medium truncate group-hover:text-primary transition-colors">{partner.name}</div>
+                  </div>
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Deltakere */}
+        {participants.length > 0 && (
+          <div className="px-6 py-4 border-b space-y-3">
+            <div className="flex items-center justify-between">
+              <h4 className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                <Users className="w-3 h-3" />
+                Deltakere ({participants.length})
+              </h4>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+              {participants.map((p, i) => (
+                <div
+                  key={i}
+                  className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-muted/50 transition-colors"
+                >
+                  <div
+                    className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-semibold text-primary shrink-0"
+                    title={p}
+                  >
+                    {participantInitials(p)}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-xs font-medium truncate">{participantLabel(p)}</div>
+                    {p.includes("@") && <div className="text-[10px] text-muted-foreground truncate">{p}</div>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Body */}
         <div className="px-6 py-5 space-y-5">
