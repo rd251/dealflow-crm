@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import DetailPanelShell, { DetailSection, DetailField, DetailDivider, DetailStatGrid, DetailStatCard } from "@/components/DetailPanelShell";
 import EntityCalendarTab from "@/components/EntityCalendarTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, GripVertical, Trophy, XCircle, Trash2, Phone, User, AlertTriangle, Clock, Building2, DollarSign, Mail, FileSignature, PartyPopper, Globe, ExternalLink, Linkedin, PenLine } from "lucide-react";
+import { Plus, GripVertical, Trophy, XCircle, Trash2, Phone, User, AlertTriangle, Clock, Building2, DollarSign, Mail, FileSignature, PartyPopper, Globe, ExternalLink, Linkedin, PenLine, NotebookPen } from "lucide-react";
 import SendEmailDialog from "@/components/SendEmailDialog";
 import SelskapInnsikt from "@/components/SelskapInnsikt";
 import CompanyLogo from "@/components/CompanyLogo";
@@ -509,6 +509,17 @@ export default function Salgsmuligheter() {
                             {(deal as any).ai_recap && (
                               <Sparkles className="w-3 h-3 text-primary/70 shrink-0" />
                             )}
+                            {(() => {
+                              const lm = lastMeetings[deal.id];
+                              if (!lm) return null;
+                              const days = Math.floor((Date.now() - new Date(lm.dato).getTime()) / 86400000);
+                              return (
+                                <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 gap-0.5 bg-warning/10 text-warning border-warning/30 shrink-0" title={lm.ai_sammendrag || lm.tittel || "Siste møte"}>
+                                  <NotebookPen className="w-2.5 h-2.5" />
+                                  {days === 0 ? "i dag" : `${days}d`}
+                                </Badge>
+                              );
+                            })()}
                             <GripVertical className="w-4 h-4 text-muted-foreground/30 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
                           </div>
 
