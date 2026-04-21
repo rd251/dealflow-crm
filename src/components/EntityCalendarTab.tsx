@@ -177,19 +177,44 @@ function MeetingRow({ meeting, variant }: { meeting: Meeting; variant: "upcoming
             </span>
           )}
         </div>
-        {meeting.deltakere && meeting.deltakere.length > 0 && (
+        {hasDeltakere && !expanded && (
           <p className="text-[11px] text-muted-foreground truncate">
-            {meeting.deltakere.slice(0, 3).join(", ")}
-            {meeting.deltakere.length > 3 && ` +${meeting.deltakere.length - 3}`}
+            {meeting.deltakere!.slice(0, 3).map(d => d.split("@")[0]).join(", ")}
+            {meeting.deltakere!.length > 3 && ` +${meeting.deltakere!.length - 3}`}
           </p>
         )}
       </div>
 
-      {expanded && hasNotes && (
-        <div className="px-3 pb-3 border-t border-border/50 pt-2">
-          <p className="text-xs text-muted-foreground whitespace-pre-line bg-muted/50 rounded p-2 leading-relaxed">
-            {meeting.moetenotater}
-          </p>
+      {expanded && (
+        <div className="px-3 pb-3 border-t border-border/50 pt-2 space-y-2">
+          {hasDescription && (
+            <div>
+              <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground mb-1">Beskrivelse</p>
+              <p className="text-xs text-foreground/80 whitespace-pre-line leading-relaxed">{meeting.beskrivelse}</p>
+            </div>
+          )}
+          {hasDeltakere && (
+            <div>
+              <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground mb-1">
+                Deltakere ({meeting.deltakere!.length})
+              </p>
+              <div className="flex flex-wrap gap-1">
+                {meeting.deltakere!.map((d, i) => (
+                  <Badge key={i} variant="secondary" className="text-[10px] font-normal">{d}</Badge>
+                ))}
+              </div>
+            </div>
+          )}
+          {hasNotes ? (
+            <div>
+              <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground mb-1">Møtenotater</p>
+              <p className="text-xs text-foreground/90 whitespace-pre-line bg-muted/50 rounded p-2 leading-relaxed">
+                {meeting.moetenotater}
+              </p>
+            </div>
+          ) : (
+            <p className="text-[11px] text-muted-foreground italic">Ingen møtenotater registrert</p>
+          )}
         </div>
       )}
     </div>
