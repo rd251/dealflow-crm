@@ -644,11 +644,12 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* ─── SECTION: OPPFØLGING ─── */}
-      <FollowUpSection items={followUps} loading={followUpsLoading} onDismiss={dismissFollowUp} />
+      {/* ─── OPPFØLGING + KOMMENDE OPPGAVER (side by side) ─── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 items-stretch">
+        <FollowUpSection items={followUps} loading={followUpsLoading} onDismiss={dismissFollowUp} />
 
-      {/* ─── KOMMENDE OPPGAVER (full width) ─── */}
-      <div className="bg-card border rounded-xl overflow-hidden mb-6 flex flex-col h-[520px]">
+      {/* KOMMENDE OPPGAVER */}
+      <div className="bg-card border rounded-xl overflow-hidden flex flex-col h-[520px]">
         <div className="px-4 sm:px-6 py-4 border-b flex items-center justify-between shrink-0">
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
             <ListTodo className="w-4 h-4" /> Kommende oppgaver
@@ -714,9 +715,10 @@ export default function Dashboard() {
           </div>
         )}
       </div>
+      </div>
 
-      {/* ─── NESTE STEG + ENDRINGSLOGG (full width, stacked) ─── */}
-      <div className="space-y-6 mb-6">
+      {/* ─── NESTE STEG + ENDRINGSLOGG (side by side) ─── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 items-stretch">
         {/* LEFT: NESTE STEG */}
         <div className="bg-card border rounded-xl overflow-hidden flex flex-col h-[520px]">
           <div className="px-4 sm:px-6 py-4 border-b flex items-center justify-between shrink-0">
