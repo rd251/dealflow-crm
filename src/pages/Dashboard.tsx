@@ -715,8 +715,8 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* ─── NESTE STEG + ENDRINGSLOGG SIDE-BY-SIDE ─── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 items-stretch">
+      {/* ─── NESTE STEG + ENDRINGSLOGG (full width, stacked) ─── */}
+      <div className="space-y-6 mb-6">
         {/* LEFT: NESTE STEG */}
         <div className="bg-card border rounded-xl overflow-hidden flex flex-col h-[520px]">
           <div className="px-4 sm:px-6 py-4 border-b flex items-center justify-between shrink-0">
