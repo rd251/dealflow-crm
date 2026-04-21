@@ -31,6 +31,7 @@ import AiCommandBar from "@/components/AiCommandBar";
 import GlobalSearch from "@/components/GlobalSearch";
 import CompanyLogo from "@/components/CompanyLogo";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
 import { gravatarUrl } from "@/lib/gravatar";
 import MeetingMismatchAlert from "@/components/MeetingMismatchAlert";
 import { useFollowUps } from "@/hooks/use-follow-ups";
