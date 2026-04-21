@@ -112,13 +112,18 @@ export default function GlobalSearch() {
           id: p.id, type: "partner", title: p.partnernavn,
           subtitle: p.kontaktperson, email: p.e_post, status: p.partnerstatus,
         }));
+        const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
         (moeteRes.data || []).forEach((m: any) => {
           const dato = m.dato ? new Date(m.dato).toLocaleDateString("no-NO", { day: "2-digit", month: "short", year: "numeric" }) : "";
-          const deltakere = Array.isArray(m.deltakere) && m.deltakere.length > 0 ? m.deltakere.slice(0, 2).join(", ") : null;
+          const deltakereArr = Array.isArray(m.deltakere)
+            ? m.deltakere.filter((d: string) => d && !uuidRe.test(d))
+            : [];
+          const deltakere = deltakereArr.length > 0 ? deltakereArr.slice(0, 2).join(", ") : null;
+          const beskrivelse = m.beskrivelse && !uuidRe.test(m.beskrivelse.trim()) ? m.beskrivelse.slice(0, 60) : null;
           out.push({
             id: m.id, type: "moete",
             title: m.tittel || "Møte uten tittel",
-            subtitle: deltakere || (m.beskrivelse ? m.beskrivelse.slice(0, 60) : undefined),
+            subtitle: deltakere || beskrivelse || undefined,
             meta: dato,
             status: m.aktivitet_kilde || undefined,
           });
