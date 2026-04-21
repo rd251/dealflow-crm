@@ -36,6 +36,7 @@ import { useProfiles } from "@/hooks/use-profiles";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
+import snakkLogo from "@/assets/snakk-logo-full.svg";
 
 const API_URL = import.meta.env.VITE_SUPABASE_URL + "/rest/v1";
 const API_HEADERS = {
