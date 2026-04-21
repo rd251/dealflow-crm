@@ -668,7 +668,20 @@ export default function Dashboard() {
             Se alle <ChevronRight className="w-3 h-3" />
           </Button>
         </div>
-        {oppgaver.length === 0 ? (
+        {oppgaverLoading ? (
+          <div className="divide-y flex-1 overflow-hidden">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="px-4 sm:px-6 py-3 flex items-start gap-3">
+                <Skeleton className="mt-0.5 w-4 h-4 rounded-full shrink-0" />
+                <Skeleton className="w-7 h-7 rounded-full shrink-0" />
+                <div className="flex-1 min-w-0 space-y-2">
+                  <Skeleton className="h-3.5 w-3/4" />
+                  <Skeleton className="h-3 w-1/2" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : oppgaver.length === 0 ? (
           <p className="px-4 py-8 text-center text-muted-foreground text-sm">Ingen åpne oppgaver</p>
         ) : (
           <div className="divide-y overflow-y-auto flex-1">
