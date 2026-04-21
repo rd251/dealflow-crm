@@ -1326,7 +1326,22 @@ function DealList({ deals, getSelskapNavn, getSelskapDomain, onSelect, label, on
                   <div className={`h-2.5 w-2.5 rounded-full ${getSignalDotClass(d)}`} title={`Kundesignal: ${getSignalLabel(d)}`} />
                 </td>
               )}
-              <td className="px-4 py-3 font-medium">{d.kontaktperson || "–"}</td>
+              <td className="px-4 py-3 font-medium">
+                {(() => {
+                  const name = d.kontaktperson || "–";
+                  const initials = name.split(" ").map(n => n[0]).filter(Boolean).slice(0, 2).join("").toUpperCase() || "?";
+                  const src = d.e_post ? gravatarUrl(d.e_post) : undefined;
+                  return (
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Avatar className="w-6 h-6 shrink-0">
+                        {src && <AvatarImage src={src} alt={name} />}
+                        <AvatarFallback className="text-[10px]">{initials}</AvatarFallback>
+                      </Avatar>
+                      <span className="truncate">{name}</span>
+                    </div>
+                  );
+                })()}
+              </td>
               <td className="px-4 py-3 text-muted-foreground">{d.use_case || "–"}</td>
               <td className="px-4 py-3 text-muted-foreground">
                 <div className="flex items-center gap-2 min-w-0">
