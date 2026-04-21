@@ -305,33 +305,35 @@ export default function ActivityLog(props: ActivityLogProps) {
       {aktiviteter.length === 0 ? (
         <p className="text-xs text-muted-foreground italic py-2">Ingen aktiviteter registrert</p>
       ) : (
-        <div className="space-y-2 max-h-[300px] overflow-y-auto">
+        <div className="space-y-1 max-h-[300px] overflow-y-auto overflow-x-hidden pr-1">
           {aktiviteter.map(a => {
-            const Icon = typeIcons[a.type] || FileText;
             const isGmail = a.ekstern_provider === 'gmail';
+            const isGCal = a.ekstern_provider === 'google_calendar';
             const isSent = a.aktivitet_kilde === 'gmail_sendt';
-            const isExternal = a.ekstern_provider === 'gmail' || a.ekstern_provider === 'google_calendar';
+            const isExternal = isGmail || isGCal;
+            const FallbackIcon = typeIcons[a.type] || FileText;
             const displayTitle = a.tittel || a.type;
             return (
               <div
                 key={a.id}
-                className={`flex items-start gap-2.5 py-1.5 group ${isGmail ? 'cursor-pointer rounded-md hover:bg-muted/50 px-1 -mx-1 transition-colors' : ''}`}
+                className="flex items-start gap-2 py-1 group rounded-md hover:bg-muted/50 px-1 -mx-1 transition-colors cursor-pointer min-w-0"
                 onClick={() => { if (isGmail) setViewingEmail(a); }}
               >
-                <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${typeColors[a.type]}`}>
-                  <Icon className="w-3.5 h-3.5" />
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${isExternal ? 'bg-white border' : typeColors[a.type]}`}>
+                  {isGmail ? (
+                    <GmailIcon size={14} />
+                  ) : isGCal ? (
+                    <GoogleCalendarIcon size={14} />
+                  ) : (
+                    <FallbackIcon className="w-3.5 h-3.5" />
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-medium">{displayTitle}</span>
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span className="text-xs font-medium truncate flex-1 min-w-0">{displayTitle}</span>
                     {isGmail && (
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${isSent ? 'bg-blue-500/10 text-blue-600' : 'bg-emerald-500/10 text-emerald-600'}`}>
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full shrink-0 ${isSent ? 'bg-blue-500/10 text-blue-600' : 'bg-emerald-500/10 text-emerald-600'}`}>
                         {isSent ? 'Sendt' : 'Mottatt'}
-                      </span>
-                    )}
-                    {isExternal && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
-                        {a.ekstern_provider === 'gmail' ? 'Gmail' : 'GCal'}
                       </span>
                     )}
                     {a.user_id && profiles[a.user_id] && (
@@ -346,11 +348,11 @@ export default function ActivityLog(props: ActivityLogProps) {
                         </TooltipContent>
                       </Tooltip>
                     )}
-                    <span className="text-[10px] text-muted-foreground flex items-center gap-0.5"><Clock className="w-2.5 h-2.5" />{formatDato(a.dato)}</span>
+                    <span className="text-[10px] text-muted-foreground flex items-center gap-0.5 shrink-0"><Clock className="w-2.5 h-2.5" />{formatDato(a.dato)}</span>
                     {!isExternal && (
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <button className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-muted">
+                          <button onClick={(e) => e.stopPropagation()} className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-muted shrink-0">
                             <MoreHorizontal className="w-3.5 h-3.5 text-muted-foreground" />
                           </button>
                         </DropdownMenuTrigger>
@@ -365,7 +367,7 @@ export default function ActivityLog(props: ActivityLogProps) {
                       </DropdownMenu>
                     )}
                   </div>
-                  <p className="text-xs text-muted-foreground mt-0.5 whitespace-pre-line line-clamp-2">{a.beskrivelse}</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5 whitespace-pre-line line-clamp-1 break-words">{a.beskrivelse}</p>
                 </div>
               </div>
             );
