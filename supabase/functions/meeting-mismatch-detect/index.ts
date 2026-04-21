@@ -160,6 +160,73 @@ serve(async (req) => {
 async function autoFixMeeting(supabase: any, aktivitetId: string) {
   const { data: m } = await supabase
     .from("aktiviteter")
+    .select("id, deltakere, selskap_id, salgsmulighet_id, kontakt_id, lead_id")
+    .eq("id", aktivitetId)
+    .maybeSingle();
+  if (!m) {
+    return new Response(JSON.stringify({ error: "Møte ikke funnet" }), {
+      status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  const { data: kontakter } = (m.deltakere && m.deltakere.length > 0)
+    ? await supabase.from("kontakter").select("id, e_post, selskap_id").in("id", m.deltakere)
+    : { data: [] };
+
+  const externals = (kontakter || []).filter((k: any) => !isInternalEmail(k.e_post) && k.selskap_id);
+  const newSelskapId = externals[0]?.selskap_id || null;
+  const newKontaktId = externals[0]?.id || null;
+
+  let newSalgsmulighetId: string | null = null;
+  if (newSelskapId) {
+    const { data: sm } = await supabase
+      .from("salgsmuligheter")
+      .select("id")
+      .eq("selskap_id", newSelskapId)
+      .not("status", "in", '("Vunnet","Tapt")')
+      .order("updated_at", { ascending: false })
+      .limit(1);
+    newSalgsmulighetId = sm && sm.length > 0 ? sm[0].id : null;
+  }
+
+  // Lead fallback: if no selskap match, try to link to an open lead by external email
+  let newLeadId: string | null = null;
+  if (!newSelskapId && !m.lead_id) {
+    const externalEmails = (kontakter || [])
+      .filter((k: any) => !isInternalEmail(k.e_post) && k.e_post)
+      .map((k: any) => k.e_post.toLowerCase());
+    if (externalEmails.length > 0) {
+      const { data: leads } = await supabase
+        .from("leads")
+        .select("id, e_post, status, updated_at")
+        .in("e_post", externalEmails)
+        .not("status", "in", '("Konvertert til salg","Konvertert til partner","Ikke aktuelt")')
+        .order("updated_at", { ascending: false })
+        .limit(1);
+      newLeadId = leads && leads.length > 0 ? leads[0].id : null;
+    }
+  }
+
+  const update: any = {};
+  if (newSelskapId) update.selskap_id = newSelskapId;
+  if (newKontaktId) update.kontakt_id = newKontaktId;
+  if (newSalgsmulighetId) update.salgsmulighet_id = newSalgsmulighetId;
+  if (newLeadId) update.lead_id = newLeadId;
+
+  if (Object.keys(update).length === 0) {
+    return new Response(JSON.stringify({ ok: false, error: "Ingen ekstern deltaker å koble mot" }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  await supabase.from("aktiviteter").update(update).eq("id", aktivitetId);
+
+  return new Response(JSON.stringify({ ok: true, updated: update }), {
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+  const { data: m } = await supabase
+    .from("aktiviteter")
     .select("id, deltakere, selskap_id, salgsmulighet_id, kontakt_id")
     .eq("id", aktivitetId)
     .maybeSingle();
