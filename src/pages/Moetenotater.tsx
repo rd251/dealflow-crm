@@ -485,11 +485,13 @@ export default function Moetenotater() {
         saving={saving}
         onSave={saveNotes}
         linked={selectedMeeting ? getLinkedEntity(selectedMeeting) : null}
+        entities={entities}
         summary={selectedMeeting ? aiSummaries[selectedMeeting.id] : undefined}
         isLoadingAi={selectedMeeting ? aiLoading === selectedMeeting.id : false}
         onGenerateSummary={() => selectedMeeting && generateSummary(selectedMeeting)}
         formatDate={formatDate}
         formatTime={formatTime}
+        navigate={navigate}
       />
     </PageShell>
   );
