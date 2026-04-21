@@ -732,7 +732,7 @@ export default function Dashboard() {
                     ) : null;
                   })()}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{o.oppgave}</p>
+                    <p className="text-sm font-medium break-words" title={o.oppgave}>{o.oppgave}</p>
                     <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                       {o.frist && (
                         <span className={`text-xs ${isOverdue ? "text-destructive font-medium" : "text-muted-foreground"}`}>
