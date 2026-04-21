@@ -111,6 +111,9 @@ function MeetingGroup({ label, meetings, variant }: { label: string; meetings: M
 function MeetingRow({ meeting, variant }: { meeting: Meeting; variant: "upcoming" | "past" }) {
   const [expanded, setExpanded] = useState(false);
   const hasNotes = !!meeting.moetenotater?.trim();
+  const hasDescription = !!meeting.beskrivelse?.trim() && meeting.beskrivelse !== meeting.tittel;
+  const hasDeltakere = !!meeting.deltakere && meeting.deltakere.length > 0;
+  const canExpand = hasNotes || hasDescription || hasDeltakere;
 
   const dateStr = (() => {
     try {
@@ -128,8 +131,8 @@ function MeetingRow({ meeting, variant }: { meeting: Meeting; variant: "upcoming
 
   return (
     <div
-      className={`rounded-lg border transition-colors ${variant === "upcoming" ? "bg-primary/5 border-primary/20" : "bg-muted/30"} ${hasNotes ? "cursor-pointer" : ""}`}
-      onClick={() => hasNotes && setExpanded(prev => !prev)}
+      className={`rounded-lg border transition-colors ${variant === "upcoming" ? "bg-primary/5 border-primary/20" : "bg-muted/30"} ${canExpand ? "cursor-pointer hover:bg-muted/40" : ""}`}
+      onClick={() => canExpand && setExpanded(prev => !prev)}
     >
       <div className="p-3 space-y-1">
         <div className="flex items-start justify-between gap-2">
@@ -149,7 +152,7 @@ function MeetingRow({ meeting, variant }: { meeting: Meeting; variant: "upcoming
                 Notater
               </Badge>
             )}
-            {hasNotes && (
+            {canExpand && (
               expanded
                 ? <ChevronUp className="w-3.5 h-3.5 text-muted-foreground" />
                 : <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
@@ -174,19 +177,44 @@ function MeetingRow({ meeting, variant }: { meeting: Meeting; variant: "upcoming
             </span>
           )}
         </div>
-        {meeting.deltakere && meeting.deltakere.length > 0 && (
+        {hasDeltakere && !expanded && (
           <p className="text-[11px] text-muted-foreground truncate">
-            {meeting.deltakere.slice(0, 3).join(", ")}
-            {meeting.deltakere.length > 3 && ` +${meeting.deltakere.length - 3}`}
+            {meeting.deltakere!.slice(0, 3).map(d => d.split("@")[0]).join(", ")}
+            {meeting.deltakere!.length > 3 && ` +${meeting.deltakere!.length - 3}`}
           </p>
         )}
       </div>
 
-      {expanded && hasNotes && (
-        <div className="px-3 pb-3 border-t border-border/50 pt-2">
-          <p className="text-xs text-muted-foreground whitespace-pre-line bg-muted/50 rounded p-2 leading-relaxed">
-            {meeting.moetenotater}
-          </p>
+      {expanded && (
+        <div className="px-3 pb-3 border-t border-border/50 pt-2 space-y-2">
+          {hasDescription && (
+            <div>
+              <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground mb-1">Beskrivelse</p>
+              <p className="text-xs text-foreground/80 whitespace-pre-line leading-relaxed">{meeting.beskrivelse}</p>
+            </div>
+          )}
+          {hasDeltakere && (
+            <div>
+              <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground mb-1">
+                Deltakere ({meeting.deltakere!.length})
+              </p>
+              <div className="flex flex-wrap gap-1">
+                {meeting.deltakere!.map((d, i) => (
+                  <Badge key={i} variant="secondary" className="text-[10px] font-normal">{d}</Badge>
+                ))}
+              </div>
+            </div>
+          )}
+          {hasNotes ? (
+            <div>
+              <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground mb-1">Møtenotater</p>
+              <p className="text-xs text-foreground/90 whitespace-pre-line bg-muted/50 rounded p-2 leading-relaxed">
+                {meeting.moetenotater}
+              </p>
+            </div>
+          ) : (
+            <p className="text-[11px] text-muted-foreground italic">Ingen møtenotater registrert</p>
+          )}
         </div>
       )}
     </div>
