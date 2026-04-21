@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Building2, User, Briefcase, Users, Handshake, X, Loader2, Mail, Phone } from "lucide-react";
+import { Search, Building2, User, Briefcase, Users, Handshake, X, Loader2, Mail, Phone, Calendar } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 
 interface SearchResult {
   id: string;
-  type: "selskap" | "kontakt" | "lead" | "salgsmulighet" | "partner";
+  type: "selskap" | "kontakt" | "lead" | "salgsmulighet" | "partner" | "moete";
   title: string;
   subtitle?: string;
   meta?: string;
@@ -22,6 +22,7 @@ const typeConfig = {
   lead: { icon: Users, label: "Lead", color: "text-amber-600 bg-amber-500/10", path: () => `/leads` },
   salgsmulighet: { icon: Briefcase, label: "Salg", color: "text-emerald-600 bg-emerald-500/10", path: () => `/salgsmuligheter` },
   partner: { icon: Handshake, label: "Partner", color: "text-violet-600 bg-violet-500/10", path: (id: string) => `/partnere/${id}` },
+  moete: { icon: Calendar, label: "Møte", color: "text-orange-600 bg-orange-500/10", path: () => `/moetenotater` },
 } as const;
 
 export default function GlobalSearch() {
@@ -73,7 +74,7 @@ export default function GlobalSearch() {
     const t = setTimeout(async () => {
       try {
         const ilike = `%${q}%`;
-        const [selskRes, kontRes, leadRes, salgRes, partRes] = await Promise.all([
+        const [selskRes, kontRes, leadRes, salgRes, partRes, moeteRes] = await Promise.all([
           supabase.from("selskaper").select("id, firmanavn, bransje, domene, kundestatus")
             .or(`firmanavn.ilike.${ilike},domene.ilike.${ilike},orgnr.ilike.${ilike}`).limit(5),
           supabase.from("kontakter").select("id, navn, e_post, telefon, rolle, selskap_id")
@@ -84,6 +85,9 @@ export default function GlobalSearch() {
             .or(`navn.ilike.${ilike},kontaktperson.ilike.${ilike},e_post.ilike.${ilike}`).limit(5),
           supabase.from("partnere").select("id, partnernavn, kontaktperson, e_post, partnerstatus")
             .or(`partnernavn.ilike.${ilike},kontaktperson.ilike.${ilike},e_post.ilike.${ilike}`).limit(5),
+          supabase.from("aktiviteter").select("id, tittel, beskrivelse, dato, deltakere, aktivitet_kilde")
+            .eq("type", "Møte")
+            .or(`tittel.ilike.${ilike},beskrivelse.ilike.${ilike}`).order("dato", { ascending: false }).limit(5),
         ]);
 
         const out: SearchResult[] = [];
@@ -108,6 +112,17 @@ export default function GlobalSearch() {
           id: p.id, type: "partner", title: p.partnernavn,
           subtitle: p.kontaktperson, email: p.e_post, status: p.partnerstatus,
         }));
+        (moeteRes.data || []).forEach((m: any) => {
+          const dato = m.dato ? new Date(m.dato).toLocaleDateString("no-NO", { day: "2-digit", month: "short", year: "numeric" }) : "";
+          const deltakere = Array.isArray(m.deltakere) && m.deltakere.length > 0 ? m.deltakere.slice(0, 2).join(", ") : null;
+          out.push({
+            id: m.id, type: "moete",
+            title: m.tittel || "Møte uten tittel",
+            subtitle: deltakere || (m.beskrivelse ? m.beskrivelse.slice(0, 60) : undefined),
+            meta: dato,
+            status: m.aktivitet_kilde || undefined,
+          });
+        });
 
         setResults(out);
         setActiveIdx(0);
@@ -127,7 +142,7 @@ export default function GlobalSearch() {
     return map;
   }, [results]);
 
-  const orderedTypes = ["selskap", "kontakt", "salgsmulighet", "lead", "partner"] as const;
+  const orderedTypes = ["selskap", "kontakt", "salgsmulighet", "moete", "lead", "partner"] as const;
   const flatResults = useMemo(() => {
     return orderedTypes.flatMap(t => grouped[t] || []);
   }, [grouped]);
