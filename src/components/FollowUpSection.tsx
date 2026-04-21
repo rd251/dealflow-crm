@@ -182,7 +182,7 @@ Adresser meldingen til ${contactName.split(' ')[0]}. Vær direkte men høflig. A
 
   return (
     <>
-      <div className="bg-card border rounded-xl mb-6 overflow-hidden flex flex-col h-[520px]">
+      <div className="bg-card border rounded-xl overflow-hidden flex flex-col h-[520px]">
         <div className="px-4 sm:px-6 py-4 border-b flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
             <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Oppfølging</h2>
