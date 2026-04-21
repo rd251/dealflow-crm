@@ -69,8 +69,9 @@ export default function LastMeetingCard({ salgsmulighetId, selskapId, kontaktId,
       if (error) throw error;
       if (data && data.moetenotater?.trim()) {
         setMeeting(data as LastMeeting);
-        if (data.ai_oppsummering && (data.ai_oppsummering as any).foreslatt_oppgave) {
-          setSuggestion(data.ai_oppsummering as FollowupSuggestion);
+        const ai = data.ai_oppsummering as unknown as FollowupSuggestion | null;
+        if (ai && ai.foreslatt_oppgave) {
+          setSuggestion(ai);
         } else {
           setSuggestion(null);
         }
@@ -179,13 +180,13 @@ export default function LastMeetingCard({ salgsmulighetId, selskapId, kontaktId,
 
   return (
     <>
-      <div className="rounded-xl border bg-gradient-to-br from-amber-500/5 to-amber-500/0 p-4 space-y-3">
+      <div className="rounded-xl border bg-gradient-to-br from-warning/5 to-warning/0 p-4 space-y-3">
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-2 flex-wrap">
-            <NotebookPen className="w-4 h-4 text-amber-600" />
+            <NotebookPen className="w-4 h-4 text-warning" />
             <h3 className="text-sm font-semibold">Siste møte</h3>
             {isTrale && (
-              <Badge variant="outline" className="text-[10px] gap-1 bg-violet-500/10 text-violet-600 border-violet-200 px-1.5 py-0">
+              <Badge variant="outline" className="text-[10px] gap-1 bg-primary/10 text-primary border-primary/30 px-1.5 py-0">
                 <Mic className="w-2.5 h-2.5" />Trale
               </Badge>
             )}
