@@ -306,7 +306,7 @@ export default function LastMeetingCard({ salgsmulighetId, selskapId, kontaktId,
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-sm flex items-center gap-2">
-              <NotebookPen className="w-4 h-4 text-amber-600" />
+              <NotebookPen className="w-4 h-4 text-warning" />
               {meeting.tittel || "Møtenotat"}
             </DialogTitle>
             <DialogDescription className="text-xs">
