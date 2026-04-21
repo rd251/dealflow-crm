@@ -312,7 +312,7 @@ async function syncForUser(supabase: any, connection: any) {
       // Fetch current record to avoid overwriting manually-set links
       const { data: current } = await supabase
         .from('aktiviteter')
-        .select('kontakt_id, selskap_id, salgsmulighet_id')
+        .select('kontakt_id, selskap_id, salgsmulighet_id, lead_id')
         .eq('id', existing.id)
         .maybeSingle();
 
@@ -321,6 +321,7 @@ async function syncForUser(supabase: any, connection: any) {
       if (current?.kontakt_id) updateData.kontakt_id = current.kontakt_id;
       if (current?.selskap_id) updateData.selskap_id = current.selskap_id;
       if (current?.salgsmulighet_id) updateData.salgsmulighet_id = current.salgsmulighet_id;
+      if (current?.lead_id) updateData.lead_id = current.lead_id;
 
       await supabase
         .from('aktiviteter')
