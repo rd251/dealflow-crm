@@ -388,7 +388,10 @@ export default function Leads() {
               {filtered.map(lead => (
                 <div key={lead.id} className="bg-card border rounded-xl p-4 space-y-2" onClick={() => setSelectedLead(lead)}>
                   <div className="flex items-center justify-between gap-2">
-                    <p className="font-semibold text-sm truncate">{lead.firmanavn}</p>
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      <CompanyLogo firmanavn={lead.firmanavn} kontaktEmails={lead.e_post ? [lead.e_post] : undefined} size="sm" />
+                      <p className="font-semibold text-sm truncate">{lead.firmanavn}</p>
+                    </div>
                     <Badge className={`text-[10px] ${statusColors[lead.status] || ""}`}>{lead.status}</Badge>
                   </div>
                   <p className="text-xs text-muted-foreground">{lead.kontaktperson}</p>
