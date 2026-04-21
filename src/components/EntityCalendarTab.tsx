@@ -131,8 +131,8 @@ function MeetingRow({ meeting, variant }: { meeting: Meeting; variant: "upcoming
 
   return (
     <div
-      className={`rounded-lg border transition-colors ${variant === "upcoming" ? "bg-primary/5 border-primary/20" : "bg-muted/30"} ${hasNotes ? "cursor-pointer" : ""}`}
-      onClick={() => hasNotes && setExpanded(prev => !prev)}
+      className={`rounded-lg border transition-colors ${variant === "upcoming" ? "bg-primary/5 border-primary/20" : "bg-muted/30"} ${canExpand ? "cursor-pointer hover:bg-muted/40" : ""}`}
+      onClick={() => canExpand && setExpanded(prev => !prev)}
     >
       <div className="p-3 space-y-1">
         <div className="flex items-start justify-between gap-2">
