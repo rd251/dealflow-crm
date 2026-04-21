@@ -28,6 +28,7 @@ import MeetingPrepPanel from "@/components/MeetingPrepPanel";
 import DealHoverCard from "@/components/DealHoverCard";
 import FollowUpSection from "@/components/FollowUpSection";
 import AiCommandBar from "@/components/AiCommandBar";
+import GlobalSearch from "@/components/GlobalSearch";
 import MeetingMismatchAlert from "@/components/MeetingMismatchAlert";
 import { useFollowUps } from "@/hooks/use-follow-ups";
 import { useProfiles } from "@/hooks/use-profiles";
@@ -457,6 +458,9 @@ export default function Dashboard() {
         </button>
       }
     >
+
+      {/* ─── GLOBAL SEARCH ─── */}
+      <GlobalSearch />
 
       {/* ─── AI COMMAND BAR (includes greeting) ─── */}
       <AiCommandBar context={aiContext} userName={currentUserName} />
