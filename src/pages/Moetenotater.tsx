@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import PageShell from "@/components/PageShell";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -53,6 +53,7 @@ interface AiSummary {
 
 export default function Moetenotater() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [entities, setEntities] = useState<Record<string, RelatedEntity>>({});
   const [selectedMeeting, setSelectedMeeting] = useState<Meeting | null>(null);
@@ -98,6 +99,29 @@ export default function Moetenotater() {
   }, []);
 
   useEffect(() => { fetchMeetings(); fetchEntities(); }, [fetchMeetings, fetchEntities]);
+
+  // Auto-åpne møte fra ?meeting=ID (fra globalt søk)
+  useEffect(() => {
+    const mid = searchParams.get("meeting");
+    const action = searchParams.get("action"); // "notes" eller default expand
+    if (!mid || meetings.length === 0) return;
+    const m = meetings.find(x => x.id === mid);
+    if (!m) return;
+    if (action === "notes") {
+      setSelectedMeeting(m);
+      setNotes(m.moetenotater || "");
+    } else {
+      setExpandedId(m.id);
+      // scroll til raden
+      setTimeout(() => {
+        document.getElementById(`meeting-row-${m.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 100);
+    }
+    // fjern query-param så den ikke trigger på nytt
+    searchParams.delete("meeting");
+    searchParams.delete("action");
+    setSearchParams(searchParams, { replace: true });
+  }, [meetings, searchParams, setSearchParams]);
 
   const getLinkedEntity = (m: Meeting): RelatedEntity | null => {
     const id = m.selskap_id || m.salgsmulighet_id || m.lead_id || m.partner_id;
