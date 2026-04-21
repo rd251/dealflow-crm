@@ -277,6 +277,12 @@ async function syncForUser(supabase: any, connection: any) {
       salgsmulighetId = await findOpenSalgsmulighetForSelskap(supabase, selskapId);
     }
 
+    // Auto-link to lead if no company/deal matched but external email matches a lead
+    let leadId: string | null = null;
+    if (!selskapId && !salgsmulighetId) {
+      leadId = await matchLeadByEmail(supabase, event.attendees || []);
+    }
+
     const aktivitetData: any = {
       type: 'Møte' as const,
       tittel: meetingTitle || 'Google Calendar-møte',
@@ -291,6 +297,7 @@ async function syncForUser(supabase: any, connection: any) {
       kontakt_id: kontaktIdFromExt,
       selskap_id: selskapId,
       salgsmulighet_id: salgsmulighetId,
+      lead_id: leadId,
     };
 
     // Upsert: check if exists
