@@ -475,36 +475,236 @@ export default function Moetenotater() {
         </div>
       )}
 
-      <Dialog open={!!selectedMeeting} onOpenChange={open => !open && setSelectedMeeting(null)}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Møtenotater – {selectedMeeting?.tittel || "Møte"}</DialogTitle>
-            <DialogDescription>
-              {selectedMeeting && formatDate(selectedMeeting.dato)}
-              {selectedMeeting?.start_tid && ` kl. ${formatTime(selectedMeeting.start_tid)}`}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3">
-            {selectedMeeting?.beskrivelse && (
-              <div className="p-2 bg-muted/50 rounded text-xs text-muted-foreground overflow-hidden">
-                <span className="font-medium">Beskrivelse:</span>
-                <p className="mt-0.5 break-all line-clamp-3">{selectedMeeting.beskrivelse}</p>
+      <MeetingDetailsDialog
+        meeting={selectedMeeting}
+        onClose={() => setSelectedMeeting(null)}
+        notes={notes}
+        setNotes={setNotes}
+        saving={saving}
+        onSave={saveNotes}
+        linked={selectedMeeting ? getLinkedEntity(selectedMeeting) : null}
+        summary={selectedMeeting ? aiSummaries[selectedMeeting.id] : undefined}
+        isLoadingAi={selectedMeeting ? aiLoading === selectedMeeting.id : false}
+        onGenerateSummary={() => selectedMeeting && generateSummary(selectedMeeting)}
+        formatDate={formatDate}
+        formatTime={formatTime}
+      />
+    </PageShell>
+  );
+}
+
+// ---------- Trale-style meeting details dialog ----------
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function cleanParticipants(deltakere: string[] | null): string[] {
+  if (!Array.isArray(deltakere)) return [];
+  return deltakere
+    .filter(d => d && typeof d === "string")
+    .map(d => d.trim())
+    .filter(d => d && d.toLowerCase() !== "null" && !UUID_RE.test(d));
+}
+
+function participantInitials(p: string): string {
+  // email -> first letter of local part; "Name Surname" -> initials
+  if (p.includes("@")) return p[0]?.toUpperCase() || "?";
+  const parts = p.split(/\s+/).filter(Boolean);
+  return ((parts[0]?.[0] || "") + (parts[1]?.[0] || "")).toUpperCase() || "?";
+}
+
+function participantLabel(p: string): string {
+  if (p.includes("@")) return p.split("@")[0];
+  return p;
+}
+
+function durationMinutes(start: string | null, end: string | null): number | null {
+  if (!start || !end) return null;
+  const ms = new Date(end).getTime() - new Date(start).getTime();
+  if (isNaN(ms) || ms <= 0) return null;
+  return Math.round(ms / 60000);
+}
+
+interface MeetingDetailsDialogProps {
+  meeting: Meeting | null;
+  onClose: () => void;
+  notes: string;
+  setNotes: (v: string) => void;
+  saving: boolean;
+  onSave: () => void;
+  linked: RelatedEntity | null;
+  summary?: AiSummary;
+  isLoadingAi: boolean;
+  onGenerateSummary: () => void;
+  formatDate: (d: string) => string;
+  formatTime: (d: string | null) => string | null;
+}
+
+function MeetingDetailsDialog({
+  meeting, onClose, notes, setNotes, saving, onSave,
+  linked, summary, isLoadingAi, onGenerateSummary, formatDate, formatTime,
+}: MeetingDetailsDialogProps) {
+  const [editing, setEditing] = useState(false);
+
+  useEffect(() => {
+    // when opening a new meeting, reset editing state based on whether notes exist
+    if (meeting) setEditing(!meeting.moetenotater?.trim());
+  }, [meeting?.id]);
+
+  if (!meeting) return null;
+
+  const participants = cleanParticipants(meeting.deltakere);
+  const isTrale = meeting.aktivitet_kilde === "trale";
+  const duration = durationMinutes(meeting.start_tid, meeting.slutt_tid);
+  const hasNotes = !!meeting.moetenotater?.trim();
+
+  return (
+    <Dialog open={!!meeting} onOpenChange={open => !open && onClose()}>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-0 gap-0">
+        {/* Header */}
+        <div className="px-6 pt-6 pb-4 border-b">
+          <DialogHeader className="space-y-3">
+            <DialogTitle className="text-xl font-semibold leading-tight pr-8">
+              {meeting.tittel || "Møte"}
+            </DialogTitle>
+            <DialogDescription className="sr-only">Detaljer og notater for møtet</DialogDescription>
+
+            {/* Participant avatars */}
+            {participants.length > 0 && (
+              <div className="flex items-center gap-3 flex-wrap">
+                <div className="flex -space-x-2">
+                  {participants.slice(0, 5).map((p, i) => (
+                    <div
+                      key={i}
+                      className="w-8 h-8 rounded-full bg-primary/10 border-2 border-background flex items-center justify-center text-[11px] font-semibold text-primary"
+                      title={p}
+                    >
+                      {participantInitials(p)}
+                    </div>
+                  ))}
+                </div>
+                <div className="text-xs text-muted-foreground truncate">
+                  {participants.slice(0, 3).map(participantLabel).join(", ")}
+                  {participants.length > 3 && ` +${participants.length - 3}`}
+                </div>
               </div>
             )}
-            <Textarea
-              placeholder="Skriv detaljerte møtenotater her... F.eks. hva ble diskutert, neste steg, kundens behov, beslutninger tatt..."
-              value={notes}
-              onChange={e => setNotes(e.target.value)}
-              rows={10}
-              autoFocus
-            />
-            <Button onClick={saveNotes} className="w-full gap-2" disabled={saving}>
-              <Save className="w-4 h-4" />
-              {saving ? "Lagrer..." : "Lagre møtenotater"}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </PageShell>
+
+            {/* Meta row */}
+            <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
+              <span className="flex items-center gap-1.5">
+                <CalendarDays className="w-3.5 h-3.5" />
+                {formatDate(meeting.dato)}
+                {meeting.start_tid && ` kl. ${formatTime(meeting.start_tid)}`}
+              </span>
+              {duration && (
+                <span className="flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5" />
+                  {duration} min
+                </span>
+              )}
+              {participants.length > 0 && (
+                <span className="flex items-center gap-1.5">
+                  <Users className="w-3.5 h-3.5" />
+                  {participants.length} deltaker{participants.length > 1 ? "e" : ""}
+                </span>
+              )}
+              {linked && (
+                <Badge variant="secondary" className="text-[10px] gap-1 h-5">
+                  <Building2 className="w-2.5 h-2.5" />
+                  {linked.name}
+                </Badge>
+              )}
+              {isTrale && (
+                <Badge variant="outline" className="text-[10px] gap-1 h-5 bg-violet-500/10 text-violet-600 border-violet-200">
+                  <Mic className="w-2.5 h-2.5" /> Trale
+                </Badge>
+              )}
+            </div>
+          </DialogHeader>
+        </div>
+
+        {/* Body */}
+        <div className="px-6 py-5 space-y-5">
+          {/* AI summary panel */}
+          {summary && (
+            <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-primary" />
+                <span className="text-xs font-semibold uppercase tracking-wide text-primary">AI-oppsummering</span>
+                {summary.kundesignal && (
+                  <Badge variant="secondary" className="text-[10px] ml-auto">{summary.kundesignal}</Badge>
+                )}
+              </div>
+              <p className="text-sm leading-relaxed">{summary.oppsummering}</p>
+              {summary.neste_steg.length > 0 && (
+                <div className="space-y-1.5 pt-1">
+                  <span className="text-[11px] font-medium text-muted-foreground uppercase">Foreslåtte neste steg</span>
+                  {summary.neste_steg.map((step, i) => (
+                    <div key={i} className="flex items-start gap-2 text-sm">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
+                      <span>{step}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Notes view or editor */}
+          {hasNotes && !editing ? (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Møtenotater</h4>
+                <div className="flex items-center gap-1.5">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 text-xs gap-1.5"
+                    onClick={onGenerateSummary}
+                    disabled={isLoadingAi}
+                  >
+                    {isLoadingAi
+                      ? <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
+                      : <Sparkles className="w-3.5 h-3.5 text-primary" />}
+                    AI-oppsummering
+                  </Button>
+                  <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setEditing(true)}>
+                    Rediger
+                  </Button>
+                </div>
+              </div>
+              <div className="rounded-lg border bg-card p-4">
+                <MeetingNotesRenderer notes={meeting.moetenotater!} source={meeting.aktivitet_kilde} />
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                {hasNotes ? "Rediger møtenotater" : "Skriv møtenotater"}
+              </h4>
+              <Textarea
+                placeholder="Skriv detaljerte møtenotater her... F.eks. hva ble diskutert, neste steg, kundens behov, beslutninger tatt..."
+                value={notes}
+                onChange={e => setNotes(e.target.value)}
+                rows={12}
+                autoFocus
+                className="text-sm leading-relaxed"
+              />
+              <div className="flex items-center gap-2">
+                <Button onClick={onSave} className="gap-2 flex-1" disabled={saving}>
+                  <Save className="w-4 h-4" />
+                  {saving ? "Lagrer..." : "Lagre møtenotater"}
+                </Button>
+                {hasNotes && (
+                  <Button variant="outline" onClick={() => setEditing(false)} disabled={saving}>
+                    Avbryt
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
