@@ -111,6 +111,9 @@ function MeetingGroup({ label, meetings, variant }: { label: string; meetings: M
 function MeetingRow({ meeting, variant }: { meeting: Meeting; variant: "upcoming" | "past" }) {
   const [expanded, setExpanded] = useState(false);
   const hasNotes = !!meeting.moetenotater?.trim();
+  const hasDescription = !!meeting.beskrivelse?.trim() && meeting.beskrivelse !== meeting.tittel;
+  const hasDeltakere = !!meeting.deltakere && meeting.deltakere.length > 0;
+  const canExpand = hasNotes || hasDescription || hasDeltakere;
 
   const dateStr = (() => {
     try {
