@@ -182,8 +182,8 @@ Adresser meldingen til ${contactName.split(' ')[0]}. Vær direkte men høflig. A
 
   return (
     <>
-      <div className="bg-card border rounded-xl mb-6 overflow-hidden">
-        <div className="px-4 sm:px-6 py-4 border-b flex items-center justify-between">
+      <div className="bg-card border rounded-xl mb-6 overflow-hidden flex flex-col h-[520px]">
+        <div className="px-4 sm:px-6 py-4 border-b flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
             <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Oppfølging</h2>
             <Badge variant="outline" className="text-[10px] bg-destructive/10 text-destructive border-destructive/20">
@@ -192,7 +192,7 @@ Adresser meldingen til ${contactName.split(' ')[0]}. Vær direkte men høflig. A
           </div>
         </div>
 
-        <div className="divide-y">
+        <div className="divide-y overflow-y-auto flex-1">
           {displayed.map((item) => (
             <div
               key={item.id}
@@ -262,7 +262,7 @@ Adresser meldingen til ${contactName.split(' ')[0]}. Vær direkte men høflig. A
         </div>
 
         {items.length > 10 && (
-          <div className="px-4 py-2 border-t text-center">
+          <div className="px-4 py-2 border-t text-center shrink-0">
             <button
               onClick={() => setShowAll(!showAll)}
               className="text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
