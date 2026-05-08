@@ -14,6 +14,7 @@ const BodySchema = z.object({
   minutter: z.string(),
   sla: z.number().nullable().optional(),
   oppstartskostnad: z.number().nullable().optional(),
+  konsulent_timepris: z.number().nullable().optional(),
 });
 
 const PAKKER_TABLE = [
