@@ -105,6 +105,7 @@ export default function SendContractModal({
         },
         body: JSON.stringify({
           ...contractData,
+          konsulent_timepris: konsulentTimepris || null,
           sender_email: senderEmail,
         }),
       });
