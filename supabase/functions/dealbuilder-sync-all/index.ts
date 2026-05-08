@@ -31,7 +31,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Verify JWT
     const supabaseAuth = createClient(supabaseUrl, serviceKey);
     const token = authHeader.replace("Bearer ", "");
     const { data: { user }, error: authError } = await supabaseAuth.auth.getUser(token);
@@ -44,96 +43,127 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, serviceKey);
 
-    // 1. Fetch all DealBuilder documents
+    // 1. Hent alle DealBuilder-dokumenter
     const dbRes = await fetch(
-      "https://api.dealbuilder.app/v1/Documents?PageSize=1000",
-      { headers: { Authorization: `Bearer ${dealBuilderKey}` } }
+      "https://api.dealbuilder.io/v1/Documents?PageSize=1000",
+      { headers: { "x-api-key": dealBuilderKey } }
     );
 
     if (!dbRes.ok) {
       const errText = await dbRes.text();
       return new Response(
-        JSON.stringify({ error: "DealBuilder API error", detail: errText }),
+        JSON.stringify({ error: "DealBuilder API error", detail: errText, status: dbRes.status }),
         { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     const dbData = await dbRes.json();
-    const documents = dbData.data || dbData.items || dbData || [];
+    const documents = dbData?.data?.items || dbData?.data || dbData?.items || dbData || [];
     const docList = Array.isArray(documents) ? documents : [];
 
-    // 2. Load CRM data for matching
+    const statusMap: Record<string, string> = {
+      Draft: "Ikke sendt",
+      Sent: "Sendt",
+      Opened: "Åpnet",
+      Signed: "Signert",
+      Expired: "Utløpt",
+      Completed: "Signert",
+    };
+
+    // 2. Last inn salgsmuligheter med dealbuilder_dokument_id
+    const { data: salgsmuligheter } = await supabase
+      .from("salgsmuligheter")
+      .select("id, navn, selskap_id, dealbuilder_dokument_id, kontrakt_status, kontrakt_signert_dato, status, forventet_mrr, oppstartskostnad")
+      .not("dealbuilder_dokument_id", "is", null);
+
+    const salgsByDocId = new Map<string, any>();
+    for (const s of salgsmuligheter || []) {
+      if (s.dealbuilder_dokument_id) salgsByDocId.set(String(s.dealbuilder_dokument_id), s);
+    }
+
+    // 3. Last inn for matching av nye dokumenter
     const { data: kontakter } = await supabase
       .from("kontakter")
       .select("id, e_post, selskap_id");
-
     const { data: selskaper } = await supabase
       .from("selskaper")
       .select("id, firmanavn");
 
-    // Build lookup maps
     const emailToSelskap = new Map<string, string>();
     for (const k of kontakter || []) {
-      if (k.e_post && k.selskap_id) {
-        emailToSelskap.set(k.e_post.toLowerCase().trim(), k.selskap_id);
-      }
+      if (k.e_post && k.selskap_id) emailToSelskap.set(k.e_post.toLowerCase().trim(), k.selskap_id);
     }
-
     const nameToSelskap = new Map<string, string>();
     for (const s of selskaper || []) {
-      if (s.firmanavn) {
-        nameToSelskap.set(s.firmanavn.toLowerCase().trim(), s.id);
-      }
+      if (s.firmanavn) nameToSelskap.set(s.firmanavn.toLowerCase().trim(), s.id);
     }
 
-    // 3. Check existing dealbuilder docs to avoid duplicates
     const { data: existing } = await supabase
       .from("selskap_dokumenter")
-      .select("dealbuilder_dokument_id")
+      .select("id, dealbuilder_dokument_id, status")
       .not("dealbuilder_dokument_id", "is", null);
+    const existingByDocId = new Map<string, any>();
+    for (const e of existing || []) {
+      if (e.dealbuilder_dokument_id) existingByDocId.set(String(e.dealbuilder_dokument_id), e);
+    }
 
-    const existingIds = new Set(
-      (existing || []).map((e: any) => e.dealbuilder_dokument_id)
-    );
-
-    // 4. Process each document
-    let matched = 0;
+    let docsInserted = 0;
+    let docsUpdated = 0;
+    let salgsUpdated = 0;
+    const salgsChanges: any[] = [];
     const unmatched: any[] = [];
 
     for (const doc of docList) {
       const docId = String(doc.id);
-
-      // Skip already synced
-      if (existingIds.has(docId)) continue;
-
-      // Try to match
-      const signatories = doc.externalSignatories || [];
-      const firstSig = signatories[0] || {};
-      const sigEmail = (firstSig.email || "").toLowerCase().trim();
-      const sigCompany = (firstSig.companyName || "").toLowerCase().trim();
-
-      let selskapId: string | null = null;
-
-      // Match by email
-      if (sigEmail && emailToSelskap.has(sigEmail)) {
-        selskapId = emailToSelskap.get(sigEmail)!;
-      }
-
-      // Match by company name
-      if (!selskapId && sigCompany && nameToSelskap.has(sigCompany)) {
-        selskapId = nameToSelskap.get(sigCompany)!;
-      }
-
-      const statusMap: Record<string, string> = {
-        Draft: "Ikke sendt",
-        Sent: "Sendt",
-        Opened: "Åpnet",
-        Signed: "Signert",
-        Expired: "Utløpt",
-        Completed: "Signert",
-      };
-
       const mappedStatus = statusMap[doc.status] || doc.status || "Ukjent";
+      const signedAt = doc.signedDate || doc.completedDate || doc.signedAt || null;
+
+      // Oppdater salgsmulighet hvis koblet
+      const sm = salgsByDocId.get(docId);
+      if (sm) {
+        const updates: any = {};
+        if (sm.kontrakt_status !== mappedStatus) updates.kontrakt_status = mappedStatus;
+        if (mappedStatus === "Signert") {
+          if (!sm.kontrakt_signert_dato && signedAt) {
+            updates.kontrakt_signert_dato = signedAt;
+          } else if (!sm.kontrakt_signert_dato && !signedAt) {
+            updates.kontrakt_signert_dato = new Date().toISOString();
+          }
+        }
+        if (Object.keys(updates).length > 0) {
+          const { error: upErr } = await supabase
+            .from("salgsmuligheter")
+            .update(updates)
+            .eq("id", sm.id);
+          if (!upErr) {
+            salgsUpdated++;
+            salgsChanges.push({ id: sm.id, navn: sm.navn, fra: sm.kontrakt_status, til: mappedStatus, signert: updates.kontrakt_signert_dato || sm.kontrakt_signert_dato });
+          }
+        }
+      }
+
+      // Oppdater eller insert i selskap_dokumenter
+      const existingDoc = existingByDocId.get(docId);
+      if (existingDoc) {
+        if (existingDoc.status !== mappedStatus) {
+          const { error: upErr } = await supabase
+            .from("selskap_dokumenter")
+            .update({ status: mappedStatus })
+            .eq("id", existingDoc.id);
+          if (!upErr) docsUpdated++;
+        }
+        continue;
+      }
+
+      // Match nytt dokument til selskap (DealBuilder returnerer 'parties' med roller)
+      const parties = doc.parties || doc.externalSignatories || [];
+      const extSig = parties.find((p: any) => (p.roles || []).includes("ExternalSignatory")) || parties[0] || {};
+      const sigEmail = (extSig.email || "").toLowerCase().trim();
+      const sigCompany = (extSig.companyName || "").toLowerCase().trim();
+
+      let selskapId: string | null = sm?.selskap_id || null;
+      if (!selskapId && sigEmail && emailToSelskap.has(sigEmail)) selskapId = emailToSelskap.get(sigEmail)!;
+      if (!selskapId && sigCompany && nameToSelskap.has(sigCompany)) selskapId = nameToSelskap.get(sigCompany)!;
 
       if (selskapId) {
         const { error: insertErr } = await supabase
@@ -150,10 +180,7 @@ Deno.serve(async (req) => {
             kilde: "dealbuilder",
             opplastet_av: "DealBuilder",
           });
-
-        if (!insertErr) {
-          matched++;
-        }
+        if (!insertErr) docsInserted++;
       } else {
         unmatched.push({
           id: docId,
@@ -161,7 +188,7 @@ Deno.serve(async (req) => {
           status: mappedStatus,
           createdDate: doc.createdDate,
           signatoryEmail: sigEmail || null,
-          signatoryCompany: firstSig.companyName || null,
+          signatoryCompany: extSig.companyName || null,
         });
       }
     }
@@ -169,7 +196,10 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         total: docList.length,
-        matched,
+        docsInserted,
+        docsUpdated,
+        salgsUpdated,
+        salgsChanges,
         unmatched: unmatched.length,
         unmatchedDocuments: unmatched,
       }),
