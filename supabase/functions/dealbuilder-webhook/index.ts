@@ -45,11 +45,6 @@ Deno.serve(async (req) => {
       const { data: byDoc } = await supabase
         .from("salgsmuligheter").select("id").eq("dealbuilder_dokument_id", String(document_id)).maybeSingle();
       if (byDoc) CRMid = byDoc.id;
-      if (!CRMid) {
-        const { data: pByDoc } = await supabase
-          .from("partnere").select("id").eq("dealbuilder_dokument_id", String(document_id)).maybeSingle();
-        if (pByDoc) CRMid = pByDoc.id;
-      }
     }
 
     // Fallback 2: match by signer email/company → selskap → nyeste deal med "Sendt"
