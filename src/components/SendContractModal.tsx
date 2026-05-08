@@ -72,6 +72,7 @@ export default function SendContractModal({
           minutter: contractData.minutter,
           sla: contractData.sla ?? null,
           oppstartskostnad: contractData.oppstartskostnad ?? null,
+          konsulent_timepris: konsulentTimepris || null,
         }),
       });
 
