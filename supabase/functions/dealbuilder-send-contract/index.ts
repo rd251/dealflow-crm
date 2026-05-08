@@ -63,6 +63,7 @@ Deno.serve(async (req) => {
         minutter: data.minutter,
         sla: data.sla ?? null,
         oppstartskostnad: data.oppstartskostnad ?? null,
+        konsulent_timepris: data.konsulent_timepris ?? null,
       }),
     });
 
