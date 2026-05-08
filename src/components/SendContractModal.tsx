@@ -184,6 +184,28 @@ export default function SendContractModal({
             </div>
           </div>
 
+          {/* Konsulent-timepris */}
+          <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
+            <Label htmlFor="konsulent-timepris" className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Briefcase className="w-3 h-3" /> Timepris konsulenttjenester
+            </Label>
+            <div className="flex items-center gap-2">
+              <Input
+                id="konsulent-timepris"
+                type="number"
+                min={0}
+                step={50}
+                value={konsulentTimepris}
+                onChange={(e) => setKonsulentTimepris(Number(e.target.value) || 0)}
+                className="w-32"
+              />
+              <span className="text-sm text-muted-foreground">kr/time</span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Brukes for bistand til oppsett, utvidet funksjonalitet og API-koblinger. Sett til 0 for å bruke "avtales med integrasjonspartner".
+            </p>
+          </div>
+
           {/* Validation warnings */}
           {(!contractData.e_post || !contractData.kontaktperson || !contractData.valgt_pakke) && (
             <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
