@@ -45,20 +45,20 @@ Deno.serve(async (req) => {
 
     // 1. Hent alle DealBuilder-dokumenter
     const dbRes = await fetch(
-      "https://api.dealbuilder.no/v1/Documents?PageSize=1000",
-      { headers: { Authorization: `Bearer ${dealBuilderKey}` } }
+      "https://api.dealbuilder.io/v1/Documents?PageSize=1000",
+      { headers: { "x-api-key": dealBuilderKey } }
     );
 
     if (!dbRes.ok) {
       const errText = await dbRes.text();
       return new Response(
-        JSON.stringify({ error: "DealBuilder API error", detail: errText }),
+        JSON.stringify({ error: "DealBuilder API error", detail: errText, status: dbRes.status }),
         { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     const dbData = await dbRes.json();
-    const documents = dbData.data || dbData.items || dbData || [];
+    const documents = dbData?.data?.items || dbData?.data || dbData?.items || dbData || [];
     const docList = Array.isArray(documents) ? documents : [];
 
     const statusMap: Record<string, string> = {
