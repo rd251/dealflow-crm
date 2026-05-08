@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { FileSignature, Eye, Send, Loader2, Building2, User, Phone, Mail, Package } from "lucide-react";
+import { FileSignature, Eye, Send, Loader2, Building2, User, Phone, Mail, Package, Briefcase } from "lucide-react";
 import { toast } from "sonner";
 import { nok } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
