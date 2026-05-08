@@ -188,7 +188,7 @@ Deno.serve(async (req) => {
           status: mappedStatus,
           createdDate: doc.createdDate,
           signatoryEmail: sigEmail || null,
-          signatoryCompany: firstSig.companyName || null,
+          signatoryCompany: extSig.companyName || null,
         });
       }
     }
