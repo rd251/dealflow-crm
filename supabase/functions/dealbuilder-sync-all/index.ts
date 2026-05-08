@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
 
     // 1. Hent alle DealBuilder-dokumenter
     const dbRes = await fetch(
-      "https://api.dealbuilder.io/v1/Documents?PageSize=1000",
+      "https://api.dealbuilder.no/v1/Documents?PageSize=1000",
       { headers: { Authorization: `Bearer ${dealBuilderKey}` } }
     );
 
