@@ -21,11 +21,15 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { event, CRMid, document_id, signer_name } = body;
+    const event = body.event || body.eventType || body.type;
+    const document_id = body.document_id || body.documentId || body.id;
+    const signer_name = body.signer_name || body.signerName;
+    const signer_email = (body.signer_email || body.signerEmail || body.email || "").toLowerCase().trim();
+    const signer_company = (body.signer_company || body.companyName || "").toLowerCase().trim();
+    let CRMid: string | null = body.CRMid || body.crmId || body.crm_id || null;
 
-    // If no event/CRMid, just acknowledge receipt
-    if (!event || !CRMid) {
-      return new Response(JSON.stringify({ received: true, warning: "Missing event or CRMid" }), {
+    if (!event) {
+      return new Response(JSON.stringify({ received: true, warning: "Missing event" }), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -35,6 +39,46 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
+
+    // Fallback 1: match by stored dealbuilder_dokument_id
+    if (!CRMid && document_id) {
+      const { data: byDoc } = await supabase
+        .from("salgsmuligheter").select("id").eq("dealbuilder_dokument_id", String(document_id)).maybeSingle();
+      if (byDoc) CRMid = byDoc.id;
+      if (!CRMid) {
+        const { data: pByDoc } = await supabase
+          .from("partnere").select("id").eq("dealbuilder_dokument_id", String(document_id)).maybeSingle();
+        if (pByDoc) CRMid = pByDoc.id;
+      }
+    }
+
+    // Fallback 2: match by signer email/company → selskap → nyeste deal med "Sendt"
+    if (!CRMid && (signer_email || signer_company)) {
+      let selskapId: string | null = null;
+      if (signer_email) {
+        const { data: k } = await supabase.from("kontakter")
+          .select("selskap_id").ilike("e_post", signer_email).not("selskap_id", "is", null).limit(1).maybeSingle();
+        if (k) selskapId = k.selskap_id;
+      }
+      if (!selskapId && signer_company) {
+        const { data: s } = await supabase.from("selskaper")
+          .select("id").ilike("firmanavn", signer_company).limit(1).maybeSingle();
+        if (s) selskapId = s.id;
+      }
+      if (selskapId) {
+        const { data: latestDeal } = await supabase.from("salgsmuligheter")
+          .select("id").eq("selskap_id", selskapId).in("kontrakt_status", ["Sendt", "Åpnet"])
+          .order("created_at", { ascending: false }).limit(1).maybeSingle();
+        if (latestDeal) CRMid = latestDeal.id;
+      }
+    }
+
+    if (!CRMid) {
+      return new Response(JSON.stringify({ received: true, warning: "Could not match to CRM entity", document_id, signer_email }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     // First try salgsmulighet
     const { data: deal, error: findError } = await supabase
