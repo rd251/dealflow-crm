@@ -155,11 +155,11 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      // Match nytt dokument til selskap
-      const signatories = doc.externalSignatories || [];
-      const firstSig = signatories[0] || {};
-      const sigEmail = (firstSig.email || "").toLowerCase().trim();
-      const sigCompany = (firstSig.companyName || "").toLowerCase().trim();
+      // Match nytt dokument til selskap (DealBuilder returnerer 'parties' med roller)
+      const parties = doc.parties || doc.externalSignatories || [];
+      const extSig = parties.find((p: any) => (p.roles || []).includes("ExternalSignatory")) || parties[0] || {};
+      const sigEmail = (extSig.email || "").toLowerCase().trim();
+      const sigCompany = (extSig.companyName || "").toLowerCase().trim();
 
       let selskapId: string | null = sm?.selskap_id || null;
       if (!selskapId && sigEmail && emailToSelskap.has(sigEmail)) selskapId = emailToSelskap.get(sigEmail)!;
