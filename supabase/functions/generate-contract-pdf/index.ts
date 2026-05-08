@@ -14,6 +14,7 @@ const BodySchema = z.object({
   minutter: z.string(),
   sla: z.number().nullable().optional(),
   oppstartskostnad: z.number().nullable().optional(),
+  konsulent_timepris: z.number().nullable().optional(),
 });
 
 const PAKKER_TABLE = [
@@ -285,10 +286,13 @@ Deno.serve(async (req) => {
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(80, 80, 80);
+    const prisTekst = data.konsulent_timepris && data.konsulent_timepris > 0
+      ? `Pris: ${nok(data.konsulent_timepris)}/time`
+      : "Pris: avtales med en av våre integrasjonspartnere";
     const konsulent = [
-      "Bistand til oppsett eller utvikling faktureres separat — Pris: avtales med en av våre integrasjonspartnere",
-      "Bistand til utvidet funksjonalitet faktureres separat — Pris: avtales med en av våre integrasjonspartnere",
-      "Hjelp til API-koblinger eller videreutvikling faktureres separat — Pris: avtales med en av våre integrasjonspartnere",
+      `Bistand til oppsett eller utvikling faktureres separat — ${prisTekst}`,
+      `Bistand til utvidet funksjonalitet faktureres separat — ${prisTekst}`,
+      `Hjelp til API-koblinger eller videreutvikling faktureres separat — ${prisTekst}`,
     ];
     for (const item of konsulent) {
       checkPage(8);

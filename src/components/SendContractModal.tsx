@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { FileSignature, Eye, Send, Loader2, Building2, User, Phone, Mail, Package } from "lucide-react";
+import { FileSignature, Eye, Send, Loader2, Building2, User, Phone, Mail, Package, Briefcase } from "lucide-react";
 import { toast } from "sonner";
 import { nok } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -40,6 +42,7 @@ export default function SendContractModal({
 }: SendContractModalProps) {
   const [previewing, setPreviewing] = useState(false);
   const [sending, setSending] = useState(false);
+  const [konsulentTimepris, setKonsulentTimepris] = useState<number>(1399);
 
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
   const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
@@ -69,6 +72,7 @@ export default function SendContractModal({
           minutter: contractData.minutter,
           sla: contractData.sla ?? null,
           oppstartskostnad: contractData.oppstartskostnad ?? null,
+          konsulent_timepris: konsulentTimepris || null,
         }),
       });
 
@@ -101,6 +105,7 @@ export default function SendContractModal({
         },
         body: JSON.stringify({
           ...contractData,
+          konsulent_timepris: konsulentTimepris || null,
           sender_email: senderEmail,
         }),
       });
@@ -177,6 +182,28 @@ export default function SendContractModal({
                 <p className="text-xs text-muted-foreground mt-1">📞 {contractData.minutter} inkludert</p>
               )}
             </div>
+          </div>
+
+          {/* Konsulent-timepris */}
+          <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
+            <Label htmlFor="konsulent-timepris" className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Briefcase className="w-3 h-3" /> Timepris konsulenttjenester
+            </Label>
+            <div className="flex items-center gap-2">
+              <Input
+                id="konsulent-timepris"
+                type="number"
+                min={0}
+                step={50}
+                value={konsulentTimepris}
+                onChange={(e) => setKonsulentTimepris(Number(e.target.value) || 0)}
+                className="w-32"
+              />
+              <span className="text-sm text-muted-foreground">kr/time</span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Brukes for bistand til oppsett, utvidet funksjonalitet og API-koblinger. Sett til 0 for å bruke "avtales med integrasjonspartner".
+            </p>
           </div>
 
           {/* Validation warnings */}
