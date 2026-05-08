@@ -16,6 +16,7 @@ const BodySchema = z.object({
   sender_email: z.string().email(),
   sla: z.number().nullable().optional(),
   oppstartskostnad: z.number().nullable().optional(),
+  konsulent_timepris: z.number().nullable().optional(),
 });
 
 Deno.serve(async (req) => {
