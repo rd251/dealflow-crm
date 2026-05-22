@@ -33,3 +33,6 @@ project_id = "tchmujgzcklwgptocbno"
     verify_jwt = false
   [functions.dealbuilder-send-contract]
     verify_jwt = false
+  [functions.jarvis-daily]
+    verify_jwt = false
+
