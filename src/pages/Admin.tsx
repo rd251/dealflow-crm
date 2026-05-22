@@ -15,6 +15,21 @@ interface TeamMember {
   display_name: string;
   email: string;
   role: "admin" | "user" | "viewer";
+  last_sign_in_at: string | null;
+}
+
+function formatLastSignIn(iso: string | null): string {
+  if (!iso) return "Aldri innlogget";
+  const date = new Date(iso);
+  const diffMs = Date.now() - date.getTime();
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 1) return "Akkurat nå";
+  if (mins < 60) return `${mins} min siden`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours} t siden`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days} d siden`;
+  return date.toLocaleDateString("nb-NO", { day: "2-digit", month: "short", year: "numeric" });
 }
 
 export default function Admin() {
@@ -32,6 +47,10 @@ export default function Admin() {
   const fetchMembers = async () => {
     const { data: profiles } = await supabase.from("profiles").select("user_id, display_name, email");
     const { data: roles } = await supabase.from("user_roles").select("user_id, role");
+    const signInRes = await supabase.functions.invoke("list-users-last-signin");
+    const signInMap = new Map<string, string | null>(
+      (signInRes.data?.users ?? []).map((u: { user_id: string; last_sign_in_at: string | null }) => [u.user_id, u.last_sign_in_at])
+    );
     if (profiles && roles) {
       const roleMap = new Map(roles.map(r => [r.user_id, r.role as "admin" | "user" | "viewer"]));
       setMembers(profiles.map(p => ({
@@ -39,11 +58,13 @@ export default function Admin() {
         display_name: p.display_name,
         email: p.email,
         role: roleMap.get(p.user_id) || "user",
+        last_sign_in_at: signInMap.get(p.user_id) ?? null,
       })));
     }
   };
 
   useEffect(() => { fetchMembers(); }, []);
+
 
   const handleInvite = async () => {
     setLoading(true);
@@ -158,6 +179,7 @@ export default function Admin() {
             <div className="flex-1 min-w-0">
               <p className="font-medium text-sm truncate">{m.display_name}</p>
               <p className="text-xs text-muted-foreground truncate">{m.email}</p>
+              <p className="text-[11px] text-muted-foreground/80 truncate mt-0.5">Sist innlogget: {formatLastSignIn(m.last_sign_in_at)}</p>
             </div>
             <Button
               variant="ghost"
