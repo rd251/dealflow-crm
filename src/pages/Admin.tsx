@@ -179,6 +179,7 @@ export default function Admin() {
             <div className="flex-1 min-w-0">
               <p className="font-medium text-sm truncate">{m.display_name}</p>
               <p className="text-xs text-muted-foreground truncate">{m.email}</p>
+              <p className="text-[11px] text-muted-foreground/80 truncate mt-0.5">Sist innlogget: {formatLastSignIn(m.last_sign_in_at)}</p>
             </div>
             <Button
               variant="ghost"
