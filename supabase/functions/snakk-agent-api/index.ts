@@ -45,7 +45,22 @@ Deno.serve(async (req) => {
   }
 
   const action = String(body.action || "").trim();
-  const p = body.params || {};
+  // params may arrive as object OR as a JSON string (Snakk platform only supports String/Number/Boolean params)
+  let p: any = body.params ?? {};
+  if (typeof p === "string") {
+    const s = p.trim();
+    if (!s) {
+      p = {};
+    } else {
+      try {
+        p = JSON.parse(s);
+      } catch {
+        return json({ error: "params must be valid JSON object or JSON string", got: s }, 400);
+      }
+    }
+  }
+  // Also accept user_email at top level (some agent setups send it as a sibling field)
+  if (body.user_email && !p.user_email) p.user_email = body.user_email;
 
   try {
     switch (action) {
