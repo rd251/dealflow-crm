@@ -3,12 +3,17 @@ import { Phone, Mail, MessageSquare, MessageCircle, Users, FileText, Clock } fro
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { GmailIcon, GoogleCalendarIcon } from "@/components/BrandIcons";
 import type { AktivitetType } from "@/components/ActivityLog";
+import { supabase } from "@/integrations/supabase/client";
 
 const API_URL = import.meta.env.VITE_SUPABASE_URL + '/rest/v1';
-const API_HEADERS = {
-  'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-  'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-  'Content-Type': 'application/json',
+const getApiHeaders = async () => {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.access_token) throw new Error("Ingen aktiv innlogging");
+  return {
+    'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+    'Authorization': `Bearer ${session.access_token}`,
+    'Content-Type': 'application/json',
+  };
 };
 
 const typeIcons: Record<AktivitetType, typeof Phone> = {
@@ -53,15 +58,20 @@ export default function LastActivityBadge(props: LastActivityBadgeProps) {
     if (props.kontakt_id) filters.push(`kontakt_id=eq.${props.kontakt_id}`);
     if (!filters.length) return;
 
-    fetch(`${API_URL}/aktiviteter?${filters.join("&")}&order=dato.desc&limit=1&select=type,ekstern_provider`, { headers: API_HEADERS })
-      .then(r => r.ok ? r.json() : [])
-      .then(data => {
-        if (data.length) {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const apiHeaders = await getApiHeaders();
+        const res = await fetch(`${API_URL}/aktiviteter?${filters.join("&")}&order=dato.desc&limit=1&select=type,ekstern_provider`, { headers: apiHeaders });
+        const data = res.ok ? await res.json() : [];
+        if (!cancelled && data.length) {
           setLastType(data[0].type);
           setLastProvider(data[0].ekstern_provider || null);
         }
-      })
-      .catch(() => {});
+      } catch {}
+    };
+    load();
+    return () => { cancelled = true; };
   }, [props.lead_id, props.salgsmulighet_id, props.selskap_id, props.partner_id, props.prosjekt_id, props.kontakt_id]);
 
   if (!props.sist_aktivitet) return <span className="text-xs text-muted-foreground">—</span>;

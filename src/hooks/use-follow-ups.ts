@@ -1,11 +1,16 @@
 import { useState, useEffect, useMemo } from "react";
 import { differenceInHours, differenceInDays } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
 
 const API_URL = import.meta.env.VITE_SUPABASE_URL + "/rest/v1";
-const API_HEADERS = {
-  apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-  Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-  "Content-Type": "application/json",
+const getApiHeaders = async () => {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.access_token) throw new Error("Ingen aktiv innlogging");
+  return {
+    apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+    Authorization: `Bearer ${session.access_token}`,
+    "Content-Type": "application/json",
+  };
 };
 
 export type FollowUpType = "lead_stale" | "sm_stale" | "post_meeting" | "email_no_reply" | "email_awaiting_reply" | "email_needs_reply";
@@ -54,16 +59,25 @@ export function useFollowUps(
 
   // Fetch recent aktiviteter for matching
   useEffect(() => {
-    const cutoff = new Date();
-    cutoff.setDate(cutoff.getDate() - 14);
-    fetch(
-      `${API_URL}/aktiviteter?dato=gte.${cutoff.toISOString()}&order=dato.desc&limit=500&select=id,type,dato,beskrivelse,tittel,lead_id,salgsmulighet_id,selskap_id,aktivitet_kilde`,
-      { headers: API_HEADERS }
-    )
-      .then((r) => (r.ok ? r.json() : []))
-      .then(setAktiviteter)
-      .catch(() => setAktiviteter([]))
-      .finally(() => setLoading(false));
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const cutoff = new Date();
+        cutoff.setDate(cutoff.getDate() - 14);
+        const apiHeaders = await getApiHeaders();
+        const res = await fetch(
+          `${API_URL}/aktiviteter?dato=gte.${cutoff.toISOString()}&order=dato.desc&limit=500&select=id,type,dato,beskrivelse,tittel,lead_id,salgsmulighet_id,selskap_id,aktivitet_kilde`,
+          { headers: apiHeaders }
+        );
+        if (!cancelled) setAktiviteter(res.ok ? await res.json() : []);
+      } catch {
+        if (!cancelled) setAktiviteter([]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+    load();
+    return () => { cancelled = true; };
   }, []);
 
   const followUps = useMemo(() => {
