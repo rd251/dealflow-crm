@@ -180,7 +180,7 @@ type CrmStore = ReturnType<typeof useCrmStoreInternal>;
 const CrmContext = createContext<CrmStore | null>(null);
 
 function useCrmStoreInternal() {
-  const { user } = useAuth();
+  const { user, session, loading: authLoading } = useAuth();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [salgsmuligheter, setSalgsmuligheter] = useState<Salgsmulighet[]>([]);
   const [prosjekter, setProsjekter] = useState<Prosjekt[]>([]);
@@ -192,11 +192,20 @@ function useCrmStoreInternal() {
 
   // Direct PostgREST helpers to bypass Supabase client auth lock
   const API_URL = import.meta.env.VITE_SUPABASE_URL + '/rest/v1';
-  const API_HEADERS = {
-    'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-    'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-    'Content-Type': 'application/json',
-  };
+  const getApiHeaders = useCallback(async () => {
+    const activeSession = session ?? (await supabase.auth.getSession()).data.session;
+    const token = activeSession?.access_token;
+
+    if (!token) {
+      throw new Error("Ingen aktiv innlogging for CRM-data");
+    }
+
+    return {
+      'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    };
+  }, [session]);
 
   // Foreign-key columns that must be null (not empty string) when unset
   const FK_COLUMNS = new Set(["selskap_id", "kontakt_id", "partner_id", "salgsmulighet_id", "lead_id", "prosjekt_id", "user_id"]);
@@ -214,8 +223,9 @@ function useCrmStoreInternal() {
   };
 
   const fetchTable = async (table: string) => {
+    const apiHeaders = await getApiHeaders();
     const res = await fetch(`${API_URL}/${table}?select=*`, {
-      headers: { ...API_HEADERS, 'Prefer': 'return=representation' },
+      headers: { ...apiHeaders, 'Prefer': 'return=representation' },
       cache: 'no-store',
     });
     if (!res.ok) throw new Error(`Failed to fetch ${table}: ${res.status} ${await res.text()}`);
@@ -224,10 +234,11 @@ function useCrmStoreInternal() {
 
   const dbUpsert = async (table: string, data: Record<string, any>) => {
     const payload = sanitizePayload(data);
+    const apiHeaders = await getApiHeaders();
     console.log(`[CRM-SYNC] UPSERT ${table}`, JSON.stringify(payload).substring(0, 200));
     const res = await fetch(`${API_URL}/${table}?on_conflict=id`, {
       method: 'POST',
-      headers: { ...API_HEADERS, 'Prefer': 'resolution=merge-duplicates,return=representation' },
+      headers: { ...apiHeaders, 'Prefer': 'resolution=merge-duplicates,return=representation' },
       body: JSON.stringify(payload),
     });
 
@@ -245,10 +256,11 @@ function useCrmStoreInternal() {
 
   const dbUpdate = async (table: string, id: string, data: Record<string, any>) => {
     const payload = sanitizePayload(data);
+    const apiHeaders = await getApiHeaders();
     console.log(`[CRM-SYNC] UPDATE ${table} id=${id}`, JSON.stringify(payload).substring(0, 200));
     const res = await fetch(`${API_URL}/${table}?id=eq.${encodeURIComponent(id)}`, {
       method: 'PATCH',
-      headers: { ...API_HEADERS, 'Prefer': 'return=representation' },
+      headers: { ...apiHeaders, 'Prefer': 'return=representation' },
       body: JSON.stringify(payload),
     });
 
@@ -266,11 +278,12 @@ function useCrmStoreInternal() {
 
   const dbDelete = async (table: string, id: string) => {
     console.log(`[CRM-SYNC] DELETE ${table} id=${id}`);
+    const apiHeaders = await getApiHeaders();
 
     // Archive the record before deleting
     try {
       const fetchRes = await fetch(`${API_URL}/${table}?id=eq.${encodeURIComponent(id)}&select=*`, {
-        headers: { ...API_HEADERS, 'Prefer': 'return=representation' },
+        headers: { ...apiHeaders, 'Prefer': 'return=representation' },
         cache: 'no-store',
       });
       if (fetchRes.ok) {
@@ -290,7 +303,7 @@ function useCrmStoreInternal() {
 
     const res = await fetch(`${API_URL}/${table}?id=eq.${encodeURIComponent(id)}`, {
       method: 'DELETE',
-      headers: { ...API_HEADERS, 'Prefer': 'return=representation' },
+      headers: { ...apiHeaders, 'Prefer': 'return=representation' },
     });
 
     const bodyText = await res.text();
