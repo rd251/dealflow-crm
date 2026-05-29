@@ -315,6 +315,14 @@ function useCrmStoreInternal() {
 
   // Fetch all data (robust: one failed table should not block all data)
   const refresh = useCallback(async () => {
+    if (authLoading) return;
+
+    if (!session?.access_token) {
+      console.warn("[CRM] Hopper over datalasting uten aktiv innlogging");
+      setLoaded(true);
+      return;
+    }
+
     console.log("[CRM] refresh() called, fetching data...");
     setLoaded(false);
 
@@ -355,7 +363,7 @@ function useCrmStoreInternal() {
     }
 
     setLoaded(true);
-  }, []);
+  }, [authLoading, session?.access_token, getApiHeaders]);
 
   useEffect(() => { refresh(); }, [refresh]);
 
