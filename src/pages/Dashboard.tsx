@@ -51,6 +51,17 @@ const getApiHeaders = async () => {
   };
 };
 
+const API_HEADERS = {
+  apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+  get Authorization() {
+    const projectRef = new URL(import.meta.env.VITE_SUPABASE_URL).hostname.split(".")[0];
+    const stored = localStorage.getItem(`sb-${projectRef}-auth-token`);
+    const token = stored ? JSON.parse(stored)?.access_token : null;
+    return `Bearer ${token ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`;
+  },
+  "Content-Type": "application/json",
+};
+
 interface MeetingItem {
   id: string;
   tittel: string;
