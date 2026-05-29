@@ -193,9 +193,22 @@ function useCrmStoreInternal() {
   // Direct PostgREST helpers to bypass Supabase client auth lock
   const API_URL = import.meta.env.VITE_SUPABASE_URL + '/rest/v1';
   const getApiHeaders = useCallback(async () => {
-    const activeSession = session ?? (await supabase.auth.getSession()).data.session;
-    const token = activeSession?.access_token;
+    let activeSession = session ?? (await supabase.auth.getSession()).data.session;
 
+    // Refresh if token is missing or expires within 60 seconds
+    const expiresAt = activeSession?.expires_at ?? 0;
+    const nowSec = Math.floor(Date.now() / 1000);
+    if (!activeSession?.access_token || expiresAt - nowSec < 60) {
+      const { data, error } = await supabase.auth.refreshSession();
+      if (!error && data.session) {
+        activeSession = data.session;
+      } else {
+        // Fallback to whatever getSession returns now
+        activeSession = (await supabase.auth.getSession()).data.session;
+      }
+    }
+
+    const token = activeSession?.access_token;
     if (!token) {
       throw new Error("Ingen aktiv innlogging for CRM-data");
     }
@@ -206,6 +219,7 @@ function useCrmStoreInternal() {
       'Content-Type': 'application/json',
     };
   }, [session]);
+
 
   // Foreign-key columns that must be null (not empty string) when unset
   const FK_COLUMNS = new Set(["selskap_id", "kontakt_id", "partner_id", "salgsmulighet_id", "lead_id", "prosjekt_id", "user_id"]);
