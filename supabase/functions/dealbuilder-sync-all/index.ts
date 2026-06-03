@@ -95,6 +95,9 @@ Deno.serve(async (req) => {
     const { data: selskaper } = await supabase
       .from("selskaper")
       .select("id, firmanavn");
+    const { data: partnere } = await supabase
+      .from("partnere")
+      .select("id, partnernavn, e_post, selskap_id");
 
     const emailToSelskap = new Map<string, string>();
     for (const k of kontakter || []) {
@@ -103,6 +106,14 @@ Deno.serve(async (req) => {
     const nameToSelskap = new Map<string, string>();
     for (const s of selskaper || []) {
       if (s.firmanavn) nameToSelskap.set(s.firmanavn.toLowerCase().trim(), s.id);
+    }
+    const partnerNames = new Set<string>();
+    const partnerEmails = new Set<string>();
+    const partnerSelskapIds = new Set<string>();
+    for (const p of partnere || []) {
+      if (p.partnernavn) partnerNames.add(p.partnernavn.toLowerCase().trim());
+      if (p.e_post) partnerEmails.add(p.e_post.toLowerCase().trim());
+      if (p.selskap_id) partnerSelskapIds.add(p.selskap_id);
     }
 
     const { data: existing } = await supabase
@@ -131,14 +142,22 @@ Deno.serve(async (req) => {
       const sigEmail = (extSig.email || "").toLowerCase().trim();
       const sigCompany = (extSig.companyName || "").toLowerCase().trim();
 
-      // Finn matchende salgsmulighet: først via doc_id, ellers via selskap (kun for signerte dokumenter)
+      // Avgjør om dette er en partneravtale — skal IKKE markere salgsmulighet som Vunnet
+      const title = String(doc.title || "").toLowerCase();
+      const isPartnerDoc =
+        title.includes("samarbeid") ||
+        title.includes("partner") ||
+        (sigEmail && partnerEmails.has(sigEmail)) ||
+        (sigCompany && partnerNames.has(sigCompany));
+
+      // Finn matchende salgsmulighet: først via doc_id, ellers via selskap (kun for signerte kundekontrakter)
       let sm = salgsByDocId.get(docId);
       let matchedViaSelskap = false;
-      if (!sm && mappedStatus === "Signert") {
+      if (!sm && mappedStatus === "Signert" && !isPartnerDoc) {
         let selskapId: string | null = null;
         if (sigEmail && emailToSelskap.has(sigEmail)) selskapId = emailToSelskap.get(sigEmail)!;
         if (!selskapId && sigCompany && nameToSelskap.has(sigCompany)) selskapId = nameToSelskap.get(sigCompany)!;
-        if (selskapId && openDealsBySelskap.has(selskapId)) {
+        if (selskapId && !partnerSelskapIds.has(selskapId) && openDealsBySelskap.has(selskapId)) {
           sm = openDealsBySelskap.get(selskapId);
           matchedViaSelskap = true;
         }
