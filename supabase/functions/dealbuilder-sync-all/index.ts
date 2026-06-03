@@ -66,19 +66,26 @@ Deno.serve(async (req) => {
       Sent: "Sendt",
       Opened: "Åpnet",
       Signed: "Signert",
+      Accepted: "Signert",
       Expired: "Utløpt",
       Completed: "Signert",
+      Revoked: "Tilbakekalt",
+      Declined: "Avvist",
     };
 
-    // 2. Last inn salgsmuligheter med dealbuilder_dokument_id
-    const { data: salgsmuligheter } = await supabase
+    // 2. Last inn ALLE salgsmuligheter (for matching både via doc_id og selskap)
+    const { data: allSalgs } = await supabase
       .from("salgsmuligheter")
-      .select("id, navn, selskap_id, dealbuilder_dokument_id, kontrakt_status, kontrakt_signert_dato, status, forventet_mrr, oppstartskostnad")
-      .not("dealbuilder_dokument_id", "is", null);
+      .select("id, navn, selskap_id, dealbuilder_dokument_id, kontrakt_status, kontrakt_signert_dato, status, forventet_mrr, oppstartskostnad, ansvarlig, kontaktperson, e_post, created_at")
+      .order("created_at", { ascending: false });
 
     const salgsByDocId = new Map<string, any>();
-    for (const s of salgsmuligheter || []) {
+    const openDealsBySelskap = new Map<string, any>();
+    for (const s of allSalgs || []) {
       if (s.dealbuilder_dokument_id) salgsByDocId.set(String(s.dealbuilder_dokument_id), s);
+      if (s.selskap_id && s.status !== "Vunnet" && s.status !== "Tapt" && !openDealsBySelskap.has(s.selskap_id)) {
+        openDealsBySelskap.set(s.selskap_id, s);
+      }
     }
 
     // 3. Last inn for matching av nye dokumenter
