@@ -125,16 +125,37 @@ Deno.serve(async (req) => {
       const mappedStatus = statusMap[doc.status] || doc.status || "Ukjent";
       const signedAt = doc.signedDate || doc.completedDate || doc.signedAt || null;
 
-      // Oppdater salgsmulighet hvis koblet
-      const sm = salgsByDocId.get(docId);
+      // Finn signatar tidlig (brukes både til matching og dokumentopprettelse)
+      const parties = doc.parties || doc.externalSignatories || [];
+      const extSig = parties.find((p: any) => (p.roles || []).includes("ExternalSignatory")) || parties[0] || {};
+      const sigEmail = (extSig.email || "").toLowerCase().trim();
+      const sigCompany = (extSig.companyName || "").toLowerCase().trim();
+
+      // Finn matchende salgsmulighet: først via doc_id, ellers via selskap (kun for signerte dokumenter)
+      let sm = salgsByDocId.get(docId);
+      let matchedViaSelskap = false;
+      if (!sm && mappedStatus === "Signert") {
+        let selskapId: string | null = null;
+        if (sigEmail && emailToSelskap.has(sigEmail)) selskapId = emailToSelskap.get(sigEmail)!;
+        if (!selskapId && sigCompany && nameToSelskap.has(sigCompany)) selskapId = nameToSelskap.get(sigCompany)!;
+        if (selskapId && openDealsBySelskap.has(selskapId)) {
+          sm = openDealsBySelskap.get(selskapId);
+          matchedViaSelskap = true;
+        }
+      }
+
       if (sm) {
         const updates: any = {};
+        if (matchedViaSelskap) updates.dealbuilder_dokument_id = docId;
         if (sm.kontrakt_status !== mappedStatus) updates.kontrakt_status = mappedStatus;
         if (mappedStatus === "Signert") {
-          if (!sm.kontrakt_signert_dato && signedAt) {
-            updates.kontrakt_signert_dato = signedAt;
-          } else if (!sm.kontrakt_signert_dato && !signedAt) {
-            updates.kontrakt_signert_dato = new Date().toISOString();
+          if (!sm.kontrakt_signert_dato) {
+            updates.kontrakt_signert_dato = signedAt || new Date().toISOString();
+          }
+          // Full "Vunnet"-flyt hvis ikke allerede vunnet
+          if (sm.status !== "Vunnet") {
+            updates.status = "Vunnet";
+            updates.vunnet_dato = (updates.kontrakt_signert_dato || new Date().toISOString()).split("T")[0];
           }
         }
         if (Object.keys(updates).length > 0) {
@@ -144,7 +165,59 @@ Deno.serve(async (req) => {
             .eq("id", sm.id);
           if (!upErr) {
             salgsUpdated++;
-            salgsChanges.push({ id: sm.id, navn: sm.navn, fra: sm.kontrakt_status, til: mappedStatus, signert: updates.kontrakt_signert_dato || sm.kontrakt_signert_dato });
+            salgsChanges.push({ id: sm.id, navn: sm.navn, fra: sm.kontrakt_status, til: mappedStatus, signert: updates.kontrakt_signert_dato || sm.kontrakt_signert_dato, vunnet: updates.status === "Vunnet" });
+          }
+
+          // Hvis vi nettopp markerte som Vunnet: oppdater selskap + opprett prosjekt + aktivitet + changelog
+          if (!upErr && updates.status === "Vunnet" && sm.selskap_id) {
+            const today = new Date().toISOString().split("T")[0];
+            const mrr = Number(sm.forventet_mrr) || 0;
+
+            await supabase.from("selskaper").update({
+              kundestatus: "Pilot",
+              live_status: false,
+              onboarding_status: "Ikke startet",
+              mrr,
+              arr: mrr * 12,
+              oppstartskostnad: Number(sm.oppstartskostnad) || 0,
+              sist_aktivitet: today,
+              lukkedato: today,
+            }).eq("id", sm.selskap_id);
+
+            // Unngå duplikat prosjekt
+            const { data: existingProj } = await supabase
+              .from("prosjekter").select("id").eq("salgsmulighet_id", sm.id).maybeSingle();
+            if (!existingProj) {
+              await supabase.from("prosjekter").insert({
+                prosjektnavn: sm.navn,
+                selskap_id: sm.selskap_id,
+                salgsmulighet_id: sm.id,
+                ansvarlig: sm.ansvarlig || "",
+                status: "Ny",
+                startdato: today,
+                oppstartskostnad: Number(sm.oppstartskostnad) || 0,
+              });
+            }
+
+            await supabase.from("aktiviteter").insert({
+              type: "Notat",
+              tittel: "Kontrakt signert",
+              beskrivelse: `Kontrakt signert via DealBuilder (sync) — ${sigEmail || sigCompany || "ukjent signatar"}`,
+              salgsmulighet_id: sm.id,
+              selskap_id: sm.selskap_id,
+              aktivitet_kilde: "dealbuilder",
+              dato: new Date().toISOString(),
+            });
+
+            await supabase.from("crm_changelog").insert({
+              event_type: "updated",
+              entity_type: "salgsmulighet",
+              entity_id: sm.id,
+              entity_name: sm.navn,
+              field_name: "kontrakt_status",
+              old_value: sm.kontrakt_status,
+              new_value: "Signert",
+            });
           }
         }
       }
@@ -161,12 +234,6 @@ Deno.serve(async (req) => {
         }
         continue;
       }
-
-      // Match nytt dokument til selskap (DealBuilder returnerer 'parties' med roller)
-      const parties = doc.parties || doc.externalSignatories || [];
-      const extSig = parties.find((p: any) => (p.roles || []).includes("ExternalSignatory")) || parties[0] || {};
-      const sigEmail = (extSig.email || "").toLowerCase().trim();
-      const sigCompany = (extSig.companyName || "").toLowerCase().trim();
 
       let selskapId: string | null = sm?.selskap_id || null;
       if (!selskapId && sigEmail && emailToSelskap.has(sigEmail)) selskapId = emailToSelskap.get(sigEmail)!;
