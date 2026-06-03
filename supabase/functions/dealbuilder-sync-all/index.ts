@@ -142,14 +142,22 @@ Deno.serve(async (req) => {
       const sigEmail = (extSig.email || "").toLowerCase().trim();
       const sigCompany = (extSig.companyName || "").toLowerCase().trim();
 
-      // Finn matchende salgsmulighet: først via doc_id, ellers via selskap (kun for signerte dokumenter)
+      // Avgjør om dette er en partneravtale — skal IKKE markere salgsmulighet som Vunnet
+      const title = String(doc.title || "").toLowerCase();
+      const isPartnerDoc =
+        title.includes("samarbeid") ||
+        title.includes("partner") ||
+        (sigEmail && partnerEmails.has(sigEmail)) ||
+        (sigCompany && partnerNames.has(sigCompany));
+
+      // Finn matchende salgsmulighet: først via doc_id, ellers via selskap (kun for signerte kundekontrakter)
       let sm = salgsByDocId.get(docId);
       let matchedViaSelskap = false;
-      if (!sm && mappedStatus === "Signert") {
+      if (!sm && mappedStatus === "Signert" && !isPartnerDoc) {
         let selskapId: string | null = null;
         if (sigEmail && emailToSelskap.has(sigEmail)) selskapId = emailToSelskap.get(sigEmail)!;
         if (!selskapId && sigCompany && nameToSelskap.has(sigCompany)) selskapId = nameToSelskap.get(sigCompany)!;
-        if (selskapId && openDealsBySelskap.has(selskapId)) {
+        if (selskapId && !partnerSelskapIds.has(selskapId) && openDealsBySelskap.has(selskapId)) {
           sm = openDealsBySelskap.get(selskapId);
           matchedViaSelskap = true;
         }
