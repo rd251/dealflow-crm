@@ -30,28 +30,6 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-    <script
-      src="https://platform.snakk.ai/embed.js"
-      data-agent-id="c42d9aa9-b353-4026-b2cc-fa4e2633ec06"
-      data-auto
-      data-button-text="JARVIS"
-      data-active-text="End call"
-      data-button-color="#500000"
-      data-text-color="#ffffff"
-      data-position="bottom-right"
-    ></script>
-    <script>
-      window.addEventListener('load', () => {
-        const tryAttach = () => {
-          const widget = document.querySelector('.snakk-widget');
-          if (!widget) return setTimeout(tryAttach, 300);
-          widget.addEventListener('snakk:connecting', () => console.log('[Snakk] Connecting...'));
-          widget.addEventListener('snakk:connected', () => console.log('[Snakk] Call started!'));
-          widget.addEventListener('snakk:disconnected', () => console.log('[Snakk] Call ended'));
-          widget.addEventListener('snakk:error', (e) => console.error('[Snakk] Error:', e.detail?.error));
-        };
-        tryAttach();
-      });
-    </script>
+    <!-- JARVIS widget midlertidig deaktivert -->
   </body>
 </html>
