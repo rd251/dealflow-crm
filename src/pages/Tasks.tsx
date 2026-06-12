@@ -297,7 +297,13 @@ export default function Tasks() {
               <Checkbox checked={task.status === "Ferdig"} onCheckedChange={() => canEdit && changeStatus(task.id, task.status === "Ferdig" ? "Åpen" : "Ferdig")} className="shrink-0" disabled={!canEdit} onClick={e => e.stopPropagation()} />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <p className={`font-medium text-sm ${task.status === "Ferdig" ? "line-through" : ""}`}>{task.oppgave}</p>
+                  <p className={`font-medium text-sm ${task.status === "Ferdig" ? "line-through" : ""}`}>
+                    {task.oppgave.split(/(\*\*[^*]+\*\*)/g).map((part, i) =>
+                      part.startsWith("**") && part.endsWith("**")
+                        ? <strong key={i} className="font-semibold">{part.slice(2, -2)}</strong>
+                        : <span key={i}>{part}</span>
+                    )}
+                  </p>
                   <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${prioritetColors[task.prioritet]}`}>{task.prioritet}</span>
                   {!isMobile && (task.paaminnelse ? <Bell className="w-3 h-3 text-primary" /> : <BellOff className="w-3 h-3 text-muted-foreground/40" />)}
                 </div>
