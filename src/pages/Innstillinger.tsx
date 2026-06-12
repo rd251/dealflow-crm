@@ -57,7 +57,7 @@ export default function Innstillinger() {
     if (!user) return;
     setLoading(true);
     const { data } = await supabase
-      .from("google_calendar_connections" as any)
+      .from("google_calendar_connection_status" as any)
       .select("last_synced_at, gmail_sync_enabled, gmail_last_synced_at")
       .eq("user_id", user.id)
       .maybeSingle();

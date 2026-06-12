@@ -1397,7 +1397,33 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      google_calendar_connection_status: {
+        Row: {
+          created_at: string | null
+          gmail_last_synced_at: string | null
+          gmail_sync_enabled: boolean | null
+          last_synced_at: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          gmail_last_synced_at?: string | null
+          gmail_sync_enabled?: boolean | null
+          last_synced_at?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          gmail_last_synced_at?: string | null
+          gmail_sync_enabled?: boolean | null
+          last_synced_at?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       delete_email: {

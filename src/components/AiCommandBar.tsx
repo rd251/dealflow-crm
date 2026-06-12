@@ -753,8 +753,8 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
       // 3. Try to create in Google Calendar if connected
       try {
         const { data: gcalConn } = await supabase
-          .from("google_calendar_connections")
-          .select("id")
+          .from("google_calendar_connection_status" as any)
+          .select("user_id")
           .eq("user_id", user?.id || "")
           .maybeSingle();
 
