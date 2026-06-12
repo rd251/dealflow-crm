@@ -294,7 +294,15 @@ export default function Tasks() {
           const ansvarligNavn = task.ansvarlig ? (getProfileName(task.ansvarlig) || task.ansvarlig) : null;
           return (
             <div key={task.id} className={`bg-card border rounded-xl p-4 flex items-center gap-3 animate-slide-in transition-opacity cursor-pointer hover:border-primary/30 ${task.status === "Ferdig" ? "opacity-50" : ""}`} onClick={() => canEdit && openEdit(task)}>
-              <Checkbox checked={task.status === "Ferdig"} onCheckedChange={() => canEdit && changeStatus(task.id, task.status === "Ferdig" ? "Åpen" : "Ferdig")} className="shrink-0" disabled={!canEdit} onClick={e => e.stopPropagation()} />
+              <div
+                className="-m-2 p-2 shrink-0"
+                onClick={e => {
+                  e.stopPropagation();
+                  if (canEdit) changeStatus(task.id, task.status === "Ferdig" ? "Åpen" : "Ferdig");
+                }}
+              >
+                <Checkbox checked={task.status === "Ferdig"} disabled={!canEdit} className="pointer-events-none" />
+              </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <p className={`font-medium text-sm ${task.status === "Ferdig" ? "line-through" : ""}`}>
