@@ -176,7 +176,7 @@ export default function Kalender() {
   useEffect(() => {
     if (!user) return;
     supabase
-      .from("google_calendar_connections" as any)
+      .from("google_calendar_connection_status" as any)
       .select("last_synced_at")
       .eq("user_id", user.id)
       .maybeSingle()
