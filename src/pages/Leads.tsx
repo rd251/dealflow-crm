@@ -40,9 +40,9 @@ const statusColors: Record<string, string> = {
 
 export default function Leads() {
   const isMobile = useIsMobile();
-  const { canEdit } = useAuth();
+  const { canEdit, isAdmin, user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { leads, updateLeads, konverterLead, konverterTilPartner, generateId } = useCrmStore();
+  const { leads, partnere, updateLeads, konverterLead, konverterTilPartner, generateId } = useCrmStore();
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
@@ -57,6 +57,13 @@ export default function Leads() {
   const [form, setForm] = useState<Partial<Lead>>({ firmanavn: "", kontaktperson: "", e_post: "", telefon: "", kilde: "Nettside", status: "Ny", ansvarlig: "", neste_steg: "", notater: "", rolle_i_firma: "", use_case: "" });
   const [filterUtenOppfolging, setFilterUtenOppfolging] = useState(false);
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+  // Forwarding to partner
+  const [forwardDialogLead, setForwardDialogLead] = useState<Lead | null>(null);
+  const [forwardPartnerId, setForwardPartnerId] = useState<string>("");
+  const [forwardMessage, setForwardMessage] = useState<string>("");
+  const [forwardHarByggeagent, setForwardHarByggeagent] = useState<boolean>(false);
+  const [forwardOnboarding, setForwardOnboarding] = useState<string>("");
+  const [forwardSending, setForwardSending] = useState<boolean>(false);
 
   type LeadSortKey = "firmanavn" | "kontaktperson" | "kilde" | "status" | "neste_steg" | "sist_aktivitet" | "opprettet_dato";
   const [sortKey, setSortKey] = useState<LeadSortKey | null>("opprettet_dato");
