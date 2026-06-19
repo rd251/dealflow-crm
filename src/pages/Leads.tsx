@@ -816,6 +816,16 @@ export default function Leads() {
                   </div>
                 )}
 
+                {currentForwardedPartner && (
+                  <div className="p-2.5 rounded-lg text-xs bg-muted/40 border flex items-start gap-2">
+                    <Send className="w-3.5 h-3.5 mt-0.5 text-muted-foreground" />
+                    <div className="flex-1">
+                      <div className="font-medium">Videresendt til {currentForwardedPartner.partnernavn}</div>
+                      <div className="text-muted-foreground">{currentLead.videresendt_dato} · {currentForwardedPartner.e_post}</div>
+                    </div>
+                  </div>
+                )}
+
                 {canEdit && !currentIsLocked && (
                   <Button size="sm" variant="ghost" className="w-full text-xs text-destructive hover:text-destructive h-8" onClick={() => {
                     updateLeads(prev => prev.filter(l => l.id !== currentLead.id));
