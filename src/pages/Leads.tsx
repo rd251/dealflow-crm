@@ -22,6 +22,7 @@ import EntityChangelog from "@/components/EntityChangelog";
 import LastActivityBadge from "@/components/LastActivityBadge";
 import DataImportDialog from "@/components/DataImportDialog";
 import CompanyLogo from "@/components/CompanyLogo";
+import LeadForwardEmailPreview from "@/components/LeadForwardEmailPreview";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -482,7 +483,7 @@ export default function Leads() {
 
       {/* Forward to partner dialog (admin only) */}
       <Dialog open={!!forwardDialogLead} onOpenChange={open => { if (!open && !forwardSending) setForwardDialogLead(null); }}>
-        <DialogContent className="max-w-[95vw] sm:max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-[95vw] sm:max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Videresend lead til partner</DialogTitle>
             <DialogDescription>
@@ -537,6 +538,28 @@ export default function Leads() {
                 value={forwardMessage}
                 onChange={e => setForwardMessage(e.target.value)}
                 rows={3}
+              />
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-xs text-muted-foreground">Forhåndsvisning av e-post</label>
+                <span className="text-[10px] text-muted-foreground">Slik ser e-posten ut hos partneren</span>
+              </div>
+              <LeadForwardEmailPreview
+                partner_navn={partnere.find((p: Partner) => p.id === forwardPartnerId)?.partnernavn || "Partner"}
+                lead_firmanavn={forwardDialogLead?.firmanavn}
+                lead_kontaktperson={forwardDialogLead?.kontaktperson}
+                lead_epost={forwardDialogLead?.e_post}
+                lead_telefon={forwardDialogLead?.telefon}
+                lead_rolle={(forwardDialogLead as any)?.rolle}
+                lead_kilde={forwardDialogLead?.kilde}
+                lead_use_case={(forwardDialogLead as any)?.use_case}
+                lead_notater={forwardDialogLead?.notater}
+                har_byggeagent={forwardHarByggeagent}
+                onboarding_oppsummering={forwardOnboarding}
+                videresendt_av={user?.email || "Snakk"}
+                intern_melding={forwardMessage}
               />
             </div>
 
