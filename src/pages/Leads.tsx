@@ -541,6 +541,28 @@ export default function Leads() {
               />
             </div>
 
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-xs text-muted-foreground">Forhåndsvisning av e-post</label>
+                <span className="text-[10px] text-muted-foreground">Slik ser e-posten ut hos partneren</span>
+              </div>
+              <LeadForwardEmailPreview
+                partner_navn={partnere.find((p: Partner) => p.id === forwardPartnerId)?.partnernavn || "Partner"}
+                lead_firmanavn={forwardDialogLead?.firmanavn}
+                lead_kontaktperson={forwardDialogLead?.kontaktperson}
+                lead_epost={forwardDialogLead?.e_post}
+                lead_telefon={forwardDialogLead?.telefon}
+                lead_rolle={(forwardDialogLead as any)?.rolle}
+                lead_kilde={forwardDialogLead?.kilde}
+                lead_use_case={(forwardDialogLead as any)?.use_case}
+                lead_notater={forwardDialogLead?.notater}
+                har_byggeagent={forwardHarByggeagent}
+                onboarding_oppsummering={forwardOnboarding}
+                videresendt_av={user?.email || "Snakk"}
+                intern_melding={forwardMessage}
+              />
+            </div>
+
             <Button
               className="w-full"
               onClick={sendForward}
