@@ -584,14 +584,25 @@ export default function Leads() {
                     {lead.neste_steg && <span className="text-[10px] text-muted-foreground truncate ml-2">→ {lead.neste_steg}</span>}
                   </div>
                   {lead.status !== "Ikke aktuelt" && (
-                    <div className="flex gap-1 mt-1">
-                      <Button size="sm" variant="ghost" className="text-xs gap-1 flex-1" onClick={e => { e.stopPropagation(); setConvertDialogLead(lead); setConvertNavn(lead.use_case || lead.firmanavn); }}>
+                    <div className="flex gap-1 mt-1 flex-wrap">
+                      <Button size="sm" variant="ghost" className="text-xs gap-1 flex-1 min-w-[80px]" onClick={e => { e.stopPropagation(); setConvertDialogLead(lead); setConvertNavn(lead.use_case || lead.firmanavn); }}>
                         <ArrowRightCircle className="w-3.5 h-3.5" />Salg
                       </Button>
-                      <Button size="sm" variant="ghost" className="text-xs gap-1 flex-1" onClick={e => { e.stopPropagation(); setPartnerDialogLead(lead); }}>
+                      <Button size="sm" variant="ghost" className="text-xs gap-1 flex-1 min-w-[80px]" onClick={e => { e.stopPropagation(); setPartnerDialogLead(lead); }}>
                         <Users2 className="w-3.5 h-3.5" />Partner
                       </Button>
+                      {isAdmin && (
+                        <Button size="sm" variant="ghost" className="text-xs gap-1 flex-1 min-w-[80px]" onClick={e => { e.stopPropagation(); openForwardDialog(lead); }}>
+                          <Send className="w-3.5 h-3.5" />Videresend
+                        </Button>
+                      )}
                     </div>
+                  )}
+                  {lead.videresendt_til_partner_id && (
+                    <Badge variant="secondary" className="text-[10px] gap-1">
+                      <Send className="w-2.5 h-2.5" />
+                      Videresendt {lead.videresendt_dato}
+                    </Badge>
                   )}
                 </div>
               ))}
