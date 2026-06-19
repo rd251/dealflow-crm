@@ -480,6 +480,80 @@ export default function Leads() {
         </DialogContent>
       </Dialog>
 
+      {/* Forward to partner dialog (admin only) */}
+      <Dialog open={!!forwardDialogLead} onOpenChange={open => { if (!open && !forwardSending) setForwardDialogLead(null); }}>
+        <DialogContent className="max-w-[95vw] sm:max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Videresend lead til partner</DialogTitle>
+            <DialogDescription>
+              Send leaden {forwardDialogLead?.firmanavn ? `«${forwardDialogLead.firmanavn}»` : ""} videre til en av partnerne. De får all kontaktinfo, generell info om leaden og status på selvbyggeren via e-post.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Velg partner</label>
+              <select
+                className="w-full border rounded-lg px-3 py-2 text-sm bg-background"
+                value={forwardPartnerId}
+                onChange={e => setForwardPartnerId(e.target.value)}
+              >
+                <option value="">– Velg partner –</option>
+                {partnere
+                  .filter((p: Partner) => p.partnerstatus !== "Inaktiv" && p.e_post)
+                  .sort((a: Partner, b: Partner) => a.partnernavn.localeCompare(b.partnernavn, "nb"))
+                  .map((p: Partner) => (
+                    <option key={p.id} value={p.id}>
+                      {p.partnernavn} — {p.e_post}
+                    </option>
+                  ))}
+              </select>
+              {partnere.filter((p: Partner) => p.partnerstatus !== "Inaktiv" && p.e_post).length === 0 && (
+                <p className="text-[11px] text-warning mt-1">Ingen aktive partnere med e-postadresse funnet.</p>
+              )}
+            </div>
+
+            <div className="rounded-lg border bg-muted/30 p-3 space-y-2 text-xs">
+              <p className="font-medium text-foreground">Dette sendes til partneren:</p>
+              <ul className="list-disc pl-4 space-y-0.5 text-muted-foreground">
+                <li>Kontaktinfo: navn, e-post, telefon, rolle</li>
+                <li>Generell lead-info: firma, kilde, use case, notater</li>
+                <li>Om leaden har byggeagent via selvbyggeren</li>
+                {forwardOnboarding && <li>Svar fra selvbyggeren (kort oppsummering)</li>}
+              </ul>
+              <label className="flex items-center gap-2 text-xs pt-1">
+                <input
+                  type="checkbox"
+                  checked={forwardHarByggeagent}
+                  onChange={e => setForwardHarByggeagent(e.target.checked)}
+                />
+                <span>Har bygget agent via selvbyggeren {forwardOnboarding ? "(oppdaget automatisk)" : ""}</span>
+              </label>
+            </div>
+
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Melding til partneren (valgfritt)</label>
+              <Textarea
+                placeholder="F.eks. «Tror dette passer godt for dere – ta gjerne kontakt direkte»"
+                value={forwardMessage}
+                onChange={e => setForwardMessage(e.target.value)}
+                rows={3}
+              />
+            </div>
+
+            <Button
+              className="w-full"
+              onClick={sendForward}
+              disabled={!forwardPartnerId || forwardSending}
+            >
+              <Send className="w-4 h-4 mr-1.5" />
+              {forwardSending ? "Sender..." : "Send til partner"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+
+
       <div className="mb-4 flex items-center gap-2">
         <div className="relative max-w-sm flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
