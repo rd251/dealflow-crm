@@ -45,6 +45,8 @@ export interface Lead {
   konvertert_til: KonvertertTil;
   rolle_i_firma: string;
   use_case: string;
+  videresendt_til_partner_id: string;
+  videresendt_dato: string;
 }
 
 export type KontraktStatus = "Ikke sendt" | "Sendt" | "Åpnet" | "Signert" | "Utløpt";
