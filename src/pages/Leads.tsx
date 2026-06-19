@@ -236,6 +236,8 @@ export default function Leads() {
                 konvertert_til: "",
                 rolle_i_firma: String(row.rolle_i_firma || ""),
                 use_case: String(row.use_case || ""),
+                videresendt_til_partner_id: "",
+                videresendt_dato: "",
               });
               success++;
             } catch { errors++; }
