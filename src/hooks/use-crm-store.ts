@@ -16,6 +16,8 @@ function rowToLead(r: any): Lead {
     notater: r.notater || "", opprettet_dato: r.opprettet_dato || "", sist_aktivitet: r.sist_aktivitet || "",
     konvertert_dato: r.konvertert_dato || "", konvertert_til: r.konvertert_til || "",
     rolle_i_firma: r.rolle_i_firma || "", use_case: r.use_case || "",
+    videresendt_til_partner_id: r.videresendt_til_partner_id || "",
+    videresendt_dato: r.videresendt_dato || "",
   };
 }
 function rowToSelskap(r: any): Selskap {
