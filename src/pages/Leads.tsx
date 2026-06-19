@@ -731,6 +731,11 @@ export default function Leads() {
             <Button size="sm" variant="secondary" onClick={() => setPartnerDialogLead(currentLead)}>
               <Users2 className="w-4 h-4 mr-1.5" />Til partner
             </Button>
+            {isAdmin && (
+              <Button size="sm" variant="outline" onClick={() => openForwardDialog(currentLead)}>
+                <Send className="w-4 h-4 mr-1.5" />Videresend
+              </Button>
+            )}
           </>
         ) : undefined}
         tabContent={currentLead ? (() => {
