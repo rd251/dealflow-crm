@@ -164,8 +164,106 @@ export default function Leads() {
     updateLeads(prev => prev.map(l => l.id === id ? { ...l, status, sist_aktivitet: new Date().toISOString().split("T")[0] } : l));
   };
 
+  // Open the "forward to partner" dialog, and auto-detect if lead has self-builder onboarding answers
+  const openForwardDialog = async (lead: Lead) => {
+    setForwardDialogLead(lead);
+    setForwardPartnerId("");
+    setForwardMessage("");
+    setForwardHarByggeagent(false);
+    setForwardOnboarding("");
+    try {
+      const email = (lead.e_post || "").trim().toLowerCase();
+      const firma = (lead.firmanavn || "").trim();
+      if (!email && !firma) return;
+      const query = supabase.from("onboarding_svar").select("svar, firmanavn, kontakt_epost, created_at").order("created_at", { ascending: false }).limit(1);
+      const { data } = email
+        ? await query.ilike("kontakt_epost", email)
+        : await query.ilike("firmanavn", firma);
+      if (data && data.length > 0) {
+        setForwardHarByggeagent(true);
+        const svar = data[0].svar as Record<string, any> | null;
+        if (svar && typeof svar === "object") {
+          const parts: string[] = [];
+          for (const [k, v] of Object.entries(svar)) {
+            const val = typeof v === "string" ? v : JSON.stringify(v);
+            if (val && val.trim()) parts.push(`• ${k}: ${val.trim().slice(0, 240)}`);
+          }
+          setForwardOnboarding(parts.slice(0, 8).join("\n"));
+        }
+      }
+    } catch (err) {
+      console.error("Onboarding lookup failed", err);
+    }
+  };
+
+  const sendForward = async () => {
+    if (!forwardDialogLead || !forwardPartnerId) return;
+    const partner = partnere.find((p: Partner) => p.id === forwardPartnerId);
+    if (!partner) { toast.error("Fant ikke valgt partner"); return; }
+    if (!partner.e_post) { toast.error("Partneren mangler e-postadresse"); return; }
+    setForwardSending(true);
+    const lead = forwardDialogLead;
+    const today = new Date().toISOString().split("T")[0];
+    try {
+      const { error: emailErr } = await supabase.functions.invoke("send-transactional-email", {
+        body: {
+          templateName: "lead-forwarded-to-partner",
+          recipientEmail: partner.e_post,
+          idempotencyKey: `lead-forward-${lead.id}-${partner.id}-${today}`,
+          templateData: {
+            partner_navn: partner.partnernavn,
+            lead_firmanavn: lead.firmanavn,
+            lead_kontaktperson: lead.kontaktperson,
+            lead_epost: lead.e_post,
+            lead_telefon: lead.telefon,
+            lead_rolle: lead.rolle_i_firma,
+            lead_kilde: lead.kilde,
+            lead_use_case: lead.use_case,
+            lead_notater: lead.notater,
+            har_byggeagent: forwardHarByggeagent,
+            onboarding_oppsummering: forwardOnboarding,
+            videresendt_av: user?.email || "Snakk",
+            intern_melding: forwardMessage,
+          },
+        },
+      });
+      if (emailErr) throw emailErr;
+
+      // Persist forwarding state on the lead
+      updateLeads(prev => prev.map(l => l.id === lead.id
+        ? { ...l, videresendt_til_partner_id: partner.id, videresendt_dato: today, sist_aktivitet: today }
+        : l));
+
+      // Log an activity for the audit trail
+      try {
+        await supabase.from("aktiviteter").insert({
+          type: "E-post",
+          tittel: `Videresendt til partner: ${partner.partnernavn}`,
+          beskrivelse: `Lead videresendt til ${partner.partnernavn} (${partner.e_post}).${forwardMessage ? `\n\nMelding: ${forwardMessage}` : ""}`,
+          dato: new Date().toISOString(),
+          lead_id: lead.id,
+          partner_id: partner.id,
+          aktivitet_kilde: "manuell",
+        });
+      } catch (logErr) {
+        console.warn("Activity log failed", logErr);
+      }
+
+      toast.success(`Lead videresendt til ${partner.partnernavn}`);
+      setForwardDialogLead(null);
+    } catch (err: any) {
+      console.error("Forward failed", err);
+      toast.error(`Kunne ikke videresende: ${err?.message || "ukjent feil"}`);
+    } finally {
+      setForwardSending(false);
+    }
+  };
+
   const currentLead = selectedLead ? leads.find(l => l.id === selectedLead.id) || selectedLead : null;
   const currentIsLocked = currentLead ? isConverted(currentLead) : false;
+  const currentForwardedPartner = currentLead?.videresendt_til_partner_id
+    ? partnere.find((p: Partner) => p.id === currentLead.videresendt_til_partner_id)
+    : null;
 
   useEffect(() => {
     if (pendingOpenActivity && detailTab === "interaksjoner") {
