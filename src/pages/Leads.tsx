@@ -661,13 +661,23 @@ export default function Leads() {
                       <td className="px-4 py-3 text-muted-foreground text-xs font-mono">{lead.opprettet_dato}</td>
                       <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
                         {lead.status !== "Ikke aktuelt" && (
-                          <div className="flex gap-1">
+                          <div className="flex gap-1 justify-end flex-wrap">
                             <Button size="sm" variant="ghost" className="text-xs gap-1" onClick={() => { setConvertDialogLead(lead); setConvertNavn(lead.use_case || lead.firmanavn); }}>
                               <ArrowRightCircle className="w-3.5 h-3.5" />Salg
                             </Button>
                             <Button size="sm" variant="ghost" className="text-xs gap-1" onClick={() => setPartnerDialogLead(lead)}>
                               <Users2 className="w-3.5 h-3.5" />Partner
                             </Button>
+                            {isAdmin && (
+                              <Button size="sm" variant="ghost" className="text-xs gap-1" onClick={() => openForwardDialog(lead)}>
+                                <Send className="w-3.5 h-3.5" />Videresend
+                              </Button>
+                            )}
+                          </div>
+                        )}
+                        {lead.videresendt_til_partner_id && (
+                          <div className="mt-1 text-[10px] text-muted-foreground inline-flex items-center gap-1">
+                            <Send className="w-3 h-3" />Videresendt {lead.videresendt_dato}
                           </div>
                         )}
                       </td>
