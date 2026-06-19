@@ -144,6 +144,7 @@ export default function Leads() {
       notater: form.notater || "", opprettet_dato: today, sist_aktivitet: today, konvertert_dato: "",
       konvertert_til: "",
       rolle_i_firma: form.rolle_i_firma || "", use_case: form.use_case || "",
+      videresendt_til_partner_id: "", videresendt_dato: "",
     };
     updateLeads(prev => [...prev, newLead]);
     setDialogOpen(false);
