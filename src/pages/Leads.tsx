@@ -483,7 +483,7 @@ export default function Leads() {
 
       {/* Forward to partner dialog (admin only) */}
       <Dialog open={!!forwardDialogLead} onOpenChange={open => { if (!open && !forwardSending) setForwardDialogLead(null); }}>
-        <DialogContent className="max-w-[95vw] sm:max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-[95vw] sm:max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Videresend lead til partner</DialogTitle>
             <DialogDescription>
