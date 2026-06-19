@@ -22,6 +22,7 @@ import EntityChangelog from "@/components/EntityChangelog";
 import LastActivityBadge from "@/components/LastActivityBadge";
 import DataImportDialog from "@/components/DataImportDialog";
 import CompanyLogo from "@/components/CompanyLogo";
+import LeadForwardEmailPreview from "@/components/LeadForwardEmailPreview";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
