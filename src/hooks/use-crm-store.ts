@@ -16,6 +16,8 @@ function rowToLead(r: any): Lead {
     notater: r.notater || "", opprettet_dato: r.opprettet_dato || "", sist_aktivitet: r.sist_aktivitet || "",
     konvertert_dato: r.konvertert_dato || "", konvertert_til: r.konvertert_til || "",
     rolle_i_firma: r.rolle_i_firma || "", use_case: r.use_case || "",
+    videresendt_til_partner_id: r.videresendt_til_partner_id || "",
+    videresendt_dato: r.videresendt_dato || "",
   };
 }
 function rowToSelskap(r: any): Selskap {
@@ -502,6 +504,8 @@ function useCrmStoreInternal() {
           opprettet_dato: emptyToNull(item.opprettet_dato), sist_aktivitet: emptyToNull(item.sist_aktivitet),
           konvertert_dato: emptyToNull(item.konvertert_dato),
           rolle_i_firma: emptyToNull(item.rolle_i_firma), use_case: emptyToNull(item.use_case),
+          videresendt_til_partner_id: emptyToNull(item.videresendt_til_partner_id),
+          videresendt_dato: emptyToNull(item.videresendt_dato),
         });
       }
     }
@@ -516,6 +520,8 @@ function useCrmStoreInternal() {
           opprettet_dato: emptyToNull(item.opprettet_dato), sist_aktivitet: emptyToNull(item.sist_aktivitet),
           konvertert_dato: emptyToNull(item.konvertert_dato),
           rolle_i_firma: emptyToNull(item.rolle_i_firma), use_case: emptyToNull(item.use_case),
+          videresendt_til_partner_id: emptyToNull(item.videresendt_til_partner_id),
+          videresendt_dato: emptyToNull(item.videresendt_dato),
         });
       }
     }

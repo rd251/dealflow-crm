@@ -477,6 +477,8 @@ export type Database = {
           telefon: string | null
           updated_at: string
           use_case: string | null
+          videresendt_dato: string | null
+          videresendt_til_partner_id: string | null
         }
         Insert: {
           ansvarlig?: string | null
@@ -496,6 +498,8 @@ export type Database = {
           telefon?: string | null
           updated_at?: string
           use_case?: string | null
+          videresendt_dato?: string | null
+          videresendt_til_partner_id?: string | null
         }
         Update: {
           ansvarlig?: string | null
@@ -515,8 +519,18 @@ export type Database = {
           telefon?: string | null
           updated_at?: string
           use_case?: string | null
+          videresendt_dato?: string | null
+          videresendt_til_partner_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "leads_videresendt_til_partner_id_fkey"
+            columns: ["videresendt_til_partner_id"]
+            isOneToOne: false
+            referencedRelation: "partnere"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       onboarding_svar: {
         Row: {

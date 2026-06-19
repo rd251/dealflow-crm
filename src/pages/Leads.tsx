@@ -11,10 +11,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import DetailPanelShell, { DetailSection, DetailField, DetailDivider } from "@/components/DetailPanelShell";
 import EntityCalendarTab from "@/components/EntityCalendarTab";
-import { Plus, Search, ArrowRightCircle, Trash2, Users2, Upload, Lock, Mail, ArrowUp, ArrowDown, ChevronsUpDown, PenLine } from "lucide-react";
+import { Plus, Search, ArrowRightCircle, Trash2, Users2, Upload, Lock, Mail, ArrowUp, ArrowDown, ChevronsUpDown, PenLine, Send } from "lucide-react";
 import SendEmailDialog from "@/components/SendEmailDialog";
 import SelskapInnsikt from "@/components/SelskapInnsikt";
-import { Lead, LeadStatus, LeadKilde } from "@/data/crm-data";
+import { Lead, LeadStatus, LeadKilde, Partner } from "@/data/crm-data";
 import { Badge } from "@/components/ui/badge";
 import InlineTaskForm from "@/components/InlineTaskForm";
 import ActivityLog from "@/components/ActivityLog";
@@ -22,6 +22,8 @@ import EntityChangelog from "@/components/EntityChangelog";
 import LastActivityBadge from "@/components/LastActivityBadge";
 import DataImportDialog from "@/components/DataImportDialog";
 import CompanyLogo from "@/components/CompanyLogo";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 // Only user-selectable statuses – no conversion statuses in dropdown
 const statusOptions: LeadStatus[] = ["Ny", "Kontaktet", "Kvalifisert", "Ikke aktuelt"];
@@ -38,9 +40,9 @@ const statusColors: Record<string, string> = {
 
 export default function Leads() {
   const isMobile = useIsMobile();
-  const { canEdit } = useAuth();
+  const { canEdit, isAdmin, user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { leads, updateLeads, konverterLead, konverterTilPartner, generateId } = useCrmStore();
+  const { leads, partnere, updateLeads, konverterLead, konverterTilPartner, generateId } = useCrmStore();
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
@@ -55,6 +57,13 @@ export default function Leads() {
   const [form, setForm] = useState<Partial<Lead>>({ firmanavn: "", kontaktperson: "", e_post: "", telefon: "", kilde: "Nettside", status: "Ny", ansvarlig: "", neste_steg: "", notater: "", rolle_i_firma: "", use_case: "" });
   const [filterUtenOppfolging, setFilterUtenOppfolging] = useState(false);
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+  // Forwarding to partner
+  const [forwardDialogLead, setForwardDialogLead] = useState<Lead | null>(null);
+  const [forwardPartnerId, setForwardPartnerId] = useState<string>("");
+  const [forwardMessage, setForwardMessage] = useState<string>("");
+  const [forwardHarByggeagent, setForwardHarByggeagent] = useState<boolean>(false);
+  const [forwardOnboarding, setForwardOnboarding] = useState<string>("");
+  const [forwardSending, setForwardSending] = useState<boolean>(false);
 
   type LeadSortKey = "firmanavn" | "kontaktperson" | "kilde" | "status" | "neste_steg" | "sist_aktivitet" | "opprettet_dato";
   const [sortKey, setSortKey] = useState<LeadSortKey | null>("opprettet_dato");
@@ -144,6 +153,7 @@ export default function Leads() {
       notater: form.notater || "", opprettet_dato: today, sist_aktivitet: today, konvertert_dato: "",
       konvertert_til: "",
       rolle_i_firma: form.rolle_i_firma || "", use_case: form.use_case || "",
+      videresendt_til_partner_id: "", videresendt_dato: "",
     };
     updateLeads(prev => [...prev, newLead]);
     setDialogOpen(false);
@@ -154,8 +164,106 @@ export default function Leads() {
     updateLeads(prev => prev.map(l => l.id === id ? { ...l, status, sist_aktivitet: new Date().toISOString().split("T")[0] } : l));
   };
 
+  // Open the "forward to partner" dialog, and auto-detect if lead has self-builder onboarding answers
+  const openForwardDialog = async (lead: Lead) => {
+    setForwardDialogLead(lead);
+    setForwardPartnerId("");
+    setForwardMessage("");
+    setForwardHarByggeagent(false);
+    setForwardOnboarding("");
+    try {
+      const email = (lead.e_post || "").trim().toLowerCase();
+      const firma = (lead.firmanavn || "").trim();
+      if (!email && !firma) return;
+      const query = supabase.from("onboarding_svar").select("svar, firmanavn, kontakt_epost, created_at").order("created_at", { ascending: false }).limit(1);
+      const { data } = email
+        ? await query.ilike("kontakt_epost", email)
+        : await query.ilike("firmanavn", firma);
+      if (data && data.length > 0) {
+        setForwardHarByggeagent(true);
+        const svar = data[0].svar as Record<string, any> | null;
+        if (svar && typeof svar === "object") {
+          const parts: string[] = [];
+          for (const [k, v] of Object.entries(svar)) {
+            const val = typeof v === "string" ? v : JSON.stringify(v);
+            if (val && val.trim()) parts.push(`• ${k}: ${val.trim().slice(0, 240)}`);
+          }
+          setForwardOnboarding(parts.slice(0, 8).join("\n"));
+        }
+      }
+    } catch (err) {
+      console.error("Onboarding lookup failed", err);
+    }
+  };
+
+  const sendForward = async () => {
+    if (!forwardDialogLead || !forwardPartnerId) return;
+    const partner = partnere.find((p: Partner) => p.id === forwardPartnerId);
+    if (!partner) { toast.error("Fant ikke valgt partner"); return; }
+    if (!partner.e_post) { toast.error("Partneren mangler e-postadresse"); return; }
+    setForwardSending(true);
+    const lead = forwardDialogLead;
+    const today = new Date().toISOString().split("T")[0];
+    try {
+      const { error: emailErr } = await supabase.functions.invoke("send-transactional-email", {
+        body: {
+          templateName: "lead-forwarded-to-partner",
+          recipientEmail: partner.e_post,
+          idempotencyKey: `lead-forward-${lead.id}-${partner.id}-${today}`,
+          templateData: {
+            partner_navn: partner.partnernavn,
+            lead_firmanavn: lead.firmanavn,
+            lead_kontaktperson: lead.kontaktperson,
+            lead_epost: lead.e_post,
+            lead_telefon: lead.telefon,
+            lead_rolle: lead.rolle_i_firma,
+            lead_kilde: lead.kilde,
+            lead_use_case: lead.use_case,
+            lead_notater: lead.notater,
+            har_byggeagent: forwardHarByggeagent,
+            onboarding_oppsummering: forwardOnboarding,
+            videresendt_av: user?.email || "Snakk",
+            intern_melding: forwardMessage,
+          },
+        },
+      });
+      if (emailErr) throw emailErr;
+
+      // Persist forwarding state on the lead
+      updateLeads(prev => prev.map(l => l.id === lead.id
+        ? { ...l, videresendt_til_partner_id: partner.id, videresendt_dato: today, sist_aktivitet: today }
+        : l));
+
+      // Log an activity for the audit trail
+      try {
+        await supabase.from("aktiviteter").insert({
+          type: "E-post",
+          tittel: `Videresendt til partner: ${partner.partnernavn}`,
+          beskrivelse: `Lead videresendt til ${partner.partnernavn} (${partner.e_post}).${forwardMessage ? `\n\nMelding: ${forwardMessage}` : ""}`,
+          dato: new Date().toISOString(),
+          lead_id: lead.id,
+          partner_id: partner.id,
+          aktivitet_kilde: "manuell",
+        });
+      } catch (logErr) {
+        console.warn("Activity log failed", logErr);
+      }
+
+      toast.success(`Lead videresendt til ${partner.partnernavn}`);
+      setForwardDialogLead(null);
+    } catch (err: any) {
+      console.error("Forward failed", err);
+      toast.error(`Kunne ikke videresende: ${err?.message || "ukjent feil"}`);
+    } finally {
+      setForwardSending(false);
+    }
+  };
+
   const currentLead = selectedLead ? leads.find(l => l.id === selectedLead.id) || selectedLead : null;
   const currentIsLocked = currentLead ? isConverted(currentLead) : false;
+  const currentForwardedPartner = currentLead?.videresendt_til_partner_id
+    ? partnere.find((p: Partner) => p.id === currentLead.videresendt_til_partner_id)
+    : null;
 
   useEffect(() => {
     if (pendingOpenActivity && detailTab === "interaksjoner") {
@@ -235,6 +343,8 @@ export default function Leads() {
                 konvertert_til: "",
                 rolle_i_firma: String(row.rolle_i_firma || ""),
                 use_case: String(row.use_case || ""),
+                videresendt_til_partner_id: "",
+                videresendt_dato: "",
               });
               success++;
             } catch { errors++; }
@@ -370,6 +480,80 @@ export default function Leads() {
         </DialogContent>
       </Dialog>
 
+      {/* Forward to partner dialog (admin only) */}
+      <Dialog open={!!forwardDialogLead} onOpenChange={open => { if (!open && !forwardSending) setForwardDialogLead(null); }}>
+        <DialogContent className="max-w-[95vw] sm:max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Videresend lead til partner</DialogTitle>
+            <DialogDescription>
+              Send leaden {forwardDialogLead?.firmanavn ? `«${forwardDialogLead.firmanavn}»` : ""} videre til en av partnerne. De får all kontaktinfo, generell info om leaden og status på selvbyggeren via e-post.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Velg partner</label>
+              <select
+                className="w-full border rounded-lg px-3 py-2 text-sm bg-background"
+                value={forwardPartnerId}
+                onChange={e => setForwardPartnerId(e.target.value)}
+              >
+                <option value="">– Velg partner –</option>
+                {partnere
+                  .filter((p: Partner) => p.partnerstatus !== "Inaktiv" && p.e_post)
+                  .sort((a: Partner, b: Partner) => a.partnernavn.localeCompare(b.partnernavn, "nb"))
+                  .map((p: Partner) => (
+                    <option key={p.id} value={p.id}>
+                      {p.partnernavn} — {p.e_post}
+                    </option>
+                  ))}
+              </select>
+              {partnere.filter((p: Partner) => p.partnerstatus !== "Inaktiv" && p.e_post).length === 0 && (
+                <p className="text-[11px] text-warning mt-1">Ingen aktive partnere med e-postadresse funnet.</p>
+              )}
+            </div>
+
+            <div className="rounded-lg border bg-muted/30 p-3 space-y-2 text-xs">
+              <p className="font-medium text-foreground">Dette sendes til partneren:</p>
+              <ul className="list-disc pl-4 space-y-0.5 text-muted-foreground">
+                <li>Kontaktinfo: navn, e-post, telefon, rolle</li>
+                <li>Generell lead-info: firma, kilde, use case, notater</li>
+                <li>Om leaden har byggeagent via selvbyggeren</li>
+                {forwardOnboarding && <li>Svar fra selvbyggeren (kort oppsummering)</li>}
+              </ul>
+              <label className="flex items-center gap-2 text-xs pt-1">
+                <input
+                  type="checkbox"
+                  checked={forwardHarByggeagent}
+                  onChange={e => setForwardHarByggeagent(e.target.checked)}
+                />
+                <span>Har bygget agent via selvbyggeren {forwardOnboarding ? "(oppdaget automatisk)" : ""}</span>
+              </label>
+            </div>
+
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Melding til partneren (valgfritt)</label>
+              <Textarea
+                placeholder="F.eks. «Tror dette passer godt for dere – ta gjerne kontakt direkte»"
+                value={forwardMessage}
+                onChange={e => setForwardMessage(e.target.value)}
+                rows={3}
+              />
+            </div>
+
+            <Button
+              className="w-full"
+              onClick={sendForward}
+              disabled={!forwardPartnerId || forwardSending}
+            >
+              <Send className="w-4 h-4 mr-1.5" />
+              {forwardSending ? "Sender..." : "Send til partner"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+
+
       <div className="mb-4 flex items-center gap-2">
         <div className="relative max-w-sm flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -400,14 +584,25 @@ export default function Leads() {
                     {lead.neste_steg && <span className="text-[10px] text-muted-foreground truncate ml-2">→ {lead.neste_steg}</span>}
                   </div>
                   {lead.status !== "Ikke aktuelt" && (
-                    <div className="flex gap-1 mt-1">
-                      <Button size="sm" variant="ghost" className="text-xs gap-1 flex-1" onClick={e => { e.stopPropagation(); setConvertDialogLead(lead); setConvertNavn(lead.use_case || lead.firmanavn); }}>
+                    <div className="flex gap-1 mt-1 flex-wrap">
+                      <Button size="sm" variant="ghost" className="text-xs gap-1 flex-1 min-w-[80px]" onClick={e => { e.stopPropagation(); setConvertDialogLead(lead); setConvertNavn(lead.use_case || lead.firmanavn); }}>
                         <ArrowRightCircle className="w-3.5 h-3.5" />Salg
                       </Button>
-                      <Button size="sm" variant="ghost" className="text-xs gap-1 flex-1" onClick={e => { e.stopPropagation(); setPartnerDialogLead(lead); }}>
+                      <Button size="sm" variant="ghost" className="text-xs gap-1 flex-1 min-w-[80px]" onClick={e => { e.stopPropagation(); setPartnerDialogLead(lead); }}>
                         <Users2 className="w-3.5 h-3.5" />Partner
                       </Button>
+                      {isAdmin && (
+                        <Button size="sm" variant="ghost" className="text-xs gap-1 flex-1 min-w-[80px]" onClick={e => { e.stopPropagation(); openForwardDialog(lead); }}>
+                          <Send className="w-3.5 h-3.5" />Videresend
+                        </Button>
+                      )}
                     </div>
+                  )}
+                  {lead.videresendt_til_partner_id && (
+                    <Badge variant="secondary" className="text-[10px] gap-1">
+                      <Send className="w-2.5 h-2.5" />
+                      Videresendt {lead.videresendt_dato}
+                    </Badge>
                   )}
                 </div>
               ))}
@@ -466,13 +661,23 @@ export default function Leads() {
                       <td className="px-4 py-3 text-muted-foreground text-xs font-mono">{lead.opprettet_dato}</td>
                       <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
                         {lead.status !== "Ikke aktuelt" && (
-                          <div className="flex gap-1">
+                          <div className="flex gap-1 justify-end flex-wrap">
                             <Button size="sm" variant="ghost" className="text-xs gap-1" onClick={() => { setConvertDialogLead(lead); setConvertNavn(lead.use_case || lead.firmanavn); }}>
                               <ArrowRightCircle className="w-3.5 h-3.5" />Salg
                             </Button>
                             <Button size="sm" variant="ghost" className="text-xs gap-1" onClick={() => setPartnerDialogLead(lead)}>
                               <Users2 className="w-3.5 h-3.5" />Partner
                             </Button>
+                            {isAdmin && (
+                              <Button size="sm" variant="ghost" className="text-xs gap-1" onClick={() => openForwardDialog(lead)}>
+                                <Send className="w-3.5 h-3.5" />Videresend
+                              </Button>
+                            )}
+                          </div>
+                        )}
+                        {lead.videresendt_til_partner_id && (
+                          <div className="mt-1 text-[10px] text-muted-foreground inline-flex items-center gap-1">
+                            <Send className="w-3 h-3" />Videresendt {lead.videresendt_dato}
                           </div>
                         )}
                       </td>
@@ -526,6 +731,11 @@ export default function Leads() {
             <Button size="sm" variant="secondary" onClick={() => setPartnerDialogLead(currentLead)}>
               <Users2 className="w-4 h-4 mr-1.5" />Til partner
             </Button>
+            {isAdmin && (
+              <Button size="sm" variant="outline" onClick={() => openForwardDialog(currentLead)}>
+                <Send className="w-4 h-4 mr-1.5" />Videresend
+              </Button>
+            )}
           </>
         ) : undefined}
         tabContent={currentLead ? (() => {
@@ -603,6 +813,16 @@ export default function Leads() {
                   <div className={`p-2.5 rounded-lg text-xs font-medium flex items-center gap-2 ${getConversionType(currentLead) === "salg" ? "bg-success/10 text-success" : "bg-primary/10 text-primary"}`}>
                     <Lock className="w-3.5 h-3.5" />
                     Konvertert til {getConversionType(currentLead) === "salg" ? "salgsmulighet" : "partner"} · {currentLead.konvertert_dato}
+                  </div>
+                )}
+
+                {currentForwardedPartner && (
+                  <div className="p-2.5 rounded-lg text-xs bg-muted/40 border flex items-start gap-2">
+                    <Send className="w-3.5 h-3.5 mt-0.5 text-muted-foreground" />
+                    <div className="flex-1">
+                      <div className="font-medium">Videresendt til {currentForwardedPartner.partnernavn}</div>
+                      <div className="text-muted-foreground">{currentLead.videresendt_dato} · {currentForwardedPartner.e_post}</div>
+                    </div>
                   </div>
                 )}
 

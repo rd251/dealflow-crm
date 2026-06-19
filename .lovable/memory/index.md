@@ -42,6 +42,7 @@
 - [Calendar scheduling](mem://features/calendar/scheduling) — 0-23h week view, auto-scroll to 07:00
 - [Branding](mem://style/branding) — Maroon color, logo, status colors
 - [Lead conversion](mem://features/leads/conversion) — Explicit status routing, state persistence
+- [Forward lead to partner](mem://features/leads/forward-to-partner) — Admin-only Videresend flow, email template, tracking columns
 - [Contact matching](mem://features/search/contact-matching) — Grouping excludes generic emails
 - [Follow-up UI](mem://features/follow-up/ui) — Badges (Red/Amber), smart routing
 - [Deleted items](mem://features/admin/deleted-items) — 30 day retention in deleted_items table
