@@ -156,17 +156,26 @@ export default function Tasks() {
     toast.success("Oppgave slettet");
   };
 
-  const forfalte = oppgaver.filter(o => o.status !== "Ferdig" && o.frist && o.frist < today);
-  const idagOppgaver = oppgaver.filter(o => o.status !== "Ferdig" && o.frist === today);
-  const ukeOppgaver = oppgaver.filter(o => o.status !== "Ferdig" && o.frist >= today && o.frist <= weekEnd);
+  // «Effektiv» status: når brukeren nettopp har klikket, regn raden som den var
+  // FØR klikket, slik at den ikke umiddelbart hopper ut av listen/gruppen.
+  const effectiveStatus = (o: Oppgave): OppgaveStatus =>
+    recentlyToggled.has(o.id)
+      ? (o.status === "Ferdig" ? "Åpen" : "Ferdig")
+      : o.status;
+
+  const forfalte = oppgaver.filter(o => effectiveStatus(o) !== "Ferdig" && o.frist && o.frist < today);
+  const idagOppgaver = oppgaver.filter(o => effectiveStatus(o) !== "Ferdig" && o.frist === today);
+  const ukeOppgaver = oppgaver.filter(o => effectiveStatus(o) !== "Ferdig" && o.frist >= today && o.frist <= weekEnd);
 
   const prioritetOrder: Record<Prioritet, number> = { "Høy": 0, "Medium": 1, "Lav": 2 };
 
   const sortTasks = (tasks: Oppgave[]) => {
     return [...tasks].sort((a, b) => {
-      if (a.status === "Ferdig" && b.status !== "Ferdig") return 1;
-      if (a.status !== "Ferdig" && b.status === "Ferdig") return -1;
-      if (a.status === "Ferdig" && b.status === "Ferdig") return 0;
+      const aS = effectiveStatus(a);
+      const bS = effectiveStatus(b);
+      if (aS === "Ferdig" && bS !== "Ferdig") return 1;
+      if (aS !== "Ferdig" && bS === "Ferdig") return -1;
+      if (aS === "Ferdig" && bS === "Ferdig") return 0;
       const aOverdue = a.frist && a.frist < today ? 1 : 0;
       const bOverdue = b.frist && b.frist < today ? 1 : 0;
       if (aOverdue !== bOverdue) return bOverdue - aOverdue;
