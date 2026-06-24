@@ -85,7 +85,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { selskaper, salgsmuligheter, leads, kontakter } = useCrmStore();
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
 
   const now = new Date();
   const { followUps, loading: followUpsLoading, dismiss: dismissFollowUp } = useFollowUps(leads, salgsmuligheter, selskaper);
