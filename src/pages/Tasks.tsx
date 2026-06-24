@@ -98,6 +98,25 @@ export default function Tasks() {
     updateOppgaver(prev => prev.map(o => o.id === id ? { ...o, status } : o));
   };
 
+  // Klikk på avkryssing: marker som «nettopp togglet» så raden ikke hopper
+  // umiddelbart pga. re-sortering. Fjernes etter ~1.2s slik at den glir på plass.
+  const toggleDone = (task: Oppgave) => {
+    setRecentlyToggled(prev => {
+      const next = new Set(prev);
+      next.add(task.id);
+      return next;
+    });
+    changeStatus(task.id, task.status === "Ferdig" ? "Åpen" : "Ferdig");
+    setTimeout(() => {
+      setRecentlyToggled(prev => {
+        if (!prev.has(task.id)) return prev;
+        const next = new Set(prev);
+        next.delete(task.id);
+        return next;
+      });
+    }, 1200);
+  };
+
   const changeAnsvarlig = async (taskId: string, newUserId: string) => {
     const task = oppgaver.find(o => o.id === taskId);
     if (!task) return;
