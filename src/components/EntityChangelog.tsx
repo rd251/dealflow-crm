@@ -90,11 +90,14 @@ interface EntityChangelogProps {
 }
 
 export default function EntityChangelog({ entity_type, entity_id }: EntityChangelogProps) {
+  const { isAdmin } = useAuth();
   const [entries, setEntries] = useState<ChangelogEntry[]>([]);
   const [profiles, setProfiles] = useState<Record<string, UserProfile>>({});
   const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
+    // Endringslogg er låst til admin-rollen i databasen — skip nettverkskall ellers.
+    if (!isAdmin) return;
     const fetchEntries = async () => {
       // Fetch entries where this entity is the subject OR related entity
       const [mainRes, relatedRes, profilesRes] = await Promise.all([
