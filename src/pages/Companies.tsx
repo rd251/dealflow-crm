@@ -289,7 +289,7 @@ export default function Companies() {
         const now = new Date();
         const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
         const nyMRR = selskaper
-          .filter(s => s.kundestatus === "Live" && s.lukkedato && new Date(s.lukkedato) >= monthStart)
+          .filter(s => s.kundestatus === "Live" && s.go_live_dato && new Date(s.go_live_dato) >= monthStart)
           .reduce((sum, s) => sum + s.mrr, 0);
         const taptMRR = selskaper
           .filter(s => s.kundestatus === "Kansellert" && s.kansellert_dato && new Date(s.kansellert_dato) >= monthStart)
