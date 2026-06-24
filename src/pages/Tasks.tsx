@@ -328,7 +328,7 @@ export default function Tasks() {
                 className="-m-2 p-2 shrink-0"
                 onClick={e => {
                   e.stopPropagation();
-                  if (canEdit) changeStatus(task.id, task.status === "Ferdig" ? "Åpen" : "Ferdig");
+                  if (canEdit) toggleDone(task);
                 }}
               >
                 <Checkbox checked={task.status === "Ferdig"} disabled={!canEdit} className="pointer-events-none" />
