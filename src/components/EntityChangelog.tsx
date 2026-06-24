@@ -121,7 +121,7 @@ export default function EntityChangelog({ entity_type, entity_id }: EntityChange
       setProfiles(pMap);
     };
     if (entity_id) fetchEntries();
-  }, [entity_type, entity_id]);
+  }, [entity_type, entity_id, isAdmin]);
 
   if (entries.length === 0) return null;
 
