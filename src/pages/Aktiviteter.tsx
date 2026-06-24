@@ -158,6 +158,7 @@ type EntityTypeFilter = "alle" | "selskap" | "kontakt" | "salgsmulighet" | "lead
 export default function Aktiviteter() {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
+  const { isAdmin } = useAuth();
   const [entries, setEntries] = useState<ChangelogEntry[]>([]);
   const [profiles, setProfiles] = useState<Record<string, UserProfile>>({});
   const [selskapLookup, setSelskapLookup] = useState<Record<string, string>>({});
