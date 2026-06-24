@@ -192,6 +192,7 @@ export default function Aktiviteter() {
   }, [dateFrom, dateTo, eventFilter, entityTypeFilter, userFilter]);
 
   const fetchAll = useCallback(async (reset = true) => {
+    if (!isAdmin) { setLoading(false); return; }
     const newOffset = reset ? 0 : offset;
     if (reset) { setLoading(true); setOffset(0); } else { setLoadingMore(true); }
     try {
@@ -208,9 +209,9 @@ export default function Aktiviteter() {
       setLoading(false);
       setLoadingMore(false);
     }
-  }, [buildUrl, offset]);
+  }, [buildUrl, offset, isAdmin]);
 
-  useEffect(() => { fetchAll(true); }, [dateFrom, dateTo, eventFilter, entityTypeFilter, userFilter]);
+  useEffect(() => { fetchAll(true); }, [dateFrom, dateTo, eventFilter, entityTypeFilter, userFilter, isAdmin]);
 
   // Realtime subscription
   useEffect(() => {
