@@ -214,14 +214,16 @@ export default function Dashboard() {
         .limit(8)
         .then(({ data }) => { if (data) setOppgaver(data); setOppgaverLoading(false); });
 
-      // Fetch CRM changelog
-      fetch(`${API_URL}/crm_changelog?order=created_at.desc&limit=5`, { headers: API_HEADERS })
-        .then(r => r.ok ? r.json() : [])
-        .then(data => setChangelogEntries(data))
-        .catch(() => {});
+      // Fetch CRM changelog (admin-only RLS, so skip for non-admins)
+      if (isAdmin) {
+        fetch(`${API_URL}/crm_changelog?order=created_at.desc&limit=5`, { headers: API_HEADERS })
+          .then(r => r.ok ? r.json() : [])
+          .then(data => setChangelogEntries(data))
+          .catch(() => {});
+      }
     };
     fetchDashboardData();
-  }, []);
+  }, [isAdmin]);
 
   useEffect(() => {
     const todayStart = new Date();
