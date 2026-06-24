@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import PageShell from "@/components/PageShell";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAuth } from "@/hooks/use-auth";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
