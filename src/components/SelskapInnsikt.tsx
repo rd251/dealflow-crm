@@ -76,7 +76,7 @@ export default function SelskapInnsikt({ domene, firmanavn, e_post, onEnriched }
         cacheQuery = null as any;
       }
 
-      const { data: cached } = cacheQuery ? await cacheQuery.single() : { data: null };
+      const { data: cached } = cacheQuery ? await cacheQuery.maybeSingle() : { data: null };
 
       if (cached) {
         const age = Date.now() - new Date(cached.updated_at).getTime();
