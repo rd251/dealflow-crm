@@ -383,6 +383,28 @@ function useCrmStoreInternal() {
 
   useEffect(() => { refresh(); }, [refresh]);
 
+  // Auto-refresh when the tab becomes visible again or window regains focus,
+  // so KPI cards and lists pick up changes made elsewhere (other tabs, edge
+  // functions, other users) without requiring a manual reload.
+  useEffect(() => {
+    if (!session?.access_token) return;
+    let lastRefresh = Date.now();
+    const MIN_INTERVAL_MS = 15_000;
+    const maybeRefresh = () => {
+      if (document.visibilityState !== "visible") return;
+      const now = Date.now();
+      if (now - lastRefresh < MIN_INTERVAL_MS) return;
+      lastRefresh = now;
+      refresh();
+    };
+    document.addEventListener("visibilitychange", maybeRefresh);
+    window.addEventListener("focus", maybeRefresh);
+    return () => {
+      document.removeEventListener("visibilitychange", maybeRefresh);
+      window.removeEventListener("focus", maybeRefresh);
+    };
+  }, [refresh, session?.access_token]);
+
   // Use refs to always have latest state available in sync callbacks
   const leadsRef = useRef(leads);
   leadsRef.current = leads;
