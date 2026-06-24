@@ -35,6 +35,8 @@ export default function Tasks() {
   const [editingTask, setEditingTask] = useState<Oppgave | null>(null);
   const [filter, setFilter] = useState<"alle" | "forfalte" | "idag" | "uke">("alle");
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
+  // IDs som nettopp ble krysset av/på — vises i samme posisjon i ~1.2s før re-sortering
+  const [recentlyToggled, setRecentlyToggled] = useState<Set<string>>(new Set());
   const [form, setForm] = useState({ oppgave: "", frist: "", prioritet: "Medium" as Prioritet, lead_id: "", selskap_id: "", salgsmulighet_id: "", kontakt_id: "", ansvarlig: "", notater: "" });
 
   // Fetch email contacts and merge with CRM kontakter for a unified person picker
