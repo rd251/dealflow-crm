@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import PageShell from "@/components/PageShell";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAuth } from "@/hooks/use-auth";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -158,6 +159,7 @@ type EntityTypeFilter = "alle" | "selskap" | "kontakt" | "salgsmulighet" | "lead
 export default function Aktiviteter() {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
+  const { isAdmin } = useAuth();
   const [entries, setEntries] = useState<ChangelogEntry[]>([]);
   const [profiles, setProfiles] = useState<Record<string, UserProfile>>({});
   const [selskapLookup, setSelskapLookup] = useState<Record<string, string>>({});
@@ -190,6 +192,7 @@ export default function Aktiviteter() {
   }, [dateFrom, dateTo, eventFilter, entityTypeFilter, userFilter]);
 
   const fetchAll = useCallback(async (reset = true) => {
+    if (!isAdmin) { setLoading(false); return; }
     const newOffset = reset ? 0 : offset;
     if (reset) { setLoading(true); setOffset(0); } else { setLoadingMore(true); }
     try {
@@ -206,9 +209,9 @@ export default function Aktiviteter() {
       setLoading(false);
       setLoadingMore(false);
     }
-  }, [buildUrl, offset]);
+  }, [buildUrl, offset, isAdmin]);
 
-  useEffect(() => { fetchAll(true); }, [dateFrom, dateTo, eventFilter, entityTypeFilter, userFilter]);
+  useEffect(() => { fetchAll(true); }, [dateFrom, dateTo, eventFilter, entityTypeFilter, userFilter, isAdmin]);
 
   // Realtime subscription
   useEffect(() => {

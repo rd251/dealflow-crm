@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "@/hooks/use-auth";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -89,11 +90,14 @@ interface EntityChangelogProps {
 }
 
 export default function EntityChangelog({ entity_type, entity_id }: EntityChangelogProps) {
+  const { isAdmin } = useAuth();
   const [entries, setEntries] = useState<ChangelogEntry[]>([]);
   const [profiles, setProfiles] = useState<Record<string, UserProfile>>({});
   const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
+    // Endringslogg er låst til admin-rollen i databasen — skip nettverkskall ellers.
+    if (!isAdmin) return;
     const fetchEntries = async () => {
       // Fetch entries where this entity is the subject OR related entity
       const [mainRes, relatedRes, profilesRes] = await Promise.all([
@@ -117,7 +121,7 @@ export default function EntityChangelog({ entity_type, entity_id }: EntityChange
       setProfiles(pMap);
     };
     if (entity_id) fetchEntries();
-  }, [entity_type, entity_id]);
+  }, [entity_type, entity_id, isAdmin]);
 
   if (entries.length === 0) return null;
 
