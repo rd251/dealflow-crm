@@ -379,6 +379,10 @@ export default function Companies() {
         const kpis = [
           { label: mrrLabel, value: nok(totalMRR), icon: <DollarSign className="w-4 h-4" /> },
           { label: arrLabel, value: nok(totalARR), icon: <BarChart3 className="w-4 h-4" /> },
+          ...(portfolio === "partner" ? [
+            { label: "Fakturerbart MRR", value: nok(fakturerbartMRR), icon: <DollarSign className="w-4 h-4" />, sub: "Til oss fra partner" },
+            { label: "Fakturerbart ARR", value: nok(fakturerbartARR), icon: <BarChart3 className="w-4 h-4" />, sub: "Til oss fra partner" },
+          ] : []),
           { label: "Netto MRR", value: `${nettoMRR >= 0 ? "" : "−"}${nok(Math.abs(nettoMRR))}`, icon: nettoMRR >= 0 ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" /> },
           { label: "Aktive kunder", value: `${aktiveKunder}`, icon: <Users className="w-4 h-4" /> },
           { label: "Ikke-live MRR", value: nok(ikkeLiveMRR), icon: <DollarSign className="w-4 h-4" /> },
@@ -388,6 +392,7 @@ export default function Companies() {
           { label: "Churn", value: `${churnRate}%`, icon: <PieChart className="w-4 h-4" />, sub: `${kansellertCount} kansellert` },
           { label: "Vunnet", value: `${wonCount}`, icon: <Trophy className="w-4 h-4" />, sub: `${vunnetDenneMnd} denne mnd` },
           { label: "Tapt", value: `${scopeSm.filter(s => s.status === "Tapt").length}`, icon: <XCircle className="w-4 h-4" />, sub: `${taptDenneMnd} denne mnd` },
+
           { label: "Kansellerte", value: `${kansellertCount}`, icon: <UserMinus className="w-4 h-4" />, sub: `${kansellertDenneMnd} denne mnd` },
         ];
         return (
