@@ -22,7 +22,8 @@ type SortKey = "firmanavn" | "bransje" | "kundestatus" | "kundeansvarlig" | "sis
 export default function AlleSelskaper() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const { selskaper, kontakter } = useCrmStore();
+  const { selskaper, kontakter, partnere } = useCrmStore();
+  const partnerNavn = (id?: string) => id ? partnere.find(p => p.id === id)?.partnernavn : undefined;
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState<SortKey | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
