@@ -60,6 +60,8 @@ function rowToSalgsmulighet(r: any): Salgsmulighet {
     dealbuilder_dokument_id: r.dealbuilder_dokument_id || "",
     valgt_pakke: r.valgt_pakke || "",
     ai_recap: r.ai_recap || null,
+    videresendt_til_partner_id: r.videresendt_til_partner_id || "",
+    videresendt_dato: r.videresendt_dato || "",
   } as Salgsmulighet;
 }
 function rowToProsjekt(r: any): Prosjekt {
@@ -648,6 +650,8 @@ function useCrmStoreInternal() {
           rolle_i_firma: emptyToNull(item.rolle_i_firma), use_case: emptyToNull(item.use_case),
           kontaktperson: emptyToNull(item.kontaktperson), e_post: emptyToNull(item.e_post),
           telefon: emptyToNull(item.telefon),
+          videresendt_til_partner_id: emptyToNull(item.videresendt_til_partner_id),
+          videresendt_dato: emptyToNull(item.videresendt_dato),
         });
       }
     }
@@ -669,6 +673,8 @@ function useCrmStoreInternal() {
           rolle_i_firma: emptyToNull(item.rolle_i_firma), use_case: emptyToNull(item.use_case),
           kontaktperson: emptyToNull(item.kontaktperson), e_post: emptyToNull(item.e_post),
           telefon: emptyToNull(item.telefon),
+          videresendt_til_partner_id: emptyToNull(item.videresendt_til_partner_id),
+          videresendt_dato: emptyToNull(item.videresendt_dato),
         });
       }
     }
