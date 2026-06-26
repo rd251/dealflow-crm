@@ -42,12 +42,17 @@ function InlinePartnerName({ value, canEdit, onSave }: { value: string; canEdit:
     );
   }
   return (
-    <span
-      className="hover:underline decoration-dotted"
-      onDoubleClick={e => { e.stopPropagation(); setDraft(value); setEditing(true); }}
-      title="Dobbeltklikk for å endre navn"
-    >
-      {value}
+    <span className="inline-flex items-center gap-1 group">
+      <span>{value}</span>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+        title="Endre navn"
+        onClick={(e) => { e.stopPropagation(); setDraft(value); setEditing(true); }}
+      >
+        <Pencil className="w-3 h-3" />
+      </Button>
     </span>
   );
 }
