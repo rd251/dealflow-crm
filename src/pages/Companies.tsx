@@ -282,10 +282,21 @@ export default function Companies() {
         </DialogContent>
       </Dialog>
 
+      {/* ─── Portfolio tabs ─── */}
+      <Tabs value={portfolio} onValueChange={v => setPortfolio(v as "egen" | "partner")} className="mb-4">
+        <TabsList>
+          <TabsTrigger value="egen">Vår portefølje</TabsTrigger>
+          <TabsTrigger value="partner">Partner-portefølje</TabsTrigger>
+        </TabsList>
+      </Tabs>
+
       {/* ─── KPI ─── */}
       {(() => {
-        
-        const liveSelskaper = selskaper.filter(s => s.kundestatus === "Live");
+        const scopeSelskaper = selskaper.filter(s => portfolio === "partner" ? !!s.partner_id : !s.partner_id);
+        const scopeIds = new Set(scopeSelskaper.map(s => s.id));
+        const scopeSm = salgsmuligheter.filter(sm => scopeIds.has(sm.selskap_id) || (portfolio === "partner" ? !!sm.partner_id : !sm.partner_id));
+
+        const liveSelskaper = scopeSelskaper.filter(s => s.kundestatus === "Live");
         const aktiveKunder = liveSelskaper.length;
         const totalMRR = liveSelskaper.reduce((sum, s) => sum + s.mrr, 0);
         const totalARR = totalMRR * 12;
@@ -293,36 +304,39 @@ export default function Companies() {
         // Netto MRR: new MRR this month minus lost MRR this month
         const now = new Date();
         const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-        const nyMRR = selskaper
+        const nyMRR = scopeSelskaper
           .filter(s => s.kundestatus === "Live" && s.go_live_dato && new Date(s.go_live_dato) >= monthStart)
           .reduce((sum, s) => sum + s.mrr, 0);
-        const taptMRR = selskaper
+        const taptMRR = scopeSelskaper
           .filter(s => s.kundestatus === "Kansellert" && s.kansellert_dato && new Date(s.kansellert_dato) >= monthStart)
           .reduce((sum, s) => sum + s.mrr, 0);
         const nettoMRR = nyMRR - taptMRR;
 
         // Ikke-live MRR/ARR (Pilot, Pause etc.)
-        const ikkeLiveSelskaper = selskaper.filter(s => s.kundestatus !== "Live" && s.kundestatus !== "Kansellert" && s.kundestatus !== "Ikke kunde");
+        const ikkeLiveSelskaper = scopeSelskaper.filter(s => s.kundestatus !== "Live" && s.kundestatus !== "Kansellert" && s.kundestatus !== "Ikke kunde");
         const ikkeLiveMRR = ikkeLiveSelskaper.reduce((sum, s) => sum + s.mrr, 0);
         const ikkeLiveARR = ikkeLiveMRR * 12;
 
-        const openSm = salgsmuligheter.filter(s => s.status !== "Vunnet" && s.status !== "Tapt");
+        const openSm = scopeSm.filter(s => s.status !== "Vunnet" && s.status !== "Tapt");
         const pipelineVerdi = openSm.reduce((sum, s) => sum + beregnTotalKontraktsverdi(s), 0);
-        const allClosed = salgsmuligheter.filter(s => s.status === "Vunnet" || s.status === "Tapt");
-        const wonCount = salgsmuligheter.filter(s => s.status === "Vunnet").length;
+        const allClosed = scopeSm.filter(s => s.status === "Vunnet" || s.status === "Tapt");
+        const wonCount = scopeSm.filter(s => s.status === "Vunnet").length;
         const winRate = allClosed.length > 0 ? Math.round((wonCount / allClosed.length) * 100) : 0;
-        const kansellertCount = selskaper.filter(s => s.kundestatus === "Kansellert").length;
-        const totalKunder = selskaper.filter(s => ["Live", "Kansellert"].includes(s.kundestatus)).length;
+        const kansellertCount = scopeSelskaper.filter(s => s.kundestatus === "Kansellert").length;
+        const totalKunder = scopeSelskaper.filter(s => ["Live", "Kansellert"].includes(s.kundestatus)).length;
         const churnRate = totalKunder > 0 ? Math.round((kansellertCount / totalKunder) * 100) : 0;
 
         // Denne måneden
-        const vunnetDenneMnd = salgsmuligheter.filter(s => s.status === "Vunnet" && s.vunnet_dato && new Date(s.vunnet_dato) >= monthStart).length;
-        const taptDenneMnd = salgsmuligheter.filter(s => s.status === "Tapt" && s.tapt_dato && new Date(s.tapt_dato) >= monthStart).length;
-        const kansellertDenneMnd = selskaper.filter(s => s.kundestatus === "Kansellert" && s.kansellert_dato && new Date(s.kansellert_dato) >= monthStart).length;
+        const vunnetDenneMnd = scopeSm.filter(s => s.status === "Vunnet" && s.vunnet_dato && new Date(s.vunnet_dato) >= monthStart).length;
+        const taptDenneMnd = scopeSm.filter(s => s.status === "Tapt" && s.tapt_dato && new Date(s.tapt_dato) >= monthStart).length;
+        const kansellertDenneMnd = scopeSelskaper.filter(s => s.kundestatus === "Kansellert" && s.kansellert_dato && new Date(s.kansellert_dato) >= monthStart).length;
+
+        const mrrLabel = portfolio === "partner" ? "Partner MRR" : "MRR";
+        const arrLabel = portfolio === "partner" ? "Partner ARR" : "ARR";
 
         const kpis = [
-          { label: "MRR", value: nok(totalMRR), icon: <DollarSign className="w-4 h-4" /> },
-          { label: "ARR", value: nok(totalARR), icon: <BarChart3 className="w-4 h-4" /> },
+          { label: mrrLabel, value: nok(totalMRR), icon: <DollarSign className="w-4 h-4" /> },
+          { label: arrLabel, value: nok(totalARR), icon: <BarChart3 className="w-4 h-4" /> },
           { label: "Netto MRR", value: `${nettoMRR >= 0 ? "" : "−"}${nok(Math.abs(nettoMRR))}`, icon: nettoMRR >= 0 ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" /> },
           { label: "Aktive kunder", value: `${aktiveKunder}`, icon: <Users className="w-4 h-4" /> },
           { label: "Ikke-live MRR", value: nok(ikkeLiveMRR), icon: <DollarSign className="w-4 h-4" /> },
@@ -331,7 +345,7 @@ export default function Companies() {
           { label: "Win rate", value: `${winRate}%`, icon: <Target className="w-4 h-4" />, sub: `${wonCount} av ${allClosed.length}` },
           { label: "Churn", value: `${churnRate}%`, icon: <PieChart className="w-4 h-4" />, sub: `${kansellertCount} kansellert` },
           { label: "Vunnet", value: `${wonCount}`, icon: <Trophy className="w-4 h-4" />, sub: `${vunnetDenneMnd} denne mnd` },
-          { label: "Tapt", value: `${salgsmuligheter.filter(s => s.status === "Tapt").length}`, icon: <XCircle className="w-4 h-4" />, sub: `${taptDenneMnd} denne mnd` },
+          { label: "Tapt", value: `${scopeSm.filter(s => s.status === "Tapt").length}`, icon: <XCircle className="w-4 h-4" />, sub: `${taptDenneMnd} denne mnd` },
           { label: "Kansellerte", value: `${kansellertCount}`, icon: <UserMinus className="w-4 h-4" />, sub: `${kansellertDenneMnd} denne mnd` },
         ];
         return (
