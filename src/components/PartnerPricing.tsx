@@ -370,7 +370,21 @@ export default function PartnerPricing({
                         <h4 className="font-semibold">{p.navn}</h4>
                         {!p.aktiv && <Badge variant="outline" className="text-[10px]">Inaktiv</Badge>}
                       </div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h4 className="font-semibold">{p.navn}</h4>
+                        {!p.aktiv && <Badge variant="outline" className="text-[10px]">Inaktiv</Badge>}
+                        <Badge variant="secondary" className="text-[10px]">
+                          {(kunderByPakke[p.id]?.length || 0)} kunde{(kunderByPakke[p.id]?.length || 0) === 1 ? "" : "r"}
+                        </Badge>
+                      </div>
                       {p.beskrivelse && <p className="text-xs text-muted-foreground mt-0.5">{p.beskrivelse}</p>}
+                      {(kunderByPakke[p.id]?.length || 0) > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {kunderByPakke[p.id].map((k) => (
+                            <Badge key={k.id} variant="outline" className="text-[10px] font-normal">{k.firmanavn}</Badge>
+                          ))}
+                        </div>
+                      )}
                     </div>
                     <div className="flex shrink-0">
                       <Button size="sm" variant="ghost" onClick={() => openEditPakke(p)}><Pencil className="w-3 h-3" /></Button>
