@@ -13,7 +13,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import DetailPanelShell, { DetailSection, DetailField, DetailDivider } from "@/components/DetailPanelShell";
 import EntityCalendarTab from "@/components/EntityCalendarTab";
-import { Plus, Search, Trash2, Users, DollarSign, BarChart3, Percent, Check, X } from "lucide-react";
+import { Plus, Search, Trash2, Users, DollarSign, BarChart3, Percent, Check, X, Pencil } from "lucide-react";
 import { Partner, Partnertype, Partnerstatus, Provisjonstype, beregnTotalKontraktsverdi } from "@/data/crm-data";
 import { Badge } from "@/components/ui/badge";
 import LastActivityBadge from "@/components/LastActivityBadge";
@@ -42,12 +42,17 @@ function InlinePartnerName({ value, canEdit, onSave }: { value: string; canEdit:
     );
   }
   return (
-    <span
-      className="hover:underline decoration-dotted"
-      onDoubleClick={e => { e.stopPropagation(); setDraft(value); setEditing(true); }}
-      title="Dobbeltklikk for å endre navn"
-    >
-      {value}
+    <span className="inline-flex items-center gap-1 group">
+      <span>{value}</span>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+        title="Endre navn"
+        onClick={(e) => { e.stopPropagation(); setDraft(value); setEditing(true); }}
+      >
+        <Pencil className="w-3 h-3" />
+      </Button>
     </span>
   );
 }
