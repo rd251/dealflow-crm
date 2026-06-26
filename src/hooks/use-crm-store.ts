@@ -593,6 +593,7 @@ function useCrmStoreInternal() {
           kundetilstand: item.kundetilstand, sist_aktivitet: emptyToNull(item.sist_aktivitet),
           neste_steg: emptyToNull(item.neste_steg), notater: emptyToNull(item.notater),
           kilde: emptyToNull(item.kilde), partner_id: emptyToNull(item.partner_id),
+          partner_pakke_id: emptyToNull(item.partner_pakke_id as any),
           lukkedato: emptyToNull(item.lukkedato),
         });
       }
