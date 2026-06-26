@@ -153,9 +153,24 @@ export default function Kontaktstrom() {
     handleGmailSync(true);
   }, []);
 
+  // Map ansvarlig (display_name / email) -> user_id so CRM-eide kontakter også kan filtreres på eier
+  const ansvarligToUserId = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const p of profiles) {
+      if (p.display_name) m.set(p.display_name.toLowerCase().trim(), p.user_id);
+      if (p.email) m.set(p.email.toLowerCase().trim(), p.user_id);
+    }
+    return m;
+  }, [profiles]);
+  const resolveOwner = (ansvarlig?: string | null): string | null => {
+    if (!ansvarlig) return null;
+    return ansvarligToUserId.get(ansvarlig.toLowerCase().trim()) || null;
+  };
+
   // Build unified person list
   const persons = useMemo(() => {
     const map = new Map<string, KontaktStromPerson>();
+
 
     const getSelskapNavn = (id: string) => selskaper.find(s => s.id === id)?.firmanavn || "";
     const getSelskapStatus = (id: string) => selskaper.find(s => s.id === id)?.kundestatus || "";
