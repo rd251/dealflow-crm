@@ -315,14 +315,14 @@ export default function Companies() {
         let totalMRR = liveSelskaper.reduce((sum, s) => sum + s.mrr, 0);
         let totalARR = totalMRR * 12;
 
-        // For partner portfolio, also calculate "Fakturerbart" (what we bill the partner)
-        // = sum of included minutes on assigned packages × cost per minute from partner tier
+        // Fakturerbart MRR fra partner-kunder (alltid beregnet, basert på live partner-kunder)
+        // = sum av inkluderte minutter på tildelte pakker × kostpris per minutt fra partner-tier
         let fakturerbartMRR = 0;
-        if (portfolio === "partner") {
-          const liveByPartner: Record<string, typeof liveSelskaper> = {};
-          for (const s of liveSelskaper) {
-            if (!s.partner_id) continue;
-            (liveByPartner[s.partner_id] ||= []).push(s);
+        {
+          const livePartnerSelskaper = selskaper.filter(s => s.kundestatus === "Live" && !!s.partner_id);
+          const liveByPartner: Record<string, typeof livePartnerSelskaper> = {};
+          for (const s of livePartnerSelskaper) {
+            (liveByPartner[s.partner_id!] ||= []).push(s);
           }
           for (const [pid, kunder] of Object.entries(liveByPartner)) {
             const count = kunder.length;
@@ -340,6 +340,13 @@ export default function Companies() {
           }
         }
         const fakturerbartARR = fakturerbartMRR * 12;
+
+        // På "Vår portefølje" plusses fakturerbart fra partner-kunder inn i totalen
+        if (portfolio === "egen") {
+          totalMRR += fakturerbartMRR;
+          totalARR += fakturerbartARR;
+        }
+
 
 
 
