@@ -20,6 +20,7 @@ import ActivityLog from "@/components/ActivityLog";
 import SelskapInnsikt from "@/components/SelskapInnsikt";
 import SendPartnerContractModal from "@/components/SendPartnerContractModal";
 import PartnerDocuments from "@/components/PartnerDocuments";
+import PartnerPricing from "@/components/PartnerPricing";
 import { useAuth } from "@/hooks/use-auth";
 
 const partnertypeOptions: Partnertype[] = ["Provisjonspartner", "Integrasjonspartner", "Salgspartner", "Strategisk partner"];
@@ -175,6 +176,7 @@ export default function PartnerProfile() {
         <Tabs defaultValue="aktiviteter">
           <TabsList className="flex-wrap h-auto gap-1">
              <TabsTrigger value="aktiviteter" className="text-xs sm:text-sm">Aktiviteter</TabsTrigger>
+             <TabsTrigger value="prising" className="text-xs sm:text-sm">Prising & fakturering</TabsTrigger>
              <TabsTrigger value="dokumenter" className="text-xs sm:text-sm">Dokumenter</TabsTrigger>
              <TabsTrigger value="kunder" className="text-xs sm:text-sm">Kunder ({partnerKunder.length})</TabsTrigger>
              <TabsTrigger value="kontakter" className="text-xs sm:text-sm">Kontakter ({partnerKontakter.length})</TabsTrigger>
@@ -184,6 +186,11 @@ export default function PartnerProfile() {
           {/* Aktiviteter tab */}
           <TabsContent value="aktiviteter">
             <ActivityLog partner_id={id} kontaktListe={kontakter.map(k => ({ id: k.id, navn: k.navn }))} />
+          </TabsContent>
+
+          {/* Prising tab */}
+          <TabsContent value="prising">
+            <PartnerPricing partnerId={id!} aktiveKunderCount={liveKunder.length} />
           </TabsContent>
 
           {/* Dokumenter tab */}
