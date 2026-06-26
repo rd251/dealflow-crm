@@ -209,6 +209,14 @@ export default function CompanyProfile() {
                 <Badge className={kundestatusColors[selskap.kundestatus]}>{selskap.kundestatus}</Badge>
                 {selskap.bransje && <span className="text-sm text-muted-foreground">{selskap.bransje}</span>}
                 {selskap.live_status && <Badge className="bg-success/10 text-success">Live</Badge>}
+                {selskap.partner_id && (() => {
+                  const p = partnere.find(pp => pp.id === selskap.partner_id);
+                  return p ? (
+                    <Badge variant="outline" className="text-[10px] border-primary/30 text-primary cursor-pointer" onClick={() => navigate(`/partnere/${p.id}`)}>
+                      Kunde hos {p.partnernavn}
+                    </Badge>
+                  ) : null;
+                })()}
               </div>
             </div>
           </div>
