@@ -957,7 +957,7 @@ export default function Salgsmuligheter() {
                 <Send className="w-3.5 h-3.5 mr-1.5" />Videresend
               </Button>
             )}
-            <Button size="sm" className="bg-success hover:bg-success/90 text-success-foreground" onClick={() => { vinnSalgsmulighet(currentSm.id); setSelectedSm(null); }}>
+            <Button size="sm" className="bg-success hover:bg-success/90 text-success-foreground" onClick={() => { setWinPartnerId(currentSm.partner_id || ""); setWinDialog(currentSm.id); setSelectedSm(null); }}>
               <Trophy className="w-3.5 h-3.5 mr-1.5" />Vunnet
             </Button>
             <Button size="sm" variant="destructive" onClick={() => { setSelectedSm(null); setLossDialog(currentSm.id); }}>
