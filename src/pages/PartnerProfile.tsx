@@ -245,6 +245,7 @@ export default function PartnerProfile() {
                     <tr className="border-b bg-muted/50">
                       <th className="text-left px-4 py-3 font-medium">Kunde</th>
                       <th className="text-left px-4 py-3 font-medium">Status</th>
+                      <th className="text-left px-4 py-3 font-medium">Pakke</th>
                       <th className="text-right px-4 py-3 font-medium">MRR</th>
                       <th className="text-right px-4 py-3 font-medium">Oppstart</th>
                       <th className="text-right px-4 py-3 font-medium">Kontraktsverdi</th>
@@ -257,10 +258,32 @@ export default function PartnerProfile() {
                     {partnerKunder.map(k => {
                       const sm = salgsmuligheter.find(s => s.selskap_id === k.id && s.partner_id === id);
                       const kontraktsverdi = sm ? beregnTotalKontraktsverdi(sm) : 0;
+                      const valgtPakke = partnerPakker.find(p => p.id === k.partner_pakke_id);
                       return (
                         <tr key={k.id} className="border-b last:border-0 hover:bg-muted/30 cursor-pointer" onClick={() => navigate(`/selskaper/${k.id}`)}>
                           <td className="px-4 py-3 font-medium">{k.firmanavn}</td>
                           <td className="px-4 py-3"><Badge variant="outline" className="text-xs">{k.kundestatus}</Badge></td>
+                          <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
+                            <select
+                              className="border rounded px-2 py-1 text-xs bg-background max-w-[160px]"
+                              value={k.partner_pakke_id || ""}
+                              onChange={e => {
+                                const pakkeId = e.target.value || null;
+                                const pakke = partnerPakker.find(p => p.id === pakkeId);
+                                updateSelskaper(prev => prev.map(s => s.id === k.id ? {
+                                  ...s,
+                                  partner_pakke_id: pakkeId,
+                                  mrr: pakke ? Number(pakke.utsalgspris_sluttkunde) : s.mrr,
+                                  arr: pakke ? Number(pakke.utsalgspris_sluttkunde) * 12 : s.arr,
+                                } : s));
+                              }}
+                            >
+                              <option value="">— Velg pakke —</option>
+                              {partnerPakker.map(p => (
+                                <option key={p.id} value={p.id}>{p.navn} ({p.inkluderte_minutter} min)</option>
+                              ))}
+                            </select>
+                          </td>
                           <td className="px-4 py-3 text-right font-mono">{k.mrr.toLocaleString("no-NO")}</td>
                           <td className="px-4 py-3 text-right font-mono">{k.oppstartskostnad.toLocaleString("no-NO")}</td>
                           <td className="px-4 py-3 text-right font-mono">{kontraktsverdi.toLocaleString("no-NO")}</td>
