@@ -884,6 +884,11 @@ export default function Salgsmuligheter() {
                 <Mail className="w-3.5 h-3.5 mr-1.5" />E-post
               </Button>
             )}
+            {isAdmin && (
+              <Button size="sm" variant="outline" onClick={() => openForwardDialog(currentSm)}>
+                <Send className="w-3.5 h-3.5 mr-1.5" />Videresend
+              </Button>
+            )}
             <Button size="sm" className="bg-success hover:bg-success/90 text-success-foreground" onClick={() => { vinnSalgsmulighet(currentSm.id); setSelectedSm(null); }}>
               <Trophy className="w-3.5 h-3.5 mr-1.5" />Vunnet
             </Button>
