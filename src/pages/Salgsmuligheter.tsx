@@ -175,6 +175,86 @@ export default function Salgsmuligheter() {
   const [pipelineView, setPipelineView] = useState<"kanban" | "table">(() => (localStorage.getItem("pipelineView") as "kanban" | "table") || "kanban");
   useEffect(() => { localStorage.setItem("pipelineView", pipelineView); }, [pipelineView]);
 
+  // Forward to partner
+  const [forwardDialogSm, setForwardDialogSm] = useState<Salgsmulighet | null>(null);
+  const [forwardPartnerId, setForwardPartnerId] = useState<string>("");
+  const [forwardMessage, setForwardMessage] = useState<string>("");
+  const [forwardSending, setForwardSending] = useState<boolean>(false);
+
+  const openForwardDialog = (sm: Salgsmulighet) => {
+    setForwardDialogSm(sm);
+    setForwardPartnerId("");
+    setForwardMessage("");
+  };
+
+  const sendForward = async () => {
+    if (!forwardDialogSm || !forwardPartnerId) return;
+    const partner = partnere.find(p => p.id === forwardPartnerId);
+    if (!partner) { toast.error("Fant ikke valgt partner"); return; }
+    if (!partner.e_post) { toast.error("Partneren mangler e-postadresse"); return; }
+    setForwardSending(true);
+    const sm = forwardDialogSm;
+    const today = new Date().toISOString().split("T")[0];
+    const selskap = selskaper.find(s => s.id === sm.selskap_id);
+    try {
+      const { error: emailErr } = await supabase.functions.invoke("send-transactional-email", {
+        body: {
+          templateName: "deal-forwarded-to-partner",
+          recipientEmail: partner.e_post,
+          idempotencyKey: `deal-forward-${sm.id}-${partner.id}-${today}`,
+          templateData: {
+            partner_navn: partner.partnernavn,
+            deal_navn: sm.navn,
+            selskap_firmanavn: selskap?.firmanavn || "",
+            kontaktperson: sm.kontaktperson,
+            kontakt_epost: sm.e_post,
+            kontakt_telefon: sm.telefon,
+            kontakt_rolle: sm.rolle_i_firma,
+            status: sm.status,
+            kilde: sm.kilde,
+            use_case: sm.use_case,
+            notater: sm.notater,
+            forventet_mrr: sm.forventet_mrr,
+            oppstartskostnad: sm.oppstartskostnad,
+            kontraktslengde_mnd: sm.kontraktslengde_mnd,
+            forventet_lukkedato: sm.forventet_lukkedato,
+            neste_steg: sm.neste_steg,
+            videresendt_av: user?.email || "Snakk",
+            intern_melding: forwardMessage,
+          },
+        },
+      });
+      if (emailErr) throw emailErr;
+
+      updateSalgsmuligheter(prev => prev.map(s => s.id === sm.id
+        ? { ...s, videresendt_til_partner_id: partner.id, videresendt_dato: today, sist_aktivitet: today }
+        : s));
+
+      try {
+        await supabase.from("aktiviteter").insert({
+          type: "E-post",
+          tittel: `Videresendt til partner: ${partner.partnernavn}`,
+          beskrivelse: `Salgsmulighet videresendt til ${partner.partnernavn} (${partner.e_post}).${forwardMessage ? `\n\nMelding: ${forwardMessage}` : ""}`,
+          dato: new Date().toISOString(),
+          salgsmulighet_id: sm.id,
+          selskap_id: sm.selskap_id || null,
+          partner_id: partner.id,
+          aktivitet_kilde: "manuell",
+        });
+      } catch (logErr) {
+        console.warn("Activity log failed", logErr);
+      }
+
+      toast.success(`Salgsmulighet videresendt til ${partner.partnernavn}`);
+      setForwardDialogSm(null);
+    } catch (err: any) {
+      console.error("Forward failed", err);
+      toast.error(`Kunne ikke videresende: ${err?.message || "ukjent feil"}`);
+    } finally {
+      setForwardSending(false);
+    }
+  };
+
   useEffect(() => {
     const openId = searchParams.get("open");
     if (openId && salgsmuligheter.length > 0) {
