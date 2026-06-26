@@ -169,6 +169,27 @@ export default function PartnerPricing({
     load();
   };
 
+  const addPresetPakker = async (key: string) => {
+    const presets = key === "__all__" ? PRESET_PAKKER : PRESET_PAKKER.filter((p) => p.navn === key);
+    if (presets.length === 0) return;
+    const existing = new Set(pakker.map((p) => p.navn.toLowerCase()));
+    const toInsert = presets.filter((p) => !existing.has(p.navn.toLowerCase())).map((p, i) => ({
+      partner_id: partnerId,
+      navn: p.navn,
+      beskrivelse: p.beskrivelse,
+      inkluderte_minutter: p.inkluderte_minutter,
+      utsalgspris_sluttkunde: p.utsalgspris_sluttkunde,
+      ekstra_min_pris: p.ekstra_min_pris,
+      aktiv: true,
+      sortering: pakker.length + i + 1,
+    }));
+    if (toInsert.length === 0) return toast.info("Allerede lagt til");
+    const { error } = await supabase.from("partner_pakker").insert(toInsert);
+    if (error) return toast.error(error.message);
+    toast.success(`La til ${toInsert.length} pakke${toInsert.length === 1 ? "" : "r"}`);
+    load();
+  };
+
   const deletePakke = async (id: string) => {
     if (!confirm("Slett pakke?")) return;
     const { error } = await supabase.from("partner_pakker").delete().eq("id", id);
