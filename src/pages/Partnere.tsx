@@ -13,10 +13,44 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import DetailPanelShell, { DetailSection, DetailField, DetailDivider } from "@/components/DetailPanelShell";
 import EntityCalendarTab from "@/components/EntityCalendarTab";
-import { Plus, Search, Trash2, Users, DollarSign, BarChart3, Percent } from "lucide-react";
+import { Plus, Search, Trash2, Users, DollarSign, BarChart3, Percent, Check, X } from "lucide-react";
 import { Partner, Partnertype, Partnerstatus, Provisjonstype, beregnTotalKontraktsverdi } from "@/data/crm-data";
 import { Badge } from "@/components/ui/badge";
 import LastActivityBadge from "@/components/LastActivityBadge";
+import CompanyLogo from "@/components/CompanyLogo";
+
+function InlinePartnerName({ value, canEdit, onSave }: { value: string; canEdit: boolean; onSave: (v: string) => void }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value);
+  if (!canEdit) return <span>{value}</span>;
+  if (editing) {
+    return (
+      <span className="inline-flex items-center gap-1" onClick={e => e.stopPropagation()}>
+        <Input
+          value={draft}
+          autoFocus
+          onChange={e => setDraft(e.target.value)}
+          onKeyDown={e => {
+            if (e.key === "Enter") { onSave(draft.trim() || value); setEditing(false); }
+            if (e.key === "Escape") { setDraft(value); setEditing(false); }
+          }}
+          className="h-7 text-sm w-44"
+        />
+        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { onSave(draft.trim() || value); setEditing(false); }}><Check className="w-3.5 h-3.5" /></Button>
+        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setDraft(value); setEditing(false); }}><X className="w-3.5 h-3.5" /></Button>
+      </span>
+    );
+  }
+  return (
+    <span
+      className="hover:underline decoration-dotted"
+      onDoubleClick={e => { e.stopPropagation(); setDraft(value); setEditing(true); }}
+      title="Dobbeltklikk for å endre navn"
+    >
+      {value}
+    </span>
+  );
+}
 
 const partnertypeOptions: Partnertype[] = ["Provisjonspartner", "Integrasjonspartner", "Salgspartner", "Strategisk partner"];
 const partnerstatusOptions: Partnerstatus[] = ["Aktiv", "Under onboarding", "Inaktiv"];
@@ -164,10 +198,16 @@ export default function Partnere() {
         <div className="space-y-3">
           {filtered.map(partner => {
             const stats = getPartnerStats(partner.id);
+            const selskap = selskaper.find(s => s.id === partner.selskap_id);
             return (
               <div key={partner.id} className="bg-card border rounded-xl p-4 space-y-2 cursor-pointer" onClick={() => navigate(`/partnere/${partner.id}`)}>
-                <div className="flex items-center justify-between">
-                  <p className="font-semibold text-sm truncate">{partner.partnernavn}</p>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <CompanyLogo size="sm" domain={selskap?.domene} firmanavn={selskap?.firmanavn || partner.partnernavn} />
+                    <p className="font-semibold text-sm truncate">
+                      <InlinePartnerName value={partner.partnernavn} canEdit={canEdit} onSave={(v) => updatePartnere(prev => prev.map(p => p.id === partner.id ? { ...p, partnernavn: v } : p))} />
+                    </p>
+                  </div>
                   <Badge className={`text-[10px] shrink-0 ${statusColors[partner.partnerstatus]}`}>{partner.partnerstatus}</Badge>
                 </div>
                 <p className="text-xs text-muted-foreground">{partner.kontaktperson}</p>
@@ -203,11 +243,16 @@ export default function Partnere() {
             <tbody>
               {filtered.map(partner => {
                 const stats = getPartnerStats(partner.id);
+                const selskap = selskaper.find(s => s.id === partner.selskap_id);
                 return (
                   <tr key={partner.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => navigate(`/partnere/${partner.id}`)}>
-                    <td className="px-4 py-3 font-medium">{partner.partnernavn}</td>
+                    <td className="px-4 py-3 font-medium">
+                      <div className="flex items-center gap-2">
+                        <CompanyLogo size="sm" domain={selskap?.domene} firmanavn={selskap?.firmanavn || partner.partnernavn} />
+                        <InlinePartnerName value={partner.partnernavn} canEdit={canEdit} onSave={(v) => updatePartnere(prev => prev.map(p => p.id === partner.id ? { ...p, partnernavn: v, sist_aktivitet: new Date().toISOString().split("T")[0] } : p))} />
+                      </div>
+                    </td>
                     <td className="px-4 py-3">{(() => {
-                      const selskap = selskaper.find(s => s.id === partner.selskap_id);
                       return selskap ? (
                         <button className="text-primary hover:underline text-sm" onClick={e => { e.stopPropagation(); navigate(`/selskaper/${selskap.id}`); }}>{selskap.firmanavn}</button>
                       ) : <span className="text-muted-foreground text-xs">—</span>;
