@@ -191,13 +191,16 @@ export default function PartnerProfile() {
 
       <main className={`${isMobile ? "p-4" : "p-8"} space-y-6 sm:space-y-8`}>
         {/* KPI cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3 sm:gap-4">
           <StatCard label="Kunder fra partner" value={antallKunder} icon={<Users className="w-5 h-5" />} />
           <StatCard label="Aktiv MRR" value={nok(aktivMrr)} icon={<DollarSign className="w-5 h-5" />} />
           <StatCard label="ARR" value={nok(arr)} icon={<TrendingUp className="w-5 h-5" />} />
+          <StatCard label="Fakturerbart MRR" value={nok(fakturerbartMrr)} icon={<DollarSign className="w-5 h-5" />} />
+          <StatCard label="Fakturerbart ARR" value={nok(fakturerbartArr)} icon={<TrendingUp className="w-5 h-5" />} />
           <StatCard label="Total kontrakt" value={nok(totalKontraktsverdi)} icon={<FileText className="w-5 h-5" />} />
           <StatCard label="Aktive avtaler" value={aktiveAvtaler.length} icon={<Handshake className="w-5 h-5" />} />
         </div>
+
 
         {/* Tabs */}
         <Tabs defaultValue="aktiviteter">
