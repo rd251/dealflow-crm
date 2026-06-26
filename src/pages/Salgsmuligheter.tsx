@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import DetailPanelShell, { DetailSection, DetailField, DetailDivider, DetailStatGrid, DetailStatCard } from "@/components/DetailPanelShell";
 import EntityCalendarTab from "@/components/EntityCalendarTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, GripVertical, Trophy, XCircle, Trash2, Phone, User, AlertTriangle, Clock, Building2, DollarSign, Mail, FileSignature, PartyPopper, Globe, ExternalLink, Linkedin, PenLine, NotebookPen } from "lucide-react";
+import { Plus, GripVertical, Trophy, XCircle, Trash2, Phone, User, AlertTriangle, Clock, Building2, DollarSign, Mail, FileSignature, PartyPopper, Globe, ExternalLink, Linkedin, PenLine, NotebookPen, Send } from "lucide-react";
 import SendEmailDialog from "@/components/SendEmailDialog";
 import SelskapInnsikt from "@/components/SelskapInnsikt";
 import CompanyLogo from "@/components/CompanyLogo";
@@ -158,9 +158,9 @@ export default function Salgsmuligheter() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const isMobile = useIsMobile();
-  const { canEdit, user } = useAuth();
+  const { canEdit, isAdmin, user } = useAuth();
   const { profiles } = useProfiles();
-  const { salgsmuligheter, selskaper, kontakter, updateSalgsmuligheter, updateSelskaper, updateKontakter, vinnSalgsmulighet, tapSalgsmulighet, generateId } = useCrmStore();
+  const { salgsmuligheter, selskaper, kontakter, partnere, updateSalgsmuligheter, updateSelskaper, updateKontakter, vinnSalgsmulighet, tapSalgsmulighet, generateId } = useCrmStore();
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [dragOverStage, setDragOverStage] = useState<string | null>(null);
   const [selectedSm, setSelectedSm] = useState<Salgsmulighet | null>(null);
