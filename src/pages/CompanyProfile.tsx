@@ -280,6 +280,20 @@ export default function CompanyProfile() {
                     {kundestatuser.map(k => <option key={k} value={k}>{k}</option>)}
                   </select>
                 </div>
+                <div>
+                  <span className="text-muted-foreground block text-xs mb-1">Kunde hos partner</span>
+                  <select
+                    className="w-full border rounded-lg px-3 py-1.5 text-sm bg-background"
+                    value={selskap.partner_id || ""}
+                    onChange={e => updateField("partner_id", e.target.value || "")}
+                  >
+                    <option value="">Direkte kunde (ingen partner)</option>
+                    {partnere
+                      .filter(p => p.partnerstatus !== "Inaktiv")
+                      .sort((a, b) => a.partnernavn.localeCompare(b.partnernavn, "nb"))
+                      .map(p => <option key={p.id} value={p.id}>{p.partnernavn}</option>)}
+                  </select>
+                </div>
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground text-xs">Live</span>
                   <Switch checked={selskap.live_status} onCheckedChange={v => {
