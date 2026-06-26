@@ -1,0 +1,1 @@
+ALTER TABLE public.selskaper ADD COLUMN IF NOT EXISTS partner_pakke_id uuid REFERENCES public.partner_pakker(id) ON DELETE SET NULL;

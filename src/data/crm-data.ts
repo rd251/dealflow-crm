@@ -148,6 +148,7 @@ export interface Selskap {
   // Partner/kilde fields
   kilde: Kilde;
   partner_id: string;
+  partner_pakke_id?: string | null;
   lukkedato: string;
   domene: string;
   orgnr: string;

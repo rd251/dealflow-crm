@@ -1347,6 +1347,7 @@ export type Database = {
           oppstartskostnad: number | null
           orgnr: string
           partner_id: string | null
+          partner_pakke_id: string | null
           postadresse: string
           sist_aktivitet: string | null
           updated_at: string
@@ -1380,6 +1381,7 @@ export type Database = {
           oppstartskostnad?: number | null
           orgnr?: string
           partner_id?: string | null
+          partner_pakke_id?: string | null
           postadresse?: string
           sist_aktivitet?: string | null
           updated_at?: string
@@ -1413,6 +1415,7 @@ export type Database = {
           oppstartskostnad?: number | null
           orgnr?: string
           partner_id?: string | null
+          partner_pakke_id?: string | null
           postadresse?: string
           sist_aktivitet?: string | null
           updated_at?: string
@@ -1423,6 +1426,13 @@ export type Database = {
             columns: ["partner_id"]
             isOneToOne: false
             referencedRelation: "partnere"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "selskaper_partner_pakke_id_fkey"
+            columns: ["partner_pakke_id"]
+            isOneToOne: false
+            referencedRelation: "partner_pakker"
             referencedColumns: ["id"]
           },
         ]

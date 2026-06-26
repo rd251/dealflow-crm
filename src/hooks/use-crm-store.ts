@@ -30,7 +30,7 @@ function rowToSelskap(r: any): Selskap {
     kanselleringsaarsak: r.kanselleringsaarsak || "", kanselleringsnotat: r.kanselleringsnotat || "",
     kundetilstand: r.kundetilstand || "Bra", sist_aktivitet: r.sist_aktivitet || "",
     neste_steg: r.neste_steg || "", notater: r.notater || "",
-    kilde: r.kilde || "Direkte salg", partner_id: r.partner_id || "",
+    kilde: r.kilde || "Direkte salg", partner_id: r.partner_id || "", partner_pakke_id: r.partner_pakke_id || null,
     lukkedato: r.lukkedato || "", domene: r.domene || "", orgnr: r.orgnr || "",
     firmaadresse: r.firmaadresse || "", postadresse: r.postadresse || "",
   };
@@ -226,7 +226,7 @@ function useCrmStoreInternal() {
 
 
   // Foreign-key columns that must be null (not empty string) when unset
-  const FK_COLUMNS = new Set(["selskap_id", "kontakt_id", "partner_id", "salgsmulighet_id", "lead_id", "prosjekt_id", "user_id"]);
+  const FK_COLUMNS = new Set(["selskap_id", "kontakt_id", "partner_id", "partner_pakke_id", "salgsmulighet_id", "lead_id", "prosjekt_id", "user_id"]);
 
   const sanitizePayload = (data: Record<string, any>) =>
     Object.fromEntries(
@@ -572,6 +572,7 @@ function useCrmStoreInternal() {
           kundetilstand: item.kundetilstand, sist_aktivitet: emptyToNull(item.sist_aktivitet),
           neste_steg: emptyToNull(item.neste_steg), notater: emptyToNull(item.notater),
           kilde: emptyToNull(item.kilde), partner_id: emptyToNull(item.partner_id),
+          partner_pakke_id: emptyToNull(item.partner_pakke_id as any),
           lukkedato: emptyToNull(item.lukkedato),
         });
       }
@@ -592,6 +593,7 @@ function useCrmStoreInternal() {
           kundetilstand: item.kundetilstand, sist_aktivitet: emptyToNull(item.sist_aktivitet),
           neste_steg: emptyToNull(item.neste_steg), notater: emptyToNull(item.notater),
           kilde: emptyToNull(item.kilde), partner_id: emptyToNull(item.partner_id),
+          partner_pakke_id: emptyToNull(item.partner_pakke_id as any),
           lukkedato: emptyToNull(item.lukkedato),
         });
       }
