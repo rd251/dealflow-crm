@@ -1019,7 +1019,7 @@ export default function Salgsmuligheter() {
                       disabled={!canEdit}
                       onChange={e => {
                         const newStatus = e.target.value as SalgsmulighetStatus;
-                        if (newStatus === "Vunnet") { vinnSalgsmulighet(currentSm.id); setSelectedSm(null); }
+                        if (newStatus === "Vunnet") { setWinPartnerId(currentSm.partner_id || ""); setWinDialog(currentSm.id); setSelectedSm(null); }
                         else if (newStatus === "Tapt") { setSelectedSm(null); setLossDialog(currentSm.id); }
                         else updateField("status", newStatus);
                       }}>
