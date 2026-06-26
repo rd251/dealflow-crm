@@ -259,7 +259,8 @@ export default function Kontaktstrom() {
         suggestedSelskapId: suggested?.id || null,
         suggestedSelskapNavn: suggested?.firmanavn || "",
         connectionStatus: resolveConnectionStatus(resolvedSelskapId, suggested?.id || null),
-        ownerUserId: null,
+        ownerUserId: resolveOwner(ansvarlig),
+
       });
     }
 
@@ -279,7 +280,8 @@ export default function Kontaktstrom() {
         selskapId: null, partnerId: null, inCrm: true,
         suggestedSelskapId: sugL?.id || null, suggestedSelskapNavn: sugL?.firmanavn || "",
         connectionStatus: resolveConnectionStatus(null, sugL?.id || null),
-        ownerUserId: null,
+        ownerUserId: resolveOwner(l.ansvarlig),
+
       });
     }
 
@@ -299,7 +301,8 @@ export default function Kontaktstrom() {
         selskapId: s.selskap_id || null, partnerId: null, inCrm: true,
         suggestedSelskapId: null, suggestedSelskapNavn: "",
         connectionStatus: resolveConnectionStatus(s.selskap_id || null, null),
-        ownerUserId: null,
+        ownerUserId: resolveOwner(s.ansvarlig),
+
       });
     }
 
@@ -318,7 +321,7 @@ export default function Kontaktstrom() {
         selskapId: p.selskap_id || null, partnerId: p.id, inCrm: true,
         suggestedSelskapId: null, suggestedSelskapNavn: "",
         connectionStatus: resolveConnectionStatus(p.selskap_id || null, null),
-        ownerUserId: null,
+        ownerUserId: resolveOwner(p.ansvarlig),
       });
     }
 
