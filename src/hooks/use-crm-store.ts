@@ -30,7 +30,7 @@ function rowToSelskap(r: any): Selskap {
     kanselleringsaarsak: r.kanselleringsaarsak || "", kanselleringsnotat: r.kanselleringsnotat || "",
     kundetilstand: r.kundetilstand || "Bra", sist_aktivitet: r.sist_aktivitet || "",
     neste_steg: r.neste_steg || "", notater: r.notater || "",
-    kilde: r.kilde || "Direkte salg", partner_id: r.partner_id || "",
+    kilde: r.kilde || "Direkte salg", partner_id: r.partner_id || "", partner_pakke_id: r.partner_pakke_id || null,
     lukkedato: r.lukkedato || "", domene: r.domene || "", orgnr: r.orgnr || "",
     firmaadresse: r.firmaadresse || "", postadresse: r.postadresse || "",
   };
