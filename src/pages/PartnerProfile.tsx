@@ -116,6 +116,9 @@ export default function PartnerProfile() {
   }, 0);
   const fakturerbartArr = fakturerbartMrr * 12;
 
+  const today = new Date().toISOString().split("T")[0];
+
+
   const updateField = (field: string, value: any) => {
     updatePartnere(prev => prev.map(p =>
       p.id === id ? { ...p, [field]: value, sist_aktivitet: today } : p
