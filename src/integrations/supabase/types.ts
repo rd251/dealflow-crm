@@ -656,6 +656,100 @@ export type Database = {
           },
         ]
       }
+      partner_pakker: {
+        Row: {
+          aktiv: boolean
+          beskrivelse: string | null
+          created_at: string
+          ekstra_min_pris: number
+          id: string
+          inkluderte_minutter: number
+          navn: string
+          partner_id: string
+          sortering: number
+          updated_at: string
+          utsalgspris_sluttkunde: number
+        }
+        Insert: {
+          aktiv?: boolean
+          beskrivelse?: string | null
+          created_at?: string
+          ekstra_min_pris?: number
+          id?: string
+          inkluderte_minutter?: number
+          navn: string
+          partner_id: string
+          sortering?: number
+          updated_at?: string
+          utsalgspris_sluttkunde?: number
+        }
+        Update: {
+          aktiv?: boolean
+          beskrivelse?: string | null
+          created_at?: string
+          ekstra_min_pris?: number
+          id?: string
+          inkluderte_minutter?: number
+          navn?: string
+          partner_id?: string
+          sortering?: number
+          updated_at?: string
+          utsalgspris_sluttkunde?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_pakker_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partnere"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partner_prismodell: {
+        Row: {
+          created_at: string
+          id: string
+          kostpris_per_minutt: number
+          max_kunder: number | null
+          min_kunder: number
+          partner_id: string
+          sortering: number
+          trinn_navn: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kostpris_per_minutt: number
+          max_kunder?: number | null
+          min_kunder: number
+          partner_id: string
+          sortering?: number
+          trinn_navn: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kostpris_per_minutt?: number
+          max_kunder?: number | null
+          min_kunder?: number
+          partner_id?: string
+          sortering?: number
+          trinn_navn?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_prismodell_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partnere"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       partnere: {
         Row: {
           ansvarlig: string | null
