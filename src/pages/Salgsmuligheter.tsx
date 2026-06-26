@@ -455,6 +455,72 @@ export default function Salgsmuligheter() {
         </DialogContent>
       </Dialog>
 
+      {/* Forward to partner dialog (admin only) */}
+      <Dialog open={!!forwardDialogSm} onOpenChange={open => { if (!open && !forwardSending) setForwardDialogSm(null); }}>
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Videresend salgsmulighet til partner</DialogTitle>
+            <DialogDescription>
+              Send dealen {forwardDialogSm?.navn ? `«${forwardDialogSm.navn}»` : ""} videre til en av partnerne. De får all kontaktinfo, deal-detaljer (forventet MRR, status, neste steg) og bakgrunn via e-post.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Velg partner</label>
+              <select
+                className="w-full border rounded-lg px-3 py-2 text-sm bg-background"
+                value={forwardPartnerId}
+                onChange={e => setForwardPartnerId(e.target.value)}
+              >
+                <option value="">– Velg partner –</option>
+                {partnere
+                  .filter(p => p.partnerstatus !== "Inaktiv" && p.e_post)
+                  .sort((a, b) => a.partnernavn.localeCompare(b.partnernavn, "nb"))
+                  .map(p => (
+                    <option key={p.id} value={p.id}>
+                      {p.partnernavn} — {p.e_post}
+                    </option>
+                  ))}
+              </select>
+              {partnere.filter(p => p.partnerstatus !== "Inaktiv" && p.e_post).length === 0 && (
+                <p className="text-[11px] text-warning mt-1">Ingen aktive partnere med e-postadresse funnet.</p>
+              )}
+            </div>
+
+            <div className="rounded-lg border bg-muted/30 p-3 space-y-1 text-xs">
+              <p className="font-medium text-foreground">Dette sendes til partneren:</p>
+              <ul className="list-disc pl-4 space-y-0.5 text-muted-foreground">
+                <li>Firma + kontaktinfo (navn, e-post, telefon, rolle)</li>
+                <li>Deal-detaljer: status, forventet MRR, oppstart, kontraktslengde, lukkedato</li>
+                <li>Bakgrunn: kilde, use case, neste steg, notater</li>
+                {forwardDialogSm?.videresendt_til_partner_id && (
+                  <li className="text-warning">⚠ Allerede videresendt {forwardDialogSm.videresendt_dato || "tidligere"} – sender på nytt</li>
+                )}
+              </ul>
+            </div>
+
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Melding til partneren (valgfritt)</label>
+              <Textarea
+                placeholder="F.eks. «Tror dette passer godt for dere – ta gjerne kontakt direkte»"
+                value={forwardMessage}
+                onChange={e => setForwardMessage(e.target.value)}
+                rows={3}
+              />
+            </div>
+
+            <Button
+              className="w-full"
+              onClick={sendForward}
+              disabled={!forwardPartnerId || forwardSending}
+            >
+              <Send className="w-4 h-4 mr-1.5" />
+              {forwardSending ? "Sender..." : "Send til partner"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <Tabs defaultValue="pipeline">
         <TabsList className="mb-4 flex-wrap h-auto gap-1">
           <TabsTrigger value="pipeline" className="text-xs sm:text-sm">Pipeline</TabsTrigger>
