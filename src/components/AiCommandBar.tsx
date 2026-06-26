@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface AiItem {
   navn: string;
@@ -196,6 +197,7 @@ type MeetingState = "pending" | "editing" | "creating" | "created";
 export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState<AiResponse | null>(null);
@@ -340,6 +342,7 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
       });
       if (error) throw error;
       setCreatedTaskIds((prev) => new Set([...prev, index]));
+      queryClient.invalidateQueries({ queryKey: ['oppgaver'] });
       toast.success("Oppgave opprettet");
     } catch {
       toast.error("Kunne ikke opprette oppgave");
@@ -370,6 +373,7 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
       } catch {}
     }
     setCreatingTasks(false);
+    if (success > 0) queryClient.invalidateQueries({ queryKey: ['oppgaver'] });
     toast.success(`${success} oppgaver opprettet`);
   };
 
@@ -388,6 +392,7 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
       });
       if (error) throw error;
       setCreatedActivityIds((prev) => new Set([...prev, index]));
+      queryClient.invalidateQueries({ queryKey: ['aktiviteter'] });
       toast.success("Aktivitet logget");
     } catch {
       toast.error("Kunne ikke logge aktivitet");
@@ -415,6 +420,7 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
       });
       if (error) throw error;
       setCreatedLeadIds((prev) => new Set([...prev, index]));
+      queryClient.invalidateQueries({ queryKey: ['leads'] });
       toast.success(`Lead "${lead.firmanavn}" opprettet`);
     } catch {
       toast.error("Kunne ikke opprette lead");
@@ -432,6 +438,8 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
       const { error } = await supabase.from(table).update(updateData).eq("id", update.entity_id);
       if (error) throw error;
       setAppliedStatusIds((prev) => new Set([...prev, index]));
+      queryClient.invalidateQueries({ queryKey: ['salgsmuligheter'] });
+      queryClient.invalidateQueries({ queryKey: ['leads'] });
       toast.success(`Status oppdatert: ${update.entity_name} → ${update.new_status}`);
     } catch {
       toast.error("Kunne ikke oppdatere status");
@@ -460,6 +468,8 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
       }).eq("id", conversion.lead_id);
 
       setAppliedConversionIds((prev) => new Set([...prev, index]));
+      queryClient.invalidateQueries({ queryKey: ['leads'] });
+      queryClient.invalidateQueries({ queryKey: ['salgsmuligheter'] });
       toast.success(`Lead "${conversion.lead_name}" konvertert til salgsmulighet`);
     } catch {
       toast.error("Kunne ikke konvertere lead");
@@ -476,6 +486,7 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
       });
       if (error) throw error;
       setCreatedCompanyIds((prev) => new Set([...prev, index]));
+      queryClient.invalidateQueries({ queryKey: ['selskaper'] });
       toast.success(`Selskap "${company.firmanavn}" opprettet`);
     } catch {
       toast.error("Kunne ikke opprette selskap");
@@ -495,6 +506,7 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
       });
       if (error) throw error;
       setCreatedContactIds((prev) => new Set([...prev, index]));
+      queryClient.invalidateQueries({ queryKey: ['kontakter'] });
       toast.success(`Kontakt "${contact.navn}" opprettet`);
     } catch {
       toast.error("Kunne ikke opprette kontakt");
@@ -573,6 +585,7 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
       }
 
       setRingelisteState("created");
+      queryClient.invalidateQueries({ queryKey: ['ringelister'] });
       toast.success(`Ringeliste "${rl.navn}" opprettet med ${rl.kontakter?.length || 0} kontakter`);
     } catch (e) {
       console.error("Create ringeliste error:", e);
