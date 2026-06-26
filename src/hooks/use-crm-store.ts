@@ -898,13 +898,13 @@ function useCrmStoreInternal() {
     ));
   }, [leads, selskaper, updateLeads, updatePartnere, updateSelskaper]);
 
-  const vinnSalgsmulighet = useCallback((smId: string) => {
+  const vinnSalgsmulighet = useCallback((smId: string, partnerId?: string | null) => {
     const sm = salgsmuligheter.find(s => s.id === smId);
     if (!sm) return;
     const today = new Date().toISOString().split("T")[0];
 
     updateSalgsmuligheter(prev => prev.map(s =>
-      s.id === smId ? { ...s, status: "Vunnet" as const, vunnet_dato: today, sist_aktivitet: today } : s
+      s.id === smId ? { ...s, status: "Vunnet" as const, vunnet_dato: today, sist_aktivitet: today, partner_id: partnerId ?? s.partner_id } : s
     ));
 
     const pId = crypto.randomUUID();
@@ -923,6 +923,7 @@ function useCrmStoreInternal() {
         mrr: sm.forventet_mrr, arr: sm.forventet_mrr * 12,
         oppstartskostnad: sm.oppstartskostnad, sist_aktivitet: today,
         lukkedato: today,
+        partner_id: partnerId !== undefined ? (partnerId || "") : s.partner_id,
       } : s
     ));
   }, [salgsmuligheter, updateSalgsmuligheter, updateProsjekter, updateSelskaper]);

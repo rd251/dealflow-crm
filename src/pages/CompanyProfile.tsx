@@ -57,7 +57,7 @@ export default function CompanyProfile() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const {
-    selskaper, updateSelskaper, kontakter, updateKontakter, salgsmuligheter, updateSalgsmuligheter, prosjekter, updateProsjekter, oppgaver, generateId,
+    selskaper, updateSelskaper, kontakter, updateKontakter, salgsmuligheter, updateSalgsmuligheter, prosjekter, updateProsjekter, oppgaver, partnere, generateId,
   } = useCrmStore();
 
   const [showAddContact, setShowAddContact] = useState(false);
@@ -209,6 +209,14 @@ export default function CompanyProfile() {
                 <Badge className={kundestatusColors[selskap.kundestatus]}>{selskap.kundestatus}</Badge>
                 {selskap.bransje && <span className="text-sm text-muted-foreground">{selskap.bransje}</span>}
                 {selskap.live_status && <Badge className="bg-success/10 text-success">Live</Badge>}
+                {selskap.partner_id && (() => {
+                  const p = partnere.find(pp => pp.id === selskap.partner_id);
+                  return p ? (
+                    <Badge variant="outline" className="text-[10px] border-primary/30 text-primary cursor-pointer" onClick={() => navigate(`/partnere/${p.id}`)}>
+                      Kunde hos {p.partnernavn}
+                    </Badge>
+                  ) : null;
+                })()}
               </div>
             </div>
           </div>
@@ -270,6 +278,20 @@ export default function CompanyProfile() {
                       else if (val !== "Pilot") updateField("live_status", false);
                     }}>
                     {kundestatuser.map(k => <option key={k} value={k}>{k}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <span className="text-muted-foreground block text-xs mb-1">Kunde hos partner</span>
+                  <select
+                    className="w-full border rounded-lg px-3 py-1.5 text-sm bg-background"
+                    value={selskap.partner_id || ""}
+                    onChange={e => updateField("partner_id", e.target.value || "")}
+                  >
+                    <option value="">Direkte kunde (ingen partner)</option>
+                    {partnere
+                      .filter(p => p.partnerstatus !== "Inaktiv")
+                      .sort((a, b) => a.partnernavn.localeCompare(b.partnernavn, "nb"))
+                      .map(p => <option key={p.id} value={p.id}>{p.partnernavn}</option>)}
                   </select>
                 </div>
                 <div className="flex items-center justify-between">

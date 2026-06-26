@@ -22,7 +22,8 @@ type SortKey = "firmanavn" | "bransje" | "kundestatus" | "kundeansvarlig" | "sis
 export default function AlleSelskaper() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const { selskaper, kontakter } = useCrmStore();
+  const { selskaper, kontakter, partnere } = useCrmStore();
+  const partnerNavn = (id?: string) => id ? partnere.find(p => p.id === id)?.partnernavn : undefined;
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState<SortKey | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
@@ -93,6 +94,11 @@ export default function AlleSelskaper() {
                 <Badge variant="outline" className={`text-[10px] ${kundestatusColors[s.kundestatus]}`}>
                   {s.kundestatus}
                 </Badge>
+                {partnerNavn(s.partner_id) && (
+                  <Badge variant="outline" className="text-[10px] border-primary/30 text-primary">
+                    Kunde hos {partnerNavn(s.partner_id)}
+                  </Badge>
+                )}
                 {s.bransje && <span className="text-xs text-muted-foreground">{s.bransje}</span>}
               </div>
               {s.kundeansvarlig && (
@@ -140,9 +146,16 @@ export default function AlleSelskaper() {
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">{s.bransje || "–"}</td>
                   <td className="px-4 py-3">
-                    <Badge variant="outline" className={`text-[10px] ${kundestatusColors[s.kundestatus]}`}>
-                      {s.kundestatus}
-                    </Badge>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <Badge variant="outline" className={`text-[10px] ${kundestatusColors[s.kundestatus]}`}>
+                        {s.kundestatus}
+                      </Badge>
+                      {partnerNavn(s.partner_id) && (
+                        <Badge variant="outline" className="text-[10px] border-primary/30 text-primary">
+                          via {partnerNavn(s.partner_id)}
+                        </Badge>
+                      )}
+                    </div>
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">{s.kundeansvarlig || "–"}</td>
                   <td className="px-4 py-3 text-xs text-muted-foreground">

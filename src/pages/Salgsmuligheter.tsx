@@ -165,6 +165,8 @@ export default function Salgsmuligheter() {
   const [dragOverStage, setDragOverStage] = useState<string | null>(null);
   const [selectedSm, setSelectedSm] = useState<Salgsmulighet | null>(null);
   const [lossDialog, setLossDialog] = useState<string | null>(null);
+  const [winDialog, setWinDialog] = useState<string | null>(null);
+  const [winPartnerId, setWinPartnerId] = useState<string>("");
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
   const [lossReason, setLossReason] = useState<Tapsaarsak>("Pris");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -289,7 +291,7 @@ export default function Salgsmuligheter() {
       }
     }
 
-    if (stage === "Vunnet") { vinnSalgsmulighet(draggedId); }
+    if (stage === "Vunnet") { setWinPartnerId(""); setWinDialog(draggedId); }
     else if (stage === "Tapt") { setLossDialog(draggedId); }
     else {
       updateSalgsmuligheter(prev => prev.map(s =>
@@ -451,6 +453,48 @@ export default function Salgsmuligheter() {
               {tapsaarsaker.map(t => <option key={t} value={t}>{t}</option>)}
             </select>
             <Button className="w-full" onClick={() => { if (lossDialog) { tapSalgsmulighet(lossDialog, lossReason); setLossDialog(null); } }}>Bekreft tap</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Win dialog – velg evt. partner for kundeforholdet */}
+      <Dialog open={!!winDialog} onOpenChange={open => !open && setWinDialog(null)}>
+        <DialogContent className="max-w-[95vw] sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>🏆 Marker som vunnet</DialogTitle>
+            <DialogDescription>
+              Selskapet blir kunde (Pilot) og et prosjekt opprettes. Hvis dette er en partner-deal, velg partneren – kunden vil da være registrert som «kunde hos» den partneren.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Partner (valgfritt)</label>
+              <select
+                className="w-full border rounded-lg px-3 py-2 text-sm bg-background"
+                value={winPartnerId}
+                onChange={e => setWinPartnerId(e.target.value)}
+              >
+                <option value="">Ingen partner – direkte kunde</option>
+                {partnere
+                  .filter(p => p.partnerstatus !== "Inaktiv")
+                  .sort((a, b) => a.partnernavn.localeCompare(b.partnernavn, "nb"))
+                  .map(p => (
+                    <option key={p.id} value={p.id}>{p.partnernavn}</option>
+                  ))}
+              </select>
+            </div>
+            <Button
+              className="w-full bg-success hover:bg-success/90 text-success-foreground"
+              onClick={() => {
+                if (winDialog) {
+                  vinnSalgsmulighet(winDialog, winPartnerId || null);
+                  setWinDialog(null);
+                  setWinPartnerId("");
+                }
+              }}
+            >
+              <Trophy className="w-4 h-4 mr-2" /> Bekreft vunnet
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -955,7 +999,7 @@ export default function Salgsmuligheter() {
                 <Send className="w-3.5 h-3.5 mr-1.5" />Videresend
               </Button>
             )}
-            <Button size="sm" className="bg-success hover:bg-success/90 text-success-foreground" onClick={() => { vinnSalgsmulighet(currentSm.id); setSelectedSm(null); }}>
+            <Button size="sm" className="bg-success hover:bg-success/90 text-success-foreground" onClick={() => { setWinPartnerId(currentSm.partner_id || ""); setWinDialog(currentSm.id); setSelectedSm(null); }}>
               <Trophy className="w-3.5 h-3.5 mr-1.5" />Vunnet
             </Button>
             <Button size="sm" variant="destructive" onClick={() => { setSelectedSm(null); setLossDialog(currentSm.id); }}>
@@ -1017,7 +1061,7 @@ export default function Salgsmuligheter() {
                       disabled={!canEdit}
                       onChange={e => {
                         const newStatus = e.target.value as SalgsmulighetStatus;
-                        if (newStatus === "Vunnet") { vinnSalgsmulighet(currentSm.id); setSelectedSm(null); }
+                        if (newStatus === "Vunnet") { setWinPartnerId(currentSm.partner_id || ""); setWinDialog(currentSm.id); setSelectedSm(null); }
                         else if (newStatus === "Tapt") { setSelectedSm(null); setLossDialog(currentSm.id); }
                         else updateField("status", newStatus);
                       }}>
