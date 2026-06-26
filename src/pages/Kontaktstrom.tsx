@@ -454,7 +454,7 @@ export default function Kontaktstrom() {
           suggestedSelskapId: ecSuggestedSelskapId,
           suggestedSelskapNavn: ecSuggestedSelskapNavn,
           connectionStatus: resolveConnectionStatus(ecSelskapId, ecSuggestedSelskapId),
-          ownerUserId: ec.user_id || null,
+          ownerUserId: ec.user_id || resolveOwner(ecAnsvarlig),
         });
       }
     }
