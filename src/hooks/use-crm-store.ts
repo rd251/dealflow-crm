@@ -226,7 +226,7 @@ function useCrmStoreInternal() {
 
 
   // Foreign-key columns that must be null (not empty string) when unset
-  const FK_COLUMNS = new Set(["selskap_id", "kontakt_id", "partner_id", "salgsmulighet_id", "lead_id", "prosjekt_id", "user_id"]);
+  const FK_COLUMNS = new Set(["selskap_id", "kontakt_id", "partner_id", "partner_pakke_id", "salgsmulighet_id", "lead_id", "prosjekt_id", "user_id"]);
 
   const sanitizePayload = (data: Record<string, any>) =>
     Object.fromEntries(
