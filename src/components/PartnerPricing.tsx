@@ -6,9 +6,22 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, Trash2, Pencil, Save, X, Calculator, Package, DollarSign } from "lucide-react";
+import { Plus, Trash2, Pencil, Save, X, Calculator, Package, DollarSign, Zap } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { nok } from "@/lib/utils";
 import { toast } from "sonner";
+
+// Standard Snakk-pakker (sluttkunde-utsalg)
+const PRESET_PAKKER: Array<{ navn: string; beskrivelse: string; inkluderte_minutter: number; utsalgspris_sluttkunde: number; ekstra_min_pris: number }> = [
+  { navn: "Chatbot + 100 min", beskrivelse: "Unlimited chat (fair use) + 100 min voice", inkluderte_minutter: 100, utsalgspris_sluttkunde: 990, ekstra_min_pris: 0 },
+  { navn: "Starter", beskrivelse: "500 min/mo (~250 samtaler)", inkluderte_minutter: 500, utsalgspris_sluttkunde: 2500, ekstra_min_pris: 0 },
+  { navn: "Growth", beskrivelse: "1 500 min/mo (~750 samtaler) — MEST POPULÆR", inkluderte_minutter: 1500, utsalgspris_sluttkunde: 7500, ekstra_min_pris: 0 },
+  { navn: "Pro", beskrivelse: "2 500 min/mo (~1 250 samtaler)", inkluderte_minutter: 2500, utsalgspris_sluttkunde: 12500, ekstra_min_pris: 0 },
+  { navn: "800 min", beskrivelse: "800 min/mo (~400 samtaler)", inkluderte_minutter: 800, utsalgspris_sluttkunde: 4000, ekstra_min_pris: 0 },
+  { navn: "Team", beskrivelse: "3 000 min/mo (~1 500 samtaler)", inkluderte_minutter: 3000, utsalgspris_sluttkunde: 15000, ekstra_min_pris: 0 },
+  { navn: "Business", beskrivelse: "6 000 min/mo (~3 000 samtaler)", inkluderte_minutter: 6000, utsalgspris_sluttkunde: 30000, ekstra_min_pris: 0 },
+  { navn: "Enterprise", beskrivelse: "22 500+ min/mo — Custom SLA & dedikert support", inkluderte_minutter: 22500, utsalgspris_sluttkunde: 0, ekstra_min_pris: 0 },
+];
 
 type Prismodell = {
   id: string;
