@@ -291,7 +291,7 @@ export default function Salgsmuligheter() {
       }
     }
 
-    if (stage === "Vunnet") { vinnSalgsmulighet(draggedId); }
+    if (stage === "Vunnet") { setWinPartnerId(""); setWinDialog(draggedId); }
     else if (stage === "Tapt") { setLossDialog(draggedId); }
     else {
       updateSalgsmuligheter(prev => prev.map(s =>
