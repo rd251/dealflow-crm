@@ -1009,6 +1009,8 @@ export type Database = {
           updated_at: string
           use_case: string | null
           valgt_pakke: string
+          videresendt_dato: string | null
+          videresendt_til_partner_id: string | null
           vunnet_dato: string | null
         }
         Insert: {
@@ -1047,6 +1049,8 @@ export type Database = {
           updated_at?: string
           use_case?: string | null
           valgt_pakke?: string
+          videresendt_dato?: string | null
+          videresendt_til_partner_id?: string | null
           vunnet_dato?: string | null
         }
         Update: {
@@ -1085,6 +1089,8 @@ export type Database = {
           updated_at?: string
           use_case?: string | null
           valgt_pakke?: string
+          videresendt_dato?: string | null
+          videresendt_til_partner_id?: string | null
           vunnet_dato?: string | null
         }
         Relationships: [
@@ -1107,6 +1113,13 @@ export type Database = {
             columns: ["selskap_id"]
             isOneToOne: false
             referencedRelation: "selskaper"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "salgsmuligheter_videresendt_til_partner_id_fkey"
+            columns: ["videresendt_til_partner_id"]
+            isOneToOne: false
+            referencedRelation: "partnere"
             referencedColumns: ["id"]
           },
         ]

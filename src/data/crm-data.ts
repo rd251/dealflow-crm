@@ -85,6 +85,8 @@ export interface Salgsmulighet {
   kontrakt_signert_dato: string;
   dealbuilder_dokument_id: string;
   valgt_pakke: string;
+  videresendt_til_partner_id?: string;
+  videresendt_dato?: string;
 }
 
 // Package definitions

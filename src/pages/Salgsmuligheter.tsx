@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import DetailPanelShell, { DetailSection, DetailField, DetailDivider, DetailStatGrid, DetailStatCard } from "@/components/DetailPanelShell";
 import EntityCalendarTab from "@/components/EntityCalendarTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, GripVertical, Trophy, XCircle, Trash2, Phone, User, AlertTriangle, Clock, Building2, DollarSign, Mail, FileSignature, PartyPopper, Globe, ExternalLink, Linkedin, PenLine, NotebookPen } from "lucide-react";
+import { Plus, GripVertical, Trophy, XCircle, Trash2, Phone, User, AlertTriangle, Clock, Building2, DollarSign, Mail, FileSignature, PartyPopper, Globe, ExternalLink, Linkedin, PenLine, NotebookPen, Send } from "lucide-react";
 import SendEmailDialog from "@/components/SendEmailDialog";
 import SelskapInnsikt from "@/components/SelskapInnsikt";
 import CompanyLogo from "@/components/CompanyLogo";
@@ -158,9 +158,9 @@ export default function Salgsmuligheter() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const isMobile = useIsMobile();
-  const { canEdit, user } = useAuth();
+  const { canEdit, isAdmin, user } = useAuth();
   const { profiles } = useProfiles();
-  const { salgsmuligheter, selskaper, kontakter, updateSalgsmuligheter, updateSelskaper, updateKontakter, vinnSalgsmulighet, tapSalgsmulighet, generateId } = useCrmStore();
+  const { salgsmuligheter, selskaper, kontakter, partnere, updateSalgsmuligheter, updateSelskaper, updateKontakter, vinnSalgsmulighet, tapSalgsmulighet, generateId } = useCrmStore();
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [dragOverStage, setDragOverStage] = useState<string | null>(null);
   const [selectedSm, setSelectedSm] = useState<Salgsmulighet | null>(null);
@@ -174,6 +174,86 @@ export default function Salgsmuligheter() {
   const [contractModalOpen, setContractModalOpen] = useState(false);
   const [pipelineView, setPipelineView] = useState<"kanban" | "table">(() => (localStorage.getItem("pipelineView") as "kanban" | "table") || "kanban");
   useEffect(() => { localStorage.setItem("pipelineView", pipelineView); }, [pipelineView]);
+
+  // Forward to partner
+  const [forwardDialogSm, setForwardDialogSm] = useState<Salgsmulighet | null>(null);
+  const [forwardPartnerId, setForwardPartnerId] = useState<string>("");
+  const [forwardMessage, setForwardMessage] = useState<string>("");
+  const [forwardSending, setForwardSending] = useState<boolean>(false);
+
+  const openForwardDialog = (sm: Salgsmulighet) => {
+    setForwardDialogSm(sm);
+    setForwardPartnerId("");
+    setForwardMessage("");
+  };
+
+  const sendForward = async () => {
+    if (!forwardDialogSm || !forwardPartnerId) return;
+    const partner = partnere.find(p => p.id === forwardPartnerId);
+    if (!partner) { toast.error("Fant ikke valgt partner"); return; }
+    if (!partner.e_post) { toast.error("Partneren mangler e-postadresse"); return; }
+    setForwardSending(true);
+    const sm = forwardDialogSm;
+    const today = new Date().toISOString().split("T")[0];
+    const selskap = selskaper.find(s => s.id === sm.selskap_id);
+    try {
+      const { error: emailErr } = await supabase.functions.invoke("send-transactional-email", {
+        body: {
+          templateName: "deal-forwarded-to-partner",
+          recipientEmail: partner.e_post,
+          idempotencyKey: `deal-forward-${sm.id}-${partner.id}-${today}`,
+          templateData: {
+            partner_navn: partner.partnernavn,
+            deal_navn: sm.navn,
+            selskap_firmanavn: selskap?.firmanavn || "",
+            kontaktperson: sm.kontaktperson,
+            kontakt_epost: sm.e_post,
+            kontakt_telefon: sm.telefon,
+            kontakt_rolle: sm.rolle_i_firma,
+            status: sm.status,
+            kilde: sm.kilde,
+            use_case: sm.use_case,
+            notater: sm.notater,
+            forventet_mrr: sm.forventet_mrr,
+            oppstartskostnad: sm.oppstartskostnad,
+            kontraktslengde_mnd: sm.kontraktslengde_mnd,
+            forventet_lukkedato: sm.forventet_lukkedato,
+            neste_steg: sm.neste_steg,
+            videresendt_av: user?.email || "Snakk",
+            intern_melding: forwardMessage,
+          },
+        },
+      });
+      if (emailErr) throw emailErr;
+
+      updateSalgsmuligheter(prev => prev.map(s => s.id === sm.id
+        ? { ...s, videresendt_til_partner_id: partner.id, videresendt_dato: today, sist_aktivitet: today }
+        : s));
+
+      try {
+        await supabase.from("aktiviteter").insert({
+          type: "E-post",
+          tittel: `Videresendt til partner: ${partner.partnernavn}`,
+          beskrivelse: `Salgsmulighet videresendt til ${partner.partnernavn} (${partner.e_post}).${forwardMessage ? `\n\nMelding: ${forwardMessage}` : ""}`,
+          dato: new Date().toISOString(),
+          salgsmulighet_id: sm.id,
+          selskap_id: sm.selskap_id || null,
+          partner_id: partner.id,
+          aktivitet_kilde: "manuell",
+        });
+      } catch (logErr) {
+        console.warn("Activity log failed", logErr);
+      }
+
+      toast.success(`Salgsmulighet videresendt til ${partner.partnernavn}`);
+      setForwardDialogSm(null);
+    } catch (err: any) {
+      console.error("Forward failed", err);
+      toast.error(`Kunne ikke videresende: ${err?.message || "ukjent feil"}`);
+    } finally {
+      setForwardSending(false);
+    }
+  };
 
   useEffect(() => {
     const openId = searchParams.get("open");
@@ -371,6 +451,72 @@ export default function Salgsmuligheter() {
               {tapsaarsaker.map(t => <option key={t} value={t}>{t}</option>)}
             </select>
             <Button className="w-full" onClick={() => { if (lossDialog) { tapSalgsmulighet(lossDialog, lossReason); setLossDialog(null); } }}>Bekreft tap</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Forward to partner dialog (admin only) */}
+      <Dialog open={!!forwardDialogSm} onOpenChange={open => { if (!open && !forwardSending) setForwardDialogSm(null); }}>
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Videresend salgsmulighet til partner</DialogTitle>
+            <DialogDescription>
+              Send dealen {forwardDialogSm?.navn ? `«${forwardDialogSm.navn}»` : ""} videre til en av partnerne. De får all kontaktinfo, deal-detaljer (forventet MRR, status, neste steg) og bakgrunn via e-post.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Velg partner</label>
+              <select
+                className="w-full border rounded-lg px-3 py-2 text-sm bg-background"
+                value={forwardPartnerId}
+                onChange={e => setForwardPartnerId(e.target.value)}
+              >
+                <option value="">– Velg partner –</option>
+                {partnere
+                  .filter(p => p.partnerstatus !== "Inaktiv" && p.e_post)
+                  .sort((a, b) => a.partnernavn.localeCompare(b.partnernavn, "nb"))
+                  .map(p => (
+                    <option key={p.id} value={p.id}>
+                      {p.partnernavn} — {p.e_post}
+                    </option>
+                  ))}
+              </select>
+              {partnere.filter(p => p.partnerstatus !== "Inaktiv" && p.e_post).length === 0 && (
+                <p className="text-[11px] text-warning mt-1">Ingen aktive partnere med e-postadresse funnet.</p>
+              )}
+            </div>
+
+            <div className="rounded-lg border bg-muted/30 p-3 space-y-1 text-xs">
+              <p className="font-medium text-foreground">Dette sendes til partneren:</p>
+              <ul className="list-disc pl-4 space-y-0.5 text-muted-foreground">
+                <li>Firma + kontaktinfo (navn, e-post, telefon, rolle)</li>
+                <li>Deal-detaljer: status, forventet MRR, oppstart, kontraktslengde, lukkedato</li>
+                <li>Bakgrunn: kilde, use case, neste steg, notater</li>
+                {forwardDialogSm?.videresendt_til_partner_id && (
+                  <li className="text-warning">⚠ Allerede videresendt {forwardDialogSm.videresendt_dato || "tidligere"} – sender på nytt</li>
+                )}
+              </ul>
+            </div>
+
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Melding til partneren (valgfritt)</label>
+              <Textarea
+                placeholder="F.eks. «Tror dette passer godt for dere – ta gjerne kontakt direkte»"
+                value={forwardMessage}
+                onChange={e => setForwardMessage(e.target.value)}
+                rows={3}
+              />
+            </div>
+
+            <Button
+              className="w-full"
+              onClick={sendForward}
+              disabled={!forwardPartnerId || forwardSending}
+            >
+              <Send className="w-4 h-4 mr-1.5" />
+              {forwardSending ? "Sender..." : "Send til partner"}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -802,6 +948,11 @@ export default function Salgsmuligheter() {
             {currentSm.e_post && (
               <Button size="sm" variant="outline" onClick={() => setEmailDialogOpen(true)}>
                 <Mail className="w-3.5 h-3.5 mr-1.5" />E-post
+              </Button>
+            )}
+            {isAdmin && (
+              <Button size="sm" variant="outline" onClick={() => openForwardDialog(currentSm)}>
+                <Send className="w-3.5 h-3.5 mr-1.5" />Videresend
               </Button>
             )}
             <Button size="sm" className="bg-success hover:bg-success/90 text-success-foreground" onClick={() => { vinnSalgsmulighet(currentSm.id); setSelectedSm(null); }}>
