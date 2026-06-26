@@ -91,6 +91,9 @@ export default function Companies() {
   const filteredUnsorted = selskaper.filter(s => {
     if (!s.firmanavn.toLowerCase().includes(search.toLowerCase())) return false;
     if (s.kundestatus === "Ikke kunde") return false;
+    const isPartnerCust = !!s.partner_id;
+    if (portfolio === "egen" && isPartnerCust) return false;
+    if (portfolio === "partner" && !isPartnerCust) return false;
     if (lukkedatoFra || lukkedatoTil) {
       if (!s.lukkedato) return false;
       const ld = new Date(s.lukkedato);
