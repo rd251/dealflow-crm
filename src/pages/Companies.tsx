@@ -23,6 +23,7 @@ import { useNavigate } from "react-router-dom";
 import InlineTaskForm from "@/components/InlineTaskForm";
 import { Selskap, Kundestatus, OnboardingStatus, Kundetilstand, Kanselleringsaarsak, Prosjekt, ProsjektStatus, Integrasjon } from "@/data/crm-data";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DataImportDialog from "@/components/DataImportDialog";
 import LastActivityBadge from "@/components/LastActivityBadge";
 import CompanyDocuments from "@/components/CompanyDocuments";
