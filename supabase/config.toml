@@ -37,4 +37,6 @@ project_id = "tchmujgzcklwgptocbno"
     verify_jwt = false
   [functions.jarvis-daily]
     verify_jwt = false
+  [functions.submit-onboarding]
+    verify_jwt = false
 
