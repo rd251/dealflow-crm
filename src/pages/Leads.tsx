@@ -65,6 +65,7 @@ export default function Leads() {
   const [forwardHarByggeagent, setForwardHarByggeagent] = useState<boolean>(false);
   const [forwardOnboarding, setForwardOnboarding] = useState<string>("");
   const [forwardSending, setForwardSending] = useState<boolean>(false);
+  const [forwardStep, setForwardStep] = useState<"edit" | "confirm">("edit");
 
   type LeadSortKey = "firmanavn" | "kontaktperson" | "kilde" | "status" | "neste_steg" | "sist_aktivitet" | "opprettet_dato";
   const [sortKey, setSortKey] = useState<LeadSortKey | null>("opprettet_dato");
@@ -172,6 +173,7 @@ export default function Leads() {
     setForwardMessage("");
     setForwardHarByggeagent(false);
     setForwardOnboarding("");
+    setForwardStep("edit");
     try {
       const email = (lead.e_post || "").trim().toLowerCase();
       const firma = (lead.firmanavn || "").trim();
