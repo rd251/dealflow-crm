@@ -315,16 +315,15 @@ export default function Companies() {
         let totalMRR = liveSelskaper.reduce((sum, s) => sum + s.mrr, 0);
         let totalARR = totalMRR * 12;
 
-        // For partner portfolio, "Partner MRR/ARR" = fakturerbart til oss
-        // (sum av inkluderte minutter på tildelte pakker × kostpris ut fra partner-tier)
+        // For partner portfolio, also calculate "Fakturerbart" (what we bill the partner)
+        // = sum of included minutes on assigned packages × cost per minute from partner tier
+        let fakturerbartMRR = 0;
         if (portfolio === "partner") {
-          // Group live customers by partner
           const liveByPartner: Record<string, typeof liveSelskaper> = {};
           for (const s of liveSelskaper) {
             if (!s.partner_id) continue;
             (liveByPartner[s.partner_id] ||= []).push(s);
           }
-          let billable = 0;
           for (const [pid, kunder] of Object.entries(liveByPartner)) {
             const count = kunder.length;
             const tiers = partnerTrinn
@@ -336,12 +335,12 @@ export default function Companies() {
             const pakkerById = new Map(partnerPakker.filter(p => p.partner_id === pid).map(p => [p.id, p]));
             for (const k of kunder) {
               const pk = k.partner_pakke_id ? pakkerById.get(k.partner_pakke_id) : null;
-              if (pk) billable += pk.inkluderte_minutter * costPerMin;
+              if (pk) fakturerbartMRR += pk.inkluderte_minutter * costPerMin;
             }
           }
-          totalMRR = billable;
-          totalARR = billable * 12;
         }
+        const fakturerbartARR = fakturerbartMRR * 12;
+
 
 
         // Netto MRR: new MRR this month minus lost MRR this month
@@ -380,6 +379,10 @@ export default function Companies() {
         const kpis = [
           { label: mrrLabel, value: nok(totalMRR), icon: <DollarSign className="w-4 h-4" /> },
           { label: arrLabel, value: nok(totalARR), icon: <BarChart3 className="w-4 h-4" /> },
+          ...(portfolio === "partner" ? [
+            { label: "Fakturerbart MRR", value: nok(fakturerbartMRR), icon: <DollarSign className="w-4 h-4" />, sub: "Til oss fra partner" },
+            { label: "Fakturerbart ARR", value: nok(fakturerbartARR), icon: <BarChart3 className="w-4 h-4" />, sub: "Til oss fra partner" },
+          ] : []),
           { label: "Netto MRR", value: `${nettoMRR >= 0 ? "" : "−"}${nok(Math.abs(nettoMRR))}`, icon: nettoMRR >= 0 ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" /> },
           { label: "Aktive kunder", value: `${aktiveKunder}`, icon: <Users className="w-4 h-4" /> },
           { label: "Ikke-live MRR", value: nok(ikkeLiveMRR), icon: <DollarSign className="w-4 h-4" /> },
@@ -389,6 +392,7 @@ export default function Companies() {
           { label: "Churn", value: `${churnRate}%`, icon: <PieChart className="w-4 h-4" />, sub: `${kansellertCount} kansellert` },
           { label: "Vunnet", value: `${wonCount}`, icon: <Trophy className="w-4 h-4" />, sub: `${vunnetDenneMnd} denne mnd` },
           { label: "Tapt", value: `${scopeSm.filter(s => s.status === "Tapt").length}`, icon: <XCircle className="w-4 h-4" />, sub: `${taptDenneMnd} denne mnd` },
+
           { label: "Kansellerte", value: `${kansellertCount}`, icon: <UserMinus className="w-4 h-4" />, sub: `${kansellertDenneMnd} denne mnd` },
         ];
         return (
