@@ -232,7 +232,7 @@ export default function Partnere() {
             <thead>
               <tr className="border-b bg-muted/50">
                 <th className="text-left px-4 py-3 font-medium">Partnernavn</th>
-                <th className="text-left px-4 py-3 font-medium">Selskap</th>
+                
                 <th className="text-left px-4 py-3 font-medium">Type</th>
                 <th className="text-left px-4 py-3 font-medium">Kontaktperson</th>
                 <th className="text-left px-4 py-3 font-medium">Status</th>
@@ -257,11 +257,6 @@ export default function Partnere() {
                         <InlinePartnerName value={partner.partnernavn} canEdit={canEdit} onSave={(v) => updatePartnere(prev => prev.map(p => p.id === partner.id ? { ...p, partnernavn: v, sist_aktivitet: new Date().toISOString().split("T")[0] } : p))} />
                       </div>
                     </td>
-                    <td className="px-4 py-3">{(() => {
-                      return selskap ? (
-                        <button className="text-primary hover:underline text-sm" onClick={e => { e.stopPropagation(); navigate(`/selskaper/${selskap.id}`); }}>{selskap.firmanavn}</button>
-                      ) : <span className="text-muted-foreground text-xs">—</span>;
-                    })()}</td>
                     <td className="px-4 py-3"><Badge variant="secondary" className="text-xs">{partner.partnertype}</Badge></td>
                     <td className="px-4 py-3 text-muted-foreground">{partner.kontaktperson}</td>
                     <td className="px-4 py-3"><Badge className={`text-xs ${statusColors[partner.partnerstatus]}`}>{partner.partnerstatus}</Badge></td>
