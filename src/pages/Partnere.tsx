@@ -13,10 +13,44 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import DetailPanelShell, { DetailSection, DetailField, DetailDivider } from "@/components/DetailPanelShell";
 import EntityCalendarTab from "@/components/EntityCalendarTab";
-import { Plus, Search, Trash2, Users, DollarSign, BarChart3, Percent } from "lucide-react";
+import { Plus, Search, Trash2, Users, DollarSign, BarChart3, Percent, Check, X } from "lucide-react";
 import { Partner, Partnertype, Partnerstatus, Provisjonstype, beregnTotalKontraktsverdi } from "@/data/crm-data";
 import { Badge } from "@/components/ui/badge";
 import LastActivityBadge from "@/components/LastActivityBadge";
+import CompanyLogo from "@/components/CompanyLogo";
+
+function InlinePartnerName({ value, canEdit, onSave }: { value: string; canEdit: boolean; onSave: (v: string) => void }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value);
+  if (!canEdit) return <span>{value}</span>;
+  if (editing) {
+    return (
+      <span className="inline-flex items-center gap-1" onClick={e => e.stopPropagation()}>
+        <Input
+          value={draft}
+          autoFocus
+          onChange={e => setDraft(e.target.value)}
+          onKeyDown={e => {
+            if (e.key === "Enter") { onSave(draft.trim() || value); setEditing(false); }
+            if (e.key === "Escape") { setDraft(value); setEditing(false); }
+          }}
+          className="h-7 text-sm w-44"
+        />
+        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { onSave(draft.trim() || value); setEditing(false); }}><Check className="w-3.5 h-3.5" /></Button>
+        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setDraft(value); setEditing(false); }}><X className="w-3.5 h-3.5" /></Button>
+      </span>
+    );
+  }
+  return (
+    <span
+      className="hover:underline decoration-dotted"
+      onDoubleClick={e => { e.stopPropagation(); setDraft(value); setEditing(true); }}
+      title="Dobbeltklikk for å endre navn"
+    >
+      {value}
+    </span>
+  );
+}
 
 const partnertypeOptions: Partnertype[] = ["Provisjonspartner", "Integrasjonspartner", "Salgspartner", "Strategisk partner"];
 const partnerstatusOptions: Partnerstatus[] = ["Aktiv", "Under onboarding", "Inaktiv"];
