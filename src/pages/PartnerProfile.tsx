@@ -105,7 +105,17 @@ export default function PartnerProfile() {
   const arr = aktivMrr * 12;
   const totalKontraktsverdi = partnerAvtaler.reduce((sum, s) => sum + beregnTotalKontraktsverdi(s), 0);
 
-  const today = new Date().toISOString().split("T")[0];
+  // Fakturerbart MRR: kostpris per minutt (basert på antall live kunder) × inkluderte minutter i tildelt pakke
+  const aktivtTrinn = prisTrinn.find(t => antallKunder >= t.min_kunder && (t.max_kunder === null || antallKunder <= t.max_kunder));
+  const kostprisPerMinutt = Number(aktivtTrinn?.kostpris_per_minutt || 0);
+  const pakkeMap = new Map(partnerPakker.map(p => [p.id, p]));
+  const fakturerbartMrr = liveKunder.reduce((sum, s) => {
+    const pakke = s.partner_pakke_id ? pakkeMap.get(s.partner_pakke_id) : null;
+    if (!pakke) return sum;
+    return sum + (pakke.inkluderte_minutter * kostprisPerMinutt);
+  }, 0);
+  const fakturerbartArr = fakturerbartMrr * 12;
+
   const updateField = (field: string, value: any) => {
     updatePartnere(prev => prev.map(p =>
       p.id === id ? { ...p, [field]: value, sist_aktivitet: today } : p
