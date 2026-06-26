@@ -57,6 +57,7 @@ export default function PartnerPricing({
 }) {
   const [trinn, setTrinn] = useState<Prismodell[]>([]);
   const [pakker, setPakker] = useState<Pakke[]>([]);
+  const [kunderByPakke, setKunderByPakke] = useState<Record<string, { id: string; firmanavn: string }[]>>({});
   const [loading, setLoading] = useState(true);
   const [editTrinnId, setEditTrinnId] = useState<string | null>(null);
   const [trinnForm, setTrinnForm] = useState<Partial<Prismodell>>({});
@@ -77,12 +78,19 @@ export default function PartnerPricing({
 
   const load = async () => {
     setLoading(true);
-    const [{ data: t }, { data: p }] = await Promise.all([
+    const [{ data: t }, { data: p }, { data: s }] = await Promise.all([
       supabase.from("partner_prismodell").select("*").eq("partner_id", partnerId).order("sortering"),
       supabase.from("partner_pakker").select("*").eq("partner_id", partnerId).order("sortering"),
+      supabase.from("selskaper").select("id, firmanavn, partner_pakke_id").eq("partner_id", partnerId),
     ]);
     setTrinn((t || []) as Prismodell[]);
     setPakker((p || []) as Pakke[]);
+    const grouped: Record<string, { id: string; firmanavn: string }[]> = {};
+    (s || []).forEach((row: any) => {
+      if (!row.partner_pakke_id) return;
+      (grouped[row.partner_pakke_id] ||= []).push({ id: row.id, firmanavn: row.firmanavn });
+    });
+    setKunderByPakke(grouped);
     setLoading(false);
   };
 
