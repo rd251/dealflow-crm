@@ -153,9 +153,24 @@ export default function Kontaktstrom() {
     handleGmailSync(true);
   }, []);
 
+  // Map ansvarlig (display_name / email) -> user_id so CRM-eide kontakter også kan filtreres på eier
+  const ansvarligToUserId = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const p of profiles) {
+      if (p.display_name) m.set(p.display_name.toLowerCase().trim(), p.user_id);
+      if (p.email) m.set(p.email.toLowerCase().trim(), p.user_id);
+    }
+    return m;
+  }, [profiles]);
+  const resolveOwner = (ansvarlig?: string | null): string | null => {
+    if (!ansvarlig) return null;
+    return ansvarligToUserId.get(ansvarlig.toLowerCase().trim()) || null;
+  };
+
   // Build unified person list
   const persons = useMemo(() => {
     const map = new Map<string, KontaktStromPerson>();
+
 
     const getSelskapNavn = (id: string) => selskaper.find(s => s.id === id)?.firmanavn || "";
     const getSelskapStatus = (id: string) => selskaper.find(s => s.id === id)?.kundestatus || "";
@@ -244,7 +259,8 @@ export default function Kontaktstrom() {
         suggestedSelskapId: suggested?.id || null,
         suggestedSelskapNavn: suggested?.firmanavn || "",
         connectionStatus: resolveConnectionStatus(resolvedSelskapId, suggested?.id || null),
-        ownerUserId: null,
+        ownerUserId: resolveOwner(ansvarlig),
+
       });
     }
 
@@ -264,7 +280,8 @@ export default function Kontaktstrom() {
         selskapId: null, partnerId: null, inCrm: true,
         suggestedSelskapId: sugL?.id || null, suggestedSelskapNavn: sugL?.firmanavn || "",
         connectionStatus: resolveConnectionStatus(null, sugL?.id || null),
-        ownerUserId: null,
+        ownerUserId: resolveOwner(l.ansvarlig),
+
       });
     }
 
@@ -284,7 +301,8 @@ export default function Kontaktstrom() {
         selskapId: s.selskap_id || null, partnerId: null, inCrm: true,
         suggestedSelskapId: null, suggestedSelskapNavn: "",
         connectionStatus: resolveConnectionStatus(s.selskap_id || null, null),
-        ownerUserId: null,
+        ownerUserId: resolveOwner(s.ansvarlig),
+
       });
     }
 
@@ -303,7 +321,7 @@ export default function Kontaktstrom() {
         selskapId: p.selskap_id || null, partnerId: p.id, inCrm: true,
         suggestedSelskapId: null, suggestedSelskapNavn: "",
         connectionStatus: resolveConnectionStatus(p.selskap_id || null, null),
-        ownerUserId: null,
+        ownerUserId: resolveOwner(p.ansvarlig),
       });
     }
 
@@ -436,7 +454,7 @@ export default function Kontaktstrom() {
           suggestedSelskapId: ecSuggestedSelskapId,
           suggestedSelskapNavn: ecSuggestedSelskapNavn,
           connectionStatus: resolveConnectionStatus(ecSelskapId, ecSuggestedSelskapId),
-          ownerUserId: ec.user_id || null,
+          ownerUserId: ec.user_id || resolveOwner(ecAnsvarlig),
         });
       }
     }
@@ -450,7 +468,7 @@ export default function Kontaktstrom() {
     });
 
     return result;
-  }, [kontakter, leads, salgsmuligheter, selskaper, partnere, emailContacts]);
+  }, [kontakter, leads, salgsmuligheter, selskaper, partnere, emailContacts, ansvarligToUserId]);
 
   // Filtered people
   const filteredPeople = useMemo(() => {
