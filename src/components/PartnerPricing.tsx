@@ -325,9 +325,25 @@ export default function PartnerPricing({
             <Package className="w-4 h-4 text-primary" />
             <h3 className="font-semibold">Sluttkunde-pakker</h3>
           </div>
-          <Button size="sm" variant="outline" onClick={() => { setEditPakke(null); setPakkeForm({ navn: "", beskrivelse: "", inkluderte_minutter: 0, utsalgspris_sluttkunde: 0, ekstra_min_pris: 0, aktiv: true }); setShowAddPakke(true); }}>
-            <Plus className="w-4 h-4 mr-1" /> Pakke
-          </Button>
+          <div className="flex items-center gap-2">
+            <Select onValueChange={(v) => addPresetPakker(v)}>
+              <SelectTrigger className="h-8 w-[200px] text-xs">
+                <Zap className="w-3 h-3 mr-1 text-primary" />
+                <SelectValue placeholder="Snakk-pakker (hurtigvalg)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__all__">⚡ Legg til alle pakker</SelectItem>
+                {PRESET_PAKKER.map((p) => (
+                  <SelectItem key={p.navn} value={p.navn}>
+                    {p.navn} — {p.inkluderte_minutter} min{p.utsalgspris_sluttkunde > 0 ? ` / ${nok(p.utsalgspris_sluttkunde)}` : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button size="sm" variant="outline" onClick={() => { setEditPakke(null); setPakkeForm({ navn: "", beskrivelse: "", inkluderte_minutter: 0, utsalgspris_sluttkunde: 0, ekstra_min_pris: 0, aktiv: true }); setShowAddPakke(true); }}>
+              <Plus className="w-4 h-4 mr-1" /> Pakke
+            </Button>
+          </div>
         </div>
         {pakker.length === 0 ? (
           <p className="text-center text-xs text-muted-foreground py-6">Ingen pakker definert. Legg til pakkene partneren tilbyr sine sluttkunder.</p>
