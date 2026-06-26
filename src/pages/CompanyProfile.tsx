@@ -57,7 +57,7 @@ export default function CompanyProfile() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const {
-    selskaper, updateSelskaper, kontakter, updateKontakter, salgsmuligheter, updateSalgsmuligheter, prosjekter, updateProsjekter, oppgaver, generateId,
+    selskaper, updateSelskaper, kontakter, updateKontakter, salgsmuligheter, updateSalgsmuligheter, prosjekter, updateProsjekter, oppgaver, partnere, generateId,
   } = useCrmStore();
 
   const [showAddContact, setShowAddContact] = useState(false);
