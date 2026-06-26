@@ -468,7 +468,7 @@ export default function Kontaktstrom() {
     });
 
     return result;
-  }, [kontakter, leads, salgsmuligheter, selskaper, partnere, emailContacts]);
+  }, [kontakter, leads, salgsmuligheter, selskaper, partnere, emailContacts, ansvarligToUserId]);
 
   // Filtered people
   const filteredPeople = useMemo(() => {
