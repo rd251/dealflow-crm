@@ -492,6 +492,7 @@ export default function Leads() {
               Send leaden {forwardDialogLead?.firmanavn ? `«${forwardDialogLead.firmanavn}»` : ""} videre til en av partnerne. De får all kontaktinfo, generell info om leaden og status på selvbyggeren via e-post.
             </DialogDescription>
           </DialogHeader>
+          {forwardStep === "edit" ? (
           <div className="space-y-3">
             <div>
               <label className="text-xs text-muted-foreground mb-1 block">Velg partner</label>
@@ -543,6 +544,45 @@ export default function Leads() {
               />
             </div>
 
+            <Button
+              className="w-full"
+              onClick={() => setForwardStep("confirm")}
+              disabled={!forwardPartnerId}
+            >
+              Forhåndsvis
+            </Button>
+          </div>
+          ) : (
+          <div className="space-y-3">
+            <div className="rounded-lg border bg-muted/30 p-4 space-y-2 text-sm">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Bekreft videresending</p>
+              {(() => {
+                const partner = partnere.find((p: Partner) => p.id === forwardPartnerId);
+                return (
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between gap-2">
+                      <span className="text-muted-foreground">Partner</span>
+                      <span className="font-medium text-right">{partner?.partnernavn || "–"}</span>
+                    </div>
+                    <div className="flex justify-between gap-2">
+                      <span className="text-muted-foreground">Sendes til</span>
+                      <span className="font-medium text-right break-all">{partner?.e_post || "–"}</span>
+                    </div>
+                    <div className="flex justify-between gap-2">
+                      <span className="text-muted-foreground">Lead</span>
+                      <span className="font-medium text-right">{forwardDialogLead?.firmanavn || "–"}</span>
+                    </div>
+                    {forwardMessage && (
+                      <div className="pt-2 border-t mt-2">
+                        <p className="text-xs text-muted-foreground mb-1">Intern melding</p>
+                        <p className="whitespace-pre-wrap text-sm">{forwardMessage}</p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+            </div>
+
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="text-xs text-muted-foreground">Forhåndsvisning av e-post</label>
@@ -565,15 +605,26 @@ export default function Leads() {
               />
             </div>
 
-            <Button
-              className="w-full"
-              onClick={sendForward}
-              disabled={!forwardPartnerId || forwardSending}
-            >
-              <Send className="w-4 h-4 mr-1.5" />
-              {forwardSending ? "Sender..." : "Send til partner"}
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setForwardStep("edit")}
+                disabled={forwardSending}
+              >
+                Tilbake
+              </Button>
+              <Button
+                className="flex-1"
+                onClick={sendForward}
+                disabled={!forwardPartnerId || forwardSending}
+              >
+                <Send className="w-4 h-4 mr-1.5" />
+                {forwardSending ? "Sender..." : "Send nå"}
+              </Button>
+            </div>
           </div>
+          )}
         </DialogContent>
       </Dialog>
 
