@@ -189,36 +189,18 @@ export default function Onboarding() {
         }
       });
 
-      // Insert answer
-      await supabase.from("onboarding_svar" as any).insert({
-        prosjekt_id: prosjektId || null,
-        svar,
-        kontakt_navn: contact.navn,
-        kontakt_epost: contact.epost,
-        firmanavn: contact.firma,
-        filer: filePaths,
+      // Submit via edge function (service role write)
+      const { error: fnErr } = await supabase.functions.invoke("submit-onboarding", {
+        body: {
+          prosjekt_id: prosjektId || null,
+          svar,
+          kontakt_navn: contact.navn,
+          kontakt_epost: contact.epost,
+          firmanavn: contact.firma,
+          filer: filePaths,
+        },
       });
-
-      // Update project status if linked
-      if (prosjektId) {
-        await supabase.from("prosjekter").update({ status: "Skjema mottatt" as any }).eq("id", prosjektId);
-
-        // Get project to find ansvarlig for notification
-        const { data: proj } = await supabase.from("prosjekter").select("ansvarlig, selskap_id").eq("id", prosjektId).maybeSingle();
-        if (proj?.ansvarlig) {
-          // Find user by display_name to send notification
-          const { data: profiles } = await supabase.from("profiles").select("user_id").eq("display_name", proj.ansvarlig);
-          if (profiles?.[0]) {
-            await supabase.from("varsler").insert({
-              user_id: profiles[0].user_id,
-              tittel: "Onboarding-skjema fylt ut",
-              beskrivelse: `${contact.firma} har fylt ut onboarding-skjemaet.`,
-              type: "onboarding",
-              lenke: `/prosjekter`,
-            });
-          }
-        }
-      }
+      if (fnErr) throw fnErr;
 
       setSubmitted(true);
     } catch (err) {
