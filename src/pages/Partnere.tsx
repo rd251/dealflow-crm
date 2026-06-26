@@ -13,7 +13,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import DetailPanelShell, { DetailSection, DetailField, DetailDivider } from "@/components/DetailPanelShell";
 import EntityCalendarTab from "@/components/EntityCalendarTab";
-import { Plus, Search, Trash2, Users, DollarSign, BarChart3, Percent, Check, X } from "lucide-react";
+import { Plus, Search, Trash2, Users, DollarSign, BarChart3, Percent, Check, X, Pencil } from "lucide-react";
 import { Partner, Partnertype, Partnerstatus, Provisjonstype, beregnTotalKontraktsverdi } from "@/data/crm-data";
 import { Badge } from "@/components/ui/badge";
 import LastActivityBadge from "@/components/LastActivityBadge";
