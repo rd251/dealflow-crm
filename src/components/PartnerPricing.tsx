@@ -57,6 +57,7 @@ export default function PartnerPricing({
 }) {
   const [trinn, setTrinn] = useState<Prismodell[]>([]);
   const [pakker, setPakker] = useState<Pakke[]>([]);
+  const [kunderByPakke, setKunderByPakke] = useState<Record<string, { id: string; firmanavn: string }[]>>({});
   const [loading, setLoading] = useState(true);
   const [editTrinnId, setEditTrinnId] = useState<string | null>(null);
   const [trinnForm, setTrinnForm] = useState<Partial<Prismodell>>({});
@@ -77,12 +78,19 @@ export default function PartnerPricing({
 
   const load = async () => {
     setLoading(true);
-    const [{ data: t }, { data: p }] = await Promise.all([
+    const [{ data: t }, { data: p }, { data: s }] = await Promise.all([
       supabase.from("partner_prismodell").select("*").eq("partner_id", partnerId).order("sortering"),
       supabase.from("partner_pakker").select("*").eq("partner_id", partnerId).order("sortering"),
+      supabase.from("selskaper").select("id, firmanavn, partner_pakke_id").eq("partner_id", partnerId),
     ]);
     setTrinn((t || []) as Prismodell[]);
     setPakker((p || []) as Pakke[]);
+    const grouped: Record<string, { id: string; firmanavn: string }[]> = {};
+    (s || []).forEach((row: any) => {
+      if (!row.partner_pakke_id) return;
+      (grouped[row.partner_pakke_id] ||= []).push({ id: row.id, firmanavn: row.firmanavn });
+    });
+    setKunderByPakke(grouped);
     setLoading(false);
   };
 
@@ -361,8 +369,18 @@ export default function PartnerPricing({
                       <div className="flex items-center gap-2 flex-wrap">
                         <h4 className="font-semibold">{p.navn}</h4>
                         {!p.aktiv && <Badge variant="outline" className="text-[10px]">Inaktiv</Badge>}
+                        <Badge variant="secondary" className="text-[10px]">
+                          {(kunderByPakke[p.id]?.length || 0)} kunde{(kunderByPakke[p.id]?.length || 0) === 1 ? "" : "r"}
+                        </Badge>
                       </div>
                       {p.beskrivelse && <p className="text-xs text-muted-foreground mt-0.5">{p.beskrivelse}</p>}
+                      {(kunderByPakke[p.id]?.length || 0) > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {kunderByPakke[p.id].map((k) => (
+                            <Badge key={k.id} variant="outline" className="text-[10px] font-normal">{k.firmanavn}</Badge>
+                          ))}
+                        </div>
+                      )}
                     </div>
                     <div className="flex shrink-0">
                       <Button size="sm" variant="ghost" onClick={() => openEditPakke(p)}><Pencil className="w-3 h-3" /></Button>
