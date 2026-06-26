@@ -55,13 +55,18 @@ export default function PartnerProfile() {
   const [standaloneOrgnr, setStandaloneOrgnr] = useState("");
   const [standaloneAdresse, setStandaloneAdresse] = useState("");
   const [partnerPakker, setPartnerPakker] = useState<Array<{ id: string; navn: string; utsalgspris_sluttkunde: number; inkluderte_minutter: number }>>([]);
+  const [prisTrinn, setPrisTrinn] = useState<Array<{ min_kunder: number; max_kunder: number | null; kostpris_per_minutt: number }>>([]);
 
   useEffect(() => {
     if (!id) return;
     supabase.from("partner_pakker").select("id, navn, utsalgspris_sluttkunde, inkluderte_minutter").eq("partner_id", id).eq("aktiv", true).order("sortering").then(({ data }) => {
       if (data) setPartnerPakker(data as any);
     });
+    supabase.from("partner_prismodell").select("min_kunder, max_kunder, kostpris_per_minutt").eq("partner_id", id).order("sortering").then(({ data }) => {
+      if (data) setPrisTrinn(data as any);
+    });
   }, [id]);
+
 
   const partner = partnere.find(p => p.id === id);
   if (!partner) {
@@ -100,7 +105,20 @@ export default function PartnerProfile() {
   const arr = aktivMrr * 12;
   const totalKontraktsverdi = partnerAvtaler.reduce((sum, s) => sum + beregnTotalKontraktsverdi(s), 0);
 
+  // Fakturerbart MRR: kostpris per minutt (basert på antall live kunder) × inkluderte minutter i tildelt pakke
+  const aktivtTrinn = prisTrinn.find(t => antallKunder >= t.min_kunder && (t.max_kunder === null || antallKunder <= t.max_kunder));
+  const kostprisPerMinutt = Number(aktivtTrinn?.kostpris_per_minutt || 0);
+  const pakkeMap = new Map(partnerPakker.map(p => [p.id, p]));
+  const fakturerbartMrr = liveKunder.reduce((sum, s) => {
+    const pakke = s.partner_pakke_id ? pakkeMap.get(s.partner_pakke_id) : null;
+    if (!pakke) return sum;
+    return sum + (pakke.inkluderte_minutter * kostprisPerMinutt);
+  }, 0);
+  const fakturerbartArr = fakturerbartMrr * 12;
+
   const today = new Date().toISOString().split("T")[0];
+
+
   const updateField = (field: string, value: any) => {
     updatePartnere(prev => prev.map(p =>
       p.id === id ? { ...p, [field]: value, sist_aktivitet: today } : p
@@ -173,13 +191,16 @@ export default function PartnerProfile() {
 
       <main className={`${isMobile ? "p-4" : "p-8"} space-y-6 sm:space-y-8`}>
         {/* KPI cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3 sm:gap-4">
           <StatCard label="Kunder fra partner" value={antallKunder} icon={<Users className="w-5 h-5" />} />
           <StatCard label="Aktiv MRR" value={nok(aktivMrr)} icon={<DollarSign className="w-5 h-5" />} />
           <StatCard label="ARR" value={nok(arr)} icon={<TrendingUp className="w-5 h-5" />} />
+          <StatCard label="Fakturerbart MRR" value={nok(fakturerbartMrr)} icon={<DollarSign className="w-5 h-5" />} />
+          <StatCard label="Fakturerbart ARR" value={nok(fakturerbartArr)} icon={<TrendingUp className="w-5 h-5" />} />
           <StatCard label="Total kontrakt" value={nok(totalKontraktsverdi)} icon={<FileText className="w-5 h-5" />} />
           <StatCard label="Aktive avtaler" value={aktiveAvtaler.length} icon={<Handshake className="w-5 h-5" />} />
         </div>
+
 
         {/* Tabs */}
         <Tabs defaultValue="aktiviteter">
