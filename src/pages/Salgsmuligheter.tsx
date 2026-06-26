@@ -457,6 +457,48 @@ export default function Salgsmuligheter() {
         </DialogContent>
       </Dialog>
 
+      {/* Win dialog – velg evt. partner for kundeforholdet */}
+      <Dialog open={!!winDialog} onOpenChange={open => !open && setWinDialog(null)}>
+        <DialogContent className="max-w-[95vw] sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>🏆 Marker som vunnet</DialogTitle>
+            <DialogDescription>
+              Selskapet blir kunde (Pilot) og et prosjekt opprettes. Hvis dette er en partner-deal, velg partneren – kunden vil da være registrert som «kunde hos» den partneren.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Partner (valgfritt)</label>
+              <select
+                className="w-full border rounded-lg px-3 py-2 text-sm bg-background"
+                value={winPartnerId}
+                onChange={e => setWinPartnerId(e.target.value)}
+              >
+                <option value="">Ingen partner – direkte kunde</option>
+                {partnere
+                  .filter(p => p.partnerstatus !== "Inaktiv")
+                  .sort((a, b) => a.partnernavn.localeCompare(b.partnernavn, "nb"))
+                  .map(p => (
+                    <option key={p.id} value={p.id}>{p.partnernavn}</option>
+                  ))}
+              </select>
+            </div>
+            <Button
+              className="w-full bg-success hover:bg-success/90 text-success-foreground"
+              onClick={() => {
+                if (winDialog) {
+                  vinnSalgsmulighet(winDialog, winPartnerId || null);
+                  setWinDialog(null);
+                  setWinPartnerId("");
+                }
+              }}
+            >
+              <Trophy className="w-4 h-4 mr-2" /> Bekreft vunnet
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Forward to partner dialog (admin only) */}
       <Dialog open={!!forwardDialogSm} onOpenChange={open => { if (!open && !forwardSending) setForwardDialogSm(null); }}>
         <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
