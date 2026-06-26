@@ -198,10 +198,16 @@ export default function Partnere() {
         <div className="space-y-3">
           {filtered.map(partner => {
             const stats = getPartnerStats(partner.id);
+            const selskap = selskaper.find(s => s.id === partner.selskap_id);
             return (
               <div key={partner.id} className="bg-card border rounded-xl p-4 space-y-2 cursor-pointer" onClick={() => navigate(`/partnere/${partner.id}`)}>
-                <div className="flex items-center justify-between">
-                  <p className="font-semibold text-sm truncate">{partner.partnernavn}</p>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <CompanyLogo size="sm" domain={selskap?.domene} firmanavn={selskap?.firmanavn || partner.partnernavn} />
+                    <p className="font-semibold text-sm truncate">
+                      <InlinePartnerName value={partner.partnernavn} canEdit={canEdit} onSave={(v) => updatePartnere(prev => prev.map(p => p.id === partner.id ? { ...p, partnernavn: v } : p))} />
+                    </p>
+                  </div>
                   <Badge className={`text-[10px] shrink-0 ${statusColors[partner.partnerstatus]}`}>{partner.partnerstatus}</Badge>
                 </div>
                 <p className="text-xs text-muted-foreground">{partner.kontaktperson}</p>
