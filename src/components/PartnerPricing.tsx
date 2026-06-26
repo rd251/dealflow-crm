@@ -6,9 +6,22 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, Trash2, Pencil, Save, X, Calculator, Package, DollarSign } from "lucide-react";
+import { Plus, Trash2, Pencil, Save, X, Calculator, Package, DollarSign, Zap } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { nok } from "@/lib/utils";
 import { toast } from "sonner";
+
+// Standard Snakk-pakker (sluttkunde-utsalg)
+const PRESET_PAKKER: Array<{ navn: string; beskrivelse: string; inkluderte_minutter: number; utsalgspris_sluttkunde: number; ekstra_min_pris: number }> = [
+  { navn: "Chatbot + 100 min", beskrivelse: "Unlimited chat (fair use) + 100 min voice", inkluderte_minutter: 100, utsalgspris_sluttkunde: 990, ekstra_min_pris: 0 },
+  { navn: "Starter", beskrivelse: "500 min/mo (~250 samtaler)", inkluderte_minutter: 500, utsalgspris_sluttkunde: 2500, ekstra_min_pris: 0 },
+  { navn: "Growth", beskrivelse: "1 500 min/mo (~750 samtaler) — MEST POPULÆR", inkluderte_minutter: 1500, utsalgspris_sluttkunde: 7500, ekstra_min_pris: 0 },
+  { navn: "Pro", beskrivelse: "2 500 min/mo (~1 250 samtaler)", inkluderte_minutter: 2500, utsalgspris_sluttkunde: 12500, ekstra_min_pris: 0 },
+  { navn: "800 min", beskrivelse: "800 min/mo (~400 samtaler)", inkluderte_minutter: 800, utsalgspris_sluttkunde: 4000, ekstra_min_pris: 0 },
+  { navn: "Team", beskrivelse: "3 000 min/mo (~1 500 samtaler)", inkluderte_minutter: 3000, utsalgspris_sluttkunde: 15000, ekstra_min_pris: 0 },
+  { navn: "Business", beskrivelse: "6 000 min/mo (~3 000 samtaler)", inkluderte_minutter: 6000, utsalgspris_sluttkunde: 30000, ekstra_min_pris: 0 },
+  { navn: "Enterprise", beskrivelse: "22 500+ min/mo — Custom SLA & dedikert support", inkluderte_minutter: 22500, utsalgspris_sluttkunde: 0, ekstra_min_pris: 0 },
+];
 
 type Prismodell = {
   id: string;
@@ -156,6 +169,27 @@ export default function PartnerPricing({
     load();
   };
 
+  const addPresetPakker = async (key: string) => {
+    const presets = key === "__all__" ? PRESET_PAKKER : PRESET_PAKKER.filter((p) => p.navn === key);
+    if (presets.length === 0) return;
+    const existing = new Set(pakker.map((p) => p.navn.toLowerCase()));
+    const toInsert = presets.filter((p) => !existing.has(p.navn.toLowerCase())).map((p, i) => ({
+      partner_id: partnerId,
+      navn: p.navn,
+      beskrivelse: p.beskrivelse,
+      inkluderte_minutter: p.inkluderte_minutter,
+      utsalgspris_sluttkunde: p.utsalgspris_sluttkunde,
+      ekstra_min_pris: p.ekstra_min_pris,
+      aktiv: true,
+      sortering: pakker.length + i + 1,
+    }));
+    if (toInsert.length === 0) return toast.info("Allerede lagt til");
+    const { error } = await supabase.from("partner_pakker").insert(toInsert);
+    if (error) return toast.error(error.message);
+    toast.success(`La til ${toInsert.length} pakke${toInsert.length === 1 ? "" : "r"}`);
+    load();
+  };
+
   const deletePakke = async (id: string) => {
     if (!confirm("Slett pakke?")) return;
     const { error } = await supabase.from("partner_pakker").delete().eq("id", id);
@@ -291,9 +325,25 @@ export default function PartnerPricing({
             <Package className="w-4 h-4 text-primary" />
             <h3 className="font-semibold">Sluttkunde-pakker</h3>
           </div>
-          <Button size="sm" variant="outline" onClick={() => { setEditPakke(null); setPakkeForm({ navn: "", beskrivelse: "", inkluderte_minutter: 0, utsalgspris_sluttkunde: 0, ekstra_min_pris: 0, aktiv: true }); setShowAddPakke(true); }}>
-            <Plus className="w-4 h-4 mr-1" /> Pakke
-          </Button>
+          <div className="flex items-center gap-2">
+            <Select onValueChange={(v) => addPresetPakker(v)}>
+              <SelectTrigger className="h-8 w-[200px] text-xs">
+                <Zap className="w-3 h-3 mr-1 text-primary" />
+                <SelectValue placeholder="Snakk-pakker (hurtigvalg)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__all__">⚡ Legg til alle pakker</SelectItem>
+                {PRESET_PAKKER.map((p) => (
+                  <SelectItem key={p.navn} value={p.navn}>
+                    {p.navn} — {p.inkluderte_minutter} min{p.utsalgspris_sluttkunde > 0 ? ` / ${nok(p.utsalgspris_sluttkunde)}` : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button size="sm" variant="outline" onClick={() => { setEditPakke(null); setPakkeForm({ navn: "", beskrivelse: "", inkluderte_minutter: 0, utsalgspris_sluttkunde: 0, ekstra_min_pris: 0, aktiv: true }); setShowAddPakke(true); }}>
+              <Plus className="w-4 h-4 mr-1" /> Pakke
+            </Button>
+          </div>
         </div>
         {pakker.length === 0 ? (
           <p className="text-center text-xs text-muted-foreground py-6">Ingen pakker definert. Legg til pakkene partneren tilbyr sine sluttkunder.</p>
