@@ -54,6 +54,14 @@ export default function PartnerProfile() {
   const [showPartnerContract, setShowPartnerContract] = useState(false);
   const [standaloneOrgnr, setStandaloneOrgnr] = useState("");
   const [standaloneAdresse, setStandaloneAdresse] = useState("");
+  const [partnerPakker, setPartnerPakker] = useState<Array<{ id: string; navn: string; utsalgspris_sluttkunde: number; inkluderte_minutter: number }>>([]);
+
+  useEffect(() => {
+    if (!id) return;
+    supabase.from("partner_pakker").select("id, navn, utsalgspris_sluttkunde, inkluderte_minutter").eq("partner_id", id).eq("aktiv", true).order("sortering").then(({ data }) => {
+      if (data) setPartnerPakker(data as any);
+    });
+  }, [id]);
 
   const partner = partnere.find(p => p.id === id);
   if (!partner) {
