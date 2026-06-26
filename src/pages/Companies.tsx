@@ -312,8 +312,37 @@ export default function Companies() {
 
         const liveSelskaper = scopeSelskaper.filter(s => s.kundestatus === "Live");
         const aktiveKunder = liveSelskaper.length;
-        const totalMRR = liveSelskaper.reduce((sum, s) => sum + s.mrr, 0);
-        const totalARR = totalMRR * 12;
+        let totalMRR = liveSelskaper.reduce((sum, s) => sum + s.mrr, 0);
+        let totalARR = totalMRR * 12;
+
+        // For partner portfolio, "Partner MRR/ARR" = fakturerbart til oss
+        // (sum av inkluderte minutter på tildelte pakker × kostpris ut fra partner-tier)
+        if (portfolio === "partner") {
+          // Group live customers by partner
+          const liveByPartner: Record<string, typeof liveSelskaper> = {};
+          for (const s of liveSelskaper) {
+            if (!s.partner_id) continue;
+            (liveByPartner[s.partner_id] ||= []).push(s);
+          }
+          let billable = 0;
+          for (const [pid, kunder] of Object.entries(liveByPartner)) {
+            const count = kunder.length;
+            const tiers = partnerTrinn
+              .filter(t => t.partner_id === pid)
+              .sort((a, b) => a.min_kunder - b.min_kunder);
+            const tier = tiers.find(t => count >= t.min_kunder && (t.max_kunder == null || count <= t.max_kunder))
+              ?? tiers[tiers.length - 1];
+            const costPerMin = tier?.kostpris_per_minutt || 0;
+            const pakkerById = new Map(partnerPakker.filter(p => p.partner_id === pid).map(p => [p.id, p]));
+            for (const k of kunder) {
+              const pk = k.partner_pakke_id ? pakkerById.get(k.partner_pakke_id) : null;
+              if (pk) billable += pk.inkluderte_minutter * costPerMin;
+            }
+          }
+          totalMRR = billable;
+          totalARR = billable * 12;
+        }
+
 
         // Netto MRR: new MRR this month minus lost MRR this month
         const now = new Date();
