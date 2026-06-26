@@ -146,9 +146,16 @@ export default function AlleSelskaper() {
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">{s.bransje || "–"}</td>
                   <td className="px-4 py-3">
-                    <Badge variant="outline" className={`text-[10px] ${kundestatusColors[s.kundestatus]}`}>
-                      {s.kundestatus}
-                    </Badge>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <Badge variant="outline" className={`text-[10px] ${kundestatusColors[s.kundestatus]}`}>
+                        {s.kundestatus}
+                      </Badge>
+                      {partnerNavn(s.partner_id) && (
+                        <Badge variant="outline" className="text-[10px] border-primary/30 text-primary">
+                          via {partnerNavn(s.partner_id)}
+                        </Badge>
+                      )}
+                    </div>
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">{s.kundeansvarlig || "–"}</td>
                   <td className="px-4 py-3 text-xs text-muted-foreground">
