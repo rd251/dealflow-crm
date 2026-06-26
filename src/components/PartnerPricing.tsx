@@ -369,10 +369,6 @@ export default function PartnerPricing({
                       <div className="flex items-center gap-2 flex-wrap">
                         <h4 className="font-semibold">{p.navn}</h4>
                         {!p.aktiv && <Badge variant="outline" className="text-[10px]">Inaktiv</Badge>}
-                      </div>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h4 className="font-semibold">{p.navn}</h4>
-                        {!p.aktiv && <Badge variant="outline" className="text-[10px]">Inaktiv</Badge>}
                         <Badge variant="secondary" className="text-[10px]">
                           {(kunderByPakke[p.id]?.length || 0)} kunde{(kunderByPakke[p.id]?.length || 0) === 1 ? "" : "r"}
                         </Badge>
