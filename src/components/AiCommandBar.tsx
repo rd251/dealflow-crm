@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface AiItem {
   navn: string;
@@ -196,6 +197,7 @@ type MeetingState = "pending" | "editing" | "creating" | "created";
 export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState<AiResponse | null>(null);
