@@ -94,6 +94,11 @@ export default function AlleSelskaper() {
                 <Badge variant="outline" className={`text-[10px] ${kundestatusColors[s.kundestatus]}`}>
                   {s.kundestatus}
                 </Badge>
+                {partnerNavn(s.partner_id) && (
+                  <Badge variant="outline" className="text-[10px] border-primary/30 text-primary">
+                    Kunde hos {partnerNavn(s.partner_id)}
+                  </Badge>
+                )}
                 {s.bransje && <span className="text-xs text-muted-foreground">{s.bransje}</span>}
               </div>
               {s.kundeansvarlig && (
