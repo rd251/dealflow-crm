@@ -559,7 +559,7 @@ export default function Companies() {
                       <Button variant="ghost" size="icon" className="h-7 w-7" title="Angre til salgsmulighet" onClick={() => setRevertDialog(s.id)}>
                         <Undo2 className="w-3.5 h-3.5" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-7 w-7" title="Overfør til partner" onClick={() => setTransferDialog(s.id)}>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" title={s.partner_id ? "Endre/ta tilbake partner" : "Delegér til partner"} onClick={() => setTransferDialog(s.id)}>
                         <ArrowRightLeft className="w-3.5 h-3.5" />
                       </Button>
                       <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" title="Slett" onClick={() => setDeleteDialog(s.id)}>
