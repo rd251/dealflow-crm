@@ -127,7 +127,7 @@ function CollapsedSidebarNav({ isAdmin }: { isAdmin: boolean }) {
 
   return (
     <>
-      <nav className="flex-1 px-2 space-y-1 mt-2 overflow-y-auto">
+      <nav className="flex-1 px-2 space-y-1 mt-2 overflow-y-auto scrollbar-sidebar">
         {items.map(({ to, icon: Icon, label }) => {
           const active = location.pathname === to;
           return (
