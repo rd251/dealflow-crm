@@ -270,18 +270,15 @@ export default function Companies() {
         </DialogContent>
       </Dialog>
 
-      {/* Transfer to partner dialog */}
-      <Dialog open={!!transferDialog} onOpenChange={open => !open && setTransferDialog(null)}>
-        <DialogContent className="max-w-[95vw] sm:max-w-md">
-          <DialogHeader><DialogTitle>Overfør til partner</DialogTitle><DialogDescription>Selskapet flyttes til partnersiden og fjernes fra kundeforhold.</DialogDescription></DialogHeader>
-          <div className="flex gap-2 justify-end">
-            <Button variant="outline" onClick={() => setTransferDialog(null)}>Avbryt</Button>
-            <Button onClick={() => {
-              if (transferDialog) { konverterSelskapTilPartner(transferDialog); setTransferDialog(null); }
-            }}>Overfør</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Delegate to partner dialog */}
+      <DelegateToPartnerDialog
+        selskapId={transferDialog}
+        onClose={() => setTransferDialog(null)}
+        selskaper={selskaper}
+        partnere={partnere}
+        partnerPakker={partnerPakker}
+        updateSelskaper={updateSelskaper}
+      />
 
       {/* Revert to salgsmulighet dialog */}
       <Dialog open={!!revertDialog} onOpenChange={open => !open && setRevertDialog(null)}>
@@ -562,7 +559,7 @@ export default function Companies() {
                       <Button variant="ghost" size="icon" className="h-7 w-7" title="Angre til salgsmulighet" onClick={() => setRevertDialog(s.id)}>
                         <Undo2 className="w-3.5 h-3.5" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-7 w-7" title="Overfør til partner" onClick={() => setTransferDialog(s.id)}>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" title={s.partner_id ? "Endre/ta tilbake partner" : "Delegér til partner"} onClick={() => setTransferDialog(s.id)}>
                         <ArrowRightLeft className="w-3.5 h-3.5" />
                       </Button>
                       <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" title="Slett" onClick={() => setDeleteDialog(s.id)}>
@@ -879,5 +876,124 @@ export default function Companies() {
         </DialogContent>
       </Dialog>
     </PageShell>
+  );
+}
+
+function DelegateToPartnerDialog({
+  selskapId, onClose, selskaper, partnere, partnerPakker, updateSelskaper,
+}: {
+  selskapId: string | null;
+  onClose: () => void;
+  selskaper: Selskap[];
+  partnere: any[];
+  partnerPakker: Array<{ id: string; partner_id: string; inkluderte_minutter: number }>;
+  updateSelskaper: (updater: (prev: Selskap[]) => Selskap[]) => void;
+}) {
+  const selskap = selskapId ? selskaper.find(s => s.id === selskapId) : null;
+  const [partnerId, setPartnerId] = useState<string>("");
+  const [pakkeId, setPakkeId] = useState<string>("");
+
+  useEffect(() => {
+    if (selskap) {
+      setPartnerId(selskap.partner_id || "");
+      setPakkeId((selskap as any).partner_pakke_id || "");
+    }
+  }, [selskap?.id]);
+
+  if (!selskap) return null;
+
+  const availablePakker = partnerPakker.filter(p => p.partner_id === partnerId);
+
+  const handleDelegate = () => {
+    if (!partnerId) {
+      toast.error("Velg en partner");
+      return;
+    }
+    const today = new Date().toISOString().split("T")[0];
+    updateSelskaper(prev => prev.map(s => s.id === selskap.id ? {
+      ...s,
+      partner_id: partnerId,
+      partner_pakke_id: pakkeId || null,
+      kilde: "Partner",
+      sist_aktivitet: today,
+    } as Selskap : s));
+    toast.success(`${selskap.firmanavn} delegert til partner`);
+    onClose();
+  };
+
+  const handleTakeBack = () => {
+    const today = new Date().toISOString().split("T")[0];
+    updateSelskaper(prev => prev.map(s => s.id === selskap.id ? {
+      ...s,
+      partner_id: "",
+      partner_pakke_id: null,
+      kilde: "Direkte salg",
+      sist_aktivitet: today,
+    } as Selskap : s));
+    toast.success(`${selskap.firmanavn} tatt tilbake fra partner`);
+    onClose();
+  };
+
+  const currentPartner = selskap.partner_id ? partnere.find(p => p.id === selskap.partner_id) : null;
+
+  return (
+    <Dialog open={!!selskapId} onOpenChange={o => !o && onClose()}>
+      <DialogContent className="max-w-[95vw] sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{currentPartner ? "Endre partner-tilknytning" : "Delegér kunde til partner"}</DialogTitle>
+          <DialogDescription>
+            {currentPartner
+              ? `${selskap.firmanavn} er i dag tilknyttet ${currentPartner.partnernavn}. Bytt partner, endre pakke, eller ta kunden tilbake til egen portefølje.`
+              : `Overfør ansvaret for ${selskap.firmanavn} til en partner. Kunden flyttes til «Partner-portefølje» og fakturering beregnes ut fra partnerens avtale.`}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <label className="text-xs font-medium text-muted-foreground mb-1 block">Partner</label>
+            <select
+              className="w-full border rounded-lg px-3 py-2 text-sm bg-background"
+              value={partnerId}
+              onChange={e => { setPartnerId(e.target.value); setPakkeId(""); }}
+            >
+              <option value="">– Velg partner –</option>
+              {partnere
+                .filter(p => p.partnerstatus === "Aktiv" || p.id === selskap.partner_id)
+                .map(p => <option key={p.id} value={p.id}>{p.partnernavn}</option>)}
+            </select>
+          </div>
+          {partnerId && (
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">Pakke (valgfritt)</label>
+              <select
+                className="w-full border rounded-lg px-3 py-2 text-sm bg-background"
+                value={pakkeId}
+                onChange={e => setPakkeId(e.target.value)}
+              >
+                <option value="">– Ingen pakke –</option>
+                {availablePakker.map(pk => (
+                  <option key={pk.id} value={pk.id}>{pk.inkluderte_minutter} min</option>
+                ))}
+              </select>
+              {availablePakker.length === 0 && (
+                <p className="text-[11px] text-muted-foreground mt-1">Denne partneren har ingen aktive pakker enda.</p>
+              )}
+            </div>
+          )}
+        </div>
+        <div className="flex gap-2 justify-between pt-2">
+          {currentPartner ? (
+            <Button variant="outline" size="sm" onClick={handleTakeBack}>
+              Ta tilbake til egen portefølje
+            </Button>
+          ) : <div />}
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={onClose}>Avbryt</Button>
+            <Button onClick={handleDelegate} disabled={!partnerId}>
+              {currentPartner ? "Oppdater" : "Delegér"}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
