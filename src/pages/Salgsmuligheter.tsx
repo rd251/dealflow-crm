@@ -630,7 +630,7 @@ export default function Salgsmuligheter() {
               const stageDeals = sortDeals(openDeals.filter(d => d.status === stage));
               const stageMrr = stageDeals.reduce((s, d) => s + d.forventet_mrr, 0);
               return (
-                <div key={stage} className={`${isMobile ? "min-w-[260px] w-[260px]" : "min-w-[290px] w-[290px]"} flex-shrink-0 flex flex-col rounded-xl p-2 -m-2 transition-colors ${dragOverStage === stage ? "bg-primary/10 ring-2 ring-primary/30" : ""}`}
+                <div key={stage} className={`${isMobile ? "min-w-[240px] w-[240px]" : "min-w-[230px] w-[230px]"} flex-shrink-0 flex flex-col rounded-xl p-2 -m-2 transition-colors ${dragOverStage === stage ? "bg-primary/10 ring-2 ring-primary/30" : ""}`}
                   onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; setDragOverStage(stage); }}
                   onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOverStage(null); }}
                   onDragEnd={() => { setDragOverStage(null); setDraggedId(null); }}
@@ -688,119 +688,61 @@ export default function Salgsmuligheter() {
                             return (
                           <div draggable onDragStart={e => { setDraggedId(deal.id); e.dataTransfer.effectAllowed = "move"; }}
                           onClick={() => setSelectedSm(deal)}
-                          className={`bg-card border rounded-xl p-3.5 cursor-grab active:cursor-grabbing hover:shadow-md transition-all group ${signalBorderClass} ${isBlocked ? "ring-2 ring-destructive animate-pulse" : ""}`}>
+                          className={`bg-card border rounded-lg p-2.5 cursor-grab active:cursor-grabbing hover:shadow-md transition-all group ${signalBorderClass} ${isBlocked ? "ring-2 ring-destructive animate-pulse" : ""}`}>
                           
-                          {/* 1. Company with logo */}
-                          <div className="flex items-center gap-2 mb-2.5">
-                            <CompanyLogo domain={getSelskapDomain(deal.selskap_id)} firmanavn={getSelskapNavn(deal.selskap_id || "")} kontaktEmails={deal.e_post ? [deal.e_post] : undefined} size="sm" className="w-7 h-7 rounded-lg" />
-                            <span className="text-sm font-semibold text-foreground truncate flex-1 cursor-pointer hover:text-primary hover:underline" onClick={e => { e.stopPropagation(); if (deal.selskap_id) navigate(`/selskaper/${deal.selskap_id}`); }}>
+                          {/* Header: logo + company + AI indicator */}
+                          <div className="flex items-center gap-1.5 mb-1.5">
+                            <CompanyLogo domain={getSelskapDomain(deal.selskap_id)} firmanavn={getSelskapNavn(deal.selskap_id || "")} kontaktEmails={deal.e_post ? [deal.e_post] : undefined} size="sm" className="w-6 h-6 rounded shrink-0" />
+                            <span className="text-xs font-semibold text-foreground truncate flex-1 cursor-pointer hover:text-primary hover:underline" onClick={e => { e.stopPropagation(); if (deal.selskap_id) navigate(`/selskaper/${deal.selskap_id}`); }}>
                               {getSelskapNavn(deal.selskap_id || "")}
                             </span>
-                            {(deal as any).ai_recap && (
-                              <Sparkles className="w-3 h-3 text-primary/70 shrink-0" />
+                            {(deal as any).ai_recap && <Sparkles className="w-3 h-3 text-primary/70 shrink-0" />}
+                            {deal.kontrakt_status === "Signert" && (
+                              <Badge className={`text-[9px] px-1 py-0 h-4 shrink-0 ${kontraktStatusColors["Signert" as KontraktStatus]}`}>✅</Badge>
                             )}
                             {(() => {
                               const lm = lastMeetings[deal.id];
                               if (!lm) return null;
                               const days = Math.floor((Date.now() - new Date(lm.dato).getTime()) / 86400000);
                               return (
-                                <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 gap-0.5 bg-warning/10 text-warning border-warning/30 shrink-0" title={lm.ai_sammendrag || lm.tittel || "Siste møte"}>
+                                <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 bg-warning/10 text-warning border-warning/30 shrink-0" title={lm.ai_sammendrag || lm.tittel || "Siste møte"}>
                                   <NotebookPen className="w-2.5 h-2.5" />
                                   {days === 0 ? "i dag" : `${days}d`}
                                 </Badge>
                               );
                             })()}
-                            <GripVertical className="w-4 h-4 text-muted-foreground/30 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
                           </div>
 
-                          {/* Details */}
-                          <div className="space-y-1.5 pl-[2px]">
-                            {/* 2. Contact person */}
-                            {deal.kontaktperson && (
-                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                <Avatar className="w-5 h-5 shrink-0">
-                                  {deal.e_post && <AvatarImage src={gravatarUrl(deal.e_post, 40) || undefined} alt={deal.kontaktperson} />}
-                                  <AvatarFallback className="text-[8px] font-bold bg-primary/10 text-primary">
-                                    {deal.kontaktperson.charAt(0).toUpperCase()}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <span className="truncate">{deal.kontaktperson}</span>
-                              </div>
+                          {/* MRR + package inline */}
+                          <div className="flex items-baseline gap-1.5 mb-1">
+                            <span className="text-sm font-bold text-foreground">{nok(deal.forventet_mrr)}</span>
+                            {deal.valgt_pakke && (
+                              <span className="text-[10px] text-muted-foreground truncate">· {deal.valgt_pakke}</span>
                             )}
+                          </div>
 
-                            {/* 3. Use case */}
-                            {deal.use_case?.trim() && (
-                              <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-                                <div className="w-5 h-5 flex items-center justify-center shrink-0">💡</div>
-                                <span className="truncate">{deal.use_case}</span>
-                              </div>
-                            )}
-
-                            {/* 4. MRR + Package */}
-                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                              <div className="w-5 h-5 flex items-center justify-center shrink-0">
-                                <DollarSign className="w-3.5 h-3.5" />
-                              </div>
-                              <span className="font-medium text-foreground">{nok(deal.forventet_mrr)}</span>
-                              {deal.valgt_pakke && (() => {
-                                const pakke = PAKKER.find(p => p.navn === deal.valgt_pakke);
-                                return (
-                                  <span className="text-[10px] text-muted-foreground">
-                                    · {deal.valgt_pakke}{pakke?.minutter ? ` (${pakke.minutter})` : ""}
-                                  </span>
-                                );
-                              })()}
+                          {/* Contact person (compact) */}
+                          {deal.kontaktperson && (
+                            <div className="text-[11px] text-muted-foreground truncate mb-1">
+                              {deal.kontaktperson}
                             </div>
+                          )}
 
-                            {/* 5. Deal owner */}
-                            {deal.ansvarlig && getProfileName(deal.ansvarlig) && (
-                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                                  <span className="text-[9px] font-bold text-primary">{getProfileName(deal.ansvarlig).charAt(0).toUpperCase()}</span>
-                                </div>
-                                <span className="truncate">{getProfileName(deal.ansvarlig)}</span>
-                              </div>
-                            )}
-
-                            {/* 6. Kilde */}
-                            {deal.kilde && (
-                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                <div className="w-5 h-5 flex items-center justify-center shrink-0">📣</div>
-                                <span className="truncate">{deal.kilde}</span>
-                              </div>
-                            )}
-
-                            {/* 7. Kontrakt-status */}
-                            {deal.kontrakt_status && deal.kontrakt_status !== "Ikke sendt" && (
-                              <div className="flex items-center gap-2 text-xs">
-                                <div className="w-5 h-5 flex items-center justify-center shrink-0">
-                                  <FileSignature className="w-3.5 h-3.5 text-muted-foreground" />
-                                </div>
-                                <Badge className={`text-[10px] px-1.5 py-0 h-4 ${kontraktStatusColors[deal.kontrakt_status as KontraktStatus]}`}>
-                                  {deal.kontrakt_status}{deal.kontrakt_status === "Signert" && " 🎉"}
-                                </Badge>
-                              </div>
-                            )}
-                          </div>
-
-                          {/* 6. Neste steg */}
+                          {/* Footer: neste steg + signal */}
                           {missingNeste ? (
-                            <div className="flex items-center gap-1.5 mt-2.5 pt-2 border-t border-border/50 text-destructive">
+                            <div className="flex items-center gap-1 mt-1.5 pt-1.5 border-t border-border/50 text-destructive">
                               <AlertTriangle className="w-3 h-3 shrink-0" />
-                              <span className="text-[10px] font-medium">Neste steg mangler!</span>
+                              <span className="text-[10px] font-medium">Neste steg mangler</span>
                             </div>
                           ) : (
-                            <div className="flex items-center justify-between gap-2 mt-2.5 pt-2 border-t border-border/50">
-                              <p className="text-[10px] text-muted-foreground truncate">→ {deal.neste_steg}</p>
-                              <div className="flex items-center gap-1 shrink-0">
-                                <div className={`w-1.5 h-1.5 rounded-full ${signal.color}`} />
-                                <span className="text-[10px] text-muted-foreground">{signal.label}</span>
-                              </div>
+                            <div className="flex items-center justify-between gap-1.5 mt-1.5 pt-1.5 border-t border-border/50">
+                              <p className="text-[10px] text-muted-foreground truncate flex-1">→ {deal.neste_steg}</p>
+                              <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${signal.color}`} title={signal.label} />
                             </div>
                           )}
 
                           {isBlocked && (
-                            <p className="text-[10px] text-destructive mt-1 font-medium">⛔ Fyll inn neste steg før flytting</p>
+                            <p className="text-[10px] text-destructive mt-1 font-medium">⛔ Fyll inn neste steg</p>
                           )}
                           </div>
                           ); })()}
