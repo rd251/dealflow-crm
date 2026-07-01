@@ -334,11 +334,34 @@ export default function Salgsmuligheter() {
   const now = new Date();
   const thisMonth = (d: string) => { const dt = new Date(d); return dt.getMonth() === now.getMonth() && dt.getFullYear() === now.getFullYear(); };
 
+  const q = searchQuery.trim().toLowerCase();
+  const from = dateFrom ? new Date(dateFrom) : null;
+  const to = dateTo ? new Date(dateTo + "T23:59:59") : null;
   const openDeals = salgsmuligheter.filter(s => {
     if (!openStatuses.includes(s.status)) return false;
     if (filterUtenAktivitet) {
       const cutoff = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
       if (s.sist_aktivitet && new Date(s.sist_aktivitet) >= cutoff) return false;
+    }
+    if (ownerFilter && s.ansvarlig !== ownerFilter) return false;
+    if (from || to) {
+      if (!s.forventet_lukkedato) return false;
+      const d = new Date(s.forventet_lukkedato);
+      if (from && d < from) return false;
+      if (to && d > to) return false;
+    }
+    if (q) {
+      const selskapNavn = (selskaper.find(x => x.id === s.selskap_id)?.firmanavn || "").toLowerCase();
+      const hay = [
+        selskapNavn,
+        s.navn,
+        s.kontaktperson,
+        s.e_post,
+        s.telefon,
+        s.use_case,
+        s.neste_steg,
+      ].filter(Boolean).join(" ").toLowerCase();
+      if (!hay.includes(q) && !selskapNavn.includes(q)) return false;
     }
     return true;
   });
