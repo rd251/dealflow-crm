@@ -73,13 +73,18 @@ export default function Companies() {
   type SortKey = "firmanavn" | "bransje" | "kundestatus" | "live" | "tilstand" | "mrr" | "arr" | "sla" | "oppstart" | "lukkedato" | "sist_aktivitet";
   const [sortKey, setSortKey] = useState<SortKey | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
-  const [partnerPakker, setPartnerPakker] = useState<Array<{ id: string; partner_id: string; inkluderte_minutter: number }>>([]);
+  const [partnerPakker, setPartnerPakker] = useState<Array<{ id: string; partner_id: string; navn: string; inkluderte_minutter: number; utsalgspris_sluttkunde: number }>>([]);
   const [partnerTrinn, setPartnerTrinn] = useState<Array<{ partner_id: string; min_kunder: number; max_kunder: number | null; kostpris_per_minutt: number }>>([]);
+
+  const reloadPartnerPakker = async () => {
+    const { data } = await supabase.from("partner_pakker").select("id, partner_id, navn, inkluderte_minutter, utsalgspris_sluttkunde").eq("aktiv", true);
+    setPartnerPakker(data || []);
+  };
 
   useEffect(() => {
     (async () => {
       const [{ data: pk }, { data: pm }] = await Promise.all([
-        supabase.from("partner_pakker").select("id, partner_id, inkluderte_minutter").eq("aktiv", true),
+        supabase.from("partner_pakker").select("id, partner_id, navn, inkluderte_minutter, utsalgspris_sluttkunde").eq("aktiv", true),
         supabase.from("partner_prismodell").select("partner_id, min_kunder, max_kunder, kostpris_per_minutt"),
       ]);
       setPartnerPakker(pk || []);
