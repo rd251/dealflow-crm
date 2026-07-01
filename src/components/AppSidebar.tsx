@@ -85,7 +85,7 @@ function SidebarNav({ onNavigate, isAdmin, displayName }: { onNavigate?: () => v
 
   return (
     <>
-      <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
+      <nav className="flex-1 px-3 space-y-1 overflow-y-auto scrollbar-sidebar">
         {navSections.map((section) => (
           <div key={section.title} className="pt-3 first:pt-0">
             <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/50">

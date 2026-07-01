@@ -100,4 +100,35 @@
     background: hsl(var(--border));
     border-radius: 3px;
   }
+
+  .scrollbar-sidebar {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--sidebar-accent)) transparent;
+  }
+
+  .scrollbar-sidebar::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .scrollbar-sidebar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-sidebar::-webkit-scrollbar-thumb {
+    background: hsl(var(--sidebar-accent) / 0.5);
+    border-radius: 3px;
+  }
+
+  .scrollbar-sidebar:hover::-webkit-scrollbar-thumb {
+    background: hsl(var(--sidebar-accent) / 0.9);
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 }
