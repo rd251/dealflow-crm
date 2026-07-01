@@ -854,6 +854,7 @@ function useCrmStoreInternal() {
     updateLeads(prev => prev.map(l =>
       l.id === leadId ? { ...l, status: "Konvertert til salg" as LeadStatus, konvertert_til: "salg" as const, konvertert_dato: today, sist_aktivitet: today } : l
     ));
+    return smId;
   }, [leads, selskaper, kontakter, updateLeads, updateSalgsmuligheter, updateSelskaper, updateKontakter]);
 
   const konverterTilPartner = useCallback((leadId: string, enrichment?: { orgnr?: string; bransje?: string; firmaadresse?: string; postadresse?: string }) => {
