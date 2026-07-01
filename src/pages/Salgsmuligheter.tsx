@@ -630,7 +630,7 @@ export default function Salgsmuligheter() {
               const stageDeals = sortDeals(openDeals.filter(d => d.status === stage));
               const stageMrr = stageDeals.reduce((s, d) => s + d.forventet_mrr, 0);
               return (
-                <div key={stage} className={`${isMobile ? "min-w-[260px] w-[260px]" : "min-w-[290px] w-[290px]"} flex-shrink-0 flex flex-col rounded-xl p-2 -m-2 transition-colors ${dragOverStage === stage ? "bg-primary/10 ring-2 ring-primary/30" : ""}`}
+                <div key={stage} className={`${isMobile ? "min-w-[240px] w-[240px]" : "min-w-[230px] w-[230px]"} flex-shrink-0 flex flex-col rounded-xl p-2 -m-2 transition-colors ${dragOverStage === stage ? "bg-primary/10 ring-2 ring-primary/30" : ""}`}
                   onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; setDragOverStage(stage); }}
                   onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOverStage(null); }}
                   onDragEnd={() => { setDragOverStage(null); setDraggedId(null); }}
