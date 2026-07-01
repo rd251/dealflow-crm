@@ -270,18 +270,15 @@ export default function Companies() {
         </DialogContent>
       </Dialog>
 
-      {/* Transfer to partner dialog */}
-      <Dialog open={!!transferDialog} onOpenChange={open => !open && setTransferDialog(null)}>
-        <DialogContent className="max-w-[95vw] sm:max-w-md">
-          <DialogHeader><DialogTitle>Overfør til partner</DialogTitle><DialogDescription>Selskapet flyttes til partnersiden og fjernes fra kundeforhold.</DialogDescription></DialogHeader>
-          <div className="flex gap-2 justify-end">
-            <Button variant="outline" onClick={() => setTransferDialog(null)}>Avbryt</Button>
-            <Button onClick={() => {
-              if (transferDialog) { konverterSelskapTilPartner(transferDialog); setTransferDialog(null); }
-            }}>Overfør</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Delegate to partner dialog */}
+      <DelegateToPartnerDialog
+        selskapId={transferDialog}
+        onClose={() => setTransferDialog(null)}
+        selskaper={selskaper}
+        partnere={partnere}
+        partnerPakker={partnerPakker}
+        updateSelskaper={updateSelskaper}
+      />
 
       {/* Revert to salgsmulighet dialog */}
       <Dialog open={!!revertDialog} onOpenChange={open => !open && setRevertDialog(null)}>
