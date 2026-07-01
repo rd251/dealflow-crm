@@ -412,11 +412,17 @@ export default function Leads() {
               disabled={!convertNavn.trim()}
               onClick={() => {
                 if (convertDialogLead) {
-                  konverterLead(convertDialogLead.id, convertNavn.trim(), enrichFields);
+                  const smId = konverterLead(convertDialogLead.id, convertNavn.trim(), enrichFields);
+                  const leadNavn = convertDialogLead.firmanavn;
                   setConvertDialogLead(null);
                   setConvertNavn("");
                   setEnrichFields({ orgnr: "", bransje: "", firmaadresse: "", postadresse: "" });
                   if (selectedLead?.id === convertDialogLead.id) setSelectedLead(null);
+                  if (smId) {
+                    toast.success(`${leadNavn} konvertert til salgsmulighet`, {
+                      action: { label: "Åpne", onClick: () => navigate(`/salgsmuligheter?open=${smId}`) },
+                    });
+                  }
                 }
               }}
             >
