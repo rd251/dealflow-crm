@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import PageShell from "@/components/PageShell";
 import { useCrmStore } from "@/hooks/use-crm-store";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -43,6 +43,7 @@ export default function Leads() {
   const isMobile = useIsMobile();
   const { canEdit, isAdmin, user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const { leads, partnere, updateLeads, konverterLead, konverterTilPartner, generateId } = useCrmStore();
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -411,11 +412,17 @@ export default function Leads() {
               disabled={!convertNavn.trim()}
               onClick={() => {
                 if (convertDialogLead) {
-                  konverterLead(convertDialogLead.id, convertNavn.trim(), enrichFields);
+                  const smId = konverterLead(convertDialogLead.id, convertNavn.trim(), enrichFields);
+                  const leadNavn = convertDialogLead.firmanavn;
                   setConvertDialogLead(null);
                   setConvertNavn("");
                   setEnrichFields({ orgnr: "", bransje: "", firmaadresse: "", postadresse: "" });
                   if (selectedLead?.id === convertDialogLead.id) setSelectedLead(null);
+                  if (smId) {
+                    toast.success(`${leadNavn} konvertert til salgsmulighet`, {
+                      action: { label: "Åpne", onClick: () => navigate(`/salgsmuligheter?open=${smId}`) },
+                    });
+                  }
                 }
               }}
             >
