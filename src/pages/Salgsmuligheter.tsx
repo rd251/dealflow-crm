@@ -643,8 +643,41 @@ export default function Salgsmuligheter() {
               </div>
             );
           })()}
-          <div className="flex items-center justify-end mb-3">
-            <div className="inline-flex rounded-md border bg-card p-0.5">
+          {/* Søk og filtre */}
+          <div className="flex flex-wrap items-center gap-2 mb-3">
+            <div className="relative flex-1 min-w-[200px] max-w-xs">
+              <Input
+                placeholder="Søk selskap, kontakt, e-post…"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="h-8 text-xs pr-7"
+              />
+              {searchQuery && (
+                <button type="button" onClick={() => setSearchQuery("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground text-xs">✕</button>
+              )}
+            </div>
+            <select
+              value={ownerFilter}
+              onChange={e => setOwnerFilter(e.target.value)}
+              className="h-8 text-xs rounded-md border bg-card px-2 min-w-[130px]"
+            >
+              <option value="">Alle ansvarlige</option>
+              {Array.from(new Set(salgsmuligheter.map(s => s.ansvarlig).filter(Boolean))).sort().map(a => (
+                <option key={a} value={a}>{profiles.find(p => p.user_id === a)?.display_name || a}</option>
+              ))}
+            </select>
+            <div className="flex items-center gap-1">
+              <span className="text-[11px] text-muted-foreground">Lukkedato:</span>
+              <Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="h-8 text-xs w-[140px]" />
+              <span className="text-[11px] text-muted-foreground">–</span>
+              <Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="h-8 text-xs w-[140px]" />
+            </div>
+            {(searchQuery || ownerFilter || dateFrom || dateTo) && (
+              <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => { setSearchQuery(""); setOwnerFilter(""); setDateFrom(""); setDateTo(""); }}>
+                Nullstill
+              </Button>
+            )}
+            <div className="ml-auto inline-flex rounded-md border bg-card p-0.5">
               <button type="button" onClick={() => setPipelineView("kanban")} className={`px-3 py-1 text-xs font-medium rounded ${pipelineView === "kanban" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>Kanban</button>
               <button type="button" onClick={() => setPipelineView("table")} className={`px-3 py-1 text-xs font-medium rounded ${pipelineView === "table" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>Tabell</button>
             </div>
