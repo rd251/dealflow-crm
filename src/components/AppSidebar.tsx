@@ -184,11 +184,11 @@ export default function AppSidebar() {
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetContent side="left" className="w-60 p-0 bg-sidebar border-sidebar-border flex flex-col">
             <SheetTitle className="sr-only">Navigasjon</SheetTitle>
-            <div className="p-6 pb-4">
+            <div className="p-4 pb-3">
               <img src={logo} alt="Snakk CRM" className="h-8 w-auto" />
             </div>
             <SidebarNav onNavigate={() => setOpen(false)} isAdmin={isAdmin} displayName={displayName} />
-            <div className="p-4 text-xs text-sidebar-foreground/50">
+            <div className="p-3 text-xs text-sidebar-foreground/50">
               Snakk CRM v2.0
             </div>
           </SheetContent>
@@ -205,7 +205,7 @@ export default function AppSidebar() {
       )}
     >
       {!collapsed && (
-        <div className="p-6 pb-4 flex items-center justify-between">
+        <div className="p-4 pb-3 flex items-center justify-between">
           <img src={logo} alt="Snakk CRM" className="h-8 w-auto" />
           <Button
             variant="ghost"
