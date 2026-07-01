@@ -71,7 +71,7 @@ function SidebarNav({ onNavigate, isAdmin, displayName }: { onNavigate?: () => v
         key={to}
         to={to}
         onClick={onNavigate}
-        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+        className={`flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
           active
             ? "bg-sidebar-accent text-sidebar-primary"
             : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
@@ -85,13 +85,13 @@ function SidebarNav({ onNavigate, isAdmin, displayName }: { onNavigate?: () => v
 
   return (
     <>
-      <nav className="flex-1 px-3 space-y-1 overflow-y-auto scrollbar-sidebar">
+      <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto scrollbar-sidebar">
         {navSections.map((section) => (
-          <div key={section.title} className="pt-3 first:pt-0">
-            <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/50">
+          <div key={section.title} className="pt-2 first:pt-0">
+            <p className="px-3 pb-0.5 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/50">
               {section.title}
             </p>
-            <div className="space-y-1">{section.items.map(renderItem)}</div>
+            <div className="space-y-0.5">{section.items.map(renderItem)}</div>
           </div>
         ))}
         {isAdmin && (
