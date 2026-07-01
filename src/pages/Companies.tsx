@@ -73,13 +73,18 @@ export default function Companies() {
   type SortKey = "firmanavn" | "bransje" | "kundestatus" | "live" | "tilstand" | "mrr" | "arr" | "sla" | "oppstart" | "lukkedato" | "sist_aktivitet";
   const [sortKey, setSortKey] = useState<SortKey | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
-  const [partnerPakker, setPartnerPakker] = useState<Array<{ id: string; partner_id: string; inkluderte_minutter: number }>>([]);
+  const [partnerPakker, setPartnerPakker] = useState<Array<{ id: string; partner_id: string; navn: string; inkluderte_minutter: number; utsalgspris_sluttkunde: number }>>([]);
   const [partnerTrinn, setPartnerTrinn] = useState<Array<{ partner_id: string; min_kunder: number; max_kunder: number | null; kostpris_per_minutt: number }>>([]);
+
+  const reloadPartnerPakker = async () => {
+    const { data } = await supabase.from("partner_pakker").select("id, partner_id, navn, inkluderte_minutter, utsalgspris_sluttkunde").eq("aktiv", true);
+    setPartnerPakker(data || []);
+  };
 
   useEffect(() => {
     (async () => {
       const [{ data: pk }, { data: pm }] = await Promise.all([
-        supabase.from("partner_pakker").select("id, partner_id, inkluderte_minutter").eq("aktiv", true),
+        supabase.from("partner_pakker").select("id, partner_id, navn, inkluderte_minutter, utsalgspris_sluttkunde").eq("aktiv", true),
         supabase.from("partner_prismodell").select("partner_id, min_kunder, max_kunder, kostpris_per_minutt"),
       ]);
       setPartnerPakker(pk || []);
@@ -278,6 +283,7 @@ export default function Companies() {
         partnere={partnere}
         partnerPakker={partnerPakker}
         updateSelskaper={updateSelskaper}
+        onPakkerChanged={reloadPartnerPakker}
       />
 
       {/* Revert to salgsmulighet dialog */}
@@ -880,35 +886,77 @@ export default function Companies() {
 }
 
 function DelegateToPartnerDialog({
-  selskapId, onClose, selskaper, partnere, partnerPakker, updateSelskaper,
+  selskapId, onClose, selskaper, partnere, partnerPakker, updateSelskaper, onPakkerChanged,
 }: {
   selskapId: string | null;
   onClose: () => void;
   selskaper: Selskap[];
   partnere: any[];
-  partnerPakker: Array<{ id: string; partner_id: string; inkluderte_minutter: number }>;
+  partnerPakker: Array<{ id: string; partner_id: string; navn: string; inkluderte_minutter: number; utsalgspris_sluttkunde: number }>;
   updateSelskaper: (updater: (prev: Selskap[]) => Selskap[]) => void;
+  onPakkerChanged: () => Promise<void>;
 }) {
+  const PRESETS = [
+    { navn: "Chatbot + 100 min", inkluderte_minutter: 100, utsalgspris_sluttkunde: 990, beskrivelse: "Unlimited chat + 100 min voice" },
+    { navn: "Starter", inkluderte_minutter: 500, utsalgspris_sluttkunde: 2500, beskrivelse: "500 min/mo" },
+    { navn: "800 min", inkluderte_minutter: 800, utsalgspris_sluttkunde: 4000, beskrivelse: "800 min/mo" },
+    { navn: "Growth", inkluderte_minutter: 1500, utsalgspris_sluttkunde: 7500, beskrivelse: "1 500 min/mo — MEST POPULÆR" },
+    { navn: "Pro", inkluderte_minutter: 2500, utsalgspris_sluttkunde: 12500, beskrivelse: "2 500 min/mo" },
+    { navn: "Team", inkluderte_minutter: 3000, utsalgspris_sluttkunde: 15000, beskrivelse: "3 000 min/mo" },
+    { navn: "Business", inkluderte_minutter: 6000, utsalgspris_sluttkunde: 30000, beskrivelse: "6 000 min/mo" },
+    { navn: "Enterprise", inkluderte_minutter: 22500, utsalgspris_sluttkunde: 0, beskrivelse: "22 500+ min/mo — Custom" },
+  ];
+
   const selskap = selskapId ? selskaper.find(s => s.id === selskapId) : null;
   const [partnerId, setPartnerId] = useState<string>("");
-  const [pakkeId, setPakkeId] = useState<string>("");
+  const [pakkeSelection, setPakkeSelection] = useState<string>(""); // "existing:<id>" or "preset:<idx>" or ""
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (selskap) {
       setPartnerId(selskap.partner_id || "");
-      setPakkeId((selskap as any).partner_pakke_id || "");
+      const existing = (selskap as any).partner_pakke_id;
+      setPakkeSelection(existing ? `existing:${existing}` : "");
     }
   }, [selskap?.id]);
 
   if (!selskap) return null;
 
-  const availablePakker = partnerPakker.filter(p => p.partner_id === partnerId);
+  const partnerPakkerFor = partnerPakker.filter(p => p.partner_id === partnerId);
+  const missingPresets = PRESETS.filter(preset =>
+    !partnerPakkerFor.some(pp => pp.inkluderte_minutter === preset.inkluderte_minutter && (pp.navn || "").toLowerCase() === preset.navn.toLowerCase())
+  );
 
-  const handleDelegate = () => {
-    if (!partnerId) {
-      toast.error("Velg en partner");
-      return;
+  const resolvePakkeId = async (): Promise<string | null> => {
+    if (!pakkeSelection) return null;
+    if (pakkeSelection.startsWith("existing:")) return pakkeSelection.split(":")[1];
+    if (pakkeSelection.startsWith("preset:")) {
+      const idx = Number(pakkeSelection.split(":")[1]);
+      const preset = PRESETS[idx];
+      if (!preset) return null;
+      // Insert into partner_pakker for this partner
+      const nextSort = (partnerPakkerFor.length || 0) + 1;
+      const { data, error } = await supabase.from("partner_pakker").insert({
+        partner_id: partnerId,
+        navn: preset.navn,
+        beskrivelse: preset.beskrivelse,
+        inkluderte_minutter: preset.inkluderte_minutter,
+        utsalgspris_sluttkunde: preset.utsalgspris_sluttkunde,
+        ekstra_min_pris: 0,
+        aktiv: true,
+        sortering: nextSort,
+      }).select("id").single();
+      if (error) { toast.error("Kunne ikke opprette pakke: " + error.message); return null; }
+      await onPakkerChanged();
+      return data.id;
     }
+    return null;
+  };
+
+  const handleDelegate = async () => {
+    if (!partnerId) { toast.error("Velg en partner"); return; }
+    setSaving(true);
+    const pakkeId = await resolvePakkeId();
     const today = new Date().toISOString().split("T")[0];
     updateSelskaper(prev => prev.map(s => s.id === selskap.id ? {
       ...s,
@@ -918,6 +966,7 @@ function DelegateToPartnerDialog({
       sist_aktivitet: today,
     } as Selskap : s));
     toast.success(`${selskap.firmanavn} delegert til partner`);
+    setSaving(false);
     onClose();
   };
 
@@ -953,7 +1002,7 @@ function DelegateToPartnerDialog({
             <select
               className="w-full border rounded-lg px-3 py-2 text-sm bg-background"
               value={partnerId}
-              onChange={e => { setPartnerId(e.target.value); setPakkeId(""); }}
+              onChange={e => { setPartnerId(e.target.value); setPakkeSelection(""); }}
             >
               <option value="">– Velg partner –</option>
               {partnere
@@ -966,17 +1015,35 @@ function DelegateToPartnerDialog({
               <label className="text-xs font-medium text-muted-foreground mb-1 block">Pakke (valgfritt)</label>
               <select
                 className="w-full border rounded-lg px-3 py-2 text-sm bg-background"
-                value={pakkeId}
-                onChange={e => setPakkeId(e.target.value)}
+                value={pakkeSelection}
+                onChange={e => setPakkeSelection(e.target.value)}
               >
                 <option value="">– Ingen pakke –</option>
-                {availablePakker.map(pk => (
-                  <option key={pk.id} value={pk.id}>{pk.inkluderte_minutter} min</option>
-                ))}
+                {partnerPakkerFor.length > 0 && (
+                  <optgroup label="Partnerens pakker">
+                    {partnerPakkerFor.map(pk => (
+                      <option key={pk.id} value={`existing:${pk.id}`}>
+                        {pk.navn} — {pk.inkluderte_minutter} min ({nok(pk.utsalgspris_sluttkunde)})
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
+                {missingPresets.length > 0 && (
+                  <optgroup label="Standard Snakk-pakker (legges til automatisk)">
+                    {missingPresets.map(preset => {
+                      const idx = PRESETS.indexOf(preset);
+                      return (
+                        <option key={idx} value={`preset:${idx}`}>
+                          + {preset.navn} — {preset.inkluderte_minutter.toLocaleString("no-NO")} min{preset.utsalgspris_sluttkunde ? ` (${nok(preset.utsalgspris_sluttkunde)})` : ""}
+                        </option>
+                      );
+                    })}
+                  </optgroup>
+                )}
               </select>
-              {availablePakker.length === 0 && (
-                <p className="text-[11px] text-muted-foreground mt-1">Denne partneren har ingen aktive pakker enda.</p>
-              )}
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Standard-pakker blir opprettet på partneren første gang de velges.
+              </p>
             </div>
           )}
         </div>
@@ -988,8 +1055,8 @@ function DelegateToPartnerDialog({
           ) : <div />}
           <div className="flex gap-2">
             <Button variant="outline" onClick={onClose}>Avbryt</Button>
-            <Button onClick={handleDelegate} disabled={!partnerId}>
-              {currentPartner ? "Oppdater" : "Delegér"}
+            <Button onClick={handleDelegate} disabled={!partnerId || saving}>
+              {saving ? "Lagrer..." : currentPartner ? "Oppdater" : "Delegér"}
             </Button>
           </div>
         </div>
