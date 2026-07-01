@@ -173,6 +173,10 @@ export default function Salgsmuligheter() {
   const [moveBlockedId, setMoveBlockedId] = useState<string | null>(null);
   const [form, setForm] = useState({ selskap_id: "", kontakt_id: "", forventet_mrr: 0, sla: 0, oppstartskostnad: 0, kontraktslengde_mnd: 12, sannsynlighet: 50, forventet_lukkedato: "", neste_steg: "", rolle_i_firma: "", use_case: "", kontaktperson: "", e_post: "", telefon: "", ansvarlig: "", kilde: "Nettside" as string });
   const [filterUtenAktivitet, setFilterUtenAktivitet] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [ownerFilter, setOwnerFilter] = useState<string>("");
+  const [dateFrom, setDateFrom] = useState<string>("");
+  const [dateTo, setDateTo] = useState<string>("");
   const [contractModalOpen, setContractModalOpen] = useState(false);
   const [pipelineView, setPipelineView] = useState<"kanban" | "table">(() => (localStorage.getItem("pipelineView") as "kanban" | "table") || "kanban");
   useEffect(() => { localStorage.setItem("pipelineView", pipelineView); }, [pipelineView]);
@@ -330,11 +334,34 @@ export default function Salgsmuligheter() {
   const now = new Date();
   const thisMonth = (d: string) => { const dt = new Date(d); return dt.getMonth() === now.getMonth() && dt.getFullYear() === now.getFullYear(); };
 
+  const q = searchQuery.trim().toLowerCase();
+  const from = dateFrom ? new Date(dateFrom) : null;
+  const to = dateTo ? new Date(dateTo + "T23:59:59") : null;
   const openDeals = salgsmuligheter.filter(s => {
     if (!openStatuses.includes(s.status)) return false;
     if (filterUtenAktivitet) {
       const cutoff = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
       if (s.sist_aktivitet && new Date(s.sist_aktivitet) >= cutoff) return false;
+    }
+    if (ownerFilter && s.ansvarlig !== ownerFilter) return false;
+    if (from || to) {
+      if (!s.forventet_lukkedato) return false;
+      const d = new Date(s.forventet_lukkedato);
+      if (from && d < from) return false;
+      if (to && d > to) return false;
+    }
+    if (q) {
+      const selskapNavn = (selskaper.find(x => x.id === s.selskap_id)?.firmanavn || "").toLowerCase();
+      const hay = [
+        selskapNavn,
+        s.navn,
+        s.kontaktperson,
+        s.e_post,
+        s.telefon,
+        s.use_case,
+        s.neste_steg,
+      ].filter(Boolean).join(" ").toLowerCase();
+      if (!hay.includes(q) && !selskapNavn.includes(q)) return false;
     }
     return true;
   });
@@ -616,8 +643,41 @@ export default function Salgsmuligheter() {
               </div>
             );
           })()}
-          <div className="flex items-center justify-end mb-3">
-            <div className="inline-flex rounded-md border bg-card p-0.5">
+          {/* Søk og filtre */}
+          <div className="flex flex-wrap items-center gap-2 mb-3">
+            <div className="relative flex-1 min-w-[200px] max-w-xs">
+              <Input
+                placeholder="Søk selskap, kontakt, e-post…"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="h-8 text-xs pr-7"
+              />
+              {searchQuery && (
+                <button type="button" onClick={() => setSearchQuery("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground text-xs">✕</button>
+              )}
+            </div>
+            <select
+              value={ownerFilter}
+              onChange={e => setOwnerFilter(e.target.value)}
+              className="h-8 text-xs rounded-md border bg-card px-2 min-w-[130px]"
+            >
+              <option value="">Alle ansvarlige</option>
+              {Array.from(new Set(salgsmuligheter.map(s => s.ansvarlig).filter(Boolean))).sort().map(a => (
+                <option key={a} value={a}>{profiles.find(p => p.user_id === a)?.display_name || a}</option>
+              ))}
+            </select>
+            <div className="flex items-center gap-1">
+              <span className="text-[11px] text-muted-foreground">Lukkedato:</span>
+              <Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="h-8 text-xs w-[140px]" />
+              <span className="text-[11px] text-muted-foreground">–</span>
+              <Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="h-8 text-xs w-[140px]" />
+            </div>
+            {(searchQuery || ownerFilter || dateFrom || dateTo) && (
+              <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => { setSearchQuery(""); setOwnerFilter(""); setDateFrom(""); setDateTo(""); }}>
+                Nullstill
+              </Button>
+            )}
+            <div className="ml-auto inline-flex rounded-md border bg-card p-0.5">
               <button type="button" onClick={() => setPipelineView("kanban")} className={`px-3 py-1 text-xs font-medium rounded ${pipelineView === "kanban" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>Kanban</button>
               <button type="button" onClick={() => setPipelineView("table")} className={`px-3 py-1 text-xs font-medium rounded ${pipelineView === "table" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>Tabell</button>
             </div>
