@@ -87,10 +87,16 @@ export default function Partnere() {
     if (selectedPartner?.id === partner.id) setSelectedPartner(null);
   };
 
-  const filtered = partnere.filter(p =>
-    p.partnernavn.toLowerCase().includes(search.toLowerCase()) ||
-    p.kontaktperson.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = partnere
+    .filter(p =>
+      p.partnernavn.toLowerCase().includes(search.toLowerCase()) ||
+      p.kontaktperson.toLowerCase().includes(search.toLowerCase())
+    )
+    .sort((a, b) => {
+      const aCount = selskaper.filter(s => s.partner_id === a.id).length;
+      const bCount = selskaper.filter(s => s.partner_id === b.id).length;
+      return bCount - aCount;
+    });
 
   const getPartnerStats = (partnerId: string) => {
     const kunder = selskaper.filter(s => s.partner_id === partnerId && s.kundestatus === "Live");
