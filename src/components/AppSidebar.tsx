@@ -71,7 +71,7 @@ function SidebarNav({ onNavigate, isAdmin, displayName }: { onNavigate?: () => v
         key={to}
         to={to}
         onClick={onNavigate}
-        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+        className={`flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
           active
             ? "bg-sidebar-accent text-sidebar-primary"
             : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
@@ -85,30 +85,30 @@ function SidebarNav({ onNavigate, isAdmin, displayName }: { onNavigate?: () => v
 
   return (
     <>
-      <nav className="flex-1 px-3 space-y-1 overflow-y-auto scrollbar-sidebar">
+      <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto scrollbar-sidebar">
         {navSections.map((section) => (
-          <div key={section.title} className="pt-3 first:pt-0">
-            <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/50">
+          <div key={section.title} className="pt-2 first:pt-0">
+            <p className="px-3 pb-0.5 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/50">
               {section.title}
             </p>
-            <div className="space-y-1">{section.items.map(renderItem)}</div>
+            <div className="space-y-0.5">{section.items.map(renderItem)}</div>
           </div>
         ))}
         {isAdmin && (
-          <div className="pt-3">
+          <div className="pt-2">
             {renderItem({ to: "/admin", icon: Shield, label: "Admin" })}
           </div>
         )}
       </nav>
       {user && (
         <div className="px-3 pb-2">
-          <div className="px-3 py-2">
+          <div className="px-3 py-1.5">
             <p className="text-sm font-medium text-sidebar-foreground truncate">{displayName || user.email}</p>
             {displayName && <span className="text-xs text-sidebar-foreground/60 truncate">{user.email}</span>}
           </div>
           <button
             onClick={() => { signOut(); onNavigate?.(); }}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors w-full"
+            className="flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors w-full"
           >
             <LogOut className="w-4 h-4 shrink-0" />
             Logg ut
@@ -127,7 +127,7 @@ function CollapsedSidebarNav({ isAdmin }: { isAdmin: boolean }) {
 
   return (
     <>
-      <nav className="flex-1 px-2 space-y-1 mt-2 overflow-y-auto scrollbar-sidebar">
+      <nav className="flex-1 px-2 space-y-0.5 mt-1 overflow-y-auto scrollbar-sidebar">
         {items.map(({ to, icon: Icon, label }) => {
           const active = location.pathname === to;
           return (
@@ -135,7 +135,7 @@ function CollapsedSidebarNav({ isAdmin }: { isAdmin: boolean }) {
               key={to}
               to={to}
               title={label}
-              className={`flex items-center justify-center p-2.5 rounded-lg transition-colors ${
+              className={`flex items-center justify-center p-2 rounded-md transition-colors ${
                 active
                   ? "bg-sidebar-accent text-sidebar-primary"
                   : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
@@ -151,7 +151,7 @@ function CollapsedSidebarNav({ isAdmin }: { isAdmin: boolean }) {
           <button
             onClick={() => signOut()}
             title="Logg ut"
-            className="flex items-center justify-center p-2.5 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors w-full"
+            className="flex items-center justify-center p-2 rounded-md text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors w-full"
           >
             <LogOut className="w-4 h-4" />
           </button>
@@ -184,11 +184,11 @@ export default function AppSidebar() {
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetContent side="left" className="w-60 p-0 bg-sidebar border-sidebar-border flex flex-col">
             <SheetTitle className="sr-only">Navigasjon</SheetTitle>
-            <div className="p-6 pb-4">
+            <div className="p-4 pb-3">
               <img src={logo} alt="Snakk CRM" className="h-8 w-auto" />
             </div>
             <SidebarNav onNavigate={() => setOpen(false)} isAdmin={isAdmin} displayName={displayName} />
-            <div className="p-4 text-xs text-sidebar-foreground/50">
+            <div className="p-3 text-xs text-sidebar-foreground/50">
               Snakk CRM v2.0
             </div>
           </SheetContent>
@@ -205,7 +205,7 @@ export default function AppSidebar() {
       )}
     >
       {!collapsed && (
-        <div className="p-6 pb-4 flex items-center justify-between">
+        <div className="p-4 pb-3 flex items-center justify-between">
           <img src={logo} alt="Snakk CRM" className="h-8 w-auto" />
           <Button
             variant="ghost"
@@ -231,7 +231,7 @@ export default function AppSidebar() {
       )}
       {collapsed ? <CollapsedSidebarNav isAdmin={isAdmin} /> : <SidebarNav isAdmin={isAdmin} displayName={displayName} />}
       {!collapsed && (
-        <div className="p-4 text-xs text-sidebar-foreground/50">
+        <div className="p-3 text-xs text-sidebar-foreground/50">
           Snakk CRM v2.0
         </div>
       )}
