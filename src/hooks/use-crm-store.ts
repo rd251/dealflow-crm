@@ -798,9 +798,9 @@ function useCrmStoreInternal() {
   }, []);
 
   // Convert lead → salgsmulighet + selskap + kontakt
-  const konverterLead = useCallback((leadId: string, customNavn?: string, enrichment?: { orgnr?: string; bransje?: string; firmaadresse?: string; postadresse?: string }) => {
+  const konverterLead = useCallback((leadId: string, customNavn?: string, enrichment?: { orgnr?: string; bransje?: string; firmaadresse?: string; postadresse?: string }): string | undefined => {
     const lead = leads.find(l => l.id === leadId);
-    if (!lead) return;
+    if (!lead) return undefined;
     const today = new Date().toISOString().split("T")[0];
 
     let selskapId = selskaper.find(s => s.firmanavn.toLowerCase() === lead.firmanavn.toLowerCase())?.id;
