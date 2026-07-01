@@ -283,6 +283,7 @@ export default function Companies() {
         partnere={partnere}
         partnerPakker={partnerPakker}
         updateSelskaper={updateSelskaper}
+        onPakkerChanged={reloadPartnerPakker}
       />
 
       {/* Revert to salgsmulighet dialog */}
