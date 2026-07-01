@@ -173,6 +173,10 @@ export default function Salgsmuligheter() {
   const [moveBlockedId, setMoveBlockedId] = useState<string | null>(null);
   const [form, setForm] = useState({ selskap_id: "", kontakt_id: "", forventet_mrr: 0, sla: 0, oppstartskostnad: 0, kontraktslengde_mnd: 12, sannsynlighet: 50, forventet_lukkedato: "", neste_steg: "", rolle_i_firma: "", use_case: "", kontaktperson: "", e_post: "", telefon: "", ansvarlig: "", kilde: "Nettside" as string });
   const [filterUtenAktivitet, setFilterUtenAktivitet] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [ownerFilter, setOwnerFilter] = useState<string>("");
+  const [dateFrom, setDateFrom] = useState<string>("");
+  const [dateTo, setDateTo] = useState<string>("");
   const [contractModalOpen, setContractModalOpen] = useState(false);
   const [pipelineView, setPipelineView] = useState<"kanban" | "table">(() => (localStorage.getItem("pipelineView") as "kanban" | "table") || "kanban");
   useEffect(() => { localStorage.setItem("pipelineView", pipelineView); }, [pipelineView]);
