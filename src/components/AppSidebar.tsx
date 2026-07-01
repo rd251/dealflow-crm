@@ -231,7 +231,7 @@ export default function AppSidebar() {
       )}
       {collapsed ? <CollapsedSidebarNav isAdmin={isAdmin} /> : <SidebarNav isAdmin={isAdmin} displayName={displayName} />}
       {!collapsed && (
-        <div className="p-4 text-xs text-sidebar-foreground/50">
+        <div className="p-3 text-xs text-sidebar-foreground/50">
           Snakk CRM v2.0
         </div>
       )}
