@@ -454,9 +454,13 @@ export default function PartnerPricing({
                 {pakker.filter((p) => p.aktiv).map((p) => {
                   const vårKost = Number(p.inkluderte_minutter) * gjeldendeKostpris;
                   const margin = Number(p.utsalgspris_sluttkunde) - vårKost;
+                  const antall = kunderByPakke[p.id]?.length || 0;
                   return (
                     <tr key={p.id} className="border-b last:border-0">
-                      <td className="py-2 font-medium">{p.navn}</td>
+                      <td className="py-2 font-medium">
+                        {p.navn}
+                        {antall > 0 && <span className="ml-2 text-[10px] text-muted-foreground">× {antall}</span>}
+                      </td>
                       <td className="py-2 text-right font-mono">{p.inkluderte_minutter}</td>
                       <td className="py-2 text-right font-mono">{nok(Number(p.utsalgspris_sluttkunde))}</td>
                       <td className="py-2 text-right font-mono text-primary">{formatKr(vårKost)}</td>
@@ -465,6 +469,52 @@ export default function PartnerPricing({
                   );
                 })}
               </tbody>
+              {(() => {
+                const aktive = pakker.filter((p) => p.aktiv);
+                const totals = aktive.reduce(
+                  (acc, p) => {
+                    const antall = kunderByPakke[p.id]?.length || 0;
+                    const vårKost = Number(p.inkluderte_minutter) * gjeldendeKostpris;
+                    const margin = Number(p.utsalgspris_sluttkunde) - vårKost;
+                    // Per-pakke totaler (uten kunder)
+                    acc.minPakke += Number(p.inkluderte_minutter);
+                    acc.utsalgPakke += Number(p.utsalgspris_sluttkunde);
+                    acc.kostPakke += vårKost;
+                    acc.marginPakke += margin;
+                    // Faktisk fakturagrunnlag (ganget med antall aktive kunder på pakken)
+                    acc.minAktiv += Number(p.inkluderte_minutter) * antall;
+                    acc.utsalgAktiv += Number(p.utsalgspris_sluttkunde) * antall;
+                    acc.kostAktiv += vårKost * antall;
+                    acc.marginAktiv += margin * antall;
+                    acc.antall += antall;
+                    return acc;
+                  },
+                  { minPakke: 0, utsalgPakke: 0, kostPakke: 0, marginPakke: 0, minAktiv: 0, utsalgAktiv: 0, kostAktiv: 0, marginAktiv: 0, antall: 0 }
+                );
+                return (
+                  <tfoot>
+                    <tr className="border-t-2 font-semibold bg-muted/30">
+                      <td className="py-2">Sum pr. pakke</td>
+                      <td className="py-2 text-right font-mono">{totals.minPakke}</td>
+                      <td className="py-2 text-right font-mono">{nok(totals.utsalgPakke)}</td>
+                      <td className="py-2 text-right font-mono text-primary">{formatKr(totals.kostPakke)}</td>
+                      <td className={`py-2 text-right font-mono ${totals.marginPakke >= 0 ? "text-success" : "text-destructive"}`}>{nok(Math.round(totals.marginPakke))}</td>
+                    </tr>
+                    {totals.antall > 0 && (
+                      <tr className="border-t bg-primary/5 font-semibold">
+                        <td className="py-2">
+                          Totalt fakturagrunnlag
+                          <span className="ml-2 text-[10px] text-muted-foreground font-normal">({totals.antall} aktive kunder)</span>
+                        </td>
+                        <td className="py-2 text-right font-mono">{totals.minAktiv}</td>
+                        <td className="py-2 text-right font-mono">{nok(totals.utsalgAktiv)}</td>
+                        <td className="py-2 text-right font-mono text-primary">{formatKr(totals.kostAktiv)}</td>
+                        <td className={`py-2 text-right font-mono ${totals.marginAktiv >= 0 ? "text-success" : "text-destructive"}`}>{nok(Math.round(totals.marginAktiv))}</td>
+                      </tr>
+                    )}
+                  </tfoot>
+                );
+              })()}
             </table>
           </div>
         </div>
