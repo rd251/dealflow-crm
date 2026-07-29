@@ -94,10 +94,12 @@ function OAuthCallbackRoute() {
     }
 
     if (user && session) {
-      console.info("[Auth] Session funnet etter callback, redirecter til /dashboard");
-      navigate("/dashboard", { replace: true });
+      const next = consumeStashedNext() ?? "/dashboard";
+      console.info("[Auth] Session funnet etter callback, redirecter til", next);
+      navigate(next, { replace: true });
       return;
     }
+
 
     console.warn("[Auth] Ingen session etter callback, redirecter til /login");
     navigate("/login", { replace: true, state: { authError: "Google-innlogging mislyktes. Prøv igjen." } });
@@ -111,8 +113,10 @@ function AppRoutes() {
     <Routes>
       <Route path="/login" element={<LoginRoute />} />
       <Route path="/~oauth" element={<OAuthCallbackRoute />} />
+      <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
       <Route path="/unsubscribe" element={<Unsubscribe />} />
       <Route path="/onboarding" element={<Onboarding />} />
+
       <Route
         path="/*"
         element={
