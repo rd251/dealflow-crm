@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Separator } from "@/components/ui/separator";
 import { useLocation } from "react-router-dom";
 import logo from "@/assets/logo.svg";
+import { getSafeNextParam, stashNext } from "@/lib/post-login-redirect";
 
 export default function Login() {
   const { signIn } = useAuth();
@@ -21,6 +22,9 @@ export default function Login() {
     if (stateError) {
       setError(stateError);
     }
+    // Preserve `next` (e.g. /.lovable/oauth/consent?authorization_id=...) across
+    // the whole login flow, including the Google redirect round-trip.
+    stashNext(getSafeNextParam());
   }, [location.state]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -31,6 +35,7 @@ export default function Login() {
     if (error) setError(error.message);
     setLoading(false);
   };
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
