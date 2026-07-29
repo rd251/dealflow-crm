@@ -33,6 +33,9 @@ import Login from "./pages/Login";
 import Unsubscribe from "./pages/Unsubscribe";
 import Ringeliste from "./pages/Ringeliste";
 import Onboarding from "./pages/Onboarding";
+import OAuthConsent from "./pages/OAuthConsent";
+import { consumeStashedNext, getSafeNextParam } from "@/lib/post-login-redirect";
+
 
 const queryClient = new QueryClient();
 
@@ -62,11 +65,13 @@ function LoginRoute() {
     return <AuthSpinner />;
   }
   if (user) {
-    console.info("[Auth] Session funnet på /login, redirecter til /dashboard");
-    return <Navigate to="/dashboard" replace />;
+    const next = getSafeNextParam() ?? consumeStashedNext() ?? "/dashboard";
+    console.info("[Auth] Session funnet på /login, redirecter til", next);
+    return <Navigate to={next} replace />;
   }
   return <Login />;
 }
+
 
 function OAuthCallbackRoute() {
   const { user, session, loading } = useAuth();
@@ -89,10 +94,12 @@ function OAuthCallbackRoute() {
     }
 
     if (user && session) {
-      console.info("[Auth] Session funnet etter callback, redirecter til /dashboard");
-      navigate("/dashboard", { replace: true });
+      const next = consumeStashedNext() ?? "/dashboard";
+      console.info("[Auth] Session funnet etter callback, redirecter til", next);
+      navigate(next, { replace: true });
       return;
     }
+
 
     console.warn("[Auth] Ingen session etter callback, redirecter til /login");
     navigate("/login", { replace: true, state: { authError: "Google-innlogging mislyktes. Prøv igjen." } });
@@ -106,8 +113,10 @@ function AppRoutes() {
     <Routes>
       <Route path="/login" element={<LoginRoute />} />
       <Route path="/~oauth" element={<OAuthCallbackRoute />} />
+      <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
       <Route path="/unsubscribe" element={<Unsubscribe />} />
       <Route path="/onboarding" element={<Onboarding />} />
+
       <Route
         path="/*"
         element={
