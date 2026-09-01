@@ -219,7 +219,7 @@ export default function Nyhetsbrev() {
                           : "–"}
                       </TableCell>
                       <TableCell className="text-right whitespace-nowrap">
-                        {n.status === "utkast" && (
+                        {(n.status === "utkast" || n.status === "test") && (
                           <Button variant="ghost" size="sm" onClick={() => navigate(`/nyhetsbrev/${n.id}/rediger`)}>
                             <FileText className="w-4 h-4 mr-1" /> Rediger
                           </Button>
