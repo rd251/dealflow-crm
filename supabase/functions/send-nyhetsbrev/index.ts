@@ -91,26 +91,65 @@ Deno.serve(async (req) => {
     }
 
     if (action === 'sync_stats') {
-      const { data: nb } = await supabase
-        .from('nyhetsbrev')
-        .select('*')
-        .eq('id', body.nyhetsbrev_id)
-        .maybeSingle()
-      if (!nb?.brevo_campaign_id) return json({ error: 'Kampanje ikke sendt via Brevo' }, 400)
+      // Hent alle kampanjer med Brevo-ID hvis ingen id er oppgitt
+      const query = supabase.from('nyhetsbrev').select('*').not('brevo_campaign_id', 'is', null)
+      const { data: rader } = body.nyhetsbrev_id
+        ? await supabase.from('nyhetsbrev').select('*').eq('id', body.nyhetsbrev_id)
+        : await query
+      const liste = rader || []
+      if (liste.length === 0) return json({ error: 'Ingen Brevo-kampanjer å synkronisere' }, 400)
 
-      const camp = await brevo(apiKey, `/emailCampaigns/${nb.brevo_campaign_id}`)
-      const s = camp.statistics?.globalStats ?? {}
-      const aapnet = s.uniqueViews ?? s.viewed ?? 0
-      const klikk = s.uniqueClicks ?? s.clickers ?? 0
-      const levert = s.delivered ?? nb.mottaker_antall ?? 0
+      const resultater: any[] = []
+      for (const nb of liste) {
+        if (!nb.brevo_campaign_id) continue
+        try {
+          const camp = await brevo(apiKey, `/emailCampaigns/${nb.brevo_campaign_id}`)
+          const s = camp.statistics?.globalStats ?? {}
+          const aapnet = s.uniqueViews ?? s.viewed ?? 0
+          const klikk = s.uniqueClicks ?? s.clickers ?? 0
+          const levert = s.delivered ?? nb.mottaker_antall ?? 0
+          const stats = {
+            navn: camp.name ?? null,
+            sendere: camp.sender ?? null,
+            sendt: camp.sentDate ?? null,
+            levert: levert,
+            sendte: s.sent ?? 0,
+            aapninger: s.viewed ?? 0,
+            unike_aapninger: aapnet,
+            klikk: s.clickers ?? 0,
+            unike_klikk: klikk,
+            harde_bounces: s.hardBounces ?? 0,
+            myke_bounces: s.softBounces ?? 0,
+            avmeldinger: s.unsubscriptions ?? 0,
+            spam: s.complaints ?? 0,
+          }
+          await supabase
+            .from('nyhetsbrev')
+            .update({
+              aapnet_antall: aapnet,
+              klikk_antall: klikk,
+              mottaker_antall: levert || nb.mottaker_antall,
+              brevo_status: camp.status ?? null,
+              brevo_stats: stats,
+              brevo_synk_dato: new Date().toISOString(),
+            })
+            .eq('id', nb.id)
+          resultater.push({ id: nb.id, campaign_id: nb.brevo_campaign_id, ...stats })
+        } catch (e) {
+          resultater.push({ id: nb.id, campaign_id: nb.brevo_campaign_id, feil: String(e) })
+        }
+      }
 
-      await supabase
-        .from('nyhetsbrev')
-        .update({ aapnet_antall: aapnet, klikk_antall: klikk, mottaker_antall: levert || nb.mottaker_antall })
-        .eq('id', nb.id)
-
-      return json({ aapnet_antall: aapnet, klikk_antall: klikk, mottaker_antall: levert })
+      const forste = resultater[0] ?? {}
+      return json({
+        antall: resultater.length,
+        resultater,
+        aapnet_antall: forste.unike_aapninger ?? 0,
+        klikk_antall: forste.unike_klikk ?? 0,
+        mottaker_antall: forste.levert ?? 0,
+      })
     }
+
 
     if (action === 'send_test') {
       const testEpost = String(body.test_epost || userData.user.email || '').trim().toLowerCase()
