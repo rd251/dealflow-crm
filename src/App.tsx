@@ -28,6 +28,8 @@ import Rapporter from "./pages/Rapporter";
 import Kalender from "./pages/Kalender";
 import Innstillinger from "./pages/Innstillinger";
 import Moetenotater from "./pages/Moetenotater";
+import Nyhetsbrev from "./pages/Nyhetsbrev";
+import NyhetsbrevEditor from "./pages/NyhetsbrevEditor";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Unsubscribe from "./pages/Unsubscribe";
@@ -143,6 +145,8 @@ function AppRoutes() {
                 <Route path="/aktiviteter" element={<Aktiviteter />} />
                 <Route path="/moetenotater" element={<Moetenotater />} />
                 <Route path="/rapporter" element={<Rapporter />} />
+                <Route path="/nyhetsbrev" element={<Nyhetsbrev />} />
+                <Route path="/nyhetsbrev/:id/rediger" element={<NyhetsbrevEditor />} />
                 <Route path="/admin" element={<Admin />} />
                 <Route path="/innstillinger" element={<Innstillinger />} />
                 <Route path="*" element={<NotFound />} />

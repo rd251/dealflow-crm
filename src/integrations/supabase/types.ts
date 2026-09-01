@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.1"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -528,6 +528,119 @@ export type Database = {
             columns: ["videresendt_til_partner_id"]
             isOneToOne: false
             referencedRelation: "partnere"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nyhetsbrev: {
+        Row: {
+          aapnet_antall: number
+          brevo_campaign_id: number | null
+          emne: string
+          id: string
+          innhold_html: string | null
+          innhold_json: Json | null
+          klikk_antall: number
+          mottaker_antall: number | null
+          opprettet_av: string | null
+          opprettet_dato: string
+          planlagt_dato: string | null
+          preheader: string | null
+          sendt_dato: string | null
+          status: string
+          tittel: string
+        }
+        Insert: {
+          aapnet_antall?: number
+          brevo_campaign_id?: number | null
+          emne: string
+          id?: string
+          innhold_html?: string | null
+          innhold_json?: Json | null
+          klikk_antall?: number
+          mottaker_antall?: number | null
+          opprettet_av?: string | null
+          opprettet_dato?: string
+          planlagt_dato?: string | null
+          preheader?: string | null
+          sendt_dato?: string | null
+          status?: string
+          tittel: string
+        }
+        Update: {
+          aapnet_antall?: number
+          brevo_campaign_id?: number | null
+          emne?: string
+          id?: string
+          innhold_html?: string | null
+          innhold_json?: Json | null
+          klikk_antall?: number
+          mottaker_antall?: number | null
+          opprettet_av?: string | null
+          opprettet_dato?: string
+          planlagt_dato?: string | null
+          preheader?: string | null
+          sendt_dato?: string | null
+          status?: string
+          tittel?: string
+        }
+        Relationships: []
+      }
+      nyhetsbrev_avmeldte: {
+        Row: {
+          created_at: string
+          e_post: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          e_post: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          e_post?: string
+          id?: string
+        }
+        Relationships: []
+      }
+      nyhetsbrev_mottakere: {
+        Row: {
+          created_at: string
+          e_post: string
+          firmanavn: string | null
+          id: string
+          kilde: string | null
+          kilde_id: string | null
+          nyhetsbrev_id: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          e_post: string
+          firmanavn?: string | null
+          id?: string
+          kilde?: string | null
+          kilde_id?: string | null
+          nyhetsbrev_id?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          e_post?: string
+          firmanavn?: string | null
+          id?: string
+          kilde?: string | null
+          kilde_id?: string | null
+          nyhetsbrev_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nyhetsbrev_mottakere_nyhetsbrev_id_fkey"
+            columns: ["nyhetsbrev_id"]
+            isOneToOne: false
+            referencedRelation: "nyhetsbrev"
             referencedColumns: ["id"]
           },
         ]
