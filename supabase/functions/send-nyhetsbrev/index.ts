@@ -1,7 +1,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
 
-const BREVO = 'https://api.brevo.com/v3'
+const GATEWAY = 'https://connector-gateway.lovable.dev/brevo'
 const SENDER = { name: 'Snakk AI', email: 'robin@snakk.ai' }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -13,11 +13,17 @@ function json(body: unknown, status = 200) {
   })
 }
 
-async function brevo(apiKey: string, path: string, init: RequestInit = {}) {
-  const res = await fetch(`${BREVO}${path}`, {
+async function brevo(path: string, init: RequestInit = {}) {
+  const lovableKey = Deno.env.get('LOVABLE_API_KEY')
+  const connectionKey = Deno.env.get('BREVO_API_KEY')
+  if (!lovableKey) throw new Error('LOVABLE_API_KEY is not configured')
+  if (!connectionKey) throw new Error('BREVO_API_KEY is not configured')
+
+  const res = await fetch(`${GATEWAY}${path}`, {
     ...init,
     headers: {
-      'api-key': apiKey,
+      Authorization: `Bearer ${lovableKey}`,
+      'X-Connection-Api-Key': connectionKey,
       'Content-Type': 'application/json',
       accept: 'application/json',
       ...(init.headers || {}),
@@ -67,8 +73,6 @@ async function hentMottakere(supabase: any): Promise<Mottaker[]> {
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
-  const apiKey = Deno.env.get('BREVO_API_KEY')
-  if (!apiKey) return json({ error: 'BREVO_API_KEY mangler' }, 500)
 
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
@@ -103,7 +107,7 @@ Deno.serve(async (req) => {
       for (const nb of liste) {
         if (!nb.brevo_campaign_id) continue
         try {
-          const camp = await brevo(apiKey, `/emailCampaigns/${nb.brevo_campaign_id}`)
+          const camp = await brevo(`/emailCampaigns/${nb.brevo_campaign_id}`)
           const s = camp.statistics?.globalStats ?? {}
           const aapnet = s.uniqueViews ?? s.viewed ?? 0
           const klikk = s.uniqueClicks ?? s.clickers ?? 0
@@ -164,7 +168,7 @@ Deno.serve(async (req) => {
       if (!nb.innhold_html) return json({ error: 'Nyhetsbrevet mangler innhold' }, 400)
 
       // Brevo krever at test-mottakeren finnes som kontakt
-      await brevo(apiKey, '/contacts', {
+      await brevo('/contacts', {
         method: 'POST',
         body: JSON.stringify({ email: testEpost, updateEnabled: true }),
       }).catch(() => {})
@@ -172,13 +176,13 @@ Deno.serve(async (req) => {
       // Gjenbruk eksisterende utkast-kampanje hvis den finnes, ellers lag ny
       let campaignId = nb.brevo_campaign_id as number | null
       if (campaignId) {
-        await brevo(apiKey, `/emailCampaigns/${campaignId}`, {
+        await brevo(`/emailCampaigns/${campaignId}`, {
           method: 'PUT',
           body: JSON.stringify({ subject: nb.emne, htmlContent: nb.innhold_html }),
         }).catch(() => { campaignId = null })
       }
       if (!campaignId) {
-        const camp = await brevo(apiKey, '/emailCampaigns', {
+        const camp = await brevo('/emailCampaigns', {
           method: 'POST',
           body: JSON.stringify({
             name: `[TEST] ${nb.tittel} – ${new Date().toISOString().slice(0, 16)}`,
@@ -193,7 +197,7 @@ Deno.serve(async (req) => {
         campaignId = camp.id
       }
 
-      await brevo(apiKey, `/emailCampaigns/${campaignId}/sendTest`, {
+      await brevo(`/emailCampaigns/${campaignId}/sendTest`, {
         method: 'POST',
         body: JSON.stringify({ emailTo: [testEpost] }),
       })
@@ -222,7 +226,7 @@ Deno.serve(async (req) => {
     if (mottakere.length === 0) return json({ error: 'Ingen gyldige mottakere' }, 400)
 
     // 1. Opprett Brevo-liste
-    const liste = await brevo(apiKey, '/contacts/lists', {
+    const liste = await brevo('/contacts/lists', {
       method: 'POST',
       body: JSON.stringify({
         name: `CRM – ${nb.tittel} – ${new Date().toISOString().slice(0, 16)}`,
@@ -234,7 +238,7 @@ Deno.serve(async (req) => {
     // 2. Importer kontakter i batcher
     for (let i = 0; i < mottakere.length; i += 100) {
       const batch = mottakere.slice(i, i + 100)
-      await brevo(apiKey, '/contacts/import', {
+      await brevo('/contacts/import', {
         method: 'POST',
         body: JSON.stringify({
           listIds: [listId],
@@ -250,7 +254,7 @@ Deno.serve(async (req) => {
 
     // 3. Opprett kampanje
     const planlagt = nb.planlagt_dato && new Date(nb.planlagt_dato) > new Date() ? nb.planlagt_dato : null
-    const campaign = await brevo(apiKey, '/emailCampaigns', {
+    const campaign = await brevo('/emailCampaigns', {
       method: 'POST',
       body: JSON.stringify({
         name: nb.tittel,
@@ -265,7 +269,7 @@ Deno.serve(async (req) => {
 
     // 4. Send nå hvis ikke planlagt
     if (!planlagt) {
-      await brevo(apiKey, `/emailCampaigns/${campaign.id}/sendNow`, { method: 'POST' })
+      await brevo(`/emailCampaigns/${campaign.id}/sendNow`, { method: 'POST' })
     }
 
     // 5. Lagre snapshot + status
