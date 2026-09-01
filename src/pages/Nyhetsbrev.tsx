@@ -29,7 +29,11 @@ interface Nyhetsbrev {
   innhold_json: any;
   preheader: string | null;
   brevo_campaign_id: number | null;
+  brevo_status: string | null;
+  brevo_stats: any;
+  brevo_synk_dato: string | null;
 }
+
 
 const STATUS_STYLE: Record<string, string> = {
   utkast: "bg-muted text-muted-foreground",
@@ -136,6 +140,23 @@ export default function Nyhetsbrev() {
     }
   };
 
+  const synkAlleBrevo = async () => {
+    setSyncing(true);
+    try {
+      const { error } = await supabase.functions.invoke("send-nyhetsbrev", {
+        body: { action: "sync_stats" },
+      });
+      if (error) throw error;
+      toast.success("Brevo-data synkronisert");
+      await lastKampanjer();
+    } catch {
+      toast.error("Kunne ikke synkronisere fra Brevo");
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+
   const toggleAvmeldt = async (m: Mottaker) => {
     if (m.avmeldt) {
       await supabase.from("nyhetsbrev_avmeldte").delete().eq("e_post", m.e_post);
@@ -157,6 +178,20 @@ export default function Nyhetsbrev() {
 
   const aktive = mottakere.filter((m) => !m.avmeldt).length;
 
+  const brevoKampanjer = useMemo(
+    () => kampanjer.filter((n) => !!n.brevo_campaign_id),
+    [kampanjer]
+  );
+
+  const sisteSynk = useMemo(() => {
+    const datoer = brevoKampanjer
+      .map((n) => n.brevo_synk_dato)
+      .filter(Boolean) as string[];
+    if (!datoer.length) return null;
+    return datoer.sort().slice(-1)[0];
+  }, [brevoKampanjer]);
+
+
   const aapningsrate = (n: Nyhetsbrev) =>
     n.mottaker_antall ? Math.round((n.aapnet_antall / n.mottaker_antall) * 100) : 0;
 
@@ -174,6 +209,8 @@ export default function Nyhetsbrev() {
         <TabsList>
           <TabsTrigger value="kampanjer">Kampanjer</TabsTrigger>
           <TabsTrigger value="mottakere">Mottakere ({mottakere.length})</TabsTrigger>
+          <TabsTrigger value="brevo">Brevo ({brevoKampanjer.length})</TabsTrigger>
+
         </TabsList>
 
         <TabsContent value="kampanjer" className="mt-4">
@@ -298,7 +335,89 @@ export default function Nyhetsbrev() {
             )}
           </div>
         </TabsContent>
+
+        <TabsContent value="brevo" className="mt-4 space-y-3">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <p className="text-xs text-muted-foreground">
+              Lagrede Brevo-data{" "}
+              {sisteSynk
+                ? `· sist synkronisert ${format(new Date(sisteSynk), "d. MMM yyyy HH:mm", { locale: nb })}`
+                : "· aldri synkronisert"}
+            </p>
+            <Button variant="outline" size="sm" disabled={syncing} onClick={synkAlleBrevo}>
+              {syncing ? (
+                <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
+              ) : (
+                <RefreshCw className="w-4 h-4 mr-1.5" />
+              )}
+              Synkroniser fra Brevo
+            </Button>
+          </div>
+
+          <div className="bg-card border rounded-xl overflow-x-auto">
+            {brevoKampanjer.length === 0 ? (
+              <div className="p-10 text-center text-muted-foreground text-sm">
+                <Mail className="w-8 h-8 mx-auto mb-2 opacity-40" />
+                Ingen kampanjer er opprettet i Brevo ennå.
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Kampanje-ID</TableHead>
+                    <TableHead>Tittel</TableHead>
+                    <TableHead>Brevo-status</TableHead>
+                    <TableHead className="text-right">Levert</TableHead>
+                    <TableHead className="text-right">Unike åpninger</TableHead>
+                    <TableHead className="text-right">Klikk (unike)</TableHead>
+                    <TableHead className="text-right">Klikkrate</TableHead>
+                    <TableHead className="text-right">Bounce / avmeldt</TableHead>
+                    <TableHead>Synket</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {brevoKampanjer.map((n) => {
+                    const s = (n.brevo_stats || {}) as any;
+                    const levert = s.levert ?? n.mottaker_antall ?? 0;
+                    const unikeKlikk = s.unike_klikk ?? n.klikk_antall ?? 0;
+                    const klikkrate = levert ? Math.round((unikeKlikk / levert) * 100) : 0;
+                    const bounces = (s.harde_bounces ?? 0) + (s.myke_bounces ?? 0);
+                    return (
+                      <TableRow key={n.id}>
+                        <TableCell className="font-mono text-xs">#{n.brevo_campaign_id}</TableCell>
+                        <TableCell>
+                          <div className="font-medium">{n.tittel}</div>
+                          <div className="text-xs text-muted-foreground truncate max-w-[220px]">
+                            {n.emne || "Uten emne"}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="secondary" className={STATUS_STYLE[n.status] || ""}>
+                            {n.brevo_status || n.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">{levert}</TableCell>
+                        <TableCell className="text-right">{s.unike_aapninger ?? n.aapnet_antall ?? 0}</TableCell>
+                        <TableCell className="text-right">{unikeKlikk}</TableCell>
+                        <TableCell className="text-right">{klikkrate} %</TableCell>
+                        <TableCell className="text-right text-muted-foreground">
+                          {bounces} / {s.avmeldinger ?? 0}
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {n.brevo_synk_dato
+                            ? format(new Date(n.brevo_synk_dato), "d. MMM HH:mm", { locale: nb })
+                            : "–"}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            )}
+          </div>
+        </TabsContent>
       </Tabs>
+
 
       <Dialog open={!!rapport} onOpenChange={(o) => !o && setRapport(null)}>
         <DialogContent className="max-w-md">

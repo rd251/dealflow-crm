@@ -8,6 +8,13 @@
       "when": 1788281876253,
       "tag": "0000_create_nyhetsbrev",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1788294709176,
+      "tag": "0001_nyhetsbrev_brevo_cache",
+      "breakpoints": true
     }
   ]
 }

@@ -536,6 +536,9 @@ export type Database = {
         Row: {
           aapnet_antall: number
           brevo_campaign_id: number | null
+          brevo_stats: Json | null
+          brevo_status: string | null
+          brevo_synk_dato: string | null
           emne: string
           id: string
           innhold_html: string | null
@@ -553,6 +556,9 @@ export type Database = {
         Insert: {
           aapnet_antall?: number
           brevo_campaign_id?: number | null
+          brevo_stats?: Json | null
+          brevo_status?: string | null
+          brevo_synk_dato?: string | null
           emne: string
           id?: string
           innhold_html?: string | null
@@ -570,6 +576,9 @@ export type Database = {
         Update: {
           aapnet_antall?: number
           brevo_campaign_id?: number | null
+          brevo_stats?: Json | null
+          brevo_status?: string | null
+          brevo_synk_dato?: string | null
           emne?: string
           id?: string
           innhold_html?: string | null
