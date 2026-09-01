@@ -178,6 +178,20 @@ export default function Nyhetsbrev() {
 
   const aktive = mottakere.filter((m) => !m.avmeldt).length;
 
+  const brevoKampanjer = useMemo(
+    () => kampanjer.filter((n) => !!n.brevo_campaign_id),
+    [kampanjer]
+  );
+
+  const sisteSynk = useMemo(() => {
+    const datoer = brevoKampanjer
+      .map((n) => n.brevo_synk_dato)
+      .filter(Boolean) as string[];
+    if (!datoer.length) return null;
+    return datoer.sort().slice(-1)[0];
+  }, [brevoKampanjer]);
+
+
   const aapningsrate = (n: Nyhetsbrev) =>
     n.mottaker_antall ? Math.round((n.aapnet_antall / n.mottaker_antall) * 100) : 0;
 
