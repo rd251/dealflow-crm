@@ -2,7 +2,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
 
 const GATEWAY = 'https://connector-gateway.lovable.dev/brevo'
-const SENDER = { name: 'Snakk AI', email: 'robin@snakk.ai' }
+const SENDER = { name: 'Snakk AI', email: 'rd@snakk.ai' }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
