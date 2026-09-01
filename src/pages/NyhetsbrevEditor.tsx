@@ -99,7 +99,32 @@ export default function NyhetsbrevEditor() {
     }
   };
 
+  const sendTest = async () => {
+    if (!emne.trim()) return toast.error("E-post-emne må fylles ut");
+    if (!(await lagre(true))) return;
+    const { data: session } = await supabase.auth.getUser();
+    const forslag = session?.user?.email ?? "";
+    const epost = window.prompt("Send testnyhetsbrev til:", forslag);
+    if (!epost) return;
+    setTestSender(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-nyhetsbrev", {
+        body: { action: "send_test", nyhetsbrev_id: id, test_epost: epost },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      setStatus((s) => (s === "sendt" ? s : "test"));
+      toast.success(`Test sendt til ${(data as any)?.test_epost ?? epost}`);
+    } catch (e: any) {
+      console.error(e);
+      toast.error("Testsending feilet. Sjekk logg for detaljer.");
+    } finally {
+      setTestSender(false);
+    }
+  };
+
   const send = async () => {
+
     setSender(true);
     try {
       const { data, error } = await supabase.functions.invoke("send-nyhetsbrev", {
