@@ -195,6 +195,8 @@ export default function Nyhetsbrev() {
         <TabsList>
           <TabsTrigger value="kampanjer">Kampanjer</TabsTrigger>
           <TabsTrigger value="mottakere">Mottakere ({mottakere.length})</TabsTrigger>
+          <TabsTrigger value="brevo">Brevo ({brevoKampanjer.length})</TabsTrigger>
+
         </TabsList>
 
         <TabsContent value="kampanjer" className="mt-4">
