@@ -29,7 +29,11 @@ interface Nyhetsbrev {
   innhold_json: any;
   preheader: string | null;
   brevo_campaign_id: number | null;
+  brevo_status: string | null;
+  brevo_stats: any;
+  brevo_synk_dato: string | null;
 }
+
 
 const STATUS_STYLE: Record<string, string> = {
   utkast: "bg-muted text-muted-foreground",
