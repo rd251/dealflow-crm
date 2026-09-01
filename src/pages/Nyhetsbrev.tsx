@@ -140,6 +140,23 @@ export default function Nyhetsbrev() {
     }
   };
 
+  const synkAlleBrevo = async () => {
+    setSyncing(true);
+    try {
+      const { error } = await supabase.functions.invoke("send-nyhetsbrev", {
+        body: { action: "sync_stats" },
+      });
+      if (error) throw error;
+      toast.success("Brevo-data synkronisert");
+      await lastKampanjer();
+    } catch {
+      toast.error("Kunne ikke synkronisere fra Brevo");
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+
   const toggleAvmeldt = async (m: Mottaker) => {
     if (m.avmeldt) {
       await supabase.from("nyhetsbrev_avmeldte").delete().eq("e_post", m.e_post);
