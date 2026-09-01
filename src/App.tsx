@@ -145,6 +145,8 @@ function AppRoutes() {
                 <Route path="/aktiviteter" element={<Aktiviteter />} />
                 <Route path="/moetenotater" element={<Moetenotater />} />
                 <Route path="/rapporter" element={<Rapporter />} />
+                <Route path="/nyhetsbrev" element={<Nyhetsbrev />} />
+                <Route path="/nyhetsbrev/:id/rediger" element={<NyhetsbrevEditor />} />
                 <Route path="/admin" element={<Admin />} />
                 <Route path="/innstillinger" element={<Innstillinger />} />
                 <Route path="*" element={<NotFound />} />
