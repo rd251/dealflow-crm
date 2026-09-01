@@ -29,6 +29,7 @@ export default function NyhetsbrevEditor() {
   const [steg, setSteg] = useState<1 | 2>(1);
   const [antall, setAntall] = useState<number | null>(null);
   const [sender, setSender] = useState(false);
+  const [testSender, setTestSender] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -171,6 +172,10 @@ export default function NyhetsbrevEditor() {
           <Button variant="outline" size="sm" onClick={() => lagre()} disabled={lagrer || laast}>
             {lagrer ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Save className="w-4 h-4 mr-1.5" />}
             Lagre
+          </Button>
+          <Button variant="outline" size="sm" onClick={sendTest} disabled={testSender || laast}>
+            {testSender ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Send className="w-4 h-4 mr-1.5" />}
+            Send test
           </Button>
           <Button size="sm" onClick={aapneSend} disabled={laast}>
             <Send className="w-4 h-4 mr-1.5" /> {planlagt ? "Planlegg" : "Send"}
