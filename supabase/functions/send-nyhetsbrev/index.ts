@@ -173,6 +173,21 @@ Deno.serve(async (req) => {
         body: JSON.stringify({ email: testEpost, updateEnabled: true }),
       }).catch(() => {})
 
+      // Brevo krever en liste på kampanjen – finn eller opprett en dedikert testliste
+      const lister = await brevo('/contacts/lists?limit=50')
+      let testListId = (lister.lists || []).find((l: any) => l.name === 'CRM – Test')?.id
+      if (!testListId) {
+        const nyListe = await brevo('/contacts/lists', {
+          method: 'POST',
+          body: JSON.stringify({ name: 'CRM – Test', folderId: 1 }),
+        })
+        testListId = nyListe.id
+      }
+      await brevo(`/contacts/lists/${testListId}/contacts/add`, {
+        method: 'POST',
+        body: JSON.stringify({ emails: [testEpost] }),
+      }).catch(() => {})
+
       // Gjenbruk eksisterende utkast-kampanje hvis den finnes, ellers lag ny
       let campaignId = nb.brevo_campaign_id as number | null
       if (campaignId) {
@@ -190,7 +205,7 @@ Deno.serve(async (req) => {
             sender: SENDER,
             type: 'classic',
             htmlContent: nb.innhold_html,
-            recipients: { listIds: [] },
+            recipients: { listIds: [testListId] },
             inlineImageActivation: false,
           }),
         })
