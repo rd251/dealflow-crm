@@ -1,7 +1,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
 
-const BREVO = 'https://api.brevo.com/v3'
+const GATEWAY = 'https://connector-gateway.lovable.dev/brevo'
 const SENDER = { name: 'Snakk AI', email: 'robin@snakk.ai' }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -13,11 +13,17 @@ function json(body: unknown, status = 200) {
   })
 }
 
-async function brevo(apiKey: string, path: string, init: RequestInit = {}) {
-  const res = await fetch(`${BREVO}${path}`, {
+async function brevo(path: string, init: RequestInit = {}) {
+  const lovableKey = Deno.env.get('LOVABLE_API_KEY')
+  const connectionKey = Deno.env.get('BREVO_API_KEY')
+  if (!lovableKey) throw new Error('LOVABLE_API_KEY is not configured')
+  if (!connectionKey) throw new Error('BREVO_API_KEY is not configured')
+
+  const res = await fetch(`${GATEWAY}${path}`, {
     ...init,
     headers: {
-      'api-key': apiKey,
+      Authorization: `Bearer ${lovableKey}`,
+      'X-Connection-Api-Key': connectionKey,
       'Content-Type': 'application/json',
       accept: 'application/json',
       ...(init.headers || {}),
