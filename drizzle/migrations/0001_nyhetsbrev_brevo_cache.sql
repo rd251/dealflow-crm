@@ -1,0 +1,4 @@
+ALTER TABLE public.nyhetsbrev
+  ADD COLUMN IF NOT EXISTS brevo_status TEXT,
+  ADD COLUMN IF NOT EXISTS brevo_stats JSONB,
+  ADD COLUMN IF NOT EXISTS brevo_synk_dato TIMESTAMPTZ;
