@@ -34,6 +34,8 @@ interface Nyhetsbrev {
 const STATUS_STYLE: Record<string, string> = {
   utkast: "bg-muted text-muted-foreground",
   planlagt: "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300",
+  test: "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300",
+
   sendt: "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300",
   feilet: "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300",
 };
@@ -217,7 +219,7 @@ export default function Nyhetsbrev() {
                           : "–"}
                       </TableCell>
                       <TableCell className="text-right whitespace-nowrap">
-                        {n.status === "utkast" && (
+                        {(n.status === "utkast" || n.status === "test") && (
                           <Button variant="ghost" size="sm" onClick={() => navigate(`/nyhetsbrev/${n.id}/rediger`)}>
                             <FileText className="w-4 h-4 mr-1" /> Rediger
                           </Button>

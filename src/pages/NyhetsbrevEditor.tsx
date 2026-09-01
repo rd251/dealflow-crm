@@ -29,6 +29,7 @@ export default function NyhetsbrevEditor() {
   const [steg, setSteg] = useState<1 | 2>(1);
   const [antall, setAntall] = useState<number | null>(null);
   const [sender, setSender] = useState(false);
+  const [testSender, setTestSender] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -99,7 +100,32 @@ export default function NyhetsbrevEditor() {
     }
   };
 
+  const sendTest = async () => {
+    if (!emne.trim()) return toast.error("E-post-emne må fylles ut");
+    if (!(await lagre(true))) return;
+    const { data: session } = await supabase.auth.getUser();
+    const forslag = session?.user?.email ?? "";
+    const epost = window.prompt("Send testnyhetsbrev til:", forslag);
+    if (!epost) return;
+    setTestSender(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-nyhetsbrev", {
+        body: { action: "send_test", nyhetsbrev_id: id, test_epost: epost },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      setStatus((s) => (s === "sendt" ? s : "test"));
+      toast.success(`Test sendt til ${(data as any)?.test_epost ?? epost}`);
+    } catch (e: any) {
+      console.error(e);
+      toast.error("Testsending feilet. Sjekk logg for detaljer.");
+    } finally {
+      setTestSender(false);
+    }
+  };
+
   const send = async () => {
+
     setSender(true);
     try {
       const { data, error } = await supabase.functions.invoke("send-nyhetsbrev", {
@@ -146,6 +172,10 @@ export default function NyhetsbrevEditor() {
           <Button variant="outline" size="sm" onClick={() => lagre()} disabled={lagrer || laast}>
             {lagrer ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Save className="w-4 h-4 mr-1.5" />}
             Lagre
+          </Button>
+          <Button variant="outline" size="sm" onClick={sendTest} disabled={testSender || laast}>
+            {testSender ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Send className="w-4 h-4 mr-1.5" />}
+            Send test
           </Button>
           <Button size="sm" onClick={aapneSend} disabled={laast}>
             <Send className="w-4 h-4 mr-1.5" /> {planlagt ? "Planlegg" : "Send"}

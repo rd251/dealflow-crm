@@ -112,7 +112,63 @@ Deno.serve(async (req) => {
       return json({ aapnet_antall: aapnet, klikk_antall: klikk, mottaker_antall: levert })
     }
 
+    if (action === 'send_test') {
+      const testEpost = String(body.test_epost || userData.user.email || '').trim().toLowerCase()
+      if (!EMAIL_RE.test(testEpost)) return json({ error: 'Ugyldig test-e-post' }, 400)
+
+      const { data: nb } = await supabase
+        .from('nyhetsbrev')
+        .select('*')
+        .eq('id', body.nyhetsbrev_id)
+        .maybeSingle()
+      if (!nb) return json({ error: 'Nyhetsbrev ikke funnet' }, 404)
+      if (!nb.innhold_html) return json({ error: 'Nyhetsbrevet mangler innhold' }, 400)
+
+      // Brevo krever at test-mottakeren finnes som kontakt
+      await brevo(apiKey, '/contacts', {
+        method: 'POST',
+        body: JSON.stringify({ email: testEpost, updateEnabled: true }),
+      }).catch(() => {})
+
+      // Gjenbruk eksisterende utkast-kampanje hvis den finnes, ellers lag ny
+      let campaignId = nb.brevo_campaign_id as number | null
+      if (campaignId) {
+        await brevo(apiKey, `/emailCampaigns/${campaignId}`, {
+          method: 'PUT',
+          body: JSON.stringify({ subject: nb.emne, htmlContent: nb.innhold_html }),
+        }).catch(() => { campaignId = null })
+      }
+      if (!campaignId) {
+        const camp = await brevo(apiKey, '/emailCampaigns', {
+          method: 'POST',
+          body: JSON.stringify({
+            name: `[TEST] ${nb.tittel} – ${new Date().toISOString().slice(0, 16)}`,
+            subject: nb.emne,
+            sender: SENDER,
+            type: 'classic',
+            htmlContent: nb.innhold_html,
+            recipients: { listIds: [] },
+            inlineImageActivation: false,
+          }),
+        })
+        campaignId = camp.id
+      }
+
+      await brevo(apiKey, `/emailCampaigns/${campaignId}/sendTest`, {
+        method: 'POST',
+        body: JSON.stringify({ emailTo: [testEpost] }),
+      })
+
+      await supabase
+        .from('nyhetsbrev')
+        .update({ brevo_campaign_id: campaignId, status: nb.status === 'sendt' ? nb.status : 'test' })
+        .eq('id', nb.id)
+
+      return json({ ok: true, test_epost: testEpost, campaign_id: campaignId })
+    }
+
     if (action !== 'send') return json({ error: 'Ukjent action' }, 400)
+
 
     const { data: nb } = await supabase
       .from('nyhetsbrev')
