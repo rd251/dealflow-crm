@@ -41,8 +41,8 @@ Deno.serve(async (req) => {
     const listId = setting?.value ? Number(setting.value) : null
     if (!listId) return json({ skipped: true, reason: 'Brevo-liste er ikke satt opp ennå' })
 
-    const apiKey = Deno.env.get('BREVO_API_KEY')
-    if (!apiKey) throw new Error('BREVO_API_KEY is not configured')
+    const apiKey = Deno.env.get('BREVO_DIRECT_API_KEY')
+    if (!apiKey) throw new Error('BREVO_DIRECT_API_KEY is not configured')
 
     const res = await fetch(`${BREVO_API}/contacts`, {
       method: 'POST',

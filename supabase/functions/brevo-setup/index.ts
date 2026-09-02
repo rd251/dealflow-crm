@@ -16,8 +16,8 @@ function json(body: unknown, status = 200) {
 }
 
 async function brevo(path: string, init: RequestInit = {}) {
-  const apiKey = Deno.env.get('BREVO_API_KEY')
-  if (!apiKey) throw new Error('BREVO_API_KEY is not configured')
+  const apiKey = Deno.env.get('BREVO_DIRECT_API_KEY')
+  if (!apiKey) throw new Error('BREVO_DIRECT_API_KEY is not configured')
 
   const res = await fetch(`${BREVO_API}${path}`, {
     ...init,
