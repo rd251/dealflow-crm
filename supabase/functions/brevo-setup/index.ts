@@ -1,7 +1,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
 
-const GATEWAY = 'https://connector-gateway.lovable.dev/brevo'
+const BREVO_API = 'https://api.brevo.com/v3'
 const FOLDER_NAME = 'Snakk AI CRM'
 const LIST_NAME = 'Snakk AI – Alle leads'
 

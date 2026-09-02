@@ -1,7 +1,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
 
-const GATEWAY = 'https://connector-gateway.lovable.dev/brevo'
+const BREVO_API = 'https://api.brevo.com/v3'
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const TEST_HINTS = ['test@', 'test.', 'example.com', 'noreply', 'no-reply', 'dummy', 'ingen@', 'mailinator', 'yopmail']
 
