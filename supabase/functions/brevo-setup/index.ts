@@ -45,10 +45,10 @@ function gyldig(e?: string | null): boolean {
 }
 
 async function finnEllerOpprettMappe(): Promise<number> {
-  const eksisterende = await brevo('/v3/contacts/folders?limit=50&offset=0')
+  const eksisterende = await brevo('/contacts/folders?limit=50&offset=0')
   const treff = (eksisterende?.folders || []).find((f: any) => f.name === FOLDER_NAME)
   if (treff) return treff.id
-  const ny = await brevo('/v3/contacts/folders', {
+  const ny = await brevo('/contacts/folders', {
     method: 'POST',
     body: JSON.stringify({ name: FOLDER_NAME }),
   })
@@ -56,10 +56,10 @@ async function finnEllerOpprettMappe(): Promise<number> {
 }
 
 async function finnEllerOpprettListe(folderId: number): Promise<number> {
-  const eksisterende = await brevo(`/v3/contacts/folders/${folderId}/lists?limit=50&offset=0`)
+  const eksisterende = await brevo(`/contacts/folders/${folderId}/lists?limit=50&offset=0`)
   const treff = (eksisterende?.lists || []).find((l: any) => l.name === LIST_NAME)
   if (treff) return treff.id
-  const ny = await brevo('/v3/contacts/lists', {
+  const ny = await brevo('/contacts/lists', {
     method: 'POST',
     body: JSON.stringify({ name: LIST_NAME, folderId }),
   })
@@ -111,7 +111,7 @@ Deno.serve(async (req) => {
 
     const kontakter = Array.from(map.values())
     if (kontakter.length) {
-      await brevo('/v3/contacts/import', {
+      await brevo('/contacts/import', {
         method: 'POST',
         body: JSON.stringify({
           listIds: [listId],
