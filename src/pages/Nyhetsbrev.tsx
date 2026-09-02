@@ -156,6 +156,26 @@ export default function Nyhetsbrev() {
     }
   };
 
+  const [brevoSetupLaster, setBrevoSetupLaster] = useState(false);
+  const synkTilBrevo = async () => {
+    setBrevoSetupLaster(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("brevo-setup", {});
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      const res = data as { antall_importert: number; liste_id: number };
+      toast.success(
+        `${res.antall_importert} kontakter importert til Brevo-liste #${res.liste_id}`
+      );
+    } catch (e: any) {
+      toast.error(e?.message || "Kunne ikke synkronisere til Brevo");
+    } finally {
+      setBrevoSetupLaster(false);
+    }
+  };
+
+
+
 
   const toggleAvmeldt = async (m: Mottaker) => {
     if (m.avmeldt) {
