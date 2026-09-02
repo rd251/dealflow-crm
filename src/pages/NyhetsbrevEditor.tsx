@@ -1,16 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, ArrowDown, ArrowUp, Loader2, Plus, Save, Send, Trash2, Users } from "lucide-react";
+import { ArrowLeft, ArrowDown, ArrowUp, Loader2, Plus, Save, Send, Sparkles, Trash2, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { BLOKK_LABELS, nyBlokk, renderNewsletterHtml, type Blokk, type BlokkType } from "@/lib/nyhetsbrev";
 import { hentMottakere } from "@/lib/nyhetsbrev-mottakere";
 import { toast } from "sonner";
+
 
 export default function NyhetsbrevEditor() {
   const { id } = useParams<{ id: string }>();
