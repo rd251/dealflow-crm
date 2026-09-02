@@ -220,9 +220,19 @@ export default function Nyhetsbrev() {
       title="Nyhetsbrev"
       subtitle={`${aktive} aktive mottakere · ${kampanjer.length} kampanjer`}
       actions={
-        <Button onClick={nyttNyhetsbrev} size="sm">
-          <Plus className="w-4 h-4 mr-1.5" /> Nytt nyhetsbrev
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" disabled={brevoSetupLaster} onClick={synkTilBrevo}>
+            {brevoSetupLaster ? (
+              <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
+            ) : (
+              <Upload className="w-4 h-4 mr-1.5" />
+            )}
+            Synk til Brevo
+          </Button>
+          <Button onClick={nyttNyhetsbrev} size="sm">
+            <Plus className="w-4 h-4 mr-1.5" /> Nytt nyhetsbrev
+          </Button>
+        </div>
       }
     >
       <Tabs defaultValue="kampanjer">
