@@ -34,6 +34,48 @@ export default function NyhetsbrevEditor() {
   const [sender, setSender] = useState(false);
   const [testSender, setTestSender] = useState(false);
 
+  const [aiOpen, setAiOpen] = useState(false);
+  const [aiBrief, setAiBrief] = useState("");
+  const [aiTone, setAiTone] = useState("Profesjonell og vennlig");
+  const [aiLengde, setAiLengde] = useState("medium");
+  const [aiCrm, setAiCrm] = useState(false);
+  const [aiByggVidere, setAiByggVidere] = useState(false);
+  const [aiLaster, setAiLaster] = useState(false);
+
+  const byggMedAi = async () => {
+    if (!aiBrief.trim() && !aiCrm) {
+      toast.error("Beskriv hva nyhetsbrevet skal handle om");
+      return;
+    }
+    setAiLaster(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("nyhetsbrev-ai", {
+        body: {
+          brief: aiBrief,
+          tone: aiTone,
+          lengde: aiLengde,
+          bruk_crm: aiCrm,
+          eksisterende_blokker: aiByggVidere ? blokker : undefined,
+        },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      const res = data as { emne?: string; preheader?: string; blokker: Blokk[] };
+      if (!res.blokker?.length) throw new Error("Tomt svar fra AI");
+      setBlokker(res.blokker);
+      if (res.emne) setEmne(res.emne);
+      if (res.preheader) setPreheader(res.preheader);
+      setAiOpen(false);
+      toast.success("Utkast generert – husk å lagre");
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e?.message || "Klarte ikke generere nyhetsbrev");
+    } finally {
+      setAiLaster(false);
+    }
+  };
+
+
   useEffect(() => {
     (async () => {
       const { data, error } = await supabase.from("nyhetsbrev").select("*").eq("id", id).maybeSingle();
