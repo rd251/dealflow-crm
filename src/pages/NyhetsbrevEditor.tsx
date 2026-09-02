@@ -414,6 +414,79 @@ export default function NyhetsbrevEditor() {
           )}
         </DialogContent>
       </Dialog>
+
+      <Dialog open={aiOpen} onOpenChange={(o) => !aiLaster && setAiOpen(o)}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4" /> Bygg nyhetsbrev med AI
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label className="text-xs">Hva skal nyhetsbrevet handle om?</Label>
+              <Textarea
+                rows={5}
+                placeholder="F.eks. «Månedsbrev for september: ny taleagent for booking, kundehistorie fra Homely, invitasjon til webinar 20. sept»"
+                value={aiBrief}
+                onChange={(e) => setAiBrief(e.target.value)}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Tone</Label>
+                <Select value={aiTone} onValueChange={setAiTone}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Profesjonell og vennlig">Profesjonell og vennlig</SelectItem>
+                    <SelectItem value="Uformell og direkte">Uformell og direkte</SelectItem>
+                    <SelectItem value="Faglig og informativ">Faglig og informativ</SelectItem>
+                    <SelectItem value="Salgsorientert og energisk">Salgsorientert og energisk</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Lengde</Label>
+                <Select value={aiLengde} onValueChange={setAiLengde}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="kort">Kort</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="lang">Lang</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between rounded-lg border p-3">
+              <div>
+                <p className="text-sm font-medium">Bruk høydepunkter fra CRM</p>
+                <p className="text-xs text-muted-foreground">Vunne avtaler og nye kunder siste periode</p>
+              </div>
+              <Switch checked={aiCrm} onCheckedChange={setAiCrm} />
+            </div>
+
+            <div className="flex items-center justify-between rounded-lg border p-3">
+              <div>
+                <p className="text-sm font-medium">Bygg videre på eksisterende innhold</p>
+                <p className="text-xs text-muted-foreground">Ellers erstattes blokkene med et nytt utkast</p>
+              </div>
+              <Switch checked={aiByggVidere} onCheckedChange={setAiByggVidere} />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAiOpen(false)} disabled={aiLaster}>Avbryt</Button>
+            <Button onClick={byggMedAi} disabled={aiLaster}>
+              {aiLaster ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}
+              Generer utkast
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
+
   );
 }
