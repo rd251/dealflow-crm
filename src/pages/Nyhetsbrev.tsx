@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { nb } from "date-fns/locale";
-import { Copy, FileText, Loader2, Mail, Plus, RefreshCw, BarChart3, Trash2, UserMinus, UserPlus } from "lucide-react";
+import { Copy, FileText, Loader2, Mail, Plus, RefreshCw, BarChart3, Trash2, Upload, UserMinus, UserPlus } from "lucide-react";
 import PageShell from "@/components/PageShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
