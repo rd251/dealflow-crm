@@ -1,16 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, ArrowDown, ArrowUp, Loader2, Plus, Save, Send, Trash2, Users } from "lucide-react";
+import { ArrowLeft, ArrowDown, ArrowUp, Loader2, Plus, Save, Send, Sparkles, Trash2, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { BLOKK_LABELS, nyBlokk, renderNewsletterHtml, type Blokk, type BlokkType } from "@/lib/nyhetsbrev";
 import { hentMottakere } from "@/lib/nyhetsbrev-mottakere";
 import { toast } from "sonner";
+
 
 export default function NyhetsbrevEditor() {
   const { id } = useParams<{ id: string }>();
@@ -30,6 +33,48 @@ export default function NyhetsbrevEditor() {
   const [antall, setAntall] = useState<number | null>(null);
   const [sender, setSender] = useState(false);
   const [testSender, setTestSender] = useState(false);
+
+  const [aiOpen, setAiOpen] = useState(false);
+  const [aiBrief, setAiBrief] = useState("");
+  const [aiTone, setAiTone] = useState("Profesjonell og vennlig");
+  const [aiLengde, setAiLengde] = useState("medium");
+  const [aiCrm, setAiCrm] = useState(false);
+  const [aiByggVidere, setAiByggVidere] = useState(false);
+  const [aiLaster, setAiLaster] = useState(false);
+
+  const byggMedAi = async () => {
+    if (!aiBrief.trim() && !aiCrm) {
+      toast.error("Beskriv hva nyhetsbrevet skal handle om");
+      return;
+    }
+    setAiLaster(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("nyhetsbrev-ai", {
+        body: {
+          brief: aiBrief,
+          tone: aiTone,
+          lengde: aiLengde,
+          bruk_crm: aiCrm,
+          eksisterende_blokker: aiByggVidere ? blokker : undefined,
+        },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      const res = data as { emne?: string; preheader?: string; blokker: Blokk[] };
+      if (!res.blokker?.length) throw new Error("Tomt svar fra AI");
+      setBlokker(res.blokker);
+      if (res.emne) setEmne(res.emne);
+      if (res.preheader) setPreheader(res.preheader);
+      setAiOpen(false);
+      toast.success("Utkast generert – husk å lagre");
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e?.message || "Klarte ikke generere nyhetsbrev");
+    } finally {
+      setAiLaster(false);
+    }
+  };
+
 
   useEffect(() => {
     (async () => {
@@ -169,7 +214,11 @@ export default function NyhetsbrevEditor() {
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
+          <Button variant="outline" size="sm" onClick={() => setAiOpen(true)} disabled={laast}>
+            <Sparkles className="w-4 h-4 mr-1.5" /> Bygg med AI
+          </Button>
           <Button variant="outline" size="sm" onClick={() => lagre()} disabled={lagrer || laast}>
+
             {lagrer ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Save className="w-4 h-4 mr-1.5" />}
             Lagre
           </Button>
@@ -365,6 +414,79 @@ export default function NyhetsbrevEditor() {
           )}
         </DialogContent>
       </Dialog>
+
+      <Dialog open={aiOpen} onOpenChange={(o) => !aiLaster && setAiOpen(o)}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4" /> Bygg nyhetsbrev med AI
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label className="text-xs">Hva skal nyhetsbrevet handle om?</Label>
+              <Textarea
+                rows={5}
+                placeholder="F.eks. «Månedsbrev for september: ny taleagent for booking, kundehistorie fra Homely, invitasjon til webinar 20. sept»"
+                value={aiBrief}
+                onChange={(e) => setAiBrief(e.target.value)}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Tone</Label>
+                <Select value={aiTone} onValueChange={setAiTone}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Profesjonell og vennlig">Profesjonell og vennlig</SelectItem>
+                    <SelectItem value="Uformell og direkte">Uformell og direkte</SelectItem>
+                    <SelectItem value="Faglig og informativ">Faglig og informativ</SelectItem>
+                    <SelectItem value="Salgsorientert og energisk">Salgsorientert og energisk</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Lengde</Label>
+                <Select value={aiLengde} onValueChange={setAiLengde}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="kort">Kort</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="lang">Lang</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between rounded-lg border p-3">
+              <div>
+                <p className="text-sm font-medium">Bruk høydepunkter fra CRM</p>
+                <p className="text-xs text-muted-foreground">Vunne avtaler og nye kunder siste periode</p>
+              </div>
+              <Switch checked={aiCrm} onCheckedChange={setAiCrm} />
+            </div>
+
+            <div className="flex items-center justify-between rounded-lg border p-3">
+              <div>
+                <p className="text-sm font-medium">Bygg videre på eksisterende innhold</p>
+                <p className="text-xs text-muted-foreground">Ellers erstattes blokkene med et nytt utkast</p>
+              </div>
+              <Switch checked={aiByggVidere} onCheckedChange={setAiByggVidere} />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAiOpen(false)} disabled={aiLaster}>Avbryt</Button>
+            <Button onClick={byggMedAi} disabled={aiLaster}>
+              {aiLaster ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}
+              Generer utkast
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
+
   );
 }
