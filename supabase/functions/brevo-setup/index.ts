@@ -1,7 +1,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
 
-const GATEWAY = 'https://connector-gateway.lovable.dev/brevo'
+const BREVO_API = 'https://api.brevo.com/v3'
 const FOLDER_NAME = 'Snakk AI CRM'
 const LIST_NAME = 'Snakk AI – Alle leads'
 
@@ -16,16 +16,13 @@ function json(body: unknown, status = 200) {
 }
 
 async function brevo(path: string, init: RequestInit = {}) {
-  const lovableKey = Deno.env.get('LOVABLE_API_KEY')
-  const connectionKey = Deno.env.get('BREVO_API_KEY')
-  if (!lovableKey) throw new Error('LOVABLE_API_KEY is not configured')
-  if (!connectionKey) throw new Error('BREVO_API_KEY is not configured')
+  const apiKey = Deno.env.get('BREVO_DIRECT_API_KEY')
+  if (!apiKey) throw new Error('BREVO_DIRECT_API_KEY is not configured')
 
-  const res = await fetch(`${GATEWAY}${path}`, {
+  const res = await fetch(`${BREVO_API}${path}`, {
     ...init,
     headers: {
-      Authorization: `Bearer ${lovableKey}`,
-      'X-Connection-Api-Key': connectionKey,
+      'api-key': apiKey,
       'Content-Type': 'application/json',
       accept: 'application/json',
       ...(init.headers || {}),
@@ -48,10 +45,10 @@ function gyldig(e?: string | null): boolean {
 }
 
 async function finnEllerOpprettMappe(): Promise<number> {
-  const eksisterende = await brevo('/v3/contacts/folders?limit=50&offset=0')
+  const eksisterende = await brevo('/contacts/folders?limit=50&offset=0')
   const treff = (eksisterende?.folders || []).find((f: any) => f.name === FOLDER_NAME)
   if (treff) return treff.id
-  const ny = await brevo('/v3/contacts/folders', {
+  const ny = await brevo('/contacts/folders', {
     method: 'POST',
     body: JSON.stringify({ name: FOLDER_NAME }),
   })
@@ -59,10 +56,10 @@ async function finnEllerOpprettMappe(): Promise<number> {
 }
 
 async function finnEllerOpprettListe(folderId: number): Promise<number> {
-  const eksisterende = await brevo(`/v3/contacts/folders/${folderId}/lists?limit=50&offset=0`)
+  const eksisterende = await brevo(`/contacts/folders/${folderId}/lists?limit=50&offset=0`)
   const treff = (eksisterende?.lists || []).find((l: any) => l.name === LIST_NAME)
   if (treff) return treff.id
-  const ny = await brevo('/v3/contacts/lists', {
+  const ny = await brevo('/contacts/lists', {
     method: 'POST',
     body: JSON.stringify({ name: LIST_NAME, folderId }),
   })
@@ -114,7 +111,7 @@ Deno.serve(async (req) => {
 
     const kontakter = Array.from(map.values())
     if (kontakter.length) {
-      await brevo('/v3/contacts/import', {
+      await brevo('/contacts/import', {
         method: 'POST',
         body: JSON.stringify({
           listIds: [listId],

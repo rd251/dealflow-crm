@@ -1,7 +1,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
 
-const GATEWAY = 'https://connector-gateway.lovable.dev/brevo'
+const BREVO_API = 'https://api.brevo.com/v3'
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const TEST_HINTS = ['test@', 'test.', 'example.com', 'noreply', 'no-reply', 'dummy', 'ingen@', 'mailinator', 'yopmail']
 
@@ -41,15 +41,13 @@ Deno.serve(async (req) => {
     const listId = setting?.value ? Number(setting.value) : null
     if (!listId) return json({ skipped: true, reason: 'Brevo-liste er ikke satt opp ennå' })
 
-    const lovableKey = Deno.env.get('LOVABLE_API_KEY')
-    const connectionKey = Deno.env.get('BREVO_API_KEY')
-    if (!lovableKey || !connectionKey) throw new Error('Brevo-nøkler mangler')
+    const apiKey = Deno.env.get('BREVO_DIRECT_API_KEY')
+    if (!apiKey) throw new Error('BREVO_DIRECT_API_KEY is not configured')
 
-    const res = await fetch(`${GATEWAY}/v3/contacts`, {
+    const res = await fetch(`${BREVO_API}/contacts`, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${lovableKey}`,
-        'X-Connection-Api-Key': connectionKey,
+        'api-key': apiKey,
         'Content-Type': 'application/json',
         accept: 'application/json',
       },
