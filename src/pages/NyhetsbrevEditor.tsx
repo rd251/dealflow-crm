@@ -214,7 +214,11 @@ export default function NyhetsbrevEditor() {
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
+          <Button variant="outline" size="sm" onClick={() => setAiOpen(true)} disabled={laast}>
+            <Sparkles className="w-4 h-4 mr-1.5" /> Bygg med AI
+          </Button>
           <Button variant="outline" size="sm" onClick={() => lagre()} disabled={lagrer || laast}>
+
             {lagrer ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Save className="w-4 h-4 mr-1.5" />}
             Lagre
           </Button>
