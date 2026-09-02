@@ -128,41 +128,88 @@ async function sikreAttributter() {
 
 function malHtml(): string {
   return `<!DOCTYPE html>
-<html lang="no"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Snakk AI – Nyhetsbrev</title></head>
-<body style="margin:0;padding:0;background:#f4f4f5;font-family:Helvetica,Arial,sans-serif;color:#111;">
-<div style="display:none;max-height:0;overflow:hidden;">{{ params.PREHEADER }}</div>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:24px 12px;">
+<html lang="no" xmlns="http://www.w3.org/1999/xhtml"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="x-apple-disable-message-reformatting">
+<title>Snakk AI</title>
+<!--[if mso]><style>table{border-collapse:collapse;}td{font-family:Arial,sans-serif;}</style><![endif]-->
+</head>
+<body style="margin:0;padding:0;background:#faf7f7;font-family:Helvetica,Arial,sans-serif;color:#1a1a1a;-webkit-text-size-adjust:100%;">
+<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">{{ params.PREHEADER | default: "Nyheter fra Snakk AI" }}&#8199;&#847;&#8199;&#847;</div>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#faf7f7;padding:28px 12px;">
 <tr><td align="center">
-<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:14px;overflow:hidden;">
-  <tr><td style="padding:28px 32px 8px 32px;">
-    <span style="font-size:22px;font-weight:800;letter-spacing:-.5px;color:#111;">SNAKK</span>
-    <span style="color:#e01e26;font-size:22px;">&#10022;</span>
+
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+
+  <!-- LOGO -->
+  <tr><td style="padding:6px 8px 18px 8px;">
+    <span style="font-size:24px;font-weight:800;letter-spacing:-.5px;color:#1a1a1a;">SNAKK</span><span style="color:#e01e26;font-size:24px;">&#10022;</span>
   </td></tr>
-  <tr><td style="padding:8px 32px 0 32px;">
-    <h1 style="margin:0;font-size:26px;line-height:1.25;color:#6b0f0f;">Overskrift her</h1>
+
+  <!-- HERO -->
+  <tr><td style="background:#500000;border-radius:18px 18px 0 0;padding:40px 36px 36px 36px;">
+    <div style="display:inline-block;background:rgba(255,255,255,.14);color:#ffd9d9;font-size:12px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;padding:6px 14px;border-radius:999px;margin-bottom:18px;">Nyheter fra Snakk AI</div>
+    <h1 style="margin:0 0 14px 0;font-size:30px;line-height:1.2;font-weight:800;letter-spacing:-.5px;color:#ffffff;">Skriv en tittel som gjør nysgjerrig</h1>
+    <p style="margin:0;font-size:16px;line-height:1.6;color:#f3dcdc;">Hei {{ contact.FIRSTNAME | default: "der" }}! Her er en kort innledning som forklarer hvorfor denne e-posten er verdt å lese – hold den til 1–2 setninger.</p>
   </td></tr>
-  <tr><td style="padding:14px 32px 0 32px;font-size:16px;line-height:1.65;color:#333;">
-    Hei {{ contact.FIRSTNAME | default: "der" }},<br><br>
-    Her er de siste nyhetene fra Snakk AI.
+
+  <!-- BRØDTEKST -->
+  <tr><td style="background:#ffffff;padding:32px 36px 8px 36px;">
+    <h2 style="margin:0 0 12px 0;font-size:20px;line-height:1.3;font-weight:800;color:#500000;">Det viktigste først</h2>
+    <p style="margin:0;font-size:16px;line-height:1.7;color:#3a3a3a;">Skriv hovedbudskapet her. Én tanke per avsnitt. Korte setninger. Fortell leseren hva de får, ikke bare hva dere har gjort.</p>
   </td></tr>
-  <tr><td style="padding:22px 32px 0 32px;">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#fdf0f0;border-radius:12px;">
-      <tr><td style="padding:18px 20px;">
-        <div style="font-size:17px;font-weight:700;color:#6b0f0f;">&#128640; Nyhet</div>
-        <div style="font-size:15px;line-height:1.6;color:#444;padding-top:6px;">Kort beskrivelse av nyheten.</div>
-        <a href="https://snakk.ai" style="color:#e01e26;font-weight:600;text-decoration:underline;font-size:14px;">Les mer</a>
+
+  <!-- NYHETSKORT 1 -->
+  <tr><td style="background:#ffffff;padding:24px 36px 0 36px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#fdf0f0;border-radius:14px;">
+      <tr><td style="padding:22px 24px;">
+        <div style="font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#e01e26;margin-bottom:8px;">&#128640; Nyhet</div>
+        <div style="font-size:18px;font-weight:800;color:#500000;line-height:1.3;">Overskrift på nyheten</div>
+        <div style="font-size:15px;line-height:1.65;color:#444;padding:8px 0 12px 0;">2–3 setninger om hva dette betyr for kunden. Fokuser på gevinsten: spar tid, færre tapte leads, bedre oppfølging.</div>
+        <a href="https://snakk.ai" style="color:#e01e26;font-weight:700;text-decoration:none;font-size:15px;">Les mer &#8594;</a>
       </td></tr>
     </table>
   </td></tr>
-  <tr><td align="center" style="padding:28px 32px 8px 32px;">
-    <a href="https://snakk.ai" style="display:inline-block;background:#e01e26;color:#ffffff;text-decoration:none;font-weight:700;font-size:15px;padding:14px 30px;border-radius:999px;">Book en demo</a>
+
+  <!-- NYHETSKORT 2 -->
+  <tr><td style="background:#ffffff;padding:16px 36px 0 36px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#fdf0f0;border-radius:14px;">
+      <tr><td style="padding:22px 24px;">
+        <div style="font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#e01e26;margin-bottom:8px;">&#128161; Tips</div>
+        <div style="font-size:18px;font-weight:800;color:#500000;line-height:1.3;">Et konkret tips leseren kan bruke i dag</div>
+        <div style="font-size:15px;line-height:1.65;color:#444;padding:8px 0 12px 0;">Del én praktisk innsikt – f.eks. hvordan man svarer leads innen 5 minutter, eller hvordan AI kan ta oppfølgingen.</div>
+        <a href="https://snakk.ai" style="color:#e01e26;font-weight:700;text-decoration:none;font-size:15px;">Se hvordan &#8594;</a>
+      </td></tr>
+    </table>
   </td></tr>
-  <tr><td style="padding:28px 32px 32px 32px;border-top:1px solid #eee;font-size:12px;color:#888;line-height:1.6;">
-    Snakk AI &middot; Oslo, Norge<br>
-    Du mottar denne e-posten fordi du er i kontakt med Snakk AI.<br>
-    <a href="{{ unsubscribe }}" style="color:#888;">Meld deg av</a>
+
+  <!-- SITAT / SOCIAL PROOF -->
+  <tr><td style="background:#ffffff;padding:28px 36px 0 36px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-left:4px solid #e01e26;">
+      <tr><td style="padding:4px 0 4px 20px;">
+        <div style="font-size:17px;line-height:1.6;color:#1a1a1a;font-style:italic;">&laquo;Et kundesitat som bygger tillit. Kort, troverdig og gjerne med et konkret resultat.&raquo;</div>
+        <div style="font-size:13px;color:#888;padding-top:8px;font-weight:700;">Navn Navnesen &middot; Selskap AS</div>
+      </td></tr>
+    </table>
   </td></tr>
+
+  <!-- CTA -->
+  <tr><td align="center" style="background:#ffffff;padding:36px 36px 40px 36px;border-radius:0 0 18px 18px;">
+    <div style="font-size:20px;font-weight:800;color:#500000;line-height:1.3;margin-bottom:8px;">Klar til å ta en prat?</div>
+    <div style="font-size:15px;color:#555;line-height:1.6;margin-bottom:22px;">Svar på denne e-posten, eller book en uforpliktende demo – det tar 15 minutter.</div>
+    <a href="https://snakk.ai" style="display:inline-block;background:#e01e26;color:#ffffff;text-decoration:none;font-weight:700;font-size:16px;padding:16px 40px;border-radius:999px;">Book en demo</a>
+    <div style="padding-top:14px;"><a href="mailto:rd@snakk.ai" style="color:#500000;font-weight:600;text-decoration:underline;font-size:14px;">Eller svar direkte til oss</a></div>
+  </td></tr>
+
+  <!-- FOOTER -->
+  <tr><td style="padding:26px 12px 8px 12px;text-align:center;font-size:12px;color:#999;line-height:1.7;">
+    <span style="font-weight:800;color:#1a1a1a;">SNAKK</span><span style="color:#e01e26;">&#10022;</span> &middot; Oslo, Norge<br>
+    <a href="https://snakk.ai" style="color:#999;text-decoration:underline;">snakk.ai</a><br><br>
+    Du mottar denne e-posten fordi du har vært i kontakt med Snakk AI.<br>
+    <a href="{{ unsubscribe }}" style="color:#999;text-decoration:underline;">Meld deg av nyhetsbrev</a>
+  </td></tr>
+
 </table>
 </td></tr></table></body></html>`
 }
