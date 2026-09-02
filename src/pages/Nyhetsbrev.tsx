@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { nb } from "date-fns/locale";
-import { Copy, FileText, Loader2, Mail, Plus, RefreshCw, BarChart3, Trash2, UserMinus, UserPlus } from "lucide-react";
+import { Copy, FileText, Loader2, Mail, Plus, RefreshCw, BarChart3, Trash2, Upload, UserMinus, UserPlus } from "lucide-react";
 import PageShell from "@/components/PageShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -156,6 +156,26 @@ export default function Nyhetsbrev() {
     }
   };
 
+  const [brevoSetupLaster, setBrevoSetupLaster] = useState(false);
+  const synkTilBrevo = async () => {
+    setBrevoSetupLaster(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("brevo-setup", {});
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      const res = data as { antall_importert: number; liste_id: number };
+      toast.success(
+        `${res.antall_importert} kontakter importert til Brevo-liste #${res.liste_id}`
+      );
+    } catch (e: any) {
+      toast.error(e?.message || "Kunne ikke synkronisere til Brevo");
+    } finally {
+      setBrevoSetupLaster(false);
+    }
+  };
+
+
+
 
   const toggleAvmeldt = async (m: Mottaker) => {
     if (m.avmeldt) {
@@ -200,9 +220,19 @@ export default function Nyhetsbrev() {
       title="Nyhetsbrev"
       subtitle={`${aktive} aktive mottakere · ${kampanjer.length} kampanjer`}
       actions={
-        <Button onClick={nyttNyhetsbrev} size="sm">
-          <Plus className="w-4 h-4 mr-1.5" /> Nytt nyhetsbrev
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" disabled={brevoSetupLaster} onClick={synkTilBrevo}>
+            {brevoSetupLaster ? (
+              <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
+            ) : (
+              <Upload className="w-4 h-4 mr-1.5" />
+            )}
+            Synk til Brevo
+          </Button>
+          <Button onClick={nyttNyhetsbrev} size="sm">
+            <Plus className="w-4 h-4 mr-1.5" /> Nytt nyhetsbrev
+          </Button>
+        </div>
       }
     >
       <Tabs defaultValue="kampanjer">

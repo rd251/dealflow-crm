@@ -15,6 +15,13 @@
       "when": 1788294709176,
       "tag": "0001_nyhetsbrev_brevo_cache",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788355033218,
+      "tag": "0002_app_settings_and_brevo_lead_trigger",
+      "breakpoints": true
     }
   ]
 }
