@@ -3,12 +3,30 @@ import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
 
 const BREVO_API = 'https://api.brevo.com/v3'
 const FOLDER_NAME = 'Snakk AI CRM'
-const HOVEDLISTE = 'Snakk AI – Alle leads'
 const SENDER = { name: 'Snakk AI', email: 'rd@snakk.ai' }
 const MAL_NAVN = 'Snakk AI – Nyhetsbrev mal'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const TEST_HINTS = ['test@', 'test.', 'example.com', 'noreply', 'no-reply', 'dummy', 'ingen@', 'mailinator', 'yopmail']
+
+// Kilder vi anser som "kalde" – kjøpte/importerte lister vi selv har lagt inn.
+// Disse skal IKKE inn i hovedlisten (Alle).
+const KALDE_KILDER = ['Kald outbound', 'Instantly kald e-post', 'Kasoleads']
+
+const LISTE_NAVN: Record<string, string> = {
+  alle: 'Snakk AI – Alle (henvendelser + kunder)',
+  alle_leads: 'Snakk AI – Alle leads',
+  leads_aktive: 'Snakk AI – Leads (aktive)',
+  inbound_nettside: 'Snakk AI – Leads inbound (nettside)',
+  facebook: 'Snakk AI – Leads Facebook ads',
+  google_ads: 'Snakk AI – Leads Google ads',
+  outbound: 'Snakk AI – Leads outbound',
+  ringeliste: 'Snakk AI – Ringeliste',
+  kontakter: 'Snakk AI – Kontakter',
+  kunder: 'Snakk AI – Kunder (Live/Pilot)',
+  deals_aktive: 'Snakk AI – Aktive salgsmuligheter',
+  partnere: 'Snakk AI – Partnere',
+}
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -187,7 +205,7 @@ Deno.serve(async (req) => {
     const [leads, ringeliste, kontakter, deals, selskaper, partnere, avmeldte] = await Promise.all([
       supabase.from('leads').select('e_post, kontaktperson, firmanavn, status, kilde'),
       supabase.from('ringeliste').select('e_post, navn, selskap, segment, status'),
-      supabase.from('kontakter').select('e_post, navn, selskap_id, selskaper(firmanavn, kundestatus)'),
+      supabase.from('kontakter').select('e_post, navn, selskap_id'),
       supabase.from('salgsmuligheter').select('e_post, kontaktperson, navn, status'),
       supabase.from('selskaper').select('id, firmanavn, kundestatus'),
       supabase.from('partnere').select('e_post, kontaktperson, partnernavn, partnerstatus'),
@@ -216,9 +234,12 @@ Deno.serve(async (req) => {
       })
     }
 
+    const alle = lag()
     const alleLeads = lag()
     const aktiveLeads = lag()
     const nettsideLeads = lag()
+    const facebookLeads = lag()
+    const googleLeads = lag()
     const outboundLeads = lag()
     const ringelisteM = lag()
     const kunderLive = lag()
@@ -227,15 +248,25 @@ Deno.serve(async (req) => {
     const partnereM = lag()
 
     for (const l of leads.data || []) {
-      add(alleLeads, l.e_post, l.kontaktperson, l.firmanavn, l.kilde || '', l.status || '')
+      const kilde = l.kilde || ''
+      add(alleLeads, l.e_post, l.kontaktperson, l.firmanavn, kilde, l.status || '')
       if (l.status !== 'Ikke aktuelt') {
-        add(aktiveLeads, l.e_post, l.kontaktperson, l.firmanavn, l.kilde || '', l.status || '')
+        add(aktiveLeads, l.e_post, l.kontaktperson, l.firmanavn, kilde, l.status || '')
       }
-      if (l.kilde === 'Nettside' || l.kilde === 'Organisk') {
-        add(nettsideLeads, l.e_post, l.kontaktperson, l.firmanavn, l.kilde || '', l.status || '')
+      if (kilde === 'Nettside' || kilde === 'Organisk') {
+        add(nettsideLeads, l.e_post, l.kontaktperson, l.firmanavn, kilde, l.status || '')
       }
-      if (['Kald outbound', 'Instantly kald e-post', 'E-post', 'Telefon', 'LinkedIn'].includes(l.kilde || '')) {
-        add(outboundLeads, l.e_post, l.kontaktperson, l.firmanavn, l.kilde || '', l.status || '')
+      if (kilde === 'Facebook ads') {
+        add(facebookLeads, l.e_post, l.kontaktperson, l.firmanavn, kilde, l.status || '')
+      }
+      if (kilde === 'Google ads') {
+        add(googleLeads, l.e_post, l.kontaktperson, l.firmanavn, kilde, l.status || '')
+      }
+      if (KALDE_KILDER.includes(kilde)) {
+        add(outboundLeads, l.e_post, l.kontaktperson, l.firmanavn, kilde, l.status || '')
+      } else {
+        // Har henvendt seg til oss -> med i hovedlisten
+        add(alle, l.e_post, l.kontaktperson, l.firmanavn, kilde || 'lead', l.status || '')
       }
     }
     for (const r of ringeliste.data || []) {
@@ -245,45 +276,53 @@ Deno.serve(async (req) => {
     for (const k of (kontakter.data || []) as any[]) {
       const s = k.selskap_id ? selskapMap.get(k.selskap_id) : null
       add(kontakterM, k.e_post, k.navn, s?.firmanavn || '', 'kontakt', s?.kundestatus || '')
+      add(alle, k.e_post, k.navn, s?.firmanavn || '', 'kontakt', s?.kundestatus || '')
       if (s && (s.kundestatus === 'Live' || s.kundestatus === 'Pilot')) {
         add(kunderLive, k.e_post, k.navn, s.firmanavn, 'kunde', s.kundestatus)
       }
     }
     for (const d of deals.data || []) {
+      add(alle, d.e_post, d.kontaktperson, d.navn, 'salgsmulighet', d.status || '')
       if (['Vunnet', 'Tapt'].includes(d.status || '')) continue
       add(dealsAktive, d.e_post, d.kontaktperson, d.navn, 'salgsmulighet', d.status || '')
     }
     for (const p of partnere.data || []) {
       add(partnereM, p.e_post, p.kontaktperson, p.partnernavn, 'partner', p.partnerstatus || '')
+      add(alle, p.e_post, p.kontaktperson, p.partnernavn, 'partner', p.partnerstatus || '')
     }
 
-    const segmenter: { navn: string; kontakter: Kontakt[] }[] = [
-      { navn: HOVEDLISTE, kontakter: [...alleLeads.values()] },
-      { navn: 'Snakk AI – Leads (aktive)', kontakter: [...aktiveLeads.values()] },
-      { navn: 'Snakk AI – Leads inbound (nettside)', kontakter: [...nettsideLeads.values()] },
-      { navn: 'Snakk AI – Leads outbound', kontakter: [...outboundLeads.values()] },
-      { navn: 'Snakk AI – Ringeliste', kontakter: [...ringelisteM.values()] },
-      { navn: 'Snakk AI – Kontakter', kontakter: [...kontakterM.values()] },
-      { navn: 'Snakk AI – Kunder (Live/Pilot)', kontakter: [...kunderLive.values()] },
-      { navn: 'Snakk AI – Aktive salgsmuligheter', kontakter: [...dealsAktive.values()] },
-      { navn: 'Snakk AI – Partnere', kontakter: [...partnereM.values()] },
+    const segmenter: { key: string; kontakter: Kontakt[] }[] = [
+      { key: 'alle', kontakter: [...alle.values()] },
+      { key: 'alle_leads', kontakter: [...alleLeads.values()] },
+      { key: 'leads_aktive', kontakter: [...aktiveLeads.values()] },
+      { key: 'inbound_nettside', kontakter: [...nettsideLeads.values()] },
+      { key: 'facebook', kontakter: [...facebookLeads.values()] },
+      { key: 'google_ads', kontakter: [...googleLeads.values()] },
+      { key: 'outbound', kontakter: [...outboundLeads.values()] },
+      { key: 'ringeliste', kontakter: [...ringelisteM.values()] },
+      { key: 'kontakter', kontakter: [...kontakterM.values()] },
+      { key: 'kunder', kontakter: [...kunderLive.values()] },
+      { key: 'deals_aktive', kontakter: [...dealsAktive.values()] },
+      { key: 'partnere', kontakter: [...partnereM.values()] },
     ]
 
     const resultat: Record<string, { liste_id: number; antall: number }> = {}
-    let hovedlisteId = 0
+    const listeIder: Record<string, number> = {}
     for (const seg of segmenter) {
-      const listId = await finnEllerOpprettListe(folderId, seg.navn)
-      if (seg.navn === HOVEDLISTE) hovedlisteId = listId
+      const navn = LISTE_NAVN[seg.key]
+      const listId = await finnEllerOpprettListe(folderId, navn)
+      listeIder[seg.key] = listId
       if (seg.kontakter.length) await importer(listId, seg.kontakter)
-      resultat[seg.navn] = { liste_id: listId, antall: seg.kontakter.length }
+      resultat[navn] = { liste_id: listId, antall: seg.kontakter.length }
     }
 
     const malId = await sikreMal()
 
     await supabase.from('app_settings').upsert(
       [
-        { key: 'brevo_list_id', value: String(hovedlisteId) },
+        { key: 'brevo_list_id', value: String(listeIder.alle) },
         { key: 'brevo_folder_id', value: String(folderId) },
+        { key: 'brevo_lister', value: JSON.stringify(listeIder) },
         ...(malId ? [{ key: 'brevo_template_id', value: String(malId) }] : []),
       ],
       { onConflict: 'key' },
@@ -291,10 +330,10 @@ Deno.serve(async (req) => {
 
     const totalt = Object.values(resultat).reduce((a, b) => a + b.antall, 0)
     return json({
-      liste_id: hovedlisteId,
+      liste_id: listeIder.alle,
       folder_id: folderId,
       mal_id: malId,
-      antall_importert: resultat[HOVEDLISTE]?.antall ?? 0,
+      antall_importert: resultat[LISTE_NAVN.alle]?.antall ?? 0,
       antall_totalt: totalt,
       lister: resultat,
     })
