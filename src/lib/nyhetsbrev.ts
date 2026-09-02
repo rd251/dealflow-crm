@@ -56,18 +56,23 @@ export function richText(raw: string | undefined): string {
     .replace(/(^|[^*])\*([^*]+)\*/g, '$1<em>$2</em>')
     .replace(
       /\[([^\]]+)\]\(([^)\s]+)\)/g,
-      '<a href="$2" style="color:#500000;text-decoration:underline;">$1</a>'
+      '<a href="$2" style="color:#e01e26;text-decoration:underline;">$1</a>'
     )
     .replace(/\n/g, "<br />");
 }
+
+// Farger hentet fra snakk.ai
+const SNAKK_RED = "#e01e26"; // Primær CTA-rød
+const SNAKK_DARK_RED = "#6b0f0f"; // Mørkerød overskriftsfarge
+const SNAKK_LIGHT = "#fdf4f3"; // Lys rosa kortbakgrunn
 
 function renderBlokk(b: Blokk): string {
   switch (b.type) {
     case "header":
       return `
-        <tr><td style="background:#1a1a1a;padding:32px 32px 28px 32px;">
-          <div style="font-family:Arial,Helvetica,sans-serif;font-size:30px;font-weight:bold;color:#ffffff;letter-spacing:2px;">SNAKK</div>
-          <div style="font-family:Arial,Helvetica,sans-serif;font-size:22px;font-weight:bold;color:#ffffff;margin-top:14px;line-height:1.3;">${esc(b.overskrift)}</div>
+        <tr><td style="background:#ffffff;padding:32px 32px 24px 32px;border-bottom:1px solid #f3e3e2;">
+          <div style="font-family:Arial,Helvetica,sans-serif;font-size:28px;font-weight:bold;color:#111111;letter-spacing:1px;"><span style="color:${SNAKK_RED};">✦</span> SNAKK</div>
+          <div style="font-family:Arial,Helvetica,sans-serif;font-size:24px;font-weight:bold;color:${SNAKK_DARK_RED};margin-top:14px;line-height:1.3;">${esc(b.overskrift)}</div>
         </td></tr>`;
     case "tekst":
       return `
@@ -77,13 +82,13 @@ function renderBlokk(b: Blokk): string {
     case "nyhet":
       return `
         <tr><td style="padding:12px 32px;">
-          <table width="100%" cellpadding="0" cellspacing="0" style="background:#f7f7f7;border-radius:8px;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="background:${SNAKK_LIGHT};border:1px solid #f3e3e2;border-radius:10px;">
             <tr><td style="padding:18px 20px;font-family:Arial,Helvetica,sans-serif;">
-              <div style="font-size:17px;font-weight:bold;color:#1a1a1a;">${esc(b.emoji)} ${esc(b.overskrift)}</div>
+              <div style="font-size:17px;font-weight:bold;color:${SNAKK_DARK_RED};">${esc(b.emoji)} ${esc(b.overskrift)}</div>
               <div style="font-size:15px;line-height:1.6;color:#444444;margin-top:8px;">${richText(b.tekst)}</div>
               ${
                 b.lenke_url
-                  ? `<div style="margin-top:12px;"><a href="${esc(b.lenke_url)}" style="color:#500000;font-weight:bold;font-size:14px;text-decoration:none;">${esc(b.lenke_tekst || "Les mer")} →</a></div>`
+                  ? `<div style="margin-top:12px;"><a href="${esc(b.lenke_url)}" style="color:${SNAKK_RED};font-weight:bold;font-size:14px;text-decoration:none;">${esc(b.lenke_tekst || "Les mer")} →</a></div>`
                   : ""
               }
             </td></tr>
@@ -102,7 +107,7 @@ function renderBlokk(b: Blokk): string {
     case "cta":
       return `
         <tr><td align="center" style="padding:26px 32px;">
-          <a href="${esc(b.lenke_url)}" style="display:inline-block;background:#500000;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:bold;padding:14px 30px;border-radius:6px;text-decoration:none;">${esc(b.lenke_tekst)}</a>
+          <a href="${esc(b.lenke_url)}" style="display:inline-block;background:${SNAKK_RED};color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:bold;padding:14px 34px;border-radius:999px;text-decoration:none;">${esc(b.lenke_tekst)} →</a>
         </td></tr>`;
   }
 }
