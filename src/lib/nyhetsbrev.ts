@@ -82,13 +82,13 @@ function renderBlokk(b: Blokk): string {
     case "nyhet":
       return `
         <tr><td style="padding:12px 32px;">
-          <table width="100%" cellpadding="0" cellspacing="0" style="background:#f7f7f7;border-radius:8px;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="background:${SNAKK_LIGHT};border:1px solid #f3e3e2;border-radius:10px;">
             <tr><td style="padding:18px 20px;font-family:Arial,Helvetica,sans-serif;">
-              <div style="font-size:17px;font-weight:bold;color:#1a1a1a;">${esc(b.emoji)} ${esc(b.overskrift)}</div>
+              <div style="font-size:17px;font-weight:bold;color:${SNAKK_DARK_RED};">${esc(b.emoji)} ${esc(b.overskrift)}</div>
               <div style="font-size:15px;line-height:1.6;color:#444444;margin-top:8px;">${richText(b.tekst)}</div>
               ${
                 b.lenke_url
-                  ? `<div style="margin-top:12px;"><a href="${esc(b.lenke_url)}" style="color:#500000;font-weight:bold;font-size:14px;text-decoration:none;">${esc(b.lenke_tekst || "Les mer")} →</a></div>`
+                  ? `<div style="margin-top:12px;"><a href="${esc(b.lenke_url)}" style="color:${SNAKK_RED};font-weight:bold;font-size:14px;text-decoration:none;">${esc(b.lenke_tekst || "Les mer")} →</a></div>`
                   : ""
               }
             </td></tr>
@@ -107,7 +107,7 @@ function renderBlokk(b: Blokk): string {
     case "cta":
       return `
         <tr><td align="center" style="padding:26px 32px;">
-          <a href="${esc(b.lenke_url)}" style="display:inline-block;background:#500000;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:bold;padding:14px 30px;border-radius:6px;text-decoration:none;">${esc(b.lenke_tekst)}</a>
+          <a href="${esc(b.lenke_url)}" style="display:inline-block;background:${SNAKK_RED};color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:bold;padding:14px 34px;border-radius:999px;text-decoration:none;">${esc(b.lenke_tekst)} →</a>
         </td></tr>`;
   }
 }
