@@ -157,7 +157,7 @@ export default function NyhetsbrevEditor() {
   const laast = status === "sendt";
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background lg:ml-60">
       <header className="sticky top-0 z-40 bg-background/90 backdrop-blur-sm border-b px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 min-w-0">
           <Button variant="ghost" size="icon" onClick={() => navigate("/nyhetsbrev")}>
