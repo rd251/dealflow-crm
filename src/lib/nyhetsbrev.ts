@@ -56,7 +56,7 @@ export function richText(raw: string | undefined): string {
     .replace(/(^|[^*])\*([^*]+)\*/g, '$1<em>$2</em>')
     .replace(
       /\[([^\]]+)\]\(([^)\s]+)\)/g,
-      '<a href="$2" style="color:#500000;text-decoration:underline;">$1</a>'
+      '<a href="$2" style="color:#e01e26;text-decoration:underline;">$1</a>'
     )
     .replace(/\n/g, "<br />");
 }
