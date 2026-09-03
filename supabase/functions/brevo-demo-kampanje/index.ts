@@ -114,6 +114,18 @@ function demoHtml(): string {
     </table>
   </td></tr>
 
+  <!-- AI BYGGER -->
+  <tr><td style="background:#ffffff;padding:16px 36px 0 36px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#fdf0f0;border-radius:14px;">
+      <tr><td style="padding:22px 24px;">
+        <div style="font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#e01e26;margin-bottom:8px;">&#128640; Prøv selv</div>
+        <div style="font-size:18px;font-weight:800;color:#500000;line-height:1.3;">Bygg din egen AI-agent på minutter</div>
+        <div style="font-size:15px;line-height:1.65;color:#444;padding:8px 0 12px 0;">Lim inn nettsideadressen din på snakk.ai/kom-i-gang, så analyserer vi siden og bygger en skreddersydd AI-agent klar til å svare på spørsmål om bedriften din.</div>
+        <a href="https://www.snakk.ai/kom-i-gang" style="display:inline-block;background:#e01e26;color:#ffffff;text-decoration:none;font-weight:700;font-size:15px;padding:12px 28px;border-radius:999px;">Bygg AI-agent nå &#8594;</a>
+      </td></tr>
+    </table>
+  </td></tr>
+
   <!-- SITAT -->
   <tr><td style="background:#ffffff;padding:28px 36px 0 36px;">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-left:4px solid #e01e26;">
