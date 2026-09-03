@@ -90,6 +90,30 @@ function demoHtml(): string {
     </table>
   </td></tr>
 
+  <!-- NYHETSKORT 3 -->
+  <tr><td style="background:#ffffff;padding:16px 36px 0 36px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#fdf0f0;border-radius:14px;">
+      <tr><td style="padding:22px 24px;">
+        <div style="font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#e01e26;margin-bottom:8px;">&#129309; Nytt forhandlerprogram</div>
+        <div style="font-size:18px;font-weight:800;color:#500000;line-height:1.3;">Selg Snakk til kundene dine &#8211; vi tar teknologien</div>
+        <div style="font-size:15px;line-height:1.65;color:#444;padding:8px 0 12px 0;">Vi har lansert et helt nytt forhandlerprogram. Du eier kunden og prosjektet, vi eier teknologien og driften. Ingen lisenskostnad, ingen minsteforpliktelse &#8211; og l&#248;pende provisjon s&#229; lenge kunden er kunde. Over 100 virksomheter bruker allerede plattformen.</div>
+        <a href="https://snakk.ai" style="color:#e01e26;font-weight:700;text-decoration:none;font-size:15px;">Les om forhandlerprogrammet &#8594;</a>
+      </td></tr>
+    </table>
+  </td></tr>
+
+  <!-- NYHETSKORT 4 -->
+  <tr><td style="background:#ffffff;padding:16px 36px 0 36px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#fdf0f0;border-radius:14px;">
+      <tr><td style="padding:22px 24px;">
+        <div style="font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#e01e26;margin-bottom:8px;">&#128274; Personvern og drift</div>
+        <div style="font-size:18px;font-weight:800;color:#500000;line-height:1.3;">Dataene dine blir i Europa</div>
+        <div style="font-size:15px;line-height:1.65;color:#444;padding:8px 0 12px 0;">Tale og drift kj&#248;rer p&#229; v&#229;re egne servere i Norge, AI-modellene i Sverige. Ingen personopplysninger behandles utenfor E&#216;S &#8211; og databehandleravtale f&#248;lger alltid med, ferdig utfylt.</div>
+        <a href="https://snakk.ai" style="color:#e01e26;font-weight:700;text-decoration:none;font-size:15px;">Slik ivaretar vi personvernet &#8594;</a>
+      </td></tr>
+    </table>
+  </td></tr>
+
   <!-- SITAT -->
   <tr><td style="background:#ffffff;padding:28px 36px 0 36px;">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-left:4px solid #e01e26;">
