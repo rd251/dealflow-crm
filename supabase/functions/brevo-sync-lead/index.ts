@@ -18,6 +18,7 @@ function gyldig(e?: string | null): boolean {
   const v = (e || '').trim().toLowerCase()
   if (!EMAIL_RE.test(v)) return false
   if (v.endsWith('@snakk.ai')) return false
+  if (EKSKLUDERTE_DOMENER.some((d) => v.endsWith(`@${d}`) || v.endsWith(`.${d}`))) return false
   return !TEST_HINTS.some((t) => v.includes(t))
 }
 
