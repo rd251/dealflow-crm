@@ -9,6 +9,11 @@ const MAL_NAVN = 'Snakk AI – Nyhetsbrev mal'
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const TEST_HINTS = ['test@', 'test.', 'example.com', 'noreply', 'no-reply', 'dummy', 'ingen@', 'mailinator', 'yopmail']
 
+// Irrelevante selskaper/domener som ikke skal ligge i noen Brevo-liste
+const EKSKLUDERTE_DOMENER = ['fair.no', 'faircollection.no', 'unifon.no', 'gastroplanner.no']
+const ekskludert = (e: string) =>
+  EKSKLUDERTE_DOMENER.some((d) => e.endsWith(`@${d}`) || e.endsWith(`.${d}`))
+
 // Kilder vi anser som "kalde" – kjøpte/importerte lister vi selv har lagt inn.
 // Disse skal IKKE inn i hovedlisten (Alle).
 const KALDE_KILDER = ['Kald outbound', 'Instantly kald e-post', 'Kasoleads']
