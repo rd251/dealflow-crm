@@ -5,6 +5,7 @@ const BREVO_API = 'https://api.brevo.com/v3'
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const TEST_HINTS = ['test@', 'test.', 'example.com', 'noreply', 'no-reply', 'dummy', 'ingen@', 'mailinator', 'yopmail']
 const KALDE_KILDER = ['Kald outbound', 'Instantly kald e-post', 'Kasoleads']
+const EKSKLUDERTE_DOMENER = ['fair.no', 'faircollection.no', 'unifon.no', 'gastroplanner.no']
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -17,6 +18,7 @@ function gyldig(e?: string | null): boolean {
   const v = (e || '').trim().toLowerCase()
   if (!EMAIL_RE.test(v)) return false
   if (v.endsWith('@snakk.ai')) return false
+  if (EKSKLUDERTE_DOMENER.some((d) => v.endsWith(`@${d}`) || v.endsWith(`.${d}`))) return false
   return !TEST_HINTS.some((t) => v.includes(t))
 }
 

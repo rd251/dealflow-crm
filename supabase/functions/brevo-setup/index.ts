@@ -9,6 +9,11 @@ const MAL_NAVN = 'Snakk AI – Nyhetsbrev mal'
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const TEST_HINTS = ['test@', 'test.', 'example.com', 'noreply', 'no-reply', 'dummy', 'ingen@', 'mailinator', 'yopmail']
 
+// Irrelevante selskaper/domener som ikke skal ligge i noen Brevo-liste
+const EKSKLUDERTE_DOMENER = ['fair.no', 'faircollection.no', 'unifon.no', 'gastroplanner.no']
+const ekskludert = (e: string) =>
+  EKSKLUDERTE_DOMENER.some((d) => e.endsWith(`@${d}`) || e.endsWith(`.${d}`))
+
 // Kilder vi anser som "kalde" – kjøpte/importerte lister vi selv har lagt inn.
 // Disse skal IKKE inn i hovedlisten (Alle).
 const KALDE_KILDER = ['Kald outbound', 'Instantly kald e-post', 'Kasoleads']
@@ -60,8 +65,36 @@ function gyldig(e?: string | null): boolean {
   const v = (e || '').trim().toLowerCase()
   if (!EMAIL_RE.test(v)) return false
   if (v.endsWith('@snakk.ai')) return false
+  if (ekskludert(v)) return false
   if (TEST_HINTS.some((t) => v.includes(t))) return false
   return true
+}
+
+// Fjerner kontakter fra ekskluderte domener helt ut av Brevo (alle lister)
+async function ryddIrrelevante(listeIder: number[]): Promise<string[]> {
+  const funnet = new Set<string>()
+  for (const listId of listeIder) {
+    for (let offset = 0; offset < 5000; offset += 500) {
+      let side: any
+      try {
+        side = await brevo(`/contacts/lists/${listId}/contacts?limit=500&offset=${offset}`)
+      } catch {
+        break
+      }
+      const rader = side?.contacts || []
+      for (const c of rader) {
+        const e = (c.email || '').toLowerCase()
+        if (e && ekskludert(e)) funnet.add(e)
+      }
+      if (rader.length < 500) break
+    }
+  }
+  for (const e of funnet) {
+    await brevo(`/contacts/${encodeURIComponent(e)}`, { method: 'DELETE' }).catch((err) =>
+      console.error('Kunne ikke slette kontakt', e, err),
+    )
+  }
+  return [...funnet]
 }
 
 async function finnEllerOpprettMappe(): Promise<number> {
@@ -363,6 +396,8 @@ Deno.serve(async (req) => {
       resultat[navn] = { liste_id: listId, antall: seg.kontakter.length }
     }
 
+    const fjernet = await ryddIrrelevante(Object.values(listeIder))
+
     const malId = await sikreMal()
 
     await supabase.from('app_settings').upsert(
@@ -382,6 +417,7 @@ Deno.serve(async (req) => {
       mal_id: malId,
       antall_importert: resultat[LISTE_NAVN.alle]?.antall ?? 0,
       antall_totalt: totalt,
+      fjernet_irrelevante: fjernet,
       lister: resultat,
     })
   } catch (e) {
