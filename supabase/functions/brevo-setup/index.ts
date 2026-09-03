@@ -396,6 +396,8 @@ Deno.serve(async (req) => {
       resultat[navn] = { liste_id: listId, antall: seg.kontakter.length }
     }
 
+    const fjernet = await ryddIrrelevante(Object.values(listeIder))
+
     const malId = await sikreMal()
 
     await supabase.from('app_settings').upsert(
@@ -415,6 +417,7 @@ Deno.serve(async (req) => {
       mal_id: malId,
       antall_importert: resultat[LISTE_NAVN.alle]?.antall ?? 0,
       antall_totalt: totalt,
+      fjernet_irrelevante: fjernet,
       lister: resultat,
     })
   } catch (e) {
