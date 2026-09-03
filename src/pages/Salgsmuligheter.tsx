@@ -469,7 +469,7 @@ export default function Salgsmuligheter() {
                   </option>
                 ))}
               </select>
-              <Button onClick={addSm} className="w-full" disabled={!form.use_case || !form.neste_steg}>Opprett</Button>
+              <Button onClick={addSm} className="w-full">Opprett</Button>
             </div>
           </DialogContent>
         </Dialog>
