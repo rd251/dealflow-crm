@@ -134,7 +134,7 @@ Deno.serve(async (req) => {
     if (!bygget) return json({ skipped: true, reason: `Ukjent tabell: ${table}` })
 
     const epost = (bygget.epost || '').trim().toLowerCase()
-    if (!gyldig(epost)) return json({ skipped: true, reason: 'Ugyldig eller filtrert e-post' })
+    if (!gyldig(epost, bygget.COMPANY)) return json({ skipped: true, reason: 'Ugyldig eller filtrert e-post/selskap' })
 
     const { data: avmeldt } = await supabase
       .from('nyhetsbrev_avmeldte')
