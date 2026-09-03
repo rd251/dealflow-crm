@@ -5,7 +5,8 @@ const BREVO_API = 'https://api.brevo.com/v3'
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const TEST_HINTS = ['test@', 'test.', 'example.com', 'noreply', 'no-reply', 'dummy', 'ingen@', 'mailinator', 'yopmail']
 const KALDE_KILDER = ['Kald outbound', 'Instantly kald e-post', 'Kasoleads']
-const EKSKLUDERTE_DOMENER = ['fair.no', 'faircollection.no', 'unifon.no', 'gastroplanner.no']
+const EKSKLUDERTE_DOMENER = ['fair.no', 'faircollection.no', 'unifon.no', 'gastroplanner.no', 'innlandetlegesenter.no', 'innlandetlegesenter']
+const EKSKLUDERTE_SELSKAP = ['fair collection', 'unifon', 'gastro planner', 'gastroplanner', 'innlandet legesenter', 'innlandetlegesenter']
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -14,11 +15,13 @@ function json(body: unknown, status = 200) {
   })
 }
 
-function gyldig(e?: string | null): boolean {
+function gyldig(e?: string | null, selskap = ''): boolean {
   const v = (e || '').trim().toLowerCase()
+  const s = selskap.toLowerCase()
   if (!EMAIL_RE.test(v)) return false
   if (v.endsWith('@snakk.ai')) return false
   if (EKSKLUDERTE_DOMENER.some((d) => v.endsWith(`@${d}`) || v.endsWith(`.${d}`))) return false
+  if (EKSKLUDERTE_SELSKAP.some((n) => s.includes(n))) return false
   return !TEST_HINTS.some((t) => v.includes(t))
 }
 
@@ -131,7 +134,7 @@ Deno.serve(async (req) => {
     if (!bygget) return json({ skipped: true, reason: `Ukjent tabell: ${table}` })
 
     const epost = (bygget.epost || '').trim().toLowerCase()
-    if (!gyldig(epost)) return json({ skipped: true, reason: 'Ugyldig eller filtrert e-post' })
+    if (!gyldig(epost, bygget.COMPANY)) return json({ skipped: true, reason: 'Ugyldig eller filtrert e-post/selskap' })
 
     const { data: avmeldt } = await supabase
       .from('nyhetsbrev_avmeldte')
