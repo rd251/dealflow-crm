@@ -11,8 +11,13 @@ const TEST_HINTS = ['test@', 'test.', 'example.com', 'noreply', 'no-reply', 'dum
 
 // Irrelevante selskaper/domener som ikke skal ligge i noen Brevo-liste
 const EKSKLUDERTE_DOMENER = ['fair.no', 'faircollection.no', 'unifon.no', 'gastroplanner.no', 'innlandetlegesenter.no', 'innlandetlegesenter']
-const ekskludert = (e: string) =>
-  EKSKLUDERTE_DOMENER.some((d) => e.endsWith(`@${d}`) || e.endsWith(`.${d}`))
+const EKSKLUDERTE_SELSKAP = ['fair collection', 'unifon', 'gastro planner', 'gastroplanner', 'innlandet legesenter', 'innlandetlegesenter']
+const ekskludert = (e: string, selskap = '') => {
+  const s = selskap.toLowerCase()
+  if (EKSKLUDERTE_DOMENER.some((d) => e.endsWith(`@${d}`) || e.endsWith(`.${d}`))) return true
+  if (EKSKLUDERTE_SELSKAP.some((n) => s.includes(n))) return true
+  return false
+}
 
 // Kilder vi anser som "kalde" – kjøpte/importerte lister vi selv har lagt inn.
 // Disse skal IKKE inn i hovedlisten (Alle).
@@ -61,16 +66,16 @@ async function brevo(path: string, init: RequestInit = {}) {
   return text ? JSON.parse(text) : {}
 }
 
-function gyldig(e?: string | null): boolean {
+function gyldig(e?: string | null, selskap = ''): boolean {
   const v = (e || '').trim().toLowerCase()
   if (!EMAIL_RE.test(v)) return false
   if (v.endsWith('@snakk.ai')) return false
-  if (ekskludert(v)) return false
+  if (ekskludert(v, selskap)) return false
   if (TEST_HINTS.some((t) => v.includes(t))) return false
   return true
 }
 
-// Fjerner kontakter fra ekskluderte domener helt ut av Brevo (alle lister)
+// Fjerner kontakter fra ekskluderte domener/selskap helt ut av Brevo (alle lister)
 async function ryddIrrelevante(listeIder: number[]): Promise<string[]> {
   const funnet = new Set<string>()
   for (const listId of listeIder) {
@@ -84,7 +89,8 @@ async function ryddIrrelevante(listeIder: number[]): Promise<string[]> {
       const rader = side?.contacts || []
       for (const c of rader) {
         const e = (c.email || '').toLowerCase()
-        if (e && ekskludert(e)) funnet.add(e)
+        const selskap = (c.attributes?.COMPANY || '').toLowerCase()
+        if (e && ekskludert(e, selskap)) funnet.add(e)
       }
       if (rader.length < 500) break
     }
@@ -304,11 +310,12 @@ Deno.serve(async (req) => {
       status = '',
     ) => {
       const key = (e || '').trim().toLowerCase()
-      if (!gyldig(key) || blokkert.has(key) || m.has(key)) return
+      const company = (firma || '').trim()
+      if (!gyldig(key, company) || blokkert.has(key) || m.has(key)) return
       m.set(key, {
         email: key,
         FIRSTNAME: (navn || '').trim().split(' ')[0] || '',
-        COMPANY: (firma || '').trim(),
+        COMPANY: company,
         KILDE: kilde,
         STATUS: status,
       })
