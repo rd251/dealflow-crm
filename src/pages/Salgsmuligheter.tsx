@@ -312,6 +312,10 @@ export default function Salgsmuligheter() {
   }, [updateSalgsmuligheter]);
 
   const addSm = () => {
+    if (!form.use_case.trim()) {
+      toast.error("Fyll inn use case / navn på dealen");
+      return;
+    }
     const today = new Date().toISOString().split("T")[0];
     const id = generateId("SM", salgsmuligheter);
     const nySm: Salgsmulighet = {
@@ -441,7 +445,7 @@ export default function Salgsmuligheter() {
                 <Input type="number" placeholder="Sannsynlighet %" value={form.sannsynlighet || ""} onChange={e => setForm(f => ({ ...f, sannsynlighet: Number(e.target.value) }))} />
               </div>
               <Input type="date" placeholder="Forventet lukkedato" value={form.forventet_lukkedato} onChange={e => setForm(f => ({ ...f, forventet_lukkedato: e.target.value }))} />
-              <Input placeholder="Neste steg *" value={form.neste_steg} onChange={e => setForm(f => ({ ...f, neste_steg: e.target.value }))} />
+              <Input placeholder="Neste steg" value={form.neste_steg} onChange={e => setForm(f => ({ ...f, neste_steg: e.target.value }))} />
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Input placeholder="Kontaktperson" value={form.kontaktperson} onChange={e => setForm(f => ({ ...f, kontaktperson: e.target.value }))} />
                 <Input placeholder="E-post" value={form.e_post} onChange={e => setForm(f => ({ ...f, e_post: e.target.value }))} />
@@ -465,7 +469,7 @@ export default function Salgsmuligheter() {
                   </option>
                 ))}
               </select>
-              <Button onClick={addSm} className="w-full" disabled={!form.use_case || !form.neste_steg}>Opprett</Button>
+              <Button onClick={addSm} className="w-full">Opprett</Button>
             </div>
           </DialogContent>
         </Dialog>
