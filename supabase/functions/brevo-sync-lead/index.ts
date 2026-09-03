@@ -5,7 +5,7 @@ const BREVO_API = 'https://api.brevo.com/v3'
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const TEST_HINTS = ['test@', 'test.', 'example.com', 'noreply', 'no-reply', 'dummy', 'ingen@', 'mailinator', 'yopmail']
 const KALDE_KILDER = ['Kald outbound', 'Instantly kald e-post', 'Kasoleads']
-const EKSKLUDERTE_DOMENER = ['fair.no', 'faircollection.no', 'unifon.no', 'gastroplanner.no']
+const EKSKLUDERTE_DOMENER = ['fair.no', 'faircollection.no', 'unifon.no', 'gastroplanner.no', 'innlandetlegesenter.no', 'innlandetlegesenter']
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {

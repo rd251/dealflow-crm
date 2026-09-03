@@ -10,7 +10,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const TEST_HINTS = ['test@', 'test.', 'example.com', 'noreply', 'no-reply', 'dummy', 'ingen@', 'mailinator', 'yopmail']
 
 // Irrelevante selskaper/domener som ikke skal ligge i noen Brevo-liste
-const EKSKLUDERTE_DOMENER = ['fair.no', 'faircollection.no', 'unifon.no', 'gastroplanner.no']
+const EKSKLUDERTE_DOMENER = ['fair.no', 'faircollection.no', 'unifon.no', 'gastroplanner.no', 'innlandetlegesenter.no', 'innlandetlegesenter']
 const ekskludert = (e: string) =>
   EKSKLUDERTE_DOMENER.some((d) => e.endsWith(`@${d}`) || e.endsWith(`.${d}`))
 
