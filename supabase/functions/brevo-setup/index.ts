@@ -65,8 +65,36 @@ function gyldig(e?: string | null): boolean {
   const v = (e || '').trim().toLowerCase()
   if (!EMAIL_RE.test(v)) return false
   if (v.endsWith('@snakk.ai')) return false
+  if (ekskludert(v)) return false
   if (TEST_HINTS.some((t) => v.includes(t))) return false
   return true
+}
+
+// Fjerner kontakter fra ekskluderte domener helt ut av Brevo (alle lister)
+async function ryddIrrelevante(listeIder: number[]): Promise<string[]> {
+  const funnet = new Set<string>()
+  for (const listId of listeIder) {
+    for (let offset = 0; offset < 5000; offset += 500) {
+      let side: any
+      try {
+        side = await brevo(`/contacts/lists/${listId}/contacts?limit=500&offset=${offset}`)
+      } catch {
+        break
+      }
+      const rader = side?.contacts || []
+      for (const c of rader) {
+        const e = (c.email || '').toLowerCase()
+        if (e && ekskludert(e)) funnet.add(e)
+      }
+      if (rader.length < 500) break
+    }
+  }
+  for (const e of funnet) {
+    await brevo(`/contacts/${encodeURIComponent(e)}`, { method: 'DELETE' }).catch((err) =>
+      console.error('Kunne ikke slette kontakt', e, err),
+    )
+  }
+  return [...funnet]
 }
 
 async function finnEllerOpprettMappe(): Promise<number> {
