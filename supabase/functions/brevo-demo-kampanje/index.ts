@@ -140,7 +140,7 @@ function demoHtml(): string {
   <tr><td align="center" style="background:#ffffff;padding:36px 36px 40px 36px;border-radius:0 0 18px 18px;">
     <div style="font-size:20px;font-weight:800;color:#500000;line-height:1.3;margin-bottom:8px;">Vil du høre forskjellen selv?</div>
     <div style="font-size:15px;color:#555;line-height:1.6;margin-bottom:22px;">Book en uforpliktende demo, så viser vi deg AI-agenten i aksjon &#8211; det tar bare 15 minutter.</div>
-    <a href="https://snakk.ai" style="display:inline-block;background:#e01e26;color:#ffffff;text-decoration:none;font-weight:700;font-size:16px;padding:16px 40px;border-radius:999px;">Book en demo</a>
+    <a href="https://meet.brevo.com/robin-saeter-diallo" style="display:inline-block;background:#e01e26;color:#ffffff;text-decoration:none;font-weight:700;font-size:16px;padding:16px 40px;border-radius:999px;">Book en demo</a>
     <div style="padding-top:14px;"><a href="mailto:rd@snakk.ai" style="color:#500000;font-weight:600;text-decoration:underline;font-size:14px;">Eller svar direkte til oss</a></div>
   </td></tr>
 
