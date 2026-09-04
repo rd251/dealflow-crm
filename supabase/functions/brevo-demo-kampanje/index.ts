@@ -51,7 +51,7 @@ function demoHtml(): string {
 
   <!-- LOGO -->
   <tr><td style="padding:6px 8px 18px 8px;">
-    <span style="font-size:24px;font-weight:800;letter-spacing:-.5px;color:#1a1a1a;">SNAKK</span><span style="color:#e01e26;font-size:24px;">&#10022;</span>
+    <img src="https://snakk-ai.lovable.app/images/snakk-logo.png" alt="Snakk AI" width="132" style="display:block;width:132px;height:auto;" /> &#10022;
   </td></tr>
 
   <!-- HERO -->
@@ -163,7 +163,7 @@ function komIGangHtml(): string {
 
   <!-- LOGO -->
   <tr><td style="padding:6px 8px 18px 8px;">
-    <span style="font-size:24px;font-weight:800;letter-spacing:-.5px;color:#1a1a1a;">SNAKK</span><span style="color:#e01e26;font-size:24px;">&#10022;</span>
+    <img src="https://snakk-ai.lovable.app/images/snakk-logo.png" alt="Snakk AI" width="132" style="display:block;width:132px;height:auto;" /> &#10022;
   </td></tr>
 
   <!-- HERO -->
