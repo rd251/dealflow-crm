@@ -51,7 +51,7 @@ function demoHtml(): string {
 
   <!-- LOGO -->
   <tr><td style="padding:6px 8px 18px 8px;">
-    <span style="font-size:24px;font-weight:800;letter-spacing:-.5px;color:#1a1a1a;">SNAKK</span><span style="color:#e01e26;font-size:24px;">&#10022;</span>
+    <img src="https://snakk-ai.lovable.app/images/snakk-logo.png" alt="Snakk AI" width="132" style="display:block;width:132px;height:auto;" />
   </td></tr>
 
   <!-- HERO -->
@@ -163,7 +163,7 @@ function komIGangHtml(): string {
 
   <!-- LOGO -->
   <tr><td style="padding:6px 8px 18px 8px;">
-    <span style="font-size:24px;font-weight:800;letter-spacing:-.5px;color:#1a1a1a;">SNAKK</span><span style="color:#e01e26;font-size:24px;">&#10022;</span>
+    <img src="https://snakk-ai.lovable.app/images/snakk-logo.png" alt="Snakk AI" width="132" style="display:block;width:132px;height:auto;" />
   </td></tr>
 
   <!-- HERO -->
@@ -270,6 +270,16 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json().catch(() => ({}))
+
+    // Rydding: slett et utkast direkte
+    if (body?.action === 'delete' && body?.id) {
+      const resp = await fetch(`https://api.brevo.com/v3/emailCampaigns/${body.id}`, {
+        method: 'DELETE',
+        headers: { 'api-key': Deno.env.get('BREVO_DIRECT_API_KEY') || Deno.env.get('BREVO_API_KEY') || '' },
+      })
+      return json({ slettet: resp.ok || resp.status === 204, status: resp.status, id: body.id })
+    }
+
     const tema = body?.tema === 'kom-i-gang' ? 'kom-i-gang' : 'standard'
 
     const supabase = createClient(

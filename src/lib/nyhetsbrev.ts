@@ -71,7 +71,7 @@ function renderBlokk(b: Blokk): string {
     case "header":
       return `
         <tr><td style="background:#ffffff;padding:32px 32px 24px 32px;border-bottom:1px solid #f3e3e2;">
-          <div style="font-family:Arial,Helvetica,sans-serif;font-size:28px;font-weight:bold;color:#111111;letter-spacing:1px;"><span style="color:${SNAKK_RED};">✦</span> SNAKK</div>
+          <img src="https://snakk-ai.lovable.app/images/snakk-logo.png" alt="Snakk AI" width="140" style="display:block;width:140px;height:auto;" />
           <div style="font-family:Arial,Helvetica,sans-serif;font-size:24px;font-weight:bold;color:${SNAKK_DARK_RED};margin-top:14px;line-height:1.3;">${esc(b.overskrift)}</div>
         </td></tr>`;
     case "tekst":
