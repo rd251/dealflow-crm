@@ -216,7 +216,7 @@ function komIGangHtml(): string {
   <tr><td style="background:#ffffff;padding:26px 36px 0 36px;">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#fdf0f0;border-radius:14px;">
       <tr><td style="padding:22px 24px;">
-        <div style="font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#e01e26;margin-bottom:8px;">&#128241; &#197;Én agent &#8211; tre kanaler</div>
+        <div style="font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#e01e26;margin-bottom:8px;">&#128241; Én agent &#8211; tre kanaler</div>
         <div style="font-size:18px;font-weight:800;color:#500000;line-height:1.3;">Tale, chat og app &#8211; samme agent</div>
         <div style="font-size:15px;line-height:1.65;color:#444;padding:8px 0 0 0;"><strong>&#128222; Telefoni:</strong> Svarer anrop til bedriften din, døgnet rundt.<br>
         <strong>&#128172; Nettside:</strong> Chat-widget som svarer besøkende med én gang.<br>
