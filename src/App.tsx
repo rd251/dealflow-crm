@@ -32,7 +32,7 @@ import Nyhetsbrev from "./pages/Nyhetsbrev";
 import NyhetsbrevEditor from "./pages/NyhetsbrevEditor";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
-import Unsubscribe from "./pages/Unsubscribe";
+
 import Ringeliste from "./pages/Ringeliste";
 import Onboarding from "./pages/Onboarding";
 import OAuthConsent from "./pages/OAuthConsent";
@@ -116,7 +116,7 @@ function AppRoutes() {
       <Route path="/login" element={<LoginRoute />} />
       <Route path="/~oauth" element={<OAuthCallbackRoute />} />
       <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
-      <Route path="/unsubscribe" element={<Unsubscribe />} />
+      
       <Route path="/onboarding" element={<Onboarding />} />
 
       <Route

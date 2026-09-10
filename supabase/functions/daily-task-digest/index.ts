@@ -1,4 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
+import { sendTemplateEmailWithLog } from '../_shared/transactional-email-templates/send-and-log.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -219,31 +220,24 @@ Deno.serve(async (req) => {
     const firstName = profile.display_name?.split(' ')[0] || profile.display_name || 'der'
 
     try {
-      const { error: sendError } = await supabase.functions.invoke('send-transactional-email', {
-        body: {
-          templateName: 'daily-task-reminder',
-          recipientEmail: profile.email,
-          idempotencyKey: `daily-tasks-${userId}-${today}`,
-          templateData: {
-            displayName: firstName,
-            prioritertIDag,
-            overdueTasks,
-            todayMeetings,
-            aktiveSalgsmuligheter,
-            anbefalinger: anbefalinger.slice(0, 5),
-            overdueCount: overdueTasks.length,
-            todayCount: prioritertIDag.length,
-            meetingCount: todayMeetings.length,
-            dealCount: aktiveSalgsmuligheter.length,
-            appUrl: 'https://snakk-ai-crm.lovable.app',
-          },
+      const result = await sendTemplateEmailWithLog('daily-task-reminder', profile.email, {
+        idempotencyKey: `daily-tasks-${userId}-${today}`,
+        templateData: {
+          displayName: firstName,
+          prioritertIDag,
+          overdueTasks,
+          todayMeetings,
+          aktiveSalgsmuligheter,
+          anbefalinger: anbefalinger.slice(0, 5),
+          overdueCount: overdueTasks.length,
+          todayCount: prioritertIDag.length,
+          meetingCount: todayMeetings.length,
+          dealCount: aktiveSalgsmuligheter.length,
+          appUrl: 'https://snakk-ai-crm.lovable.app',
         },
       })
 
-      if (sendError) {
-        console.error('Failed to send to', profile.email, sendError)
-        errors.push(`${profile.email}: ${sendError.message}`)
-      } else {
+      if (result.sent) {
         sentCount++
       }
     } catch (err) {

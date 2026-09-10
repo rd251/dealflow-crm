@@ -1,4 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
+import { sendTemplateEmailWithLog } from '../_shared/transactional-email-templates/send-and-log.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -259,19 +260,12 @@ Deno.serve(async (req) => {
     const firstName = profile.display_name?.split(' ')[0] || 'der'
 
     try {
-      const { error: sendError } = await supabase.functions.invoke('send-transactional-email', {
-        body: {
-          templateName: 'weekly-sales-report',
-          recipientEmail: profile.email,
-          idempotencyKey: `weekly-sales-${profile.user_id}-${todayStr}`,
-          templateData: { ...templateData, displayName: firstName },
-        },
+      const result = await sendTemplateEmailWithLog('weekly-sales-report', profile.email, {
+        idempotencyKey: `weekly-sales-${profile.user_id}-${todayStr}`,
+        templateData: { ...templateData, displayName: firstName },
       })
 
-      if (sendError) {
-        console.error('Failed to send weekly report to', profile.email, sendError)
-        errors.push(`${profile.email}: ${sendError.message}`)
-      } else {
+      if (result.sent) {
         sentCount++
       }
     } catch (err) {
