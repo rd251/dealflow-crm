@@ -203,34 +203,15 @@ export default function Salgsmuligheter() {
     const today = new Date().toISOString().split("T")[0];
     const selskap = selskaper.find(s => s.id === sm.selskap_id);
     try {
-      const { error: emailErr } = await supabase.functions.invoke("send-transactional-email", {
+      const { data: emailRes, error: emailErr } = await supabase.functions.invoke("forward-deal-to-partner", {
         body: {
-          templateName: "deal-forwarded-to-partner",
-          recipientEmail: partner.e_post,
-          idempotencyKey: `deal-forward-${sm.id}-${partner.id}-${today}`,
-          templateData: {
-            partner_navn: partner.partnernavn,
-            deal_navn: sm.navn,
-            selskap_firmanavn: selskap?.firmanavn || "",
-            kontaktperson: sm.kontaktperson,
-            kontakt_epost: sm.e_post,
-            kontakt_telefon: sm.telefon,
-            kontakt_rolle: sm.rolle_i_firma,
-            status: sm.status,
-            kilde: sm.kilde,
-            use_case: sm.use_case,
-            notater: sm.notater,
-            forventet_mrr: sm.forventet_mrr,
-            oppstartskostnad: sm.oppstartskostnad,
-            kontraktslengde_mnd: sm.kontraktslengde_mnd,
-            forventet_lukkedato: sm.forventet_lukkedato,
-            neste_steg: sm.neste_steg,
-            videresendt_av: user?.email || "Snakk",
-            intern_melding: forwardMessage,
-          },
+          dealId: sm.id,
+          partnerId: partner.id,
+          internMelding: forwardMessage,
         },
       });
       if (emailErr) throw emailErr;
+      if (emailRes?.error) throw new Error(emailRes.error);
 
       updateSalgsmuligheter(prev => prev.map(s => s.id === sm.id
         ? { ...s, videresendt_til_partner_id: partner.id, videresendt_dato: today, sist_aktivitet: today }

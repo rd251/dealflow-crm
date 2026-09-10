@@ -209,29 +209,17 @@ export default function Leads() {
     const lead = forwardDialogLead;
     const today = new Date().toISOString().split("T")[0];
     try {
-      const { error: emailErr } = await supabase.functions.invoke("send-transactional-email", {
+      const { data: emailRes, error: emailErr } = await supabase.functions.invoke("forward-lead-to-partner", {
         body: {
-          templateName: "lead-forwarded-to-partner",
-          recipientEmail: partner.e_post,
-          idempotencyKey: `lead-forward-${lead.id}-${partner.id}-${today}`,
-          templateData: {
-            partner_navn: partner.partnernavn,
-            lead_firmanavn: lead.firmanavn,
-            lead_kontaktperson: lead.kontaktperson,
-            lead_epost: lead.e_post,
-            lead_telefon: lead.telefon,
-            lead_rolle: lead.rolle_i_firma,
-            lead_kilde: lead.kilde,
-            lead_use_case: lead.use_case,
-            lead_notater: lead.notater,
-            har_byggeagent: forwardHarByggeagent,
-            onboarding_oppsummering: forwardOnboarding,
-            videresendt_av: user?.email || "Snakk",
-            intern_melding: forwardMessage,
-          },
+          leadId: lead.id,
+          partnerId: partner.id,
+          internMelding: forwardMessage,
+          harByggeagent: forwardHarByggeagent,
+          onboardingOppsummering: forwardOnboarding,
         },
       });
       if (emailErr) throw emailErr;
+      if (emailRes?.error) throw new Error(emailRes.error);
 
       // Persist forwarding state on the lead
       updateLeads(prev => prev.map(l => l.id === lead.id

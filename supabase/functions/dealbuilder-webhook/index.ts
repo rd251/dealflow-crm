@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { sendTemplateEmailWithLog } from "../_shared/transactional-email-templates/send-and-log.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -245,17 +246,19 @@ Deno.serve(async (req) => {
           .eq("id", deal!.selskap_id)
           .maybeSingle();
 
-        await supabase.functions.invoke("send-transactional-email", {
-          body: {
-            templateName: "welcome-customer",
-            recipientEmail,
+        try {
+          await sendTemplateEmailWithLog("welcome-customer", recipientEmail, {
             idempotencyKey: `welcome-customer-${CRMid}`,
             templateData: {
               firmanavn: selskap?.firmanavn || deal!.navn,
               kontaktperson: deal!.kontaktperson || undefined,
             },
-          },
-        });
+          });
+        } catch (mailErr) {
+          console.error("Kunne ikke sende velkomst-e-post", {
+            message: mailErr instanceof Error ? mailErr.message : String(mailErr),
+          });
+        }
       }
     }
     return new Response(JSON.stringify({ received: true, event, CRMid }), {
