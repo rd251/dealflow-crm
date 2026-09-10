@@ -67,8 +67,10 @@ Returner KUN gyldig JSON på dette formatet:
   "emne": "e-post-emne, maks 60 tegn, uten emoji-spam",
   "preheader": "forhåndsvisningstekst, maks 100 tegn",
   "blokker": [
-    { "type": "header", "overskrift": "..." },
+    { "type": "header", "overskrift": "KORT OVERTEKST" },
+    { "type": "hero", "kicker": "NYHET", "overskrift": "Kort, slående tittel", "tekst": "Én setning som forklarer nyheten.", "lenke_tekst": "Kom i gang", "lenke_url": "https://www.snakk.ai/kom-i-gang" },
     { "type": "tekst", "tekst": "..." },
+    { "type": "kort", "kicker": "DIN BEDRIFT, DIN STEMME.", "overskrift": "Seksjonstittel", "tekst": "...", "lenke_tekst": "Se hvordan", "lenke_url": "https://snakk.ai" },
     { "type": "nyhet", "emoji": "🚀", "overskrift": "...", "tekst": "...", "lenke_url": "https://snakk.ai", "lenke_tekst": "Les mer" },
     { "type": "deler", "overskrift": "SEKSJONSNAVN" },
     { "type": "cta", "lenke_tekst": "Book en demo", "lenke_url": "https://snakk.ai" }
@@ -77,7 +79,10 @@ Returner KUN gyldig JSON på dette formatet:
 
 Regler:
 - Alt innhold på norsk (bokmål).
-- Gyldige blokktyper: header, tekst, nyhet, deler, cta. Start alltid med én header og avslutt med én cta.
+- Gyldige blokktyper: header, hero, tekst, kort, nyhet, deler, cta.
+- Struktur: start med header, deretter én hero, så 2–3 "kort"-blokker, og avslutt med én cta.
+- Hver "kort"-blokk har en kort STOR BOKSTAV-kicker, en kort tittel og maks 3 setninger, pluss en lenke som starter med et verb ("Se hvordan", "Prøv gratis").
+- Hero-tittel: maks 6 ord, konkret nytte – i stil med "Mer tid til menneskene".
 - ${lengdeHint}.
 - Tekst kan bruke **fet**, *kursiv* og [lenketekst](https://url). Ingen HTML.
 - Tone: ${tone}.
@@ -122,16 +127,18 @@ Regler:
       return json({ error: "Klarte ikke tolke AI-svaret. Prøv igjen." }, 502);
     }
 
-    const gyldige = new Set(["header", "tekst", "nyhet", "deler", "cta"]);
+    const gyldige = new Set(["header", "hero", "tekst", "kort", "nyhet", "bilde", "deler", "cta"]);
     const blokker = parsed.blokker
       .filter((b: any) => b && gyldige.has(b.type))
       .slice(0, 15)
       .map((b: any) => ({
         id: crypto.randomUUID(),
         type: b.type,
+        kicker: b.kicker ?? undefined,
         overskrift: b.overskrift ?? undefined,
         tekst: b.tekst ?? undefined,
         emoji: b.emoji ?? undefined,
+        bilde_url: b.bilde_url ?? undefined,
         lenke_url: b.lenke_url ?? undefined,
         lenke_tekst: b.lenke_tekst ?? undefined,
       }));
