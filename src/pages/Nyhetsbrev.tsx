@@ -157,6 +157,26 @@ export default function Nyhetsbrev() {
   };
 
   const [brevoSetupLaster, setBrevoSetupLaster] = useState(false);
+  const [rensLaster, setRensLaster] = useState(false);
+  const rensLister = async () => {
+    setRensLaster(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("brevo-rens-lister", {
+        body: {},
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      const res = data as { antall_fjernet: number; antall_lister: number };
+      toast.success(
+        `${res.antall_fjernet} inaktive adresser fjernet fra ${res.antall_lister} lister`
+      );
+      await lastMottakere();
+    } catch (e: any) {
+      toast.error(e?.message || "Kunne ikke rense listene");
+    } finally {
+      setRensLaster(false);
+    }
+  };
   const synkTilBrevo = async () => {
     setBrevoSetupLaster(true);
     try {
@@ -228,6 +248,14 @@ export default function Nyhetsbrev() {
               <Upload className="w-4 h-4 mr-1.5" />
             )}
             Synk til Brevo
+          </Button>
+          <Button variant="outline" size="sm" disabled={rensLaster} onClick={rensLister}>
+            {rensLaster ? (
+              <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
+            ) : (
+              <Trash2 className="w-4 h-4 mr-1.5" />
+            )}
+            Rens lister
           </Button>
           <Button onClick={nyttNyhetsbrev} size="sm">
             <Plus className="w-4 h-4 mr-1.5" /> Nytt nyhetsbrev
