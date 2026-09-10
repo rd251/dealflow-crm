@@ -324,7 +324,19 @@ export default function NyhetsbrevEditor() {
                     disabled={laast}
                   />
                 )}
-                {(b.type === "header" || b.type === "nyhet" || b.type === "deler") && (
+                {(b.type === "hero" || b.type === "kort") && (
+                  <Input
+                    placeholder="Liten overtekst (f.eks. NYHET)"
+                    value={b.kicker || ""}
+                    onChange={(e) => oppdater(b.id, { kicker: e.target.value })}
+                    disabled={laast}
+                  />
+                )}
+                {(b.type === "header" ||
+                  b.type === "hero" ||
+                  b.type === "kort" ||
+                  b.type === "nyhet" ||
+                  b.type === "deler") && (
                   <Input
                     placeholder="Overskrift"
                     value={b.overskrift || ""}
@@ -332,16 +344,32 @@ export default function NyhetsbrevEditor() {
                     disabled={laast}
                   />
                 )}
-                {(b.type === "tekst" || b.type === "nyhet") && (
+                {(b.type === "tekst" ||
+                  b.type === "hero" ||
+                  b.type === "kort" ||
+                  b.type === "nyhet" ||
+                  b.type === "bilde") && (
                   <Textarea
-                    placeholder="Tekst – **fet**, *kursiv*, [lenke](https://…)"
-                    rows={b.type === "tekst" ? 5 : 3}
+                    placeholder={
+                      b.type === "bilde"
+                        ? "Bildetekst (valgfritt)"
+                        : "Tekst – **fet**, *kursiv*, [lenke](https://…)"
+                    }
+                    rows={b.type === "tekst" ? 5 : b.type === "bilde" ? 2 : 3}
                     value={b.tekst || ""}
                     onChange={(e) => oppdater(b.id, { tekst: e.target.value })}
                     disabled={laast}
                   />
                 )}
-                {(b.type === "nyhet" || b.type === "cta") && (
+                {(b.type === "hero" || b.type === "kort" || b.type === "bilde") && (
+                  <Input
+                    placeholder="Bilde-URL (https://…)"
+                    value={b.bilde_url || ""}
+                    onChange={(e) => oppdater(b.id, { bilde_url: e.target.value })}
+                    disabled={laast}
+                  />
+                )}
+                {(b.type === "hero" || b.type === "kort" || b.type === "nyhet" || b.type === "cta") && (
                   <div className="grid grid-cols-2 gap-2">
                     <Input
                       placeholder="Lenketekst"
