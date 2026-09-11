@@ -11,6 +11,7 @@ import AppSidebar from "@/components/AppSidebar";
 import ScrollToTop from "@/components/ScrollToTop";
 import Dashboard from "./pages/Dashboard";
 import Leads from "./pages/Leads";
+import Salg from "./pages/Salg";
 import Salgsmuligheter from "./pages/Salgsmuligheter";
 import Prosjekter from "./pages/Prosjekter";
 import Companies from "./pages/Companies";
@@ -128,6 +129,7 @@ function AppRoutes() {
               <Routes>
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
                 <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/salg" element={<Salg />} />
                 <Route path="/leads" element={<Leads />} />
                 <Route path="/salgsmuligheter" element={<Salgsmuligheter />} />
                 <Route path="/prosjekter" element={<Prosjekter />} />
