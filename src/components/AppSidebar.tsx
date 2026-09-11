@@ -102,7 +102,7 @@ function SidebarNav({ onNavigate, isAdmin, displayName }: { onNavigate?: () => v
 function CollapsedSidebarNav({ isAdmin }: { isAdmin: boolean }) {
   const location = useLocation();
   const { signOut, user } = useAuth();
-  const allItems = navSections.flatMap((s) => s.items);
+  const allItems = [...mainItems, ...moreItems];
   const items = isAdmin ? [...allItems, { to: "/admin", icon: Shield, label: "Admin" }] : allItems;
 
   return (
