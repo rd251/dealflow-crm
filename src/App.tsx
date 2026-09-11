@@ -11,6 +11,7 @@ import AppSidebar from "@/components/AppSidebar";
 import ScrollToTop from "@/components/ScrollToTop";
 import Dashboard from "./pages/Dashboard";
 import Leads from "./pages/Leads";
+import Salg from "./pages/Salg";
 import Salgsmuligheter from "./pages/Salgsmuligheter";
 import Prosjekter from "./pages/Prosjekter";
 import Companies from "./pages/Companies";
