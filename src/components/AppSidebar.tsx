@@ -62,14 +62,17 @@ function SidebarNav({ onNavigate, isAdmin, displayName }: { onNavigate?: () => v
   return (
     <>
       <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto scrollbar-sidebar">
-        {navSections.map((section) => (
-          <div key={section.title} className="pt-2 first:pt-0">
-            <p className="px-3 pb-0.5 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/50">
-              {section.title}
-            </p>
-            <div className="space-y-0.5">{section.items.map(renderItem)}</div>
-          </div>
-        ))}
+        <div className="space-y-0.5">{mainItems.map(renderItem)}</div>
+        <div className="pt-3">
+          <button
+            onClick={() => setMoreOpen((v) => !v)}
+            className="flex w-full items-center gap-2.5 px-3 py-2 rounded-md text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
+          >
+            <ChevronDown className={cn("w-4 h-4 shrink-0 transition-transform", !moreOpen && "-rotate-90")} />
+            Mer
+          </button>
+          {moreOpen && <div className="space-y-0.5 pt-0.5">{moreItems.map(renderItem)}</div>}
+        </div>
         {isAdmin && (
           <div className="pt-2">
             {renderItem({ to: "/admin", icon: Shield, label: "Admin" })}
