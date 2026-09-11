@@ -92,7 +92,19 @@ export default function Leads() {
       setFilterUtenOppfolging(true);
       setSearchParams({}, { replace: true });
     }
-  }, [searchParams]);
+    const openId = searchParams.get("open");
+    if (openId) {
+      const lead = leads.find(l => l.id === openId);
+      if (lead) {
+        setSelectedLead(lead);
+        setSearchParams({}, { replace: true });
+      }
+    }
+    if (searchParams.get("ny") === "1") {
+      setDialogOpen(true);
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, leads]);
 
   const now = new Date();
 
