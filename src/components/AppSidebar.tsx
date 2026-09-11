@@ -11,54 +11,29 @@ import { cn } from "@/lib/utils";
 
 type NavItem = { to: string; icon: any; label: string };
 
-const navSections: { title: string; items: NavItem[] }[] = [
-  {
-    title: "Oversikt",
-    items: [
-      { to: "/kontaktstrom", icon: GitMerge, label: "Kontaktstrøm" },
-      { to: "/", icon: LayoutDashboard, label: "Dashboard" },
-    ],
-  },
-  {
-    title: "Salg",
-    items: [
-      { to: "/leads", icon: UserPlus, label: "Leads" },
-      { to: "/salgsmuligheter", icon: Handshake, label: "Salgsmuligheter" },
-      { to: "/prosjekter", icon: FolderKanban, label: "Prosjekter" },
-      { to: "/ringeliste", icon: Phone, label: "Ringeliste" },
-    ],
-  },
-  {
-    title: "Kunder",
-    items: [
-      { to: "/selskaper", icon: Building2, label: "Kundeforhold" },
-      { to: "/alle-selskaper", icon: Building2, label: "Selskaper" },
-      { to: "/kontakter", icon: Users, label: "Kontakter" },
-    ],
-  },
-  {
-    title: "Aktivitet",
-    items: [
-      { to: "/oppgaver", icon: ListTodo, label: "Oppgaver" },
-      { to: "/kalender", icon: CalendarDays, label: "Kalender" },
-      { to: "/moetenotater", icon: NotebookPen, label: "Møtenotater" },
-      { to: "/aktiviteter", icon: Activity, label: "Endringslogg" },
-    ],
-  },
-  {
-    title: "Partnere",
-    items: [
-      { to: "/partnere", icon: Users2, label: "Partnere" },
-      { to: "/partner-pipeline", icon: GitBranch, label: "Partner Pipeline" },
-    ],
-  },
-  {
-    title: "Innsikt",
-    items: [
-      { to: "/rapporter", icon: BarChart3, label: "Rapporter" },
-      { to: "/nyhetsbrev", icon: Mail, label: "Nyhetsbrev" },
-    ],
-  },
+// Dagligbruk – alltid synlig
+const mainItems: NavItem[] = [
+  { to: "/dashboard", icon: LayoutDashboard, label: "Hjem" },
+  { to: "/salg", icon: Handshake, label: "Salg" },
+  { to: "/selskaper", icon: Building2, label: "Kunder" },
+  { to: "/kontakter", icon: Users, label: "Kontakter" },
+  { to: "/oppgaver", icon: ListTodo, label: "Oppgaver" },
+  { to: "/kalender", icon: CalendarDays, label: "Kalender" },
+];
+
+// Alt annet – samlet under «Mer»
+const moreItems: NavItem[] = [
+  { to: "/leads", icon: UserPlus, label: "Leads" },
+  { to: "/prosjekter", icon: FolderKanban, label: "Prosjekter" },
+  { to: "/ringeliste", icon: Phone, label: "Ringeliste" },
+  { to: "/alle-selskaper", icon: Building2, label: "Alle selskaper" },
+  { to: "/kontaktstrom", icon: GitMerge, label: "Kontaktstrøm" },
+  { to: "/moetenotater", icon: NotebookPen, label: "Møtenotater" },
+  { to: "/aktiviteter", icon: Activity, label: "Endringslogg" },
+  { to: "/partnere", icon: Users2, label: "Partnere" },
+  { to: "/partner-pipeline", icon: GitBranch, label: "Partner Pipeline" },
+  { to: "/rapporter", icon: BarChart3, label: "Rapporter" },
+  { to: "/nyhetsbrev", icon: Mail, label: "Nyhetsbrev" },
 ];
 
 function SidebarNav({ onNavigate, isAdmin, displayName }: { onNavigate?: () => void; isAdmin: boolean; displayName?: string }) {
