@@ -39,6 +39,7 @@ const moreItems: NavItem[] = [
 function SidebarNav({ onNavigate, isAdmin, displayName }: { onNavigate?: () => void; isAdmin: boolean; displayName?: string }) {
   const location = useLocation();
   const { signOut, user } = useAuth();
+  const [moreOpen, setMoreOpen] = useState(() => moreItems.some((i) => i.to === location.pathname));
 
   const renderItem = ({ to, icon: Icon, label }: NavItem) => {
     const active = location.pathname === to;
