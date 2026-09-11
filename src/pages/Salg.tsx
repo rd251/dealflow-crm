@@ -203,7 +203,7 @@ export default function Salg() {
         ))}
       </div>
 
-      <div className="rounded-xl border bg-card overflow-hidden">
+      <div className="rounded-xl border bg-card overflow-x-auto">
         {synlige.length === 0 ? (
           <div className="p-10 text-center text-sm text-muted-foreground">Ingen treff.</div>
         ) : isMobile ? (
