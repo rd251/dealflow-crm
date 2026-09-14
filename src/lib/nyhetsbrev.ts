@@ -93,21 +93,24 @@ export function richText(raw: string | undefined): string {
     .replace(/(^|[^*])\*([^*]+)\*/g, '$1<em>$2</em>')
     .replace(
       /\[([^\]]+)\]\(([^)\s]+)\)/g,
-      '<a href="$2" style="color:#500000;text-decoration:underline;">$1</a>'
+      '<a href="$2" style="color:#FF6B0A;text-decoration:underline;">$1</a>'
     )
     .replace(/\n/g, "<br />");
 }
 
 // Snakk-farger
-const SNAKK_RED = "#e01e26"; // Primær CTA-rød
-const SNAKK_DARK_RED = "#500000"; // Maroon – overskrifter
-const CREAM = "#faf7f2"; // Rolig bakgrunn
-const BORDER = "#e7ded2"; // Varm ramme
-const INK = "#2b2b2b";
-const MUTED = "#6f6a63";
+const SNAKK_RED = "#FF6B0A"; // Primær CTA-oransje (ny profil)
+const SNAKK_DARK_RED = "#171717"; // Nesten svart – overskrifter
+const CREAM = "#FAFAF9"; // Varm off-white bakgrunn
+const BORDER = "#E1DED9"; // Lys sand ramme
+const INK = "#171717";
+const MUTED = "#666666";
 
-const SERIF = "Georgia,'Times New Roman',serif";
-const SANS = "'Helvetica Neue',Helvetica,Arial,sans-serif";
+// Geist finnes ikke i e-postklienter – nærmeste grotesk-stack
+const SERIF =
+  "Geist,'Helvetica Neue',Helvetica,Arial,sans-serif";
+const SANS =
+  "Geist,'Helvetica Neue',Helvetica,Arial,sans-serif";
 
 const LOGO = "https://snakk-ai.lovable.app/images/snakk-logo.png";
 
@@ -144,12 +147,12 @@ function renderBlokk(b: Blokk): string {
       return `
         <tr><td style="background:${CREAM};padding:36px 36px 40px 36px;text-align:center;border-bottom:1px solid ${BORDER};">
           ${kicker(b.kicker)}
-          <div style="font-family:${SERIF};font-size:40px;line-height:1.1;color:${SNAKK_DARK_RED};margin-top:12px;">${esc(
+          <div style="font-family:${SERIF};font-weight:600;letter-spacing:-0.02em;font-size:40px;line-height:1.1;color:${SNAKK_DARK_RED};margin-top:12px;">${esc(
             b.overskrift
           )}</div>
           ${
             b.tekst
-              ? `<div style="font-family:${SERIF};font-size:19px;line-height:1.45;color:${INK};margin-top:14px;">${richText(
+              ? `<div style="font-family:${SERIF};font-weight:400;font-size:19px;line-height:1.55;color:${MUTED};margin-top:14px;">${richText(
                   b.tekst
                 )}</div>`
               : ""
@@ -182,7 +185,7 @@ function renderBlokk(b: Blokk): string {
           <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid ${BORDER};border-radius:16px;background:#ffffff;">
             <tr><td style="padding:28px 26px;">
               ${kicker(b.kicker)}
-              <div style="font-family:${SERIF};font-size:27px;line-height:1.2;color:${SNAKK_DARK_RED};margin-top:${
+              <div style="font-family:${SERIF};font-weight:600;letter-spacing:-0.02em;font-size:27px;line-height:1.2;color:${SNAKK_DARK_RED};margin-top:${
                 b.kicker ? "16px" : "0"
               };">${esc(b.overskrift)}</div>
               ${
@@ -209,7 +212,7 @@ function renderBlokk(b: Blokk): string {
         <tr><td style="padding:14px 36px;">
           <table width="100%" cellpadding="0" cellspacing="0" style="background:${CREAM};border:1px solid ${BORDER};border-radius:16px;">
             <tr><td style="padding:24px 26px;">
-              <div style="font-family:${SERIF};font-size:22px;line-height:1.25;color:${SNAKK_DARK_RED};">${esc(
+              <div style="font-family:${SERIF};font-weight:600;letter-spacing:-0.02em;font-size:22px;line-height:1.25;color:${SNAKK_DARK_RED};">${esc(
                 b.emoji
               )} ${esc(b.overskrift)}</div>
               <div style="font-family:${SANS};font-size:16px;line-height:1.65;color:${INK};margin-top:10px;">${richText(
@@ -277,7 +280,7 @@ export function renderNewsletterHtml(blokker: Blokk[], preheader?: string): stri
         </td></tr>
         <tr><td style="padding:26px 36px 32px 36px;border-top:1px solid ${BORDER};background:${CREAM};text-align:center;">
           <img src="${LOGO}" alt="Snakk" width="104" style="display:inline-block;width:104px;height:auto;" />
-          <div style="font-family:${SERIF};font-size:17px;color:${SNAKK_DARK_RED};margin-top:10px;">Mer tid til menneskene.</div>
+          <div style="font-family:${SERIF};font-weight:500;font-size:17px;color:${SNAKK_DARK_RED};margin-top:10px;">Mer tid til menneskene.</div>
           <div style="font-family:${SANS};font-size:12px;color:${MUTED};line-height:1.7;margin-top:14px;">
             Snakk Teknologi AS &middot; Norge<br />
             Du mottar denne e-posten fordi du er i kontakt med Snakk.<br />
