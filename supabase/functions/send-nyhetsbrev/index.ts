@@ -237,7 +237,32 @@ Deno.serve(async (req) => {
     if (nb.status === 'sendt') return json({ error: 'Nyhetsbrevet er allerede sendt' }, 400)
     if (!nb.innhold_html) return json({ error: 'Nyhetsbrevet mangler innhold' }, 400)
 
-    const mottakere = await hentMottakere(supabase)
+    // Bruk lagret mottakerliste hvis den finnes (inkluderer ringeliste/Brevo-kontakter)
+    const { data: lagrede } = await supabase
+      .from('nyhetsbrev_mottakere')
+      .select('e_post, firmanavn, kilde, kilde_id')
+      .eq('nyhetsbrev_id', nb.id)
+
+    const { data: avmeldteRader } = await supabase.from('nyhetsbrev_avmeldte').select('e_post')
+    const avmeldtSet = new Set((avmeldteRader || []).map((a: any) => a.e_post.toLowerCase()))
+
+    let mottakere: Mottaker[] = []
+    if (lagrede && lagrede.length > 0) {
+      const map = new Map<string, Mottaker>()
+      for (const r of lagrede as any[]) {
+        const key = (r.e_post || '').trim().toLowerCase()
+        if (!EMAIL_RE.test(key) || avmeldtSet.has(key) || map.has(key)) continue
+        map.set(key, {
+          e_post: key,
+          firmanavn: r.firmanavn ?? null,
+          kilde: r.kilde ?? 'lagret',
+          kilde_id: r.kilde_id ?? null,
+        })
+      }
+      mottakere = Array.from(map.values())
+    } else {
+      mottakere = await hentMottakere(supabase)
+    }
     if (mottakere.length === 0) return json({ error: 'Ingen gyldige mottakere' }, 400)
 
     // 1. Opprett Brevo-liste
