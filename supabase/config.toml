@@ -39,3 +39,5 @@ project_id = "tchmujgzcklwgptocbno"
     verify_jwt = false
 
 
+  [functions.brevo-engasjerte]
+    verify_jwt = false

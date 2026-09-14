@@ -55,24 +55,24 @@ async function alleKontakter(): Promise<Contact[]> {
 
 type Stat = { email: string; sent: number; opened: number; clicked: number; bounced: number }
 
+function tell(v: unknown): number {
+  if (Array.isArray(v)) return v.length
+  if (v && typeof v === 'object') {
+    return Object.values(v as Record<string, unknown>).reduce<number>((n, x) => n + tell(x), 0)
+  }
+  return 0
+}
+
 async function kontaktStatistikk(email: string): Promise<Stat | null> {
   try {
     const d = await brevo(`/contacts/${encodeURIComponent(email)}`)
     const s = d?.statistics ?? {}
-    const count = (v: unknown) => (Array.isArray(v) ? v.length : 0)
-    const countEvents = (obj: unknown) => {
-      if (!obj || typeof obj !== 'object') return 0
-      return Object.values(obj as Record<string, unknown[]>).reduce(
-        (n, arr) => n + count(arr),
-        0,
-      )
-    }
     return {
       email: email.toLowerCase(),
-      sent: countEvents(s.messagesSent ? { m: s.messagesSent } : null) || count(s.messagesSent),
-      opened: countEvents(s.opened),
-      clicked: countEvents(s.clicked) + countEvents(s.complaints ? {} : null),
-      bounced: countEvents(s.hardBounces) + countEvents(s.softBounces),
+      sent: tell(s.messagesSent),
+      opened: tell(s.opened),
+      clicked: tell(s.clicked),
+      bounced: tell(s.hardBounces),
     }
   } catch {
     return null
@@ -98,7 +98,7 @@ Deno.serve(async (req) => {
   try {
     const body = await req.json().catch(() => ({}))
     const nyhetsbrevId: string | undefined = body.nyhetsbrev_id
-    const dryRun: boolean = body.dry_run !== false && body.dry_run !== undefined ? !!body.dry_run : false
+    const dryRun: boolean = body.dry_run ?? true
     const kunEngasjerte: boolean = body.kun_engasjerte ?? false
 
     if (!nyhetsbrevId) return json({ error: 'nyhetsbrev_id mangler' }, 400)
