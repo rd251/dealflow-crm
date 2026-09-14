@@ -437,7 +437,7 @@ export default function Salgsmuligheter() {
               </div>
 
               <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background" value={form.kilde} onChange={e => setForm(f => ({ ...f, kilde: e.target.value }))}>
-                {["Nettside","LinkedIn","Partner","Referanse","Kald outbound","E-post","Telefon","Annet","Organisk","Facebook ads","Instantly kald e-post","Google ads"].map(k => (
+                {["Nettside","LinkedIn","Partner","Referanse","Kald outbound","E-post","Telefon","Annet","Organisk","Facebook ads","Instantly kald e-post","Google ads","Agent Builder"].map(k => (
                   <option key={k} value={k}>{k}</option>
                 ))}
               </select>
@@ -1082,7 +1082,7 @@ export default function Salgsmuligheter() {
                       disabled={!canEdit}
                       onChange={e => updateField("kilde", e.target.value)}>
                       <option value="">Ikke satt</option>
-                      {["Nettside","LinkedIn","Partner","Referanse","Kald outbound","E-post","Telefon","Annet","Organisk","Facebook ads","Instantly kald e-post","Google ads"].map(k => (
+                      {["Nettside","LinkedIn","Partner","Referanse","Kald outbound","E-post","Telefon","Annet","Organisk","Facebook ads","Instantly kald e-post","Google ads","Agent Builder"].map(k => (
                         <option key={k} value={k}>{k}</option>
                       ))}
                     </select>
