@@ -276,7 +276,7 @@ export function renderNewsletterHtml(blokker: Blokk[], preheader?: string): stri
       <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:18px;overflow:hidden;">
         ${body}
         <tr><td style="padding:30px 36px 10px 36px;font-family:${SANS};font-size:16px;line-height:1.7;color:${INK};">
-          Hilsen Robin &amp; teamet i Snakk
+          Hilsen Snakk-teamet
         </td></tr>
         <tr><td style="padding:26px 36px 32px 36px;border-top:1px solid ${BORDER};background:${CREAM};text-align:center;">
           <img src="${LOGO}" alt="Snakk" width="104" style="display:inline-block;width:104px;height:auto;" />
