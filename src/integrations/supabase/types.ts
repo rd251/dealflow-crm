@@ -1770,6 +1770,7 @@ export type Database = {
         | "Instantly kald e-post"
         | "Google ads"
         | "Kasoleads"
+        | "Agent Builder"
       kundestatus: "Ikke kunde" | "Pilot" | "Live" | "Pause" | "Kansellert"
       kundetilstand: "Bra" | "Usikker" | "Risiko"
       lead_kilde:
@@ -1786,6 +1787,7 @@ export type Database = {
         | "Instantly kald e-post"
         | "Google ads"
         | "Kasoleads"
+        | "Agent Builder"
       lead_status:
         | "Ny"
         | "Kontaktet"
@@ -2006,6 +2008,7 @@ export const Constants = {
         "Instantly kald e-post",
         "Google ads",
         "Kasoleads",
+        "Agent Builder",
       ],
       kundestatus: ["Ikke kunde", "Pilot", "Live", "Pause", "Kansellert"],
       kundetilstand: ["Bra", "Usikker", "Risiko"],
@@ -2023,6 +2026,7 @@ export const Constants = {
         "Instantly kald e-post",
         "Google ads",
         "Kasoleads",
+        "Agent Builder",
       ],
       lead_status: [
         "Ny",
