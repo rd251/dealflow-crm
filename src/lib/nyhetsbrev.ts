@@ -152,7 +152,7 @@ function renderBlokk(b: Blokk): string {
           )}</div>
           ${
             b.tekst
-              ? `<div style="font-family:${SERIF};font-weight:600;letter-spacing:-0.02em;font-size:19px;line-height:1.45;color:${INK};margin-top:14px;">${richText(
+              ? `<div style="font-family:${SERIF};font-weight:400;font-size:19px;line-height:1.55;color:${MUTED};margin-top:14px;">${richText(
                   b.tekst
                 )}</div>`
               : ""
@@ -280,7 +280,7 @@ export function renderNewsletterHtml(blokker: Blokk[], preheader?: string): stri
         </td></tr>
         <tr><td style="padding:26px 36px 32px 36px;border-top:1px solid ${BORDER};background:${CREAM};text-align:center;">
           <img src="${LOGO}" alt="Snakk" width="104" style="display:inline-block;width:104px;height:auto;" />
-          <div style="font-family:${SERIF};font-weight:600;letter-spacing:-0.02em;font-size:17px;color:${SNAKK_DARK_RED};margin-top:10px;">Mer tid til menneskene.</div>
+          <div style="font-family:${SERIF};font-weight:500;font-size:17px;color:${SNAKK_DARK_RED};margin-top:10px;">Mer tid til menneskene.</div>
           <div style="font-family:${SANS};font-size:12px;color:${MUTED};line-height:1.7;margin-top:14px;">
             Snakk Teknologi AS &middot; Norge<br />
             Du mottar denne e-posten fordi du er i kontakt med Snakk.<br />
