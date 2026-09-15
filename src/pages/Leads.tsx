@@ -13,7 +13,7 @@ import DetailPanelShell, { DetailSection, DetailField, DetailDivider } from "@/c
 import EntityCalendarTab from "@/components/EntityCalendarTab";
 import { Plus, Search, ArrowRightCircle, Trash2, Users2, Upload, Lock, Mail, ArrowUp, ArrowDown, ChevronsUpDown, PenLine, Send, Phone, CalendarDays, UserPlus, CheckCircle2, TrendingUp } from "lucide-react";
 import StatCard from "@/components/StatCard";
-import { relativTid, dagerSiden, kildeGruppe, KILDE_GRUPPER, leadStatusFarge, leadStatusKort, idag, type KildeGruppe } from "@/lib/sales-flow";
+import { relativTid, dagerSiden, kildeGruppe, KILDE_GRUPPER, leadStatusFarge, leadStatusKort, idag, datoOm, type KildeGruppe } from "@/lib/sales-flow";
 import SendEmailDialog from "@/components/SendEmailDialog";
 import SelskapInnsikt from "@/components/SelskapInnsikt";
 import { Lead, LeadStatus, LeadKilde, Partner } from "@/data/crm-data";
@@ -39,7 +39,7 @@ export default function Leads() {
   const { canEdit, isAdmin, user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { leads, partnere, updateLeads, konverterLead, konverterTilPartner, generateId } = useCrmStore();
+  const { leads, partnere, updateLeads, updateOppgaver, konverterLead, konverterTilPartner, generateId } = useCrmStore();
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
