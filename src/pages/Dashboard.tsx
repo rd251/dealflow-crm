@@ -116,6 +116,7 @@ export default function Dashboard() {
     return value;
   }, []);
   const tomorrowStart = useMemo(() => new Date(todayStart.getTime() + 86400000), [todayStart]);
+  const nextWeek = useMemo(() => new Date(todayStart.getTime() + 7 * 86400000), [todayStart]);
   const weekStart = useMemo(() => {
     const value = new Date(todayStart);
     value.setDate(value.getDate() - ((value.getDay() + 6) % 7));
@@ -129,8 +130,8 @@ export default function Dashboard() {
         supabase.from("aktiviteter")
           .select("id,type,tittel,beskrivelse,dato,lead_id,salgsmulighet_id,selskap_id,kontakt_id")
           .gte("dato", todayStart.toISOString())
-          .lt("dato", tomorrowStart.toISOString())
-          .order("dato", { ascending: false }),
+          .lt("dato", nextWeek.toISOString())
+          .order("dato", { ascending: true }),
         supabase.from("crm_changelog")
           .select("id,entity_id,entity_name,new_value,created_at")
           .eq("entity_type", "salgsmulighet")
@@ -144,7 +145,7 @@ export default function Dashboard() {
       setContractEvents((changeData || []) as ContractEvent[]);
     };
     loadActivity();
-  }, [todayStart, tomorrowStart]);
+  }, [todayStart, tomorrowStart, nextWeek]);
 
   const companyMap = useMemo(() => new Map(selskaper.map(item => [item.id, item])), [selskaper]);
   const leadMap = useMemo(() => new Map(leads.map(item => [item.id, item])), [leads]);
@@ -201,7 +202,7 @@ export default function Dashboard() {
   }, [activities, oppgaver, companyMap, leadMap]);
 
   const timeline = useMemo<TimelineItem[]>(() => {
-    const normal = activities.map(item => {
+    const normal = activities.filter(item => new Date(item.dato) < tomorrowStart).map(item => {
       const company = item.selskap_id ? companyMap.get(item.selskap_id)?.firmanavn : undefined;
       const lead = item.lead_id ? leadMap.get(item.lead_id) : undefined;
       const deal = item.salgsmulighet_id ? dealMap.get(item.salgsmulighet_id) : undefined;
@@ -219,7 +220,7 @@ export default function Dashboard() {
       href: `/salgsmuligheter?open=${item.entity_id}`,
     }));
     return [...normal, ...contracts].sort((a, b) => b.date.localeCompare(a.date));
-  }, [activities, contractEvents, companyMap, contactMap, leadMap, dealMap]);
+  }, [activities, contractEvents, companyMap, contactMap, leadMap, dealMap, tomorrowStart]);
 
   const mrrData = useMemo(() => Array.from({ length: 6 }, (_, index) => {
     const month = subMonths(startOfMonth(now), 5 - index);
