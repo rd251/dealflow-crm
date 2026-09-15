@@ -34,9 +34,13 @@ import SendContractModal from "@/components/SendContractModal";
 import DealRecapCard from "@/components/DealRecapCard";
 import LastMeetingCard from "@/components/LastMeetingCard";
 import { useLastMeetingsByDeal } from "@/hooks/use-last-meetings";
+import confetti from "canvas-confetti";
+import { KANBAN_STADIER, tilKanbanStadium, dagerSiden, relativTid, initialer, erKald, idag, datoOm, type KanbanStadium } from "@/lib/sales-flow";
 
-const allStatuses: SalgsmulighetStatus[] = ["Møte booket", "Behov avklart", "Løsning presentert", "Kontrakt sendt"];
-const openStatuses = allStatuses;
+/** Aktive stadier i kanban (rekkefølge). */
+const allStatuses: SalgsmulighetStatus[] = ["Møte booket", "Demo gjennomført", "Kontrakt sendt"];
+/** Alle statuser som regnes som åpne – inkl. eldre statuser fra før omleggingen. */
+const openStatuses: SalgsmulighetStatus[] = ["Møte booket", "Behov avklart", "Løsning presentert", "Demo gjennomført", "Kontrakt sendt"];
 const tapsaarsaker: Tapsaarsak[] = ["Pris", "Ikke riktig timing", "Valgte annen leverandør", "Ikke behov", "Teknisk / integrasjon", "Annet"];
 
 const kontraktStatusColors: Record<KontraktStatus, string> = {
@@ -128,6 +132,7 @@ const statusColors: Record<SalgsmulighetStatus, string> = {
   "Møte booket": "bg-stage-contacted",
   "Behov avklart": "bg-stage-qualified",
   "Løsning presentert": "bg-stage-demo",
+  "Demo gjennomført": "bg-stage-demo",
   "Kontrakt sendt": "bg-stage-proposal",
   "Vunnet": "bg-stage-won",
   "Tapt": "bg-stage-lost",
@@ -160,7 +165,7 @@ export default function Salgsmuligheter() {
   const isMobile = useIsMobile();
   const { canEdit, isAdmin, user } = useAuth();
   const { profiles } = useProfiles();
-  const { salgsmuligheter, selskaper, kontakter, partnere, updateSalgsmuligheter, updateSelskaper, updateKontakter, vinnSalgsmulighet, tapSalgsmulighet, generateId } = useCrmStore();
+  const { salgsmuligheter, selskaper, kontakter, partnere, oppgaver, updateSalgsmuligheter, updateSelskaper, updateKontakter, updateOppgaver, vinnSalgsmulighet, tapSalgsmulighet, generateId } = useCrmStore();
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [dragOverStage, setDragOverStage] = useState<string | null>(null);
   const [selectedSm, setSelectedSm] = useState<Salgsmulighet | null>(null);

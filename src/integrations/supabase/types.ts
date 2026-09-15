@@ -1830,6 +1830,7 @@ export type Database = {
         | "Kontrakt sendt"
         | "Vunnet"
         | "Tapt"
+        | "Demo gjennomført"
       tapsaarsak:
         | "Pris"
         | "Ikke riktig timing"
@@ -2075,6 +2076,7 @@ export const Constants = {
         "Kontrakt sendt",
         "Vunnet",
         "Tapt",
+        "Demo gjennomført",
       ],
       tapsaarsak: [
         "Pris",

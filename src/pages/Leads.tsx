@@ -11,7 +11,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import DetailPanelShell, { DetailSection, DetailField, DetailDivider } from "@/components/DetailPanelShell";
 import EntityCalendarTab from "@/components/EntityCalendarTab";
-import { Plus, Search, ArrowRightCircle, Trash2, Users2, Upload, Lock, Mail, ArrowUp, ArrowDown, ChevronsUpDown, PenLine, Send } from "lucide-react";
+import { Plus, Search, ArrowRightCircle, Trash2, Users2, Upload, Lock, Mail, ArrowUp, ArrowDown, ChevronsUpDown, PenLine, Send, Phone, CalendarDays, UserPlus, CheckCircle2, TrendingUp } from "lucide-react";
+import StatCard from "@/components/StatCard";
+import { relativTid, dagerSiden, kildeGruppe, KILDE_GRUPPER, leadStatusFarge, leadStatusKort, idag, type KildeGruppe } from "@/lib/sales-flow";
 import SendEmailDialog from "@/components/SendEmailDialog";
 import SelskapInnsikt from "@/components/SelskapInnsikt";
 import { Lead, LeadStatus, LeadKilde, Partner } from "@/data/crm-data";
@@ -30,14 +32,7 @@ import { toast } from "sonner";
 const statusOptions: LeadStatus[] = ["Ny", "Kontaktet", "Kvalifisert", "Ikke aktuelt"];
 const kildeOptions: string[] = ["Nettside", "LinkedIn", "Partner", "Referanse", "Kald outbound", "E-post", "Telefon", "Organisk", "Facebook ads", "Instantly kald e-post", "Google ads", "Agent Builder", "Annet"];
 
-const statusColors: Record<string, string> = {
-  "Ny": "bg-stage-new-lead/10 text-stage-new-lead",
-  "Kontaktet": "bg-stage-contacted/10 text-stage-contacted",
-  "Kvalifisert": "bg-stage-qualified/10 text-stage-qualified",
-  "Ikke aktuelt": "bg-muted text-muted-foreground",
-  "Konvertert til salg": "bg-success/10 text-success",
-  "Konvertert til partner": "bg-primary/10 text-primary",
-};
+const statusColors: Record<string, string> = leadStatusFarge;
 
 export default function Leads() {
   const isMobile = useIsMobile();
@@ -58,6 +53,8 @@ export default function Leads() {
   const [pendingOpenActivity, setPendingOpenActivity] = useState(false);
   const [form, setForm] = useState<Partial<Lead>>({ firmanavn: "", kontaktperson: "", e_post: "", telefon: "", kilde: "Nettside", status: "Ny", ansvarlig: "", neste_steg: "", notater: "", rolle_i_firma: "", use_case: "" });
   const [filterUtenOppfolging, setFilterUtenOppfolging] = useState(false);
+  const [kildeFilter, setKildeFilter] = useState<"alle" | KildeGruppe>("alle");
+  const [statusFilter, setStatusFilter] = useState<"alle" | LeadStatus>("alle");
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
   // Forwarding to partner
   const [forwardDialogLead, setForwardDialogLead] = useState<Lead | null>(null);
@@ -134,6 +131,8 @@ export default function Leads() {
       const cutoff = new Date(now.getTime() - 24 * 60 * 60 * 1000);
       if (l.sist_aktivitet && new Date(l.sist_aktivitet) >= cutoff) return false;
     }
+    if (kildeFilter !== "alle" && kildeGruppe(l.kilde) !== kildeFilter) return false;
+    if (statusFilter !== "alle" && l.status !== statusFilter) return false;
     if (!normalizedSearch) return true;
     return (
       l.firmanavn.toLowerCase().includes(normalizedSearch) ||
@@ -178,6 +177,52 @@ export default function Leads() {
   const changeStatus = (id: string, status: LeadStatus) => {
     updateLeads(prev => prev.map(l => l.id === id ? { ...l, status, sist_aktivitet: new Date().toISOString().split("T")[0] } : l));
   };
+
+  /* ---- Hurtighandlinger ---- */
+  const loggSamtale = async (lead: Lead) => {
+    try {
+      await supabase.from("aktiviteter").insert({
+        type: "Telefonsamtale",
+        tittel: `Samtale med ${lead.kontaktperson || lead.firmanavn}`,
+        beskrivelse: `Ringt ${lead.kontaktperson || lead.firmanavn}${lead.telefon ? ` (${lead.telefon})` : ""}`,
+        dato: new Date().toISOString(),
+        lead_id: lead.id,
+        aktivitet_kilde: "manuell",
+      });
+      updateLeads(prev => prev.map(l => l.id === lead.id ? { ...l, status: l.status === "Ny" ? "Kontaktet" : l.status, sist_aktivitet: idag() } : l));
+      toast.success("Samtale logget");
+    } catch (err: any) {
+      toast.error(`Kunne ikke logge samtale: ${err?.message || "ukjent feil"}`);
+    }
+  };
+
+  const bookMoete = (lead: Lead) => {
+    setSelectedLead(lead);
+    setDetailTab("kalender");
+  };
+
+  const sendEpost = (lead: Lead) => {
+    setSelectedLead(lead);
+    setEmailDialogOpen(true);
+  };
+
+  /* ---- KPI-er ---- */
+  const startOfWeek = (() => {
+    const d = new Date();
+    const day = (d.getDay() + 6) % 7;
+    d.setDate(d.getDate() - day);
+    return d.toISOString().split("T")[0];
+  })();
+  const startOfMonth = idag().slice(0, 7) + "-01";
+
+  const nyeDenneUken = leads.filter(l => (l.opprettet_dato || "") >= startOfWeek).length;
+  const kvalifiserteDenneMnd = leads.filter(l =>
+    (l.status === "Kvalifisert" || l.status === "Konvertert til salg") &&
+    ((l.sist_aktivitet || l.opprettet_dato || "") >= startOfMonth)
+  ).length;
+  const konverterteTotalt = leads.filter(l => l.status === "Konvertert til salg").length;
+  const kvalifiserteTotalt = leads.filter(l => l.status === "Kvalifisert").length + konverterteTotalt;
+  const konverteringsrate = kvalifiserteTotalt > 0 ? Math.round((konverterteTotalt / kvalifiserteTotalt) * 100) : 0;
 
   // Open the "forward to partner" dialog, and auto-detect if lead has self-builder onboarding answers
   const openForwardDialog = async (lead: Lead) => {
@@ -637,16 +682,49 @@ export default function Leads() {
 
 
 
-      <div className="mb-4 flex items-center gap-2">
-        <div className="relative max-w-sm flex-1">
+      {/* KPI-er */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
+        <StatCard label="Nye leads denne uken" value={nyeDenneUken} icon={<UserPlus className="w-5 h-5" />} />
+        <StatCard label="Kvalifiserte denne måneden" value={kvalifiserteDenneMnd} icon={<CheckCircle2 className="w-5 h-5" />} />
+        <StatCard label="Konverteringsrate" value={`${konverteringsrate} %`} icon={<TrendingUp className="w-5 h-5" />} trend="Kvalifisert → salgsmulighet" />
+      </div>
+
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <div className="relative max-w-sm flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input placeholder="Søk leads..." className="pl-9" value={search} onChange={e => setSearch(e.target.value)} />
+          <Input placeholder="Søk leads..." className="pl-9 h-9" value={search} onChange={e => setSearch(e.target.value)} />
         </div>
         {filterUtenOppfolging && (
           <Badge variant="secondary" className="gap-1 cursor-pointer hover:bg-destructive/10" onClick={() => setFilterUtenOppfolging(false)}>
             Uten oppfølging ✕
           </Badge>
         )}
+      </div>
+
+      <div className="mb-4 flex flex-wrap gap-1.5">
+        {(["alle", ...KILDE_GRUPPER] as const).map(k => (
+          <button
+            key={k}
+            onClick={() => setKildeFilter(k as any)}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+              kildeFilter === k ? "bg-primary text-primary-foreground border-primary" : "bg-background text-muted-foreground border-border hover:bg-muted"
+            }`}
+          >
+            {k === "alle" ? "Alle kilder" : k}
+          </button>
+        ))}
+        <span className="w-px bg-border mx-1 self-stretch" />
+        {(["alle", ...statusOptions] as const).map(s => (
+          <button
+            key={s}
+            onClick={() => setStatusFilter(s as any)}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+              statusFilter === s ? "bg-foreground text-background border-foreground" : "bg-background text-muted-foreground border-border hover:bg-muted"
+            }`}
+          >
+            {s === "alle" ? "Alle statuser" : s}
+          </button>
+        ))}
       </div>
 
       {/* Mobile: card layout */}
@@ -659,23 +737,33 @@ export default function Leads() {
                       <CompanyLogo firmanavn={lead.firmanavn} kontaktEmails={lead.e_post ? [lead.e_post] : undefined} size="sm" />
                       <p className="font-semibold text-sm truncate">{lead.firmanavn}</p>
                     </div>
-                    <Badge className={`text-[10px] ${statusColors[lead.status] || ""}`}>{lead.status}</Badge>
+                    <Badge variant="outline" className={`text-[10px] ${statusColors[lead.status] || ""}`}>{leadStatusKort[lead.status] || lead.status}</Badge>
                   </div>
                   <p className="text-xs text-muted-foreground">{lead.kontaktperson}</p>
                   <div className="flex items-center justify-between">
-                    <Badge variant="secondary" className="text-[10px]">{lead.kilde}</Badge>
-                    {lead.neste_steg && <span className="text-[10px] text-muted-foreground truncate ml-2">→ {lead.neste_steg}</span>}
+                    <Badge variant="secondary" className="text-[10px]">{kildeGruppe(lead.kilde)}</Badge>
+                    <span className="text-[10px] text-muted-foreground">{relativTid(lead.sist_aktivitet)}</span>
                   </div>
+                  {lead.neste_steg && <p className="text-[11px] text-muted-foreground truncate">→ {lead.neste_steg}</p>}
                   {lead.status !== "Ikke aktuelt" && (
-                    <div className="flex gap-1 mt-1 flex-wrap">
-                      <Button size="sm" variant="ghost" className="text-xs gap-1 flex-1 min-w-[80px]" onClick={e => { e.stopPropagation(); setConvertDialogLead(lead); setConvertNavn(lead.use_case || lead.firmanavn); }}>
+                    <div className="flex gap-1 mt-1 flex-wrap" onClick={e => e.stopPropagation()}>
+                      <Button size="sm" variant="ghost" className="text-xs gap-1 flex-1 min-w-[80px]" onClick={() => loggSamtale(lead)}>
+                        <Phone className="w-3.5 h-3.5" />Ringt
+                      </Button>
+                      <Button size="sm" variant="ghost" className="text-xs gap-1 flex-1 min-w-[80px]" onClick={() => bookMoete(lead)}>
+                        <CalendarDays className="w-3.5 h-3.5" />Møte
+                      </Button>
+                      <Button size="sm" variant="ghost" className="text-xs gap-1 flex-1 min-w-[80px]" onClick={() => sendEpost(lead)}>
+                        <Mail className="w-3.5 h-3.5" />E-post
+                      </Button>
+                      <Button size="sm" variant="ghost" className="text-xs gap-1 flex-1 min-w-[80px]" onClick={() => { setConvertDialogLead(lead); setConvertNavn(lead.use_case || lead.firmanavn); }}>
                         <ArrowRightCircle className="w-3.5 h-3.5" />Salg
                       </Button>
-                      <Button size="sm" variant="ghost" className="text-xs gap-1 flex-1 min-w-[80px]" onClick={e => { e.stopPropagation(); setPartnerDialogLead(lead); }}>
+                      <Button size="sm" variant="ghost" className="text-xs gap-1 flex-1 min-w-[80px]" onClick={() => setPartnerDialogLead(lead)}>
                         <Users2 className="w-3.5 h-3.5" />Partner
                       </Button>
                       {isAdmin && (
-                        <Button size="sm" variant="ghost" className="text-xs gap-1 flex-1 min-w-[80px]" onClick={e => { e.stopPropagation(); openForwardDialog(lead); }}>
+                        <Button size="sm" variant="ghost" className="text-xs gap-1 flex-1 min-w-[80px]" onClick={() => openForwardDialog(lead)}>
                           <Send className="w-3.5 h-3.5" />Videresend
                         </Button>
                       )}
@@ -693,73 +781,83 @@ export default function Leads() {
             </div>
           ) : (
             /* Desktop: table layout */
-            <div className="bg-card border rounded-xl overflow-hidden">
+            <div className="bg-card border rounded-xl overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b bg-muted/50">
+                  <tr className="border-b bg-muted/40 text-xs uppercase tracking-wide text-muted-foreground">
                     {([
-                      ["firmanavn", "Firma"],
+                      ["firmanavn", "Firmanavn"],
                       ["kontaktperson", "Kontaktperson"],
                       ["kilde", "Kilde"],
                       ["status", "Status"],
-                      ["neste_steg", "Neste steg"],
-                      ["sist_aktivitet", "Sist aktivitet"],
-                      ["opprettet_dato", "Opprettet"],
                     ] as [LeadSortKey, string][]).map(([key, label]) => (
-                      <th
-                        key={key}
-                        className="text-left px-4 py-3 font-medium cursor-pointer select-none hover:bg-muted/80 transition-colors"
-                        onClick={() => toggleSort(key)}
-                      >
-                        <span className="inline-flex items-center gap-1">
-                          {label} <SortIcon col={key} />
-                        </span>
+                      <th key={key} className="text-left px-4 py-2.5 font-medium cursor-pointer select-none hover:text-foreground transition-colors" onClick={() => toggleSort(key)}>
+                        <span className="inline-flex items-center gap-1">{label} <SortIcon col={key} /></span>
                       </th>
                     ))}
-                    <th className="text-right px-4 py-3 font-medium">Handling</th>
+                    <th className="text-left px-4 py-2.5 font-medium">Ansvarlig</th>
+                    <th className="text-left px-4 py-2.5 font-medium cursor-pointer select-none hover:text-foreground" onClick={() => toggleSort("sist_aktivitet")}>
+                      <span className="inline-flex items-center gap-1">Siste aktivitet <SortIcon col="sist_aktivitet" /></span>
+                    </th>
+                    <th className="text-left px-4 py-2.5 font-medium">Neste steg</th>
+                    <th className="text-right px-4 py-2.5 font-medium cursor-pointer select-none hover:text-foreground" onClick={() => toggleSort("opprettet_dato")}>
+                      <span className="inline-flex items-center gap-1">Dager <SortIcon col="opprettet_dato" /></span>
+                    </th>
+                    <th className="text-right px-4 py-2.5 font-medium w-[190px]">Handling</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filtered.map(lead => (
-                    <tr key={lead.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => setSelectedLead(lead)}>
-                      <td className="px-4 py-3 font-medium">
+                    <tr key={lead.id} className="group border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => setSelectedLead(lead)}>
+                      <td className="px-4 py-2.5 font-medium">
                         <div className="flex items-center gap-2 min-w-0">
                           <CompanyLogo firmanavn={lead.firmanavn} kontaktEmails={lead.e_post ? [lead.e_post] : undefined} size="sm" />
                           <span className="truncate">{lead.firmanavn}</span>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-muted-foreground">{lead.kontaktperson}</td>
-                      <td className="px-4 py-3"><Badge variant="secondary" className="text-xs">{lead.kilde}</Badge></td>
-                      <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
+                      <td className="px-4 py-2.5 text-muted-foreground truncate max-w-[160px]">{lead.kontaktperson || "—"}</td>
+                      <td className="px-4 py-2.5"><Badge variant="secondary" className="text-[11px]">{kildeGruppe(lead.kilde)}</Badge></td>
+                      <td className="px-4 py-2.5" onClick={e => e.stopPropagation()}>
                         <select
-                          className={`text-xs px-2 py-1 rounded-full font-medium border-0 cursor-pointer ${statusColors[lead.status] || ""}`}
+                          className={`text-xs px-2 py-1 rounded-full font-medium border cursor-pointer ${statusColors[lead.status] || ""}`}
                           value={lead.status}
                           onChange={e => changeStatus(lead.id, e.target.value as LeadStatus)}
+                          disabled={!canEdit}
                         >
                           {statusOptions.map(s => <option key={s} value={s}>{s}</option>)}
                         </select>
                       </td>
-                      <td className="px-4 py-3 text-muted-foreground text-xs">{lead.neste_steg}</td>
-                      <td className="px-4 py-3"><LastActivityBadge lead_id={lead.id} sist_aktivitet={lead.sist_aktivitet} /></td>
-                      <td className="px-4 py-3 text-muted-foreground text-xs font-mono">{lead.opprettet_dato}</td>
-                      <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
+                      <td className="px-4 py-2.5 text-muted-foreground text-xs truncate max-w-[120px]">{lead.ansvarlig || "—"}</td>
+                      <td className="px-4 py-2.5 text-muted-foreground text-xs">{relativTid(lead.sist_aktivitet)}</td>
+                      <td className="px-4 py-2.5 text-muted-foreground text-xs truncate max-w-[200px]">{lead.neste_steg || "—"}</td>
+                      <td className="px-4 py-2.5 text-right text-xs tabular-nums text-muted-foreground">{dagerSiden(lead.opprettet_dato) ?? "—"}</td>
+                      <td className="px-4 py-2.5 text-right" onClick={e => e.stopPropagation()}>
                         {lead.status !== "Ikke aktuelt" && (
-                          <div className="flex gap-1 justify-end flex-wrap">
-                            <Button size="sm" variant="ghost" className="text-xs gap-1" onClick={() => { setConvertDialogLead(lead); setConvertNavn(lead.use_case || lead.firmanavn); }}>
-                              <ArrowRightCircle className="w-3.5 h-3.5" />Salg
+                          <div className="flex gap-0.5 justify-end opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+                            <Button size="icon" variant="ghost" className="h-7 w-7" title="Logg samtale" onClick={() => loggSamtale(lead)}>
+                              <Phone className="w-3.5 h-3.5" />
                             </Button>
-                            <Button size="sm" variant="ghost" className="text-xs gap-1" onClick={() => setPartnerDialogLead(lead)}>
-                              <Users2 className="w-3.5 h-3.5" />Partner
+                            <Button size="icon" variant="ghost" className="h-7 w-7" title="Book møte" onClick={() => bookMoete(lead)}>
+                              <CalendarDays className="w-3.5 h-3.5" />
+                            </Button>
+                            <Button size="icon" variant="ghost" className="h-7 w-7" title="Send e-post" onClick={() => sendEpost(lead)}>
+                              <Mail className="w-3.5 h-3.5" />
+                            </Button>
+                            <Button size="icon" variant="ghost" className="h-7 w-7" title="Konverter til salgsmulighet" onClick={() => { setConvertDialogLead(lead); setConvertNavn(lead.use_case || lead.firmanavn); }}>
+                              <ArrowRightCircle className="w-3.5 h-3.5" />
+                            </Button>
+                            <Button size="icon" variant="ghost" className="h-7 w-7" title="Konverter til partner" onClick={() => setPartnerDialogLead(lead)}>
+                              <Users2 className="w-3.5 h-3.5" />
                             </Button>
                             {isAdmin && (
-                              <Button size="sm" variant="ghost" className="text-xs gap-1" onClick={() => openForwardDialog(lead)}>
-                                <Send className="w-3.5 h-3.5" />Videresend
+                              <Button size="icon" variant="ghost" className="h-7 w-7" title="Videresend til partner" onClick={() => openForwardDialog(lead)}>
+                                <Send className="w-3.5 h-3.5" />
                               </Button>
                             )}
                           </div>
                         )}
                         {lead.videresendt_til_partner_id && (
-                          <div className="mt-1 text-[10px] text-muted-foreground inline-flex items-center gap-1">
+                          <div className="text-[10px] text-muted-foreground inline-flex items-center gap-1">
                             <Send className="w-3 h-3" />Videresendt {lead.videresendt_dato}
                           </div>
                         )}
@@ -771,6 +869,7 @@ export default function Leads() {
               {filtered.length === 0 && <p className="text-center text-sm text-muted-foreground py-8">Ingen leads funnet</p>}
             </div>
           )}
+
 
       <DetailPanelShell
         open={!!currentLead}
