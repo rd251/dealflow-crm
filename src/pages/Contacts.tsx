@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import PageShell from "@/components/PageShell";
 import { useCrmStore } from "@/hooks/use-crm-store";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -117,6 +117,7 @@ function ContactDetailPanel({ kontakt, selskaper, salgsmuligheter, onUpdate, onN
 
 export default function Contacts() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const isMobile = useIsMobile();
   const { canEdit } = useAuth();
   const { kontakter, selskaper, salgsmuligheter, updateKontakter, updateSalgsmuligheter, generateId, refresh } = useCrmStore();
@@ -132,6 +133,15 @@ export default function Contacts() {
   const [deleteRelations, setDeleteRelations] = useState<string[]>([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    const openId = searchParams.get("open");
+    if (!openId || kontakter.length === 0) return;
+    const contact = kontakter.find(item => item.id === openId);
+    if (!contact) return;
+    setSelected(contact);
+    setSearchParams({}, { replace: true });
+  }, [kontakter, searchParams, setSearchParams]);
 
   const filtered = kontakter.filter(k =>
     k.navn.toLowerCase().includes(search.toLowerCase()) || k.e_post.toLowerCase().includes(search.toLowerCase())

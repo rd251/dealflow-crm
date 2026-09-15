@@ -18,9 +18,9 @@ interface SearchResult {
 
 const typeConfig = {
   selskap: { icon: Building2, label: "Selskap", color: "text-primary bg-primary/10", path: (id: string) => `/selskaper/${id}` },
-  kontakt: { icon: User, label: "Kontakt", color: "text-blue-600 bg-blue-500/10", path: () => `/kontakter` },
-  lead: { icon: Users, label: "Lead", color: "text-amber-600 bg-amber-500/10", path: () => `/leads` },
-  salgsmulighet: { icon: Briefcase, label: "Salg", color: "text-emerald-600 bg-emerald-500/10", path: () => `/salgsmuligheter` },
+  kontakt: { icon: User, label: "Kontakt", color: "text-blue-600 bg-blue-500/10", path: (id: string) => `/kontakter?open=${id}` },
+  lead: { icon: Users, label: "Lead", color: "text-amber-600 bg-amber-500/10", path: (id: string) => `/leads?open=${id}` },
+  salgsmulighet: { icon: Briefcase, label: "Salg", color: "text-emerald-600 bg-emerald-500/10", path: (id: string) => `/salgsmuligheter?open=${id}` },
   partner: { icon: Handshake, label: "Partner", color: "text-violet-600 bg-violet-500/10", path: (id: string) => `/partnere/${id}` },
   moete: { icon: Calendar, label: "Møte", color: "text-orange-600 bg-orange-500/10", path: (id: string) => `/moetenotater?meeting=${id}` },
 } as const;

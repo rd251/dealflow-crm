@@ -1,464 +1,272 @@
-import { useState, useEffect, useMemo } from "react";
+import { useMemo, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { format, isTomorrow } from "date-fns";
+import { nb } from "date-fns/locale";
+import { CalendarDays, Check, ChevronRight, Link2, Pencil, Trash2, Users } from "lucide-react";
 import PageShell from "@/components/PageShell";
-import PersonSearchPicker from "@/components/PersonSearchPicker";
-import { useCrmStore } from "@/hooks/use-crm-store";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { useAuth } from "@/hooks/use-auth";
-import { useProfiles } from "@/hooks/use-profiles";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Bell, BellOff, Calendar, AlertTriangle, Pencil, Trash2, Building2, Target, User, PhoneForwarded, ChevronDown, ChevronRight } from "lucide-react";
-import CompanyLogo from "@/components/CompanyLogo";
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
+import { useCrmStore } from "@/hooks/use-crm-store";
+import { useAuth } from "@/hooks/use-auth";
+import { useProfiles } from "@/hooks/use-profiles";
+import { gravatarUrl } from "@/lib/gravatar";
+import { cn } from "@/lib/utils";
 import { Oppgave, OppgaveStatus, Prioritet } from "@/data/crm-data";
 import { toast } from "sonner";
 
-const prioritetColors: Record<Prioritet, string> = {
-  "Lav": "bg-muted text-muted-foreground",
-  "Medium": "bg-primary/10 text-primary",
-  "Høy": "bg-destructive/10 text-destructive",
+const tabs = [
+  ["idag", "I dag"],
+  ["uke", "Denne uken"],
+  ["aapne", "Alle åpne"],
+  ["ferdig", "Ferdig"],
+] as const;
+type Filter = typeof tabs[number][0];
+type ActiveFilter = Filter | "forfalte";
+
+const priorityDot: Record<Prioritet, string> = {
+  Høy: "bg-destructive",
+  Medium: "bg-warning",
+  Lav: "bg-muted-foreground",
 };
 
-const statusOptions: OppgaveStatus[] = ["Åpen", "Pågår", "Ferdig"];
+const emptyForm = { oppgave: "", frist: "", prioritet: "Medium" as Prioritet, lead_id: "", selskap_id: "", salgsmulighet_id: "", kontakt_id: "", ansvarlig: "", notater: "" };
+
+function initials(name: string) {
+  return name.split(" ").map(part => part[0]).filter(Boolean).slice(0, 2).join("").toUpperCase();
+}
 
 export default function Tasks() {
-  const isMobile = useIsMobile();
-  const { user, canEdit } = useAuth();
-  const { profiles } = useProfiles();
-  const { oppgaver, selskaper, salgsmuligheter, kontakter, leads, updateOppgaver, generateId } = useCrmStore();
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const initialFilter = searchParams.get("filter") === "forfalte" ? "aapne" : "idag";
+  const [filter, setFilter] = useState<ActiveFilter>(searchParams.get("filter") === "forfalte" ? "forfalte" : initialFilter);
+  const [quickTitle, setQuickTitle] = useState("");
+  const [quickDue, setQuickDue] = useState("");
+  const [quickLink, setQuickLink] = useState("");
   const [editingTask, setEditingTask] = useState<Oppgave | null>(null);
-  const [filter, setFilter] = useState<"alle" | "forfalte" | "idag" | "uke">("alle");
-  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
-  // IDs som nettopp ble krysset av/på — vises i samme posisjon i ~1.2s før re-sortering
-  const [recentlyToggled, setRecentlyToggled] = useState<Set<string>>(new Set());
-  const [form, setForm] = useState({ oppgave: "", frist: "", prioritet: "Medium" as Prioritet, lead_id: "", selskap_id: "", salgsmulighet_id: "", kontakt_id: "", ansvarlig: "", notater: "" });
+  const { user, isAdmin, canEdit } = useAuth();
+  const { profiles } = useProfiles();
+  const { oppgaver, selskaper, leads, salgsmuligheter, updateOppgaver, generateId } = useCrmStore();
 
-  // Fetch email contacts and merge with CRM kontakter for a unified person picker
-  const [emailContacts, setEmailContacts] = useState<{ id: string; display_name: string; primary_email: string }[]>([]);
-  useEffect(() => {
-    supabase.from("email_contacts").select("id, display_name, primary_email").then(({ data }) => {
-      if (data) setEmailContacts(data);
-    });
-  }, []);
+  const today = format(new Date(), "yyyy-MM-dd");
+  const weekEndDate = new Date();
+  weekEndDate.setDate(weekEndDate.getDate() + 7);
+  const weekEnd = format(weekEndDate, "yyyy-MM-dd");
+  const currentProfile = profiles.find(profile => profile.user_id === user?.id);
 
-  const allPersons = useMemo(() => {
-    const list: { id: string; label: string; type: "kontakt" | "e-post" }[] = [];
-    for (const k of kontakter) {
-      list.push({ id: k.id, label: `${k.navn}${k.rolle ? ` – ${k.rolle}` : ""}`, type: "kontakt" });
-    }
-    const crmEmails = new Set(kontakter.map(k => k.e_post?.toLowerCase()).filter(Boolean));
-    for (const ec of emailContacts) {
-      if (!crmEmails.has(ec.primary_email.toLowerCase())) {
-        list.push({ id: ec.id, label: `${ec.display_name || ec.primary_email} (e-post)`, type: "e-post" });
-      }
-    }
-    return list;
-  }, [kontakter, emailContacts]);
+  const profileMap = useMemo(() => new Map(profiles.map(profile => [profile.user_id, profile])), [profiles]);
+  const companyMap = useMemo(() => new Map(selskaper.map(item => [item.id, item])), [selskaper]);
+  const leadMap = useMemo(() => new Map(leads.map(item => [item.id, item])), [leads]);
+  const dealMap = useMemo(() => new Map(salgsmuligheter.map(item => [item.id, item])), [salgsmuligheter]);
 
-  const today = new Date().toISOString().split("T")[0];
-  const weekEnd = new Date(Date.now() + 7 * 86400000).toISOString().split("T")[0];
+  const relationOptions = useMemo(() => [
+    ...selskaper.map(item => ({ value: `selskap:${item.id}`, label: item.firmanavn })),
+    ...leads.map(item => ({ value: `lead:${item.id}`, label: `${item.firmanavn} · lead` })),
+    ...salgsmuligheter.map(item => ({ value: `deal:${item.id}`, label: `${item.navn} · salg` })),
+  ].sort((a, b) => a.label.localeCompare(b.label, "nb")), [selskaper, leads, salgsmuligheter]);
 
-  const sendNotification = async (assigneeUserId: string, taskName: string) => {
-    if (!user || assigneeUserId === user.id) return;
-    const senderProfile = profiles.find(p => p.user_id === user.id);
-    const senderName = senderProfile?.display_name || user.email || "Noen";
-    await supabase.from("varsler").insert({
-      user_id: assigneeUserId,
-      type: "oppgave_delegert",
-      tittel: `Ny oppgave tildelt deg`,
-      beskrivelse: `${senderName} har tildelt deg oppgaven: "${taskName}"`,
-      fra_user_id: user.id,
-      lenke: "/oppgaver",
-    });
+  const createTask = () => {
+    if (!quickTitle.trim() || !canEdit) return;
+    const relation = quickLink ? quickLink.split(":") : [];
+    const type = relation[0];
+    const id = relation.slice(1).join(":");
+    const task: Oppgave = {
+      id: generateId("O", oppgaver),
+      ...emptyForm,
+      oppgave: quickTitle.trim(),
+      frist: quickDue,
+      ansvarlig: user?.id || "",
+      selskap_id: type === "selskap" ? id : "",
+      lead_id: type === "lead" ? id : "",
+      salgsmulighet_id: type === "deal" ? id : "",
+      status: "Åpen",
+      paaminnelse: true,
+    };
+    updateOppgaver(previous => [task, ...previous]);
+    setQuickTitle("");
+    setQuickDue("");
+    setQuickLink("");
+    toast.success("Oppgave opprettet");
   };
 
-  const addOppgave = async () => {
-    const id = generateId("O", oppgaver);
-    const ny: Oppgave = { id, ...form, status: "Åpen", paaminnelse: true };
-    updateOppgaver(prev => [ny, ...prev]);
-    setDialogOpen(false);
-
-    // Send notification if assigned to someone else
-    if (form.ansvarlig && form.ansvarlig !== user?.id) {
-      await sendNotification(form.ansvarlig, form.oppgave);
-      const assignee = profiles.find(p => p.user_id === form.ansvarlig);
-      toast.success(`Oppgave delegert til ${assignee?.display_name || "bruker"}`);
-    }
-
-    setForm({ oppgave: "", frist: "", prioritet: "Medium", lead_id: "", selskap_id: "", salgsmulighet_id: "", kontakt_id: "", ansvarlig: "", notater: "" });
+  const completeTask = (id: string) => {
+    updateOppgaver(previous => previous.map(item => item.id === id ? { ...item, status: "Ferdig" as OppgaveStatus } : item));
+    toast.success("Oppgaven er ferdig");
   };
 
-  const changeStatus = (id: string, status: OppgaveStatus) => {
-    updateOppgaver(prev => prev.map(o => o.id === id ? { ...o, status } : o));
-  };
-
-  // Klikk på avkryssing: marker som «nettopp togglet» så raden ikke hopper
-  // umiddelbart pga. re-sortering. Fjernes etter ~1.2s slik at den glir på plass.
-  const toggleDone = (task: Oppgave) => {
-    setRecentlyToggled(prev => {
-      const next = new Set(prev);
-      next.add(task.id);
-      return next;
-    });
-    changeStatus(task.id, task.status === "Ferdig" ? "Åpen" : "Ferdig");
-    setTimeout(() => {
-      setRecentlyToggled(prev => {
-        if (!prev.has(task.id)) return prev;
-        const next = new Set(prev);
-        next.delete(task.id);
-        return next;
-      });
-    }, 1200);
-  };
-
-  const changeAnsvarlig = async (taskId: string, newUserId: string) => {
-    const task = oppgaver.find(o => o.id === taskId);
-    if (!task) return;
-    updateOppgaver(prev => prev.map(o => o.id === taskId ? { ...o, ansvarlig: newUserId } : o));
-    if (newUserId && newUserId !== user?.id) {
-      await sendNotification(newUserId, task.oppgave);
-      const assignee = profiles.find(p => p.user_id === newUserId);
-      toast.success(`Oppgave delegert til ${assignee?.display_name || "bruker"}`);
-    }
-  };
-
-  const openEdit = (task: Oppgave) => {
-    setEditingTask({ ...task });
-    setEditDialogOpen(true);
-  };
-
-  const saveEdit = async () => {
-    if (!editingTask) return;
-    const oldTask = oppgaver.find(o => o.id === editingTask.id);
-    updateOppgaver(prev => prev.map(o => o.id === editingTask.id ? editingTask : o));
-    setEditDialogOpen(false);
-    // Notify if reassigned
-    if (oldTask && editingTask.ansvarlig && editingTask.ansvarlig !== oldTask.ansvarlig && editingTask.ansvarlig !== user?.id) {
-      await sendNotification(editingTask.ansvarlig, editingTask.oppgave);
-      const assignee = profiles.find(p => p.user_id === editingTask.ansvarlig);
-      toast.success(`Oppgave delegert til ${assignee?.display_name || "bruker"}`);
-    } else {
-      toast.success("Oppgave oppdatert");
-    }
+  const saveEdit = () => {
+    if (!editingTask?.oppgave.trim()) return;
+    updateOppgaver(previous => previous.map(item => item.id === editingTask.id ? editingTask : item));
     setEditingTask(null);
+    toast.success("Oppgave oppdatert");
   };
 
   const deleteTask = (id: string) => {
-    updateOppgaver(prev => prev.filter(o => o.id !== id));
-    setEditDialogOpen(false);
+    updateOppgaver(previous => previous.filter(item => item.id !== id));
     setEditingTask(null);
     toast.success("Oppgave slettet");
   };
 
-  // «Effektiv» status: når brukeren nettopp har klikket, regn raden som den var
-  // FØR klikket, slik at den ikke umiddelbart hopper ut av listen/gruppen.
-  const effectiveStatus = (o: Oppgave): OppgaveStatus =>
-    recentlyToggled.has(o.id)
-      ? (o.status === "Ferdig" ? "Åpen" : "Ferdig")
-      : o.status;
+  const myTasks = oppgaver.filter(item => item.ansvarlig === user?.id);
+  const filteredTasks = myTasks.filter(item => {
+    if (filter === "ferdig") return item.status === "Ferdig";
+    if (item.status === "Ferdig") return false;
+    if (filter === "forfalte") return !!item.frist && item.frist < today;
+    if (filter === "idag") return !!item.frist && item.frist <= today;
+    if (filter === "uke") return !!item.frist && item.frist <= weekEnd;
+    return true;
+  }).sort((a, b) => {
+    const bucket = (item: Oppgave) => {
+      if (item.status === "Ferdig") return 4;
+      if (item.frist && item.frist < today) return 0;
+      if (item.frist === today) return 1;
+      if (item.frist && item.frist <= weekEnd) return 2;
+      if (!item.frist) return 3;
+      return 3;
+    };
+    const bucketDiff = bucket(a) - bucket(b);
+    if (bucketDiff) return bucketDiff;
+    return (a.frist || "9999").localeCompare(b.frist || "9999");
+  });
 
-  const forfalte = oppgaver.filter(o => effectiveStatus(o) !== "Ferdig" && o.frist && o.frist < today);
-  const idagOppgaver = oppgaver.filter(o => effectiveStatus(o) !== "Ferdig" && o.frist === today);
-  const ukeOppgaver = oppgaver.filter(o => effectiveStatus(o) !== "Ferdig" && o.frist >= today && o.frist <= weekEnd);
-
-  const prioritetOrder: Record<Prioritet, number> = { "Høy": 0, "Medium": 1, "Lav": 2 };
-
-  const sortTasks = (tasks: Oppgave[]) => {
-    return [...tasks].sort((a, b) => {
-      const aS = effectiveStatus(a);
-      const bS = effectiveStatus(b);
-      if (aS === "Ferdig" && bS !== "Ferdig") return 1;
-      if (aS !== "Ferdig" && bS === "Ferdig") return -1;
-      if (aS === "Ferdig" && bS === "Ferdig") return 0;
-      const aOverdue = a.frist && a.frist < today ? 1 : 0;
-      const bOverdue = b.frist && b.frist < today ? 1 : 0;
-      if (aOverdue !== bOverdue) return bOverdue - aOverdue;
-      const pDiff = prioritetOrder[a.prioritet] - prioritetOrder[b.prioritet];
-      if (pDiff !== 0) return pDiff;
-      if (a.frist && b.frist) return a.frist.localeCompare(b.frist);
-      if (a.frist) return -1;
-      if (b.frist) return 1;
-      return 0;
-    });
+  const relationFor = (task: Oppgave) => {
+    if (task.selskap_id) return { label: companyMap.get(task.selskap_id)?.firmanavn, href: `/selskaper/${task.selskap_id}` };
+    if (task.lead_id) return { label: leadMap.get(task.lead_id)?.firmanavn, href: `/leads?open=${task.lead_id}` };
+    if (task.salgsmulighet_id) return { label: dealMap.get(task.salgsmulighet_id)?.navn, href: `/salgsmuligheter?open=${task.salgsmulighet_id}` };
+    return null;
   };
 
-  let visibleTasks = sortTasks(oppgaver);
-  if (filter === "forfalte") visibleTasks = sortTasks(forfalte);
-  else if (filter === "idag") visibleTasks = sortTasks(idagOppgaver);
-  else if (filter === "uke") visibleTasks = sortTasks(ukeOppgaver);
-
-  const getProfileName = (userId: string) => profiles.find(p => p.user_id === userId)?.display_name;
-
-  const avatarColors = ["bg-primary", "bg-chart-1", "bg-chart-2", "bg-chart-3", "bg-chart-4", "bg-chart-5"];
-  const getAvatarColor = (userId: string) => {
-    let hash = 0;
-    for (let i = 0; i < userId.length; i++) hash = userId.charCodeAt(i) + ((hash << 5) - hash);
-    return avatarColors[Math.abs(hash) % avatarColors.length];
+  const dueLabel = (date: string) => {
+    if (!date) return "Uten frist";
+    if (date < today) {
+      const days = Math.max(1, Math.round((new Date(today).getTime() - new Date(date).getTime()) / 86400000));
+      return `${days} ${days === 1 ? "dag" : "dager"} siden`;
+    }
+    if (date === today) return "I dag";
+    if (isTomorrow(new Date(`${date}T12:00:00`))) return "I morgen";
+    return format(new Date(`${date}T12:00:00`), "d. MMM", { locale: nb });
   };
-  const getInitials = (name: string) => name.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase();
+
+  const adminRows = profiles.map(profile => {
+    const open = oppgaver.filter(item => item.ansvarlig === profile.user_id && item.status !== "Ferdig");
+    return { profile, open: open.length, overdue: open.filter(item => item.frist && item.frist < today).length };
+  }).filter(item => item.open > 0).sort((a, b) => b.open - a.open);
+  const highestLoad = adminRows[0]?.open || 0;
 
   return (
-    <TooltipProvider>
-    <PageShell
-      title="Oppgaver"
-      subtitle={`${oppgaver.filter(o => o.status !== "Ferdig").length} åpne · ${forfalte.length} forfalte`}
-      actions={canEdit ? (
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button size="sm"><Plus className="w-4 h-4 mr-1" />{!isMobile && "Ny oppgave"}</Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-[95vw] sm:max-w-lg">
-            <DialogHeader><DialogTitle>Ny oppgave</DialogTitle><DialogDescription>Fyll inn detaljer for den nye oppgaven.</DialogDescription></DialogHeader>
-            <div className="space-y-3">
-              <Input placeholder="Oppgave" value={form.oppgave} onChange={e => setForm(f => ({ ...f, oppgave: e.target.value }))} />
-              <div className="grid grid-cols-2 gap-3">
-                <Input type="date" value={form.frist} onChange={e => setForm(f => ({ ...f, frist: e.target.value }))} />
-                <select className="border rounded-lg px-3 py-2 text-sm bg-background" value={form.prioritet} onChange={e => setForm(f => ({ ...f, prioritet: e.target.value as Prioritet }))}>
-                  {(["Lav", "Medium", "Høy"] as Prioritet[]).map(p => <option key={p}>{p}</option>)}
-                </select>
-              </div>
-              <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background" value={form.lead_id} onChange={e => setForm(f => ({ ...f, lead_id: e.target.value }))}>
-                <option value="">Knytt til lead (valgfritt)</option>
-                {leads.map(l => <option key={l.id} value={l.id}>{l.firmanavn}{l.kontaktperson ? ` – ${l.kontaktperson}` : ""}</option>)}
-              </select>
-              <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background" value={form.selskap_id} onChange={e => setForm(f => ({ ...f, selskap_id: e.target.value }))}>
-                <option value="">Knytt til selskap (valgfritt)</option>
-                {selskaper.map(s => <option key={s.id} value={s.id}>{s.firmanavn}</option>)}
-              </select>
-              <PersonSearchPicker persons={allPersons} value={form.kontakt_id} onChange={id => setForm(f => ({ ...f, kontakt_id: id }))} />
-              <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background" value={form.ansvarlig} onChange={e => setForm(f => ({ ...f, ansvarlig: e.target.value }))}>
-                <option value="">Velg ansvarlig (valgfritt)</option>
-                {profiles.map(p => (
-                  <option key={p.user_id} value={p.user_id}>
-                    {p.display_name}{p.user_id === user?.id ? " (deg)" : ""}
-                  </option>
-                ))}
-              </select>
-              <Textarea placeholder="Notater" value={form.notater} onChange={e => setForm(f => ({ ...f, notater: e.target.value }))} />
-              <Button onClick={addOppgave} className="w-full" disabled={!form.oppgave}>Opprett oppgave</Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-      ) : undefined}
-    >
-      <div className="flex gap-2 mb-4 flex-wrap">
-        {([["alle", "Alle"], ["forfalte", `Forfalte (${forfalte.length})`], ["idag", `I dag (${idagOppgaver.length})`], ["uke", `Uke (${ukeOppgaver.length})`]] as const).map(([key, label]) => (
-          <Button key={key} size="sm" variant={filter === key ? "default" : "outline"} onClick={() => setFilter(key)} className="text-xs">{label}</Button>
+    <PageShell title="Oppgaver" subtitle={`${myTasks.filter(item => item.status !== "Ferdig").length} åpne oppgaver i min liste`}>
+      {canEdit && (
+        <section className="mb-5 rounded-lg border bg-card p-3">
+          <div className="flex flex-col gap-2 lg:flex-row">
+            <Input
+              value={quickTitle}
+              onChange={event => setQuickTitle(event.target.value)}
+              onKeyDown={event => { if (event.key === "Enter") createTask(); }}
+              placeholder="Skriv en oppgave og trykk Enter"
+              className="h-10 flex-1"
+              aria-label="Ny oppgave"
+            />
+            <Input type="date" value={quickDue} onChange={event => setQuickDue(event.target.value)} className="h-10 lg:w-40" aria-label="Frist" />
+            <select value={quickLink} onChange={event => setQuickLink(event.target.value)} className="h-10 rounded-md border bg-background px-3 text-sm lg:w-64" aria-label="Tilknytning">
+              <option value="">Ingen tilknytning</option>
+              {relationOptions.map(item => <option key={item.value} value={item.value}>{item.label}</option>)}
+            </select>
+            <Button onClick={createTask} disabled={!quickTitle.trim()} className="h-10">Legg til</Button>
+          </div>
+        </section>
+      )}
+
+      <div className="mb-5 flex gap-1 overflow-x-auto border-b">
+        {tabs.map(([key, label]) => (
+          <Button key={key} variant="ghost" onClick={() => setFilter(key)} className={cn("shrink-0 rounded-none border-b-2 border-transparent px-3", filter === key && "border-primary text-primary")}>{label}</Button>
         ))}
       </div>
 
-      {(() => {
-        // Group visible tasks by selskap_id (or lead's firmanavn fallback / "Uten selskap")
-        const groups = new Map<string, { key: string; label: string; domene?: string; tasks: Oppgave[] }>();
-        for (const task of visibleTasks) {
-          let key = "__none__";
-          let label = "Uten selskap";
-          let domene: string | undefined;
-          if (task.selskap_id) {
-            const sel = selskaper.find(s => s.id === task.selskap_id);
-            if (sel) { key = `s:${sel.id}`; label = sel.firmanavn; domene = sel.domene; }
-          } else if (task.lead_id) {
-            const ld = leads.find(l => l.id === task.lead_id);
-            if (ld) { key = `l:${ld.id}`; label = ld.firmanavn; }
-          }
-          if (!groups.has(key)) groups.set(key, { key, label, domene, tasks: [] });
-          groups.get(key)!.tasks.push(task);
-        }
-        const sortedGroups = Array.from(groups.values()).sort((a, b) => {
-          if (a.key === "__none__") return 1;
-          if (b.key === "__none__") return -1;
-          return b.tasks.length - a.tasks.length;
-        });
-
-        const toggleGroup = (key: string) => {
-          setCollapsedGroups(prev => {
-            const next = new Set(prev);
-            if (next.has(key)) next.delete(key); else next.add(key);
-            return next;
-          });
-        };
-
-        return (
-          <div className="space-y-4">
-            {sortedGroups.map(group => {
-              const collapsed = collapsedGroups.has(group.key);
-              const openCount = group.tasks.filter(t => t.status !== "Ferdig").length;
-              const overdueCount = group.tasks.filter(t => t.status !== "Ferdig" && t.frist && t.frist < today).length;
-              const showHeader = group.tasks.length > 1 || group.key !== "__none__";
+      <div className={cn("grid grid-cols-1 gap-5", isAdmin && "xl:grid-cols-[minmax(0,1fr)_340px]") }>
+        <section>
+          <h2 className="mb-3 text-sm font-semibold">Min liste</h2>
+          <div className="space-y-2">
+            {filteredTasks.length === 0 && <div className="rounded-lg border bg-card px-4 py-12 text-center text-sm text-muted-foreground">Ingen oppgaver å vise.</div>}
+            {filteredTasks.map(task => {
+              const overdue = task.status !== "Ferdig" && !!task.frist && task.frist < today;
+              const dueToday = task.status !== "Ferdig" && task.frist === today;
+              const profile = profileMap.get(task.ansvarlig) || currentProfile;
+              const relation = relationFor(task);
+              const avatarSource = profile ? profile.avatar_url || gravatarUrl(profile.email) || undefined : undefined;
               return (
-                <div key={group.key} className="space-y-2">
-                  {showHeader && (
-                    <button
-                      onClick={() => toggleGroup(group.key)}
-                      className="w-full flex items-center gap-2 px-3 py-2 bg-muted/40 hover:bg-muted/60 rounded-lg transition-colors text-left"
-                    >
-                      {collapsed ? <ChevronRight className="w-4 h-4 shrink-0" /> : <ChevronDown className="w-4 h-4 shrink-0" />}
-                      {group.key.startsWith("s:") ? (
-                        <CompanyLogo domain={group.domene} firmanavn={group.label} size="sm" />
-                      ) : (
-                        <Building2 className="w-4 h-4 text-muted-foreground" />
-                      )}
-                      <span className="font-semibold text-sm flex-1 truncate">{group.label}</span>
-                      <span className="text-xs text-muted-foreground">{openCount} åpne · {group.tasks.length} totalt</span>
-                      {overdueCount > 0 && (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium bg-destructive/10 text-destructive">{overdueCount} forfalt</span>
-                      )}
-                    </button>
-                  )}
-                  {!collapsed && (
-                    <div className={`space-y-2 ${showHeader ? "pl-4 border-l-2 border-border ml-2" : ""}`}>
-                      {group.tasks.map(task => {
-          const isOverdue = task.status !== "Ferdig" && task.frist && task.frist < today;
-          const selskap = selskaper.find(s => s.id === task.selskap_id);
-          const salgsmulighet = salgsmuligheter.find(s => s.id === task.salgsmulighet_id);
-          const lead = leads.find(l => l.id === task.lead_id);
-          const kontakt = kontakter.find(k => k.id === task.kontakt_id);
-          const emailKontakt = !kontakt && task.kontakt_id ? emailContacts.find(ec => ec.id === task.kontakt_id) : null;
-          const personNavn = kontakt?.navn || emailKontakt?.display_name || emailKontakt?.primary_email || null;
-          const ansvarligNavn = task.ansvarlig ? (getProfileName(task.ansvarlig) || task.ansvarlig) : null;
-          return (
-            <div key={task.id} className={`bg-card border rounded-xl p-4 flex items-center gap-3 animate-slide-in transition-opacity cursor-pointer hover:border-primary/30 ${task.status === "Ferdig" ? "opacity-50" : ""}`} onClick={() => canEdit && openEdit(task)}>
-              <div
-                className="-m-2 p-2 shrink-0"
-                onClick={e => {
-                  e.stopPropagation();
-                  if (canEdit) toggleDone(task);
-                }}
-              >
-                <Checkbox checked={task.status === "Ferdig"} disabled={!canEdit} className="pointer-events-none" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <p className={`font-medium text-sm ${task.status === "Ferdig" ? "line-through" : ""}`}>
-                    {task.oppgave.split(/(\*\*[^*]+\*\*)/g).map((part, i) =>
-                      part.startsWith("**") && part.endsWith("**")
-                        ? <strong key={i} className="font-semibold">{part.slice(2, -2)}</strong>
-                        : <span key={i}>{part}</span>
-                    )}
-                  </p>
-                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${prioritetColors[task.prioritet]}`}>{task.prioritet}</span>
-                  {!isMobile && (task.paaminnelse ? <Bell className="w-3 h-3 text-primary" /> : <BellOff className="w-3 h-3 text-muted-foreground/40" />)}
-                </div>
-                <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground flex-wrap">
-                  <span onClick={e => e.stopPropagation()}>
-                    {canEdit ? (
-                      <select className="text-xs border-0 bg-transparent cursor-pointer" value={task.status} onChange={e => changeStatus(task.id, e.target.value as OppgaveStatus)}>
-                        {statusOptions.map(s => <option key={s}>{s}</option>)}
-                      </select>
-                    ) : (
-                      <span className="text-xs">{task.status}</span>
-                    )}
-                  </span>
-                  {task.frist && (
-                    <span className={`flex items-center gap-1 ${isOverdue ? "text-destructive font-medium" : ""}`}>
-                      {isOverdue && <AlertTriangle className="w-3 h-3" />}
-                      <Calendar className="w-3 h-3" />
-                      {task.frist}
-                    </span>
-                  )}
-                  {!showHeader && selskap && <span className="truncate flex items-center gap-0.5"><Building2 className="w-3 h-3" /> {selskap.firmanavn}</span>}
-                  {salgsmulighet && <span className="truncate flex items-center gap-0.5"><Target className="w-3 h-3" /> {salgsmulighet.navn}</span>}
-                  {!showHeader && lead && <span className="truncate flex items-center gap-0.5"><PhoneForwarded className="w-3 h-3" /> {lead.firmanavn}</span>}
-                  {personNavn && <span className="truncate flex items-center gap-0.5"><User className="w-3 h-3" /> {personNavn}</span>}
-                  {canEdit ? (
-                    <span className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
-                      <select
-                        className="text-xs border-0 bg-transparent cursor-pointer"
-                        value={task.ansvarlig}
-                        onChange={e => changeAnsvarlig(task.id, e.target.value)}
-                      >
-                        <option value="">Ikke tildelt</option>
-                        {profiles.map(p => (
-                          <option key={p.user_id} value={p.user_id}>
-                            {p.display_name}{p.user_id === user?.id ? " (deg)" : ""}
-                          </option>
-                        ))}
-                      </select>
-                    </span>
-                  ) : ansvarligNavn ? (
-                    <span className="text-xs">· {ansvarligNavn}</span>
-                  ) : null}
-                </div>
-              </div>
-              {ansvarligNavn && (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-primary-foreground shrink-0 ${getAvatarColor(task.ansvarlig)}`}>
-                      {getInitials(ansvarligNavn)}
+                <article key={task.id} className={cn(
+                  "rounded-lg border bg-card p-4",
+                  overdue && "border-destructive/40 bg-destructive/5",
+                  dueToday && "border-warning/50 bg-warning/5",
+                  task.status === "Ferdig" && "bg-muted/40 opacity-70",
+                )}>
+                  <div className="flex items-start gap-3">
+                    <span className={cn("mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full", priorityDot[task.prioritet])} title={`Prioritet: ${task.prioritet}`} />
+                    <div className="min-w-0 flex-1">
+                      <button type="button" onClick={() => canEdit && setEditingTask({ ...task })} className={cn("block max-w-full text-left text-sm font-semibold hover:text-primary", task.status === "Ferdig" && "line-through")}>{task.oppgave}</button>
+                      <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                        {relation?.label && <Button variant="link" size="sm" onClick={() => navigate(relation.href)} className="h-auto p-0 text-xs"><Link2 className="mr-1 h-3 w-3" />{relation.label}</Button>}
+                        <span className={cn("flex items-center gap-1 text-muted-foreground", overdue && "font-medium text-destructive", dueToday && "font-medium text-warning-foreground")}><CalendarDays className="h-3 w-3" />{dueLabel(task.frist)}</span>
+                      </div>
                     </div>
-                  </TooltipTrigger>
-                  <TooltipContent side="left" className="text-xs">{ansvarligNavn}</TooltipContent>
-                </Tooltip>
-              )}
-            </div>
-          );
-                      })}
-                    </div>
-                  )}
-                </div>
+                    {profile && (
+                      <Avatar className="h-8 w-8 shrink-0">
+                        {avatarSource && <AvatarImage src={avatarSource} alt={profile.display_name} />}
+                        <AvatarFallback className="text-[10px]">{initials(profile.display_name)}</AvatarFallback>
+                      </Avatar>
+                    )}
+                    {canEdit && task.status !== "Ferdig" && <Button size="sm" variant="outline" onClick={() => completeTask(task.id)} className="shrink-0"><Check className="mr-1 h-4 w-4" /><span className="hidden sm:inline">Merk ferdig</span></Button>}
+                  </div>
+                </article>
               );
             })}
-            {visibleTasks.length === 0 && (
-              <div className="text-center py-16 text-muted-foreground"><p className="text-sm">Ingen oppgaver å vise</p></div>
-            )}
           </div>
-        );
-      })()}
+        </section>
 
-      {/* Edit dialog */}
-      <Dialog open={editDialogOpen} onOpenChange={o => { setEditDialogOpen(o); if (!o) setEditingTask(null); }}>
+        {isAdmin && (
+          <aside>
+            <div className="sticky top-4 overflow-hidden rounded-lg border bg-card">
+              <header className="border-b px-4 py-3"><h2 className="flex items-center gap-2 text-sm font-semibold"><Users className="h-4 w-4 text-primary" />Oversikt</h2></header>
+              {adminRows.length === 0 ? <p className="px-4 py-8 text-center text-sm text-muted-foreground">Ingen åpne oppgaver.</p> : (
+                <div className="divide-y">
+                  {adminRows.map(({ profile, open, overdue }) => {
+                    const avatarSource = profile.avatar_url || gravatarUrl(profile.email) || undefined;
+                    return (
+                      <div key={profile.user_id} className={cn("flex items-center gap-3 px-4 py-3", open === highestLoad && "bg-primary/5")}>
+                        <Avatar className="h-8 w-8"><AvatarImage src={avatarSource} alt={profile.display_name} /><AvatarFallback className="text-[10px]">{initials(profile.display_name)}</AvatarFallback></Avatar>
+                        <div className="min-w-0 flex-1"><p className="truncate text-sm font-medium">{profile.display_name}</p><p className="text-xs text-muted-foreground">{open} åpne</p></div>
+                        {overdue > 0 && <span className="text-xs font-semibold text-destructive">{overdue} forfalt</span>}
+                        {open === highestLoad && <ChevronRight className="h-4 w-4 text-primary" />}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </aside>
+        )}
+      </div>
+
+      <Dialog open={!!editingTask} onOpenChange={open => { if (!open) setEditingTask(null); }}>
         <DialogContent className="max-w-[95vw] sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2"><Pencil className="w-4 h-4" />Rediger oppgave</DialogTitle>
-            <DialogDescription>Endre detaljer for oppgaven.</DialogDescription>
-          </DialogHeader>
+          <DialogHeader><DialogTitle className="flex items-center gap-2"><Pencil className="h-4 w-4" />Rediger oppgave</DialogTitle><DialogDescription>Endre detaljer for oppgaven.</DialogDescription></DialogHeader>
           {editingTask && (
             <div className="space-y-3">
-              <Input placeholder="Oppgave" value={editingTask.oppgave} onChange={e => setEditingTask(t => t ? { ...t, oppgave: e.target.value } : t)} />
+              <Input value={editingTask.oppgave} onChange={event => setEditingTask({ ...editingTask, oppgave: event.target.value })} />
               <div className="grid grid-cols-2 gap-3">
-                <Input type="date" value={editingTask.frist} onChange={e => setEditingTask(t => t ? { ...t, frist: e.target.value } : t)} />
-                <select className="border rounded-lg px-3 py-2 text-sm bg-background" value={editingTask.prioritet} onChange={e => setEditingTask(t => t ? { ...t, prioritet: e.target.value as Prioritet } : t)}>
-                  {(["Lav", "Medium", "Høy"] as Prioritet[]).map(p => <option key={p}>{p}</option>)}
-                </select>
+                <Input type="date" value={editingTask.frist} onChange={event => setEditingTask({ ...editingTask, frist: event.target.value })} />
+                <select className="rounded-md border bg-background px-3 text-sm" value={editingTask.prioritet} onChange={event => setEditingTask({ ...editingTask, prioritet: event.target.value as Prioritet })}>{(["Lav", "Medium", "Høy"] as Prioritet[]).map(value => <option key={value}>{value}</option>)}</select>
               </div>
-              <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background" value={editingTask.status} onChange={e => setEditingTask(t => t ? { ...t, status: e.target.value as OppgaveStatus } : t)}>
-                {statusOptions.map(s => <option key={s}>{s}</option>)}
-              </select>
-              <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background" value={editingTask.lead_id} onChange={e => setEditingTask(t => t ? { ...t, lead_id: e.target.value } : t)}>
-                <option value="">Knytt til lead (valgfritt)</option>
-                {leads.map(l => <option key={l.id} value={l.id}>{l.firmanavn}{l.kontaktperson ? ` – ${l.kontaktperson}` : ""}</option>)}
-              </select>
-              <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background" value={editingTask.selskap_id} onChange={e => setEditingTask(t => t ? { ...t, selskap_id: e.target.value } : t)}>
-                <option value="">Knytt til selskap (valgfritt)</option>
-                {selskaper.map(s => <option key={s.id} value={s.id}>{s.firmanavn}</option>)}
-              </select>
-              <PersonSearchPicker persons={allPersons} value={editingTask.kontakt_id} onChange={id => setEditingTask(t => t ? { ...t, kontakt_id: id } : t)} />
-              <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background" value={editingTask.ansvarlig} onChange={e => setEditingTask(t => t ? { ...t, ansvarlig: e.target.value } : t)}>
-                <option value="">Velg ansvarlig (valgfritt)</option>
-                {profiles.map(p => (
-                  <option key={p.user_id} value={p.user_id}>
-                    {p.display_name}{p.user_id === user?.id ? " (deg)" : ""}
-                  </option>
-                ))}
-              </select>
-              <Textarea placeholder="Notater" value={editingTask.notater} onChange={e => setEditingTask(t => t ? { ...t, notater: e.target.value } : t)} />
-              <div className="flex gap-2">
-                <Button onClick={saveEdit} className="flex-1" disabled={!editingTask.oppgave.trim()}>Lagre endringer</Button>
-                <Button variant="destructive" size="icon" onClick={() => deleteTask(editingTask.id)}>
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </div>
+              <select className="h-10 w-full rounded-md border bg-background px-3 text-sm" value={editingTask.ansvarlig} onChange={event => setEditingTask({ ...editingTask, ansvarlig: event.target.value })}><option value="">Ikke tildelt</option>{profiles.map(profile => <option key={profile.user_id} value={profile.user_id}>{profile.display_name}</option>)}</select>
+              <Textarea value={editingTask.notater} onChange={event => setEditingTask({ ...editingTask, notater: event.target.value })} placeholder="Notater" />
+              <div className="flex gap-2"><Button onClick={saveEdit} className="flex-1">Lagre</Button><Button variant="destructive" size="icon" onClick={() => deleteTask(editingTask.id)} aria-label="Slett oppgave"><Trash2 className="h-4 w-4" /></Button></div>
             </div>
           )}
         </DialogContent>
       </Dialog>
     </PageShell>
-    </TooltipProvider>
   );
 }
