@@ -464,7 +464,21 @@ export default function Leads() {
                   setEnrichFields({ orgnr: "", bransje: "", firmaadresse: "", postadresse: "" });
                   if (selectedLead?.id === convertDialogLead.id) setSelectedLead(null);
                   if (smId) {
-                    toast.success(`${leadNavn} konvertert til salgsmulighet`, {
+                    updateOppgaver(prev => [...prev, {
+                      id: crypto.randomUUID(),
+                      oppgave: "Gjennomfør demo",
+                      lead_id: "",
+                      selskap_id: "",
+                      salgsmulighet_id: smId,
+                      kontakt_id: "",
+                      ansvarlig: convertDialogLead.ansvarlig || user?.id || "",
+                      frist: datoOm(7),
+                      prioritet: "Høy",
+                      status: "Åpen",
+                      paaminnelse: true,
+                      notater: "",
+                    }]);
+                    toast.success(`${leadNavn} konvertert til salgsmulighet · oppgave «Gjennomfør demo» opprettet`, {
                       action: { label: "Åpne", onClick: () => navigate(`/salgsmuligheter?open=${smId}`) },
                     });
                   }
