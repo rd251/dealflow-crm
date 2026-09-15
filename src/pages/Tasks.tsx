@@ -24,6 +24,7 @@ const tabs = [
   ["ferdig", "Ferdig"],
 ] as const;
 type Filter = typeof tabs[number][0];
+type ActiveFilter = Filter | "forfalte";
 
 const priorityDot: Record<Prioritet, string> = {
   Høy: "bg-destructive",
@@ -41,7 +42,7 @@ export default function Tasks() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const initialFilter = searchParams.get("filter") === "forfalte" ? "aapne" : "idag";
-  const [filter, setFilter] = useState<Filter>(initialFilter);
+  const [filter, setFilter] = useState<ActiveFilter>(searchParams.get("filter") === "forfalte" ? "forfalte" : initialFilter);
   const [quickTitle, setQuickTitle] = useState("");
   const [quickDue, setQuickDue] = useState("");
   const [quickLink, setQuickLink] = useState("");
@@ -113,6 +114,7 @@ export default function Tasks() {
   const filteredTasks = myTasks.filter(item => {
     if (filter === "ferdig") return item.status === "Ferdig";
     if (item.status === "Ferdig") return false;
+    if (filter === "forfalte") return !!item.frist && item.frist < today;
     if (filter === "idag") return !!item.frist && item.frist <= today;
     if (filter === "uke") return !!item.frist && item.frist <= weekEnd;
     return true;

@@ -226,7 +226,8 @@ export default function Dashboard() {
     const month = subMonths(startOfMonth(now), 5 - index);
     const monthEnd = endOfMonth(month);
     const mrr = selskaper.filter(item => {
-      const started = item.go_live_dato ? new Date(item.go_live_dato) <= monthEnd : false;
+      const startDate = item.go_live_dato || item.lukkedato;
+      const started = startDate ? new Date(startDate) <= monthEnd : item.kundestatus === "Live" && index === 5;
       const notCancelled = !item.kansellert_dato || new Date(item.kansellert_dato) > monthEnd;
       return started && notCancelled;
     }).reduce((sum, item) => sum + item.mrr, 0);
