@@ -47,6 +47,7 @@ const smStatusColors: Record<SalgsmulighetStatus, string> = {
   "Møte booket": "bg-stage-contacted/10 text-stage-contacted",
   "Behov avklart": "bg-stage-qualified/10 text-stage-qualified",
   "Løsning presentert": "bg-stage-demo/10 text-stage-demo",
+  "Demo gjennomført": "bg-stage-demo/10 text-stage-demo",
   "Kontrakt sendt": "bg-stage-proposal/10 text-stage-proposal",
   "Vunnet": "bg-success/10 text-success",
   "Tapt": "bg-destructive/10 text-destructive",
