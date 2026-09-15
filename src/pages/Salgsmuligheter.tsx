@@ -649,30 +649,33 @@ export default function Salgsmuligheter() {
           {/* Pipeline summary panel */}
           {(() => {
             const totalPipeline = openDeals.reduce((s, d) => s + beregnTotalKontraktsverdi(d), 0);
-            const totalVektet = openDeals.reduce((s, d) => s + beregnVektetPipeline(d), 0);
-            const nearClosing = openDeals.filter(d => d.status === "Kontrakt sendt");
-            const nearClosingValue = nearClosing.reduce((s, d) => s + beregnTotalKontraktsverdi(d), 0);
+            const vunnetMrr = wonThisMonth.reduce((s, d) => s + d.forventet_mrr, 0);
+            const avsluttetDenneMnd = wonThisMonth.length + lostThisMonth.length;
+            const winRate = avsluttetDenneMnd ? Math.round((wonThisMonth.length / avsluttetDenneMnd) * 100) : 0;
+            const alderSnitt = openDeals.length
+              ? Math.round(openDeals.reduce((s, d) => s + (dagerSiden(d.opprettet_dato) ?? 0), 0) / openDeals.length)
+              : 0;
             return (
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
                 <div className="bg-card border rounded-lg p-3">
-                  <p className="text-xs text-muted-foreground font-medium">Total pipeline</p>
+                  <p className="text-xs text-muted-foreground font-medium">Total pipelineverdi</p>
                   <p className="text-lg font-bold tracking-tight">{nok(totalPipeline)}</p>
                   <p className="text-[11px] text-muted-foreground">{openDeals.length} åpne deals</p>
                 </div>
                 <div className="bg-card border rounded-lg p-3">
-                  <p className="text-xs text-muted-foreground font-medium">Vektet verdi</p>
-                  <p className="text-lg font-bold tracking-tight">{nok(totalVektet)}</p>
-                  <p className="text-[11px] text-muted-foreground">justert for sannsynlighet</p>
+                  <p className="text-xs text-muted-foreground font-medium">Vunnet denne måneden</p>
+                  <p className="text-lg font-bold tracking-tight">{nok(vunnetMrr)}</p>
+                  <p className="text-[11px] text-muted-foreground">{wonThisMonth.length} deals · MRR</p>
                 </div>
                 <div className="bg-card border rounded-lg p-3">
-                  <p className="text-xs text-muted-foreground font-medium">Nær closing</p>
-                  <p className="text-lg font-bold tracking-tight">{nearClosing.length} deals</p>
-                  <p className="text-[11px] text-muted-foreground">{nok(nearClosingValue)} i verdi</p>
+                  <p className="text-xs text-muted-foreground font-medium">Win rate denne måneden</p>
+                  <p className="text-lg font-bold tracking-tight">{winRate} %</p>
+                  <p className="text-[11px] text-muted-foreground">{wonThisMonth.length} av {avsluttetDenneMnd} avsluttet</p>
                 </div>
                 <div className="bg-card border rounded-lg p-3">
-                  <p className="text-xs text-muted-foreground font-medium">Snitt MRR</p>
-                  <p className="text-lg font-bold tracking-tight">{nok(openDeals.length ? Math.round(openDeals.reduce((s, d) => s + d.forventet_mrr, 0) / openDeals.length) : 0)}</p>
-                  <p className="text-[11px] text-muted-foreground">per deal</p>
+                  <p className="text-xs text-muted-foreground font-medium">Snitt deal-alder</p>
+                  <p className="text-lg font-bold tracking-tight">{alderSnitt} dager</p>
+                  <p className="text-[11px] text-muted-foreground">åpne deals</p>
                 </div>
               </div>
             );
@@ -720,8 +723,13 @@ export default function Salgsmuligheter() {
             <DealList deals={sortDeals(openDeals)} getSelskapNavn={getSelskapNavn} getSelskapDomain={getSelskapDomain} onSelect={setSelectedSm} label="Åpne salgsmuligheter" onNavigateSelskap={id => navigate(`/selskaper/${id}`)} isMobile={isMobile} showKontraktStatus showLukkedato showSignalAndNextStep />
           ) : (
           <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-4 scrollbar-thin items-start">
-            {openStatuses.map(stage => {
-              const stageDeals = sortDeals(openDeals.filter(d => d.status === stage));
+            {KANBAN_STADIER.map(stadium => {
+              const stage = stadium as SalgsmulighetStatus;
+              const stageDeals = sortDeals(
+                stadium === "Vunnet" ? wonThisMonth
+                : stadium === "Tapt" ? lostThisMonth
+                : openDeals.filter(d => tilKanbanStadium(d.status) === stadium)
+              );
               const stageMrr = stageDeals.reduce((s, d) => s + d.forventet_mrr, 0);
               return (
                 <div key={stage} className={`${isMobile ? "min-w-[240px] w-[240px]" : "min-w-[230px] w-[230px]"} flex-shrink-0 flex flex-col rounded-xl p-2 -m-2 transition-colors ${dragOverStage === stage ? "bg-primary/10 ring-2 ring-primary/30" : ""}`}
