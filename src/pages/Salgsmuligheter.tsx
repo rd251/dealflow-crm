@@ -422,6 +422,31 @@ export default function Salgsmuligheter() {
   const currentSm = selectedSm ? salgsmuligheter.find(s => s.id === selectedSm.id) || selectedSm : null;
   const openDealIds = openDeals.map(d => d.id);
   const { byId: lastMeetings } = useLastMeetingsByDeal(openDealIds);
+
+  // Når kom dealen inn i nåværende stadium? (siste statusendring i endringsloggen)
+  const [stageSince, setStageSince] = useState<Record<string, string>>({});
+  const openDealIdsKey = openDealIds.join(",");
+  useEffect(() => {
+    const ids = openDealIdsKey ? openDealIdsKey.split(",") : [];
+    if (ids.length === 0) { setStageSince({}); return; }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("crm_changelog")
+        .select("entity_id, created_at")
+        .eq("entity_type", "salgsmulighet")
+        .eq("field_name", "status")
+        .in("entity_id", ids)
+        .order("created_at", { ascending: false });
+      if (cancelled || !data) return;
+      const map: Record<string, string> = {};
+      for (const row of data as { entity_id: string; created_at: string }[]) {
+        if (!map[row.entity_id]) map[row.entity_id] = row.created_at;
+      }
+      setStageSince(map);
+    })();
+    return () => { cancelled = true; };
+  }, [openDealIdsKey]);
   const openCreateActivityRef = useRef<(() => void) | null>(null);
   const [detailTab, setDetailTab] = useState<"detaljer" | "selskap" | "kontakt" | "interaksjoner" | "notater" | "kalender" | "dokumenter">("detaljer");
   const [pendingOpenActivity, setPendingOpenActivity] = useState(false);
@@ -830,6 +855,14 @@ export default function Salgsmuligheter() {
                             </div>
                           )}
 
+                          {/* Dager i stadium */}
+                          <div className="text-[10px] text-muted-foreground mb-1">
+                            {(() => {
+                              const d = dagerSiden(stageSince[deal.id] || deal.opprettet_dato);
+                              return d === null ? "—" : `${d} d i dette stadiet`;
+                            })()}
+                          </div>
+
                           {/* Footer: neste steg + signal */}
                           {missingNeste ? (
                             <div className="flex items-center gap-1 mt-1.5 pt-1.5 border-t border-border/50 text-destructive">
@@ -839,7 +872,19 @@ export default function Salgsmuligheter() {
                           ) : (
                             <div className="flex items-center justify-between gap-1.5 mt-1.5 pt-1.5 border-t border-border/50">
                               <p className="text-[10px] text-muted-foreground truncate flex-1">→ {deal.neste_steg}</p>
-                              <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${signal.color}`} title={signal.label} />
+                              {deal.ansvarlig && (
+                                <span
+                                  className="w-4 h-4 rounded-full bg-primary/15 text-primary text-[8px] font-semibold flex items-center justify-center shrink-0"
+                                  title={getProfileName(deal.ansvarlig) || deal.ansvarlig}
+                                >
+                                  {initialer(getProfileName(deal.ansvarlig) || deal.ansvarlig)}
+                                </span>
+                              )}
+                              {erKald(deal.sist_aktivitet) ? (
+                                <div className="w-2 h-2 rounded-full shrink-0 bg-destructive" title={`Ingen aktivitet siste 7 dager (${relativTid(deal.sist_aktivitet)})`} />
+                              ) : (
+                                <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${signal.color}`} title={signal.label} />
+                              )}
                             </div>
                           )}
 
