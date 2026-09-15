@@ -505,7 +505,13 @@ export default function Salgsmuligheter() {
             <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background" value={lossReason} onChange={e => setLossReason(e.target.value as Tapsaarsak)}>
               {tapsaarsaker.map(t => <option key={t} value={t}>{t}</option>)}
             </select>
-            <Button className="w-full" onClick={() => { if (lossDialog) { tapSalgsmulighet(lossDialog, lossReason); setLossDialog(null); } }}>Bekreft tap</Button>
+            <Button className="w-full" onClick={() => {
+              if (!lossDialog) return;
+              const deal = salgsmuligheter.find(s => s.id === lossDialog);
+              tapSalgsmulighet(lossDialog, lossReason);
+              if (deal) opprettOppgave(deal, "Følg opp igjen", datoOm(90));
+              setLossDialog(null);
+            }}>Bekreft tap</Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -541,6 +547,8 @@ export default function Salgsmuligheter() {
               onClick={() => {
                 if (winDialog) {
                   vinnSalgsmulighet(winDialog, winPartnerId || null);
+                  feirVunnet();
+                  toast.success("Deal vunnet 🎉 Kundeforhold og prosjekt er opprettet");
                   setWinDialog(null);
                   setWinPartnerId("");
                 }
