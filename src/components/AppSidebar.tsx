@@ -11,28 +11,28 @@ import { cn } from "@/lib/utils";
 
 type NavItem = { to: string; icon: any; label: string };
 
-// Dagligbruk – alltid synlig
+// Salgsflyten – alltid synlig
 const mainItems: NavItem[] = [
-  { to: "/dashboard", icon: LayoutDashboard, label: "Hjem" },
-  { to: "/salg", icon: Handshake, label: "Salg" },
-  { to: "/selskaper", icon: Building2, label: "Kunder" },
+  { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
+  { to: "/leads", icon: UserPlus, label: "Leads" },
+  { to: "/ringeliste", icon: Phone, label: "Ringeliste" },
+  { to: "/salgsmuligheter", icon: Handshake, label: "Salgsmuligheter" },
+  { to: "/selskaper", icon: Building2, label: "Kundeforhold" },
+  { to: "/prosjekter", icon: FolderKanban, label: "Prosjekter" },
   { to: "/kontakter", icon: Users, label: "Kontakter" },
-  { to: "/oppgaver", icon: ListTodo, label: "Oppgaver" },
+  { to: "/partnere", icon: Users2, label: "Partnere" },
   { to: "/kalender", icon: CalendarDays, label: "Kalender" },
+  { to: "/oppgaver", icon: ListTodo, label: "Oppgaver" },
+  { to: "/rapporter", icon: BarChart3, label: "Rapporter" },
 ];
 
 // Alt annet – samlet under «Mer»
 const moreItems: NavItem[] = [
-  { to: "/leads", icon: UserPlus, label: "Leads" },
-  { to: "/prosjekter", icon: FolderKanban, label: "Prosjekter" },
-  { to: "/ringeliste", icon: Phone, label: "Ringeliste" },
   { to: "/alle-selskaper", icon: Building2, label: "Alle selskaper" },
   { to: "/kontaktstrom", icon: GitMerge, label: "Kontaktstrøm" },
   { to: "/moetenotater", icon: NotebookPen, label: "Møtenotater" },
   { to: "/aktiviteter", icon: Activity, label: "Endringslogg" },
-  { to: "/partnere", icon: Users2, label: "Partnere" },
   { to: "/partner-pipeline", icon: GitBranch, label: "Partner Pipeline" },
-  { to: "/rapporter", icon: BarChart3, label: "Rapporter" },
   { to: "/nyhetsbrev", icon: Mail, label: "Nyhetsbrev" },
 ];
 

@@ -29,6 +29,13 @@
       "when": 1789409765106,
       "tag": "0003_add_agent_builder_kilde",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1789461028296,
+      "tag": "0004_add_demo_gjennomfoert_status",
+      "breakpoints": true
     }
   ]
 }

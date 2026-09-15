@@ -35,6 +35,7 @@ const DEAL_TIL_STEG: Record<SalgsmulighetStatus, Steg> = {
   "Møte booket": "Møte",
   "Behov avklart": "Tilbud",
   "Løsning presentert": "Tilbud",
+  "Demo gjennomført": "Tilbud",
   "Kontrakt sendt": "Kontrakt",
   "Vunnet": "Vunnet",
   "Tapt": "Tapt",

@@ -34,9 +34,13 @@ import SendContractModal from "@/components/SendContractModal";
 import DealRecapCard from "@/components/DealRecapCard";
 import LastMeetingCard from "@/components/LastMeetingCard";
 import { useLastMeetingsByDeal } from "@/hooks/use-last-meetings";
+import confetti from "canvas-confetti";
+import { KANBAN_STADIER, tilKanbanStadium, dagerSiden, relativTid, initialer, erKald, idag, datoOm, type KanbanStadium } from "@/lib/sales-flow";
 
-const allStatuses: SalgsmulighetStatus[] = ["Møte booket", "Behov avklart", "Løsning presentert", "Kontrakt sendt"];
-const openStatuses = allStatuses;
+/** Aktive stadier i kanban (rekkefølge). */
+const allStatuses: SalgsmulighetStatus[] = ["Møte booket", "Demo gjennomført", "Kontrakt sendt"];
+/** Alle statuser som regnes som åpne – inkl. eldre statuser fra før omleggingen. */
+const openStatuses: SalgsmulighetStatus[] = ["Møte booket", "Behov avklart", "Løsning presentert", "Demo gjennomført", "Kontrakt sendt"];
 const tapsaarsaker: Tapsaarsak[] = ["Pris", "Ikke riktig timing", "Valgte annen leverandør", "Ikke behov", "Teknisk / integrasjon", "Annet"];
 
 const kontraktStatusColors: Record<KontraktStatus, string> = {
@@ -128,6 +132,7 @@ const statusColors: Record<SalgsmulighetStatus, string> = {
   "Møte booket": "bg-stage-contacted",
   "Behov avklart": "bg-stage-qualified",
   "Løsning presentert": "bg-stage-demo",
+  "Demo gjennomført": "bg-stage-demo",
   "Kontrakt sendt": "bg-stage-proposal",
   "Vunnet": "bg-stage-won",
   "Tapt": "bg-stage-lost",
@@ -160,7 +165,7 @@ export default function Salgsmuligheter() {
   const isMobile = useIsMobile();
   const { canEdit, isAdmin, user } = useAuth();
   const { profiles } = useProfiles();
-  const { salgsmuligheter, selskaper, kontakter, partnere, updateSalgsmuligheter, updateSelskaper, updateKontakter, vinnSalgsmulighet, tapSalgsmulighet, generateId } = useCrmStore();
+  const { salgsmuligheter, selskaper, kontakter, partnere, oppgaver, updateSalgsmuligheter, updateSelskaper, updateKontakter, updateOppgaver, vinnSalgsmulighet, tapSalgsmulighet, generateId } = useCrmStore();
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [dragOverStage, setDragOverStage] = useState<string | null>(null);
   const [selectedSm, setSelectedSm] = useState<Salgsmulighet | null>(null);
@@ -260,6 +265,38 @@ export default function Salgsmuligheter() {
   const getSelskapNavn = (id: string) => selskaper.find(s => s.id === id)?.firmanavn || "–";
   const getSelskapDomain = (id: string | null) => id ? selskaper.find(s => s.id === id)?.domene || "" : "";
   const getProfileName = (id: string) => profiles.find(p => p.user_id === id)?.display_name || "";
+  /** Oppretter en oppgave hvis en tilsvarende ikke allerede finnes på dealen. */
+  const opprettOppgave = useCallback((deal: Salgsmulighet, tekst: string, frist: string) => {
+    const finnes = oppgaver.some(o => o.salgsmulighet_id === deal.id && o.oppgave === tekst && o.status !== "Ferdig");
+    if (finnes) return;
+    updateOppgaver(prev => [...prev, {
+      id: crypto.randomUUID(),
+      oppgave: tekst,
+      lead_id: "",
+      selskap_id: deal.selskap_id || "",
+      salgsmulighet_id: deal.id,
+      kontakt_id: deal.kontakt_id || "",
+      ansvarlig: deal.ansvarlig || user?.id || "",
+      frist,
+      prioritet: "Høy",
+      status: "Åpen",
+      paaminnelse: true,
+      notater: "",
+    }]);
+    toast.success(`Oppgave opprettet: ${tekst}`);
+  }, [oppgaver, updateOppgaver, user?.id]);
+
+  /** Automatikk når en deal flyttes til et nytt stadium. */
+  const etterStegEndring = useCallback((deal: Salgsmulighet, nyStatus: SalgsmulighetStatus) => {
+    if (nyStatus === "Demo gjennomført") {
+      opprettOppgave(deal, "Send kontrakt", datoOm(2));
+    }
+  }, [opprettOppgave]);
+
+  const feirVunnet = useCallback(() => {
+    confetti({ particleCount: 140, spread: 75, origin: { y: 0.6 }, colors: ["#c0392b", "#e67e22", "#2ecc71", "#ffffff"] });
+  }, []);
+
   const handleDrop = (e: React.DragEvent, stage: SalgsmulighetStatus) => {
     e.preventDefault();
     setDragOverStage(null);
@@ -279,18 +316,22 @@ export default function Salgsmuligheter() {
     if (stage === "Vunnet") { setWinPartnerId(""); setWinDialog(draggedId); }
     else if (stage === "Tapt") { setLossDialog(draggedId); }
     else {
+      const deal = salgsmuligheter.find(s => s.id === draggedId);
       updateSalgsmuligheter(prev => prev.map(s =>
-        s.id === draggedId ? { ...s, status: stage, sist_aktivitet: new Date().toISOString().split("T")[0] } : s
+        s.id === draggedId ? { ...s, status: stage, sist_aktivitet: idag() } : s
       ));
+      if (deal) etterStegEndring(deal, stage);
     }
     setDraggedId(null);
   };
 
   const moveDealToStage = useCallback((dealId: string, newStage: SalgsmulighetStatus) => {
+    const deal = salgsmuligheter.find(s => s.id === dealId);
     updateSalgsmuligheter(prev => prev.map(s =>
-      s.id === dealId ? { ...s, status: newStage, sist_aktivitet: new Date().toISOString().split("T")[0] } : s
+      s.id === dealId ? { ...s, status: newStage, sist_aktivitet: idag() } : s
     ));
-  }, [updateSalgsmuligheter]);
+    if (deal) etterStegEndring(deal, newStage);
+  }, [salgsmuligheter, updateSalgsmuligheter, etterStegEndring]);
 
   const addSm = () => {
     if (!form.use_case.trim()) {
@@ -381,6 +422,31 @@ export default function Salgsmuligheter() {
   const currentSm = selectedSm ? salgsmuligheter.find(s => s.id === selectedSm.id) || selectedSm : null;
   const openDealIds = openDeals.map(d => d.id);
   const { byId: lastMeetings } = useLastMeetingsByDeal(openDealIds);
+
+  // Når kom dealen inn i nåværende stadium? (siste statusendring i endringsloggen)
+  const [stageSince, setStageSince] = useState<Record<string, string>>({});
+  const openDealIdsKey = openDealIds.join(",");
+  useEffect(() => {
+    const ids = openDealIdsKey ? openDealIdsKey.split(",") : [];
+    if (ids.length === 0) { setStageSince({}); return; }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("crm_changelog")
+        .select("entity_id, created_at")
+        .eq("entity_type", "salgsmulighet")
+        .eq("field_name", "status")
+        .in("entity_id", ids)
+        .order("created_at", { ascending: false });
+      if (cancelled || !data) return;
+      const map: Record<string, string> = {};
+      for (const row of data as { entity_id: string; created_at: string }[]) {
+        if (!map[row.entity_id]) map[row.entity_id] = row.created_at;
+      }
+      setStageSince(map);
+    })();
+    return () => { cancelled = true; };
+  }, [openDealIdsKey]);
   const openCreateActivityRef = useRef<(() => void) | null>(null);
   const [detailTab, setDetailTab] = useState<"detaljer" | "selskap" | "kontakt" | "interaksjoner" | "notater" | "kalender" | "dokumenter">("detaljer");
   const [pendingOpenActivity, setPendingOpenActivity] = useState(false);
@@ -464,7 +530,13 @@ export default function Salgsmuligheter() {
             <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background" value={lossReason} onChange={e => setLossReason(e.target.value as Tapsaarsak)}>
               {tapsaarsaker.map(t => <option key={t} value={t}>{t}</option>)}
             </select>
-            <Button className="w-full" onClick={() => { if (lossDialog) { tapSalgsmulighet(lossDialog, lossReason); setLossDialog(null); } }}>Bekreft tap</Button>
+            <Button className="w-full" onClick={() => {
+              if (!lossDialog) return;
+              const deal = salgsmuligheter.find(s => s.id === lossDialog);
+              tapSalgsmulighet(lossDialog, lossReason);
+              if (deal) opprettOppgave(deal, "Følg opp igjen", datoOm(90));
+              setLossDialog(null);
+            }}>Bekreft tap</Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -500,6 +572,8 @@ export default function Salgsmuligheter() {
               onClick={() => {
                 if (winDialog) {
                   vinnSalgsmulighet(winDialog, winPartnerId || null);
+                  feirVunnet();
+                  toast.success("Deal vunnet 🎉 Kundeforhold og prosjekt er opprettet");
                   setWinDialog(null);
                   setWinPartnerId("");
                 }
@@ -600,30 +674,33 @@ export default function Salgsmuligheter() {
           {/* Pipeline summary panel */}
           {(() => {
             const totalPipeline = openDeals.reduce((s, d) => s + beregnTotalKontraktsverdi(d), 0);
-            const totalVektet = openDeals.reduce((s, d) => s + beregnVektetPipeline(d), 0);
-            const nearClosing = openDeals.filter(d => d.status === "Kontrakt sendt");
-            const nearClosingValue = nearClosing.reduce((s, d) => s + beregnTotalKontraktsverdi(d), 0);
+            const vunnetMrr = wonThisMonth.reduce((s, d) => s + d.forventet_mrr, 0);
+            const avsluttetDenneMnd = wonThisMonth.length + lostThisMonth.length;
+            const winRate = avsluttetDenneMnd ? Math.round((wonThisMonth.length / avsluttetDenneMnd) * 100) : 0;
+            const alderSnitt = openDeals.length
+              ? Math.round(openDeals.reduce((s, d) => s + (dagerSiden(d.opprettet_dato) ?? 0), 0) / openDeals.length)
+              : 0;
             return (
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
                 <div className="bg-card border rounded-lg p-3">
-                  <p className="text-xs text-muted-foreground font-medium">Total pipeline</p>
+                  <p className="text-xs text-muted-foreground font-medium">Total pipelineverdi</p>
                   <p className="text-lg font-bold tracking-tight">{nok(totalPipeline)}</p>
                   <p className="text-[11px] text-muted-foreground">{openDeals.length} åpne deals</p>
                 </div>
                 <div className="bg-card border rounded-lg p-3">
-                  <p className="text-xs text-muted-foreground font-medium">Vektet verdi</p>
-                  <p className="text-lg font-bold tracking-tight">{nok(totalVektet)}</p>
-                  <p className="text-[11px] text-muted-foreground">justert for sannsynlighet</p>
+                  <p className="text-xs text-muted-foreground font-medium">Vunnet denne måneden</p>
+                  <p className="text-lg font-bold tracking-tight">{nok(vunnetMrr)}</p>
+                  <p className="text-[11px] text-muted-foreground">{wonThisMonth.length} deals · MRR</p>
                 </div>
                 <div className="bg-card border rounded-lg p-3">
-                  <p className="text-xs text-muted-foreground font-medium">Nær closing</p>
-                  <p className="text-lg font-bold tracking-tight">{nearClosing.length} deals</p>
-                  <p className="text-[11px] text-muted-foreground">{nok(nearClosingValue)} i verdi</p>
+                  <p className="text-xs text-muted-foreground font-medium">Win rate denne måneden</p>
+                  <p className="text-lg font-bold tracking-tight">{winRate} %</p>
+                  <p className="text-[11px] text-muted-foreground">{wonThisMonth.length} av {avsluttetDenneMnd} avsluttet</p>
                 </div>
                 <div className="bg-card border rounded-lg p-3">
-                  <p className="text-xs text-muted-foreground font-medium">Snitt MRR</p>
-                  <p className="text-lg font-bold tracking-tight">{nok(openDeals.length ? Math.round(openDeals.reduce((s, d) => s + d.forventet_mrr, 0) / openDeals.length) : 0)}</p>
-                  <p className="text-[11px] text-muted-foreground">per deal</p>
+                  <p className="text-xs text-muted-foreground font-medium">Snitt deal-alder</p>
+                  <p className="text-lg font-bold tracking-tight">{alderSnitt} dager</p>
+                  <p className="text-[11px] text-muted-foreground">åpne deals</p>
                 </div>
               </div>
             );
@@ -671,8 +748,13 @@ export default function Salgsmuligheter() {
             <DealList deals={sortDeals(openDeals)} getSelskapNavn={getSelskapNavn} getSelskapDomain={getSelskapDomain} onSelect={setSelectedSm} label="Åpne salgsmuligheter" onNavigateSelskap={id => navigate(`/selskaper/${id}`)} isMobile={isMobile} showKontraktStatus showLukkedato showSignalAndNextStep />
           ) : (
           <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-4 scrollbar-thin items-start">
-            {openStatuses.map(stage => {
-              const stageDeals = sortDeals(openDeals.filter(d => d.status === stage));
+            {KANBAN_STADIER.map(stadium => {
+              const stage = stadium as SalgsmulighetStatus;
+              const stageDeals = sortDeals(
+                stadium === "Vunnet" ? wonThisMonth
+                : stadium === "Tapt" ? lostThisMonth
+                : openDeals.filter(d => tilKanbanStadium(d.status) === stadium)
+              );
               const stageMrr = stageDeals.reduce((s, d) => s + d.forventet_mrr, 0);
               return (
                 <div key={stage} className={`${isMobile ? "min-w-[240px] w-[240px]" : "min-w-[230px] w-[230px]"} flex-shrink-0 flex flex-col rounded-xl p-2 -m-2 transition-colors ${dragOverStage === stage ? "bg-primary/10 ring-2 ring-primary/30" : ""}`}
@@ -773,6 +855,14 @@ export default function Salgsmuligheter() {
                             </div>
                           )}
 
+                          {/* Dager i stadium */}
+                          <div className="text-[10px] text-muted-foreground mb-1">
+                            {(() => {
+                              const d = dagerSiden(stageSince[deal.id] || deal.opprettet_dato);
+                              return d === null ? "—" : `${d} d i dette stadiet`;
+                            })()}
+                          </div>
+
                           {/* Footer: neste steg + signal */}
                           {missingNeste ? (
                             <div className="flex items-center gap-1 mt-1.5 pt-1.5 border-t border-border/50 text-destructive">
@@ -782,7 +872,19 @@ export default function Salgsmuligheter() {
                           ) : (
                             <div className="flex items-center justify-between gap-1.5 mt-1.5 pt-1.5 border-t border-border/50">
                               <p className="text-[10px] text-muted-foreground truncate flex-1">→ {deal.neste_steg}</p>
-                              <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${signal.color}`} title={signal.label} />
+                              {deal.ansvarlig && (
+                                <span
+                                  className="w-4 h-4 rounded-full bg-primary/15 text-primary text-[8px] font-semibold flex items-center justify-center shrink-0"
+                                  title={getProfileName(deal.ansvarlig) || deal.ansvarlig}
+                                >
+                                  {initialer(getProfileName(deal.ansvarlig) || deal.ansvarlig)}
+                                </span>
+                              )}
+                              {erKald(deal.sist_aktivitet) ? (
+                                <div className="w-2 h-2 rounded-full shrink-0 bg-destructive" title={`Ingen aktivitet siste 7 dager (${relativTid(deal.sist_aktivitet)})`} />
+                              ) : (
+                                <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${signal.color}`} title={signal.label} />
+                              )}
                             </div>
                           )}
 
