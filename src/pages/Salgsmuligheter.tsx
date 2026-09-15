@@ -265,6 +265,38 @@ export default function Salgsmuligheter() {
   const getSelskapNavn = (id: string) => selskaper.find(s => s.id === id)?.firmanavn || "–";
   const getSelskapDomain = (id: string | null) => id ? selskaper.find(s => s.id === id)?.domene || "" : "";
   const getProfileName = (id: string) => profiles.find(p => p.user_id === id)?.display_name || "";
+  /** Oppretter en oppgave hvis en tilsvarende ikke allerede finnes på dealen. */
+  const opprettOppgave = useCallback((deal: Salgsmulighet, tekst: string, frist: string) => {
+    const finnes = oppgaver.some(o => o.salgsmulighet_id === deal.id && o.oppgave === tekst && o.status !== "Ferdig");
+    if (finnes) return;
+    updateOppgaver(prev => [...prev, {
+      id: crypto.randomUUID(),
+      oppgave: tekst,
+      lead_id: "",
+      selskap_id: deal.selskap_id || "",
+      salgsmulighet_id: deal.id,
+      kontakt_id: deal.kontakt_id || "",
+      ansvarlig: deal.ansvarlig || user?.id || "",
+      frist,
+      prioritet: "Høy",
+      status: "Åpen",
+      paaminnelse: true,
+      notater: "",
+    }]);
+    toast.success(`Oppgave opprettet: ${tekst}`);
+  }, [oppgaver, updateOppgaver, user?.id]);
+
+  /** Automatikk når en deal flyttes til et nytt stadium. */
+  const etterStegEndring = useCallback((deal: Salgsmulighet, nyStatus: SalgsmulighetStatus) => {
+    if (nyStatus === "Demo gjennomført") {
+      opprettOppgave(deal, "Send kontrakt", datoOm(2));
+    }
+  }, [opprettOppgave]);
+
+  const feirVunnet = useCallback(() => {
+    confetti({ particleCount: 140, spread: 75, origin: { y: 0.6 }, colors: ["#c0392b", "#e67e22", "#2ecc71", "#ffffff"] });
+  }, []);
+
   const handleDrop = (e: React.DragEvent, stage: SalgsmulighetStatus) => {
     e.preventDefault();
     setDragOverStage(null);
@@ -284,18 +316,22 @@ export default function Salgsmuligheter() {
     if (stage === "Vunnet") { setWinPartnerId(""); setWinDialog(draggedId); }
     else if (stage === "Tapt") { setLossDialog(draggedId); }
     else {
+      const deal = salgsmuligheter.find(s => s.id === draggedId);
       updateSalgsmuligheter(prev => prev.map(s =>
-        s.id === draggedId ? { ...s, status: stage, sist_aktivitet: new Date().toISOString().split("T")[0] } : s
+        s.id === draggedId ? { ...s, status: stage, sist_aktivitet: idag() } : s
       ));
+      if (deal) etterStegEndring(deal, stage);
     }
     setDraggedId(null);
   };
 
   const moveDealToStage = useCallback((dealId: string, newStage: SalgsmulighetStatus) => {
+    const deal = salgsmuligheter.find(s => s.id === dealId);
     updateSalgsmuligheter(prev => prev.map(s =>
-      s.id === dealId ? { ...s, status: newStage, sist_aktivitet: new Date().toISOString().split("T")[0] } : s
+      s.id === dealId ? { ...s, status: newStage, sist_aktivitet: idag() } : s
     ));
-  }, [updateSalgsmuligheter]);
+    if (deal) etterStegEndring(deal, newStage);
+  }, [salgsmuligheter, updateSalgsmuligheter, etterStegEndring]);
 
   const addSm = () => {
     if (!form.use_case.trim()) {
