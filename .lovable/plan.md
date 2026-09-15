@@ -11,6 +11,7 @@ Bygge to rene arbeidsflater basert kun på eksisterende CRM-data: ett dashboard 
   - Kunder: aktive live-kunder, live MRR, kansellerte denne måneden og månedlig churn-rate.
 - Legg inn «Krever handling nå» med de fire avtalte kontrollpunktene og lenker som åpner relevante, filtrerte sider.
 - Slå sammen kommende møter og åpne oppgaver til én kronologisk liste med fem elementer og riktige lenker.
+- Legg til «Dagens aktivitet» mellom aktivitetsoversikten og grafene. Vis dagens telefonsamtaler, e-poster, møter, meldinger, notater og kontrakthendelser som en tidslinje, nyeste først, med klokkeslett, ikon, tittel og klikkbar tilknytning. Vis en tydelig tomtilstand når dagen ikke har registrerte aktiviteter.
 - Lag to enkle grafer med eksisterende diagramverktøy:
   - MRR-utvikling for siste seks måneder.
   - Leads gruppert som Inbound, Outbound, Partner og Referanse.
@@ -32,7 +33,8 @@ Bygge to rene arbeidsflater basert kun på eksisterende CRM-data: ett dashboard 
 - Alle klikkbare kort og relasjoner får tastaturfokus og mobilvennlig oppsett.
 
 ## Tekniske detaljer
-- Dashboard-data beregnes fra eksisterende leads, salgsmuligheter, selskaper, oppgaver og aktiviteter; ingen AI-kall eller generert tekst brukes.
+- Dashboard-data beregnes fra eksisterende leads, salgsmuligheter, selskaper, oppgaver, aktiviteter og kontraktshendelser; ingen AI-kall eller generert tekst brukes.
+- «Dagens aktivitet» henter dagens aktivitetsrader og relevante kontraktshendelser fra endringsloggen, med eksisterende tilgangsstyring.
 - MRR-grafen rekonstruerer månedsslutt fra nåværende MRR, go-live-dato og kanselleringsdato. Historiske prisendringer kan ikke gjenskapes fordi de ikke lagres som tidsserie.
 - Kontrakter eldre enn sju dager bruker statusendring fra endringsloggen når tilgjengelig, ellers siste aktivitetsdato som trygg reserve.
 - Kildegrafen bruker prosjektets eksisterende kildegruppering.
