@@ -1051,17 +1051,19 @@ function useCrmStoreInternal() {
     if (!selskap) return;
     const today = new Date().toISOString().split("T")[0];
 
+    const primaerKontakt = kontakter.find(k => k.selskap_id === selskapId);
+
     const partnerId = crypto.randomUUID();
     const nyPartner: Partner = {
       id: partnerId, partnernavn: selskap.firmanavn, partnertype: "Salgspartner",
-      kontaktperson: "", e_post: "", telefon: "",
+      kontaktperson: primaerKontakt?.navn || "", e_post: primaerKontakt?.e_post || "",
+      telefon: primaerKontakt?.telefon || "",
       partnerstatus: "Under onboarding", pipeline_status: "Ny partnermulighet",
       ansvarlig: selskap.kundeansvarlig, provisjonsprosent: 0, provisjonstype: "",
-      selskap_id: "", opprettet_dato: today, sist_aktivitet: today, notater: selskap.notater,
+      selskap_id: selskapId, opprettet_dato: today, sist_aktivitet: today, notater: selskap.notater,
     };
     updatePartnere(prev => [...prev, nyPartner]);
-    updateSelskaper(prev => prev.filter(s => s.id !== selskapId));
-  }, [selskaper, updatePartnere, updateSelskaper]);
+  }, [selskaper, kontakter, updatePartnere]);
 
   return {
     leads, salgsmuligheter, prosjekter, selskaper, kontakter, oppgaver, partnere,
