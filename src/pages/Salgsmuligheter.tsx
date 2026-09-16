@@ -1261,7 +1261,10 @@ export default function Salgsmuligheter() {
                     <Input value={currentSm.use_case} onChange={e => updateField("use_case", e.target.value)} className="h-7 text-xs" readOnly={!canEdit} />
                   </DetailField>
                   <div className="rounded-lg border p-3 space-y-1">
-                    <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Neste steg</label>
+                    <div className="flex items-center justify-between gap-2">
+                      <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Neste steg</label>
+                      <NesteStegTaskButton nesteSteg={currentSm.neste_steg} salgsmulighet_id={currentSm.id} selskap_id={currentSm.selskap_id} kontakt_id={currentSm.kontakt_id} disabled={!canEdit} />
+                    </div>
                     <Input value={currentSm.neste_steg} onChange={e => updateField("neste_steg", e.target.value)} className={`h-8 text-sm ${!currentSm.neste_steg?.trim() ? "border-destructive ring-1 ring-destructive/30" : ""}`} readOnly={!canEdit} placeholder="Hva er neste steg?" />
                     {!currentSm.neste_steg?.trim() && (
                       <p className="text-[10px] text-destructive flex items-center gap-1"><AlertTriangle className="w-3 h-3" />Obligatorisk</p>
