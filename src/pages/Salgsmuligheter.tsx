@@ -33,6 +33,7 @@ import MeetingNotesList from "@/components/MeetingNotesList";
 import SendContractModal from "@/components/SendContractModal";
 import DealRecapCard from "@/components/DealRecapCard";
 import LastMeetingCard from "@/components/LastMeetingCard";
+import NesteStegTaskButton from "@/components/NesteStegTaskButton";
 import { useLastMeetingsByDeal } from "@/hooks/use-last-meetings";
 import confetti from "canvas-confetti";
 import { KANBAN_STADIER, tilKanbanStadium, dagerSiden, relativTid, initialer, erKald, idag, datoOm, type KanbanStadium } from "@/lib/sales-flow";
