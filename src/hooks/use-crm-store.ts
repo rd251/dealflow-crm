@@ -332,7 +332,8 @@ function useCrmStoreInternal() {
   };
 
   // Fetch all data (robust: one failed table should not block all data)
-  const refresh = useCallback(async () => {
+  // silent=true keeps existing data on screen (used for background refreshes)
+  const refresh = useCallback(async (silent = false) => {
     if (authLoading) return;
 
     if (!session?.access_token) {
@@ -342,7 +343,7 @@ function useCrmStoreInternal() {
     }
 
     console.log("[CRM] refresh() called, fetching data...");
-    setLoaded(false);
+    if (!silent) setLoaded(false);
 
     try {
       const [r1, r2, r3, r4, r5, r6, r7] = await Promise.allSettled([
