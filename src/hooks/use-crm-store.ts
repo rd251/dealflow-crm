@@ -439,7 +439,7 @@ function useCrmStoreInternal() {
   const syncErrorHandler = <T,>(
     module: string,
     prev: T[],
-    ref: React.MutableRefObject<T[]>,
+    ref: { current: T[] },
     setter: (rows: T[]) => void,
   ) => (e: Error) => {
     console.error(`sync${module} error:`, e);
