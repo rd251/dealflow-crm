@@ -1009,8 +1009,14 @@ function useCrmStoreInternal() {
     const knyttedeKontakter = kontakter.filter(k => k.selskap_id === selskapId);
     if (knyttedeKontakter.length > 0) {
       updateKontakter(prev => prev.filter(k => k.selskap_id !== selskapId));
+      // Remove the company only after the contacts are gone in the database,
+      // so no rows are left pointing at a deleted company.
+      kontakterSyncQueueRef.current = kontakterSyncQueueRef.current.then(() => {
+        updateSelskaper(prev => prev.filter(s => s.id !== selskapId));
+      });
+    } else {
+      updateSelskaper(prev => prev.filter(s => s.id !== selskapId));
     }
-    updateSelskaper(prev => prev.filter(s => s.id !== selskapId));
     return true;
   }, [salgsmuligheter, prosjekter, kontakter, updateKontakter, updateSelskaper]);
 
