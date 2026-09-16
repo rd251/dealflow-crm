@@ -25,6 +25,7 @@ import LastActivityBadge from "@/components/LastActivityBadge";
 import DataImportDialog from "@/components/DataImportDialog";
 import CompanyLogo from "@/components/CompanyLogo";
 import LeadForwardEmailPreview from "@/components/LeadForwardEmailPreview";
+import NesteStegTaskButton from "@/components/NesteStegTaskButton";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -947,7 +948,10 @@ export default function Leads() {
               <div className="space-y-3">
                 {/* Neste steg – prominent at top */}
                 <div className={`rounded-lg border p-3 ${!currentLead.neste_steg ? "border-warning bg-warning/5" : "bg-muted/30"}`}>
-                  <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Neste steg</label>
+                  <div className="flex items-center justify-between gap-2">
+                    <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Neste steg</label>
+                    <NesteStegTaskButton nesteSteg={currentLead.neste_steg} lead_id={currentLead.id} disabled={!canEdit || currentIsLocked} />
+                  </div>
                   <Input value={currentLead.neste_steg} onChange={e => updateField("neste_steg", e.target.value)} className="h-7 text-xs mt-1 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0" placeholder="Hva er neste steg?" readOnly={!canEdit || currentIsLocked} />
                   {!currentLead.neste_steg && <p className="text-[10px] text-warning mt-0.5">⚠ Mangler neste steg</p>}
                 </div>
