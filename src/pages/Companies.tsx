@@ -269,7 +269,7 @@ export default function Companies() {
           <div className="flex gap-2 justify-end">
             <Button variant="outline" onClick={() => setDeleteDialog(null)}>Avbryt</Button>
             <Button variant="destructive" onClick={() => {
-              if (deleteDialog) { slettSelskap(deleteDialog); setDeleteDialog(null); }
+              if (deleteDialog && slettSelskap(deleteDialog)) setDeleteDialog(null);
             }}>Slett</Button>
           </div>
         </DialogContent>
