@@ -990,9 +990,29 @@ function useCrmStoreInternal() {
     ));
   }, [updateSelskaper]);
 
-  const slettSelskap = useCallback((selskapId: string) => {
+  const slettSelskap = useCallback((selskapId: string): boolean => {
+    const knyttedeSm = salgsmuligheter.filter(sm => sm.selskap_id === selskapId);
+    const knyttedeProsjekter = prosjekter.filter(p => p.selskap_id === selskapId);
+
+    if (knyttedeSm.length > 0 || knyttedeProsjekter.length > 0) {
+      const deler = [
+        knyttedeSm.length > 0 ? `${knyttedeSm.length} salgsmulighet${knyttedeSm.length === 1 ? "" : "er"}` : null,
+        knyttedeProsjekter.length > 0 ? `${knyttedeProsjekter.length} prosjekt${knyttedeProsjekter.length === 1 ? "" : "er"}` : null,
+      ].filter(Boolean).join(" og ");
+      toast.error("Kan ikke slette selskapet", {
+        description: `Selskapet har ${deler} knyttet til seg. Flytt eller slett disse først.`,
+      });
+      return false;
+    }
+
+    // Contacts follow the company (archived to deleted_items via dbDelete)
+    const knyttedeKontakter = kontakter.filter(k => k.selskap_id === selskapId);
+    if (knyttedeKontakter.length > 0) {
+      updateKontakter(prev => prev.filter(k => k.selskap_id !== selskapId));
+    }
     updateSelskaper(prev => prev.filter(s => s.id !== selskapId));
-  }, [updateSelskaper]);
+    return true;
+  }, [salgsmuligheter, prosjekter, kontakter, updateKontakter, updateSelskaper]);
 
   const angreTilSalgsmulighet = useCallback((selskapId: string) => {
     const today = new Date().toISOString().split("T")[0];
