@@ -332,7 +332,8 @@ function useCrmStoreInternal() {
   };
 
   // Fetch all data (robust: one failed table should not block all data)
-  const refresh = useCallback(async () => {
+  // silent=true keeps existing data on screen (used for background refreshes)
+  const refresh = useCallback(async (silent = false) => {
     if (authLoading) return;
 
     if (!session?.access_token) {
@@ -342,7 +343,7 @@ function useCrmStoreInternal() {
     }
 
     console.log("[CRM] refresh() called, fetching data...");
-    setLoaded(false);
+    if (!silent) setLoaded(false);
 
     try {
       const [r1, r2, r3, r4, r5, r6, r7] = await Promise.allSettled([
@@ -397,7 +398,7 @@ function useCrmStoreInternal() {
       const now = Date.now();
       if (now - lastRefresh < MIN_INTERVAL_MS) return;
       lastRefresh = now;
-      refresh();
+      refresh(true);
     };
     document.addEventListener("visibilitychange", maybeRefresh);
     window.addEventListener("focus", maybeRefresh);
@@ -432,12 +433,23 @@ function useCrmStoreInternal() {
   const oppgaverSyncQueueRef = useRef<Promise<void>>(Promise.resolve());
   const partnereSyncQueueRef = useRef<Promise<void>>(Promise.resolve());
 
-  const syncErrorHandler = (module: string) => (e: Error) => {
+  // On sync failure: show a toast AND roll local state back to the value it
+  // had before the optimistic update, so the UI never shows unsaved changes
+  // as if they were stored.
+  const syncErrorHandler = <T,>(
+    module: string,
+    prev: T[],
+    ref: { current: T[] },
+    setter: (rows: T[]) => void,
+  ) => (e: Error) => {
     console.error(`sync${module} error:`, e);
+    ref.current = prev;
+    setter(prev);
     toast.error(`Lagring feilet: ${module}`, {
       description: e.message?.substring(0, 120) || "Ukjent feil",
     });
   };
+
 
   const updateLeads = useCallback((fn: (prev: Lead[]) => Lead[]) => {
     const prev = leadsRef.current;
@@ -446,7 +458,7 @@ function useCrmStoreInternal() {
     setLeads(next);
     leadsSyncQueueRef.current = leadsSyncQueueRef.current
       .then(() => syncLeads(prev, next))
-      .catch(syncErrorHandler("Leads"));
+      .catch(syncErrorHandler("Leads", prev, leadsRef, setLeads));
   }, []);
 
   const updateSelskaper = useCallback((fn: (prev: Selskap[]) => Selskap[]) => {
@@ -456,7 +468,7 @@ function useCrmStoreInternal() {
     setSelskaper(next);
     selskaperSyncQueueRef.current = selskaperSyncQueueRef.current
       .then(() => syncSelskaper(prev, next))
-      .catch(syncErrorHandler("Selskaper"));
+      .catch(syncErrorHandler("Selskaper", prev, selskaperRef, setSelskaper));
   }, []);
 
   const updateKontakter = useCallback((fn: (prev: Kontakt[]) => Kontakt[]) => {
@@ -467,7 +479,7 @@ function useCrmStoreInternal() {
     kontakterSyncQueueRef.current = kontakterSyncQueueRef.current
       .then(() => selskaperSyncQueueRef.current)
       .then(() => syncKontakter(prev, next))
-      .catch(syncErrorHandler("Kontakter"));
+      .catch(syncErrorHandler("Kontakter", prev, kontakterRef, setKontakter));
   }, []);
 
   const updateSalgsmuligheter = useCallback((fn: (prev: Salgsmulighet[]) => Salgsmulighet[]) => {
@@ -478,7 +490,7 @@ function useCrmStoreInternal() {
     salgsmuligheterSyncQueueRef.current = salgsmuligheterSyncQueueRef.current
       .then(() => Promise.all([selskaperSyncQueueRef.current, kontakterSyncQueueRef.current]))
       .then(() => syncSalgsmuligheter(prev, next))
-      .catch(syncErrorHandler("Salgsmuligheter"));
+      .catch(syncErrorHandler("Salgsmuligheter", prev, salgsmuligheterRef, setSalgsmuligheter));
   }, []);
 
   const updateProsjekter = useCallback((fn: (prev: Prosjekt[]) => Prosjekt[]) => {
@@ -489,7 +501,7 @@ function useCrmStoreInternal() {
     prosjekterSyncQueueRef.current = prosjekterSyncQueueRef.current
       .then(() => selskaperSyncQueueRef.current)
       .then(() => syncProsjekter(prev, next))
-      .catch(syncErrorHandler("Prosjekter"));
+      .catch(syncErrorHandler("Prosjekter", prev, prosjekterRef, setProsjekter));
   }, []);
 
   const updateOppgaver = useCallback((fn: (prev: Oppgave[]) => Oppgave[]) => {
@@ -500,7 +512,7 @@ function useCrmStoreInternal() {
     oppgaverSyncQueueRef.current = oppgaverSyncQueueRef.current
       .then(() => selskaperSyncQueueRef.current)
       .then(() => syncOppgaver(prev, next))
-      .catch(syncErrorHandler("Oppgaver"));
+      .catch(syncErrorHandler("Oppgaver", prev, oppgaverRef, setOppgaver));
   }, []);
 
   const updatePartnere = useCallback((fn: (prev: Partner[]) => Partner[]) => {
@@ -511,7 +523,7 @@ function useCrmStoreInternal() {
     partnereSyncQueueRef.current = partnereSyncQueueRef.current
       .then(() => selskaperSyncQueueRef.current)
       .then(() => syncPartnere(prev, next))
-      .catch(syncErrorHandler("Partnere"));
+      .catch(syncErrorHandler("Partnere", prev, partnereRef, setPartnere));
   }, []);
 
   // Sync helpers - detect new/updated/deleted items
@@ -978,9 +990,35 @@ function useCrmStoreInternal() {
     ));
   }, [updateSelskaper]);
 
-  const slettSelskap = useCallback((selskapId: string) => {
-    updateSelskaper(prev => prev.filter(s => s.id !== selskapId));
-  }, [updateSelskaper]);
+  const slettSelskap = useCallback((selskapId: string): boolean => {
+    const knyttedeSm = salgsmuligheter.filter(sm => sm.selskap_id === selskapId);
+    const knyttedeProsjekter = prosjekter.filter(p => p.selskap_id === selskapId);
+
+    if (knyttedeSm.length > 0 || knyttedeProsjekter.length > 0) {
+      const deler = [
+        knyttedeSm.length > 0 ? `${knyttedeSm.length} salgsmulighet${knyttedeSm.length === 1 ? "" : "er"}` : null,
+        knyttedeProsjekter.length > 0 ? `${knyttedeProsjekter.length} prosjekt${knyttedeProsjekter.length === 1 ? "" : "er"}` : null,
+      ].filter(Boolean).join(" og ");
+      toast.error("Kan ikke slette selskapet", {
+        description: `Selskapet har ${deler} knyttet til seg. Flytt eller slett disse først.`,
+      });
+      return false;
+    }
+
+    // Contacts follow the company (archived to deleted_items via dbDelete)
+    const knyttedeKontakter = kontakter.filter(k => k.selskap_id === selskapId);
+    if (knyttedeKontakter.length > 0) {
+      updateKontakter(prev => prev.filter(k => k.selskap_id !== selskapId));
+      // Remove the company only after the contacts are gone in the database,
+      // so no rows are left pointing at a deleted company.
+      kontakterSyncQueueRef.current = kontakterSyncQueueRef.current.then(() => {
+        updateSelskaper(prev => prev.filter(s => s.id !== selskapId));
+      });
+    } else {
+      updateSelskaper(prev => prev.filter(s => s.id !== selskapId));
+    }
+    return true;
+  }, [salgsmuligheter, prosjekter, kontakter, updateKontakter, updateSelskaper]);
 
   const angreTilSalgsmulighet = useCallback((selskapId: string) => {
     const today = new Date().toISOString().split("T")[0];
@@ -1013,17 +1051,19 @@ function useCrmStoreInternal() {
     if (!selskap) return;
     const today = new Date().toISOString().split("T")[0];
 
+    const primaerKontakt = kontakter.find(k => k.selskap_id === selskapId);
+
     const partnerId = crypto.randomUUID();
     const nyPartner: Partner = {
       id: partnerId, partnernavn: selskap.firmanavn, partnertype: "Salgspartner",
-      kontaktperson: "", e_post: "", telefon: "",
+      kontaktperson: primaerKontakt?.navn || "", e_post: primaerKontakt?.e_post || "",
+      telefon: primaerKontakt?.telefon || "",
       partnerstatus: "Under onboarding", pipeline_status: "Ny partnermulighet",
       ansvarlig: selskap.kundeansvarlig, provisjonsprosent: 0, provisjonstype: "",
-      selskap_id: "", opprettet_dato: today, sist_aktivitet: today, notater: selskap.notater,
+      selskap_id: selskapId, opprettet_dato: today, sist_aktivitet: today, notater: selskap.notater,
     };
     updatePartnere(prev => [...prev, nyPartner]);
-    updateSelskaper(prev => prev.filter(s => s.id !== selskapId));
-  }, [selskaper, updatePartnere, updateSelskaper]);
+  }, [selskaper, kontakter, updatePartnere]);
 
   return {
     leads, salgsmuligheter, prosjekter, selskaper, kontakter, oppgaver, partnere,

@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { Settings } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useSidebarCollapsed } from "@/hooks/use-sidebar-collapsed";
 import { Button } from "@/components/ui/button";
 import NotificationBell from "@/components/NotificationBell";
 
@@ -15,9 +16,10 @@ interface PageShellProps {
 export default function PageShell({ title, subtitle, actions, children }: PageShellProps) {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
+  const { collapsed } = useSidebarCollapsed();
 
   return (
-    <div className={`min-h-screen bg-background ${isMobile ? "ml-0" : "ml-60"} transition-all duration-200`}>
+    <div className={`min-h-screen bg-background ${isMobile ? "ml-0" : collapsed ? "ml-14" : "ml-60"} transition-all duration-200`}>
       <header className={`sticky top-0 z-40 bg-background/80 backdrop-blur-sm border-b ${isMobile ? "px-4 py-4 pl-14" : "px-8 py-5"}`}>
         <div className="flex items-center justify-between">
           <div className="min-w-0">
