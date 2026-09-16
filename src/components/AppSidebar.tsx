@@ -146,7 +146,7 @@ export default function AppSidebar() {
   const { isAdmin, user } = useAuth();
   const { profiles } = useProfiles();
   const [open, setOpen] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
+  const { collapsed, setCollapsed } = useSidebarCollapsed();
 
   const displayName = user ? profiles.find(p => p.user_id === user.id)?.display_name : undefined;
 
