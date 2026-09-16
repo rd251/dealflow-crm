@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { Settings } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useSidebarCollapsed } from "@/hooks/use-sidebar-collapsed";
 import { Button } from "@/components/ui/button";
 import NotificationBell from "@/components/NotificationBell";
 
