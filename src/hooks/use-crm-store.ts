@@ -433,12 +433,23 @@ function useCrmStoreInternal() {
   const oppgaverSyncQueueRef = useRef<Promise<void>>(Promise.resolve());
   const partnereSyncQueueRef = useRef<Promise<void>>(Promise.resolve());
 
-  const syncErrorHandler = (module: string) => (e: Error) => {
+  // On sync failure: show a toast AND roll local state back to the value it
+  // had before the optimistic update, so the UI never shows unsaved changes
+  // as if they were stored.
+  const syncErrorHandler = <T,>(
+    module: string,
+    prev: T[],
+    ref: React.MutableRefObject<T[]>,
+    setter: (rows: T[]) => void,
+  ) => (e: Error) => {
     console.error(`sync${module} error:`, e);
+    ref.current = prev;
+    setter(prev);
     toast.error(`Lagring feilet: ${module}`, {
       description: e.message?.substring(0, 120) || "Ukjent feil",
     });
   };
+
 
   const updateLeads = useCallback((fn: (prev: Lead[]) => Lead[]) => {
     const prev = leadsRef.current;
