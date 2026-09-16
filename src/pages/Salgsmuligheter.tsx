@@ -873,6 +873,7 @@ export default function Salgsmuligheter() {
                           ) : (
                             <div className="flex items-center justify-between gap-1.5 mt-1.5 pt-1.5 border-t border-border/50">
                               <p className="text-[10px] text-muted-foreground truncate flex-1">→ {deal.neste_steg}</p>
+                              <NesteStegTaskButton compact nesteSteg={deal.neste_steg} salgsmulighet_id={deal.id} selskap_id={deal.selskap_id} kontakt_id={deal.kontakt_id} disabled={!canEdit} />
                               {deal.ansvarlig && (
                                 <span
                                   className="w-4 h-4 rounded-full bg-primary/15 text-primary text-[8px] font-semibold flex items-center justify-center shrink-0"
