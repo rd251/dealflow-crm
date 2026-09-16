@@ -4,6 +4,7 @@ import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/use-auth";
+import { useSidebarCollapsed } from "@/hooks/use-sidebar-collapsed";
 import { useProfiles } from "@/hooks/use-profiles";
 import logo from "@/assets/logo-white.svg";
 import { useState } from "react";
