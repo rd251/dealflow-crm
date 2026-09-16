@@ -221,5 +221,6 @@ export default function AppSidebar() {
 }
 
 export function useSidebarWidth() {
-  return { collapsed: false };
+  const { collapsed } = useSidebarCollapsed();
+  return { collapsed };
 }
