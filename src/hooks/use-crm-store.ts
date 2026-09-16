@@ -398,7 +398,7 @@ function useCrmStoreInternal() {
       const now = Date.now();
       if (now - lastRefresh < MIN_INTERVAL_MS) return;
       lastRefresh = now;
-      refresh();
+      refresh(true);
     };
     document.addEventListener("visibilitychange", maybeRefresh);
     window.addEventListener("focus", maybeRefresh);
