@@ -458,7 +458,7 @@ function useCrmStoreInternal() {
     setLeads(next);
     leadsSyncQueueRef.current = leadsSyncQueueRef.current
       .then(() => syncLeads(prev, next))
-      .catch(syncErrorHandler("Leads"));
+      .catch(syncErrorHandler("Leads", prev, leadsRef, setLeads));
   }, []);
 
   const updateSelskaper = useCallback((fn: (prev: Selskap[]) => Selskap[]) => {
@@ -468,7 +468,7 @@ function useCrmStoreInternal() {
     setSelskaper(next);
     selskaperSyncQueueRef.current = selskaperSyncQueueRef.current
       .then(() => syncSelskaper(prev, next))
-      .catch(syncErrorHandler("Selskaper"));
+      .catch(syncErrorHandler("Selskaper", prev, selskaperRef, setSelskaper));
   }, []);
 
   const updateKontakter = useCallback((fn: (prev: Kontakt[]) => Kontakt[]) => {
@@ -479,7 +479,7 @@ function useCrmStoreInternal() {
     kontakterSyncQueueRef.current = kontakterSyncQueueRef.current
       .then(() => selskaperSyncQueueRef.current)
       .then(() => syncKontakter(prev, next))
-      .catch(syncErrorHandler("Kontakter"));
+      .catch(syncErrorHandler("Kontakter", prev, kontakterRef, setKontakter));
   }, []);
 
   const updateSalgsmuligheter = useCallback((fn: (prev: Salgsmulighet[]) => Salgsmulighet[]) => {
@@ -490,7 +490,7 @@ function useCrmStoreInternal() {
     salgsmuligheterSyncQueueRef.current = salgsmuligheterSyncQueueRef.current
       .then(() => Promise.all([selskaperSyncQueueRef.current, kontakterSyncQueueRef.current]))
       .then(() => syncSalgsmuligheter(prev, next))
-      .catch(syncErrorHandler("Salgsmuligheter"));
+      .catch(syncErrorHandler("Salgsmuligheter", prev, salgsmuligheterRef, setSalgsmuligheter));
   }, []);
 
   const updateProsjekter = useCallback((fn: (prev: Prosjekt[]) => Prosjekt[]) => {
@@ -501,7 +501,7 @@ function useCrmStoreInternal() {
     prosjekterSyncQueueRef.current = prosjekterSyncQueueRef.current
       .then(() => selskaperSyncQueueRef.current)
       .then(() => syncProsjekter(prev, next))
-      .catch(syncErrorHandler("Prosjekter"));
+      .catch(syncErrorHandler("Prosjekter", prev, prosjekterRef, setProsjekter));
   }, []);
 
   const updateOppgaver = useCallback((fn: (prev: Oppgave[]) => Oppgave[]) => {
@@ -512,7 +512,7 @@ function useCrmStoreInternal() {
     oppgaverSyncQueueRef.current = oppgaverSyncQueueRef.current
       .then(() => selskaperSyncQueueRef.current)
       .then(() => syncOppgaver(prev, next))
-      .catch(syncErrorHandler("Oppgaver"));
+      .catch(syncErrorHandler("Oppgaver", prev, oppgaverRef, setOppgaver));
   }, []);
 
   const updatePartnere = useCallback((fn: (prev: Partner[]) => Partner[]) => {
@@ -523,7 +523,7 @@ function useCrmStoreInternal() {
     partnereSyncQueueRef.current = partnereSyncQueueRef.current
       .then(() => selskaperSyncQueueRef.current)
       .then(() => syncPartnere(prev, next))
-      .catch(syncErrorHandler("Partnere"));
+      .catch(syncErrorHandler("Partnere", prev, partnereRef, setPartnere));
   }, []);
 
   // Sync helpers - detect new/updated/deleted items
