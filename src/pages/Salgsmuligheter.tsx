@@ -842,11 +842,23 @@ export default function Salgsmuligheter() {
 
       {pipelineSegment === "aktive" ? (
         <>
-          {filterUtenAktivitet && (
-            <div className="mb-3">
-              <Badge variant="secondary" className="gap-1 cursor-pointer hover:bg-destructive/10" onClick={() => setFilterUtenAktivitet(false)}>
-                Uten aktivitet ✕
-              </Badge>
+          {(filterUtenAktivitet || stageFilter || kaldeFilter) && (
+            <div className="mb-3 flex flex-wrap gap-2">
+              {filterUtenAktivitet && (
+                <Badge variant="secondary" className="gap-1 cursor-pointer hover:bg-destructive/10" onClick={() => setFilterUtenAktivitet(false)}>
+                  Uten aktivitet ✕
+                </Badge>
+              )}
+              {stageFilter && (
+                <button type="button" onClick={() => clearDeepFilter("stadium")} aria-label={`Fjern filter ${stageFilter}`} className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                  <Badge variant="secondary" className="gap-1 cursor-pointer hover:bg-destructive/10">{stageFilter} · {openDeals.length} ✕</Badge>
+                </button>
+              )}
+              {kaldeFilter && (
+                <button type="button" onClick={() => clearDeepFilter("filter")} aria-label="Fjern filter kalde deals" className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                  <Badge variant="secondary" className="gap-1 cursor-pointer hover:bg-destructive/10">Kalde deals · {openDeals.length} ✕</Badge>
+                </button>
+              )}
             </div>
           )}
           <div className="mb-4 grid grid-cols-1 divide-y rounded-lg border bg-card shadow-card sm:grid-cols-3 sm:divide-x sm:divide-y-0">
