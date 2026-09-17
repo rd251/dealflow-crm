@@ -627,9 +627,9 @@ export default function Salgsmuligheter() {
       title="Salgsmuligheter"
       subtitle={`${openDeals.length} åpne · ${nok(openDeals.reduce((s, d) => s + d.forventet_mrr, 0))} MRR i pipeline`}
       actions={canEdit ? (
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <Dialog open={dialogOpen} onOpenChange={open => { setDialogOpen(open); if (!open) setCreateStage("Møte booket"); }}>
           <DialogTrigger asChild>
-            <Button size="sm"><Plus className="w-4 h-4 mr-1" />{!isMobile && "Ny mulighet"}</Button>
+            <Button size="sm" variant="secondary" onClick={() => setCreateStage("Møte booket")}><Plus className="w-4 h-4 mr-1" />Ny mulighet</Button>
           </DialogTrigger>
           <DialogContent className="max-w-[95vw] sm:max-w-lg">
             <DialogHeader><DialogTitle>Ny salgsmulighet</DialogTitle><DialogDescription>Fyll inn detaljer for den nye salgsmuligheten.</DialogDescription></DialogHeader>
@@ -808,19 +808,28 @@ export default function Salgsmuligheter() {
         </DialogContent>
       </Dialog>
 
-      <Tabs defaultValue="pipeline">
-        <TabsList className="mb-4 flex-wrap h-auto gap-1">
-          <TabsTrigger value="pipeline" className="text-xs sm:text-sm">Pipeline</TabsTrigger>
-          <TabsTrigger value="awaiting" className="text-xs sm:text-sm">Venter på signering ({awaitingSignature.length})</TabsTrigger>
-          <TabsTrigger value="signed" className="text-xs sm:text-sm">Signerte ({signedDeals.length})</TabsTrigger>
-          <TabsTrigger value="overdue" className="text-xs sm:text-sm">Forfalt ({overdueDeals.length})</TabsTrigger>
-          <TabsTrigger value="inactive" className="text-xs sm:text-sm">Inaktive ({inactiveDeals.length})</TabsTrigger>
-          <TabsTrigger value="won" className="text-xs sm:text-sm">Vunnet ({wonThisMonth.length})</TabsTrigger>
-          <TabsTrigger value="lost" className="text-xs sm:text-sm">Tapt ({lostThisMonth.length})</TabsTrigger>
-          <TabsTrigger value="all" className="text-xs sm:text-sm">Avsluttede</TabsTrigger>
-        </TabsList>
+      <div className="mb-4 inline-flex max-w-full overflow-x-auto rounded-md border bg-secondary/60 p-1 scrollbar-hide" aria-label="Visning av salgsmuligheter">
+        {([
+          ["aktive", "Aktive", openDeals.length],
+          ["vunnet", "Vunnet", salgsmuligheter.filter(deal => deal.status === "Vunnet").length],
+          ["tapt", "Tapt", salgsmuligheter.filter(deal => deal.status === "Tapt").length],
+          ["arkiv", "Arkiv", archiveDeals.length],
+        ] as const).map(([value, label, count]) => (
+          <Button
+            key={value}
+            type="button"
+            size="sm"
+            variant="ghost"
+            onClick={() => setPipelineSegment(value)}
+            className={`h-7 rounded px-3 text-xs ${pipelineSegment === value ? "bg-card text-foreground shadow-sm hover:bg-card" : "text-muted-foreground"}`}
+          >
+            {label} <span className="tabular-nums opacity-60">{count}</span>
+          </Button>
+        ))}
+      </div>
 
-        <TabsContent value="pipeline">
+      {pipelineSegment === "aktive" ? (
+        <>
           {filterUtenAktivitet && (
             <div className="mb-3">
               <Badge variant="secondary" className="gap-1 cursor-pointer hover:bg-destructive/10" onClick={() => setFilterUtenAktivitet(false)}>
@@ -828,40 +837,18 @@ export default function Salgsmuligheter() {
               </Badge>
             </div>
           )}
-          {/* Pipeline summary panel */}
-          {(() => {
-            const totalPipeline = openDeals.reduce((s, d) => s + beregnTotalKontraktsverdi(d), 0);
-            const vunnetMrr = wonThisMonth.reduce((s, d) => s + d.forventet_mrr, 0);
-            const avsluttetDenneMnd = wonThisMonth.length + lostThisMonth.length;
-            const winRate = avsluttetDenneMnd ? Math.round((wonThisMonth.length / avsluttetDenneMnd) * 100) : 0;
-            const alderSnitt = openDeals.length
-              ? Math.round(openDeals.reduce((s, d) => s + (dagerSiden(d.opprettet_dato) ?? 0), 0) / openDeals.length)
-              : 0;
-            return (
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-                <div className="bg-card border rounded-lg p-3">
-                  <p className="text-xs text-muted-foreground font-medium">Total pipelineverdi</p>
-                  <p className="text-lg font-bold tracking-tight">{nok(totalPipeline)}</p>
-                  <p className="text-[11px] text-muted-foreground">{openDeals.length} åpne deals</p>
-                </div>
-                <div className="bg-card border rounded-lg p-3">
-                  <p className="text-xs text-muted-foreground font-medium">Vunnet denne måneden</p>
-                  <p className="text-lg font-bold tracking-tight">{nok(vunnetMrr)}</p>
-                  <p className="text-[11px] text-muted-foreground">{wonThisMonth.length} deals · MRR</p>
-                </div>
-                <div className="bg-card border rounded-lg p-3">
-                  <p className="text-xs text-muted-foreground font-medium">Win rate denne måneden</p>
-                  <p className="text-lg font-bold tracking-tight">{winRate} %</p>
-                  <p className="text-[11px] text-muted-foreground">{wonThisMonth.length} av {avsluttetDenneMnd} avsluttet</p>
-                </div>
-                <div className="bg-card border rounded-lg p-3">
-                  <p className="text-xs text-muted-foreground font-medium">Snitt deal-alder</p>
-                  <p className="text-lg font-bold tracking-tight">{alderSnitt} dager</p>
-                  <p className="text-[11px] text-muted-foreground">åpne deals</p>
-                </div>
+          <div className="mb-4 grid grid-cols-1 divide-y rounded-lg border bg-card shadow-card sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+            {[
+              ["Pipelineverdi", nok(pipelineValue)],
+              ["Vektet verdi", nok(weightedValue)],
+              ["Win rate", `${winRate} %`],
+            ].map(([label, value]) => (
+              <div key={label} className="flex items-baseline justify-between gap-3 px-4 py-3 sm:block">
+                <p className="text-xs font-medium text-muted-foreground">{label}</p>
+                <p className="mt-0.5 font-display text-lg font-semibold tabular-nums">{value}</p>
               </div>
-            );
-          })()}
+            ))}
+          </div>
           {/* Søk og filtre */}
           <div className="flex flex-wrap items-center gap-2 mb-3">
             <div className="relative flex-1 min-w-[200px] max-w-xs">
@@ -905,246 +892,42 @@ export default function Salgsmuligheter() {
             <DealList deals={sortDeals(openDeals)} getSelskapNavn={getSelskapNavn} getSelskapDomain={getSelskapDomain} onSelect={setSelectedSm} label="Åpne salgsmuligheter" onNavigateSelskap={id => navigate(`/selskaper/${id}`)} isMobile={isMobile} showKontraktStatus showLukkedato showSignalAndNextStep />
           ) : (
           <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-4 scrollbar-thin items-start">
-            {KANBAN_STADIER.map(stadium => {
+            {ACTIVE_KANBAN_STAGES.map(stadium => {
               const stage = stadium as SalgsmulighetStatus;
-              const stageDeals = sortDeals(
-                stadium === "Vunnet" ? wonThisMonth
-                : stadium === "Tapt" ? lostThisMonth
-                : openDeals.filter(d => tilKanbanStadium(d.status) === stadium)
-              );
+              const stageDeals = sortDeals(openDeals.filter(d => tilKanbanStadium(d.status) === stadium));
               const stageMrr = stageDeals.reduce((s, d) => s + d.forventet_mrr, 0);
               return (
-                <div key={stage} className={`${isMobile ? "min-w-[240px] w-[240px]" : "min-w-[230px] w-[230px]"} flex-shrink-0 flex flex-col rounded-xl p-2 -m-2 transition-colors ${dragOverStage === stage ? "bg-primary/10 ring-2 ring-primary/30" : ""}`}
+                <div key={stage} className={`${isMobile ? "min-w-[270px] w-[270px]" : "min-w-[290px] w-[290px]"} flex-shrink-0 flex flex-col rounded-lg bg-secondary/35 p-2.5 transition-colors ${dragOverStage === stage ? "bg-pipeline/10 ring-2 ring-pipeline/30" : ""}`}
                   onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; setDragOverStage(stage); }}
                   onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOverStage(null); }}
                   onDragEnd={() => { setDragOverStage(null); setDraggedId(null); }}
                   onDrop={e => handleDrop(e, stage)}>
-                  <div className="mb-2 flex items-center gap-2">
-                    <div className={`w-2.5 h-2.5 rounded-full ${statusColors[stage]}`} />
-                    <h3 className="font-semibold text-xs sm:text-sm">{stage}</h3>
-                    <span className="text-xs text-muted-foreground ml-auto">{stageDeals.length}</span>
+                  <div className="mb-2.5 flex min-h-8 items-center gap-2 px-1">
+                    <div className={`h-2 w-2 shrink-0 rounded-full ${statusColors[stage]}`} />
+                    <h3 className="min-w-0 flex-1 truncate text-xs font-semibold">{stage}</h3>
+                    <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">{stageDeals.length} · {stageMrr > 0 ? nok(stageMrr) : "—"}</span>
+                    {canEdit && (
+                      <Button type="button" variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground" title={`Ny mulighet i ${stage}`} onClick={() => openCreateDialog(stage)}>
+                        <Plus className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
                   </div>
-                  <p className="text-[11px] text-muted-foreground mb-3 font-mono">{nok(stageMrr)} MRR</p>
                   <div className="space-y-2 max-h-[calc(75vh-80px)] overflow-y-auto pr-1 scrollbar-thin">
                     {stageDeals.map(deal => {
-                      const signal = activitySignal(deal.sist_aktivitet);
                       const missingNeste = !deal.neste_steg?.trim();
                       const isBlocked = moveBlockedId === deal.id;
                       return isMobile ? (
                         /* ── Compact mobile card with swipe ── */
                         <MobileSwipeCard key={deal.id} deal={deal} stage={stage} onMove={moveDealToStage}
-                          onClick={() => setSelectedSm(deal)} signal={signal} missingNeste={missingNeste} isBlocked={isBlocked}>
-                          <div className="flex items-center gap-2">
-                            <CompanyLogo domain={getSelskapDomain(deal.selskap_id)} firmanavn={getSelskapNavn(deal.selskap_id || "")} kontaktEmails={deal.e_post ? [deal.e_post] : undefined} size="sm" className="w-6 h-6 rounded shrink-0" />
-                            <div className="flex-1 min-w-0">
-                              <p className="text-xs font-semibold text-foreground truncate">{getSelskapNavn(deal.selskap_id || "")}</p>
-                              {deal.kontaktperson && <p className="text-[10px] text-muted-foreground truncate">{deal.kontaktperson}</p>}
-                            </div>
-                            <span className="text-xs font-medium text-foreground shrink-0">{nok(deal.forventet_mrr)}{deal.valgt_pakke ? ` · ${deal.valgt_pakke}` : ""}</span>
-                            {deal.kontrakt_status && deal.kontrakt_status !== "Ikke sendt" && (
-                              <Badge className={`text-[8px] px-1 py-0 h-3.5 shrink-0 ${kontraktStatusColors[deal.kontrakt_status as KontraktStatus]}`}>
-                                {deal.kontrakt_status === "Signert" ? "✅" : deal.kontrakt_status.charAt(0)}
-                              </Badge>
-                            )}
-                            <div className={`w-2 h-2 rounded-full shrink-0 ${signal.color}`} title={signal.label} />
-                          </div>
-                          {missingNeste && (
-                            <div className="flex items-center gap-1 mt-1 text-destructive">
-                              <AlertTriangle className="w-2.5 h-2.5" />
-                              <span className="text-[9px] font-medium">Neste steg mangler</span>
-                            </div>
-                          )}
-                          {isBlocked && <p className="text-[9px] text-destructive mt-0.5 font-medium">⛔ Fyll inn neste steg</p>}
+                          onClick={() => setSelectedSm(deal)} signal={activitySignal(deal.sist_aktivitet)} missingNeste={missingNeste} isBlocked={isBlocked}>
+                          {renderDealCardContent(deal, isBlocked)}
                         </MobileSwipeCard>
                       ) : (
-                        /* ── Full desktop card ── */
-                        <HoverCard key={deal.id} openDelay={350} closeDelay={100}>
-                          <HoverCardTrigger asChild>
-                          {(() => {
-                            const signal = ((deal as any).ai_recap?.kundesignal || "").toLowerCase();
-                            const signalBorderClass = signal === "høy" || signal === "hoy"
-                              ? "border-l-4 border-l-success"
-                              : signal === "medium"
-                              ? "border-l-4 border-l-warning"
-                              : signal === "lav"
-                              ? "border-l-4 border-l-destructive"
-                              : "";
-                            return (
-                          <div draggable onDragStart={e => { setDraggedId(deal.id); e.dataTransfer.effectAllowed = "move"; }}
+                        <div key={deal.id} draggable onDragStart={e => { setDraggedId(deal.id); e.dataTransfer.effectAllowed = "move"; }}
                           onClick={() => setSelectedSm(deal)}
-                          className={`bg-card border rounded-lg p-2.5 cursor-grab active:cursor-grabbing hover:shadow-md transition-all group ${signalBorderClass} ${isBlocked ? "ring-2 ring-destructive animate-pulse" : ""}`}>
-                          
-                          {/* Header: logo + company + AI indicator */}
-                          <div className="flex items-center gap-1.5 mb-1.5">
-                            <CompanyLogo domain={getSelskapDomain(deal.selskap_id)} firmanavn={getSelskapNavn(deal.selskap_id || "")} kontaktEmails={deal.e_post ? [deal.e_post] : undefined} size="sm" className="w-6 h-6 rounded shrink-0" />
-                            <span className="text-xs font-semibold text-foreground truncate flex-1 cursor-pointer hover:text-primary hover:underline" onClick={e => { e.stopPropagation(); if (deal.selskap_id) navigate(`/selskaper/${deal.selskap_id}`); }}>
-                              {getSelskapNavn(deal.selskap_id || "")}
-                            </span>
-                            {(deal as any).ai_recap && <Sparkles className="w-3 h-3 text-primary/70 shrink-0" />}
-                            {deal.kontrakt_status === "Signert" && (
-                              <Badge className={`text-[9px] px-1 py-0 h-4 shrink-0 ${kontraktStatusColors["Signert" as KontraktStatus]}`}>✅</Badge>
-                            )}
-                            {(() => {
-                              const lm = lastMeetings[deal.id];
-                              if (!lm) return null;
-                              const days = Math.floor((Date.now() - new Date(lm.dato).getTime()) / 86400000);
-                              return (
-                                <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 bg-warning/10 text-warning border-warning/30 shrink-0" title={lm.ai_sammendrag || lm.tittel || "Siste møte"}>
-                                  <NotebookPen className="w-2.5 h-2.5" />
-                                  {days === 0 ? "i dag" : `${days}d`}
-                                </Badge>
-                              );
-                            })()}
-                          </div>
-
-                          {/* MRR + package inline */}
-                          <div className="flex items-baseline gap-1.5 mb-1">
-                            <span className="text-sm font-bold text-foreground">{nok(deal.forventet_mrr)}</span>
-                            {deal.valgt_pakke && (
-                              <span className="text-[10px] text-muted-foreground truncate">· {deal.valgt_pakke}</span>
-                            )}
-                          </div>
-
-                          {/* Contact person (compact) */}
-                          {deal.kontaktperson && (
-                            <div className="text-[11px] text-muted-foreground truncate mb-1">
-                              {deal.kontaktperson}
-                            </div>
-                          )}
-
-                          {/* Dager i stadium */}
-                          <div className="text-[10px] text-muted-foreground mb-1">
-                            {(() => {
-                              const d = dagerSiden(stageSince[deal.id] || deal.opprettet_dato);
-                              return d === null ? "—" : `${d} d i dette stadiet`;
-                            })()}
-                          </div>
-
-                          {/* Footer: neste steg + signal */}
-                          {missingNeste ? (
-                            <div className="flex items-center gap-1 mt-1.5 pt-1.5 border-t border-border/50 text-destructive">
-                              <AlertTriangle className="w-3 h-3 shrink-0" />
-                              <span className="text-[10px] font-medium">Neste steg mangler</span>
-                            </div>
-                          ) : (
-                            <div className="flex items-center justify-between gap-1.5 mt-1.5 pt-1.5 border-t border-border/50">
-                              <p className="text-[10px] text-muted-foreground truncate flex-1">→ {deal.neste_steg}</p>
-                              <NesteStegTaskButton compact nesteSteg={deal.neste_steg} salgsmulighet_id={deal.id} selskap_id={deal.selskap_id} kontakt_id={deal.kontakt_id} disabled={!canEdit} />
-                              {deal.ansvarlig && (
-                                <span
-                                  className="w-4 h-4 rounded-full bg-primary/15 text-primary text-[8px] font-semibold flex items-center justify-center shrink-0"
-                                  title={getProfileName(deal.ansvarlig) || deal.ansvarlig}
-                                >
-                                  {initialer(getProfileName(deal.ansvarlig) || deal.ansvarlig)}
-                                </span>
-                              )}
-                              {erKald(deal.sist_aktivitet) ? (
-                                <div className="w-2 h-2 rounded-full shrink-0 bg-destructive" title={`Ingen aktivitet siste 7 dager (${relativTid(deal.sist_aktivitet)})`} />
-                              ) : (
-                                <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${signal.color}`} title={signal.label} />
-                              )}
-                            </div>
-                          )}
-
-                          {isBlocked && (
-                            <p className="text-[10px] text-destructive mt-1 font-medium">⛔ Fyll inn neste steg</p>
-                          )}
-                          </div>
-                          ); })()}
-                          </HoverCardTrigger>
-                          {(() => {
-                            const recap = (deal as any).ai_recap as { sammendrag?: string; kundesignal?: string; neste_steg?: string; risikofaktorer?: string[]; generert_dato?: string } | null;
-                            if (!recap) return null;
-                            const signalStyle = recap.kundesignal === "Høy" ? "bg-success/15 text-success border-success/30"
-                              : recap.kundesignal === "Medium" ? "bg-warning/15 text-warning border-warning/30"
-                              : recap.kundesignal === "Lav" ? "bg-destructive/15 text-destructive border-destructive/30"
-                              : "bg-muted text-muted-foreground border-border";
-                            return (
-                              <HoverCardContent side="right" align="start" className="w-80 p-3 space-y-2">
-                                <div className="flex items-center gap-2">
-                                  <Sparkles className="w-3.5 h-3.5 text-primary" />
-                                  <span className="text-xs font-semibold">AI Recap</span>
-                                  {recap.kundesignal && (
-                                    <Badge variant="outline" className={`text-[10px] px-1.5 py-0 border ${signalStyle}`}>
-                                      {recap.kundesignal} interesse
-                                    </Badge>
-                                  )}
-                                </div>
-                                {recap.sammendrag && (
-                                  <p className="text-xs leading-relaxed text-foreground">{recap.sammendrag}</p>
-                                )}
-                                {(() => {
-                                  const lm = lastMeetings[deal.id];
-                                  if (!lm) return null;
-                                  const days = Math.floor((Date.now() - new Date(lm.dato).getTime()) / 86400000);
-                                  return (
-                                    <div className="rounded-md bg-warning/5 border border-warning/20 p-2">
-                                      <div className="flex items-center gap-1.5 mb-0.5">
-                                        <NotebookPen className="w-2.5 h-2.5 text-warning" />
-                                        <span className="text-[10px] font-medium text-warning uppercase tracking-wide">
-                                          Siste møte · {days === 0 ? "i dag" : `${days}d siden`}
-                                        </span>
-                                      </div>
-                                      <p className="text-[11px] text-foreground/80 line-clamp-3">
-                                        {lm.ai_sammendrag || lm.tittel || "Møtenotater tilgjengelig"}
-                                      </p>
-                                    </div>
-                                  );
-                                })()}
-                                {recap.neste_steg && (() => {
-                                  const alreadyApplied = (deal.neste_steg || "").trim() === recap.neste_steg.trim();
-                                  return (
-                                    <div className="rounded-md bg-muted/50 border p-2">
-                                      <div className="flex items-center justify-between gap-2 mb-0.5">
-                                        <div className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Foreslått neste steg</div>
-                                        <Button
-                                          size="sm"
-                                          variant={alreadyApplied ? "ghost" : "outline"}
-                                          className="h-5 px-1.5 text-[10px]"
-                                          disabled={alreadyApplied}
-                                          onClick={async (e) => {
-                                            e.stopPropagation();
-                                            try {
-                                              const { error } = await supabase
-                                                .from("salgsmuligheter")
-                                                .update({ neste_steg: recap.neste_steg })
-                                                .eq("id", deal.id);
-                                              if (error) throw error;
-                                              updateSalgsmuligheter(prev => prev.map(s =>
-                                                s.id === deal.id ? { ...s, neste_steg: recap.neste_steg! } : s
-                                              ));
-                                              toast.success("Neste steg oppdatert");
-                                            } catch (err) {
-                                              console.error(err);
-                                              toast.error("Kunne ikke oppdatere neste steg");
-                                            }
-                                          }}
-                                        >
-                                          {alreadyApplied ? (
-                                            <><Check className="w-2.5 h-2.5 mr-0.5" /> Brukt</>
-                                          ) : (
-                                            <>Bruk <ArrowRight className="w-2.5 h-2.5 ml-0.5" /></>
-                                          )}
-                                        </Button>
-                                      </div>
-                                      <div className="text-xs">{recap.neste_steg}</div>
-                                    </div>
-                                  );
-                                })()}
-                                {recap.risikofaktorer && recap.risikofaktorer.length > 0 && (
-                                  <div className="rounded-md bg-destructive/5 border border-destructive/20 p-2">
-                                    <div className="text-[10px] font-medium text-destructive uppercase tracking-wide mb-0.5 flex items-center gap-1">
-                                      <AlertTriangle className="w-2.5 h-2.5" /> Risiko
-                                    </div>
-                                    <ul className="text-[11px] space-y-0.5 list-disc list-inside text-foreground/80">
-                                      {recap.risikofaktorer.slice(0, 3).map((r, i) => <li key={i}>{r}</li>)}
-                                    </ul>
-                                  </div>
-                                )}
-                              </HoverCardContent>
-                            );
-                          })()}
-                        </HoverCard>
+                          className={`cursor-grab rounded-lg border bg-card p-3 shadow-card transition-shadow hover:shadow-md active:cursor-grabbing ${isBlocked ? "ring-2 ring-warning/40" : ""}`}>
+                          {renderDealCardContent(deal, isBlocked)}
+                        </div>
                       );
                     })}
                     {stageDeals.length === 0 && (
@@ -1154,49 +937,26 @@ export default function Salgsmuligheter() {
                 </div>
               );
             })}
-            {/* Vunnet / Tapt drop zones */}
-            {(["Vunnet", "Tapt"] as const).map(stage => (
-              <div key={stage} className={`${isMobile ? "min-w-[160px] w-[160px]" : "min-w-[200px] w-[200px]"} flex-shrink-0 rounded-xl p-2 -m-2 transition-colors ${dragOverStage === stage ? (stage === "Vunnet" ? "bg-success/10 ring-2 ring-success/30" : "bg-destructive/10 ring-2 ring-destructive/30") : ""}`}
-                onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; setDragOverStage(stage); }}
-                onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOverStage(null); }}
-                onDragEnd={() => { setDragOverStage(null); setDraggedId(null); }}
-                onDrop={e => handleDrop(e, stage)}>
-                <div className="mb-3 flex items-center gap-2">
-                  <div className={`w-2.5 h-2.5 rounded-full ${statusColors[stage]}`} />
-                  <h3 className="font-semibold text-xs sm:text-sm">{stage}</h3>
-                </div>
-                <div className="border-2 border-dashed rounded-lg p-6 sm:p-8 text-center text-xs text-muted-foreground flex flex-col items-center gap-2">
-                  {stage === "Vunnet" ? <Trophy className="w-5 h-5 text-success" /> : <XCircle className="w-5 h-5 text-destructive" />}
-                  Dra deal hit
-                </div>
-              </div>
-            ))}
           </div>
           )}
-        </TabsContent>
-        <TabsContent value="signed">
-          <DealList deals={signedDeals} getSelskapNavn={getSelskapNavn} getSelskapDomain={getSelskapDomain} onSelect={setSelectedSm} label="Signerte kontrakter" onNavigateSelskap={id => navigate(`/selskaper/${id}`)} isMobile={isMobile} showKontraktStatus />
-        </TabsContent>
-
-        <TabsContent value="awaiting">
-          <DealList deals={awaitingSignature} getSelskapNavn={getSelskapNavn} getSelskapDomain={getSelskapDomain} onSelect={setSelectedSm} label="Venter på signering" onNavigateSelskap={id => navigate(`/selskaper/${id}`)} isMobile={isMobile} showKontraktStatus />
-        </TabsContent>
-        <TabsContent value="overdue">
-          <DealList deals={overdueDeals} getSelskapNavn={getSelskapNavn} getSelskapDomain={getSelskapDomain} onSelect={setSelectedSm} label="Forfalt lukkedato" onNavigateSelskap={id => navigate(`/selskaper/${id}`)} isMobile={isMobile} showLukkedato />
-        </TabsContent>
-        <TabsContent value="inactive">
-          <DealList deals={inactiveDeals} getSelskapNavn={getSelskapNavn} getSelskapDomain={getSelskapDomain} onSelect={setSelectedSm} label="Inaktive deals (>7 dager)" onNavigateSelskap={id => navigate(`/selskaper/${id}`)} isMobile={isMobile} />
-        </TabsContent>
-        <TabsContent value="won">
-          <DealList deals={wonThisMonth} getSelskapNavn={getSelskapNavn} getSelskapDomain={getSelskapDomain} onSelect={setSelectedSm} label="Vunnet denne måneden" onNavigateSelskap={id => navigate(`/selskaper/${id}`)} isMobile={isMobile} />
-        </TabsContent>
-        <TabsContent value="lost">
-          <DealList deals={lostThisMonth} getSelskapNavn={getSelskapNavn} getSelskapDomain={getSelskapDomain} onSelect={setSelectedSm} label="Tapt denne måneden" onNavigateSelskap={id => navigate(`/selskaper/${id}`)} isMobile={isMobile} />
-        </TabsContent>
-        <TabsContent value="all">
-          <DealList deals={allClosed} getSelskapNavn={getSelskapNavn} getSelskapDomain={getSelskapDomain} onSelect={setSelectedSm} label="Alle avsluttede salg" onNavigateSelskap={id => navigate(`/selskaper/${id}`)} isMobile={isMobile} />
-        </TabsContent>
-      </Tabs>
+        </>
+      ) : pipelineSegment === "vunnet" ? (
+        <DealList deals={sortDeals(salgsmuligheter.filter(deal => deal.status === "Vunnet"))} getSelskapNavn={getSelskapNavn} getSelskapDomain={getSelskapDomain} onSelect={setSelectedSm} label="Vunne salgsmuligheter" onNavigateSelskap={id => navigate(`/selskaper/${id}`)} isMobile={isMobile} showKontraktStatus />
+      ) : pipelineSegment === "tapt" ? (
+        <DealList deals={sortDeals(salgsmuligheter.filter(deal => deal.status === "Tapt"))} getSelskapNavn={getSelskapNavn} getSelskapDomain={getSelskapDomain} onSelect={setSelectedSm} label="Tapte salgsmuligheter" onNavigateSelskap={id => navigate(`/selskaper/${id}`)} isMobile={isMobile} />
+      ) : (
+        <div className="space-y-3">
+          <div className="flex max-w-full gap-1 overflow-x-auto pb-1 scrollbar-hide">
+            {([
+              ["alle", "Alle"], ["signert", "Signerte"], ["venter", "Venter på signering"],
+              ["forfalt", "Forfalt"], ["inaktive", "Inaktive"], ["avsluttede", "Avsluttede"],
+            ] as const).map(([value, label]) => (
+              <Button key={value} size="sm" variant={archiveFilter === value ? "secondary" : "ghost"} className="h-8 shrink-0 text-xs" onClick={() => setArchiveFilter(value)}>{label}</Button>
+            ))}
+          </div>
+          <DealList deals={sortDeals(archiveDeals)} getSelskapNavn={getSelskapNavn} getSelskapDomain={getSelskapDomain} onSelect={setSelectedSm} label="Arkiv" onNavigateSelskap={id => navigate(`/selskaper/${id}`)} isMobile={isMobile} showKontraktStatus showLukkedato />
+        </div>
+      )}
 
       <DetailPanelShell
         open={!!currentSm}
