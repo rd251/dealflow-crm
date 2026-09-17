@@ -1,6 +1,6 @@
 // ============ TYPES ============
 
-export type LeadStatus = "Ny" | "Kontaktet" | "Kvalifisert" | "Ikke aktuelt" | "Konvertert til salg" | "Konvertert til partner";
+export type LeadStatus = "Ny" | "Kontaktet" | "Svarte ikke telefon" | "Ikke fått tak i ennå" | "Kvalifisert" | "Ikke aktuelt" | "Konvertert til salg" | "Konvertert til partner";
 export type LeadKilde = "Nettside" | "LinkedIn" | "Partner" | "Referanse" | "Kald outbound" | "E-post" | "Telefon" | "Annet";
 
 export type SalgsmulighetStatus = "Møte booket" | "Behov avklart" | "Løsning presentert" | "Demo gjennomført" | "Kontrakt sendt" | "Vunnet" | "Tapt";

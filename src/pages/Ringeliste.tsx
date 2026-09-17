@@ -23,7 +23,6 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import * as XLSX from "xlsx";
 import SendEmailDialog from "@/components/SendEmailDialog";
-import RingelisteIdag from "@/components/RingelisteIdag";
 
 // ---------- types ----------
 interface Ringelister {
@@ -176,32 +175,13 @@ function isSegmentValid(seg: { segment: string; kanal: string; kilde_segment: st
 // ========== MAIN COMPONENT ==========
 export default function Ringeliste() {
   const [activeListe, setActiveListe] = useState<Ringelister | null>(null);
-  const [visning, setVisning] = useState<"idag" | "lister">("idag");
 
   return (
-    <PageShell title="Ringeliste">
+    <PageShell title="Kampanjelister">
       {activeListe ? (
         <RingelisteContacts liste={activeListe} onBack={() => setActiveListe(null)} />
       ) : (
-        <>
-          <div className="flex gap-1.5 mb-4">
-            {([["idag", "I dag"], ["lister", "Kampanjelister"]] as const).map(([key, label]) => (
-              <button
-                key={key}
-                onClick={() => setVisning(key)}
-                className={cn(
-                  "px-3 py-1.5 rounded-full text-xs font-medium border transition-colors",
-                  visning === key
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-background text-muted-foreground border-border hover:bg-muted"
-                )}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-          {visning === "idag" ? <RingelisteIdag /> : <RingelisterOverview onSelect={setActiveListe} />}
-        </>
+        <RingelisterOverview onSelect={setActiveListe} />
       )}
     </PageShell>
   );

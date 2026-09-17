@@ -1769,6 +1769,8 @@ export type Database = {
         | "Ikke aktuelt"
         | "Konvertert til salg"
         | "Konvertert til partner"
+        | "Svarte ikke telefon"
+        | "Ikke fått tak i ennå"
       onboarding_status:
         | "Ikke startet"
         | "Pågår"
@@ -2010,6 +2012,8 @@ export const Constants = {
         "Ikke aktuelt",
         "Konvertert til salg",
         "Konvertert til partner",
+        "Svarte ikke telefon",
+        "Ikke fått tak i ennå",
       ],
       onboarding_status: [
         "Ikke startet",
