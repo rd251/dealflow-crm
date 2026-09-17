@@ -122,7 +122,7 @@ function MobileSwipeCard({ deal, stage, onMove, onClick, signal, missingNeste, i
       <div ref={cardRef}
         onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}
         onClick={onClick}
-        className={`relative z-10 bg-card border rounded-lg p-2.5 active:bg-muted/50 transition-[opacity] duration-100 ${isBlocked ? "ring-2 ring-destructive animate-pulse" : ""}`}
+        className={`relative z-10 rounded-lg border border-border bg-card p-3 shadow-card active:bg-muted/50 transition-[opacity,box-shadow] duration-100 ${isBlocked ? "ring-2 ring-warning/40" : ""}`}
         style={{ touchAction: "pan-y" }}>
         {children}
       </div>
@@ -893,7 +893,7 @@ export default function Salgsmuligheter() {
               const stageDeals = sortDeals(openDeals.filter(d => tilKanbanStadium(d.status) === stadium));
               const stageMrr = stageDeals.reduce((s, d) => s + d.forventet_mrr, 0);
               return (
-                <div key={stage} className={`${isMobile ? "min-w-[270px] w-[270px]" : "min-w-[290px] w-[290px]"} flex-shrink-0 flex flex-col rounded-lg bg-secondary/35 p-2.5 transition-colors ${dragOverStage === stage ? "bg-pipeline/10 ring-2 ring-pipeline/30" : ""}`}
+                <div key={stage} className={`${isMobile ? "min-w-[270px] w-[270px]" : "min-w-[290px] w-[290px]"} flex-shrink-0 flex flex-col rounded-lg border border-border/70 bg-muted p-2.5 transition-colors ${dragOverStage === stage ? "bg-pipeline/10 ring-2 ring-pipeline/30" : ""}`}
                   onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; setDragOverStage(stage); }}
                   onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOverStage(null); }}
                   onDragEnd={() => { setDragOverStage(null); setDraggedId(null); }}
@@ -921,7 +921,7 @@ export default function Salgsmuligheter() {
                       ) : (
                         <div key={deal.id} draggable onDragStart={e => { setDraggedId(deal.id); e.dataTransfer.effectAllowed = "move"; }}
                           onClick={() => setSelectedSm(deal)}
-                          className={`cursor-grab rounded-lg border bg-card p-3 shadow-card transition-shadow hover:shadow-md active:cursor-grabbing ${isBlocked ? "ring-2 ring-warning/40" : ""}`}>
+                          className={`cursor-grab rounded-lg border border-border bg-card p-3 shadow-card transition-[border-color,box-shadow] hover:border-foreground/20 hover:shadow-md active:cursor-grabbing ${isBlocked ? "ring-2 ring-warning/40" : ""}`}>
                           {renderDealCardContent(deal, isBlocked)}
                         </div>
                       );
