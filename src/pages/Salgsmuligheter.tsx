@@ -36,10 +36,10 @@ import confetti from "canvas-confetti";
 import { tilKanbanStadium, dagerSiden, initialer, idag, datoOm } from "@/lib/sales-flow";
 
 /** Aktive stadier i kanban (rekkefølge). */
-const allStatuses: SalgsmulighetStatus[] = ["Møte booket", "Demo gjennomført", "Kontrakt sendt"];
+const allStatuses: SalgsmulighetStatus[] = ["Møte booket", "Demo gjennomført", "Demo-prosjekt", "Kontrakt sendt"];
 /** Alle statuser som regnes som åpne – inkl. eldre statuser fra før omleggingen. */
-const openStatuses: SalgsmulighetStatus[] = ["Møte booket", "Behov avklart", "Løsning presentert", "Demo gjennomført", "Kontrakt sendt"];
-const ACTIVE_KANBAN_STAGES: SalgsmulighetStatus[] = ["Møte booket", "Demo gjennomført", "Kontrakt sendt"];
+const openStatuses: SalgsmulighetStatus[] = ["Møte booket", "Behov avklart", "Løsning presentert", "Demo gjennomført", "Demo-prosjekt", "Kontrakt sendt"];
+const ACTIVE_KANBAN_STAGES: SalgsmulighetStatus[] = ["Møte booket", "Demo gjennomført", "Demo-prosjekt", "Kontrakt sendt"];
 const STALE_STAGE_DAYS = 90;
 type PipelineSegment = "aktive" | "vunnet" | "tapt" | "arkiv";
 type ArchiveFilter = "alle" | "signert" | "venter" | "forfalt" | "inaktive" | "avsluttede";
@@ -135,6 +135,7 @@ const statusColors: Record<SalgsmulighetStatus, string> = {
   "Behov avklart": "bg-stage-qualified",
   "Løsning presentert": "bg-stage-demo",
   "Demo gjennomført": "bg-stage-demo",
+  "Demo-prosjekt": "bg-stage-demo",
   "Kontrakt sendt": "bg-stage-proposal",
   "Vunnet": "bg-stage-won",
   "Tapt": "bg-stage-lost",
