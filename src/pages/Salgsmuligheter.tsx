@@ -13,8 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import DetailPanelShell, { DetailSection, DetailField, DetailDivider, DetailStatGrid, DetailStatCard } from "@/components/DetailPanelShell";
 import EntityCalendarTab from "@/components/EntityCalendarTab";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, GripVertical, Trophy, XCircle, Trash2, Phone, User, AlertTriangle, Clock, Building2, DollarSign, Mail, FileSignature, PartyPopper, Globe, ExternalLink, Linkedin, PenLine, NotebookPen, Send } from "lucide-react";
+import { Plus, GripVertical, Trophy, XCircle, Trash2, Phone, User, AlertTriangle, Clock, Building2, DollarSign, Mail, FileSignature, PartyPopper, Globe, ExternalLink, Linkedin, PenLine, Send } from "lucide-react";
 import SendEmailDialog from "@/components/SendEmailDialog";
 import SelskapInnsikt from "@/components/SelskapInnsikt";
 import CompanyLogo from "@/components/CompanyLogo";
@@ -33,7 +32,6 @@ import SendContractModal from "@/components/SendContractModal";
 import DealRecapCard from "@/components/DealRecapCard";
 import LastMeetingCard from "@/components/LastMeetingCard";
 import NesteStegTaskButton from "@/components/NesteStegTaskButton";
-import { useLastMeetingsByDeal } from "@/hooks/use-last-meetings";
 import confetti from "canvas-confetti";
 import { tilKanbanStadium, dagerSiden, initialer, idag, datoOm } from "@/lib/sales-flow";
 
@@ -435,8 +433,6 @@ export default function Salgsmuligheter() {
 
   const currentSm = selectedSm ? salgsmuligheter.find(s => s.id === selectedSm.id) || selectedSm : null;
   const openDealIds = openDeals.map(d => d.id);
-  const { byId: lastMeetings } = useLastMeetingsByDeal(openDealIds);
-
   // Når kom dealen inn i nåværende stadium? (siste statusendring i endringsloggen)
   const [stageSince, setStageSince] = useState<Record<string, string>>({});
   const openDealIdsKey = openDealIds.join(",");
@@ -625,11 +621,11 @@ export default function Salgsmuligheter() {
   return (
     <PageShell
       title="Salgsmuligheter"
-      subtitle={`${openDeals.length} åpne · ${nok(openDeals.reduce((s, d) => s + d.forventet_mrr, 0))} MRR i pipeline`}
+      subtitle={`${openDeals.length} åpne · ${nok(pipelineValue)} i pipeline`}
       actions={canEdit ? (
         <Dialog open={dialogOpen} onOpenChange={open => { setDialogOpen(open); if (!open) setCreateStage("Møte booket"); }}>
           <DialogTrigger asChild>
-            <Button size="sm" variant="secondary" onClick={() => setCreateStage("Møte booket")}><Plus className="w-4 h-4 mr-1" />Ny mulighet</Button>
+            <Button size="sm" onClick={() => setCreateStage("Møte booket")}><Plus className="w-4 h-4 mr-1" />Ny mulighet</Button>
           </DialogTrigger>
           <DialogContent className="max-w-[95vw] sm:max-w-lg">
             <DialogHeader><DialogTitle>Ny salgsmulighet</DialogTitle><DialogDescription>Fyll inn detaljer for den nye salgsmuligheten.</DialogDescription></DialogHeader>

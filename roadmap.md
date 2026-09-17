@@ -10,6 +10,6 @@
 - [x] Flytt dagens ringeliste til Leads og behold kampanjelister separat
 - [x] Legg til statusene «Svarte ikke telefon» og «Ikke fått tak i ennå»
 - [x] Verifiser statuslagring og Leads-fanene på desktop og mobil
-- [ ] Forenkle Salgsmuligheter til Aktive/Vunnet/Tapt/Arkiv
-- [ ] Redesign kanbankort, kolonneoverskrifter og KPI-stripen
+- [x] Forenkle Salgsmuligheter til Aktive/Vunnet/Tapt/Arkiv
+- [x] Redesign kanbankort, kolonneoverskrifter og KPI-stripen
 - [ ] Verifiser drag-and-drop, filtre, desktop og mobil
