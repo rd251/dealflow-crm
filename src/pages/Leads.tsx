@@ -959,6 +959,17 @@ export default function Leads() {
           return {
             detaljer: (
               <div className="space-y-3">
+                {/* Hurtighandlinger for samtale */}
+                {canEdit && !currentIsLocked && (
+                  <div className="rounded-lg border bg-card p-3">
+                    <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide mb-2">Registrer samtale</p>
+                    <LeadQuickActions
+                      lead={currentLead}
+                      onBookMoete={() => { setPendingOpenActivity(true); setDetailTab("interaksjoner"); }}
+                    />
+                  </div>
+                )}
+
                 {/* Neste steg – prominent at top */}
                 <div className={`rounded-lg border p-3 ${!currentLead.neste_steg ? "border-warning bg-warning/5" : "bg-muted/30"}`}>
                   <div className="flex items-center justify-between gap-2">
