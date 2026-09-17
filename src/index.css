@@ -124,6 +124,18 @@
     letter-spacing: 0;
   }
 
+  table {
+    font-variant-numeric: tabular-nums;
+  }
+
+  thead {
+    @apply bg-muted/60 text-muted-foreground;
+  }
+
+  tbody tr {
+    @apply transition-colors hover:bg-muted/45;
+  }
+
   [data-metric], .font-metric, .tabular-nums {
     font-family: 'Space Grotesk', sans-serif;
     font-variant-numeric: tabular-nums;
@@ -182,6 +194,25 @@
 
   .surface-panel {
     @apply rounded-lg border bg-card text-card-foreground shadow-card;
+  }
+
+  .rounded-xl {
+    border-radius: var(--radius);
+  }
+
+  .tracking-tight,
+  .tracking-wide {
+    letter-spacing: 0;
+  }
+
+  .font-mono {
+    font-family: 'Space Grotesk', sans-serif;
+    font-variant-numeric: tabular-nums;
+  }
+
+  main .bg-card.border,
+  [role="dialog"] .bg-card.border {
+    box-shadow: var(--shadow-card);
   }
 
   .status-positive {

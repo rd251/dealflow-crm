@@ -59,12 +59,13 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { selskaper, salgsmuligheter, partnere } = useCrmStore();
 
-  const activeCustomers = useMemo(() => selskaper
-    .filter(company => company.kundestatus === "Live")
-    .sort((a, b) => b.mrr - a.mrr), [selskaper]);
   const churnRisk = useMemo(() => selskaper.filter(company =>
-    company.kundestatus !== "Live" && (company.kundestatus === "Pause" || company.kundetilstand === "Risiko")
+    company.kundestatus === "Pause" || company.kundetilstand === "Risiko"
   ), [selskaper]);
+  const churnRiskIds = useMemo(() => new Set(churnRisk.map(company => company.id)), [churnRisk]);
+  const activeCustomers = useMemo(() => selskaper
+    .filter(company => company.kundestatus === "Live" && !churnRiskIds.has(company.id))
+    .sort((a, b) => b.mrr - a.mrr), [selskaper, churnRiskIds]);
   const openDeals = useMemo(() => salgsmuligheter.filter(deal => deal.status !== "Vunnet" && deal.status !== "Tapt"), [salgsmuligheter]);
   const inDialogCompanyIds = useMemo(() => new Set(openDeals.map(deal => deal.selskap_id).filter(Boolean)), [openDeals]);
   const totalMrr = activeCustomers.reduce((sum, company) => sum + company.mrr, 0);

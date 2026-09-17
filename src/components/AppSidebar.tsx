@@ -181,7 +181,7 @@ export default function AppSidebar() {
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 bottom-0 bg-sidebar flex flex-col z-50 transition-all duration-200",
+        "fixed left-0 top-0 bottom-0 border-r border-sidebar-border bg-sidebar flex flex-col z-50 transition-all duration-200",
         collapsed ? "w-14" : "w-60"
       )}
     >

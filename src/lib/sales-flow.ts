@@ -41,12 +41,12 @@ export const LEAD_STATUSER: LeadStatus[] = [
 ];
 
 export const leadStatusFarge: Record<string, string> = {
-  "Ny": "bg-blue-500/12 text-blue-700 dark:text-blue-300 border-blue-500/25",
-  "Kontaktet": "bg-amber-500/12 text-amber-700 dark:text-amber-300 border-amber-500/25",
-  "Kvalifisert": "bg-emerald-500/12 text-emerald-700 dark:text-emerald-300 border-emerald-500/25",
+  "Ny": "bg-pipeline/10 text-pipeline border-pipeline/20",
+  "Kontaktet": "bg-warning/10 text-warning border-warning/25",
+  "Kvalifisert": "bg-success/10 text-success border-success/20",
   "Ikke aktuelt": "bg-muted text-muted-foreground border-border",
-  "Konvertert til salg": "bg-violet-500/12 text-violet-700 dark:text-violet-300 border-violet-500/25",
-  "Konvertert til partner": "bg-violet-500/12 text-violet-700 dark:text-violet-300 border-violet-500/25",
+  "Konvertert til salg": "bg-pipeline/10 text-pipeline border-pipeline/20",
+  "Konvertert til partner": "bg-partner/10 text-partner border-partner/20",
 };
 
 export const leadStatusKort: Record<string, string> = {
@@ -112,26 +112,26 @@ export function tilKanbanStadium(status: SalgsmulighetStatus): KanbanStadium {
 }
 
 export const stadiumFarge: Record<KanbanStadium, string> = {
-  "Møte booket": "bg-blue-500/12 text-blue-700 dark:text-blue-300 border-blue-500/25",
-  "Demo gjennomført": "bg-sky-500/12 text-sky-700 dark:text-sky-300 border-sky-500/25",
-  "Kontrakt sendt": "bg-violet-500/12 text-violet-700 dark:text-violet-300 border-violet-500/25",
-  "Vunnet": "bg-emerald-500/12 text-emerald-700 dark:text-emerald-300 border-emerald-500/25",
+  "Møte booket": "bg-pipeline/10 text-pipeline border-pipeline/20",
+  "Demo gjennomført": "bg-pipeline/10 text-pipeline border-pipeline/20",
+  "Kontrakt sendt": "bg-partner/10 text-partner border-partner/20",
+  "Vunnet": "bg-success/10 text-success border-success/20",
   "Tapt": "bg-muted text-muted-foreground border-border",
 };
 
 export const stadiumStripe: Record<KanbanStadium, string> = {
-  "Møte booket": "bg-blue-500",
-  "Demo gjennomført": "bg-sky-500",
-  "Kontrakt sendt": "bg-violet-500",
-  "Vunnet": "bg-emerald-500",
+  "Møte booket": "bg-pipeline",
+  "Demo gjennomført": "bg-pipeline",
+  "Kontrakt sendt": "bg-partner",
+  "Vunnet": "bg-success",
   "Tapt": "bg-muted-foreground/40",
 };
 
 export const kontraktStatusFarge: Record<string, string> = {
   "Ikke sendt": "bg-muted text-muted-foreground border-border",
-  "Sendt": "bg-blue-500/12 text-blue-700 dark:text-blue-300 border-blue-500/25",
-  "Åpnet": "bg-amber-500/12 text-amber-700 dark:text-amber-300 border-amber-500/25",
-  "Signert": "bg-emerald-500/12 text-emerald-700 dark:text-emerald-300 border-emerald-500/25",
+  "Sendt": "bg-pipeline/10 text-pipeline border-pipeline/20",
+  "Åpnet": "bg-warning/10 text-warning border-warning/25",
+  "Signert": "bg-success/10 text-success border-success/20",
   "Utløpt": "bg-destructive/12 text-destructive border-destructive/25",
 };
 
