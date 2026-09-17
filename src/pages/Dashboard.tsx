@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ArrowUpRight, Building2, CircleDollarSign, Handshake, Layers3, PhoneCall, Target, TrendingUp, Users } from "lucide-react";
 import { dagerSiden, KANBAN_STADIER, leadStatusFarge, stadiumFarge, tilKanbanStadium } from "@/lib/sales-flow";
 import type { LeadStatus } from "@/data/crm-data";
@@ -40,17 +40,28 @@ function MetricCard({ label, value, icon: Icon, accent = "pipeline", onClick }: 
   ) : <div className="flex min-h-24 items-center gap-3 rounded-lg border bg-card p-4 shadow-card">{content}</div>;
 }
 
-function Panel({ title, subtitle, children, accent = "pipeline" }: {
+function Panel({ title, subtitle, children, accent = "pipeline", onTitleClick, titleLinkLabel }: {
   title: string;
   subtitle?: string;
   children: React.ReactNode;
   accent?: Accent;
+  onTitleClick?: () => void;
+  titleLinkLabel?: string;
 }) {
   return (
     <section className="overflow-hidden rounded-lg border bg-card shadow-card">
       <header className={`border-b px-5 py-4 ${accent === "partner" ? "bg-partner/5" : "bg-card"}`}>
-        <h2 className="font-display text-base font-semibold">{title}</h2>
-        {subtitle && <p className="mt-0.5 text-xs text-muted-foreground">{subtitle}</p>}
+        {onTitleClick ? (
+          <button type="button" onClick={onTitleClick} aria-label={titleLinkLabel || title} className="text-left transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            <h2 className="font-display text-base font-semibold">{title}</h2>
+            {subtitle && <p className="mt-0.5 text-xs text-muted-foreground">{subtitle}</p>}
+          </button>
+        ) : (
+          <>
+            <h2 className="font-display text-base font-semibold">{title}</h2>
+            {subtitle && <p className="mt-0.5 text-xs text-muted-foreground">{subtitle}</p>}
+          </>
+        )}
       </header>
       {children}
     </section>
