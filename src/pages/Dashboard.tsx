@@ -71,7 +71,7 @@ export default function Dashboard() {
   const openDeals = useMemo(() => salgsmuligheter.filter(deal => deal.status !== "Vunnet" && deal.status !== "Tapt"), [salgsmuligheter]);
   const aktiveLeads = useMemo(() => leads.filter(l => l.status !== "Ikke aktuelt" && l.status !== "Konvertert til salg" && l.status !== "Konvertert til partner"), [leads]);
   const leadsPerStatus = useMemo(() => {
-    const order: LeadStatus[] = ["Ny", "Kontaktet", "Svarte ikke telefon", "Ikke fått tak i ennå", "Kvalifisert"];
+    const order: LeadStatus[] = ["Ny", "Kontaktet", "Svarte ikke telefon", "Kvalifisert"];
     return order.map(status => ({ status, antall: aktiveLeads.filter(l => l.status === status).length })).filter(r => r.antall > 0);
   }, [aktiveLeads]);
   const leadsTrengerOppfoelging = useMemo(() => aktiveLeads.filter(l => {

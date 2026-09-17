@@ -32,7 +32,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 // Only user-selectable statuses – no conversion statuses in dropdown
-const statusOptions: LeadStatus[] = ["Ny", "Kontaktet", "Svarte ikke telefon", "Ikke fått tak i ennå", "Kvalifisert", "Ikke aktuelt"];
+const statusOptions: LeadStatus[] = ["Ny", "Kontaktet", "Svarte ikke telefon", "Kvalifisert", "Ikke aktuelt"];
 const kildeOptions: string[] = ["Nettside", "LinkedIn", "Partner", "Referanse", "Kald outbound", "E-post", "Telefon", "Organisk", "Facebook ads", "Instantly kald e-post", "Google ads", "Agent Builder", "Annet"];
 
 const statusColors: Record<string, string> = leadStatusFarge;
