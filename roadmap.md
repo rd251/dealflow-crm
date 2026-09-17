@@ -12,4 +12,4 @@
 - [x] Verifiser statuslagring og Leads-fanene på desktop og mobil
 - [x] Forenkle Salgsmuligheter til Aktive/Vunnet/Tapt/Arkiv
 - [x] Redesign kanbankort, kolonneoverskrifter og KPI-stripen
-- [ ] Verifiser drag-and-drop, filtre, desktop og mobil
+- [x] Verifiser drag-and-drop, filtre, desktop og mobil
