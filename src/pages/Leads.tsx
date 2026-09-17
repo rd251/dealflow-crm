@@ -742,6 +742,16 @@ export default function Leads() {
             Uten oppfølging ✕
           </Badge>
         )}
+        {statusParam && (
+          <button type="button" onClick={() => clearDeepFilter("status")} aria-label={`Fjern filter ${statusParam}`} className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            <Badge variant="secondary" className="gap-1 cursor-pointer hover:bg-destructive/10">{statusParam} · {filteredUnsorted.length} ✕</Badge>
+          </button>
+        )}
+        {oppfolgingFilter && (
+          <button type="button" onClick={() => clearDeepFilter("filter")} aria-label="Fjern filter trenger oppfølging" className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            <Badge variant="secondary" className="gap-1 cursor-pointer hover:bg-destructive/10">Trenger oppfølging · {filteredUnsorted.length} ✕</Badge>
+          </button>
+        )}
       </div>
 
       <div className="mb-4 flex flex-wrap gap-1.5">
