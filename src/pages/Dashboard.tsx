@@ -35,9 +35,10 @@ function MetricCard({ label, value, icon: Icon, accent = "pipeline", onClick }: 
       </span>
     </>
   );
-  return onClick ? (
+  const erNull = value === 0 || value === "0" || (typeof value === "string" && /^0(\D|$)/.test(value.replace(/\s/g, "")));
+  return onClick && !erNull ? (
     <Button variant="outline" onClick={onClick} className="h-auto min-h-24 w-full justify-start gap-3 rounded-lg bg-card p-4 text-left shadow-card hover:bg-card">{content}</Button>
-  ) : <div className="flex min-h-24 items-center gap-3 rounded-lg border bg-card p-4 shadow-card">{content}</div>;
+  ) : <div className={`flex min-h-24 items-center gap-3 rounded-lg border bg-card p-4 shadow-card ${erNull ? "opacity-60" : ""}`}>{content}</div>;
 }
 
 function Panel({ title, subtitle, children, accent = "pipeline", onTitleClick, titleLinkLabel }: {
