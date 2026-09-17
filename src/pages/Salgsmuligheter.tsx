@@ -392,6 +392,11 @@ export default function Salgsmuligheter() {
       const cutoff = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
       if (s.sist_aktivitet && new Date(s.sist_aktivitet) >= cutoff) return false;
     }
+    if (kaldeFilter) {
+      const dager = dagerSiden(s.sist_aktivitet);
+      if (dager !== null && dager < 7) return false;
+    }
+    if (stageFilter && tilKanbanStadium(s.status) !== tilKanbanStadium(stageFilter)) return false;
     if (ownerFilter && s.ansvarlig !== ownerFilter) return false;
     if (from || to) {
       if (!s.forventet_lukkedato) return false;
