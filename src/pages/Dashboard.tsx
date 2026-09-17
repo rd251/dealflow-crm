@@ -1,6 +1,8 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowUpRight, Building2, CircleDollarSign, Handshake, Layers3, TrendingUp, Users } from "lucide-react";
+import { ArrowUpRight, Building2, CircleDollarSign, Handshake, Layers3, PhoneCall, Target, TrendingUp, Users } from "lucide-react";
+import { dagerSiden, KANBAN_STADIER, leadStatusFarge, stadiumFarge, tilKanbanStadium } from "@/lib/sales-flow";
+import type { LeadStatus } from "@/data/crm-data";
 import PageShell from "@/components/PageShell";
 import CompanyLogo from "@/components/CompanyLogo";
 import { Badge } from "@/components/ui/badge";
@@ -57,7 +59,7 @@ function Panel({ title, subtitle, children, accent = "pipeline" }: {
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { selskaper, salgsmuligheter, partnere } = useCrmStore();
+  const { selskaper, salgsmuligheter, partnere, leads } = useCrmStore();
 
   const churnRisk = useMemo(() => selskaper.filter(company =>
     company.kundestatus === "Pause" || company.kundetilstand === "Risiko"
@@ -67,6 +69,24 @@ export default function Dashboard() {
     .filter(company => company.kundestatus === "Live" && !churnRiskIds.has(company.id))
     .sort((a, b) => b.mrr - a.mrr), [selskaper, churnRiskIds]);
   const openDeals = useMemo(() => salgsmuligheter.filter(deal => deal.status !== "Vunnet" && deal.status !== "Tapt"), [salgsmuligheter]);
+  const aktiveLeads = useMemo(() => leads.filter(l => l.status !== "Ikke aktuelt" && l.status !== "Konvertert til salg" && l.status !== "Konvertert til partner"), [leads]);
+  const leadsPerStatus = useMemo(() => {
+    const order: LeadStatus[] = ["Ny", "Kontaktet", "Svarte ikke telefon", "Ikke fått tak i ennå", "Kvalifisert"];
+    return order.map(status => ({ status, antall: aktiveLeads.filter(l => l.status === status).length })).filter(r => r.antall > 0);
+  }, [aktiveLeads]);
+  const leadsTrengerOppfoelging = useMemo(() => aktiveLeads.filter(l => {
+    const d = dagerSiden(l.sist_aktivitet);
+    return d === null || d >= 3;
+  }).length, [aktiveLeads]);
+  const stageStats = useMemo(() => KANBAN_STADIER.filter(s => s !== "Vunnet" && s !== "Tapt").map(stage => {
+    const deals = openDeals.filter(d => tilKanbanStadium(d.status) === stage);
+    return { stage, antall: deals.length, mrr: deals.reduce((sum, d) => sum + (d.forventet_mrr || 0), 0) };
+  }), [openDeals]);
+  const kaldeDeals = useMemo(() => openDeals.filter(d => {
+    const dager = dagerSiden(d.sist_aktivitet);
+    return dager === null || dager >= 7;
+  }).length, [openDeals]);
+  const totalPipelineMrr = openDeals.reduce((sum, d) => sum + (d.forventet_mrr || 0), 0);
   const inDialogCompanyIds = useMemo(() => new Set(openDeals.map(deal => deal.selskap_id).filter(Boolean)), [openDeals]);
   const totalMrr = activeCustomers.reduce((sum, company) => sum + company.mrr, 0);
   const riskMrr = churnRisk.reduce((sum, company) => sum + company.mrr, 0);
@@ -108,6 +128,48 @@ export default function Dashboard() {
           <MetricCard label="I dialog" value={inDialogCompanyIds.size} icon={Users} accent="pipeline" onClick={() => navigate("/salgsmuligheter")} />
           <MetricCard label="Partnere" value={partnere.length} icon={Handshake} accent="partner" onClick={() => navigate("/partnere")} />
         </section>
+
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <Panel title="Leads" subtitle={`${aktiveLeads.length} aktive · ${leadsTrengerOppfoelging} trenger oppfølging`} accent="pipeline">
+            <div className="divide-y">
+              {leadsPerStatus.map(rad => (
+                <button key={rad.status} onClick={() => navigate("/leads")} className="flex w-full items-center justify-between px-5 py-3.5 text-left transition-colors hover:bg-muted/50">
+                  <Badge variant="outline" className={leadStatusFarge[rad.status]}>{rad.status}</Badge>
+                  <span data-metric className="font-semibold">{rad.antall}</span>
+                </button>
+              ))}
+              {leadsPerStatus.length === 0 && <p className="p-8 text-center text-sm text-muted-foreground">Ingen aktive leads.</p>}
+            </div>
+            {leadsTrengerOppfoelging > 0 && (
+              <button onClick={() => navigate("/leads")} className="flex w-full items-center justify-between border-t bg-warning/5 px-5 py-4 text-left transition-colors hover:bg-warning/10">
+                <span className="flex items-center gap-2.5 text-sm font-medium text-warning"><PhoneCall className="h-4 w-4" />Trenger oppfølging (3+ dager)</span>
+                <span data-metric className="font-semibold text-warning">{leadsTrengerOppfoelging}</span>
+              </button>
+            )}
+          </Panel>
+
+          <Panel title="Salgsmuligheter" subtitle={`${openDeals.length} åpne · ${nok(totalPipelineMrr)} forventet MRR`} accent="pipeline">
+            <div className="divide-y">
+              {stageStats.map(rad => (
+                <button key={rad.stage} onClick={() => navigate("/salgsmuligheter")} className="flex w-full items-center justify-between gap-4 px-5 py-3.5 text-left transition-colors hover:bg-muted/50">
+                  <span className="flex min-w-0 items-center gap-2.5">
+                    <Badge variant="outline" className={stadiumFarge[rad.stage]}>{rad.stage}</Badge>
+                  </span>
+                  <span className="flex shrink-0 items-baseline gap-3">
+                    <span className="text-xs text-muted-foreground">{nok(rad.mrr)}</span>
+                    <span data-metric className="font-semibold">{rad.antall}</span>
+                  </span>
+                </button>
+              ))}
+            </div>
+            {kaldeDeals > 0 && (
+              <button onClick={() => navigate("/salgsmuligheter")} className="flex w-full items-center justify-between border-t bg-destructive/5 px-5 py-4 text-left transition-colors hover:bg-destructive/10">
+                <span className="flex items-center gap-2.5 text-sm font-medium text-destructive"><Target className="h-4 w-4" />Kalde deals (7+ dager uten aktivitet)</span>
+                <span data-metric className="font-semibold text-destructive">{kaldeDeals}</span>
+              </button>
+            )}
+          </Panel>
+        </div>
 
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(320px,0.8fr)]">
           <Panel title="MRR per kunde" subtitle="Aktive kunder, høyeste MRR først" accent="success">
