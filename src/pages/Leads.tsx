@@ -107,6 +107,15 @@ export default function Leads() {
     }
   }, [searchParams, leads]);
 
+  /** Deep-linkede filtre fra oversikten. */
+  const statusParam = searchParams.get("status") as LeadStatus | null;
+  const oppfolgingFilter = searchParams.get("filter") === "oppfolging";
+  const clearDeepFilter = (key: "status" | "filter") => {
+    const next = new URLSearchParams(searchParams);
+    next.delete(key);
+    setSearchParams(next, { replace: true });
+  };
+
   const now = new Date();
 
   // Helper: is a lead converted (locked)? Also check konvertert_dato for DB-persisted state
@@ -135,6 +144,12 @@ export default function Leads() {
       const cutoff = new Date(now.getTime() - 24 * 60 * 60 * 1000);
       if (l.sist_aktivitet && new Date(l.sist_aktivitet) >= cutoff) return false;
     }
+    if (oppfolgingFilter) {
+      if (l.status === "Ikke aktuelt") return false;
+      const cutoff = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
+      if (l.sist_aktivitet && new Date(l.sist_aktivitet) >= cutoff) return false;
+    }
+    if (statusParam && l.status !== statusParam) return false;
     if (kildeFilter !== "alle" && kildeGruppe(l.kilde) !== kildeFilter) return false;
     if (statusFilter !== "alle" && l.status !== statusFilter) return false;
     if (!normalizedSearch) return true;
@@ -726,6 +741,16 @@ export default function Leads() {
           <Badge variant="secondary" className="gap-1 cursor-pointer hover:bg-destructive/10" onClick={() => setFilterUtenOppfolging(false)}>
             Uten oppfølging ✕
           </Badge>
+        )}
+        {statusParam && (
+          <button type="button" onClick={() => clearDeepFilter("status")} aria-label={`Fjern filter ${statusParam}`} className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            <Badge variant="secondary" className="gap-1 cursor-pointer hover:bg-destructive/10">{statusParam} · {filteredUnsorted.length} ✕</Badge>
+          </button>
+        )}
+        {oppfolgingFilter && (
+          <button type="button" onClick={() => clearDeepFilter("filter")} aria-label="Fjern filter trenger oppfølging" className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            <Badge variant="secondary" className="gap-1 cursor-pointer hover:bg-destructive/10">Trenger oppfølging · {filteredUnsorted.length} ✕</Badge>
+          </button>
         )}
       </div>
 

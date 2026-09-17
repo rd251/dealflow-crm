@@ -43,6 +43,13 @@
       "when": 1789643604302,
       "tag": "0005_add_lead_contact_statuses",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1789671480831,
+      "tag": "0006_add_demo_prosjekt_status",
+      "breakpoints": true
     }
   ]
 }

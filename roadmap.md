@@ -13,3 +13,5 @@
 - [x] Forenkle Salgsmuligheter til Aktive/Vunnet/Tapt/Arkiv
 - [x] Redesign kanbankort, kolonneoverskrifter og KPI-stripen
 - [x] Verifiser drag-and-drop, filtre, desktop og mobil
+- [x] Legg til steget «Demo-prosjekt» før «Kontrakt sendt» i pipelinen
+- [x] Gjør tall og rader på Porteføljeoversikt klikkbare med deep-linkede filtre og filterchips

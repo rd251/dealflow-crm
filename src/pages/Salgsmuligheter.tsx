@@ -36,10 +36,10 @@ import confetti from "canvas-confetti";
 import { tilKanbanStadium, dagerSiden, initialer, idag, datoOm } from "@/lib/sales-flow";
 
 /** Aktive stadier i kanban (rekkefølge). */
-const allStatuses: SalgsmulighetStatus[] = ["Møte booket", "Demo gjennomført", "Kontrakt sendt"];
+const allStatuses: SalgsmulighetStatus[] = ["Møte booket", "Demo gjennomført", "Demo-prosjekt", "Kontrakt sendt"];
 /** Alle statuser som regnes som åpne – inkl. eldre statuser fra før omleggingen. */
-const openStatuses: SalgsmulighetStatus[] = ["Møte booket", "Behov avklart", "Løsning presentert", "Demo gjennomført", "Kontrakt sendt"];
-const ACTIVE_KANBAN_STAGES: SalgsmulighetStatus[] = ["Møte booket", "Demo gjennomført", "Kontrakt sendt"];
+const openStatuses: SalgsmulighetStatus[] = ["Møte booket", "Behov avklart", "Løsning presentert", "Demo gjennomført", "Demo-prosjekt", "Kontrakt sendt"];
+const ACTIVE_KANBAN_STAGES: SalgsmulighetStatus[] = ["Møte booket", "Demo gjennomført", "Demo-prosjekt", "Kontrakt sendt"];
 const STALE_STAGE_DAYS = 90;
 type PipelineSegment = "aktive" | "vunnet" | "tapt" | "arkiv";
 type ArchiveFilter = "alle" | "signert" | "venter" | "forfalt" | "inaktive" | "avsluttede";
@@ -135,6 +135,7 @@ const statusColors: Record<SalgsmulighetStatus, string> = {
   "Behov avklart": "bg-stage-qualified",
   "Løsning presentert": "bg-stage-demo",
   "Demo gjennomført": "bg-stage-demo",
+  "Demo-prosjekt": "bg-stage-demo",
   "Kontrakt sendt": "bg-stage-proposal",
   "Vunnet": "bg-stage-won",
   "Tapt": "bg-stage-lost",
@@ -268,6 +269,16 @@ export default function Salgsmuligheter() {
     }
   }, [searchParams, salgsmuligheter]);
 
+  /** Deep-linkede filtre fra oversikten. */
+  const stageParam = searchParams.get("stadium") as SalgsmulighetStatus | null;
+  const stageFilter = stageParam && ACTIVE_KANBAN_STAGES.includes(stageParam) ? stageParam : null;
+  const kaldeFilter = searchParams.get("filter") === "kalde";
+  const clearDeepFilter = (key: "stadium" | "filter") => {
+    const next = new URLSearchParams(searchParams);
+    next.delete(key);
+    setSearchParams(next, { replace: true });
+  };
+
   const getSelskapNavn = (id: string) => selskaper.find(s => s.id === id)?.firmanavn || "–";
   const getSelskapDomain = (id: string | null) => id ? selskaper.find(s => s.id === id)?.domene || "" : "";
   const getProfileName = (id: string) => profiles.find(p => p.user_id === id)?.display_name || "";
@@ -381,6 +392,11 @@ export default function Salgsmuligheter() {
       const cutoff = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
       if (s.sist_aktivitet && new Date(s.sist_aktivitet) >= cutoff) return false;
     }
+    if (kaldeFilter) {
+      const dager = dagerSiden(s.sist_aktivitet);
+      if (dager !== null && dager < 7) return false;
+    }
+    if (stageFilter && tilKanbanStadium(s.status) !== tilKanbanStadium(stageFilter)) return false;
     if (ownerFilter && s.ansvarlig !== ownerFilter) return false;
     if (from || to) {
       if (!s.forventet_lukkedato) return false;
@@ -826,11 +842,23 @@ export default function Salgsmuligheter() {
 
       {pipelineSegment === "aktive" ? (
         <>
-          {filterUtenAktivitet && (
-            <div className="mb-3">
-              <Badge variant="secondary" className="gap-1 cursor-pointer hover:bg-destructive/10" onClick={() => setFilterUtenAktivitet(false)}>
-                Uten aktivitet ✕
-              </Badge>
+          {(filterUtenAktivitet || stageFilter || kaldeFilter) && (
+            <div className="mb-3 flex flex-wrap gap-2">
+              {filterUtenAktivitet && (
+                <Badge variant="secondary" className="gap-1 cursor-pointer hover:bg-destructive/10" onClick={() => setFilterUtenAktivitet(false)}>
+                  Uten aktivitet ✕
+                </Badge>
+              )}
+              {stageFilter && (
+                <button type="button" onClick={() => clearDeepFilter("stadium")} aria-label={`Fjern filter ${stageFilter}`} className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                  <Badge variant="secondary" className="gap-1 cursor-pointer hover:bg-destructive/10">{stageFilter} · {openDeals.length} ✕</Badge>
+                </button>
+              )}
+              {kaldeFilter && (
+                <button type="button" onClick={() => clearDeepFilter("filter")} aria-label="Fjern filter kalde deals" className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                  <Badge variant="secondary" className="gap-1 cursor-pointer hover:bg-destructive/10">Kalde deals · {openDeals.length} ✕</Badge>
+                </button>
+              )}
             </div>
           )}
           <div className="mb-4 grid grid-cols-1 divide-y rounded-lg border bg-card shadow-card sm:grid-cols-3 sm:divide-x sm:divide-y-0">
@@ -888,7 +916,7 @@ export default function Salgsmuligheter() {
             <DealList deals={sortDeals(openDeals)} getSelskapNavn={getSelskapNavn} getSelskapDomain={getSelskapDomain} onSelect={setSelectedSm} label="Åpne salgsmuligheter" onNavigateSelskap={id => navigate(`/selskaper/${id}`)} isMobile={isMobile} showKontraktStatus showLukkedato showSignalAndNextStep />
           ) : (
           <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-4 scrollbar-thin items-start">
-            {ACTIVE_KANBAN_STAGES.map(stadium => {
+            {(stageFilter ? [stageFilter] : ACTIVE_KANBAN_STAGES).map(stadium => {
               const stage = stadium as SalgsmulighetStatus;
               const stageDeals = sortDeals(openDeals.filter(d => tilKanbanStadium(d.status) === stadium));
               const stageMrr = stageDeals.reduce((s, d) => s + d.forventet_mrr, 0);

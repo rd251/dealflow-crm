@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ArrowUpRight, Building2, CircleDollarSign, Handshake, Layers3, PhoneCall, Target, TrendingUp, Users } from "lucide-react";
 import { dagerSiden, KANBAN_STADIER, leadStatusFarge, stadiumFarge, tilKanbanStadium } from "@/lib/sales-flow";
 import type { LeadStatus } from "@/data/crm-data";
@@ -35,22 +35,34 @@ function MetricCard({ label, value, icon: Icon, accent = "pipeline", onClick }: 
       </span>
     </>
   );
-  return onClick ? (
+  const erNull = value === 0 || value === "0" || (typeof value === "string" && /^0(\D|$)/.test(value.replace(/\s/g, "")));
+  return onClick && !erNull ? (
     <Button variant="outline" onClick={onClick} className="h-auto min-h-24 w-full justify-start gap-3 rounded-lg bg-card p-4 text-left shadow-card hover:bg-card">{content}</Button>
-  ) : <div className="flex min-h-24 items-center gap-3 rounded-lg border bg-card p-4 shadow-card">{content}</div>;
+  ) : <div className={`flex min-h-24 items-center gap-3 rounded-lg border bg-card p-4 shadow-card ${erNull ? "opacity-60" : ""}`}>{content}</div>;
 }
 
-function Panel({ title, subtitle, children, accent = "pipeline" }: {
+function Panel({ title, subtitle, children, accent = "pipeline", onTitleClick, titleLinkLabel }: {
   title: string;
   subtitle?: string;
   children: React.ReactNode;
   accent?: Accent;
+  onTitleClick?: () => void;
+  titleLinkLabel?: string;
 }) {
   return (
     <section className="overflow-hidden rounded-lg border bg-card shadow-card">
       <header className={`border-b px-5 py-4 ${accent === "partner" ? "bg-partner/5" : "bg-card"}`}>
-        <h2 className="font-display text-base font-semibold">{title}</h2>
-        {subtitle && <p className="mt-0.5 text-xs text-muted-foreground">{subtitle}</p>}
+        {onTitleClick ? (
+          <button type="button" onClick={onTitleClick} aria-label={titleLinkLabel || title} className="text-left transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            <h2 className="font-display text-base font-semibold">{title}</h2>
+            {subtitle && <p className="mt-0.5 text-xs text-muted-foreground">{subtitle}</p>}
+          </button>
+        ) : (
+          <>
+            <h2 className="font-display text-base font-semibold">{title}</h2>
+            {subtitle && <p className="mt-0.5 text-xs text-muted-foreground">{subtitle}</p>}
+          </>
+        )}
       </header>
       {children}
     </section>
@@ -130,28 +142,48 @@ export default function Dashboard() {
         </section>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <Panel title="Leads" subtitle={`${aktiveLeads.length} aktive · ${leadsTrengerOppfoelging} trenger oppfølging`} accent="pipeline">
+          <Panel
+            title="Leads"
+            subtitle={`${aktiveLeads.length} aktive · ${leadsTrengerOppfoelging} trenger oppfølging`}
+            accent="pipeline"
+            onTitleClick={aktiveLeads.length > 0 ? () => navigate("/leads") : undefined}
+            titleLinkLabel="Se alle aktive leads"
+          >
             <div className="divide-y">
               {leadsPerStatus.map(rad => (
-                <button key={rad.status} onClick={() => navigate("/leads")} className="flex w-full items-center justify-between px-5 py-3.5 text-left transition-colors hover:bg-muted/50">
+                <Link
+                  key={rad.status}
+                  to={`/leads?status=${encodeURIComponent(rad.status)}`}
+                  className="flex w-full items-center justify-between px-5 py-3.5 text-left transition-colors hover:bg-muted/50 active:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+                >
                   <Badge variant="outline" className={leadStatusFarge[rad.status]}>{rad.status}</Badge>
                   <span data-metric className="font-semibold">{rad.antall}</span>
-                </button>
+                </Link>
               ))}
               {leadsPerStatus.length === 0 && <p className="p-8 text-center text-sm text-muted-foreground">Ingen aktive leads.</p>}
             </div>
-            {leadsTrengerOppfoelging > 0 && (
-              <button onClick={() => navigate("/leads")} className="flex w-full items-center justify-between border-t bg-warning/5 px-5 py-4 text-left transition-colors hover:bg-warning/10">
+            {leadsTrengerOppfoelging > 0 ? (
+              <Link to="/leads?filter=oppfolging" className="flex w-full items-center justify-between border-t bg-warning/5 px-5 py-4 text-left transition-colors hover:bg-warning/10 active:bg-warning/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
                 <span className="flex items-center gap-2.5 text-sm font-medium text-warning"><PhoneCall className="h-4 w-4" />Trenger oppfølging (3+ dager)</span>
                 <span data-metric className="font-semibold text-warning">{leadsTrengerOppfoelging}</span>
-              </button>
-            )}
+              </Link>
+            ) : null}
           </Panel>
 
-          <Panel title="Salgsmuligheter" subtitle={`${openDeals.length} åpne · ${nok(totalPipelineMrr)} forventet MRR`} accent="pipeline">
+          <Panel
+            title="Salgsmuligheter"
+            subtitle={`${openDeals.length} åpne · ${nok(totalPipelineMrr)} forventet MRR`}
+            accent="pipeline"
+            onTitleClick={openDeals.length > 0 ? () => navigate("/salgsmuligheter") : undefined}
+            titleLinkLabel="Se alle åpne salgsmuligheter"
+          >
             <div className="divide-y">
-              {stageStats.map(rad => (
-                <button key={rad.stage} onClick={() => navigate("/salgsmuligheter")} className="flex w-full items-center justify-between gap-4 px-5 py-3.5 text-left transition-colors hover:bg-muted/50">
+              {stageStats.map(rad => rad.antall > 0 ? (
+                <Link
+                  key={rad.stage}
+                  to={`/salgsmuligheter?stadium=${encodeURIComponent(rad.stage)}`}
+                  className="flex w-full items-center justify-between gap-4 px-5 py-3.5 text-left transition-colors hover:bg-muted/50 active:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+                >
                   <span className="flex min-w-0 items-center gap-2.5">
                     <Badge variant="outline" className={stadiumFarge[rad.stage]}>{rad.stage}</Badge>
                   </span>
@@ -159,15 +191,25 @@ export default function Dashboard() {
                     <span className="text-xs text-muted-foreground">{nok(rad.mrr)}</span>
                     <span data-metric className="font-semibold">{rad.antall}</span>
                   </span>
-                </button>
+                </Link>
+              ) : (
+                <div key={rad.stage} className="flex w-full items-center justify-between gap-4 px-5 py-3.5 text-muted-foreground">
+                  <span className="flex min-w-0 items-center gap-2.5">
+                    <Badge variant="outline" className={stadiumFarge[rad.stage]}>{rad.stage}</Badge>
+                  </span>
+                  <span className="flex shrink-0 items-baseline gap-3">
+                    <span className="text-xs text-muted-foreground">{nok(rad.mrr)}</span>
+                    <span data-metric className="font-semibold">{rad.antall}</span>
+                  </span>
+                </div>
               ))}
             </div>
-            {kaldeDeals > 0 && (
-              <button onClick={() => navigate("/salgsmuligheter")} className="flex w-full items-center justify-between border-t bg-destructive/5 px-5 py-4 text-left transition-colors hover:bg-destructive/10">
+            {kaldeDeals > 0 ? (
+              <Link to="/salgsmuligheter?filter=kalde" className="flex w-full items-center justify-between border-t bg-destructive/5 px-5 py-4 text-left transition-colors hover:bg-destructive/10 active:bg-destructive/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
                 <span className="flex items-center gap-2.5 text-sm font-medium text-destructive"><Target className="h-4 w-4" />Kalde deals (7+ dager uten aktivitet)</span>
                 <span data-metric className="font-semibold text-destructive">{kaldeDeals}</span>
-              </button>
-            )}
+              </Link>
+            ) : null}
           </Panel>
         </div>
 

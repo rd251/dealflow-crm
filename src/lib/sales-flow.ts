@@ -89,6 +89,7 @@ export function kildeGruppe(kilde?: string): KildeGruppe {
 export const KANBAN_STADIER = [
   "Møte booket",
   "Demo gjennomført",
+  "Demo-prosjekt",
   "Kontrakt sendt",
   "Vunnet",
   "Tapt",
@@ -103,6 +104,8 @@ export function tilKanbanStadium(status: SalgsmulighetStatus): KanbanStadium {
     case "Løsning presentert":
     case "Demo gjennomført":
       return "Demo gjennomført";
+    case "Demo-prosjekt":
+      return "Demo-prosjekt";
     case "Kontrakt sendt":
       return "Kontrakt sendt";
     case "Vunnet":
@@ -117,6 +120,7 @@ export function tilKanbanStadium(status: SalgsmulighetStatus): KanbanStadium {
 export const stadiumFarge: Record<KanbanStadium, string> = {
   "Møte booket": "bg-pipeline/10 text-pipeline border-pipeline/20",
   "Demo gjennomført": "bg-pipeline/10 text-pipeline border-pipeline/20",
+  "Demo-prosjekt": "bg-pipeline/10 text-pipeline border-pipeline/20",
   "Kontrakt sendt": "bg-partner/10 text-partner border-partner/20",
   "Vunnet": "bg-success/10 text-success border-success/20",
   "Tapt": "bg-muted text-muted-foreground border-border",
@@ -125,6 +129,7 @@ export const stadiumFarge: Record<KanbanStadium, string> = {
 export const stadiumStripe: Record<KanbanStadium, string> = {
   "Møte booket": "bg-pipeline",
   "Demo gjennomført": "bg-pipeline",
+  "Demo-prosjekt": "bg-pipeline",
   "Kontrakt sendt": "bg-partner",
   "Vunnet": "bg-success",
   "Tapt": "bg-muted-foreground/40",
