@@ -269,6 +269,16 @@ export default function Salgsmuligheter() {
     }
   }, [searchParams, salgsmuligheter]);
 
+  /** Deep-linkede filtre fra oversikten. */
+  const stageParam = searchParams.get("stadium") as SalgsmulighetStatus | null;
+  const stageFilter = stageParam && ACTIVE_KANBAN_STAGES.includes(stageParam) ? stageParam : null;
+  const kaldeFilter = searchParams.get("filter") === "kalde";
+  const clearDeepFilter = (key: "stadium" | "filter") => {
+    const next = new URLSearchParams(searchParams);
+    next.delete(key);
+    setSearchParams(next, { replace: true });
+  };
+
   const getSelskapNavn = (id: string) => selskaper.find(s => s.id === id)?.firmanavn || "–";
   const getSelskapDomain = (id: string | null) => id ? selskaper.find(s => s.id === id)?.domene || "" : "";
   const getProfileName = (id: string) => profiles.find(p => p.user_id === id)?.display_name || "";
