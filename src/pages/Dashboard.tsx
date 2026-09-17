@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowUpRight, Building2, CircleDollarSign, Handshake, Layers3, PhoneCall, Target, TrendingUp, Users } from "lucide-react";
-import { leadStatusFarge, PIPELINE_STAGES } from "@/lib/sales-flow";
+import { dagerSiden, KANBAN_STADIER, leadStatusFarge, stadiumFarge, tilKanbanStadium } from "@/lib/sales-flow";
 import type { LeadStatus } from "@/data/crm-data";
 import PageShell from "@/components/PageShell";
 import CompanyLogo from "@/components/CompanyLogo";
