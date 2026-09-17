@@ -3,7 +3,7 @@
 export type LeadStatus = "Ny" | "Kontaktet" | "Svarte ikke telefon" | "Ikke fått tak i ennå" | "Kvalifisert" | "Ikke aktuelt" | "Konvertert til salg" | "Konvertert til partner";
 export type LeadKilde = "Nettside" | "LinkedIn" | "Partner" | "Referanse" | "Kald outbound" | "E-post" | "Telefon" | "Annet";
 
-export type SalgsmulighetStatus = "Møte booket" | "Behov avklart" | "Løsning presentert" | "Demo gjennomført" | "Kontrakt sendt" | "Vunnet" | "Tapt";
+export type SalgsmulighetStatus = "Møte booket" | "Behov avklart" | "Løsning presentert" | "Demo gjennomført" | "Demo-prosjekt" | "Kontrakt sendt" | "Vunnet" | "Tapt";
 export type Tapsaarsak = "Pris" | "Ikke riktig timing" | "Valgte annen leverandør" | "Ikke behov" | "Teknisk / integrasjon" | "Annet";
 
 export type ProsjektStatus = "Ny" | "Skjema mottatt" | "I produksjon" | "Test med kunde" | "Live" | "Blokkert";
