@@ -9,7 +9,6 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { CheckCircle, Upload, X, ArrowRight, ArrowLeft } from "lucide-react";
 
-const BRAND_RED = "#c0392b";
 const TOTAL_STEPS = 11; // 10 questions + contact info
 
 interface QuestionConfig {
@@ -212,13 +211,13 @@ export default function Onboarding() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center p-6">
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-6">
         <div className="text-center max-w-md mx-auto">
           <SnakkLogo />
           <div className="mt-10">
-            <CheckCircle className="w-16 h-16 mx-auto mb-6" style={{ color: BRAND_RED }} />
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">Takk!</h1>
-            <p className="text-lg text-gray-600 leading-relaxed">
+            <CheckCircle className="w-16 h-16 mx-auto mb-6 text-success" />
+            <h1 className="font-display text-3xl font-semibold mb-4">Takk!</h1>
+            <p className="text-lg text-muted-foreground leading-relaxed">
               Vi er i gang. Du hører fra oss innen 1–2 virkedager.
             </p>
           </div>
@@ -228,16 +227,16 @@ export default function Onboarding() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-screen bg-background text-foreground flex flex-col">
       {/* Header */}
-      <header className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+      <header className="flex items-center justify-between px-6 py-4 border-b bg-card">
         <SnakkLogo />
-        <span className="text-sm text-gray-400">Spørsmål {step + 1} av {TOTAL_STEPS}</span>
+        <span className="text-sm text-muted-foreground">Spørsmål {step + 1} av {TOTAL_STEPS}</span>
       </header>
 
       {/* Progress */}
-      <div className="w-full h-1 bg-gray-100">
-        <div className="h-full transition-all duration-500 ease-out" style={{ width: `${progress}%`, backgroundColor: BRAND_RED }} />
+      <div className="w-full h-1 bg-muted">
+        <div className="h-full bg-primary transition-all duration-500 ease-out" style={{ width: `${progress}%` }} />
       </div>
 
       {/* Content */}
@@ -247,13 +246,13 @@ export default function Onboarding() {
           className="w-full max-w-2xl animate-fade-in"
           style={{ animation: `${direction === "forward" ? "slideInRight" : "slideInLeft"} 0.35s ease-out` }}
         >
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{q.title}</h2>
-          <p className="text-gray-500 mb-8 text-base sm:text-lg">{q.subtitle}</p>
+          <h2 className="font-display text-2xl sm:text-3xl font-semibold mb-2">{q.title}</h2>
+          <p className="text-muted-foreground mb-8 text-base sm:text-lg">{q.subtitle}</p>
 
           {/* Question body */}
           {q.type === "textarea-lg" && (
             <Textarea
-              className="min-h-[180px] text-base border-gray-200 focus:border-red-400 focus:ring-red-400/20 resize-none"
+              className="min-h-[180px] text-base resize-none"
               placeholder={q.placeholder}
               value={answers[q.id] || ""}
               onChange={e => setAnswers(a => ({ ...a, [q.id]: e.target.value }))}
@@ -263,7 +262,7 @@ export default function Onboarding() {
 
           {q.type === "textarea-md" && (
             <Textarea
-              className="min-h-[120px] text-base border-gray-200 focus:border-red-400 focus:ring-red-400/20 resize-none"
+              className="min-h-[120px] text-base resize-none"
               placeholder={q.placeholder}
               value={answers[q.id] || ""}
               onChange={e => setAnswers(a => ({ ...a, [q.id]: e.target.value }))}
@@ -279,7 +278,7 @@ export default function Onboarding() {
                     key={opt}
                     htmlFor={opt}
                     className={`flex items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                      radioSelection === opt ? "border-red-500 bg-red-50" : "border-gray-200 hover:border-gray-300"
+                      radioSelection === opt ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
                     }`}
                   >
                     <RadioGroupItem value={opt} id={opt} />
@@ -288,7 +287,7 @@ export default function Onboarding() {
                 ))}
               </RadioGroup>
               <Textarea
-                className="min-h-[80px] text-base border-gray-200 focus:border-red-400 focus:ring-red-400/20 resize-none"
+                className="min-h-[80px] text-base resize-none"
                 placeholder={q.radioPlaceholder}
                 value={answers[q.id] || ""}
                 onChange={e => setAnswers(a => ({ ...a, [q.id]: e.target.value }))}
@@ -300,14 +299,14 @@ export default function Onboarding() {
             <div className="space-y-6">
               {/* Drop zone */}
               <div
-                className="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center hover:border-red-300 transition-colors cursor-pointer"
+                className="rounded-lg border-2 border-dashed border-border bg-card p-8 text-center shadow-card hover:border-primary/40 transition-colors cursor-pointer"
                 onDragOver={e => e.preventDefault()}
                 onDrop={handleFileDrop}
                 onClick={() => fileInputRef.current?.click()}
               >
-                <Upload className="w-8 h-8 mx-auto mb-3 text-gray-400" />
-                <p className="text-sm text-gray-600 font-medium">Dra og slipp filer her, eller klikk for å velge</p>
-                <p className="text-xs text-gray-400 mt-1">PDF, Word, TXT, MP3 — maks 5 filer, 100 MB per fil</p>
+                <Upload className="w-8 h-8 mx-auto mb-3 text-muted-foreground" />
+                <p className="text-sm font-medium">Dra og slipp filer her, eller klikk for å velge</p>
+                <p className="text-xs text-muted-foreground mt-1">PDF, Word, TXT, MP3 — maks 5 filer, 100 MB per fil</p>
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -320,18 +319,18 @@ export default function Onboarding() {
               {files.length > 0 && (
                 <div className="space-y-2">
                   {files.map((f, i) => (
-                    <div key={i} className="flex items-center gap-3 bg-gray-50 rounded-lg px-4 py-2.5">
+                    <div key={i} className="flex items-center gap-3 bg-muted rounded-lg px-4 py-2.5">
                       <span className="text-sm truncate flex-1">{f.name}</span>
-                      <span className="text-xs text-gray-400">{(f.size / 1024 / 1024).toFixed(1)} MB</span>
-                      <button onClick={() => removeFile(i)} className="text-gray-400 hover:text-red-500"><X className="w-4 h-4" /></button>
+                      <span className="text-xs text-muted-foreground">{(f.size / 1024 / 1024).toFixed(1)} MB</span>
+                      <Button variant="ghost" size="icon" onClick={() => removeFile(i)} className="h-7 w-7 text-muted-foreground hover:text-destructive"><X className="w-4 h-4" /></Button>
                     </div>
                   ))}
                 </div>
               )}
               <div>
-                <Label className="text-sm text-gray-600 mb-1.5 block">Lenker til nettside, FAQ e.l.</Label>
+                <Label className="text-sm text-muted-foreground mb-1.5 block">Lenker til nettside, FAQ e.l.</Label>
                 <Textarea
-                  className="min-h-[60px] text-base border-gray-200 focus:border-red-400 focus:ring-red-400/20 resize-none"
+                  className="min-h-[60px] text-base resize-none"
                   placeholder={q.placeholder}
                   value={answers[q.id] || ""}
                   onChange={e => setAnswers(a => ({ ...a, [q.id]: e.target.value }))}
@@ -343,9 +342,9 @@ export default function Onboarding() {
           {q.type === "contact" && (
             <div className="space-y-5">
               <div>
-                <Label className="text-sm font-medium text-gray-700 mb-1.5 block">Navn *</Label>
+                <Label className="text-sm font-medium mb-1.5 block">Navn *</Label>
                 <Input
-                  className="h-12 text-base border-gray-200 focus:border-red-400 focus:ring-red-400/20"
+                  className="h-12 text-base"
                   placeholder="Ola Nordmann"
                   value={contact.navn}
                   onChange={e => setContact(c => ({ ...c, navn: e.target.value }))}
@@ -353,19 +352,19 @@ export default function Onboarding() {
                 />
               </div>
               <div>
-                <Label className="text-sm font-medium text-gray-700 mb-1.5 block">E-post *</Label>
+                <Label className="text-sm font-medium mb-1.5 block">E-post *</Label>
                 <Input
                   type="email"
-                  className="h-12 text-base border-gray-200 focus:border-red-400 focus:ring-red-400/20"
+                  className="h-12 text-base"
                   placeholder="ola@firma.no"
                   value={contact.epost}
                   onChange={e => setContact(c => ({ ...c, epost: e.target.value }))}
                 />
               </div>
               <div>
-                <Label className="text-sm font-medium text-gray-700 mb-1.5 block">Firmanavn *</Label>
+                <Label className="text-sm font-medium mb-1.5 block">Firmanavn *</Label>
                 <Input
-                  className="h-12 text-base border-gray-200 focus:border-red-400 focus:ring-red-400/20"
+                  className="h-12 text-base"
                   placeholder="Firma AS"
                   value={contact.firma}
                   onChange={e => setContact(c => ({ ...c, firma: e.target.value }))}
@@ -376,22 +375,21 @@ export default function Onboarding() {
 
           {/* Required indicator */}
           {q.required && q.type !== "contact" && (
-            <p className="text-xs text-gray-400 mt-3">* Obligatorisk</p>
+            <p className="text-xs text-muted-foreground mt-3">* Obligatorisk</p>
           )}
         </div>
       </div>
 
       {/* Footer navigation */}
-      <footer className="border-t border-gray-100 px-6 py-4 flex items-center justify-between">
-        <Button variant="ghost" onClick={goBack} disabled={step === 0} className="text-gray-500">
+      <footer className="border-t bg-card px-6 py-4 flex items-center justify-between">
+        <Button variant="ghost" onClick={goBack} disabled={step === 0} className="text-muted-foreground">
           <ArrowLeft className="w-4 h-4 mr-1" /> Tilbake
         </Button>
         {step < TOTAL_STEPS - 1 ? (
           <Button
             onClick={goNext}
             disabled={!canNext()}
-            className="text-white px-6"
-            style={{ backgroundColor: BRAND_RED }}
+            className="px-6"
           >
             Neste <ArrowRight className="w-4 h-4 ml-1" />
           </Button>
@@ -399,8 +397,7 @@ export default function Onboarding() {
           <Button
             onClick={handleSubmit}
             disabled={submitting || !canNext()}
-            className="text-white px-8"
-            style={{ backgroundColor: BRAND_RED }}
+            className="px-8"
           >
             {submitting ? "Sender..." : "Send inn"}
           </Button>
@@ -426,9 +423,9 @@ function SnakkLogo() {
   return (
     <div className="flex items-center gap-2">
       <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
-        <path d="M16 2L19.5 11.5L29 16L19.5 20.5L16 30L12.5 20.5L3 16L12.5 11.5L16 2Z" fill={BRAND_RED} />
+        <path d="M16 2L19.5 11.5L29 16L19.5 20.5L16 30L12.5 20.5L3 16L12.5 11.5L16 2Z" fill="currentColor" className="text-primary" />
       </svg>
-      <span className="text-xl font-bold tracking-tight text-gray-900">SNAKK</span>
+      <span className="font-display text-xl font-semibold">SNAKK</span>
     </div>
   );
 }

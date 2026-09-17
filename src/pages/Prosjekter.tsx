@@ -22,7 +22,7 @@ const statuses: ProsjektStatus[] = ["Ny", "Skjema mottatt", "I produksjon", "Tes
 
 const statusColors: Record<ProsjektStatus, string> = {
   "Ny": "bg-stage-new-lead",
-  "Skjema mottatt": "bg-blue-400",
+  "Skjema mottatt": "bg-pipeline",
   "I produksjon": "bg-stage-contacted",
   "Test med kunde": "bg-stage-demo",
   "Live": "bg-stage-won",

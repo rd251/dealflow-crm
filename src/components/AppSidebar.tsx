@@ -14,7 +14,7 @@ type NavItem = { to: string; icon: any; label: string };
 
 // Salgsflyten – alltid synlig
 const mainItems: NavItem[] = [
-  { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
+  { to: "/dashboard", icon: LayoutDashboard, label: "Oversikt" },
   { to: "/leads", icon: UserPlus, label: "Leads" },
   { to: "/ringeliste", icon: Phone, label: "Ringeliste" },
   { to: "/salgsmuligheter", icon: Handshake, label: "Salgsmuligheter" },
@@ -33,7 +33,7 @@ const moreItems: NavItem[] = [
   { to: "/kontaktstrom", icon: GitMerge, label: "Kontaktstrøm" },
   { to: "/moetenotater", icon: NotebookPen, label: "Møtenotater" },
   { to: "/aktiviteter", icon: Activity, label: "Endringslogg" },
-  { to: "/partner-pipeline", icon: GitBranch, label: "Partner Pipeline" },
+  { to: "/partner-pipeline", icon: GitBranch, label: "Partnerløp" },
   { to: "/nyhetsbrev", icon: Mail, label: "Nyhetsbrev" },
 ];
 
@@ -49,9 +49,9 @@ function SidebarNav({ onNavigate, isAdmin, displayName }: { onNavigate?: () => v
         key={to}
         to={to}
         onClick={onNavigate}
-        className={`flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+        className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
           active
-            ? "bg-sidebar-accent text-sidebar-primary"
+            ? "bg-sidebar-primary/10 text-sidebar-primary"
             : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
         }`}
       >
@@ -68,7 +68,7 @@ function SidebarNav({ onNavigate, isAdmin, displayName }: { onNavigate?: () => v
         <div className="pt-3">
           <button
             onClick={() => setMoreOpen((v) => !v)}
-            className="flex w-full items-center gap-2.5 px-3 py-2 rounded-md text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
+            className="flex w-full items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
           >
             <ChevronDown className={cn("w-4 h-4 shrink-0 transition-transform", !moreOpen && "-rotate-90")} />
             Mer
@@ -89,7 +89,7 @@ function SidebarNav({ onNavigate, isAdmin, displayName }: { onNavigate?: () => v
           </div>
           <button
             onClick={() => { signOut(); onNavigate?.(); }}
-            className="flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors w-full"
+            className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors w-full"
           >
             <LogOut className="w-4 h-4 shrink-0" />
             Logg ut
@@ -118,7 +118,7 @@ function CollapsedSidebarNav({ isAdmin }: { isAdmin: boolean }) {
               title={label}
               className={`flex items-center justify-center p-2 rounded-md transition-colors ${
                 active
-                  ? "bg-sidebar-accent text-sidebar-primary"
+                  ? "bg-sidebar-primary/10 text-sidebar-primary"
                   : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
               }`}
             >
@@ -181,7 +181,7 @@ export default function AppSidebar() {
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 bottom-0 bg-sidebar flex flex-col z-50 transition-all duration-200",
+        "fixed left-0 top-0 bottom-0 border-r border-sidebar-border bg-sidebar flex flex-col z-50 transition-all duration-200",
         collapsed ? "w-14" : "w-60"
       )}
     >

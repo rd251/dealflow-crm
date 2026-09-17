@@ -5,6 +5,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useSidebarCollapsed } from "@/hooks/use-sidebar-collapsed";
 import { Button } from "@/components/ui/button";
 import NotificationBell from "@/components/NotificationBell";
+import ThemeToggle from "@/components/ThemeToggle";
 
 interface PageShellProps {
   title: string;
@@ -20,13 +21,14 @@ export default function PageShell({ title, subtitle, actions, children }: PageSh
 
   return (
     <div className={`min-h-screen bg-background ${isMobile ? "ml-0" : collapsed ? "ml-14" : "ml-60"} transition-all duration-200`}>
-      <header className={`sticky top-0 z-40 bg-background/80 backdrop-blur-sm border-b ${isMobile ? "px-4 py-4 pl-14" : "px-8 py-5"}`}>
+      <header className={`sticky top-0 z-40 border-b bg-background/90 backdrop-blur-md ${isMobile ? "px-4 py-4 pl-14" : "px-8 py-5"}`}>
         <div className="flex items-center justify-between">
           <div className="min-w-0">
-            <h1 className="text-2xl font-bold tracking-tight truncate">{title}</h1>
+            <h1 className="font-display text-2xl font-semibold truncate">{title}</h1>
             {subtitle && <p className="text-sm text-muted-foreground mt-0.5 truncate">{subtitle}</p>}
           </div>
           <div className="flex items-center gap-1 shrink-0">
+            <ThemeToggle />
             <NotificationBell />
             <Button
               variant="ghost"
@@ -41,7 +43,7 @@ export default function PageShell({ title, subtitle, actions, children }: PageSh
         </div>
         {actions && <div className="flex flex-wrap items-center gap-2 mt-3">{actions}</div>}
       </header>
-      <main className={isMobile ? "p-4" : "p-8"}>{children}</main>
+      <main className={isMobile ? "p-4" : "p-8 lg:p-10"}>{children}</main>
     </div>
   );
 }

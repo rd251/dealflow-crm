@@ -76,7 +76,7 @@ export default function DetailPanelShell({
 
         <div className="flex flex-col">
           {/* Hero header */}
-          <div className="px-6 pt-10 pb-5 border-b">
+          <div className="border-b bg-muted/35 px-6 pb-5 pt-10">
             <div className="flex items-start gap-3">
               <div className="w-11 h-11 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-base shrink-0">
                 {initials || title.charAt(0).toUpperCase()}
@@ -89,7 +89,7 @@ export default function DetailPanelShell({
                     onChange={e => onTitleChange(e.target.value)}
                   />
                 ) : (
-                  <h2 className="text-xl font-semibold tracking-tight truncate">{title}</h2>
+                   <h2 className="font-display text-xl font-semibold truncate">{title}</h2>
                 )}
                 {subtitle && (
                   <p className="text-sm text-muted-foreground truncate mt-0.5">{subtitle}</p>
@@ -177,8 +177,8 @@ export function DetailStatGrid({ children }: { children: ReactNode }) {
 
 export function DetailStatCard({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="rounded-lg border bg-muted/30 p-3 text-center">
-      <div className="text-lg font-semibold">{value}</div>
+    <div className="rounded-lg border bg-muted/50 p-3 text-center">
+      <div className="font-display text-lg font-semibold tabular-nums">{value}</div>
       <div className="text-xs text-muted-foreground">{label}</div>
     </div>
   );

@@ -39,7 +39,7 @@ export default function PartnerPipeline() {
   };
 
   return (
-    <PageShell title="Partner Pipeline" subtitle="Rekruttering av nye partnere">
+    <PageShell title="Partnerløp" subtitle="Rekruttering av nye partnere">
       <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-4 scrollbar-thin">
         {pipelineStatuses.map(stage => {
           const stagePartners = partnere.filter(p => p.pipeline_status === stage);
@@ -58,7 +58,7 @@ export default function PartnerPipeline() {
                   return (
                   <div key={partner.id} draggable onDragStart={e => { setDraggedId(partner.id); e.dataTransfer.effectAllowed = "move"; }}
                     onClick={() => navigate(`/partnere/${partner.id}`)}
-                    className="bg-card border rounded-lg p-3 sm:p-3.5 cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow group">
+                    className="bg-card border rounded-lg p-3 sm:p-3.5 shadow-card cursor-grab active:cursor-grabbing hover:border-partner/30 transition-colors group">
                     <div className="flex items-start gap-2">
                       {!isMobile && <GripVertical className="w-4 h-4 text-muted-foreground/40 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity" />}
                       <div className="flex-1 min-w-0">
