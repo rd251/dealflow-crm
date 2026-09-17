@@ -627,7 +627,8 @@ export default function Kontaktstrom() {
 
   return (
     <PageShell
-      title="Søk"
+      title="Kontaktstrøm"
+      subtitle="Alle kontakter fra e-post – leads, kunder og partnere samlet"
       actions={
         <div className="flex flex-wrap items-center gap-3">
           <Button
@@ -640,10 +641,6 @@ export default function Kontaktstrom() {
             <RefreshCw className={`w-4 h-4 ${syncing ? "animate-spin" : ""}`} />
             {syncing ? "Synkroniserer..." : "Synk Gmail"}
           </Button>
-          <div className="relative min-w-[200px] max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input placeholder="Søk navn, e-post, selskap..." className="pl-9" value={search} onChange={e => setSearch(e.target.value)} />
-          </div>
           <Select value={filterEier} onValueChange={setFilterEier}>
             <SelectTrigger className="w-[160px]">
               <SelectValue placeholder="Eier" />
@@ -660,6 +657,26 @@ export default function Kontaktstrom() {
         </div>
       }
     >
+      {/* Søk – øverst over fanene */}
+      <div className="relative mb-4">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+        <Input
+          placeholder="Søk navn, e-post, selskap..."
+          className="pl-9 pr-9 h-11 bg-card"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          autoFocus
+        />
+        {search && (
+          <button
+            onClick={() => setSearch("")}
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-muted"
+            aria-label="Nullstill søk"
+          >
+            <span className="text-muted-foreground text-base leading-none">×</span>
+          </button>
+        )}
+      </div>
       {/* Tabs */}
       <div className="border-b mb-0">
         <div className="flex gap-6 px-1">
