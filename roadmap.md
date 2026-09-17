@@ -9,4 +9,4 @@
 - [x] Verifiser oversikt og sentrale arbeidsflater på desktop og mobil
 - [x] Flytt dagens ringeliste til Leads og behold kampanjelister separat
 - [x] Legg til statusene «Svarte ikke telefon» og «Ikke fått tak i ennå»
-- [ ] Verifiser statuslagring og Leads-fanene på desktop og mobil
+- [x] Verifiser statuslagring og Leads-fanene på desktop og mobil

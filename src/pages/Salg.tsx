@@ -82,7 +82,11 @@ export default function Salg() {
         navn: l.firmanavn,
         selskap: l.firmanavn,
         kontakt: l.kontaktperson || "",
-        steg: (l.status === "Ikke aktuelt" ? "Tapt" : (l.status as string)) as Steg,
+        steg: (l.status === "Ikke aktuelt"
+          ? "Tapt"
+          : l.status === "Svarte ikke telefon" || l.status === "Ikke fått tak i ennå"
+            ? "Kontaktet"
+            : l.status) as Steg,
         mrr: 0,
         neste_steg: l.neste_steg || "",
         ansvarlig: l.ansvarlig || "",
