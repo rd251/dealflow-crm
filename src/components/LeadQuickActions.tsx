@@ -5,11 +5,11 @@ import { useCrmStore } from "@/hooks/use-crm-store";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Phone, CalendarDays, X, Ban, PhoneMissed } from "lucide-react";
+import { Phone, CalendarDays, Ban, PhoneMissed } from "lucide-react";
 import { idag, datoOm } from "@/lib/sales-flow";
 import type { Lead } from "@/data/crm-data";
 
-export type LeadUtfall = "ringt" | "ikke-svar" | "ikke-tak" | "ikke-aktuelt";
+export type LeadUtfall = "ringt" | "ikke-svar" | "ikke-aktuelt";
 
 interface Props {
   lead: Lead;
@@ -72,20 +72,13 @@ export default function LeadQuickActions({ lead, onHandled, onBookMoete, size = 
   };
 
   const ikkeSvar = async () => {
-    await loggAktivitet(`Forsøkte å ringe ${navn}`, "Ikke svar");
+    await loggAktivitet(`Forsøkte å ringe ${navn}`, "Ikke svart");
     updateLeads(prev => prev.map(l => l.id === lead.id ? { ...l, status: "Svarte ikke telefon", sist_aktivitet: idag() } : l));
     nyRingeoppgave(`Ring ${navn} igjen`);
-    toast("Ikke svar – ny ringeoppgave om 2 dager");
+    toast("Ikke svart – ny ringeoppgave om 2 dager");
     onHandled?.("ikke-svar");
   };
 
-  const ikkeFaattTak = async () => {
-    await loggAktivitet(`Ikke fått tak i ${navn}`, "Ikke fått tak i ennå");
-    updateLeads(prev => prev.map(l => l.id === lead.id ? { ...l, status: "Ikke fått tak i ennå", sist_aktivitet: idag() } : l));
-    nyRingeoppgave(`Prøv ${navn} igjen`);
-    toast("Markert som ikke fått tak i – ny oppgave om 2 dager");
-    onHandled?.("ikke-tak");
-  };
 
   const ikkeAktuelt = async () => {
     await loggAktivitet(`Ringt ${navn}`, "Ikke aktuelt");
@@ -112,10 +105,7 @@ export default function LeadQuickActions({ lead, onHandled, onBookMoete, size = 
           <Phone className="w-3.5 h-3.5 mr-1.5" />Ringt ✓
         </Button>
         <Button size={size} variant="outline" onClick={ikkeSvar}>
-          <X className="w-3.5 h-3.5 mr-1.5" />Ikke svar
-        </Button>
-        <Button size={size} variant="outline" onClick={ikkeFaattTak}>
-          <PhoneMissed className="w-3.5 h-3.5 mr-1.5" />Ikke fått tak i ennå
+          <PhoneMissed className="w-3.5 h-3.5 mr-1.5" />Ikke svart
         </Button>
         <Button size={size} variant="outline" onClick={ikkeAktuelt}>
           <Ban className="w-3.5 h-3.5 mr-1.5" />Ikke aktuelt

@@ -35,7 +35,6 @@ export const LEAD_STATUSER: LeadStatus[] = [
   "Ny",
   "Kontaktet",
   "Svarte ikke telefon",
-  "Ikke fått tak i ennå",
   "Kvalifisert",
   "Ikke aktuelt",
   "Konvertert til salg",
