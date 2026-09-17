@@ -107,6 +107,15 @@ export default function Leads() {
     }
   }, [searchParams, leads]);
 
+  /** Deep-linkede filtre fra oversikten. */
+  const statusParam = searchParams.get("status") as LeadStatus | null;
+  const oppfolgingFilter = searchParams.get("filter") === "oppfolging";
+  const clearDeepFilter = (key: "status" | "filter") => {
+    const next = new URLSearchParams(searchParams);
+    next.delete(key);
+    setSearchParams(next, { replace: true });
+  };
+
   const now = new Date();
 
   // Helper: is a lead converted (locked)? Also check konvertert_dato for DB-persisted state

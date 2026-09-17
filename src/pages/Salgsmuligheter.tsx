@@ -916,7 +916,7 @@ export default function Salgsmuligheter() {
             <DealList deals={sortDeals(openDeals)} getSelskapNavn={getSelskapNavn} getSelskapDomain={getSelskapDomain} onSelect={setSelectedSm} label="Åpne salgsmuligheter" onNavigateSelskap={id => navigate(`/selskaper/${id}`)} isMobile={isMobile} showKontraktStatus showLukkedato showSignalAndNextStep />
           ) : (
           <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-4 scrollbar-thin items-start">
-            {ACTIVE_KANBAN_STAGES.map(stadium => {
+            {(stageFilter ? [stageFilter] : ACTIVE_KANBAN_STAGES).map(stadium => {
               const stage = stadium as SalgsmulighetStatus;
               const stageDeals = sortDeals(openDeals.filter(d => tilKanbanStadium(d.status) === stadium));
               const stageMrr = stageDeals.reduce((s, d) => s + d.forventet_mrr, 0);
