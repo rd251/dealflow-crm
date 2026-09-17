@@ -59,7 +59,7 @@ function Panel({ title, subtitle, children, accent = "pipeline" }: {
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { selskaper, salgsmuligheter, partnere } = useCrmStore();
+  const { selskaper, salgsmuligheter, partnere, leads } = useCrmStore();
 
   const churnRisk = useMemo(() => selskaper.filter(company =>
     company.kundestatus === "Pause" || company.kundetilstand === "Risiko"
