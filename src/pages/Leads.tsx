@@ -26,6 +26,7 @@ import DataImportDialog from "@/components/DataImportDialog";
 import CompanyLogo from "@/components/CompanyLogo";
 import LeadForwardEmailPreview from "@/components/LeadForwardEmailPreview";
 import NesteStegTaskButton from "@/components/NesteStegTaskButton";
+import LeadQuickActions from "@/components/LeadQuickActions";
 import RingelisteIdag from "@/components/RingelisteIdag";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
