@@ -69,6 +69,24 @@ export default function Dashboard() {
     .filter(company => company.kundestatus === "Live" && !churnRiskIds.has(company.id))
     .sort((a, b) => b.mrr - a.mrr), [selskaper, churnRiskIds]);
   const openDeals = useMemo(() => salgsmuligheter.filter(deal => deal.status !== "Vunnet" && deal.status !== "Tapt"), [salgsmuligheter]);
+  const aktiveLeads = useMemo(() => leads.filter(l => l.status !== "Ikke aktuelt" && l.status !== "Konvertert til salg" && l.status !== "Konvertert til partner"), [leads]);
+  const leadsPerStatus = useMemo(() => {
+    const order: LeadStatus[] = ["Ny", "Kontaktet", "Svarte ikke telefon", "Ikke fått tak i ennå", "Kvalifisert"];
+    return order.map(status => ({ status, antall: aktiveLeads.filter(l => l.status === status).length })).filter(r => r.antall > 0);
+  }, [aktiveLeads]);
+  const leadsTrengerOppfoelging = useMemo(() => aktiveLeads.filter(l => {
+    const d = dagerSiden(l.sist_aktivitet);
+    return d === null || d >= 3;
+  }).length, [aktiveLeads]);
+  const stageStats = useMemo(() => KANBAN_STADIER.filter(s => s !== "Vunnet" && s !== "Tapt").map(stage => {
+    const deals = openDeals.filter(d => tilKanbanStadium(d.status) === stage);
+    return { stage, antall: deals.length, mrr: deals.reduce((sum, d) => sum + (d.forventet_mrr || 0), 0) };
+  }), [openDeals]);
+  const kaldeDeals = useMemo(() => openDeals.filter(d => {
+    const dager = dagerSiden(d.sist_aktivitet);
+    return dager === null || dager >= 7;
+  }).length, [openDeals]);
+  const totalPipelineMrr = openDeals.reduce((sum, d) => sum + (d.forventet_mrr || 0), 0);
   const inDialogCompanyIds = useMemo(() => new Set(openDeals.map(deal => deal.selskap_id).filter(Boolean)), [openDeals]);
   const totalMrr = activeCustomers.reduce((sum, company) => sum + company.mrr, 0);
   const riskMrr = churnRisk.reduce((sum, company) => sum + company.mrr, 0);
