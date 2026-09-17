@@ -34,6 +34,8 @@ export function datoOm(dager: number): string {
 export const LEAD_STATUSER: LeadStatus[] = [
   "Ny",
   "Kontaktet",
+  "Svarte ikke telefon",
+  "Ikke fått tak i ennå",
   "Kvalifisert",
   "Ikke aktuelt",
   "Konvertert til salg",
@@ -43,6 +45,8 @@ export const LEAD_STATUSER: LeadStatus[] = [
 export const leadStatusFarge: Record<string, string> = {
   "Ny": "bg-pipeline/10 text-pipeline border-pipeline/20",
   "Kontaktet": "bg-warning/10 text-warning border-warning/25",
+  "Svarte ikke telefon": "bg-warning/10 text-warning border-warning/25",
+  "Ikke fått tak i ennå": "bg-muted text-muted-foreground border-border",
   "Kvalifisert": "bg-success/10 text-success border-success/20",
   "Ikke aktuelt": "bg-muted text-muted-foreground border-border",
   "Konvertert til salg": "bg-pipeline/10 text-pipeline border-pipeline/20",

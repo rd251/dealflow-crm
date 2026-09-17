@@ -8,7 +8,7 @@ import { useCrmStore } from "@/hooks/use-crm-store";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Phone, CalendarDays, X, Ban, Check, Clock } from "lucide-react";
+import { Phone, CalendarDays, X, Ban, Check, Clock, PhoneMissed } from "lucide-react";
 import { relativTid, dagerSiden, idag, datoOm } from "@/lib/sales-flow";
 import type { Lead } from "@/data/crm-data";
 
@@ -95,6 +95,7 @@ export default function RingelisteIdag() {
 
   const ikkeSvar = async (rad: Rad) => {
     await loggAktivitet(rad.lead, `Forsøkte å ringe ${rad.lead.kontaktperson || rad.lead.firmanavn}`, "Ikke svar");
+    updateLeads(prev => prev.map(l => l.id === rad.lead.id ? { ...l, status: "Svarte ikke telefon", sist_aktivitet: idag() } : l));
     updateOppgaver(prev => [...prev, {
       id: crypto.randomUUID(),
       oppgave: `Ring ${rad.lead.kontaktperson || rad.lead.firmanavn} igjen`,
@@ -112,6 +113,28 @@ export default function RingelisteIdag() {
     fullfoerOppgave(rad.oppgaveId);
     setFerdige(f => [...f, rad.lead.id]);
     toast("Ikke svar – ny ringeoppgave om 2 dager");
+  };
+
+  const ikkeFaattTak = async (rad: Rad) => {
+    await loggAktivitet(rad.lead, `Ikke fått tak i ${rad.lead.kontaktperson || rad.lead.firmanavn}`, "Ikke fått tak i ennå");
+    updateLeads(prev => prev.map(l => l.id === rad.lead.id ? { ...l, status: "Ikke fått tak i ennå", sist_aktivitet: idag() } : l));
+    updateOppgaver(prev => [...prev, {
+      id: crypto.randomUUID(),
+      oppgave: `Prøv ${rad.lead.kontaktperson || rad.lead.firmanavn} igjen`,
+      lead_id: rad.lead.id,
+      selskap_id: "",
+      salgsmulighet_id: "",
+      kontakt_id: "",
+      ansvarlig: rad.lead.ansvarlig || user?.id || "",
+      frist: datoOm(2),
+      prioritet: "Medium",
+      status: "Åpen",
+      paaminnelse: true,
+      notater: "",
+    }]);
+    fullfoerOppgave(rad.oppgaveId);
+    setFerdige(f => [...f, rad.lead.id]);
+    toast("Markert som ikke fått tak i – ny oppgave om 2 dager");
   };
 
   const ikkeAktuelt = async (rad: Rad) => {
@@ -178,6 +201,9 @@ export default function RingelisteIdag() {
                 </Button>
                 <Button size="sm" variant="outline" onClick={() => ikkeSvar(rad)}>
                   <X className="w-3.5 h-3.5 mr-1.5" />Ikke svar
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => ikkeFaattTak(rad)}>
+                  <PhoneMissed className="w-3.5 h-3.5 mr-1.5" />Ikke fått tak i ennå
                 </Button>
                 <Button size="sm" variant="outline" onClick={() => ikkeAktuelt(rad)}>
                   <Ban className="w-3.5 h-3.5 mr-1.5" />Ikke aktuelt

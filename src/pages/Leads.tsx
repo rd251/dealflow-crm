@@ -26,11 +26,12 @@ import DataImportDialog from "@/components/DataImportDialog";
 import CompanyLogo from "@/components/CompanyLogo";
 import LeadForwardEmailPreview from "@/components/LeadForwardEmailPreview";
 import NesteStegTaskButton from "@/components/NesteStegTaskButton";
+import RingelisteIdag from "@/components/RingelisteIdag";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 // Only user-selectable statuses – no conversion statuses in dropdown
-const statusOptions: LeadStatus[] = ["Ny", "Kontaktet", "Kvalifisert", "Ikke aktuelt"];
+const statusOptions: LeadStatus[] = ["Ny", "Kontaktet", "Svarte ikke telefon", "Ikke fått tak i ennå", "Kvalifisert", "Ikke aktuelt"];
 const kildeOptions: string[] = ["Nettside", "LinkedIn", "Partner", "Referanse", "Kald outbound", "E-post", "Telefon", "Organisk", "Facebook ads", "Instantly kald e-post", "Google ads", "Agent Builder", "Annet"];
 
 const statusColors: Record<string, string> = leadStatusFarge;
@@ -42,6 +43,7 @@ export default function Leads() {
   const navigate = useNavigate();
   const { leads, partnere, updateLeads, updateOppgaver, konverterLead, konverterTilPartner, generateId } = useCrmStore();
   const [search, setSearch] = useState("");
+  const [visning, setVisning] = useState<"leads" | "ringeliste">("leads");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
@@ -697,6 +699,16 @@ export default function Leads() {
 
 
 
+      <div className="mb-5 flex gap-1.5">
+        <Button size="sm" variant={visning === "leads" ? "default" : "outline"} onClick={() => setVisning("leads")}>
+          Alle leads
+        </Button>
+        <Button size="sm" variant={visning === "ringeliste" ? "default" : "outline"} onClick={() => setVisning("ringeliste")}>
+          Ringeliste i dag
+        </Button>
+      </div>
+
+      {visning === "ringeliste" ? <RingelisteIdag /> : <>
       {/* KPI-er */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
         <StatCard label="Nye leads denne uken" value={nyeDenneUken} icon={<UserPlus className="w-5 h-5" />} />
@@ -884,6 +896,7 @@ export default function Leads() {
               {filtered.length === 0 && <p className="text-center text-sm text-muted-foreground py-8">Ingen leads funnet</p>}
             </div>
           )}
+      </>}
 
 
       <DetailPanelShell
