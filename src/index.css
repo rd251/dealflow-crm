@@ -28,6 +28,8 @@
     --pipeline-foreground: 0 0% 100%;
     --partner: 22 100% 45%;
     --partner-foreground: 0 0% 100%;
+    --ai: 252 55% 52%;
+    --ai-foreground: 0 0% 100%;
     --border: 36 8% 88%;
     --input: 36 8% 88%;
     --ring: 22 100% 45%;
@@ -77,6 +79,8 @@
     --pipeline-foreground: 0 0% 7%;
     --partner: 22 100% 62%;
     --partner-foreground: 0 0% 7%;
+    --ai: 252 82% 72%;
+    --ai-foreground: 0 0% 7%;
     --border: 0 0% 20%;
     --input: 0 0% 20%;
     --ring: 22 100% 52%;

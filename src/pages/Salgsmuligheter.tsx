@@ -22,8 +22,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { gravatarUrl } from "@/lib/gravatar";
 import EntityLinkPicker from "@/components/EntityLinkPicker";
 import { Badge } from "@/components/ui/badge";
-import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui/hover-card";
-import { Sparkles, ArrowRight, Check } from "lucide-react";
+import { Sparkles, ArrowRight, Check, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Salgsmulighet, SalgsmulighetStatus, Tapsaarsak, KontraktStatus, beregnTotalKontraktsverdi, beregnVektetPipeline, PAKKER } from "@/data/crm-data";
 import InlineTaskForm from "@/components/InlineTaskForm";
@@ -36,12 +35,16 @@ import LastMeetingCard from "@/components/LastMeetingCard";
 import NesteStegTaskButton from "@/components/NesteStegTaskButton";
 import { useLastMeetingsByDeal } from "@/hooks/use-last-meetings";
 import confetti from "canvas-confetti";
-import { KANBAN_STADIER, tilKanbanStadium, dagerSiden, relativTid, initialer, erKald, idag, datoOm, type KanbanStadium } from "@/lib/sales-flow";
+import { tilKanbanStadium, dagerSiden, initialer, idag, datoOm } from "@/lib/sales-flow";
 
 /** Aktive stadier i kanban (rekkefølge). */
 const allStatuses: SalgsmulighetStatus[] = ["Møte booket", "Demo gjennomført", "Kontrakt sendt"];
 /** Alle statuser som regnes som åpne – inkl. eldre statuser fra før omleggingen. */
 const openStatuses: SalgsmulighetStatus[] = ["Møte booket", "Behov avklart", "Løsning presentert", "Demo gjennomført", "Kontrakt sendt"];
+const ACTIVE_KANBAN_STAGES: SalgsmulighetStatus[] = ["Møte booket", "Demo gjennomført", "Kontrakt sendt"];
+const STALE_STAGE_DAYS = 90;
+type PipelineSegment = "aktive" | "vunnet" | "tapt" | "arkiv";
+type ArchiveFilter = "alle" | "signert" | "venter" | "forfalt" | "inaktive" | "avsluttede";
 const tapsaarsaker: Tapsaarsak[] = ["Pris", "Ikke riktig timing", "Valgte annen leverandør", "Ikke behov", "Teknisk / integrasjon", "Annet"];
 
 const kontraktStatusColors: Record<KontraktStatus, string> = {
@@ -176,6 +179,10 @@ export default function Salgsmuligheter() {
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
   const [lossReason, setLossReason] = useState<Tapsaarsak>("Pris");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [createStage, setCreateStage] = useState<SalgsmulighetStatus>("Møte booket");
+  const [pipelineSegment, setPipelineSegment] = useState<PipelineSegment>("aktive");
+  const [archiveFilter, setArchiveFilter] = useState<ArchiveFilter>("alle");
+  const [expandedAiIds, setExpandedAiIds] = useState<Set<string>>(() => new Set());
   const [moveBlockedId, setMoveBlockedId] = useState<string | null>(null);
   const [form, setForm] = useState({ selskap_id: "", kontakt_id: "", forventet_mrr: 0, sla: 0, oppstartskostnad: 0, kontraktslengde_mnd: 12, sannsynlighet: 50, forventet_lukkedato: "", neste_steg: "", rolle_i_firma: "", use_case: "", kontaktperson: "", e_post: "", telefon: "", ansvarlig: "", kilde: "Nettside" as string });
   const [filterUtenAktivitet, setFilterUtenAktivitet] = useState(false);
@@ -343,7 +350,7 @@ export default function Salgsmuligheter() {
     const id = generateId("SM", salgsmuligheter);
     const nySm: Salgsmulighet = {
       id, navn: form.use_case, selskap_id: form.selskap_id, kontakt_id: form.kontakt_id,
-      ansvarlig: form.ansvarlig || user?.id || "", status: "Møte booket", forventet_mrr: form.forventet_mrr, sla: form.sla,
+      ansvarlig: form.ansvarlig || user?.id || "", status: createStage, forventet_mrr: form.forventet_mrr, sla: form.sla,
       oppstartskostnad: form.oppstartskostnad, kontraktslengde_mnd: form.kontraktslengde_mnd,
       sannsynlighet: form.sannsynlighet, forventet_lukkedato: form.forventet_lukkedato,
       vunnet_dato: "", tapt_dato: "", tapsaarsak: "", neste_steg: form.neste_steg, notater: "",
@@ -355,7 +362,13 @@ export default function Salgsmuligheter() {
     };
     updateSalgsmuligheter(prev => [...prev, nySm]);
     setDialogOpen(false);
+    setCreateStage("Møte booket");
     setForm({ selskap_id: "", kontakt_id: "", forventet_mrr: 0, sla: 0, oppstartskostnad: 0, kontraktslengde_mnd: 12, sannsynlighet: 50, forventet_lukkedato: "", neste_steg: "", rolle_i_firma: "", use_case: "", kontaktperson: "", e_post: "", telefon: "", ansvarlig: "", kilde: "Nettside" });
+  };
+
+  const openCreateDialog = (stage: SalgsmulighetStatus = "Møte booket") => {
+    setCreateStage(stage);
+    setDialogOpen(true);
   };
 
   const now = new Date();
