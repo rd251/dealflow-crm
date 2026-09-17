@@ -86,15 +86,15 @@ export default function Dashboard() {
   return (
     <PageShell title="Porteføljeoversikt" subtitle="Kunder, inntekter og partneravtaler">
       <div className="mx-auto max-w-[1500px] space-y-6">
-        <section className="relative overflow-hidden rounded-lg border border-success/20 bg-success p-6 text-success-foreground shadow-card sm:p-8">
+        <section className="relative overflow-hidden rounded-lg border border-primary/20 bg-primary p-6 text-primary-foreground shadow-card sm:p-8">
           <div className="relative flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
             <div>
-              <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-md bg-success-foreground/15"><TrendingUp className="h-5 w-5" /></div>
+              <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-md bg-primary-foreground/15"><TrendingUp className="h-5 w-5" /></div>
               <p className="text-sm font-medium opacity-80">Aktiv månedlig inntekt</p>
               <h2 data-metric className="mt-1 text-4xl font-semibold sm:text-5xl">{nok(totalMrr)}</h2>
               <p className="mt-2 max-w-xl text-sm opacity-75">Samlet MRR fra {activeCustomers.length} aktive kunder. Kunder i pause eller med churn-risiko er ikke medregnet.</p>
             </div>
-            <Button variant="secondary" onClick={() => navigate("/selskaper")} className="self-start bg-success-foreground/15 text-success-foreground hover:bg-success-foreground/25 sm:self-auto">
+            <Button variant="secondary" onClick={() => navigate("/selskaper")} className="self-start bg-primary-foreground/15 text-primary-foreground hover:bg-primary-foreground/25 sm:self-auto">
               Se kunder <ArrowUpRight className="h-4 w-4" />
             </Button>
           </div>
