@@ -129,6 +129,48 @@ export default function Dashboard() {
           <MetricCard label="Partnere" value={partnere.length} icon={Handshake} accent="partner" onClick={() => navigate("/partnere")} />
         </section>
 
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <Panel title="Leads" subtitle={`${aktiveLeads.length} aktive · ${leadsTrengerOppfoelging} trenger oppfølging`} accent="pipeline">
+            <div className="divide-y">
+              {leadsPerStatus.map(rad => (
+                <button key={rad.status} onClick={() => navigate("/leads")} className="flex w-full items-center justify-between px-5 py-3.5 text-left transition-colors hover:bg-muted/50">
+                  <Badge variant="outline" className={leadStatusFarge[rad.status]}>{rad.status}</Badge>
+                  <span data-metric className="font-semibold">{rad.antall}</span>
+                </button>
+              ))}
+              {leadsPerStatus.length === 0 && <p className="p-8 text-center text-sm text-muted-foreground">Ingen aktive leads.</p>}
+            </div>
+            {leadsTrengerOppfoelging > 0 && (
+              <button onClick={() => navigate("/leads")} className="flex w-full items-center justify-between border-t bg-warning/5 px-5 py-4 text-left transition-colors hover:bg-warning/10">
+                <span className="flex items-center gap-2.5 text-sm font-medium text-warning"><PhoneCall className="h-4 w-4" />Trenger oppfølging (3+ dager)</span>
+                <span data-metric className="font-semibold text-warning">{leadsTrengerOppfoelging}</span>
+              </button>
+            )}
+          </Panel>
+
+          <Panel title="Salgsmuligheter" subtitle={`${openDeals.length} åpne · ${nok(totalPipelineMrr)} forventet MRR`} accent="pipeline">
+            <div className="divide-y">
+              {stageStats.map(rad => (
+                <button key={rad.stage} onClick={() => navigate("/salgsmuligheter")} className="flex w-full items-center justify-between gap-4 px-5 py-3.5 text-left transition-colors hover:bg-muted/50">
+                  <span className="flex min-w-0 items-center gap-2.5">
+                    <Badge variant="outline" className={stadiumFarge[rad.stage]}>{rad.stage}</Badge>
+                  </span>
+                  <span className="flex shrink-0 items-baseline gap-3">
+                    <span className="text-xs text-muted-foreground">{nok(rad.mrr)}</span>
+                    <span data-metric className="font-semibold">{rad.antall}</span>
+                  </span>
+                </button>
+              ))}
+            </div>
+            {kaldeDeals > 0 && (
+              <button onClick={() => navigate("/salgsmuligheter")} className="flex w-full items-center justify-between border-t bg-destructive/5 px-5 py-4 text-left transition-colors hover:bg-destructive/10">
+                <span className="flex items-center gap-2.5 text-sm font-medium text-destructive"><Target className="h-4 w-4" />Kalde deals (7+ dager uten aktivitet)</span>
+                <span data-metric className="font-semibold text-destructive">{kaldeDeals}</span>
+              </button>
+            )}
+          </Panel>
+        </div>
+
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(320px,0.8fr)]">
           <Panel title="MRR per kunde" subtitle="Aktive kunder, høyeste MRR først" accent="success">
             {activeCustomers.length === 0 ? <p className="p-8 text-center text-sm text-muted-foreground">Ingen aktive kunder.</p> : (
