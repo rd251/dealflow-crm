@@ -299,9 +299,10 @@ export default function Companies() {
         </DialogContent>
       </Dialog>
 
+      <div className="mx-auto max-w-[1500px] space-y-6">
       {/* ─── Portfolio tabs ─── */}
-      <Tabs value={portfolio} onValueChange={v => setPortfolio(v as "egen" | "partner")} className="mb-4">
-        <TabsList>
+      <Tabs value={portfolio} onValueChange={v => setPortfolio(v as "egen" | "partner")}>
+        <TabsList className="border bg-card p-1 shadow-card">
           <TabsTrigger value="egen">Vår portefølje</TabsTrigger>
           <TabsTrigger value="partner">Partner-portefølje</TabsTrigger>
         </TabsList>
@@ -406,23 +407,30 @@ export default function Companies() {
           { label: "Kansellerte", value: `${kansellertCount}`, icon: <UserMinus className="w-4 h-4" />, sub: `${kansellertDenneMnd} denne mnd` },
         ];
         return (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-6">
+          <section className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
             {kpis.map(kpi => (
-              <div key={kpi.label} className="bg-card border rounded-xl px-4 py-3 flex items-center gap-3">
-                <div className="text-muted-foreground">{kpi.icon}</div>
-                <div>
-                  <p className="text-xs text-muted-foreground">{kpi.label}</p>
-                  <p className="text-lg font-bold tracking-tight">{kpi.value}</p>
+              <div key={kpi.label} className="flex min-h-24 items-center gap-3 rounded-lg border bg-card p-4 shadow-card">
+                <div className={cn(
+                  "flex h-9 w-9 shrink-0 items-center justify-center rounded-md",
+                  ["MRR", "ARR", "Netto MRR", "Aktive kunder", "Vunnet"].includes(kpi.label) && "bg-success/10 text-success",
+                  ["Pipeline", "Ikke-live MRR", "Ikke-live ARR"].includes(kpi.label) && "bg-primary/10 text-primary",
+                  ["Win rate", "Churn", "Kansellerte", "Tapt"].includes(kpi.label) && "bg-warning/10 text-warning",
+                  kpi.label.startsWith("Partner") && "bg-primary/10 text-primary",
+                  kpi.label.startsWith("Fakturerbart") && "bg-primary/10 text-primary",
+                )}>{kpi.icon}</div>
+                <div className="min-w-0">
+                  <p className="text-xs font-medium text-muted-foreground">{kpi.label}</p>
+                  <p data-metric className="truncate text-lg font-semibold">{kpi.value}</p>
                   {(kpi as any).sub && <p className="text-[10px] text-muted-foreground">{(kpi as any).sub}</p>}
                 </div>
               </div>
             ))}
-          </div>
+          </section>
         );
       })()}
 
-      <div className="mb-4 flex flex-wrap items-center gap-3">
-        <div className="relative max-w-sm">
+      <section className="flex flex-col gap-3 rounded-lg border bg-card p-4 shadow-card sm:flex-row sm:flex-wrap sm:items-center">
+        <div className="relative w-full sm:max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input placeholder="Søk selskaper..." className="pl-9" value={search} onChange={e => setSearch(e.target.value)} />
         </div>
@@ -456,7 +464,7 @@ export default function Companies() {
             <X className="w-3.5 h-3.5" /> Nullstill
           </Button>
         )}
-      </div>
+      </section>
 
       {/* Mobile: card layout */}
       {isMobile ? (
@@ -465,7 +473,7 @@ export default function Companies() {
             const selskapSm = salgsmuligheter.filter(sm => sm.selskap_id === s.id && sm.status !== "Tapt");
             const totalSla = selskapSm.reduce((sum, sm) => sum + (sm.sla || 0), 0);
             return (
-              <div key={s.id} className="bg-card border rounded-xl p-4 space-y-2" onClick={() => navigate(`/selskaper/${s.id}`)}>
+              <div key={s.id} className="space-y-3 rounded-lg border bg-card p-4 shadow-card transition-colors active:bg-muted/50" onClick={() => navigate(`/selskaper/${s.id}`)}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <CompanyLogo domain={s.domene} firmanavn={s.firmanavn} kontaktEmails={kontakter.filter(k => k.selskap_id === s.id).map(k => k.e_post)} size="sm" />
@@ -475,7 +483,7 @@ export default function Companies() {
                 </div>
                 {s.bransje && <p className="text-xs text-muted-foreground">{s.bransje}</p>}
                 <div className="flex items-center justify-between text-xs">
-                  <span className="font-mono">MRR: {s.mrr.toLocaleString("no-NO")}</span>
+                  <span data-metric className="font-semibold text-success">MRR: {nok(s.mrr)}</span>
                   <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${tilstandColors[s.kundetilstand]}`}>{s.kundetilstand}</span>
                 </div>
                 {canEdit && (
@@ -498,10 +506,10 @@ export default function Companies() {
           {filtered.length === 0 && <p className="text-center text-sm text-muted-foreground py-8">Ingen selskaper å vise</p>}
         </div>
       ) : (
-        <div className="bg-card border rounded-xl overflow-hidden overflow-x-auto">
+        <div className="overflow-hidden overflow-x-auto rounded-lg border bg-card shadow-card">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b bg-muted/50">
+              <tr className="border-b bg-muted/60">
                 {([
                   ["firmanavn", "Firma", "left"],
                   ["bransje", "Bransje", "left"],
@@ -517,7 +525,7 @@ export default function Companies() {
                 ] as [SortKey, string, string][]).map(([key, label, align]) => (
                   <th
                     key={key}
-                    className={`text-${align} px-4 py-3 font-medium cursor-pointer select-none hover:bg-muted/80 transition-colors`}
+                    className={`text-${align} px-4 py-3 text-xs font-medium cursor-pointer select-none hover:bg-muted transition-colors`}
                     onClick={() => toggleSort(key)}
                   >
                     <span className={`inline-flex items-center gap-1 ${align === "right" ? "justify-end w-full" : ""}`}>
@@ -533,11 +541,11 @@ export default function Companies() {
                 const selskapSm = salgsmuligheter.filter(sm => sm.selskap_id === s.id && sm.status !== "Tapt");
                 const totalSla = selskapSm.reduce((sum, sm) => sum + (sm.sla || 0), 0);
                 return (
-                <tr key={s.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => navigate(`/selskaper/${s.id}`)}>
+                <tr key={s.id} className="group border-b last:border-0 hover:bg-primary/[0.035] transition-colors cursor-pointer" onClick={() => navigate(`/selskaper/${s.id}`)}>
                   <td className="px-4 py-3 font-medium">
                     <div className="flex items-center gap-2">
                       <CompanyLogo domain={s.domene} firmanavn={s.firmanavn} kontaktEmails={kontakter.filter(k => k.selskap_id === s.id).map(k => k.e_post)} size="sm" />
-                      {s.firmanavn}
+                      <span className="transition-colors group-hover:text-primary">{s.firmanavn}</span>
                     </div>
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">{s.bransje || "–"}</td>
@@ -553,10 +561,10 @@ export default function Companies() {
                   <td className="px-4 py-3">
                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${tilstandColors[s.kundetilstand]}`}>{s.kundetilstand}</span>
                   </td>
-                  <td className="px-4 py-3 text-right font-mono">{s.mrr.toLocaleString("no-NO")}</td>
-                  <td className="px-4 py-3 text-right font-mono">{s.arr.toLocaleString("no-NO")}</td>
-                  <td className="px-4 py-3 text-right font-mono">{totalSla.toLocaleString("no-NO")}</td>
-                  <td className="px-4 py-3 text-right font-mono">{s.oppstartskostnad.toLocaleString("no-NO")}</td>
+                  <td data-metric className="px-4 py-3 text-right font-semibold text-success">{nok(s.mrr)}</td>
+                  <td data-metric className="px-4 py-3 text-right">{nok(s.arr)}</td>
+                  <td data-metric className="px-4 py-3 text-right">{nok(totalSla)}</td>
+                  <td data-metric className="px-4 py-3 text-right">{nok(s.oppstartskostnad)}</td>
                   <td className="px-4 py-3 text-muted-foreground text-xs font-mono">{s.lukkedato || "–"}</td>
                   <td className="px-4 py-3"><LastActivityBadge selskap_id={s.id} sist_aktivitet={s.sist_aktivitet} /></td>
                   {canEdit && (
@@ -581,6 +589,7 @@ export default function Companies() {
           </table>
         </div>
       )}
+      </div>
 
       <DetailPanelShell
         open={!!currentSelskap}
@@ -594,7 +603,7 @@ export default function Companies() {
               <Badge className={`text-xs ${tilstandColors[currentSelskap.kundetilstand]}`}>{currentSelskap.kundetilstand}</Badge>
             )}
             {currentSelskap.live_status && (
-              <Badge variant="outline" className="text-xs bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400">Live</Badge>
+              <Badge variant="outline" className="status-positive text-xs">Live</Badge>
             )}
           </>
         ) : undefined}
