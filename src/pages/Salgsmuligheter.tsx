@@ -477,6 +477,149 @@ export default function Salgsmuligheter() {
 
   useEffect(() => { setDetailTab("detaljer"); }, [selectedSm?.id]);
 
+  const pipelineValue = openDeals.reduce((sum, deal) => sum + beregnTotalKontraktsverdi(deal), 0);
+  const weightedValue = openDeals.reduce((sum, deal) => sum + beregnVektetPipeline(deal), 0);
+  const closedThisMonth = wonThisMonth.length + lostThisMonth.length;
+  const winRate = closedThisMonth ? Math.round((wonThisMonth.length / closedThisMonth) * 100) : 0;
+
+  const archiveDeals = (() => {
+    switch (archiveFilter) {
+      case "signert": return signedDeals;
+      case "venter": return awaitingSignature;
+      case "forfalt": return overdueDeals;
+      case "inaktive": return inactiveDeals;
+      case "avsluttede": return allClosed;
+      default: return salgsmuligheter.filter(deal =>
+        deal.kontrakt_status === "Signert" ||
+        deal.kontrakt_status === "Sendt" ||
+        deal.kontrakt_status === "Åpnet" ||
+        deal.kontrakt_status === "Utløpt" ||
+        deal.status === "Vunnet" ||
+        deal.status === "Tapt" ||
+        inactiveDeals.some(inactive => inactive.id === deal.id)
+      );
+    }
+  })();
+
+  const toggleAiRecap = (dealId: string) => {
+    setExpandedAiIds(current => {
+      const next = new Set(current);
+      if (next.has(dealId)) next.delete(dealId);
+      else next.add(dealId);
+      return next;
+    });
+  };
+
+  const renderDealCardContent = (deal: Salgsmulighet, isBlocked: boolean) => {
+    const companyName = getSelskapNavn(deal.selskap_id || "");
+    const stageAge = dagerSiden(stageSince[deal.id] || deal.opprettet_dato);
+    const recap = (deal as Salgsmulighet & { ai_recap?: { sammendrag?: string; kundesignal?: string; neste_steg?: string; risikofaktorer?: string[] } | null }).ai_recap;
+    const aiOpen = expandedAiIds.has(deal.id);
+    const signal = recap?.kundesignal?.trim();
+
+    return (
+      <>
+        <div className="flex items-center gap-2">
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-secondary text-[10px] font-semibold text-secondary-foreground">
+            {initialer(companyName)}
+          </span>
+          <button
+            type="button"
+            className="min-w-0 flex-1 truncate text-left text-sm font-semibold text-foreground hover:text-pipeline"
+            onClick={event => {
+              event.stopPropagation();
+              if (deal.selskap_id) navigate(`/selskaper/${deal.selskap_id}`);
+            }}
+          >
+            {companyName}
+          </button>
+          {deal.forventet_mrr > 0 && (
+            <span className="shrink-0 text-xs font-semibold tabular-nums text-foreground">{nok(deal.forventet_mrr)}</span>
+          )}
+        </div>
+
+        {deal.kontaktperson && <p className="mt-1 pl-9 text-xs text-muted-foreground truncate">{deal.kontaktperson}</p>}
+
+        <div className="mt-3 flex flex-wrap items-center gap-1.5">
+          {deal.neste_steg?.trim() ? (
+            <button
+              type="button"
+              onClick={event => { event.stopPropagation(); setSelectedSm(deal); }}
+              className="inline-flex max-w-full items-center gap-1 rounded-full bg-pipeline/10 px-2 py-1 text-[11px] font-medium text-pipeline hover:bg-pipeline/15"
+              title={deal.neste_steg}
+            >
+              <ArrowRight className="h-3 w-3 shrink-0" />
+              <span className="truncate">{deal.neste_steg}</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={event => { event.stopPropagation(); setSelectedSm(deal); }}
+              className="inline-flex items-center rounded-full border border-dashed px-2 py-1 text-[11px] text-muted-foreground hover:border-pipeline/40 hover:text-pipeline"
+            >
+              + Legg til neste steg
+            </button>
+          )}
+
+          {stageAge !== null && stageAge > STALE_STAGE_DAYS && (
+            <span className="rounded-full bg-warning/10 px-2 py-1 text-[10px] font-semibold tabular-nums text-warning">{stageAge} d</span>
+          )}
+
+          {recap && (
+            <button
+              type="button"
+              aria-expanded={aiOpen}
+              onClick={event => { event.stopPropagation(); toggleAiRecap(deal.id); }}
+              className="inline-flex items-center gap-1 rounded-full bg-ai/10 px-2 py-1 text-[10px] font-medium text-ai hover:bg-ai/15"
+            >
+              <Sparkles className="h-3 w-3" />
+              AI{signal ? `: ${signal.toLowerCase()} interesse` : "-oppsummering"}
+              <ChevronDown className={`h-3 w-3 transition-transform ${aiOpen ? "rotate-180" : ""}`} />
+            </button>
+          )}
+
+          {deal.neste_steg?.trim() && (
+            <span onClick={event => event.stopPropagation()}>
+              <NesteStegTaskButton compact nesteSteg={deal.neste_steg} salgsmulighet_id={deal.id} selskap_id={deal.selskap_id} kontakt_id={deal.kontakt_id} disabled={!canEdit} />
+            </span>
+          )}
+        </div>
+
+        {recap && aiOpen && (
+          <div className="mt-2 space-y-2 rounded-md border border-ai/20 bg-ai/5 p-2.5 text-[11px]" onClick={event => event.stopPropagation()}>
+            {recap.sammendrag && <p className="leading-relaxed text-foreground/85">{recap.sammendrag}</p>}
+            {recap.neste_steg && (() => {
+              const suggestedStep = recap.neste_steg;
+              const alreadyApplied = deal.neste_steg?.trim() === suggestedStep.trim();
+              return (
+                <div className="flex items-start justify-between gap-2 border-t border-ai/15 pt-2">
+                  <p className="text-muted-foreground"><span className="font-medium text-foreground">Forslag:</span> {suggestedStep}</p>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-6 shrink-0 px-2 text-[10px] text-ai hover:bg-ai/10 hover:text-ai"
+                    disabled={alreadyApplied}
+                    onClick={() => {
+                      updateSalgsmuligheter(current => current.map(item => item.id === deal.id ? { ...item, neste_steg: suggestedStep } : item));
+                      toast.success("Neste steg oppdatert");
+                    }}
+                  >
+                    {alreadyApplied ? <><Check className="h-3 w-3" /> Brukt</> : "Bruk"}
+                  </Button>
+                </div>
+              );
+            })()}
+            {recap.risikofaktorer && recap.risikofaktorer.length > 0 && (
+              <p className="text-warning">Risiko: {recap.risikofaktorer.slice(0, 2).join(" · ")}</p>
+            )}
+          </div>
+        )}
+
+        {isBlocked && <p className="mt-2 text-[10px] font-medium text-warning">Legg til neste steg før du flytter kortet.</p>}
+      </>
+    );
+  };
+
   
 
   return (
