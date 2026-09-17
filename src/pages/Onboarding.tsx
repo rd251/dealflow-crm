@@ -322,7 +322,7 @@ export default function Onboarding() {
                     <div key={i} className="flex items-center gap-3 bg-muted rounded-lg px-4 py-2.5">
                       <span className="text-sm truncate flex-1">{f.name}</span>
                       <span className="text-xs text-muted-foreground">{(f.size / 1024 / 1024).toFixed(1)} MB</span>
-                      <button onClick={() => removeFile(i)} className="text-muted-foreground hover:text-destructive"><X className="w-4 h-4" /></button>
+                      <Button variant="ghost" size="icon" onClick={() => removeFile(i)} className="h-7 w-7 text-muted-foreground hover:text-destructive"><X className="w-4 h-4" /></Button>
                     </div>
                   ))}
                 </div>

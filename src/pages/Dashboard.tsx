@@ -100,7 +100,7 @@ export default function Dashboard() {
           </div>
         </section>
 
-        <section className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-6">
+        <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
           <MetricCard label="ARR" value={nok(totalMrr * 12)} icon={CircleDollarSign} accent="success" onClick={() => navigate("/selskaper")} />
           <MetricCard label="Snitt-MRR" value={nok(averageMrr)} icon={TrendingUp} accent="success" onClick={() => navigate("/selskaper")} />
           <MetricCard label="Aktive kunder" value={activeCustomers.length} icon={Building2} accent="success" onClick={() => navigate("/selskaper")} />
