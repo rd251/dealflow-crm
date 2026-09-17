@@ -52,6 +52,10 @@ export default {
           DEFAULT: "hsl(var(--partner))",
           foreground: "hsl(var(--partner-foreground))",
         },
+        ai: {
+          DEFAULT: "hsl(var(--ai))",
+          foreground: "hsl(var(--ai-foreground))",
+        },
         muted: {
           DEFAULT: "hsl(var(--muted))",
           foreground: "hsl(var(--muted-foreground))",
