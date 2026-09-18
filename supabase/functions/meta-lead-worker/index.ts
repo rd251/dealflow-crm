@@ -198,8 +198,9 @@ Deno.serve(async (req) => {
     const mapped = mapLeadFields(lead.field_data as any);
 
     const createdTime = (lead.created_time as string | undefined) ?? ev.created_time ?? null;
+    const formName = (await fetchFormName(formId, pageToken)) ?? ev.form_name ?? null;
     const notater = buildNotes(mapped, {
-      formName: (lead.form_name as string) ?? null,
+      formName,
       formId,
       adName: (lead.ad_name as string) ?? null,
       adId: (lead.ad_id as string) ?? ev.ad_id,
