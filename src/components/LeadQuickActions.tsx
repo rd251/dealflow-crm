@@ -3,10 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useCrmStore } from "@/hooks/use-crm-store";
 import { useAuth } from "@/hooks/use-auth";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Phone, CalendarDays, Ban, PhoneMissed } from "lucide-react";
+import { Phone, CalendarDays, Ban } from "lucide-react";
 import { idag, datoOm } from "@/lib/sales-flow";
+import { QUICK_ACTIONS, loggAktivitet } from "@/lib/activity-logging";
+import LogActivityDialog from "@/components/LogActivityDialog";
 import type { Lead } from "@/data/crm-data";
 
 export type LeadUtfall = "ringt" | "ikke-svar" | "ikke-aktuelt";
@@ -21,30 +22,17 @@ interface Props {
   className?: string;
 }
 
-export default function LeadQuickActions({ lead, onHandled, onBookMoete, size = "sm", className }: Props) {
+export default function LeadQuickActions({ lead, onBookMoete, onHandled, size = "sm", className }: Props) {
   const { updateLeads, updateOppgaver } = useCrmStore();
   const { canEdit, user } = useAuth();
   const [notatApen, setNotatApen] = useState(false);
   const [notat, setNotat] = useState("");
+  const [dialogApen, setDialogApen] = useState(false);
+  const [busy, setBusy] = useState<string | null>(null);
 
   if (!canEdit) return null;
 
   const navn = lead.kontaktperson || lead.firmanavn;
-
-  const loggAktivitet = async (tittel: string, beskrivelse: string) => {
-    try {
-      await supabase.from("aktiviteter").insert({
-        type: "Telefonsamtale",
-        tittel,
-        beskrivelse,
-        dato: new Date().toISOString(),
-        lead_id: lead.id,
-        aktivitet_kilde: "manuell",
-      });
-    } catch (err) {
-      console.warn("Kunne ikke logge aktivitet", err);
-    }
-  };
 
   const nyRingeoppgave = (tekst: string) => {
     updateOppgaver(prev => [...prev, {
@@ -63,25 +51,53 @@ export default function LeadQuickActions({ lead, onHandled, onBookMoete, size = 
     }]);
   };
 
-  const ringt = async () => {
-    await loggAktivitet(`Ringt ${navn}`, "Samtale gjennomført");
-    updateLeads(prev => prev.map(l => l.id === lead.id ? { ...l, status: l.status === "Ny" ? "Kontaktet" : l.status, sist_aktivitet: idag() } : l));
-    setNotat("");
-    setNotatApen(true);
-    toast.success("Samtale logget");
+  /** Hurtighandlinger med ett trykk — lista defineres i src/lib/activity-logging.ts */
+  const kjørHurtig = async (id: string) => {
+    const handling = QUICK_ACTIONS.find(q => q.id === id);
+    if (!handling) return;
+    setBusy(id);
+    try {
+      await loggAktivitet({
+        logg: handling.logg,
+        target: { lead_id: lead.id },
+        tittel: `${handling.tittel} – ${navn}`,
+        notat: handling.beskrivelse,
+      });
+      if (handling.id === "ringte-ikke-svar") {
+        updateLeads(prev => prev.map(l => l.id === lead.id ? { ...l, status: "Svarte ikke telefon", sist_aktivitet: idag() } : l));
+        nyRingeoppgave(`Ring ${navn} igjen`);
+        toast("Ikke svart – ny ringeoppgave om 2 dager");
+        onHandled?.("ikke-svar");
+      } else {
+        updateLeads(prev => prev.map(l => l.id === lead.id ? { ...l, status: l.status === "Ny" ? "Kontaktet" : l.status, sist_aktivitet: idag() } : l));
+        toast.success(`${handling.label} · logget`);
+        if (handling.id === "ringte-booket-moete") {
+          setNotat("");
+          setNotatApen(true);
+          onBookMoete?.();
+        } else {
+          onHandled?.("ringt");
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Kunne ikke logge aktiviteten");
+    } finally {
+      setBusy(null);
+    }
   };
-
-  const ikkeSvar = async () => {
-    await loggAktivitet(`Forsøkte å ringe ${navn}`, "Ikke svart");
-    updateLeads(prev => prev.map(l => l.id === lead.id ? { ...l, status: "Svarte ikke telefon", sist_aktivitet: idag() } : l));
-    nyRingeoppgave(`Ring ${navn} igjen`);
-    toast("Ikke svart – ny ringeoppgave om 2 dager");
-    onHandled?.("ikke-svar");
-  };
-
 
   const ikkeAktuelt = async () => {
-    await loggAktivitet(`Ringt ${navn}`, "Ikke aktuelt");
+    try {
+      await loggAktivitet({
+        logg: "ringte",
+        target: { lead_id: lead.id },
+        tittel: `Ringte ${navn}`,
+        notat: "Ikke aktuelt",
+      });
+    } catch (err) {
+      console.warn("Kunne ikke logge aktivitet", err);
+    }
     updateLeads(prev => prev.map(l => l.id === lead.id ? { ...l, status: "Ikke aktuelt", sist_aktivitet: idag() } : l));
     toast("Markert som ikke aktuelt");
     onHandled?.("ikke-aktuelt");
@@ -89,9 +105,14 @@ export default function LeadQuickActions({ lead, onHandled, onBookMoete, size = 
 
   const lagreNotat = async () => {
     if (notat.trim()) {
-      await loggAktivitet("Samtalenotat", notat.trim());
-      updateLeads(prev => prev.map(l => l.id === lead.id ? { ...l, neste_steg: l.neste_steg || notat.trim().slice(0, 120) } : l));
-      toast.success("Notat lagret");
+      try {
+        await loggAktivitet({ logg: "notat", target: { lead_id: lead.id }, tittel: "Samtalenotat", notat: notat.trim() });
+        updateLeads(prev => prev.map(l => l.id === lead.id ? { ...l, neste_steg: l.neste_steg || notat.trim().slice(0, 120) } : l));
+        toast.success("Notat lagret");
+      } catch (err) {
+        console.error(err);
+        toast.error("Kunne ikke lagre notatet");
+      }
     }
     setNotatApen(false);
     setNotat("");
@@ -101,11 +122,16 @@ export default function LeadQuickActions({ lead, onHandled, onBookMoete, size = 
   return (
     <div className={className}>
       <div className="flex flex-wrap gap-2">
-        <Button size={size} onClick={ringt}>
-          <Phone className="w-3.5 h-3.5 mr-1.5" />Ringt ✓
-        </Button>
-        <Button size={size} variant="outline" onClick={ikkeSvar}>
-          <PhoneMissed className="w-3.5 h-3.5 mr-1.5" />Ikke svart
+        {QUICK_ACTIONS.map(q => {
+          const Icon = q.icon;
+          return (
+            <Button key={q.id} size={size} variant="outline" disabled={busy !== null} onClick={() => kjørHurtig(q.id)}>
+              <Icon className={`w-3.5 h-3.5 mr-1.5 ${q.tone}`} />{q.label}
+            </Button>
+          );
+        })}
+        <Button size={size} onClick={() => setDialogApen(true)}>
+          <Phone className="w-3.5 h-3.5 mr-1.5" />Logg aktivitet
         </Button>
         <Button size={size} variant="outline" onClick={ikkeAktuelt}>
           <Ban className="w-3.5 h-3.5 mr-1.5" />Ikke aktuelt
@@ -123,15 +149,21 @@ export default function LeadQuickActions({ lead, onHandled, onBookMoete, size = 
           <Textarea value={notat} onChange={e => setNotat(e.target.value)} rows={3} placeholder="Notat fra samtalen…" />
           <div className="flex flex-wrap gap-2">
             <Button size="sm" onClick={lagreNotat}>Lagre notat</Button>
-            {onBookMoete && (
-              <Button size="sm" variant="secondary" onClick={() => { lagreNotat(); onBookMoete(); }}>
-                <CalendarDays className="w-3.5 h-3.5 mr-1.5" />Book møte nå
-              </Button>
-            )}
             <Button size="sm" variant="ghost" onClick={() => { setNotatApen(false); setNotat(""); onHandled?.("ringt"); }}>Hopp over</Button>
           </div>
         </div>
       )}
+
+      <LogActivityDialog
+        open={dialogApen}
+        onOpenChange={setDialogApen}
+        target={{ lead_id: lead.id }}
+        entityName={lead.firmanavn}
+        onLogged={() => {
+          updateLeads(prev => prev.map(l => l.id === lead.id ? { ...l, status: l.status === "Ny" ? "Kontaktet" : l.status, sist_aktivitet: idag() } : l));
+          onHandled?.("ringt");
+        }}
+      />
     </div>
   );
 }
