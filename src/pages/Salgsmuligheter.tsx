@@ -930,6 +930,30 @@ export default function Salgsmuligheter() {
               </div>
             ))}
           </div>
+          {/* Hurtigfiltre */}
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            {([["mine", "Mine"], ["forfalt", "Forfalt"], ["denne-uka", "Denne uka"]] as const).map(([v, l]) => (
+              <Button
+                key={v}
+                type="button"
+                size="sm"
+                variant={hurtigFilter === v ? "default" : "outline"}
+                className="h-7 rounded-full px-3 text-[11px]"
+                onClick={() => setHurtigFilter(prev => (prev === v ? "" : v))}
+              >
+                {l}
+              </Button>
+            ))}
+            <Button
+              type="button"
+              size="sm"
+              variant={kompaktKort ? "default" : "outline"}
+              className="ml-auto h-7 rounded-full px-3 text-[11px]"
+              onClick={() => setKompaktKort(v => { localStorage.setItem("pipelineKompakt", v ? "0" : "1"); return !v; })}
+            >
+              Kompakte kort
+            </Button>
+          </div>
           {/* Søk og filtre */}
           <div className="flex flex-wrap items-center gap-2 mb-3">
             <div className="relative flex-1 min-w-[200px] max-w-xs">
