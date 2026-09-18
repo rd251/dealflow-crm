@@ -991,7 +991,7 @@ export default function Salgsmuligheter() {
                   <div className="mb-2.5 flex min-h-8 items-center gap-2 px-1">
                     <div className={`h-2 w-2 shrink-0 rounded-full ${statusColors[stage]}`} />
                     <h3 className="min-w-0 flex-1 truncate text-xs font-semibold">{stage}</h3>
-                    <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">{stageDeals.length} · {stageMrr > 0 ? nok(stageMrr) : "—"}</span>
+                    <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">{alleIStadium.length} · {stageMrr > 0 ? nok(stageMrr) : "—"}</span>
                     {canEdit && (
                       <Button type="button" variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground" title={`Ny mulighet i ${stage}`} onClick={() => openCreateDialog(stage)}>
                         <Plus className="h-3.5 w-3.5" />
