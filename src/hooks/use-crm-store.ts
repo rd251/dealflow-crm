@@ -14,6 +14,7 @@ function rowToLead(r: any): Lead {
     e_post: r.e_post || "", telefon: r.telefon || "", kilde: r.kilde || "Annet",
     status: r.status || "Ny", ansvarlig: r.ansvarlig || "", neste_steg: r.neste_steg || "",
     notater: r.notater || "", opprettet_dato: r.opprettet_dato || "", sist_aktivitet: r.sist_aktivitet || "",
+    neste_oppfolging: r.neste_oppfolging || "",
     konvertert_dato: r.konvertert_dato || "", konvertert_til: r.konvertert_til || "",
     rolle_i_firma: r.rolle_i_firma || "", use_case: r.use_case || "",
     videresendt_til_partner_id: r.videresendt_til_partner_id || "",
