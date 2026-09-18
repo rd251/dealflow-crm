@@ -1,5 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import {
+  LEAD_GRAPH_FIELDS,
   MAX_ATTEMPTS,
   buildNotes,
   graphVersion,
