@@ -29,6 +29,7 @@ import NesteStegTaskButton from "@/components/NesteStegTaskButton";
 import LeadQuickActions from "@/components/LeadQuickActions";
 import RingelisteIdag from "@/components/RingelisteIdag";
 import { supabase } from "@/integrations/supabase/client";
+import { loggAktivitet } from "@/lib/activity-logging";
 import { toast } from "sonner";
 
 // Only user-selectable statuses – no conversion statuses in dropdown
