@@ -1,4 +1,4 @@
-import { Phone, PhoneMissed, Users, Mail, FileText, ArrowRight } from "lucide-react";
+import { Phone, PhoneMissed, Users, Mail, FileText, ArrowRight, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { nesteOppfolgingFraUtfall, type LeadUtfallNokkel } from "@/lib/follow-up-rules";
 
