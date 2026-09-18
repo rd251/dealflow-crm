@@ -1074,6 +1074,39 @@ export default function Salgsmuligheter() {
           </div>
           )}
         </>
+      ) : pipelineSegment === "avklaring" ? (
+        <div className="space-y-3">
+          <p className="rounded-lg border border-warning/25 bg-warning/5 p-3 text-xs text-muted-foreground">
+            Muligheter som har passert tidsbudsjettet for stadiet sitt uten aktivitet. Logg en aktivitet for å nullstille klokken.
+          </p>
+          {openDeals.filter(erKaldDeal).length === 0 ? (
+            <div className="rounded-lg border bg-card p-10 text-center text-sm text-muted-foreground">Ingenting trenger avklaring nå.</div>
+          ) : (
+            sortKanbanDeals(openDeals.filter(erKaldDeal)).map(deal => (
+              <div key={deal.id} className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-card p-3 shadow-card">
+                <button type="button" className="min-w-0 flex-1 text-left" onClick={() => setSelectedSm(deal)}>
+                  <p className="truncate text-sm font-semibold">{getSelskapNavn(deal.selskap_id || "")}</p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {deal.status} · {dagerUtenAktivitet(deal)} dager uten aktivitet (budsjett {stadiumBudsjett(deal.status)} d)
+                  </p>
+                </button>
+                {deal.forventet_mrr > 0 && <span className="text-xs font-semibold tabular-nums">{nok(deal.forventet_mrr)}</span>}
+                {erForeslaattTapt(deal) && (
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="bg-warning/10 text-warning text-[10px]">
+                      Foreslått tapt · {AUTO_TAP_DAGER} d
+                    </Badge>
+                    {canEdit && AUTO_TAP_MODUS === "bekreft" && (
+                      <Button size="sm" variant="outline" className="h-7 text-[11px]" onClick={() => moveDealToStage(deal.id, "Tapt")}>
+                        Flytt til Tapt
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))
+          )}
+        </div>
       ) : pipelineSegment === "vunnet" ? (
         <DealList deals={sortDeals(salgsmuligheter.filter(deal => deal.status === "Vunnet"))} getSelskapNavn={getSelskapNavn} getSelskapDomain={getSelskapDomain} onSelect={setSelectedSm} label="Vunne salgsmuligheter" onNavigateSelskap={id => navigate(`/selskaper/${id}`)} isMobile={isMobile} showKontraktStatus />
       ) : pipelineSegment === "tapt" ? (
