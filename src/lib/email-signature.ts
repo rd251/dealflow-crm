@@ -27,6 +27,12 @@ export function tilStorForbokstav(navn?: string | null): string {
     .join("");
 }
 
+/** Title-cases only when the text has no capitals at all (keeps "IBM AS" intact). */
+export function pentNavn(navn?: string | null): string {
+  if (!navn) return "";
+  return /[A-ZÆØÅ]/.test(navn) ? navn.trim() : tilStorForbokstav(navn);
+}
+
 /** First name, properly capitalized. */
 export function fornavn(navn?: string | null): string {
   const full = tilStorForbokstav(navn);
