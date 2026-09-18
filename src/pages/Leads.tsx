@@ -879,6 +879,7 @@ export default function Leads() {
                     <th className="text-left px-4 py-2.5 font-medium cursor-pointer select-none hover:text-foreground" onClick={() => toggleSort("sist_aktivitet")}>
                       <span className="inline-flex items-center gap-1">Siste aktivitet <SortIcon col="sist_aktivitet" /></span>
                     </th>
+                    <th className="text-left px-4 py-2.5 font-medium">Oppfølging</th>
                     <th className="text-left px-4 py-2.5 font-medium">Neste steg</th>
                     <th className="text-right px-4 py-2.5 font-medium cursor-pointer select-none hover:text-foreground" onClick={() => toggleSort("opprettet_dato")}>
                       <span className="inline-flex items-center gap-1">Dager <SortIcon col="opprettet_dato" /></span>
