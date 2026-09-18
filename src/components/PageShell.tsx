@@ -28,6 +28,7 @@ export default function PageShell({ title, subtitle, actions, children }: PageSh
             {subtitle && <p className="text-sm text-muted-foreground mt-0.5 truncate">{subtitle}</p>}
           </div>
           <div className="flex items-center gap-1 shrink-0">
+            <LogActivityButton allowTargetPick variant="outline" label={isMobile ? "Logg" : "Logg aktivitet"} className="mr-1" />
             <ThemeToggle />
             <NotificationBell />
             <Button
