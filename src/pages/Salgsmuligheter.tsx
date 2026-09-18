@@ -42,7 +42,8 @@ const allStatuses: SalgsmulighetStatus[] = ["Møte booket", "Demo gjennomført",
 const openStatuses: SalgsmulighetStatus[] = ["Møte booket", "Behov avklart", "Løsning presentert", "Demo gjennomført", "Demo-prosjekt", "Kontrakt sendt"];
 const ACTIVE_KANBAN_STAGES: SalgsmulighetStatus[] = ["Møte booket", "Demo gjennomført", "Demo-prosjekt", "Kontrakt sendt"];
 const STALE_STAGE_DAYS = 90;
-type PipelineSegment = "aktive" | "vunnet" | "tapt" | "arkiv";
+type PipelineSegment = "aktive" | "avklaring" | "vunnet" | "tapt" | "arkiv";
+type HurtigFilter = "" | "mine" | "forfalt" | "denne-uka";
 type ArchiveFilter = "alle" | "signert" | "venter" | "forfalt" | "inaktive" | "avsluttede";
 const tapsaarsaker: Tapsaarsak[] = ["Pris", "Ikke riktig timing", "Valgte annen leverandør", "Ikke behov", "Teknisk / integrasjon", "Annet"];
 
