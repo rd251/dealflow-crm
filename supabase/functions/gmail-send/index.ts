@@ -119,6 +119,39 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
+    // Resolve the sender's signature from their profile and fill placeholders
+    const { data: profileRow } = await supabase
+      .from("profiles")
+      .select("display_name, signatur_navn, signatur_tittel, signatur_selskap")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    const sig = {
+      navn: (profileRow as any)?.signatur_navn || (profileRow as any)?.display_name || "",
+      tittel: (profileRow as any)?.signatur_tittel || "",
+      selskap: (profileRow as any)?.signatur_selskap || "",
+    };
+    const finalSubject = fillSignature(subject, sig);
+    let finalBody = fillSignature(body, sig);
+    const sigLines = [sig.navn, sig.tittel, sig.selskap].filter(Boolean);
+    if (sigLines.length && sig.navn && !finalBody.includes(sig.navn)) {
+      finalBody = `${finalBody.trimEnd()}\n\nVennlig hilsen\n${sigLines.join("\n")}`;
+    }
+
+    // Safety guard: never send unresolved placeholder tokens
+    const leftover = [
+      ...(finalSubject.match(PLACEHOLDER_REGEX) || []),
+      ...(finalBody.match(PLACEHOLDER_REGEX) || []),
+    ];
+    if (leftover.length) {
+      return new Response(
+        JSON.stringify({
+          error: `E-posten inneholder uerstattede plassholdere: ${[...new Set(leftover)].join(", ")}. Fyll inn riktig tekst (eller lagre signaturen din i Innstillinger) før du sender.`,
+        }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+
     // Get Gmail connection
     const { data: connection } = await supabase
       .from("google_calendar_connections")
