@@ -1,5 +1,6 @@
 import { Phone, PhoneMissed, Users, Mail, FileText, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { nesteOppfolgingFraUtfall, type LeadUtfallNokkel } from "@/lib/follow-up-rules";
 
 /** Typene som faktisk finnes i databasen — skal ikke endres. */
 export type AktivitetDbType = "Telefonsamtale" | "E-post" | "LinkedIn-melding" | "SMS" | "Møte" | "Notat";
