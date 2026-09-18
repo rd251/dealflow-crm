@@ -421,6 +421,14 @@ export default function Salgsmuligheter() {
     }
     if (stageFilter && tilKanbanStadium(s.status) !== tilKanbanStadium(stageFilter)) return false;
     if (ownerFilter && s.ansvarlig !== ownerFilter) return false;
+    if (hurtigFilter === "mine" && s.ansvarlig !== user?.id) return false;
+    if (hurtigFilter === "forfalt" && !erKaldDeal(s)) return false;
+    if (hurtigFilter === "denne-uka") {
+      if (!s.forventet_lukkedato) return false;
+      const d = new Date(s.forventet_lukkedato);
+      const slutt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+      if (d < now || d > slutt) return false;
+    }
     if (from || to) {
       if (!s.forventet_lukkedato) return false;
       const d = new Date(s.forventet_lukkedato);
