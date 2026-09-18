@@ -200,13 +200,11 @@ export default function Leads() {
   /* ---- Hurtighandlinger ---- */
   const loggSamtale = async (lead: Lead) => {
     try {
-      await supabase.from("aktiviteter").insert({
-        type: "Telefonsamtale",
+      await loggAktivitet({
+        logg: "ringte",
+        target: { lead_id: lead.id },
         tittel: `Samtale med ${lead.kontaktperson || lead.firmanavn}`,
-        beskrivelse: `Ringt ${lead.kontaktperson || lead.firmanavn}${lead.telefon ? ` (${lead.telefon})` : ""}`,
-        dato: new Date().toISOString(),
-        lead_id: lead.id,
-        aktivitet_kilde: "manuell",
+        notat: `Ringt ${lead.kontaktperson || lead.firmanavn}${lead.telefon ? ` (${lead.telefon})` : ""}`,
       });
       updateLeads(prev => prev.map(l => l.id === lead.id ? { ...l, status: l.status === "Ny" ? "Kontaktet" : l.status, sist_aktivitet: idag() } : l));
       toast.success("Samtale logget");
