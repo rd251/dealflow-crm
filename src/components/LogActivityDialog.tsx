@@ -130,7 +130,7 @@ export default function LogActivityDialog({
       });
       toast.success("Aktivitet logget");
       onOpenChange(false);
-      onLogged?.();
+      onLogged?.(res);
     } catch (err) {
       console.error(err);
       toast.error("Kunne ikke logge aktiviteten");
