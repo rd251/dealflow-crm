@@ -46,12 +46,16 @@ export default function SendEmailDialog({ open, onOpenChange, defaultTo, default
   const [editMode, setEditMode] = useState(true);
   const [showPrompt, setShowPrompt] = useState(false);
   const [customPrompt, setCustomPrompt] = useState("");
+  const { signatur } = useSignatur();
+
+  const pentSelskap = pentNavn(context.selskapNavn);
+  const pentKontakt = pentNavn(context.kontaktperson);
 
   // Reset state when dialog opens
   const handleOpenChange = (val: boolean) => {
     if (val) {
       setEmailTo(defaultTo || "");
-      setEmailSubject(defaultSubject || `Oppfølging – ${context.selskapNavn}`);
+      setEmailSubject(defaultSubject || `Oppfølging – ${pentSelskap}`);
       setEmailBody(defaultBody || "");
       setEditMode(true);
       setShowPrompt(false);
