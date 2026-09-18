@@ -1006,17 +1006,40 @@ export default function Salgsmuligheter() {
                         /* ── Compact mobile card with swipe ── */
                         <MobileSwipeCard key={deal.id} deal={deal} stage={stage} onMove={moveDealToStage}
                           onClick={() => setSelectedSm(deal)} signal={activitySignal(deal.sist_aktivitet)} missingNeste={missingNeste} isBlocked={isBlocked}>
-                          {renderDealCardContent(deal, isBlocked)}
+                          {kompaktKort ? renderKompaktKort(deal) : renderDealCardContent(deal, isBlocked)}
                         </MobileSwipeCard>
                       ) : (
                         <div key={deal.id} draggable onDragStart={e => { setDraggedId(deal.id); e.dataTransfer.effectAllowed = "move"; }}
                           onClick={() => setSelectedSm(deal)}
-                          className={`cursor-grab rounded-lg border border-border bg-card p-3 shadow-card transition-[border-color,box-shadow] hover:border-foreground/20 hover:shadow-md active:cursor-grabbing ${isBlocked ? "ring-2 ring-warning/40" : ""}`}>
-                          {renderDealCardContent(deal, isBlocked)}
+                          className={`cursor-grab rounded-lg border border-border bg-card shadow-card transition-[border-color,box-shadow] hover:border-foreground/20 hover:shadow-md active:cursor-grabbing ${kompaktKort ? "px-3 py-2" : "p-3"} ${isBlocked ? "ring-2 ring-warning/40" : ""}`}>
+                          {kompaktKort ? renderKompaktKort(deal) : renderDealCardContent(deal, isBlocked)}
                         </div>
                       );
                     })}
-                    {stageDeals.length === 0 && (
+
+                    {grunnlag.length > stageDeals.length && (
+                      <Button variant="ghost" size="sm" className="w-full text-[11px]" onClick={() => setUtvidedeStadier(prev => { const n = new Set(prev); n.add(stage); return n; })}>
+                        Vis alle {grunnlag.length}
+                      </Button>
+                    )}
+                    {utvidet && grunnlag.length > KANBAN_SYNLIGE_KORT && (
+                      <Button variant="ghost" size="sm" className="w-full text-[11px]" onClick={() => setUtvidedeStadier(prev => { const n = new Set(prev); n.delete(stage); return n; })}>
+                        Vis færre
+                      </Button>
+                    )}
+
+                    {kaldeIStadium.length > 0 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full text-[11px] text-warning hover:text-warning"
+                        onClick={() => setVisKaldeIStadium(prev => { const n = new Set(prev); if (n.has(stage)) n.delete(stage); else n.add(stage); return n; })}
+                      >
+                        {kaldeVises ? "Skjul kalde" : `+${kaldeIStadium.length} kalde`}
+                      </Button>
+                    )}
+
+                    {alleIStadium.length === 0 && (
                       <div className="border-2 border-dashed rounded-lg p-6 text-center text-xs text-muted-foreground">Dra hit</div>
                     )}
                   </div>
