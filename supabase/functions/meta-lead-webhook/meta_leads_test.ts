@@ -10,6 +10,7 @@ import {
   retryDelaySeconds,
   verifyMetaSignature,
   callerFromRoleRow,
+  LEAD_GRAPH_FIELDS,
 } from "../_shared/meta-leads.ts";
 
 const SECRET = "test-app-secret";
@@ -138,4 +139,35 @@ Deno.test("kun admin-rolle slipper gjennom worker-autorisering", () => {
   assertEquals(callerFromRoleRow({ role: "viewer" }), null);
   assertEquals(callerFromRoleRow(null), null);
   assertEquals(callerFromRoleRow(undefined), null);
+});
+
+Deno.test("lead-query ber kun om gyldige leadgen-felt (ingen form_name)", () => {
+  assertFalse(LEAD_GRAPH_FIELDS.includes("form_name" as never));
+  for (const required of ["id", "created_time", "field_data", "form_id"]) {
+    assert(LEAD_GRAPH_FIELDS.includes(required as never), `mangler ${required}`);
+  }
+});
+
+Deno.test("skjemanavn er valgfri berikelse og stopper ikke importen", () => {
+  // Uten skjemanavn skal notatene fortsatt inneholde svarene og Meta-ID-ene.
+  const mapped = mapLeadFields([
+    { name: "full_name", values: ["Walter Brynhildsen"] },
+    { name: "email", values: ["walter@online.no"] },
+    { name: "hvilken_plattform", values: ["Microsoft Teams"] },
+    { name: "naar", values: ["Om 1-3 maneder"] },
+  ]);
+  const notes = buildNotes(mapped, {
+    formName: null,
+    formId: "1467144368799732",
+    adName: null,
+    adId: null,
+    campaignName: null,
+    campaignId: null,
+    leadgenId: "1738450803894904",
+    createdTime: "2026-09-18T12:20:00+0000",
+  });
+  assert(notes.includes("Microsoft Teams"));
+  assert(notes.includes("Om 1-3 maneder"));
+  assert(notes.includes("1738450803894904"));
+  assertFalse(notes.toLowerCase().includes("null"));
 });
