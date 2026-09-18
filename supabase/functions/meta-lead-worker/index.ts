@@ -85,7 +85,7 @@ interface GraphResult {
 
 async function fetchLeadFromGraph(leadgenId: string, token: string): Promise<GraphResult> {
   // NB: form_name is not a valid field on a leadgen node — requesting it fails the whole query.
-  const fields = "id,created_time,field_data,form_id,ad_id,adset_id,campaign_id,campaign_name,ad_name,platform,is_organic";
+  const fields = LEAD_GRAPH_FIELDS.join(",");
   const url = `https://graph.facebook.com/${graphVersion()}/${encodeURIComponent(leadgenId)}?fields=${fields}`;
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), GRAPH_TIMEOUT_MS);
