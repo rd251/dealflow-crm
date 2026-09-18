@@ -33,9 +33,16 @@ Deno.serve(async (req) => {
     };
 
     const daysInactive = Math.floor(hoursInactive / 24);
-    const contactName = kontaktperson || navn;
+    const titleCase = (s: string) =>
+      (s || "")
+        .trim()
+        .toLowerCase()
+        .split(/(\s+)/)
+        .map((d) => (/\s/.test(d) ? d : d.split("-").map((x) => (x ? x[0].toUpperCase() + x.slice(1) : x)).join("-")))
+        .join("");
+    const contactName = titleCase(kontaktperson || navn);
 
-    const prompt = customPrompt || `Du er en norsk salgsassistent. Generer en kort, profesjonell oppfølgingsmelding.
+    const prompt = (customPrompt || `Du er en norsk salgsassistent. Generer en kort, profesjonell oppfølgingsmelding.
 
 Kontekst:
 - Kontaktperson: ${contactName}
