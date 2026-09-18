@@ -109,13 +109,23 @@ ${signaturPromptLinje(signatur)}`;
       toast.error("Fyll inn mottaker, emne og innhold");
       return;
     }
+    const ferdigEmne = emailSubject;
+    const ferdigBody = medSignatur(emailBody, signatur);
+    const plassholdere = finnPlassholdere(ferdigEmne, ferdigBody);
+    if (plassholdere.length) {
+      setEmailBody(ferdigBody);
+      toast.error(
+        `E-posten inneholder uerstattet tekst: ${plassholdere.join(", ")}. Rett den opp (eller lagre signaturen din i Innstillinger) før du sender.`
+      );
+      return;
+    }
     setSending(true);
     try {
       const { data, error } = await supabase.functions.invoke("gmail-send", {
         body: {
           to: emailTo,
-          subject: emailSubject,
-          body: emailBody,
+          subject: ferdigEmne,
+          body: ferdigBody,
           entity_id: context.entityId,
           entity_type: context.entityType,
           selskap_id: context.selskapId,
