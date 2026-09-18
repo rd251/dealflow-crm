@@ -336,10 +336,30 @@ export default function ActivityLog(props: ActivityLogProps) {
     <div className="border-t pt-4 space-y-3">
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Aktivitetslogg</span>
-        <Button size="sm" variant="outline" className="text-xs h-7 gap-1" onClick={openCreate}>
+        <Button size="sm" variant="outline" className="text-xs h-7 gap-1" onClick={openCreate} disabled={!harTarget}>
           <Plus className="w-3 h-3" /> Logg aktivitet
         </Button>
       </div>
+
+      {harTarget && (
+        <div className="flex flex-wrap gap-1.5">
+          {QUICK_ACTIONS.map(q => {
+            const QIcon = q.icon;
+            return (
+              <button
+                key={q.id}
+                type="button"
+                disabled={quickBusy !== null}
+                onClick={() => kjørHurtighandling(q.id)}
+                className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2 py-1 text-[11px] text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground disabled:opacity-50"
+              >
+                <QIcon className={`w-3 h-3 ${q.tone}`} />
+                {q.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {aktiviteter.length === 0 ? (
         <p className="text-xs text-muted-foreground italic py-2">Ingen aktiviteter registrert</p>
