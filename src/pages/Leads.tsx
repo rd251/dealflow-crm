@@ -31,6 +31,7 @@ import RingelisteIdag from "@/components/RingelisteIdag";
 import FolgOppIDag from "@/components/FolgOppIDag";
 import {
   NYTT_LEAD_OPPFOLGING_DAGER,
+  oppfolgingDatoOm,
   LEAD_KALD_DAGER,
   erKaldtLead,
   effektivOppfolging,
