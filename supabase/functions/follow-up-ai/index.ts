@@ -58,7 +58,7 @@ Adresser meldingen til kontaktpersonen (${contactName}) med "Hei ${contactName.s
 Ikke bruk for formelle hilsener. Vær direkte men høflig.
 Referer til siste kontakt naturlig. Avslutt med et konkret forslag til neste steg.
 
-Svar KUN med selve meldingsteksten, ingen JSON eller annen formatering.`;
+Svar KUN med selve meldingsteksten, ingen JSON eller annen formatering.`) + signaturInstruks;
 
     const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
