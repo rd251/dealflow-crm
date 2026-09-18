@@ -553,6 +553,22 @@ export default function Salgsmuligheter() {
     });
   };
 
+  /** Kompakt visning: én linje med navn · verdi · neste steg. */
+  const renderKompaktKort = (deal: Salgsmulighet) => {
+    const companyName = getSelskapNavn(deal.selskap_id || "");
+    const kald = erKaldDeal(deal);
+    return (
+      <div className="flex items-center gap-2 text-xs">
+        {kald && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-warning" title="Kald" />}
+        <span className="min-w-0 flex-1 truncate font-medium text-foreground">{companyName}</span>
+        {deal.forventet_mrr > 0 && <span className="shrink-0 tabular-nums text-muted-foreground">{nok(deal.forventet_mrr)}</span>}
+        <span className="min-w-0 max-w-[45%] truncate text-muted-foreground">
+          {deal.neste_steg?.trim() || "Mangler neste steg"}
+        </span>
+      </div>
+    );
+  };
+
   const renderDealCardContent = (deal: Salgsmulighet, isBlocked: boolean) => {
     const companyName = getSelskapNavn(deal.selskap_id || "");
     const stageAge = dagerSiden(stageSince[deal.id] || deal.opprettet_dato);
