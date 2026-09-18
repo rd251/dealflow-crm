@@ -218,5 +218,5 @@ export async function loggAktivitet(input: LoggAktivitetInput): Promise<{ id: st
   if (t.selskap_id) await oppdater("selskaper", t.selskap_id, true);
   if (t.partner_id) await oppdater("partnere", t.partner_id, false);
 
-  return { id: (data as { id?: string } | null)?.id ?? null };
+  return { id: (data as { id?: string } | null)?.id ?? null, nesteOppfolging: oppfolgingDato };
 }
