@@ -5,6 +5,25 @@ export const DEFAULT_GRAPH_VERSION = "v21.0";
 export const MAX_BODY_BYTES = 512 * 1024; // 512 kB hard limit on webhook bodies
 export const MAX_ATTEMPTS = 6;
 
+/**
+ * Fields that actually exist on a leadgen node. `form_name` does NOT exist there —
+ * asking for it makes Graph reject the whole query with (#100).
+ * The form's display name is fetched separately from the form node as optional enrichment.
+ */
+export const LEAD_GRAPH_FIELDS = [
+  "id",
+  "created_time",
+  "field_data",
+  "form_id",
+  "ad_id",
+  "adset_id",
+  "campaign_id",
+  "campaign_name",
+  "ad_name",
+  "platform",
+  "is_organic",
+] as const;
+
 /** Timing-safe-ish comparison of two hex strings. */
 export function safeEqual(a: string, b: string): boolean {
   if (a.length !== b.length) return false;

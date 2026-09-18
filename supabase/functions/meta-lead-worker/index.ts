@@ -1,5 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import {
+  LEAD_GRAPH_FIELDS,
   MAX_ATTEMPTS,
   buildNotes,
   graphVersion,
@@ -84,7 +85,8 @@ interface GraphResult {
 }
 
 async function fetchLeadFromGraph(leadgenId: string, token: string): Promise<GraphResult> {
-  const fields = "id,created_time,field_data,form_id,ad_id,adset_id,campaign_id,campaign_name,ad_name,form_name,platform,is_organic";
+  // NB: form_name is not a valid field on a leadgen node — requesting it fails the whole query.
+  const fields = LEAD_GRAPH_FIELDS.join(",");
   const url = `https://graph.facebook.com/${graphVersion()}/${encodeURIComponent(leadgenId)}?fields=${fields}`;
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), GRAPH_TIMEOUT_MS);
@@ -102,6 +104,30 @@ async function fetchLeadFromGraph(leadgenId: string, token: string): Promise<Gra
     return { ok: true, status: res.status, body };
   } catch (e) {
     return { ok: false, status: 599, body: null, error: e instanceof Error ? e.message : String(e) };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/**
+ * Optional enrichment: the form's display name lives on the form node, not the lead.
+ * Any failure here (missing permission, timeout) must never block the lead import.
+ */
+async function fetchFormName(formId: string | null, token: string): Promise<string | null> {
+  if (!formId) return null;
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), GRAPH_TIMEOUT_MS);
+  try {
+    const res = await fetch(
+      `https://graph.facebook.com/${graphVersion()}/${encodeURIComponent(formId)}?fields=name`,
+      { headers: { Authorization: `Bearer ${token}` }, signal: ctrl.signal },
+    );
+    if (!res.ok) return null;
+    const body = await res.json().catch(() => null);
+    const name = body?.name;
+    return typeof name === "string" && name.length > 0 ? name : null;
+  } catch {
+    return null;
   } finally {
     clearTimeout(timer);
   }
@@ -173,8 +199,9 @@ Deno.serve(async (req) => {
     const mapped = mapLeadFields(lead.field_data as any);
 
     const createdTime = (lead.created_time as string | undefined) ?? ev.created_time ?? null;
+    const formName = (await fetchFormName(formId, pageToken)) ?? ev.form_name ?? null;
     const notater = buildNotes(mapped, {
-      formName: (lead.form_name as string) ?? null,
+      formName,
       formId,
       adName: (lead.ad_name as string) ?? null,
       adId: (lead.ad_id as string) ?? ev.ad_id,
@@ -247,7 +274,7 @@ Deno.serve(async (req) => {
         lead_id: leadId,
         last_error: null,
         form_id: formId,
-        form_name: (lead.form_name as string) ?? null,
+        form_name: formName,
         ad_name: (lead.ad_name as string) ?? null,
         campaign_id: (lead.campaign_id as string) ?? null,
         campaign_name: (lead.campaign_name as string) ?? null,
