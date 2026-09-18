@@ -76,6 +76,7 @@ export default function LogActivityDialog({
     setNotat("");
     setNesteSteg("");
     setNesteStegDato(undefined);
+    setOppfolgingDato(undefined);
     setValgt(null);
     setSøk("");
     setMeetingTittel("");
