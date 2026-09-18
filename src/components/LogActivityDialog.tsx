@@ -40,7 +40,7 @@ interface Props {
   entityName?: string;
   kontaktListe?: KontaktOption[];
   defaultType?: LoggType;
-  onLogged?: () => void;
+  onLogged?: (res?: { id: string | null; nesteOppfolging: string }) => void;
 }
 
 export default function LogActivityDialog({
