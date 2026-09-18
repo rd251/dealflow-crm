@@ -13,6 +13,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import MeetingFields from "@/components/MeetingFields";
 import SendEmailDialog from "@/components/SendEmailDialog";
 import { useAuth } from "@/hooks/use-auth";
+import LogActivityDialog from "@/components/LogActivityDialog";
+import { QUICK_ACTIONS, loggAktivitet, type ActivityTarget } from "@/lib/activity-logging";
 
 const API_URL = import.meta.env.VITE_SUPABASE_URL + '/rest/v1';
 const getApiHeaders = async () => {
