@@ -65,14 +65,15 @@ export default function SendEmailDialog({ open, onOpenChange, defaultTo, default
   };
 
   const buildDefaultPrompt = () => {
-    const contactName = context.kontaktperson || "kontaktperson";
+    const contactName = pentKontakt || "kontaktperson";
     return `Skriv en kort, profesjonell e-post på norsk (3-5 setninger).
 Kontaktperson: ${contactName}
-Selskap: ${context.selskapNavn}
+Selskap: ${pentSelskap}
 ${context.useCase ? `Use case: ${context.useCase}` : ""}
 ${context.nesteSteg ? `Neste steg: ${context.nesteSteg}` : ""}
 ${context.status ? `Status: ${context.status}` : ""}
-Adresser meldingen til ${contactName.split(" ")[0]}. Vær direkte men høflig. Avslutt med et konkret forslag til neste steg.`;
+Adresser meldingen til ${fornavn(contactName) || contactName}. Vær direkte men høflig. Avslutt med et konkret forslag til neste steg.
+${signaturPromptLinje(signatur)}`;
   };
 
   const generateDraft = async (promptOverride?: string) => {
