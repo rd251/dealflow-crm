@@ -1849,6 +1849,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      verify_meta_worker_token: { Args: { p_token: string }; Returns: boolean }
     }
     Enums: {
       aktivitet_type:
