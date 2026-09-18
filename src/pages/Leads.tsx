@@ -147,9 +147,19 @@ export default function Leads() {
 
   const normalizedSearch = search.trim().toLowerCase();
 
+  /** Aktive (ikke konverterte) leads – grunnlag for oppfølging og kalde leads. */
+  const aktiveLeads = leads.filter(l => !isConverted(l) && l.status !== "Ikke aktuelt");
+  const kaldeLeads = aktiveLeads.filter(erKaldtLead);
+
   const filteredUnsorted = leads.filter(l => {
     // Hide converted leads to avoid duplication with salgsmuligheter/partnere
     if (isConverted(l)) return false;
+    // Kalde leads holdes utenfor hovedflyten – de har egen visning
+    if (visning === "kalde") {
+      if (!erKaldtLead(l) || l.status === "Ikke aktuelt") return false;
+    } else if (erKaldtLead(l) && l.status !== "Ikke aktuelt") {
+      return false;
+    }
     if (filterUtenOppfolging) {
       if (l.status === "Ikke aktuelt") return false;
       const cutoff = new Date(now.getTime() - 24 * 60 * 60 * 1000);
