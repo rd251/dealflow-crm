@@ -28,6 +28,16 @@ import LeadForwardEmailPreview from "@/components/LeadForwardEmailPreview";
 import NesteStegTaskButton from "@/components/NesteStegTaskButton";
 import LeadQuickActions from "@/components/LeadQuickActions";
 import RingelisteIdag from "@/components/RingelisteIdag";
+import FolgOppIDag from "@/components/FolgOppIDag";
+import {
+  NYTT_LEAD_OPPFOLGING_DAGER,
+  LEAD_KALD_DAGER,
+  erKaldtLead,
+  effektivOppfolging,
+  oppfolgingEtikett,
+  oppfolgingFarge,
+  oppfolgingTilstand,
+} from "@/lib/follow-up-rules";
 import { supabase } from "@/integrations/supabase/client";
 import { loggAktivitet } from "@/lib/activity-logging";
 import { toast } from "sonner";
