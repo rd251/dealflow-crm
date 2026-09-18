@@ -68,6 +68,22 @@ function buildRawEmail(to: string, subject: string, body: string, fromEmail: str
   return lines.join("\r\n");
 }
 
+const PLACEHOLDER_REGEX = /\[[^\]\n]{1,80}\]/g;
+
+function fillSignature(text: string, sig: { navn: string; tittel: string; selskap: string }): string {
+  if (!text) return text;
+  const navn = ["ditt navn", "navn", "your name", "avsender", "ditt fulle navn"];
+  const tittel = ["din tittel", "tittel", "your title", "stilling", "din stilling"];
+  const selskap = ["ditt selskap", "selskap", "firma", "your company", "bedrift"];
+  return text.replace(PLACEHOLDER_REGEX, (match) => {
+    const inner = match.slice(1, -1).trim().toLowerCase();
+    if (sig.navn && navn.includes(inner)) return sig.navn;
+    if (sig.tittel && tittel.includes(inner)) return sig.tittel;
+    if (sig.selskap && selskap.includes(inner)) return sig.selskap;
+    return match;
+  });
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
