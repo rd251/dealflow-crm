@@ -117,7 +117,7 @@ export default function LogActivityDialog({
     if (!effektivtTarget) return;
     setSaving(true);
     try {
-      await loggAktivitet({
+      const res = await loggAktivitet({
         logg: type,
         target: effektivtTarget,
         notat,
