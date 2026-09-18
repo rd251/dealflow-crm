@@ -205,6 +205,10 @@ export default function Salgsmuligheter() {
   const [pipelineSegment, setPipelineSegment] = useState<PipelineSegment>("aktive");
   const [archiveFilter, setArchiveFilter] = useState<ArchiveFilter>("alle");
   const [expandedAiIds, setExpandedAiIds] = useState<Set<string>>(() => new Set());
+  const [hurtigFilter, setHurtigFilter] = useState<HurtigFilter>("");
+  const [kompaktKort, setKompaktKort] = useState<boolean>(() => localStorage.getItem("pipelineKompakt") === "1");
+  const [utvidedeStadier, setUtvidedeStadier] = useState<Set<string>>(() => new Set());
+  const [visKaldeIStadium, setVisKaldeIStadium] = useState<Set<string>>(() => new Set());
   const [moveBlockedId, setMoveBlockedId] = useState<string | null>(null);
   const [form, setForm] = useState({ selskap_id: "", kontakt_id: "", forventet_mrr: 0, sla: 0, oppstartskostnad: 0, kontraktslengde_mnd: 12, sannsynlighet: 50, forventet_lukkedato: "", neste_steg: "", rolle_i_firma: "", use_case: "", kontaktperson: "", e_post: "", telefon: "", ansvarlig: "", kilde: "Nettside" as string });
   const [filterUtenAktivitet, setFilterUtenAktivitet] = useState(false);
