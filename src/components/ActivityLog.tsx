@@ -167,16 +167,36 @@ export default function ActivityLog(props: ActivityLogProps) {
       .catch(() => {});
   }, []);
 
+  const aktivitetTarget: ActivityTarget = {
+    lead_id: props.lead_id,
+    salgsmulighet_id: props.salgsmulighet_id,
+    selskap_id: props.selskap_id,
+    partner_id: props.partner_id,
+    prosjekt_id: props.prosjekt_id,
+    kontakt_id: props.kontakt_id,
+  };
+  const harTarget = Boolean(props.lead_id || props.salgsmulighet_id || props.selskap_id || props.partner_id || props.prosjekt_id || props.kontakt_id);
+
   const openCreate = () => {
     setEditingId(null);
-    setType("Telefonsamtale");
-    setBeskrivelse("");
-    setMeetingTittel("");
-    setMeetingDato(new Date().toISOString().split("T")[0]);
-    setMeetingStartTid("09:00");
-    setMeetingSluttTid("10:00");
-    setMeetingDeltakere([]);
-    setDialogOpen(true);
+    setLogOpen(true);
+  };
+
+  const kjørHurtighandling = async (id: string) => {
+    const handling = QUICK_ACTIONS.find(q => q.id === id);
+    if (!handling || !harTarget) return;
+    setQuickBusy(id);
+    try {
+      await loggAktivitet({ logg: handling.logg, target: aktivitetTarget, tittel: handling.tittel, notat: handling.beskrivelse });
+      toast.success(`${handling.label} · logget`);
+      await fetchAktiviteter();
+      props.onActivityLogged?.();
+    } catch (e) {
+      console.error(e);
+      toast.error("Kunne ikke logge aktiviteten");
+    } finally {
+      setQuickBusy(null);
+    }
   };
 
   // Expose openCreate to parent via ref
