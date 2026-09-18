@@ -34,6 +34,38 @@ export default function Innstillinger() {
   const [togglingGmail, setTogglingGmail] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
 
+  const { signatur, refetch: refetchSignatur } = useSignatur();
+  const [sigNavn, setSigNavn] = useState("");
+  const [sigTittel, setSigTittel] = useState("");
+  const [sigSelskap, setSigSelskap] = useState("");
+  const [lagrerSignatur, setLagrerSignatur] = useState(false);
+
+  useEffect(() => {
+    setSigNavn(signatur.navn || "");
+    setSigTittel(signatur.tittel || "");
+    setSigSelskap(signatur.selskap || "");
+  }, [signatur.navn, signatur.tittel, signatur.selskap]);
+
+  const lagreSignatur = async () => {
+    if (!user) return;
+    setLagrerSignatur(true);
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        signatur_navn: sigNavn.trim() || null,
+        signatur_tittel: sigTittel.trim() || null,
+        signatur_selskap: sigSelskap.trim() || null,
+      })
+      .eq("user_id", user.id);
+    setLagrerSignatur(false);
+    if (error) {
+      toast.error("Kunne ikke lagre signaturen");
+      return;
+    }
+    toast.success("Signatur lagret");
+    refetchSignatur();
+  };
+
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
   const leadApiUrl = `${supabaseUrl}/functions/v1/lead-intake`;
   const traleWebhookUrl = `${supabaseUrl}/functions/v1/trale-webhook`;
