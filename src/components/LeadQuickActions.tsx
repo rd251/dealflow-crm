@@ -160,8 +160,8 @@ export default function LeadQuickActions({ lead, onBookMoete, onHandled, size = 
         onOpenChange={setDialogApen}
         target={{ lead_id: lead.id }}
         entityName={lead.firmanavn}
-        onLogged={() => {
-          updateLeads(prev => prev.map(l => l.id === lead.id ? { ...l, status: l.status === "Ny" ? "Kontaktet" : l.status, sist_aktivitet: idag() } : l));
+      onLogged={(res) => {
+          updateLeads(prev => prev.map(l => l.id === lead.id ? { ...l, status: l.status === "Ny" ? "Kontaktet" : l.status, sist_aktivitet: idag(), neste_oppfolging: res?.nesteOppfolging || l.neste_oppfolging } : l));
           onHandled?.("ringt");
         }}
       />
