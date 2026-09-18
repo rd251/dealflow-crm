@@ -242,5 +242,8 @@ Deno.serve(async (req) => {
     }
   }
 
-  return new Response(JSON.stringify({ processed: results.length, results }), { status: 200, headers: jsonHeaders });
+  const payload = caller === "trigger"
+    ? { processed: results.length }
+    : { processed: results.length, results };
+  return new Response(JSON.stringify(payload), { status: 200, headers: jsonHeaders });
 });
