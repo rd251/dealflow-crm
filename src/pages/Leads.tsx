@@ -29,6 +29,7 @@ import NesteStegTaskButton from "@/components/NesteStegTaskButton";
 import LeadQuickActions from "@/components/LeadQuickActions";
 import RingelisteIdag from "@/components/RingelisteIdag";
 import { supabase } from "@/integrations/supabase/client";
+import { loggAktivitet } from "@/lib/activity-logging";
 import { toast } from "sonner";
 
 // Only user-selectable statuses – no conversion statuses in dropdown
@@ -200,13 +201,11 @@ export default function Leads() {
   /* ---- Hurtighandlinger ---- */
   const loggSamtale = async (lead: Lead) => {
     try {
-      await supabase.from("aktiviteter").insert({
-        type: "Telefonsamtale",
+      await loggAktivitet({
+        logg: "ringte",
+        target: { lead_id: lead.id },
         tittel: `Samtale med ${lead.kontaktperson || lead.firmanavn}`,
-        beskrivelse: `Ringt ${lead.kontaktperson || lead.firmanavn}${lead.telefon ? ` (${lead.telefon})` : ""}`,
-        dato: new Date().toISOString(),
-        lead_id: lead.id,
-        aktivitet_kilde: "manuell",
+        notat: `Ringt ${lead.kontaktperson || lead.firmanavn}${lead.telefon ? ` (${lead.telefon})` : ""}`,
       });
       updateLeads(prev => prev.map(l => l.id === lead.id ? { ...l, status: l.status === "Ny" ? "Kontaktet" : l.status, sist_aktivitet: idag() } : l));
       toast.success("Samtale logget");
@@ -304,14 +303,11 @@ export default function Leads() {
 
       // Log an activity for the audit trail
       try {
-        await supabase.from("aktiviteter").insert({
-          type: "E-post",
+        await loggAktivitet({
+          logg: "epost",
+          target: { lead_id: lead.id, partner_id: partner.id },
           tittel: `Videresendt til partner: ${partner.partnernavn}`,
-          beskrivelse: `Lead videresendt til ${partner.partnernavn} (${partner.e_post}).${forwardMessage ? `\n\nMelding: ${forwardMessage}` : ""}`,
-          dato: new Date().toISOString(),
-          lead_id: lead.id,
-          partner_id: partner.id,
-          aktivitet_kilde: "manuell",
+          notat: `Lead videresendt til ${partner.partnernavn} (${partner.e_post}).${forwardMessage ? `\n\nMelding: ${forwardMessage}` : ""}`,
         });
       } catch (logErr) {
         console.warn("Activity log failed", logErr);
