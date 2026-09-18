@@ -739,9 +739,19 @@ export default function Leads() {
         <Button size="sm" variant={visning === "ringeliste" ? "default" : "outline"} onClick={() => setVisning("ringeliste")}>
           Ringeliste i dag
         </Button>
+        <Button size="sm" variant={visning === "kalde" ? "default" : "outline"} onClick={() => setVisning("kalde")}>
+          Kalde leads <span className="ml-1 tabular-nums opacity-70">{kaldeLeads.length}</span>
+        </Button>
       </div>
 
       {visning === "ringeliste" ? <RingelisteIdag /> : <>
+      {visning === "kalde" ? (
+        <p className="mb-4 rounded-lg border border-warning/25 bg-warning/5 p-3 text-xs text-muted-foreground">
+          Ingen aktivitet på {LEAD_KALD_DAGER} dager eller mer. Logg en aktivitet for å vekke leadet – da flyttes det tilbake i hovedflyten.
+        </p>
+      ) : (
+        <FolgOppIDag leads={aktiveLeads} onOpenLead={setSelectedLead} />
+      )}
       {/* KPI-er */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
         <StatCard label="Nye leads denne uken" value={nyeDenneUken} icon={<UserPlus className="w-5 h-5" />} />
