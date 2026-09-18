@@ -28,6 +28,16 @@ export const LOGG_TYPER: LoggTypeDef[] = [
 
 export const loggTypeDef = (t: LoggType): LoggTypeDef => LOGG_TYPER.find(d => d.value === t) || LOGG_TYPER[0];
 
+/** Oversetter en lagret databasetype til et valg i dialogen. */
+export function loggTypeFraDb(dbType: string): LoggType {
+  switch (dbType) {
+    case "Telefonsamtale": return "ringte";
+    case "Møte": return "moete";
+    case "E-post": return "epost";
+    default: return "notat";
+  }
+}
+
 /** Hurtighandlinger med ett trykk. Enkel å redigere — legg til/fjern rader her. */
 export interface QuickAction {
   id: string;
