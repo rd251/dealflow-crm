@@ -200,6 +200,7 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { signatur } = useSignatur();
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState<AiResponse | null>(null);
