@@ -35,6 +35,15 @@ import LastMeetingCard from "@/components/LastMeetingCard";
 import NesteStegTaskButton from "@/components/NesteStegTaskButton";
 import confetti from "canvas-confetti";
 import { tilKanbanStadium, dagerSiden, initialer, idag, datoOm } from "@/lib/sales-flow";
+import {
+  KANBAN_SYNLIGE_KORT,
+  AUTO_TAP_DAGER,
+  AUTO_TAP_MODUS,
+  erKaldDeal,
+  erForeslaattTapt,
+  stadiumBudsjett,
+  dagerUtenAktivitet,
+} from "@/lib/follow-up-rules";
 
 /** Aktive stadier i kanban (rekkefølge). */
 const allStatuses: SalgsmulighetStatus[] = ["Møte booket", "Demo gjennomført", "Demo-prosjekt", "Kontrakt sendt"];
