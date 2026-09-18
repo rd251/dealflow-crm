@@ -61,6 +61,7 @@ export const QUICK_ACTIONS: QuickAction[] = [
     beskrivelse: "Forsøkte å ringe, fikk ikke svar",
     icon: PhoneMissed,
     tone: "text-amber-600",
+    utfall: "svarte_ikke",
   },
   {
     id: "ringte-booket-moete",
