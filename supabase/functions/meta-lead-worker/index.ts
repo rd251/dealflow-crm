@@ -84,7 +84,8 @@ async function fetchLeadFromGraph(leadgenId: string, token: string): Promise<Gra
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
-  if (!(await authorize(req))) {
+  const caller = await authorize(req);
+  if (!caller) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: jsonHeaders });
   }
 
