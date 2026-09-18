@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import DeletedItemsLog from "@/components/DeletedItemsLog";
 import DealBuilderSyncCard from "@/components/DealBuilderSyncCard";
 import MetaLeadsCard from "@/components/MetaLeadsCard";
+import { useSignatur, signaturBlokk } from "@/lib/email-signature";
 
 interface ConnectionData {
   last_synced_at: string | null;
