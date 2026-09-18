@@ -110,7 +110,21 @@ export interface LoggAktivitetInput {
   /** Default «manuell». Brukes f.eks. av AI-assistenten. */
   kilde?: string;
   ansvarlig?: string;
+  /** Utfall som styrer automatisk oppfølgingsdato på lead. */
+  utfall?: LeadUtfallNokkel;
+  /** Manuell overstyring av oppfølgingsdato (yyyy-mm-dd). Tom streng = ikke rør. */
+  nesteOppfolging?: string;
 }
+
+/** Standardutfall per aktivitetstype når ingen er oppgitt. */
+const UTFALL_FRA_TYPE: Record<LoggType, LeadUtfallNokkel> = {
+  ringte: "snakket",
+  ikke_svar: "svarte_ikke",
+  moete: "snakket",
+  epost: "snakket",
+  notat: "snakket",
+  neste_steg: "snakket",
+};
 
 const idag = () => new Date().toISOString().split("T")[0];
 
