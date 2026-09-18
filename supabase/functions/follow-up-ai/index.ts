@@ -10,7 +10,12 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { type, navn, kontaktperson, selskapNavn, sistAktivitetType, anbefalHandling, hoursInactive, entityType, customPrompt } = await req.json();
+    const { type, navn, kontaktperson, selskapNavn, sistAktivitetType, anbefalHandling, hoursInactive, entityType, customPrompt, signatur } = await req.json();
+
+    const signaturLinjer = [signatur?.navn, signatur?.tittel, signatur?.selskap].filter(Boolean);
+    const signaturInstruks = signaturLinjer.length
+      ? `\n\nAvslutt e-posten med nøyaktig denne signaturen:\nVennlig hilsen\n${signaturLinjer.join("\n")}\nAldri bruk plassholdere i klammer som [Ditt navn] eller [Din tittel].`
+      : `\n\nIkke skriv noen signatur, og aldri plassholdere i klammer som [Ditt navn] eller [Din tittel].`;
 
     const apiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!apiKey) {
