@@ -974,8 +974,14 @@ export default function Salgsmuligheter() {
           <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-4 scrollbar-thin items-start">
             {(stageFilter ? [stageFilter] : ACTIVE_KANBAN_STAGES).map(stadium => {
               const stage = stadium as SalgsmulighetStatus;
-              const stageDeals = sortDeals(openDeals.filter(d => tilKanbanStadium(d.status) === stadium));
-              const stageMrr = stageDeals.reduce((s, d) => s + d.forventet_mrr, 0);
+              const alleIStadium = sortKanbanDeals(openDeals.filter(d => tilKanbanStadium(d.status) === stadium));
+              const kaldeIStadium = alleIStadium.filter(erKaldDeal);
+              const kaldeVises = visKaldeIStadium.has(stage);
+              const varme = alleIStadium.filter(d => !erKaldDeal(d));
+              const grunnlag = kaldeVises ? alleIStadium : varme;
+              const utvidet = utvidedeStadier.has(stage);
+              const stageDeals = utvidet ? grunnlag : grunnlag.slice(0, KANBAN_SYNLIGE_KORT);
+              const stageMrr = alleIStadium.reduce((s, d) => s + d.forventet_mrr, 0);
               return (
                 <div key={stage} className={`${isMobile ? "min-w-[270px] w-[270px]" : "min-w-[290px] w-[290px]"} flex-shrink-0 flex flex-col rounded-lg border border-border/70 bg-muted p-2.5 transition-colors ${dragOverStage === stage ? "bg-pipeline/10 ring-2 ring-pipeline/30" : ""}`}
                   onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; setDragOverStage(stage); }}
