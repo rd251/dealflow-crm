@@ -640,6 +640,16 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
       return;
     }
 
+    const ferdigBody = medSignatur(body, signatur);
+    const plassholdere = finnPlassholdere(subject, ferdigBody);
+    if (plassholdere.length) {
+      toast.error(
+        `E-posten inneholder uerstattet tekst: ${plassholdere.join(", ")}. Klikk Rediger og rett den opp før du sender.`
+      );
+      setEmailState(index, "pending");
+      return;
+    }
+
     setEmailState(index, "sending");
 
     try {
@@ -647,7 +657,7 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
         body: {
           to,
           subject,
-          body,
+          body: ferdigBody,
           entity_id: email.entity_id || null,
           entity_type: email.entity_type || null,
           selskap_id: email.selskap_id || null,
