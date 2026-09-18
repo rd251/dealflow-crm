@@ -26,6 +26,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Salgsmulighet, SalgsmulighetStatus, Tapsaarsak, KontraktStatus, beregnTotalKontraktsverdi, beregnVektetPipeline, PAKKER } from "@/data/crm-data";
 import InlineTaskForm from "@/components/InlineTaskForm";
 import ActivityLog from "@/components/ActivityLog";
+import { loggAktivitet } from "@/lib/activity-logging";
 import EntityChangelog from "@/components/EntityChangelog";
 import MeetingNotesList from "@/components/MeetingNotesList";
 import SendContractModal from "@/components/SendContractModal";
