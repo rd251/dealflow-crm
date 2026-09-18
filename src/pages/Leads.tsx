@@ -823,6 +823,9 @@ export default function Leads() {
                   <div className="flex items-center justify-between">
                     <Badge variant="secondary" className="text-[10px]">{kildeGruppe(lead.kilde)}</Badge>
                     <span className="text-[10px] text-muted-foreground">{relativTid(lead.sist_aktivitet)}</span>
+                    <Badge variant="outline" className={`text-[10px] ${oppfolgingFarge[oppfolgingTilstand(effektivOppfolging(lead))]}`}>
+                      {oppfolgingEtikett(effektivOppfolging(lead))}
+                    </Badge>
                   </div>
                   {lead.neste_steg && <p className="text-[11px] text-muted-foreground truncate">→ {lead.neste_steg}</p>}
                   {lead.status !== "Ikke aktuelt" && (
