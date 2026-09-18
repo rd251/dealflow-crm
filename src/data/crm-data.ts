@@ -41,6 +41,8 @@ export interface Lead {
   notater: string;
   opprettet_dato: string;
   sist_aktivitet: string;
+  /** Dato for neste planlagte oppfølging (settes automatisk ved logging, kan overstyres). */
+  neste_oppfolging: string;
   konvertert_dato: string;
   konvertert_til: KonvertertTil;
   rolle_i_firma: string;
