@@ -14,6 +14,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import CompanyLogo from "@/components/CompanyLogo";
+import {
+  useSignatur, medSignatur, finnPlassholdere, pentNavn, fornavn, signaturPromptLinje,
+} from "@/lib/email-signature";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface FollowUpSectionProps {
