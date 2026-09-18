@@ -31,6 +31,7 @@ import RingelisteIdag from "@/components/RingelisteIdag";
 import FolgOppIDag from "@/components/FolgOppIDag";
 import {
   NYTT_LEAD_OPPFOLGING_DAGER,
+  oppfolgingDatoOm,
   LEAD_KALD_DAGER,
   erKaldtLead,
   effektivOppfolging,
@@ -205,7 +206,7 @@ export default function Leads() {
       e_post: form.e_post || "", telefon: form.telefon || "", kilde: form.kilde as LeadKilde || "Annet",
       status: "Ny", ansvarlig: form.ansvarlig || "", neste_steg: form.neste_steg || "",
       notater: form.notater || "", opprettet_dato: today, sist_aktivitet: today,
-      neste_oppfolging: datoOm(NYTT_LEAD_OPPFOLGING_DAGER), konvertert_dato: "",
+      neste_oppfolging: oppfolgingDatoOm(NYTT_LEAD_OPPFOLGING_DAGER), konvertert_dato: "",
       konvertert_til: "",
       rolle_i_firma: form.rolle_i_firma || "", use_case: form.use_case || "",
       videresendt_til_partner_id: "", videresendt_dato: "",
