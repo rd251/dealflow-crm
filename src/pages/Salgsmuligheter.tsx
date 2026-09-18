@@ -879,6 +879,7 @@ export default function Salgsmuligheter() {
       <div className="mb-4 inline-flex max-w-full overflow-x-auto rounded-md border bg-secondary/60 p-1 scrollbar-hide" aria-label="Visning av salgsmuligheter">
         {([
           ["aktive", "Aktive", openDeals.length],
+          ["avklaring", "Trenger avklaring", openDeals.filter(erKaldDeal).length],
           ["vunnet", "Vunnet", salgsmuligheter.filter(deal => deal.status === "Vunnet").length],
           ["tapt", "Tapt", salgsmuligheter.filter(deal => deal.status === "Tapt").length],
           ["arkiv", "Arkiv", archiveDeals.length],
