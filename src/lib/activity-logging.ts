@@ -71,6 +71,7 @@ export const QUICK_ACTIONS: QuickAction[] = [
     beskrivelse: "Samtale gjennomført, møte booket",
     icon: Phone,
     tone: "text-emerald-600",
+    utfall: "snakket",
   },
   {
     id: "sendte-epost",
@@ -80,6 +81,17 @@ export const QUICK_ACTIONS: QuickAction[] = [
     beskrivelse: "E-post sendt",
     icon: Mail,
     tone: "text-blue-600",
+    utfall: "snakket",
+  },
+  {
+    id: "ringte-ikke-naa",
+    label: "Snakket – ikke nå",
+    logg: "ringte",
+    tittel: "Ringte – ikke aktuelt nå",
+    beskrivelse: "Samtale gjennomført, ikke aktuelt akkurat nå",
+    icon: Clock,
+    tone: "text-muted-foreground",
+    utfall: "ikke_naa",
   },
 ];
 
