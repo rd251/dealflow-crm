@@ -20,6 +20,17 @@ import {
   type ActivityTarget,
   type LoggType,
 } from "@/lib/activity-logging";
+import { LEAD_OPPFOLGING_DAGER, type LeadUtfallNokkel } from "@/lib/follow-up-rules";
+
+/** Utfall per aktivitetstype – styrer foreslått oppfølgingsdato. */
+const UTFALL_FOR_TYPE: Record<LoggType, LeadUtfallNokkel> = {
+  ringte: "snakket",
+  ikke_svar: "svarte_ikke",
+  moete: "snakket",
+  epost: "snakket",
+  notat: "snakket",
+  neste_steg: "snakket",
+};
 
 interface KontaktOption { id: string; navn: string }
 
