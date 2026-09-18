@@ -111,6 +111,8 @@ export default function ActivityLog(props: ActivityLogProps) {
   const [aktiviteter, setAktiviteter] = useState<Aktivitet[]>([]);
   const [profiles, setProfiles] = useState<Record<string, UserProfile>>({});
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [logOpen, setLogOpen] = useState(false);
+  const [quickBusy, setQuickBusy] = useState<string | null>(null);
   const [type, setType] = useState<AktivitetType>("Telefonsamtale");
   const [beskrivelse, setBeskrivelse] = useState("");
   const [loading, setLoading] = useState(false);
