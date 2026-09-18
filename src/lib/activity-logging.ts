@@ -48,6 +48,8 @@ export interface QuickAction {
   beskrivelse: string;
   icon: typeof Phone;
   tone: string;
+  /** Styrer neste oppfølgingsdato. Se LEAD_OPPFOLGING_DAGER. */
+  utfall?: LeadUtfallNokkel;
 }
 
 export const QUICK_ACTIONS: QuickAction[] = [
