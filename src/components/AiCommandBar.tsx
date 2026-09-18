@@ -379,18 +379,18 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
 
   const handleLogActivity = async (activity: SuggestedActivity, index: number) => {
     try {
-      const { error } = await supabase.from("aktiviteter").insert({
-        type: activity.type,
+      await loggAktivitet({
+        logg: loggTypeFraDb(activity.type),
+        target: {
+          salgsmulighet_id: activity.salgsmulighet_id || null,
+          selskap_id: activity.selskap_id || null,
+          lead_id: activity.lead_id || null,
+          kontakt_id: activity.kontakt_id || null,
+        },
         tittel: activity.tittel,
-        beskrivelse: activity.beskrivelse,
-        dato: new Date().toISOString(),
-        salgsmulighet_id: activity.salgsmulighet_id || null,
-        selskap_id: activity.selskap_id || null,
-        lead_id: activity.lead_id || null,
-        kontakt_id: activity.kontakt_id || null,
-        aktivitet_kilde: "ai-assistent",
+        notat: activity.beskrivelse,
+        kilde: "ai-assistent",
       });
-      if (error) throw error;
       setCreatedActivityIds((prev) => new Set([...prev, index]));
       queryClient.invalidateQueries({ queryKey: ['aktiviteter'] });
       toast.success("Aktivitet logget");
