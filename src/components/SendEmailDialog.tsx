@@ -83,18 +83,19 @@ ${signaturPromptLinje(signatur)}`;
       const { data, error } = await supabase.functions.invoke("follow-up-ai", {
         body: {
           type: context.entityType === "lead" ? "lead_stale" : "sm_stale",
-          navn: context.selskapNavn,
-          kontaktperson: context.kontaktperson,
-          selskapNavn: context.selskapNavn,
+          navn: pentSelskap,
+          kontaktperson: pentKontakt,
+          selskapNavn: pentSelskap,
           anbefalHandling: context.nesteSteg || "Følg opp",
           hoursInactive: 0,
           entityType: context.entityType,
           customPrompt: prompt,
+          signatur,
         },
       });
       if (error) throw error;
       const msg = data?.message || "Kunne ikke generere utkast.";
-      setEmailBody(msg);
+      setEmailBody(medSignatur(msg, signatur));
       setEditMode(true);
     } catch {
       toast.error("Kunne ikke generere AI-utkast");
