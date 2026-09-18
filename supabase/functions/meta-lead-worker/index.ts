@@ -108,6 +108,30 @@ async function fetchLeadFromGraph(leadgenId: string, token: string): Promise<Gra
   }
 }
 
+/**
+ * Optional enrichment: the form's display name lives on the form node, not the lead.
+ * Any failure here (missing permission, timeout) must never block the lead import.
+ */
+async function fetchFormName(formId: string | null, token: string): Promise<string | null> {
+  if (!formId) return null;
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), GRAPH_TIMEOUT_MS);
+  try {
+    const res = await fetch(
+      `https://graph.facebook.com/${graphVersion()}/${encodeURIComponent(formId)}?fields=name`,
+      { headers: { Authorization: `Bearer ${token}` }, signal: ctrl.signal },
+    );
+    if (!res.ok) return null;
+    const body = await res.json().catch(() => null);
+    const name = body?.name;
+    return typeof name === "string" && name.length > 0 ? name : null;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
