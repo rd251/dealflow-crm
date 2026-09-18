@@ -123,6 +123,7 @@ export default function LogActivityDialog({
         notat,
         nesteSteg,
         nesteStegDato: nesteStegDato ? format(nesteStegDato, "yyyy-MM-dd") : undefined,
+        nesteOppfolging: oppfolgingDato ? format(oppfolgingDato, "yyyy-MM-dd") : undefined,
         meeting: type === "moete"
           ? { tittel: meetingTittel, dato: meetingDato, startTid: meetingStartTid, sluttTid: meetingSluttTid, deltakere: meetingDeltakere }
           : undefined,
