@@ -50,6 +50,20 @@
       "when": 1789671480831,
       "tag": "0006_add_demo_prosjekt_status",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1789721557090,
+      "tag": "0007_add_meta_lead_ads_kilde",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1789721580196,
+      "tag": "0008_create_meta_lead_queue",
+      "breakpoints": true
     }
   ]
 }

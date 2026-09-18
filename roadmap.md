@@ -15,3 +15,13 @@
 - [x] Verifiser drag-and-drop, filtre, desktop og mobil
 - [x] Legg til steget «Demo-prosjekt» før «Kontrakt sendt» i pipelinen
 - [x] Gjør tall og rader på Porteføljeoversikt klikkbare med deep-linkede filtre og filterchips
+
+## Meta Lead Ads
+- [x] Webhook med challenge-verifisering og HMAC-signaturkontroll
+- [x] Varig kø med idempotens per Meta lead-ID
+- [x] Bakgrunnsjobb med lease, retry/backoff og permanent feilstatus
+- [x] Graph API-henting, feltmapping og lead-oppretting med dedup
+- [x] Adminvisning under Innstillinger (status, kø, feil, prøv igjen)
+- [x] Tester: challenge, signatur, batch, allowlist, mapping, retry, duplikater, uautorisert tilgang
+- [ ] Legge inn Meta-hemmeligheter og abonnere siden på leadgen (krever tilgang hos Meta)
+- [ ] Bekrefte ende-til-ende med et ekte testlead fra Meta
