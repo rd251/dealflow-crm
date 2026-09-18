@@ -189,8 +189,8 @@ Deno.serve(async (req) => {
     const fromEmail = profile.emailAddress;
 
     // Build and send email
-    const fullBody = body;
-    const rawEmail = buildRawEmail(to, subject, fullBody, fromEmail);
+    const fullBody = finalBody;
+    const rawEmail = buildRawEmail(to, finalSubject, fullBody, fromEmail);
     const encodedEmail = btoa(unescape(encodeURIComponent(rawEmail)))
       .replace(/\+/g, "-")
       .replace(/\//g, "_")
