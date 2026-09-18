@@ -220,3 +220,11 @@ export function graphVersion(): string {
   const v = (Deno.env.get("META_GRAPH_VERSION") ?? "").trim();
   return /^v\d+\.\d+$/.test(v) ? v : DEFAULT_GRAPH_VERSION;
 }
+
+/**
+ * Decides whether a signed-in user may call the worker. Only an explicit
+ * admin row in public.user_roles grants access; every other role is denied.
+ */
+export function callerFromRoleRow(row: { role?: string } | null | undefined): "admin" | null {
+  return row?.role === "admin" ? "admin" : null;
+}

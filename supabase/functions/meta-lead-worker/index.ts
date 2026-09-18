@@ -8,6 +8,7 @@ import {
   mapLeadFields,
   parsePageAllowlist,
   retryDelaySeconds,
+  callerFromRoleRow,
 } from "../_shared/meta-leads.ts";
 
 const corsHeaders = {
@@ -72,7 +73,7 @@ async function authorize(req: Request): Promise<Caller> {
 
   const { data: role } = await service
     .from("user_roles").select("role").eq("user_id", userId).eq("role", "admin").maybeSingle();
-  return role ? "admin" : null;
+  return callerFromRoleRow(role);
 }
 
 interface GraphResult {

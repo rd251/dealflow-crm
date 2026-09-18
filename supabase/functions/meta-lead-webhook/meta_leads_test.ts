@@ -9,6 +9,7 @@ import {
   parsePageAllowlist,
   retryDelaySeconds,
   verifyMetaSignature,
+  callerFromRoleRow,
 } from "../_shared/meta-leads.ts";
 
 const SECRET = "test-app-secret";
@@ -129,4 +130,12 @@ Deno.test("retry policy: 429/5xx retried with capped backoff, 4xx permanent", ()
   assertEquals(retryDelaySeconds(1), 60);
   assertEquals(retryDelaySeconds(2), 120);
   assertEquals(retryDelaySeconds(10), 3600);
+});
+
+Deno.test("kun admin-rolle slipper gjennom worker-autorisering", () => {
+  assertEquals(callerFromRoleRow({ role: "admin" }), "admin");
+  assertEquals(callerFromRoleRow({ role: "user" }), null);
+  assertEquals(callerFromRoleRow({ role: "viewer" }), null);
+  assertEquals(callerFromRoleRow(null), null);
+  assertEquals(callerFromRoleRow(undefined), null);
 });
