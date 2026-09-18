@@ -97,22 +97,23 @@ ${signaturPromptLinje(signatur)}`;
       const { data, error } = await supabase.functions.invoke("follow-up-ai", {
         body: {
           type: item.type,
-          navn: item.navn,
-          kontaktperson: item.kontaktperson,
-          selskapNavn: item.selskapNavn,
+          navn: pentNavn(item.navn),
+          kontaktperson: pentNavn(item.kontaktperson),
+          selskapNavn: pentNavn(item.selskapNavn),
           sistAktivitetType: item.sistAktivitetType,
           anbefalHandling: item.anbefalHandling,
           hoursInactive: item.hoursInactive,
           entityType: item.entityType,
           customPrompt: prompt,
+          signatur,
         },
       });
       if (error) throw error;
-      const msg = data?.message || "Kunne ikke generere melding.";
+      const msg = medSignatur(data?.message || "Kunne ikke generere melding.", signatur);
       setGeneratedMessage(msg);
 
       setEmailTo(item.ePost || "");
-      setEmailSubject(`Oppfølging – ${item.selskapNavn}`);
+      setEmailSubject(`Oppfølging – ${pentNavn(item.selskapNavn)}`);
       setEmailBody(msg);
     } catch {
       setGeneratedMessage("Kunne ikke generere melding. Prøv igjen.");
