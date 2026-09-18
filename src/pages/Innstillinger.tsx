@@ -185,6 +185,43 @@ export default function Innstillinger() {
   return (
     <PageShell title="Innstillinger">
       <div className="max-w-2xl space-y-6">
+        {/* Signatur */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Mail className="h-4 w-4" /> Signatur
+            </CardTitle>
+            <CardDescription>
+              Navnet og tittelen din legges automatisk inn nederst i e-poster du sender fra CRM-et.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="sig-navn">Navn</Label>
+                <Input id="sig-navn" value={sigNavn} onChange={e => setSigNavn(e.target.value)} placeholder="Fornavn Etternavn" />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="sig-tittel">Tittel</Label>
+                <Input id="sig-tittel" value={sigTittel} onChange={e => setSigTittel(e.target.value)} placeholder="Head of Sales" />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="sig-selskap">Selskap</Label>
+              <Input id="sig-selskap" value={sigSelskap} onChange={e => setSigSelskap(e.target.value)} placeholder="Snakk" />
+            </div>
+            {(sigNavn || sigTittel || sigSelskap) && (
+              <pre className="whitespace-pre-wrap rounded-lg border bg-muted/40 p-3 text-xs text-muted-foreground">
+                {signaturBlokk({ navn: sigNavn, tittel: sigTittel, selskap: sigSelskap })}
+              </pre>
+            )}
+            <Button onClick={lagreSignatur} disabled={lagrerSignatur} size="sm">
+              {lagrerSignatur && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Lagre signatur
+            </Button>
+          </CardContent>
+        </Card>
+
         {/* Google-tilkobling */}
         {!connected && !loading && (
           <Card>
