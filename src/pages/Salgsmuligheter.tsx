@@ -230,15 +230,11 @@ export default function Salgsmuligheter() {
         : s));
 
       try {
-        await supabase.from("aktiviteter").insert({
-          type: "E-post",
+        await loggAktivitet({
+          logg: "epost",
+          target: { salgsmulighet_id: sm.id, selskap_id: sm.selskap_id || null, partner_id: partner.id },
           tittel: `Videresendt til partner: ${partner.partnernavn}`,
-          beskrivelse: `Salgsmulighet videresendt til ${partner.partnernavn} (${partner.e_post}).${forwardMessage ? `\n\nMelding: ${forwardMessage}` : ""}`,
-          dato: new Date().toISOString(),
-          salgsmulighet_id: sm.id,
-          selskap_id: sm.selskap_id || null,
-          partner_id: partner.id,
-          aktivitet_kilde: "manuell",
+          notat: `Salgsmulighet videresendt til ${partner.partnernavn} (${partner.e_post}).${forwardMessage ? `\n\nMelding: ${forwardMessage}` : ""}`,
         });
       } catch (logErr) {
         console.warn("Activity log failed", logErr);
