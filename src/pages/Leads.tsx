@@ -302,14 +302,11 @@ export default function Leads() {
 
       // Log an activity for the audit trail
       try {
-        await supabase.from("aktiviteter").insert({
-          type: "E-post",
+        await loggAktivitet({
+          logg: "epost",
+          target: { lead_id: lead.id, partner_id: partner.id },
           tittel: `Videresendt til partner: ${partner.partnernavn}`,
-          beskrivelse: `Lead videresendt til ${partner.partnernavn} (${partner.e_post}).${forwardMessage ? `\n\nMelding: ${forwardMessage}` : ""}`,
-          dato: new Date().toISOString(),
-          lead_id: lead.id,
-          partner_id: partner.id,
-          aktivitet_kilde: "manuell",
+          notat: `Lead videresendt til ${partner.partnernavn} (${partner.e_post}).${forwardMessage ? `\n\nMelding: ${forwardMessage}` : ""}`,
         });
       } catch (logErr) {
         console.warn("Activity log failed", logErr);
