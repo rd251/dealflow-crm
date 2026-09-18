@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import DeletedItemsLog from "@/components/DeletedItemsLog";
 import DealBuilderSyncCard from "@/components/DealBuilderSyncCard";
 import MetaLeadsCard from "@/components/MetaLeadsCard";
+import { useSignatur, signaturBlokk } from "@/lib/email-signature";
 
 interface ConnectionData {
   last_synced_at: string | null;
@@ -32,6 +33,38 @@ export default function Innstillinger() {
   const [connecting, setConnecting] = useState(false);
   const [togglingGmail, setTogglingGmail] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
+
+  const { signatur, refetch: refetchSignatur } = useSignatur();
+  const [sigNavn, setSigNavn] = useState("");
+  const [sigTittel, setSigTittel] = useState("");
+  const [sigSelskap, setSigSelskap] = useState("");
+  const [lagrerSignatur, setLagrerSignatur] = useState(false);
+
+  useEffect(() => {
+    setSigNavn(signatur.navn || "");
+    setSigTittel(signatur.tittel || "");
+    setSigSelskap(signatur.selskap || "");
+  }, [signatur.navn, signatur.tittel, signatur.selskap]);
+
+  const lagreSignatur = async () => {
+    if (!user) return;
+    setLagrerSignatur(true);
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        signatur_navn: sigNavn.trim() || null,
+        signatur_tittel: sigTittel.trim() || null,
+        signatur_selskap: sigSelskap.trim() || null,
+      })
+      .eq("user_id", user.id);
+    setLagrerSignatur(false);
+    if (error) {
+      toast.error("Kunne ikke lagre signaturen");
+      return;
+    }
+    toast.success("Signatur lagret");
+    refetchSignatur();
+  };
 
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
   const leadApiUrl = `${supabaseUrl}/functions/v1/lead-intake`;
@@ -152,6 +185,43 @@ export default function Innstillinger() {
   return (
     <PageShell title="Innstillinger">
       <div className="max-w-2xl space-y-6">
+        {/* Signatur */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Mail className="h-4 w-4" /> Signatur
+            </CardTitle>
+            <CardDescription>
+              Navnet og tittelen din legges automatisk inn nederst i e-poster du sender fra CRM-et.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="sig-navn">Navn</Label>
+                <Input id="sig-navn" value={sigNavn} onChange={e => setSigNavn(e.target.value)} placeholder="Fornavn Etternavn" />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="sig-tittel">Tittel</Label>
+                <Input id="sig-tittel" value={sigTittel} onChange={e => setSigTittel(e.target.value)} placeholder="Head of Sales" />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="sig-selskap">Selskap</Label>
+              <Input id="sig-selskap" value={sigSelskap} onChange={e => setSigSelskap(e.target.value)} placeholder="Snakk" />
+            </div>
+            {(sigNavn || sigTittel || sigSelskap) && (
+              <pre className="whitespace-pre-wrap rounded-lg border bg-muted/40 p-3 text-xs text-muted-foreground">
+                {signaturBlokk({ navn: sigNavn, tittel: sigTittel, selskap: sigSelskap })}
+              </pre>
+            )}
+            <Button onClick={lagreSignatur} disabled={lagrerSignatur} size="sm">
+              {lagrerSignatur && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Lagre signatur
+            </Button>
+          </CardContent>
+        </Card>
+
         {/* Google-tilkobling */}
         {!connected && !loading && (
           <Card>

@@ -1084,6 +1084,9 @@ export type Database = {
           display_name: string
           email: string
           id: string
+          signatur_navn: string | null
+          signatur_selskap: string | null
+          signatur_tittel: string | null
           updated_at: string
           user_id: string
         }
@@ -1093,6 +1096,9 @@ export type Database = {
           display_name?: string
           email?: string
           id?: string
+          signatur_navn?: string | null
+          signatur_selskap?: string | null
+          signatur_tittel?: string | null
           updated_at?: string
           user_id: string
         }
@@ -1102,6 +1108,9 @@ export type Database = {
           display_name?: string
           email?: string
           id?: string
+          signatur_navn?: string | null
+          signatur_selskap?: string | null
+          signatur_tittel?: string | null
           updated_at?: string
           user_id?: string
         }

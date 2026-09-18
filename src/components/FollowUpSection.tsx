@@ -14,6 +14,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import CompanyLogo from "@/components/CompanyLogo";
+import {
+  useSignatur, medSignatur, finnPlassholdere, pentNavn, fornavn, signaturPromptLinje,
+} from "@/lib/email-signature";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface FollowUpSectionProps {
@@ -68,16 +71,18 @@ export default function FollowUpSection({ items, loading, onDismiss, selskaper =
   // Prompt editing
   const [showPrompt, setShowPrompt] = useState(false);
   const [customPrompt, setCustomPrompt] = useState("");
+  const { signatur } = useSignatur();
 
   const buildDefaultPrompt = (item: FollowUpItem) => {
-    const contactName = item.kontaktperson || item.navn;
+    const contactName = pentNavn(item.kontaktperson || item.navn);
     const daysInactive = Math.floor(item.hoursInactive / 24);
     return `Skriv en kort, profesjonell oppfølgings-epost på norsk (3-5 setninger).
 Kontaktperson: ${contactName}
-Selskap: ${item.selskapNavn}
+Selskap: ${pentNavn(item.selskapNavn)}
 Situasjon: ${item.anbefalHandling}
 Dager inaktiv: ${daysInactive}
-Adresser meldingen til ${contactName.split(' ')[0]}. Vær direkte men høflig. Avslutt med et konkret forslag til neste steg.`;
+Adresser meldingen til ${fornavn(contactName) || contactName}. Vær direkte men høflig. Avslutt med et konkret forslag til neste steg.
+${signaturPromptLinje(signatur)}`;
   };
 
   const generateMessage = async (item: FollowUpItem, promptOverride?: string) => {
@@ -92,22 +97,23 @@ Adresser meldingen til ${contactName.split(' ')[0]}. Vær direkte men høflig. A
       const { data, error } = await supabase.functions.invoke("follow-up-ai", {
         body: {
           type: item.type,
-          navn: item.navn,
-          kontaktperson: item.kontaktperson,
-          selskapNavn: item.selskapNavn,
+          navn: pentNavn(item.navn),
+          kontaktperson: pentNavn(item.kontaktperson),
+          selskapNavn: pentNavn(item.selskapNavn),
           sistAktivitetType: item.sistAktivitetType,
           anbefalHandling: item.anbefalHandling,
           hoursInactive: item.hoursInactive,
           entityType: item.entityType,
           customPrompt: prompt,
+          signatur,
         },
       });
       if (error) throw error;
-      const msg = data?.message || "Kunne ikke generere melding.";
+      const msg = medSignatur(data?.message || "Kunne ikke generere melding.", signatur);
       setGeneratedMessage(msg);
 
       setEmailTo(item.ePost || "");
-      setEmailSubject(`Oppfølging – ${item.selskapNavn}`);
+      setEmailSubject(`Oppfølging – ${pentNavn(item.selskapNavn)}`);
       setEmailBody(msg);
     } catch {
       setGeneratedMessage("Kunne ikke generere melding. Prøv igjen.");
@@ -128,13 +134,24 @@ Adresser meldingen til ${contactName.split(' ')[0]}. Vær direkte men høflig. A
       toast.error("Fyll inn mottaker, emne og innhold");
       return;
     }
+    const ferdigBody = medSignatur(emailBody, signatur);
+    const plassholdere = finnPlassholdere(emailSubject, ferdigBody);
+    if (plassholdere.length) {
+      setEmailBody(ferdigBody);
+      setGeneratedMessage(ferdigBody);
+      setEditMode(true);
+      toast.error(
+        `E-posten inneholder uerstattet tekst: ${plassholdere.join(", ")}. Rett den opp (eller lagre signaturen din i Innstillinger) før du sender.`
+      );
+      return;
+    }
     setSending(true);
     try {
       const { data, error } = await supabase.functions.invoke("gmail-send", {
         body: {
           to: emailTo,
           subject: emailSubject,
-          body: emailBody,
+          body: ferdigBody,
           entity_id: messageDialog?.entityId,
           entity_type: messageDialog?.entityType,
           selskap_id: messageDialog?.selskapId,

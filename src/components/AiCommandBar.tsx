@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import { supabase } from "@/integrations/supabase/client";
+import { useSignatur, medSignatur, finnPlassholdere } from "@/lib/email-signature";
 import { loggAktivitet, loggTypeFraDb } from "@/lib/activity-logging";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -199,6 +200,7 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { signatur } = useSignatur();
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState<AiResponse | null>(null);
@@ -638,6 +640,16 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
       return;
     }
 
+    const ferdigBody = medSignatur(body, signatur);
+    const plassholdere = finnPlassholdere(subject, ferdigBody);
+    if (plassholdere.length) {
+      toast.error(
+        `E-posten inneholder uerstattet tekst: ${plassholdere.join(", ")}. Klikk Rediger og rett den opp før du sender.`
+      );
+      setEmailState(index, "pending");
+      return;
+    }
+
     setEmailState(index, "sending");
 
     try {
@@ -645,7 +657,7 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
         body: {
           to,
           subject,
-          body,
+          body: ferdigBody,
           entity_id: email.entity_id || null,
           entity_type: email.entity_type || null,
           selskap_id: email.selskap_id || null,

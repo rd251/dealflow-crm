@@ -10,7 +10,12 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { type, navn, kontaktperson, selskapNavn, sistAktivitetType, anbefalHandling, hoursInactive, entityType, customPrompt } = await req.json();
+    const { type, navn, kontaktperson, selskapNavn, sistAktivitetType, anbefalHandling, hoursInactive, entityType, customPrompt, signatur } = await req.json();
+
+    const signaturLinjer = [signatur?.navn, signatur?.tittel, signatur?.selskap].filter(Boolean);
+    const signaturInstruks = signaturLinjer.length
+      ? `\n\nAvslutt e-posten med nøyaktig denne signaturen:\nVennlig hilsen\n${signaturLinjer.join("\n")}\nAldri bruk plassholdere i klammer som [Ditt navn] eller [Din tittel].`
+      : `\n\nIkke skriv noen signatur, og aldri plassholdere i klammer som [Ditt navn] eller [Din tittel].`;
 
     const apiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!apiKey) {
@@ -28,9 +33,16 @@ Deno.serve(async (req) => {
     };
 
     const daysInactive = Math.floor(hoursInactive / 24);
-    const contactName = kontaktperson || navn;
+    const titleCase = (s: string) =>
+      (s || "")
+        .trim()
+        .toLowerCase()
+        .split(/(\s+)/)
+        .map((d) => (/\s/.test(d) ? d : d.split("-").map((x) => (x ? x[0].toUpperCase() + x.slice(1) : x)).join("-")))
+        .join("");
+    const contactName = titleCase(kontaktperson || navn);
 
-    const prompt = customPrompt || `Du er en norsk salgsassistent. Generer en kort, profesjonell oppfølgingsmelding.
+    const prompt = (customPrompt || `Du er en norsk salgsassistent. Generer en kort, profesjonell oppfølgingsmelding.
 
 Kontekst:
 - Kontaktperson: ${contactName}
@@ -46,7 +58,7 @@ Adresser meldingen til kontaktpersonen (${contactName}) med "Hei ${contactName.s
 Ikke bruk for formelle hilsener. Vær direkte men høflig.
 Referer til siste kontakt naturlig. Avslutt med et konkret forslag til neste steg.
 
-Svar KUN med selve meldingsteksten, ingen JSON eller annen formatering.`;
+Svar KUN med selve meldingsteksten, ingen JSON eller annen formatering.`) + signaturInstruks;
 
     const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

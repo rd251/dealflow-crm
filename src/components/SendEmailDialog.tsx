@@ -8,6 +8,9 @@ import {
 import { Send, Loader2, Sparkles, Pencil, Settings2, RefreshCw, Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import {
+  useSignatur, medSignatur, finnPlassholdere, pentNavn, fornavn, signaturPromptLinje,
+} from "@/lib/email-signature";
 
 interface SendEmailDialogProps {
   open: boolean;
@@ -43,12 +46,16 @@ export default function SendEmailDialog({ open, onOpenChange, defaultTo, default
   const [editMode, setEditMode] = useState(true);
   const [showPrompt, setShowPrompt] = useState(false);
   const [customPrompt, setCustomPrompt] = useState("");
+  const { signatur } = useSignatur();
+
+  const pentSelskap = pentNavn(context.selskapNavn);
+  const pentKontakt = pentNavn(context.kontaktperson);
 
   // Reset state when dialog opens
   const handleOpenChange = (val: boolean) => {
     if (val) {
       setEmailTo(defaultTo || "");
-      setEmailSubject(defaultSubject || `Oppfølging – ${context.selskapNavn}`);
+      setEmailSubject(defaultSubject || `Oppfølging – ${pentSelskap}`);
       setEmailBody(defaultBody || "");
       setEditMode(true);
       setShowPrompt(false);
@@ -58,14 +65,15 @@ export default function SendEmailDialog({ open, onOpenChange, defaultTo, default
   };
 
   const buildDefaultPrompt = () => {
-    const contactName = context.kontaktperson || "kontaktperson";
+    const contactName = pentKontakt || "kontaktperson";
     return `Skriv en kort, profesjonell e-post på norsk (3-5 setninger).
 Kontaktperson: ${contactName}
-Selskap: ${context.selskapNavn}
+Selskap: ${pentSelskap}
 ${context.useCase ? `Use case: ${context.useCase}` : ""}
 ${context.nesteSteg ? `Neste steg: ${context.nesteSteg}` : ""}
 ${context.status ? `Status: ${context.status}` : ""}
-Adresser meldingen til ${contactName.split(" ")[0]}. Vær direkte men høflig. Avslutt med et konkret forslag til neste steg.`;
+Adresser meldingen til ${fornavn(contactName) || contactName}. Vær direkte men høflig. Avslutt med et konkret forslag til neste steg.
+${signaturPromptLinje(signatur)}`;
   };
 
   const generateDraft = async (promptOverride?: string) => {
@@ -75,18 +83,19 @@ Adresser meldingen til ${contactName.split(" ")[0]}. Vær direkte men høflig. A
       const { data, error } = await supabase.functions.invoke("follow-up-ai", {
         body: {
           type: context.entityType === "lead" ? "lead_stale" : "sm_stale",
-          navn: context.selskapNavn,
-          kontaktperson: context.kontaktperson,
-          selskapNavn: context.selskapNavn,
+          navn: pentSelskap,
+          kontaktperson: pentKontakt,
+          selskapNavn: pentSelskap,
           anbefalHandling: context.nesteSteg || "Følg opp",
           hoursInactive: 0,
           entityType: context.entityType,
           customPrompt: prompt,
+          signatur,
         },
       });
       if (error) throw error;
       const msg = data?.message || "Kunne ikke generere utkast.";
-      setEmailBody(msg);
+      setEmailBody(medSignatur(msg, signatur));
       setEditMode(true);
     } catch {
       toast.error("Kunne ikke generere AI-utkast");
@@ -100,13 +109,23 @@ Adresser meldingen til ${contactName.split(" ")[0]}. Vær direkte men høflig. A
       toast.error("Fyll inn mottaker, emne og innhold");
       return;
     }
+    const ferdigEmne = emailSubject;
+    const ferdigBody = medSignatur(emailBody, signatur);
+    const plassholdere = finnPlassholdere(ferdigEmne, ferdigBody);
+    if (plassholdere.length) {
+      setEmailBody(ferdigBody);
+      toast.error(
+        `E-posten inneholder uerstattet tekst: ${plassholdere.join(", ")}. Rett den opp (eller lagre signaturen din i Innstillinger) før du sender.`
+      );
+      return;
+    }
     setSending(true);
     try {
       const { data, error } = await supabase.functions.invoke("gmail-send", {
         body: {
           to: emailTo,
-          subject: emailSubject,
-          body: emailBody,
+          subject: ferdigEmne,
+          body: ferdigBody,
           entity_id: context.entityId,
           entity_type: context.entityType,
           selskap_id: context.selskapId,

@@ -68,6 +68,22 @@ function buildRawEmail(to: string, subject: string, body: string, fromEmail: str
   return lines.join("\r\n");
 }
 
+const PLACEHOLDER_REGEX = /\[[^\]\n]{1,80}\]/g;
+
+function fillSignature(text: string, sig: { navn: string; tittel: string; selskap: string }): string {
+  if (!text) return text;
+  const navn = ["ditt navn", "navn", "your name", "avsender", "ditt fulle navn"];
+  const tittel = ["din tittel", "tittel", "your title", "stilling", "din stilling"];
+  const selskap = ["ditt selskap", "selskap", "firma", "your company", "bedrift"];
+  return text.replace(PLACEHOLDER_REGEX, (match) => {
+    const inner = match.slice(1, -1).trim().toLowerCase();
+    if (sig.navn && navn.includes(inner)) return sig.navn;
+    if (sig.tittel && tittel.includes(inner)) return sig.tittel;
+    if (sig.selskap && selskap.includes(inner)) return sig.selskap;
+    return match;
+  });
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -102,6 +118,39 @@ Deno.serve(async (req) => {
     }
 
     const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+
+    // Resolve the sender's signature from their profile and fill placeholders
+    const { data: profileRow } = await supabase
+      .from("profiles")
+      .select("display_name, signatur_navn, signatur_tittel, signatur_selskap")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    const sig = {
+      navn: (profileRow as any)?.signatur_navn || (profileRow as any)?.display_name || "",
+      tittel: (profileRow as any)?.signatur_tittel || "",
+      selskap: (profileRow as any)?.signatur_selskap || "",
+    };
+    const finalSubject = fillSignature(subject, sig);
+    let finalBody = fillSignature(body, sig);
+    const sigLines = [sig.navn, sig.tittel, sig.selskap].filter(Boolean);
+    if (sigLines.length && sig.navn && !finalBody.includes(sig.navn)) {
+      finalBody = `${finalBody.trimEnd()}\n\nVennlig hilsen\n${sigLines.join("\n")}`;
+    }
+
+    // Safety guard: never send unresolved placeholder tokens
+    const leftover = [
+      ...(finalSubject.match(PLACEHOLDER_REGEX) || []),
+      ...(finalBody.match(PLACEHOLDER_REGEX) || []),
+    ];
+    if (leftover.length) {
+      return new Response(
+        JSON.stringify({
+          error: `E-posten inneholder uerstattede plassholdere: ${[...new Set(leftover)].join(", ")}. Fyll inn riktig tekst (eller lagre signaturen din i Innstillinger) før du sender.`,
+        }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
 
     // Get Gmail connection
     const { data: connection } = await supabase
@@ -140,8 +189,8 @@ Deno.serve(async (req) => {
     const fromEmail = profile.emailAddress;
 
     // Build and send email
-    const fullBody = body;
-    const rawEmail = buildRawEmail(to, subject, fullBody, fromEmail);
+    const fullBody = finalBody;
+    const rawEmail = buildRawEmail(to, finalSubject, fullBody, fromEmail);
     const encodedEmail = btoa(unescape(encodeURIComponent(rawEmail)))
       .replace(/\+/g, "-")
       .replace(/\//g, "_")
@@ -176,8 +225,8 @@ Deno.serve(async (req) => {
     // Log activity
     const aktivitetData: Record<string, any> = {
       type: "E-post",
-      tittel: `→ ${subject}`,
-      beskrivelse: `[${to}] ${body.substring(0, 500)}`,
+      tittel: `→ ${finalSubject}`,
+      beskrivelse: `[${to}] ${finalBody.substring(0, 500)}`,
       dato: new Date().toISOString(),
       ekstern_id: sendData.id,
       ekstern_provider: "gmail",
