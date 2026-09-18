@@ -122,9 +122,16 @@ Deno.serve(async (req) => {
       if (!one.ok) return new Response(JSON.stringify({ error: "Graph-feil", status: one.status, body: one.body }), { status: 502, headers: jsonHeaders });
       matches.push(one.body);
     } else {
-      const forms = await graph(`/${pageId}/leadgen_forms?fields=id,name&limit=100`);
-      if (!forms.ok) return new Response(JSON.stringify({ error: "Graph-feil ved skjemaliste", status: forms.status, body: forms.body }), { status: 502, headers: jsonHeaders });
-      for (const form of (forms.body?.data ?? [])) {
+      // A known form id skips the forms listing (which needs extra ad permissions).
+      let formList: Array<{ id: string; name?: string }>;
+      if (payload.form_id) {
+        formList = [{ id: String(payload.form_id) }];
+      } else {
+        const forms = await graph(`/${pageId}/leadgen_forms?fields=id,name&limit=100`);
+        if (!forms.ok) return new Response(JSON.stringify({ error: "Graph-feil ved skjemaliste", status: forms.status, body: forms.body }), { status: 502, headers: jsonHeaders });
+        formList = forms.body?.data ?? [];
+      }
+      for (const form of formList) {
         const q = `/${form.id}/leads?fields=id,created_time,field_data,form_id,ad_id,campaign_id&limit=100` +
           (sinceIso ? `&filtering=${encodeURIComponent(JSON.stringify([{ field: "time_created", operator: "GREATER_THAN", value: Math.floor(new Date(sinceIso).getTime() / 1000) }]))}` : "");
         const leads = await graph(q);
