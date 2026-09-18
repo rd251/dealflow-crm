@@ -23,24 +23,31 @@ const BATCH_SIZE = 10;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 
-/** Cron runs with the service role key; admins may trigger a manual retry with their own JWT. */
-async function authorize(req: Request): Promise<boolean> {
+type Caller = "service" | "admin" | "trigger" | null;
+
+/**
+ * "service" = webhook wake-up / internal call, "admin" = admin JWT with the admin role,
+ * "trigger" = the scheduled reconciliation run, which may only start processing and
+ * never receives per-lead details in the response.
+ */
+async function authorize(req: Request): Promise<Caller> {
   const header = req.headers.get("Authorization") ?? "";
-  if (!header.startsWith("Bearer ")) return false;
+  if (!header.startsWith("Bearer ")) return null;
   const token = header.slice(7);
-  if (token === SERVICE_KEY) return true;
+  if (token === SERVICE_KEY) return "service";
+  if (token === Deno.env.get("SUPABASE_ANON_KEY")) return "trigger";
 
   const anon = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY")!, {
     global: { headers: { Authorization: header } },
   });
   const { data, error } = await anon.auth.getClaims(token);
   const userId = data?.claims?.sub;
-  if (error || !userId) return false;
+  if (error || !userId) return null;
 
   const admin = createClient(SUPABASE_URL, SERVICE_KEY);
   const { data: role } = await admin
     .from("user_roles").select("role").eq("user_id", userId).eq("role", "admin").maybeSingle();
-  return !!role;
+  return role ? "admin" : null;
 }
 
 interface GraphResult {
