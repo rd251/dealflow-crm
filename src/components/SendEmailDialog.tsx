@@ -8,6 +8,9 @@ import {
 import { Send, Loader2, Sparkles, Pencil, Settings2, RefreshCw, Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import {
+  useSignatur, medSignatur, finnPlassholdere, pentNavn, fornavn, signaturPromptLinje,
+} from "@/lib/email-signature";
 
 interface SendEmailDialogProps {
   open: boolean;
