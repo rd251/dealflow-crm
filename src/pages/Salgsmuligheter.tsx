@@ -173,6 +173,18 @@ function sortDeals(deals: Salgsmulighet[]): Salgsmulighet[] {
   });
 }
 
+/** Kanban-sortering: forfalt oppfølging først, deretter nyeste aktivitet. */
+function sortKanbanDeals(deals: Salgsmulighet[]): Salgsmulighet[] {
+  return [...deals].sort((a, b) => {
+    const forfaltA = erKaldDeal(a) ? 1 : 0;
+    const forfaltB = erKaldDeal(b) ? 1 : 0;
+    if (forfaltA !== forfaltB) return forfaltB - forfaltA;
+    const dateA = a.sist_aktivitet ? new Date(a.sist_aktivitet).getTime() : 0;
+    const dateB = b.sist_aktivitet ? new Date(b.sist_aktivitet).getTime() : 0;
+    return dateB - dateA;
+  });
+}
+
 export default function Salgsmuligheter() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
