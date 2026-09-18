@@ -638,6 +638,16 @@ export default function ActivityLog(props: ActivityLogProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Felles «Logg aktivitet»-dialog */}
+      <LogActivityDialog
+        open={logOpen}
+        onOpenChange={setLogOpen}
+        target={aktivitetTarget}
+        entityName={props.entityName}
+        kontaktListe={props.kontaktListe}
+        onLogged={() => { fetchAktiviteter(); props.onActivityLogged?.(); }}
+      />
     </div>
   );
 }
