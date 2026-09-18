@@ -44,9 +44,24 @@ export const KANBAN_SYNLIGE_KORT = 12;
    Leads
    ============================================================ */
 
-/** Neste oppfølgingsdato ut fra utfall. */
+/** Flytt en dato som faller i helg til påfølgende mandag. */
+export function unngaHelg(dato: string): string {
+  const d = new Date(`${dato}T00:00:00`);
+  if (isNaN(d.getTime())) return dato;
+  const dag = d.getDay(); // 0 = søndag, 6 = lørdag
+  if (dag === 6) d.setDate(d.getDate() + 2);
+  else if (dag === 0) d.setDate(d.getDate() + 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+/** Dato om N dager, aldri i helg (lørdag/søndag → mandag). */
+export function oppfolgingDatoOm(dager: number): string {
+  return unngaHelg(datoOm(dager));
+}
+
+/** Neste oppfølgingsdato ut fra utfall, aldri i helg. */
 export function nesteOppfolgingFraUtfall(utfall: LeadUtfallNokkel): string {
-  return datoOm(LEAD_OPPFOLGING_DAGER[utfall]);
+  return oppfolgingDatoOm(LEAD_OPPFOLGING_DAGER[utfall]);
 }
 
 /** Dager til (positivt) eller etter (negativt) oppfølgingsdatoen. */
@@ -92,7 +107,7 @@ export function effektivOppfolging(lead: { neste_oppfolging?: string; sist_aktiv
   const d = new Date(`${basis}T00:00:00`);
   if (isNaN(d.getTime())) return idag();
   d.setDate(d.getDate() + LEAD_OPPFOLGING_DAGER.snakket);
-  return d.toISOString().split("T")[0];
+  return unngaHelg(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`);
 }
 
 /** Kaldt lead: ingen aktivitet på LEAD_KALD_DAGER dager. */
