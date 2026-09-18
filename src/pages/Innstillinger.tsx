@@ -13,6 +13,7 @@ import { CalendarDays, Mail, RefreshCw, Unlink, CheckCircle2, XCircle, Loader2, 
 import { Input } from "@/components/ui/input";
 import DeletedItemsLog from "@/components/DeletedItemsLog";
 import DealBuilderSyncCard from "@/components/DealBuilderSyncCard";
+import MetaLeadsCard from "@/components/MetaLeadsCard";
 
 interface ConnectionData {
   last_synced_at: string | null;
@@ -407,6 +408,9 @@ export default function Innstillinger() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Meta Lead Ads */}
+        <MetaLeadsCard />
 
         {/* DealBuilder sync */}
         <DealBuilderSyncCard />

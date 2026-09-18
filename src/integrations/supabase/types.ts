@@ -547,6 +547,122 @@ export type Database = {
           },
         ]
       }
+      meta_integration_state: {
+        Row: {
+          connection_verified: boolean
+          id: string
+          last_error: string | null
+          last_error_at: string | null
+          last_event_at: string | null
+          last_processed_at: string | null
+          last_verify_at: string | null
+          updated_at: string
+          verified_page_id: string | null
+        }
+        Insert: {
+          connection_verified?: boolean
+          id?: string
+          last_error?: string | null
+          last_error_at?: string | null
+          last_event_at?: string | null
+          last_processed_at?: string | null
+          last_verify_at?: string | null
+          updated_at?: string
+          verified_page_id?: string | null
+        }
+        Update: {
+          connection_verified?: boolean
+          id?: string
+          last_error?: string | null
+          last_error_at?: string | null
+          last_event_at?: string | null
+          last_processed_at?: string | null
+          last_verify_at?: string | null
+          updated_at?: string
+          verified_page_id?: string | null
+        }
+        Relationships: []
+      }
+      meta_lead_events: {
+        Row: {
+          ad_id: string | null
+          ad_name: string | null
+          adgroup_id: string | null
+          attempts: number
+          campaign_id: string | null
+          campaign_name: string | null
+          created_time: string | null
+          form_id: string | null
+          form_name: string | null
+          id: string
+          last_error: string | null
+          lead_id: string | null
+          lead_payload: Json | null
+          leadgen_id: string
+          locked_until: string | null
+          next_attempt_at: string
+          page_id: string
+          processed_at: string | null
+          raw_change: Json
+          received_at: string
+          status: string
+        }
+        Insert: {
+          ad_id?: string | null
+          ad_name?: string | null
+          adgroup_id?: string | null
+          attempts?: number
+          campaign_id?: string | null
+          campaign_name?: string | null
+          created_time?: string | null
+          form_id?: string | null
+          form_name?: string | null
+          id?: string
+          last_error?: string | null
+          lead_id?: string | null
+          lead_payload?: Json | null
+          leadgen_id: string
+          locked_until?: string | null
+          next_attempt_at?: string
+          page_id: string
+          processed_at?: string | null
+          raw_change: Json
+          received_at?: string
+          status?: string
+        }
+        Update: {
+          ad_id?: string | null
+          ad_name?: string | null
+          adgroup_id?: string | null
+          attempts?: number
+          campaign_id?: string | null
+          campaign_name?: string | null
+          created_time?: string | null
+          form_id?: string | null
+          form_name?: string | null
+          id?: string
+          last_error?: string | null
+          lead_id?: string | null
+          lead_payload?: Json | null
+          leadgen_id?: string
+          locked_until?: string | null
+          next_attempt_at?: string
+          page_id?: string
+          processed_at?: string | null
+          raw_change?: Json
+          received_at?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_lead_events_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       nyhetsbrev: {
         Row: {
           aapnet_antall: number
@@ -1694,6 +1810,38 @@ export type Database = {
       }
     }
     Functions: {
+      claim_meta_lead_events: {
+        Args: { p_lease_seconds?: number; p_limit?: number }
+        Returns: {
+          ad_id: string | null
+          ad_name: string | null
+          adgroup_id: string | null
+          attempts: number
+          campaign_id: string | null
+          campaign_name: string | null
+          created_time: string | null
+          form_id: string | null
+          form_name: string | null
+          id: string
+          last_error: string | null
+          lead_id: string | null
+          lead_payload: Json | null
+          leadgen_id: string
+          locked_until: string | null
+          next_attempt_at: string
+          page_id: string
+          processed_at: string | null
+          raw_change: Json
+          received_at: string
+          status: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "meta_lead_events"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1762,6 +1910,7 @@ export type Database = {
         | "Google ads"
         | "Kasoleads"
         | "Agent Builder"
+        | "Meta Lead Ads"
       lead_status:
         | "Ny"
         | "Kontaktet"
@@ -2005,6 +2154,7 @@ export const Constants = {
         "Google ads",
         "Kasoleads",
         "Agent Builder",
+        "Meta Lead Ads",
       ],
       lead_status: [
         "Ny",

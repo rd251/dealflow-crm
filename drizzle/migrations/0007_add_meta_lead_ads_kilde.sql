@@ -1,0 +1,1 @@
+ALTER TYPE public.lead_kilde ADD VALUE IF NOT EXISTS 'Meta Lead Ads';

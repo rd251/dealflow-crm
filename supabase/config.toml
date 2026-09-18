@@ -41,3 +41,10 @@ project_id = "tchmujgzcklwgptocbno"
 
   [functions.brevo-engasjerte]
     verify_jwt = false
+
+  [functions.meta-lead-webhook]
+    verify_jwt = false
+  [functions.meta-lead-worker]
+    verify_jwt = false
+  [functions.meta-leads-admin]
+    verify_jwt = false
