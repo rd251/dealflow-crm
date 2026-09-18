@@ -273,7 +273,7 @@ Deno.serve(async (req) => {
         lead_id: leadId,
         last_error: null,
         form_id: formId,
-        form_name: (lead.form_name as string) ?? null,
+        form_name: formName,
         ad_name: (lead.ad_name as string) ?? null,
         campaign_id: (lead.campaign_id as string) ?? null,
         campaign_name: (lead.campaign_name as string) ?? null,
