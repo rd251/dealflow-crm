@@ -624,6 +624,15 @@ export default function Salgsmuligheter() {
             <span className="rounded-full bg-warning/10 px-2 py-1 text-[10px] font-semibold tabular-nums text-warning">{stageAge} d</span>
           )}
 
+          {erKaldDeal(deal) && (
+            <span
+              className="rounded-full bg-warning/10 px-2 py-1 text-[10px] font-medium text-warning"
+              title={`Ingen aktivitet på ${dagerUtenAktivitet(deal)} dager (budsjett ${stadiumBudsjett(deal.status)} d)`}
+            >
+              Kald · {dagerUtenAktivitet(deal)} d
+            </span>
+          )}
+
           {recap && (
             <button
               type="button"
