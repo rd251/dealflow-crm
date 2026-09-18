@@ -64,6 +64,13 @@
       "when": 1789721580196,
       "tag": "0008_create_meta_lead_queue",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1789762403936,
+      "tag": "0009_add_signature_to_profiles",
+      "breakpoints": true
     }
   ]
 }
