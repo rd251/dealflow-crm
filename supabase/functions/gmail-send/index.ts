@@ -225,8 +225,8 @@ Deno.serve(async (req) => {
     // Log activity
     const aktivitetData: Record<string, any> = {
       type: "E-post",
-      tittel: `→ ${subject}`,
-      beskrivelse: `[${to}] ${body.substring(0, 500)}`,
+      tittel: `→ ${finalSubject}`,
+      beskrivelse: `[${to}] ${finalBody.substring(0, 500)}`,
       dato: new Date().toISOString(),
       ekstern_id: sendData.id,
       ekstern_provider: "gmail",
