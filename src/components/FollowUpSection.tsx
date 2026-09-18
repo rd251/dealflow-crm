@@ -71,16 +71,18 @@ export default function FollowUpSection({ items, loading, onDismiss, selskaper =
   // Prompt editing
   const [showPrompt, setShowPrompt] = useState(false);
   const [customPrompt, setCustomPrompt] = useState("");
+  const { signatur } = useSignatur();
 
   const buildDefaultPrompt = (item: FollowUpItem) => {
-    const contactName = item.kontaktperson || item.navn;
+    const contactName = pentNavn(item.kontaktperson || item.navn);
     const daysInactive = Math.floor(item.hoursInactive / 24);
     return `Skriv en kort, profesjonell oppfølgings-epost på norsk (3-5 setninger).
 Kontaktperson: ${contactName}
-Selskap: ${item.selskapNavn}
+Selskap: ${pentNavn(item.selskapNavn)}
 Situasjon: ${item.anbefalHandling}
 Dager inaktiv: ${daysInactive}
-Adresser meldingen til ${contactName.split(' ')[0]}. Vær direkte men høflig. Avslutt med et konkret forslag til neste steg.`;
+Adresser meldingen til ${fornavn(contactName) || contactName}. Vær direkte men høflig. Avslutt med et konkret forslag til neste steg.
+${signaturPromptLinje(signatur)}`;
   };
 
   const generateMessage = async (item: FollowUpItem, promptOverride?: string) => {
