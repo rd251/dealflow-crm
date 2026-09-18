@@ -197,8 +197,14 @@ export async function loggAktivitet(input: LoggAktivitetInput): Promise<{ id: st
 
   // «Sist kontaktet» + neste steg på selve posten
   const dag = idag();
+  const oppfolgingDato =
+    input.nesteOppfolging?.trim() ||
+    input.nesteStegDato?.trim() ||
+    nesteOppfolgingFraUtfall(input.utfall ?? UTFALL_FRA_TYPE[input.logg]);
+
   const oppdater = async (tabell: "leads" | "salgsmuligheter" | "selskaper" | "partnere", id: string, medNesteSteg: boolean) => {
     const patch: Record<string, unknown> = { sist_aktivitet: dag };
+    if (tabell === "leads") patch.neste_oppfolging = oppfolgingDato;
     if (medNesteSteg && nesteSteg && tabell !== "partnere") patch.neste_steg = nesteSteg;
     try {
       await supabase.from(tabell).update(patch as never).eq("id", id);
