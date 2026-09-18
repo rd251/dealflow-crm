@@ -36,6 +36,10 @@ async function authorize(req: Request): Promise<Caller> {
   const token = header.slice(7);
   if (token === SERVICE_KEY) return "service";
   if (token === Deno.env.get("SUPABASE_ANON_KEY")) return "trigger";
+  // The scheduled reconciliation run authenticates with a valid project publishable key.
+  // Such a caller may only start processing; it never receives per-lead details.
+  const probe = await fetch(`${SUPABASE_URL}/rest/v1/`, { headers: { apikey: token } });
+  if (probe.ok) return "trigger";
 
   const anon = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY")!, {
     global: { headers: { Authorization: header } },
