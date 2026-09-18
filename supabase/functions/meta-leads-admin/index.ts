@@ -76,10 +76,14 @@ Deno.serve(async (req) => {
     const page = await graph(`/${pageId}?fields=id,name,category`);
     const subs = await graph(`/${pageId}/subscribed_apps?fields=id,name,subscribed_fields`);
     const forms = await graph(`/${pageId}/leadgen_forms?fields=id,name,status&limit=50`);
+    const me = await graph(`/me?fields=id,name`);
+    const perms = await graph(`/me/permissions`);
     return new Response(JSON.stringify({
       page: { ok: page.ok, status: page.status, body: page.body },
       subscribed_apps: { ok: subs.ok, status: subs.status, body: subs.body },
       leadgen_forms: { ok: forms.ok, status: forms.status, body: forms.body },
+      token_identity: { ok: me.ok, status: me.status, body: me.body },
+      token_permissions: { ok: perms.ok, status: perms.status, body: perms.body },
       expected_app_id: APP_ID,
       graph_version: graphVersion(),
     }), { status: 200, headers: jsonHeaders });
