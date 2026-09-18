@@ -20,6 +20,17 @@ import {
   type ActivityTarget,
   type LoggType,
 } from "@/lib/activity-logging";
+import { LEAD_OPPFOLGING_DAGER, type LeadUtfallNokkel } from "@/lib/follow-up-rules";
+
+/** Utfall per aktivitetstype – styrer foreslått oppfølgingsdato. */
+const UTFALL_FOR_TYPE: Record<LoggType, LeadUtfallNokkel> = {
+  ringte: "snakket",
+  ikke_svar: "svarte_ikke",
+  moete: "snakket",
+  epost: "snakket",
+  notat: "snakket",
+  neste_steg: "snakket",
+};
 
 interface KontaktOption { id: string; navn: string }
 
@@ -40,7 +51,7 @@ interface Props {
   entityName?: string;
   kontaktListe?: KontaktOption[];
   defaultType?: LoggType;
-  onLogged?: () => void;
+  onLogged?: (res?: { id: string | null; nesteOppfolging: string }) => void;
 }
 
 export default function LogActivityDialog({
@@ -57,6 +68,7 @@ export default function LogActivityDialog({
   const [notat, setNotat] = useState("");
   const [nesteSteg, setNesteSteg] = useState("");
   const [nesteStegDato, setNesteStegDato] = useState<Date | undefined>();
+  const [oppfolgingDato, setOppfolgingDato] = useState<Date | undefined>();
   const [saving, setSaving] = useState(false);
 
   const [meetingTittel, setMeetingTittel] = useState("");
@@ -75,6 +87,7 @@ export default function LogActivityDialog({
     setNotat("");
     setNesteSteg("");
     setNesteStegDato(undefined);
+    setOppfolgingDato(undefined);
     setValgt(null);
     setSøk("");
     setMeetingTittel("");
@@ -117,19 +130,20 @@ export default function LogActivityDialog({
     if (!effektivtTarget) return;
     setSaving(true);
     try {
-      await loggAktivitet({
+      const res = await loggAktivitet({
         logg: type,
         target: effektivtTarget,
         notat,
         nesteSteg,
         nesteStegDato: nesteStegDato ? format(nesteStegDato, "yyyy-MM-dd") : undefined,
+        nesteOppfolging: oppfolgingDato ? format(oppfolgingDato, "yyyy-MM-dd") : undefined,
         meeting: type === "moete"
           ? { tittel: meetingTittel, dato: meetingDato, startTid: meetingStartTid, sluttTid: meetingSluttTid, deltakere: meetingDeltakere }
           : undefined,
       });
       toast.success("Aktivitet logget");
       onOpenChange(false);
-      onLogged?.();
+      onLogged?.(res);
     } catch (err) {
       console.error(err);
       toast.error("Kunne ikke logge aktiviteten");
@@ -267,6 +281,35 @@ export default function LogActivityDialog({
                   mode="single"
                   selected={nesteStegDato}
                   onSelect={setNesteStegDato}
+                  initialFocus
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          <div className="space-y-1.5 rounded-lg border bg-muted/30 p-3">
+            <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Neste oppfølging <span className="normal-case font-normal">(settes automatisk)</span>
+            </Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={cn("w-full justify-start text-left font-normal", !oppfolgingDato && "text-muted-foreground")}
+                >
+                  <CalendarIcon className="w-3.5 h-3.5 mr-2" />
+                  {oppfolgingDato
+                    ? format(oppfolgingDato, "d. MMMM yyyy", { locale: nb })
+                    : `Automatisk – om ${LEAD_OPPFOLGING_DAGER[UTFALL_FOR_TYPE[type]]} dager`}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={oppfolgingDato}
+                  onSelect={setOppfolgingDato}
                   initialFocus
                   className={cn("p-3 pointer-events-auto")}
                 />

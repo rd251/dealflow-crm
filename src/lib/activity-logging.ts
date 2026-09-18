@@ -1,5 +1,6 @@
-import { Phone, PhoneMissed, Users, Mail, FileText, ArrowRight } from "lucide-react";
+import { Phone, PhoneMissed, Users, Mail, FileText, ArrowRight, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { nesteOppfolgingFraUtfall, type LeadUtfallNokkel } from "@/lib/follow-up-rules";
 
 /** Typene som faktisk finnes i databasen — skal ikke endres. */
 export type AktivitetDbType = "Telefonsamtale" | "E-post" | "LinkedIn-melding" | "SMS" | "Møte" | "Notat";
@@ -47,6 +48,8 @@ export interface QuickAction {
   beskrivelse: string;
   icon: typeof Phone;
   tone: string;
+  /** Styrer neste oppfølgingsdato. Se LEAD_OPPFOLGING_DAGER. */
+  utfall?: LeadUtfallNokkel;
 }
 
 export const QUICK_ACTIONS: QuickAction[] = [
@@ -58,6 +61,7 @@ export const QUICK_ACTIONS: QuickAction[] = [
     beskrivelse: "Forsøkte å ringe, fikk ikke svar",
     icon: PhoneMissed,
     tone: "text-amber-600",
+    utfall: "svarte_ikke",
   },
   {
     id: "ringte-booket-moete",
@@ -67,6 +71,7 @@ export const QUICK_ACTIONS: QuickAction[] = [
     beskrivelse: "Samtale gjennomført, møte booket",
     icon: Phone,
     tone: "text-emerald-600",
+    utfall: "snakket",
   },
   {
     id: "sendte-epost",
@@ -76,6 +81,17 @@ export const QUICK_ACTIONS: QuickAction[] = [
     beskrivelse: "E-post sendt",
     icon: Mail,
     tone: "text-blue-600",
+    utfall: "snakket",
+  },
+  {
+    id: "ringte-ikke-naa",
+    label: "Snakket – ikke nå",
+    logg: "ringte",
+    tittel: "Ringte – ikke aktuelt nå",
+    beskrivelse: "Samtale gjennomført, ikke aktuelt akkurat nå",
+    icon: Clock,
+    tone: "text-muted-foreground",
+    utfall: "ikke_naa",
   },
 ];
 
@@ -110,7 +126,21 @@ export interface LoggAktivitetInput {
   /** Default «manuell». Brukes f.eks. av AI-assistenten. */
   kilde?: string;
   ansvarlig?: string;
+  /** Utfall som styrer automatisk oppfølgingsdato på lead. */
+  utfall?: LeadUtfallNokkel;
+  /** Manuell overstyring av oppfølgingsdato (yyyy-mm-dd). Tom streng = ikke rør. */
+  nesteOppfolging?: string;
 }
+
+/** Standardutfall per aktivitetstype når ingen er oppgitt. */
+const UTFALL_FRA_TYPE: Record<LoggType, LeadUtfallNokkel> = {
+  ringte: "snakket",
+  ikke_svar: "svarte_ikke",
+  moete: "snakket",
+  epost: "snakket",
+  notat: "snakket",
+  neste_steg: "snakket",
+};
 
 const idag = () => new Date().toISOString().split("T")[0];
 
@@ -122,7 +152,7 @@ const harTarget = (t: ActivityTarget) =>
  * Skriver til den eksisterende `aktiviteter`-tabellen, oppdaterer «sist kontaktet»
  * og oppretter oppgave for neste steg når det er fylt ut.
  */
-export async function loggAktivitet(input: LoggAktivitetInput): Promise<{ id: string | null }> {
+export async function loggAktivitet(input: LoggAktivitetInput): Promise<{ id: string | null; nesteOppfolging: string }> {
   const def = loggTypeDef(input.logg);
   const { data: sessionData } = await supabase.auth.getSession();
   const userId = sessionData?.session?.user?.id ?? null;
@@ -182,8 +212,14 @@ export async function loggAktivitet(input: LoggAktivitetInput): Promise<{ id: st
 
   // «Sist kontaktet» + neste steg på selve posten
   const dag = idag();
+  const oppfolgingDato =
+    input.nesteOppfolging?.trim() ||
+    input.nesteStegDato?.trim() ||
+    nesteOppfolgingFraUtfall(input.utfall ?? UTFALL_FRA_TYPE[input.logg]);
+
   const oppdater = async (tabell: "leads" | "salgsmuligheter" | "selskaper" | "partnere", id: string, medNesteSteg: boolean) => {
     const patch: Record<string, unknown> = { sist_aktivitet: dag };
+    if (tabell === "leads") patch.neste_oppfolging = oppfolgingDato;
     if (medNesteSteg && nesteSteg && tabell !== "partnere") patch.neste_steg = nesteSteg;
     try {
       await supabase.from(tabell).update(patch as never).eq("id", id);
@@ -197,5 +233,5 @@ export async function loggAktivitet(input: LoggAktivitetInput): Promise<{ id: st
   if (t.selskap_id) await oppdater("selskaper", t.selskap_id, true);
   if (t.partner_id) await oppdater("partnere", t.partner_id, false);
 
-  return { id: (data as { id?: string } | null)?.id ?? null };
+  return { id: (data as { id?: string } | null)?.id ?? null, nesteOppfolging: oppfolgingDato };
 }

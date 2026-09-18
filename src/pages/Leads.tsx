@@ -28,6 +28,16 @@ import LeadForwardEmailPreview from "@/components/LeadForwardEmailPreview";
 import NesteStegTaskButton from "@/components/NesteStegTaskButton";
 import LeadQuickActions from "@/components/LeadQuickActions";
 import RingelisteIdag from "@/components/RingelisteIdag";
+import FolgOppIDag from "@/components/FolgOppIDag";
+import {
+  NYTT_LEAD_OPPFOLGING_DAGER,
+  LEAD_KALD_DAGER,
+  erKaldtLead,
+  effektivOppfolging,
+  oppfolgingEtikett,
+  oppfolgingFarge,
+  oppfolgingTilstand,
+} from "@/lib/follow-up-rules";
 import { supabase } from "@/integrations/supabase/client";
 import { loggAktivitet } from "@/lib/activity-logging";
 import { toast } from "sonner";
@@ -45,7 +55,7 @@ export default function Leads() {
   const navigate = useNavigate();
   const { leads, partnere, updateLeads, updateOppgaver, konverterLead, konverterTilPartner, generateId } = useCrmStore();
   const [search, setSearch] = useState("");
-  const [visning, setVisning] = useState<"leads" | "ringeliste">("leads");
+  const [visning, setVisning] = useState<"leads" | "ringeliste" | "kalde">("leads");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
@@ -137,9 +147,19 @@ export default function Leads() {
 
   const normalizedSearch = search.trim().toLowerCase();
 
+  /** Aktive (ikke konverterte) leads – grunnlag for oppfølging og kalde leads. */
+  const aktiveLeads = leads.filter(l => !isConverted(l) && l.status !== "Ikke aktuelt");
+  const kaldeLeads = aktiveLeads.filter(erKaldtLead);
+
   const filteredUnsorted = leads.filter(l => {
     // Hide converted leads to avoid duplication with salgsmuligheter/partnere
     if (isConverted(l)) return false;
+    // Kalde leads holdes utenfor hovedflyten – de har egen visning
+    if (visning === "kalde") {
+      if (!erKaldtLead(l) || l.status === "Ikke aktuelt") return false;
+    } else if (erKaldtLead(l) && l.status !== "Ikke aktuelt") {
+      return false;
+    }
     if (filterUtenOppfolging) {
       if (l.status === "Ikke aktuelt") return false;
       const cutoff = new Date(now.getTime() - 24 * 60 * 60 * 1000);
@@ -184,7 +204,8 @@ export default function Leads() {
       id, firmanavn: form.firmanavn || "", kontaktperson: form.kontaktperson || "",
       e_post: form.e_post || "", telefon: form.telefon || "", kilde: form.kilde as LeadKilde || "Annet",
       status: "Ny", ansvarlig: form.ansvarlig || "", neste_steg: form.neste_steg || "",
-      notater: form.notater || "", opprettet_dato: today, sist_aktivitet: today, konvertert_dato: "",
+      notater: form.notater || "", opprettet_dato: today, sist_aktivitet: today,
+      neste_oppfolging: datoOm(NYTT_LEAD_OPPFOLGING_DAGER), konvertert_dato: "",
       konvertert_til: "",
       rolle_i_firma: form.rolle_i_firma || "", use_case: form.use_case || "",
       videresendt_til_partner_id: "", videresendt_dato: "",
@@ -718,9 +739,19 @@ export default function Leads() {
         <Button size="sm" variant={visning === "ringeliste" ? "default" : "outline"} onClick={() => setVisning("ringeliste")}>
           Ringeliste i dag
         </Button>
+        <Button size="sm" variant={visning === "kalde" ? "default" : "outline"} onClick={() => setVisning("kalde")}>
+          Kalde leads <span className="ml-1 tabular-nums opacity-70">{kaldeLeads.length}</span>
+        </Button>
       </div>
 
       {visning === "ringeliste" ? <RingelisteIdag /> : <>
+      {visning === "kalde" ? (
+        <p className="mb-4 rounded-lg border border-warning/25 bg-warning/5 p-3 text-xs text-muted-foreground">
+          Ingen aktivitet på {LEAD_KALD_DAGER} dager eller mer. Logg en aktivitet for å vekke leadet – da flyttes det tilbake i hovedflyten.
+        </p>
+      ) : (
+        <FolgOppIDag leads={aktiveLeads} onOpenLead={setSelectedLead} />
+      )}
       {/* KPI-er */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
         <StatCard label="Nye leads denne uken" value={nyeDenneUken} icon={<UserPlus className="w-5 h-5" />} />
@@ -792,6 +823,9 @@ export default function Leads() {
                   <div className="flex items-center justify-between">
                     <Badge variant="secondary" className="text-[10px]">{kildeGruppe(lead.kilde)}</Badge>
                     <span className="text-[10px] text-muted-foreground">{relativTid(lead.sist_aktivitet)}</span>
+                    <Badge variant="outline" className={`text-[10px] ${oppfolgingFarge[oppfolgingTilstand(effektivOppfolging(lead))]}`}>
+                      {oppfolgingEtikett(effektivOppfolging(lead))}
+                    </Badge>
                   </div>
                   {lead.neste_steg && <p className="text-[11px] text-muted-foreground truncate">→ {lead.neste_steg}</p>}
                   {lead.status !== "Ikke aktuelt" && (
@@ -848,6 +882,7 @@ export default function Leads() {
                     <th className="text-left px-4 py-2.5 font-medium cursor-pointer select-none hover:text-foreground" onClick={() => toggleSort("sist_aktivitet")}>
                       <span className="inline-flex items-center gap-1">Siste aktivitet <SortIcon col="sist_aktivitet" /></span>
                     </th>
+                    <th className="text-left px-4 py-2.5 font-medium">Oppfølging</th>
                     <th className="text-left px-4 py-2.5 font-medium">Neste steg</th>
                     <th className="text-right px-4 py-2.5 font-medium cursor-pointer select-none hover:text-foreground" onClick={() => toggleSort("opprettet_dato")}>
                       <span className="inline-flex items-center gap-1">Dager <SortIcon col="opprettet_dato" /></span>
@@ -878,6 +913,11 @@ export default function Leads() {
                       </td>
                       <td className="px-4 py-2.5 text-muted-foreground text-xs truncate max-w-[120px]">{lead.ansvarlig || "—"}</td>
                       <td className="px-4 py-2.5 text-muted-foreground text-xs">{relativTid(lead.sist_aktivitet)}</td>
+                      <td className="px-4 py-2.5">
+                        <Badge variant="outline" className={`text-[10px] ${oppfolgingFarge[oppfolgingTilstand(effektivOppfolging(lead))]}`}>
+                          {oppfolgingEtikett(effektivOppfolging(lead))}
+                        </Badge>
+                      </td>
                       <td className="px-4 py-2.5 text-muted-foreground text-xs truncate max-w-[200px]">{lead.neste_steg || "—"}</td>
                       <td className="px-4 py-2.5 text-right text-xs tabular-nums text-muted-foreground">{dagerSiden(lead.opprettet_dato) ?? "—"}</td>
                       <td className="px-4 py-2.5 text-right" onClick={e => e.stopPropagation()}>
@@ -1021,6 +1061,21 @@ export default function Leads() {
                   </div>
                   <div className="text-xs"><span className="text-muted-foreground">Opprettet</span>
                     <div className="h-7 flex items-center text-xs text-muted-foreground mt-0.5">{currentLead.opprettet_dato || "–"}</div>
+                  </div>
+                  <div className="text-xs col-span-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-muted-foreground">Neste oppfølging</span>
+                      <Badge variant="outline" className={`text-[10px] ${oppfolgingFarge[oppfolgingTilstand(effektivOppfolging(currentLead))]}`}>
+                        {oppfolgingEtikett(effektivOppfolging(currentLead))}
+                      </Badge>
+                    </div>
+                    <Input
+                      type="date"
+                      value={currentLead.neste_oppfolging || effektivOppfolging(currentLead)}
+                      onChange={e => updateField("neste_oppfolging", e.target.value)}
+                      className="h-7 text-xs mt-0.5"
+                      readOnly={!canEdit || currentIsLocked}
+                    />
                   </div>
                 </div>
 

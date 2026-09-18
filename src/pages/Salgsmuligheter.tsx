@@ -35,6 +35,15 @@ import LastMeetingCard from "@/components/LastMeetingCard";
 import NesteStegTaskButton from "@/components/NesteStegTaskButton";
 import confetti from "canvas-confetti";
 import { tilKanbanStadium, dagerSiden, initialer, idag, datoOm } from "@/lib/sales-flow";
+import {
+  KANBAN_SYNLIGE_KORT,
+  AUTO_TAP_DAGER,
+  AUTO_TAP_MODUS,
+  erKaldDeal,
+  erForeslaattTapt,
+  stadiumBudsjett,
+  dagerUtenAktivitet,
+} from "@/lib/follow-up-rules";
 
 /** Aktive stadier i kanban (rekkefølge). */
 const allStatuses: SalgsmulighetStatus[] = ["Møte booket", "Demo gjennomført", "Demo-prosjekt", "Kontrakt sendt"];
@@ -42,7 +51,8 @@ const allStatuses: SalgsmulighetStatus[] = ["Møte booket", "Demo gjennomført",
 const openStatuses: SalgsmulighetStatus[] = ["Møte booket", "Behov avklart", "Løsning presentert", "Demo gjennomført", "Demo-prosjekt", "Kontrakt sendt"];
 const ACTIVE_KANBAN_STAGES: SalgsmulighetStatus[] = ["Møte booket", "Demo gjennomført", "Demo-prosjekt", "Kontrakt sendt"];
 const STALE_STAGE_DAYS = 90;
-type PipelineSegment = "aktive" | "vunnet" | "tapt" | "arkiv";
+type PipelineSegment = "aktive" | "avklaring" | "vunnet" | "tapt" | "arkiv";
+type HurtigFilter = "" | "mine" | "forfalt" | "denne-uka";
 type ArchiveFilter = "alle" | "signert" | "venter" | "forfalt" | "inaktive" | "avsluttede";
 const tapsaarsaker: Tapsaarsak[] = ["Pris", "Ikke riktig timing", "Valgte annen leverandør", "Ikke behov", "Teknisk / integrasjon", "Annet"];
 
@@ -163,6 +173,18 @@ function sortDeals(deals: Salgsmulighet[]): Salgsmulighet[] {
   });
 }
 
+/** Kanban-sortering: forfalt oppfølging først, deretter nyeste aktivitet. */
+function sortKanbanDeals(deals: Salgsmulighet[]): Salgsmulighet[] {
+  return [...deals].sort((a, b) => {
+    const forfaltA = erKaldDeal(a) ? 1 : 0;
+    const forfaltB = erKaldDeal(b) ? 1 : 0;
+    if (forfaltA !== forfaltB) return forfaltB - forfaltA;
+    const dateA = a.sist_aktivitet ? new Date(a.sist_aktivitet).getTime() : 0;
+    const dateB = b.sist_aktivitet ? new Date(b.sist_aktivitet).getTime() : 0;
+    return dateB - dateA;
+  });
+}
+
 export default function Salgsmuligheter() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -183,6 +205,10 @@ export default function Salgsmuligheter() {
   const [pipelineSegment, setPipelineSegment] = useState<PipelineSegment>("aktive");
   const [archiveFilter, setArchiveFilter] = useState<ArchiveFilter>("alle");
   const [expandedAiIds, setExpandedAiIds] = useState<Set<string>>(() => new Set());
+  const [hurtigFilter, setHurtigFilter] = useState<HurtigFilter>("");
+  const [kompaktKort, setKompaktKort] = useState<boolean>(() => localStorage.getItem("pipelineKompakt") === "1");
+  const [utvidedeStadier, setUtvidedeStadier] = useState<Set<string>>(() => new Set());
+  const [visKaldeIStadium, setVisKaldeIStadium] = useState<Set<string>>(() => new Set());
   const [moveBlockedId, setMoveBlockedId] = useState<string | null>(null);
   const [form, setForm] = useState({ selskap_id: "", kontakt_id: "", forventet_mrr: 0, sla: 0, oppstartskostnad: 0, kontraktslengde_mnd: 12, sannsynlighet: 50, forventet_lukkedato: "", neste_steg: "", rolle_i_firma: "", use_case: "", kontaktperson: "", e_post: "", telefon: "", ansvarlig: "", kilde: "Nettside" as string });
   const [filterUtenAktivitet, setFilterUtenAktivitet] = useState(false);
@@ -395,6 +421,14 @@ export default function Salgsmuligheter() {
     }
     if (stageFilter && tilKanbanStadium(s.status) !== tilKanbanStadium(stageFilter)) return false;
     if (ownerFilter && s.ansvarlig !== ownerFilter) return false;
+    if (hurtigFilter === "mine" && s.ansvarlig !== user?.id) return false;
+    if (hurtigFilter === "forfalt" && !erKaldDeal(s)) return false;
+    if (hurtigFilter === "denne-uka") {
+      if (!s.forventet_lukkedato) return false;
+      const d = new Date(s.forventet_lukkedato);
+      const slutt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+      if (d < now || d > slutt) return false;
+    }
     if (from || to) {
       if (!s.forventet_lukkedato) return false;
       const d = new Date(s.forventet_lukkedato);
@@ -519,6 +553,22 @@ export default function Salgsmuligheter() {
     });
   };
 
+  /** Kompakt visning: én linje med navn · verdi · neste steg. */
+  const renderKompaktKort = (deal: Salgsmulighet) => {
+    const companyName = getSelskapNavn(deal.selskap_id || "");
+    const kald = erKaldDeal(deal);
+    return (
+      <div className="flex items-center gap-2 text-xs">
+        {kald && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-warning" title="Kald" />}
+        <span className="min-w-0 flex-1 truncate font-medium text-foreground">{companyName}</span>
+        {deal.forventet_mrr > 0 && <span className="shrink-0 tabular-nums text-muted-foreground">{nok(deal.forventet_mrr)}</span>}
+        <span className="min-w-0 max-w-[45%] truncate text-muted-foreground">
+          {deal.neste_steg?.trim() || "Mangler neste steg"}
+        </span>
+      </div>
+    );
+  };
+
   const renderDealCardContent = (deal: Salgsmulighet, isBlocked: boolean) => {
     const companyName = getSelskapNavn(deal.selskap_id || "");
     const stageAge = dagerSiden(stageSince[deal.id] || deal.opprettet_dato);
@@ -572,6 +622,15 @@ export default function Salgsmuligheter() {
 
           {stageAge !== null && stageAge > STALE_STAGE_DAYS && (
             <span className="rounded-full bg-warning/10 px-2 py-1 text-[10px] font-semibold tabular-nums text-warning">{stageAge} d</span>
+          )}
+
+          {erKaldDeal(deal) && (
+            <span
+              className="rounded-full bg-warning/10 px-2 py-1 text-[10px] font-medium text-warning"
+              title={`Ingen aktivitet på ${dagerUtenAktivitet(deal)} dager (budsjett ${stadiumBudsjett(deal.status)} d)`}
+            >
+              Kald · {dagerUtenAktivitet(deal)} d
+            </span>
           )}
 
           {recap && (
@@ -820,6 +879,7 @@ export default function Salgsmuligheter() {
       <div className="mb-4 inline-flex max-w-full overflow-x-auto rounded-md border bg-secondary/60 p-1 scrollbar-hide" aria-label="Visning av salgsmuligheter">
         {([
           ["aktive", "Aktive", openDeals.length],
+          ["avklaring", "Trenger avklaring", openDeals.filter(erKaldDeal).length],
           ["vunnet", "Vunnet", salgsmuligheter.filter(deal => deal.status === "Vunnet").length],
           ["tapt", "Tapt", salgsmuligheter.filter(deal => deal.status === "Tapt").length],
           ["arkiv", "Arkiv", archiveDeals.length],
@@ -870,6 +930,30 @@ export default function Salgsmuligheter() {
               </div>
             ))}
           </div>
+          {/* Hurtigfiltre */}
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            {([["mine", "Mine"], ["forfalt", "Forfalt"], ["denne-uka", "Denne uka"]] as const).map(([v, l]) => (
+              <Button
+                key={v}
+                type="button"
+                size="sm"
+                variant={hurtigFilter === v ? "default" : "outline"}
+                className="h-7 rounded-full px-3 text-[11px]"
+                onClick={() => setHurtigFilter(prev => (prev === v ? "" : v))}
+              >
+                {l}
+              </Button>
+            ))}
+            <Button
+              type="button"
+              size="sm"
+              variant={kompaktKort ? "default" : "outline"}
+              className="ml-auto h-7 rounded-full px-3 text-[11px]"
+              onClick={() => setKompaktKort(v => { localStorage.setItem("pipelineKompakt", v ? "0" : "1"); return !v; })}
+            >
+              Kompakte kort
+            </Button>
+          </div>
           {/* Søk og filtre */}
           <div className="flex flex-wrap items-center gap-2 mb-3">
             <div className="relative flex-1 min-w-[200px] max-w-xs">
@@ -915,8 +999,14 @@ export default function Salgsmuligheter() {
           <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-4 scrollbar-thin items-start">
             {(stageFilter ? [stageFilter] : ACTIVE_KANBAN_STAGES).map(stadium => {
               const stage = stadium as SalgsmulighetStatus;
-              const stageDeals = sortDeals(openDeals.filter(d => tilKanbanStadium(d.status) === stadium));
-              const stageMrr = stageDeals.reduce((s, d) => s + d.forventet_mrr, 0);
+              const alleIStadium = sortKanbanDeals(openDeals.filter(d => tilKanbanStadium(d.status) === stadium));
+              const kaldeIStadium = alleIStadium.filter(erKaldDeal);
+              const kaldeVises = visKaldeIStadium.has(stage);
+              const varme = alleIStadium.filter(d => !erKaldDeal(d));
+              const grunnlag = kaldeVises ? alleIStadium : varme;
+              const utvidet = utvidedeStadier.has(stage);
+              const stageDeals = utvidet ? grunnlag : grunnlag.slice(0, KANBAN_SYNLIGE_KORT);
+              const stageMrr = alleIStadium.reduce((s, d) => s + d.forventet_mrr, 0);
               return (
                 <div key={stage} className={`${isMobile ? "min-w-[270px] w-[270px]" : "min-w-[290px] w-[290px]"} flex-shrink-0 flex flex-col rounded-lg border border-border/70 bg-muted p-2.5 transition-colors ${dragOverStage === stage ? "bg-pipeline/10 ring-2 ring-pipeline/30" : ""}`}
                   onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; setDragOverStage(stage); }}
@@ -926,7 +1016,7 @@ export default function Salgsmuligheter() {
                   <div className="mb-2.5 flex min-h-8 items-center gap-2 px-1">
                     <div className={`h-2 w-2 shrink-0 rounded-full ${statusColors[stage]}`} />
                     <h3 className="min-w-0 flex-1 truncate text-xs font-semibold">{stage}</h3>
-                    <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">{stageDeals.length} · {stageMrr > 0 ? nok(stageMrr) : "—"}</span>
+                    <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">{alleIStadium.length} · {stageMrr > 0 ? nok(stageMrr) : "—"}</span>
                     {canEdit && (
                       <Button type="button" variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground" title={`Ny mulighet i ${stage}`} onClick={() => openCreateDialog(stage)}>
                         <Plus className="h-3.5 w-3.5" />
@@ -941,17 +1031,40 @@ export default function Salgsmuligheter() {
                         /* ── Compact mobile card with swipe ── */
                         <MobileSwipeCard key={deal.id} deal={deal} stage={stage} onMove={moveDealToStage}
                           onClick={() => setSelectedSm(deal)} signal={activitySignal(deal.sist_aktivitet)} missingNeste={missingNeste} isBlocked={isBlocked}>
-                          {renderDealCardContent(deal, isBlocked)}
+                          {kompaktKort ? renderKompaktKort(deal) : renderDealCardContent(deal, isBlocked)}
                         </MobileSwipeCard>
                       ) : (
                         <div key={deal.id} draggable onDragStart={e => { setDraggedId(deal.id); e.dataTransfer.effectAllowed = "move"; }}
                           onClick={() => setSelectedSm(deal)}
-                          className={`cursor-grab rounded-lg border border-border bg-card p-3 shadow-card transition-[border-color,box-shadow] hover:border-foreground/20 hover:shadow-md active:cursor-grabbing ${isBlocked ? "ring-2 ring-warning/40" : ""}`}>
-                          {renderDealCardContent(deal, isBlocked)}
+                          className={`cursor-grab rounded-lg border border-border bg-card shadow-card transition-[border-color,box-shadow] hover:border-foreground/20 hover:shadow-md active:cursor-grabbing ${kompaktKort ? "px-3 py-2" : "p-3"} ${isBlocked ? "ring-2 ring-warning/40" : ""}`}>
+                          {kompaktKort ? renderKompaktKort(deal) : renderDealCardContent(deal, isBlocked)}
                         </div>
                       );
                     })}
-                    {stageDeals.length === 0 && (
+
+                    {grunnlag.length > stageDeals.length && (
+                      <Button variant="ghost" size="sm" className="w-full text-[11px]" onClick={() => setUtvidedeStadier(prev => { const n = new Set(prev); n.add(stage); return n; })}>
+                        Vis alle {grunnlag.length}
+                      </Button>
+                    )}
+                    {utvidet && grunnlag.length > KANBAN_SYNLIGE_KORT && (
+                      <Button variant="ghost" size="sm" className="w-full text-[11px]" onClick={() => setUtvidedeStadier(prev => { const n = new Set(prev); n.delete(stage); return n; })}>
+                        Vis færre
+                      </Button>
+                    )}
+
+                    {kaldeIStadium.length > 0 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full text-[11px] text-warning hover:text-warning"
+                        onClick={() => setVisKaldeIStadium(prev => { const n = new Set(prev); if (n.has(stage)) n.delete(stage); else n.add(stage); return n; })}
+                      >
+                        {kaldeVises ? "Skjul kalde" : `+${kaldeIStadium.length} kalde`}
+                      </Button>
+                    )}
+
+                    {alleIStadium.length === 0 && (
                       <div className="border-2 border-dashed rounded-lg p-6 text-center text-xs text-muted-foreground">Dra hit</div>
                     )}
                   </div>
@@ -961,6 +1074,39 @@ export default function Salgsmuligheter() {
           </div>
           )}
         </>
+      ) : pipelineSegment === "avklaring" ? (
+        <div className="space-y-3">
+          <p className="rounded-lg border border-warning/25 bg-warning/5 p-3 text-xs text-muted-foreground">
+            Muligheter som har passert tidsbudsjettet for stadiet sitt uten aktivitet. Logg en aktivitet for å nullstille klokken.
+          </p>
+          {openDeals.filter(erKaldDeal).length === 0 ? (
+            <div className="rounded-lg border bg-card p-10 text-center text-sm text-muted-foreground">Ingenting trenger avklaring nå.</div>
+          ) : (
+            sortKanbanDeals(openDeals.filter(erKaldDeal)).map(deal => (
+              <div key={deal.id} className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-card p-3 shadow-card">
+                <button type="button" className="min-w-0 flex-1 text-left" onClick={() => setSelectedSm(deal)}>
+                  <p className="truncate text-sm font-semibold">{getSelskapNavn(deal.selskap_id || "")}</p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {deal.status} · {dagerUtenAktivitet(deal)} dager uten aktivitet (budsjett {stadiumBudsjett(deal.status)} d)
+                  </p>
+                </button>
+                {deal.forventet_mrr > 0 && <span className="text-xs font-semibold tabular-nums">{nok(deal.forventet_mrr)}</span>}
+                {erForeslaattTapt(deal) && (
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="bg-warning/10 text-warning text-[10px]">
+                      Foreslått tapt · {AUTO_TAP_DAGER} d
+                    </Badge>
+                    {canEdit && AUTO_TAP_MODUS === "bekreft" && (
+                      <Button size="sm" variant="outline" className="h-7 text-[11px]" onClick={() => moveDealToStage(deal.id, "Tapt")}>
+                        Flytt til Tapt
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))
+          )}
+        </div>
       ) : pipelineSegment === "vunnet" ? (
         <DealList deals={sortDeals(salgsmuligheter.filter(deal => deal.status === "Vunnet"))} getSelskapNavn={getSelskapNavn} getSelskapDomain={getSelskapDomain} onSelect={setSelectedSm} label="Vunne salgsmuligheter" onNavigateSelskap={id => navigate(`/selskaper/${id}`)} isMobile={isMobile} showKontraktStatus />
       ) : pipelineSegment === "tapt" ? (

@@ -57,19 +57,20 @@ export default function LeadQuickActions({ lead, onBookMoete, onHandled, size = 
     if (!handling) return;
     setBusy(id);
     try {
-      await loggAktivitet({
+      const { nesteOppfolging } = await loggAktivitet({
         logg: handling.logg,
         target: { lead_id: lead.id },
         tittel: `${handling.tittel} – ${navn}`,
         notat: handling.beskrivelse,
+        utfall: handling.utfall,
       });
       if (handling.id === "ringte-ikke-svar") {
-        updateLeads(prev => prev.map(l => l.id === lead.id ? { ...l, status: "Svarte ikke telefon", sist_aktivitet: idag() } : l));
+        updateLeads(prev => prev.map(l => l.id === lead.id ? { ...l, status: "Svarte ikke telefon", sist_aktivitet: idag(), neste_oppfolging: nesteOppfolging } : l));
         nyRingeoppgave(`Ring ${navn} igjen`);
         toast("Ikke svart – ny ringeoppgave om 2 dager");
         onHandled?.("ikke-svar");
       } else {
-        updateLeads(prev => prev.map(l => l.id === lead.id ? { ...l, status: l.status === "Ny" ? "Kontaktet" : l.status, sist_aktivitet: idag() } : l));
+        updateLeads(prev => prev.map(l => l.id === lead.id ? { ...l, status: l.status === "Ny" ? "Kontaktet" : l.status, sist_aktivitet: idag(), neste_oppfolging: nesteOppfolging } : l));
         toast.success(`${handling.label} · logget`);
         if (handling.id === "ringte-booket-moete") {
           setNotat("");
@@ -159,8 +160,8 @@ export default function LeadQuickActions({ lead, onBookMoete, onHandled, size = 
         onOpenChange={setDialogApen}
         target={{ lead_id: lead.id }}
         entityName={lead.firmanavn}
-        onLogged={() => {
-          updateLeads(prev => prev.map(l => l.id === lead.id ? { ...l, status: l.status === "Ny" ? "Kontaktet" : l.status, sist_aktivitet: idag() } : l));
+      onLogged={(res) => {
+          updateLeads(prev => prev.map(l => l.id === lead.id ? { ...l, status: l.status === "Ny" ? "Kontaktet" : l.status, sist_aktivitet: idag(), neste_oppfolging: res?.nesteOppfolging || l.neste_oppfolging } : l));
           onHandled?.("ringt");
         }}
       />

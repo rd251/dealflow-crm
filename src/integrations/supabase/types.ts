@@ -483,6 +483,7 @@ export type Database = {
           kilde: Database["public"]["Enums"]["lead_kilde"] | null
           kontaktperson: string | null
           konvertert_dato: string | null
+          neste_oppfolging: string | null
           neste_steg: string | null
           notater: string | null
           opprettet_dato: string | null
@@ -504,6 +505,7 @@ export type Database = {
           kilde?: Database["public"]["Enums"]["lead_kilde"] | null
           kontaktperson?: string | null
           konvertert_dato?: string | null
+          neste_oppfolging?: string | null
           neste_steg?: string | null
           notater?: string | null
           opprettet_dato?: string | null
@@ -525,6 +527,7 @@ export type Database = {
           kilde?: Database["public"]["Enums"]["lead_kilde"] | null
           kontaktperson?: string | null
           konvertert_dato?: string | null
+          neste_oppfolging?: string | null
           neste_steg?: string | null
           notater?: string | null
           opprettet_dato?: string | null
