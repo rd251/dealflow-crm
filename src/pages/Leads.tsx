@@ -1062,6 +1062,21 @@ export default function Leads() {
                   <div className="text-xs"><span className="text-muted-foreground">Opprettet</span>
                     <div className="h-7 flex items-center text-xs text-muted-foreground mt-0.5">{currentLead.opprettet_dato || "–"}</div>
                   </div>
+                  <div className="text-xs col-span-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-muted-foreground">Neste oppfølging</span>
+                      <Badge variant="outline" className={`text-[10px] ${oppfolgingFarge[oppfolgingTilstand(effektivOppfolging(currentLead))]}`}>
+                        {oppfolgingEtikett(effektivOppfolging(currentLead))}
+                      </Badge>
+                    </div>
+                    <Input
+                      type="date"
+                      value={currentLead.neste_oppfolging || effektivOppfolging(currentLead)}
+                      onChange={e => updateField("neste_oppfolging", e.target.value)}
+                      className="h-7 text-xs mt-0.5"
+                      readOnly={!canEdit || currentIsLocked}
+                    />
+                  </div>
                 </div>
 
                 <div className="border-t" />
