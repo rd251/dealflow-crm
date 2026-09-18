@@ -25,34 +25,52 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 
 type Caller = "service" | "admin" | "trigger" | null;
 
+/** Constant-time comparison of two secrets. */
+function safeEquals(a: string, b: string): boolean {
+  const ea = new TextEncoder().encode(a);
+  const eb = new TextEncoder().encode(b);
+  if (ea.length !== eb.length) return false;
+  let diff = 0;
+  for (let i = 0; i < ea.length; i++) diff |= ea[i] ^ eb[i];
+  return diff === 0;
+}
+
 /**
- * "service" = webhook wake-up / internal call, "admin" = admin JWT with the admin role,
- * "trigger" = the scheduled reconciliation run, which may only start processing and
- * never receives per-lead details in the response.
+ * Accepted callers, all server-side or verified humans:
+ * - "service": the service role key (internal wake-up from the webhook / admin endpoint).
+ * - "trigger": the scheduled run, authenticated with a server-only token that lives
+ *   encrypted in the database vault and is verified there in constant time.
+ *   It may only start processing and never receives per-lead details.
+ * - "admin": a signed-in CRM user whose admin role is verified server-side.
+ * Publishable/anon keys and unverified tokens are always rejected.
  */
 async function authorize(req: Request): Promise<Caller> {
   const header = req.headers.get("Authorization") ?? "";
   if (!header.startsWith("Bearer ")) return null;
   const token = header.slice(7);
-  if (token === SERVICE_KEY) return "service";
-  if (token === Deno.env.get("SUPABASE_ANON_KEY")) return "trigger";
-  // The scheduled reconciliation run authenticates with a valid project publishable key.
-  // Such a caller may only start processing; it never receives per-lead details.
-  const probe = await fetch(`${SUPABASE_URL}/rest/v1/leads?select=id&limit=1`, {
-    headers: { apikey: token, Authorization: `Bearer ${token}` },
-  });
-  const probeBody = await probe.text();
-  if (!probeBody.includes("Invalid API key") && !probeBody.includes("invalid JWT")) return "trigger";
+  if (!token) return null;
 
-  const anon = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY")!, {
+  if (safeEquals(token, SERVICE_KEY)) return "service";
+
+  const service = createClient(SUPABASE_URL, SERVICE_KEY);
+
+  // Scheduled run: server-only token verified against the encrypted vault.
+  const { data: workerOk, error: workerError } = await service
+    .rpc("verify_meta_worker_token", { p_token: token });
+  if (workerError) console.error("meta-lead-worker: token verification failed", workerError.message);
+  if (workerOk === true) return "trigger";
+
+  // Signed-in CRM administrator.
+  const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
+  if (!anonKey) return null;
+  const anon = createClient(SUPABASE_URL, anonKey, {
     global: { headers: { Authorization: header } },
   });
   const { data, error } = await anon.auth.getClaims(token);
   const userId = data?.claims?.sub;
   if (error || !userId) return null;
 
-  const admin = createClient(SUPABASE_URL, SERVICE_KEY);
-  const { data: role } = await admin
+  const { data: role } = await service
     .from("user_roles").select("role").eq("user_id", userId).eq("role", "admin").maybeSingle();
   return role ? "admin" : null;
 }
