@@ -910,6 +910,11 @@ export default function Leads() {
                       </td>
                       <td className="px-4 py-2.5 text-muted-foreground text-xs truncate max-w-[120px]">{lead.ansvarlig || "—"}</td>
                       <td className="px-4 py-2.5 text-muted-foreground text-xs">{relativTid(lead.sist_aktivitet)}</td>
+                      <td className="px-4 py-2.5">
+                        <Badge variant="outline" className={`text-[10px] ${oppfolgingFarge[oppfolgingTilstand(effektivOppfolging(lead))]}`}>
+                          {oppfolgingEtikett(effektivOppfolging(lead))}
+                        </Badge>
+                      </td>
                       <td className="px-4 py-2.5 text-muted-foreground text-xs truncate max-w-[200px]">{lead.neste_steg || "—"}</td>
                       <td className="px-4 py-2.5 text-right text-xs tabular-nums text-muted-foreground">{dagerSiden(lead.opprettet_dato) ?? "—"}</td>
                       <td className="px-4 py-2.5 text-right" onClick={e => e.stopPropagation()}>
