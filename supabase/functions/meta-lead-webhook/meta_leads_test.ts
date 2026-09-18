@@ -9,6 +9,7 @@ import {
   parsePageAllowlist,
   retryDelaySeconds,
   verifyMetaSignature,
+  callerFromRoleRow,
 } from "../_shared/meta-leads.ts";
 
 const SECRET = "test-app-secret";
