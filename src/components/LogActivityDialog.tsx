@@ -57,6 +57,7 @@ export default function LogActivityDialog({
   const [notat, setNotat] = useState("");
   const [nesteSteg, setNesteSteg] = useState("");
   const [nesteStegDato, setNesteStegDato] = useState<Date | undefined>();
+  const [oppfolgingDato, setOppfolgingDato] = useState<Date | undefined>();
   const [saving, setSaving] = useState(false);
 
   const [meetingTittel, setMeetingTittel] = useState("");
