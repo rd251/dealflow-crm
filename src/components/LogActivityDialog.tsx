@@ -275,6 +275,35 @@ export default function LogActivityDialog({
             </Popover>
           </div>
 
+          <div className="space-y-1.5 rounded-lg border bg-muted/30 p-3">
+            <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Neste oppfølging <span className="normal-case font-normal">(settes automatisk)</span>
+            </Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={cn("w-full justify-start text-left font-normal", !oppfolgingDato && "text-muted-foreground")}
+                >
+                  <CalendarIcon className="w-3.5 h-3.5 mr-2" />
+                  {oppfolgingDato
+                    ? format(oppfolgingDato, "d. MMMM yyyy", { locale: nb })
+                    : `Automatisk – om ${LEAD_OPPFOLGING_DAGER[UTFALL_FOR_TYPE[type]]} dager`}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={oppfolgingDato}
+                  onSelect={setOppfolgingDato}
+                  initialFocus
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+
           <Button className="w-full" onClick={lagre} disabled={!kanLagre}>
             {saving && <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />}
             Logg aktivitet
