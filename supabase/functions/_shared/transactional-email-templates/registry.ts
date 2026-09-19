@@ -24,4 +24,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'welcome-customer': welcomeCustomer,
   'lead-forwarded-to-partner': leadForwardedToPartner,
   'deal-forwarded-to-partner': dealForwardedToPartner,
+  'follow-up-nudge': followUpNudge,
 }
