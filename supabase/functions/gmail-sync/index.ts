@@ -1,4 +1,8 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { registrerVenterPaSvar } from "../_shared/awaiting-reply.ts";
+
+/** Maks antall AI-vurderinger av utgående tråder per synkronisering. */
+const MAKS_KLASSIFISERINGER_PER_SYNK = 10;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
