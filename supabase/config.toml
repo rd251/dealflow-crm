@@ -50,3 +50,5 @@ project_id = "tchmujgzcklwgptocbno"
     verify_jwt = false
   [functions.meta-leads-admin]
     verify_jwt = false
+  [functions.nudge-awaiting-reply]
+    verify_jwt = false
