@@ -92,6 +92,8 @@ Deno.serve(async (req) => {
 
   for (const profile of (profiles || []).slice(0, MAKS_BRUKERE)) {
     if (!profile.email) continue
+    // Personlig av/på for ukesagenda
+    if ((profile as any).ukesagenda_aktiv === false && !kunEpost) continue
     if (kunEpost && profile.email !== kunEpost) continue
     const uid = profile.user_id
 
