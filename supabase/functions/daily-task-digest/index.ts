@@ -1,5 +1,8 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { sendTemplateEmailWithLog } from '../_shared/transactional-email-templates/send-and-log.ts'
+import { rangerAgenda, AgendaAiError, type AgendaPunkt } from '../_shared/agenda-ai.ts'
+
+const APP_URL = 'https://snakk-ai-crm.lovable.app'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -27,7 +30,7 @@ Deno.serve(async (req) => {
   // Fetch open tasks with deadline <= today
   const { data: tasks, error: tasksError } = await supabase
     .from('oppgaver')
-    .select('id, oppgave, frist, ansvarlig, prioritet, status, user_id, selskap_id, kontakt_id, salgsmulighet_id')
+    .select('id, oppgave, frist, ansvarlig, prioritet, status, user_id, selskap_id, kontakt_id, salgsmulighet_id, notater')
     .neq('status', 'Ferdig')
     .not('user_id', 'is', null)
     .not('frist', 'is', null)
@@ -81,13 +84,13 @@ Deno.serve(async (req) => {
   const allKontaktIds = new Set<string>()
   for (const t of tasks || []) if (t.kontakt_id) allKontaktIds.add(t.kontakt_id)
 
-  const kontaktMap = new Map<string, string>()
+  const kontaktMap = new Map<string, any>()
   if (allKontaktIds.size > 0) {
     const { data: kontakter } = await supabase
       .from('kontakter')
-      .select('id, navn')
+      .select('id, navn, telefon, e_post')
       .in('id', Array.from(allKontaktIds))
-    for (const k of kontakter || []) kontaktMap.set(k.id, k.navn)
+    for (const k of kontakter || []) kontaktMap.set(k.id, k)
   }
 
   // Collect all user IDs
@@ -134,6 +137,7 @@ Deno.serve(async (req) => {
   const nameMap = new Map(profiles?.map(p => [p.user_id, p.display_name]) || [])
 
   let sentCount = 0
+  let aiPauset = false
   const errors: string[] = []
 
   for (const userId of allUserIds) {
@@ -152,7 +156,11 @@ Deno.serve(async (req) => {
       ansvarlig: (t.ansvarlig && nameMap.get(t.ansvarlig)) || null,
       prioritet: t.prioritet,
       selskap: t.selskap_id ? selskapMap.get(t.selskap_id) || null : null,
-      kontakt: t.kontakt_id ? kontaktMap.get(t.kontakt_id) || null : null,
+      kontakt: t.kontakt_id ? kontaktMap.get(t.kontakt_id)?.navn || null : null,
+      telefon: t.kontakt_id ? kontaktMap.get(t.kontakt_id)?.telefon || null : null,
+      ePost: t.kontakt_id ? kontaktMap.get(t.kontakt_id)?.e_post || null : null,
+      notat: t.notater ? String(t.notater).slice(0, 160) : null,
+      lenke: t.salgsmulighet_id ? `${APP_URL}/salgsmuligheter?open=${t.salgsmulighet_id}` : `${APP_URL}/oppgaver`,
     })
 
     const overdueTasks = userTasks.filter(t => t.frist && t.frist < today).map(mapTask)
@@ -179,6 +187,8 @@ Deno.serve(async (req) => {
       forventetLukkedato: d.forventet_lukkedato ? formatDate(d.forventet_lukkedato) : null,
       kontaktperson: d.kontaktperson,
       nesteSteg: d.neste_steg,
+      dagerUtenAktivitet: d.sist_aktivitet ? daysBetween(d.sist_aktivitet.split('T')[0], today) : null,
+      lenke: `${APP_URL}/salgsmuligheter?open=${d.id}`,
     }))
 
     // Deals near closing (within 7 days)
@@ -215,6 +225,33 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ── Topp 3 konkrete handlinger (AI) ──
+    let topp3: AgendaPunkt[] = []
+    if (!aiPauset && (prioritertIDag.length > 0 || overdueTasks.length > 0 || aktiveSalgsmuligheter.length > 0)) {
+      try {
+        const res = await rangerAgenda(
+          'Du er kommersiell sparringspartner for Snakk AI og lager dagens tre viktigste handlinger for én selger. ' +
+          'Hver handling må være så konkret at den kan utføres uten å tenke: hvem som skal kontaktes, på hvilken kanal ' +
+          '(bruk telefonnummer eller e-post fra dataene når det finnes), hva som skal sies eller sendes, og når. ' +
+          'Prioriter det som flytter penger i dag: forfalte frister, deals nær beslutning og møter som krever forberedelse. ' +
+          'Ingen generelle råd som "følg opp kunden" – si eksakt hva som skal gjøres. Ikke finn på tall eller navn. Norsk bokmål.',
+          {
+            dato: today,
+            forfalte_oppgaver: overdueTasks,
+            oppgaver_i_dag: prioritertIDag,
+            moter_i_dag: todayMeetings,
+            salgsmuligheter: aktiveSalgsmuligheter,
+          },
+          3,
+        )
+        topp3 = res.agenda
+      } catch (err) {
+        const status = err instanceof AgendaAiError ? err.status : 0
+        console.error('Daglig AI-rangering feilet', status)
+        if (status === 402 || status === 403) aiPauset = true
+      }
+    }
+
     if (prioritertIDag.length === 0 && overdueTasks.length === 0 && aktiveSalgsmuligheter.length === 0 && todayMeetings.length === 0) continue
 
     const firstName = profile.display_name?.split(' ')[0] || profile.display_name || 'der'
@@ -224,6 +261,7 @@ Deno.serve(async (req) => {
         idempotencyKey: `daily-tasks-${userId}-${today}`,
         templateData: {
           displayName: firstName,
+          topp3,
           prioritertIDag,
           overdueTasks,
           todayMeetings,
