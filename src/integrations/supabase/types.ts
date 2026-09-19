@@ -1988,7 +1988,7 @@ export type Database = {
         | "SMS"
         | "Møte"
         | "Notat"
-      app_role: "admin" | "user" | "viewer"
+      app_role: "admin" | "user" | "viewer" | "investor"
       integrasjon:
         | "Ingen"
         | "GastroPlanner"
@@ -2229,7 +2229,7 @@ export const Constants = {
         "Møte",
         "Notat",
       ],
-      app_role: ["admin", "user", "viewer"],
+      app_role: ["admin", "user", "viewer", "investor"],
       integrasjon: [
         "Ingen",
         "GastroPlanner",

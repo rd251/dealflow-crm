@@ -85,6 +85,13 @@
       "when": 1789833274979,
       "tag": "0011_venter_pa_svar_og_eierskap",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1789833292003,
+      "tag": "0012_app_role_investor",
+      "breakpoints": true
     }
   ]
 }
