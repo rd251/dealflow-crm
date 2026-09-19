@@ -157,6 +157,18 @@ ${signaturPromptLinje(signatur)}`;
           </DialogDescription>
         </DialogHeader>
 
+        {!googleLoading && !googleTilkoblet && (
+          <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-sm">
+            <p className="font-medium">Google-kontoen din er ikke tilkoblet</p>
+            <p className="text-muted-foreground">
+              E-posten sendes fra din egen Gmail. Koble til kontoen din i Innstillinger for å sende.
+            </p>
+            <a href="/innstillinger" className="mt-2 inline-block font-medium text-primary underline underline-offset-2">
+              Koble til Google
+            </a>
+          </div>
+        )}
+
         <div className="space-y-3">
           <div>
             <label className="text-xs text-muted-foreground">Til</label>
