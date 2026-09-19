@@ -15,6 +15,8 @@ import DeletedItemsLog from "@/components/DeletedItemsLog";
 import DealBuilderSyncCard from "@/components/DealBuilderSyncCard";
 import MetaLeadsCard from "@/components/MetaLeadsCard";
 import { useSignatur, signaturBlokk } from "@/lib/email-signature";
+import NudgeSettingsCard from "@/components/NudgeSettingsCard";
+import InvestorAccessCard from "@/components/InvestorAccessCard";
 
 interface ConnectionData {
   last_synced_at: string | null;
