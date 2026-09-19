@@ -1,6 +1,7 @@
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Settings } from "lucide-react";
+import { Settings, UserPlus } from "lucide-react";
+import QuickAddPersonDialog from "@/components/QuickAddPersonDialog";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useSidebarCollapsed } from "@/hooks/use-sidebar-collapsed";
 import { Button } from "@/components/ui/button";
