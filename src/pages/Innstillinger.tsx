@@ -481,6 +481,12 @@ export default function Innstillinger() {
           </CardContent>
         </Card>
 
+        {/* Oppfølgingspåminnelser */}
+        <NudgeSettingsCard />
+
+        {/* Investortilgang */}
+        <InvestorAccessCard />
+
         {/* Meta Lead Ads */}
         <MetaLeadsCard />
 
