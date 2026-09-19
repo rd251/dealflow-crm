@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowUpRight, Building2, CircleDollarSign, Handshake, Layers3, PhoneCall, Target, TrendingUp, Users } from "lucide-react";
 import { dagerSiden, KANBAN_STADIER, leadStatusFarge, stadiumFarge, tilKanbanStadium } from "@/lib/sales-flow";
+import { RELASJON_KALD_DAGER, RELASJON_LUNKEN_DAGER, relasjonTilstand } from "@/lib/relationship";
 import type { LeadStatus } from "@/data/crm-data";
 import PageShell from "@/components/PageShell";
 import CompanyLogo from "@/components/CompanyLogo";
@@ -99,6 +100,15 @@ export default function Dashboard() {
     return dager === null || dager >= 7;
   }).length, [openDeals]);
   const totalPipelineMrr = openDeals.reduce((sum, d) => sum + (d.forventet_mrr || 0), 0);
+  const relasjoner = useMemo(() => {
+    const kunder = selskaper.filter(s => s.kundestatus === "Live" || s.kundestatus === "Pilot").map(s => s.sist_aktivitet);
+    const parts = partnere.filter(p => p.partnerstatus === "Aktiv" || p.partnerstatus === "Under onboarding").map(p => p.sist_aktivitet);
+    const alle = [...kunder, ...parts].map(relasjonTilstand);
+    return {
+      lunkne: alle.filter(t => t === "lunken").length,
+      forsomte: alle.filter(t => t === "forsomt" || t === "ukjent").length,
+    };
+  }, [selskaper, partnere]);
   const inDialogCompanyIds = useMemo(() => new Set(openDeals.map(deal => deal.selskap_id).filter(Boolean)), [openDeals]);
   const totalMrr = activeCustomers.reduce((sum, company) => sum + company.mrr, 0);
   const riskMrr = churnRisk.reduce((sum, company) => sum + company.mrr, 0);
