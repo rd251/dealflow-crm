@@ -243,7 +243,25 @@ Deno.serve(async (req) => {
     if (selskap_id) aktivitetData.selskap_id = selskap_id;
     if (kontakt_id) aktivitetData.kontakt_id = kontakt_id;
 
-    await supabase.from("aktiviteter").insert(aktivitetData);
+    const { data: aktivitetRad } = await supabase
+      .from("aktiviteter")
+      .insert(aktivitetData)
+      .select("id")
+      .maybeSingle();
+
+    // Vurder om e-posten krever svar – grunnlag for oppfølgingspåminnelser.
+    await registrerVenterPaSvar(supabase, {
+      userId: user.id,
+      threadId: sendData.threadId || sendData.id,
+      emne: finalSubject,
+      tekst: finalBody,
+      ePost: to,
+      kontaktId: kontakt_id ?? null,
+      leadId: entity_type === "lead" ? entity_id ?? null : null,
+      salgsmulighetId: entity_type === "salgsmulighet" ? entity_id ?? null : null,
+      selskapId: selskap_id ?? null,
+      aktivitetId: (aktivitetRad as any)?.id ?? null,
+    });
 
     // Update sist_aktivitet on the entity
     const today = new Date().toISOString().split("T")[0];
