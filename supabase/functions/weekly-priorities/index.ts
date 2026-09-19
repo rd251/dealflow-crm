@@ -24,6 +24,15 @@ Deno.serve(async (req) => {
     })
   }
 
+  // dryRun = beregn agenda uten å sende e-post (for testing)
+  let dryRun = false
+  let kunEpost: string | null = null
+  try {
+    const body = await req.json()
+    dryRun = body?.dryRun === true
+    kunEpost = typeof body?.email === 'string' ? body.email : null
+  } catch { /* tomt body er ok */ }
+
   const supabase = createClient(supabaseUrl, supabaseServiceKey)
   const today = new Date()
   const todayStr = today.toISOString().split('T')[0]
@@ -79,8 +88,11 @@ Deno.serve(async (req) => {
   const errors: string[] = []
   let aiPauset = false
 
+  const forhandsvisning: unknown[] = []
+
   for (const profile of (profiles || []).slice(0, MAKS_BRUKERE)) {
     if (!profile.email) continue
+    if (kunEpost && profile.email !== kunEpost) continue
     const uid = profile.user_id
 
     const mineDeals = (deals || []).filter((d: any) => d.ansvarlig === uid).map((d: any) => ({
@@ -221,6 +233,11 @@ Deno.serve(async (req) => {
 
     if (agenda.length === 0) continue
 
+    if (dryRun) {
+      forhandsvisning.push({ email: profile.email, aiBrukt, oppsummering, agenda, risikoer })
+      continue
+    }
+
     try {
       const result = await sendTemplateEmailWithLog('weekly-priorities', profile.email, {
         idempotencyKey: `weekly-priorities-${uid}-${todayStr}`,
@@ -246,7 +263,7 @@ Deno.serve(async (req) => {
   }
 
   return new Response(
-    JSON.stringify({ sent, aiPauset, errors: errors.length ? errors : undefined }),
+    JSON.stringify({ sent, aiPauset, dryRun, forhandsvisning: dryRun ? forhandsvisning : undefined, errors: errors.length ? errors : undefined }),
     { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
   )
 })
