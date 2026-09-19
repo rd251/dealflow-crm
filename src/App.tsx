@@ -17,6 +17,7 @@ import Prosjekter from "./pages/Prosjekter";
 import Companies from "./pages/Companies";
 import AlleSelskaper from "./pages/AlleSelskaper";
 import Contacts from "./pages/Contacts";
+import Relasjoner from "./pages/Relasjoner";
 import Tasks from "./pages/Tasks";
 import Partnere from "./pages/Partnere";
 import PartnerProfile from "./pages/PartnerProfile";
@@ -137,6 +138,7 @@ function AppRoutes() {
                 <Route path="/alle-selskaper" element={<AlleSelskaper />} />
                 <Route path="/selskaper/:id" element={<CompanyProfile />} />
                 <Route path="/kontakter" element={<Contacts />} />
+                <Route path="/relasjoner" element={<Relasjoner />} />
                 <Route path="/kontaktstrom" element={<Kontaktstrom />} />
                 <Route path="/oppgaver" element={<Tasks />} />
                 <Route path="/ringeliste" element={<Ringeliste />} />

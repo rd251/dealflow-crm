@@ -4,6 +4,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { GmailIcon, GoogleCalendarIcon } from "@/components/BrandIcons";
 import type { AktivitetType } from "@/components/ActivityLog";
 import { supabase } from "@/integrations/supabase/client";
+import { relasjonFarge, relasjonTilstand } from "@/lib/relationship";
 
 const API_URL = import.meta.env.VITE_SUPABASE_URL + '/rest/v1';
 const getApiHeaders = async () => {
@@ -42,6 +43,8 @@ interface LastActivityBadgeProps {
   prosjekt_id?: string;
   kontakt_id?: string;
   sist_aktivitet?: string;
+  /** Vis relasjonsvarme (lunken/forsømt) ved siden av datoen. */
+  visVarme?: boolean;
 }
 
 export default function LastActivityBadge(props: LastActivityBadgeProps) {
@@ -74,7 +77,20 @@ export default function LastActivityBadge(props: LastActivityBadgeProps) {
     return () => { cancelled = true; };
   }, [props.lead_id, props.salgsmulighet_id, props.selskap_id, props.partner_id, props.prosjekt_id, props.kontakt_id]);
 
-  if (!props.sist_aktivitet) return <span className="text-xs text-muted-foreground">—</span>;
+  const tilstand = relasjonTilstand(props.sist_aktivitet);
+  const varme = props.visVarme && (tilstand === "lunken" || tilstand === "forsomt" || tilstand === "ukjent") ? (
+    <span className={`ml-1.5 inline-flex items-center rounded border px-1.5 py-0.5 text-[10px] ${relasjonFarge[tilstand]}`}>
+      {tilstand === "lunken" ? "Ikke snakket på en stund" : "Forsømt"}
+    </span>
+  ) : null;
+
+  if (!props.sist_aktivitet) {
+    return (
+      <span className="inline-flex items-center text-xs text-muted-foreground">
+        —{varme}
+      </span>
+    );
+  }
 
   const formatDate = (d: string) => {
     const date = new Date(d);
@@ -92,16 +108,19 @@ export default function LastActivityBadge(props: LastActivityBadgeProps) {
   const color = lastType ? typeColors[lastType] : "text-muted-foreground";
 
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <span className={`inline-flex items-center gap-1 text-xs ${color}`}>
-          {isGmail ? <GmailIcon size={14} /> : isGCal ? <GoogleCalendarIcon size={14} /> : <Icon className="w-3.5 h-3.5" />}
-          {formatDate(props.sist_aktivitet)}
-        </span>
-      </TooltipTrigger>
-      <TooltipContent>
-        <p className="text-xs">{lastType || "Sist aktivitet"}: {props.sist_aktivitet}</p>
-      </TooltipContent>
-    </Tooltip>
+    <span className="inline-flex items-center">
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className={`inline-flex items-center gap-1 text-xs ${color}`}>
+            {isGmail ? <GmailIcon size={14} /> : isGCal ? <GoogleCalendarIcon size={14} /> : <Icon className="w-3.5 h-3.5" />}
+            {formatDate(props.sist_aktivitet)}
+          </span>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p className="text-xs">{lastType || "Sist aktivitet"}: {props.sist_aktivitet}</p>
+        </TooltipContent>
+      </Tooltip>
+      {varme}
+    </span>
   );
 }
