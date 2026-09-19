@@ -176,13 +176,10 @@ function RoleRoutes() {
                 <Route path="/nyhetsbrev/:id/rediger" element={<NyhetsbrevEditor />} />
                 <Route path="/admin" element={<Admin />} />
                 <Route path="/innstillinger" element={<Innstillinger />} />
+                <Route path="/investor" element={<Investor />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </CrmProvider>
-          </ProtectedRoute>
-        }
-      />
-    </Routes>
   );
 }
 
