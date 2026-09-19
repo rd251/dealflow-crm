@@ -127,7 +127,6 @@ export default function Contacts() {
   const [selected, setSelected] = useState<Kontakt | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
-  const [form, setForm] = useState({ navn: "", selskap_id: "", rolle: "", e_post: "", telefon: "", linkedin: "", notater: "" });
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
 
   // Delete state
@@ -151,12 +150,6 @@ export default function Contacts() {
 
   const getSelskapNavn = (id: string) => selskaper.find(s => s.id === id)?.firmanavn || "–";
 
-  const addKontakt = () => {
-    const id = generateId("K", kontakter);
-    updateKontakter(prev => [...prev, { id, ...form }]);
-    setDialogOpen(false);
-    setForm({ navn: "", selskap_id: "", rolle: "", e_post: "", telefon: "", linkedin: "", notater: "" });
-  };
 
   const currentKontakt = selected ? kontakter.find(k => k.id === selected.id) || selected : null;
   const relatedDeals = currentKontakt ? salgsmuligheter.filter(s => s.kontakt_id === currentKontakt.id || s.selskap_id === currentKontakt.selskap_id) : [];

@@ -26,6 +26,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Salgsmulighet, SalgsmulighetStatus, Tapsaarsak, KontraktStatus, beregnTotalKontraktsverdi, beregnVektetPipeline, PAKKER } from "@/data/crm-data";
 import InlineTaskForm from "@/components/InlineTaskForm";
 import ActivityLog from "@/components/ActivityLog";
+import PersonTimeline from "@/components/PersonTimeline";
 import { loggAktivitet } from "@/lib/activity-logging";
 import EntityChangelog from "@/components/EntityChangelog";
 import MeetingNotesList from "@/components/MeetingNotesList";
@@ -1581,6 +1582,13 @@ export default function Salgsmuligheter() {
             ),
             interaksjoner: (
               <>
+                <PersonTimeline
+                  kontakt_id={currentSm.kontakt_id || undefined}
+                  selskap_id={currentSm.selskap_id || undefined}
+                  e_post={currentSm.e_post || undefined}
+                  maks={6}
+                  tittel="Relasjonstidslinje"
+                />
                 <InlineTaskForm salgsmulighet_id={currentSm.id} selskap_id={currentSm.selskap_id} />
                 <ActivityLog salgsmulighet_id={currentSm.id} onOpenCreateRef={openCreateActivityRef} onActivityLogged={() => {
                   updateSalgsmuligheter(prev => prev.map(s => s.id === currentSm.id ? { ...s, sist_aktivitet: new Date().toISOString().split("T")[0] } : s));
