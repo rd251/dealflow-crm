@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowUpRight, Building2, CircleDollarSign, Handshake, Layers3, PhoneCall, Target, TrendingUp, Users } from "lucide-react";
+import { ArrowUpRight, Building2, CircleDollarSign, Handshake, HeartHandshake, Layers3, PhoneCall, Target, TrendingUp, Users } from "lucide-react";
 import { dagerSiden, KANBAN_STADIER, leadStatusFarge, stadiumFarge, tilKanbanStadium } from "@/lib/sales-flow";
 import { RELASJON_KALD_DAGER, RELASJON_LUNKEN_DAGER, relasjonTilstand } from "@/lib/relationship";
 import type { LeadStatus } from "@/data/crm-data";
@@ -149,6 +149,20 @@ export default function Dashboard() {
           <MetricCard label="Churn-risiko" value={nok(riskMrr)} icon={Layers3} accent="warning" onClick={() => navigate("/selskaper")} />
           <MetricCard label="I dialog" value={inDialogCompanyIds.size} icon={Users} accent="pipeline" onClick={() => navigate("/salgsmuligheter")} />
           <MetricCard label="Partnere" value={partnere.length} icon={Handshake} accent="partner" onClick={() => navigate("/partnere")} />
+          <MetricCard
+            label={`Ikke snakket på ${RELASJON_LUNKEN_DAGER}+ dager`}
+            value={relasjoner.lunkne}
+            icon={HeartHandshake}
+            accent="warning"
+            onClick={() => navigate("/relasjoner?filter=lunken")}
+          />
+          <MetricCard
+            label={`Forsømte (${RELASJON_KALD_DAGER}+ dager)`}
+            value={relasjoner.forsomte}
+            icon={HeartHandshake}
+            accent="warning"
+            onClick={() => navigate("/relasjoner?filter=forsomt")}
+          />
         </section>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
