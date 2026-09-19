@@ -130,6 +130,13 @@ export type Database = {
             foreignKeyName: "aktiviteter_selskap_id_fkey"
             columns: ["selskap_id"]
             isOneToOne: false
+            referencedRelation: "investor_portefolje"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aktiviteter_selskap_id_fkey"
+            columns: ["selskap_id"]
+            isOneToOne: false
             referencedRelation: "selskaper"
             referencedColumns: ["id"]
           },
@@ -426,6 +433,36 @@ export type Database = {
         }
         Relationships: []
       }
+      investor_tilgang: {
+        Row: {
+          aktiv: boolean
+          created_at: string
+          e_post: string
+          id: string
+          navn: string | null
+          opprettet_av: string | null
+          updated_at: string
+        }
+        Insert: {
+          aktiv?: boolean
+          created_at?: string
+          e_post: string
+          id?: string
+          navn?: string | null
+          opprettet_av?: string | null
+          updated_at?: string
+        }
+        Update: {
+          aktiv?: boolean
+          created_at?: string
+          e_post?: string
+          id?: string
+          navn?: string | null
+          opprettet_av?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       kontakter: {
         Row: {
           created_at: string
@@ -464,6 +501,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "kontakter_selskap_id_fkey"
+            columns: ["selskap_id"]
+            isOneToOne: false
+            referencedRelation: "investor_portefolje"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "kontakter_selskap_id_fkey"
             columns: ["selskap_id"]
@@ -910,6 +954,13 @@ export type Database = {
             foreignKeyName: "oppgaver_selskap_id_fkey"
             columns: ["selskap_id"]
             isOneToOne: false
+            referencedRelation: "investor_portefolje"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "oppgaver_selskap_id_fkey"
+            columns: ["selskap_id"]
+            isOneToOne: false
             referencedRelation: "selskaper"
             referencedColumns: ["id"]
           },
@@ -1081,6 +1132,13 @@ export type Database = {
             foreignKeyName: "partnere_selskap_id_fkey"
             columns: ["selskap_id"]
             isOneToOne: false
+            referencedRelation: "investor_portefolje"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partnere_selskap_id_fkey"
+            columns: ["selskap_id"]
+            isOneToOne: false
             referencedRelation: "selskaper"
             referencedColumns: ["id"]
           },
@@ -1201,6 +1259,13 @@ export type Database = {
             columns: ["salgsmulighet_id"]
             isOneToOne: false
             referencedRelation: "salgsmuligheter"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prosjekter_selskap_id_fkey"
+            columns: ["selskap_id"]
+            isOneToOne: false
+            referencedRelation: "investor_portefolje"
             referencedColumns: ["id"]
           },
           {
@@ -1486,6 +1551,13 @@ export type Database = {
             columns: ["partner_id"]
             isOneToOne: false
             referencedRelation: "partnere"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "salgsmuligheter_selskap_id_fkey"
+            columns: ["selskap_id"]
+            isOneToOne: false
+            referencedRelation: "investor_portefolje"
             referencedColumns: ["id"]
           },
           {
@@ -1903,6 +1975,13 @@ export type Database = {
             foreignKeyName: "venter_pa_svar_selskap_id_fkey"
             columns: ["selskap_id"]
             isOneToOne: false
+            referencedRelation: "investor_portefolje"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "venter_pa_svar_selskap_id_fkey"
+            columns: ["selskap_id"]
+            isOneToOne: false
             referencedRelation: "selskaper"
             referencedColumns: ["id"]
           },
@@ -1934,6 +2013,56 @@ export type Database = {
           last_synced_at?: string | null
           updated_at?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      investor_mrr_trend: {
+        Row: {
+          churn_mrr: number | null
+          mnd: string | null
+          mrr: number | null
+          ny_mrr: number | null
+        }
+        Relationships: []
+      }
+      investor_noekkeltall: {
+        Row: {
+          antall_aktive: number | null
+          antall_churn_12m: number | null
+          antall_pause: number | null
+          partner_mrr: number | null
+          total_arr: number | null
+          total_mrr: number | null
+        }
+        Relationships: []
+      }
+      investor_portefolje: {
+        Row: {
+          arr: number | null
+          bransje: string | null
+          firmanavn: string | null
+          id: string | null
+          kunde_siden: string | null
+          mrr: number | null
+          status: string | null
+        }
+        Insert: {
+          arr?: never
+          bransje?: string | null
+          firmanavn?: string | null
+          id?: string | null
+          kunde_siden?: string | null
+          mrr?: never
+          status?: never
+        }
+        Update: {
+          arr?: never
+          bransje?: string | null
+          firmanavn?: string | null
+          id?: string | null
+          kunde_siden?: string | null
+          mrr?: never
+          status?: never
         }
         Relationships: []
       }
@@ -1971,6 +2100,8 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      er_intern: { Args: { _user_id: string }; Returns: boolean }
+      har_investorinnsyn: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

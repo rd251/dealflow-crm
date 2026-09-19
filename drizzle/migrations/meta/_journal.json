@@ -92,6 +92,13 @@
       "when": 1789833292003,
       "tag": "0012_app_role_investor",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1789833359817,
+      "tag": "0013_investor_tilgang_og_visning",
+      "breakpoints": true
     }
   ]
 }
