@@ -122,7 +122,7 @@ Deno.serve(async (req) => {
 
   const { data: profiles, error: profilesError } = await supabase
     .from('profiles')
-    .select('user_id, display_name, email')
+    .select('user_id, display_name, email, daglig_epost_aktiv')
     .in('user_id', Array.from(allUserIds))
 
   if (profilesError) {
