@@ -25,3 +25,7 @@
 - [x] Tester: challenge, signatur, batch, allowlist, mapping, retry, duplikater, uautorisert tilgang
 - [ ] Legge inn Meta-hemmeligheter og abonnere siden på leadgen (krever tilgang hos Meta)
 - [ ] Bekrefte ende-til-ende med et ekte testlead fra Meta
+
+## Ukentlig prioritering
+- [x] Ukesagenda med AI-rangering sendes mandag morgen (weekly-priorities)
+- [x] Daglig e-post gjort konkret: topp 3 handlinger, kontaktinfo og direktelenker

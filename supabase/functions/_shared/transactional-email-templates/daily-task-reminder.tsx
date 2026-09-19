@@ -1,6 +1,6 @@
 import * as React from 'npm:react@18.3.1'
 import {
-  Body, Container, Head, Heading, Html, Preview, Text, Button, Section, Hr, Img,
+  Body, Container, Head, Heading, Html, Preview, Text, Button, Section, Hr, Img, Link,
 } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 
@@ -12,6 +12,15 @@ const APP_URL_DEFAULT = 'https://snakk-ai-crm.lovable.app'
 
 // ── Types ──
 
+interface TopAction {
+  tittel: string
+  selskap?: string | null
+  hvorfor: string
+  handling: string
+  risiko?: string | null
+  lenke?: string | null
+}
+
 interface TaskItem {
   oppgave: string
   frist: string | null
@@ -20,6 +29,10 @@ interface TaskItem {
   prioritet: string | null
   selskap: string | null
   kontakt: string | null
+  telefon?: string | null
+  ePost?: string | null
+  notat?: string | null
+  lenke?: string | null
 }
 
 interface MeetingItem {
@@ -36,10 +49,13 @@ interface DealItem {
   forventetLukkedato: string | null
   kontaktperson: string | null
   nesteSteg: string | null
+  dagerUtenAktivitet?: number | null
+  lenke?: string | null
 }
 
 interface DailyBriefProps {
   displayName?: string
+  topp3?: TopAction[]
   prioritertIDag?: TaskItem[]
   overdueTasks?: TaskItem[]
   todayMeetings?: MeetingItem[]
@@ -67,6 +83,7 @@ const priorityLabel: Record<string, { emoji: string; color: string }> = {
 
 const DailyBriefEmail = ({
   displayName = 'der',
+  topp3 = [],
   prioritertIDag = [],
   overdueTasks = [],
   todayMeetings = [],
@@ -121,6 +138,30 @@ const DailyBriefEmail = ({
               {dealCount > 0 && <span>💼 {dealCount} aktive deals</span>}
             </Text>
 
+            {topp3.length > 0 && (
+              <>
+                <Hr style={divider} />
+                <Heading as="h2" style={sectionHeading}>Gjør disse tre først</Heading>
+                {topp3.map((a, i) => (
+                  <Section key={i} style={topCard}>
+                    <Text style={topTitle}>
+                      <span style={rankBadge}>{i + 1}</span>
+                      {a.tittel}
+                    </Text>
+                    {a.selskap && <Text style={topMeta}>{a.selskap}</Text>}
+                    <Text style={topWhy}>{a.hvorfor}</Text>
+                    <Text style={topAction}>→ {a.handling}</Text>
+                    {a.risiko && <Text style={topRisk}>⚠️ {a.risiko}</Text>}
+                    {a.lenke && (
+                      <Text style={{ margin: '8px 0 0' }}>
+                        <Link href={a.lenke} style={inlineLink}>Åpne i CRM</Link>
+                      </Text>
+                    )}
+                  </Section>
+                ))}
+              </>
+            )}
+
             <Button style={ctaButtonPrimary} className="cta-button" href={`${appUrl}/oppgaver`}>
               Åpne CRM
             </Button>
@@ -143,7 +184,11 @@ const DailyBriefEmail = ({
                       {task.kontakt && <span style={metaChip}>👤 {task.kontakt}</span>}
                       {task.frist && <span style={metaChip}>📅 {task.frist}</span>}
                       {task.prioritet && <span style={{ ...metaChip, color: priorityLabel[task.prioritet]?.color || '#666' }}>{task.prioritet}</span>}
+                      {task.telefon && <span style={metaChip}>📞 {task.telefon}</span>}
+                      {task.ePost && <span style={metaChip}>✉️ {task.ePost}</span>}
                     </Text>
+                    {task.notat && <Text style={noteText}>{task.notat}</Text>}
+                    {task.lenke && <Text style={{ margin: '6px 0 0' }}><Link href={task.lenke} style={inlineLink}>Åpne</Link></Text>}
                   </Section>
                 ))}
               </>
@@ -188,7 +233,11 @@ const DailyBriefEmail = ({
                       {task.prioritet && priorityLabel[task.prioritet] && (
                         <span style={{ ...metaChip, color: priorityLabel[task.prioritet].color }}>{task.prioritet}</span>
                       )}
+                      {task.telefon && <span style={metaChip}>📞 {task.telefon}</span>}
+                      {task.ePost && <span style={metaChip}>✉️ {task.ePost}</span>}
                     </Text>
+                    {task.notat && <Text style={noteText}>{task.notat}</Text>}
+                    {task.lenke && <Text style={{ margin: '6px 0 0' }}><Link href={task.lenke} style={inlineLink}>Åpne</Link></Text>}
                   </Section>
                 ))}
               </>
@@ -210,9 +259,15 @@ const DailyBriefEmail = ({
                       {deal.kontaktperson && <span style={metaChip}>👤 {deal.kontaktperson}</span>}
                       {deal.forventetLukkedato && <span style={metaChip}>📅 {deal.forventetLukkedato}</span>}
                     </Text>
-                    {deal.nesteSteg && (
-                      <Text style={nesteStegText}>→ {deal.nesteSteg}</Text>
-                    )}
+                    {deal.nesteSteg
+                      ? <Text style={nesteStegText}>→ {deal.nesteSteg}</Text>
+                      : <Text style={nesteStegMissing}>→ Mangler neste steg – sett ett i dag</Text>}
+                    <Text style={taskMeta}>
+                      {deal.dagerUtenAktivitet != null && (
+                        <span style={metaChip}>{deal.dagerUtenAktivitet} dager uten aktivitet</span>
+                      )}
+                      {deal.lenke && <Link href={deal.lenke} style={inlineLink}>Åpne</Link>}
+                    </Text>
                   </Section>
                 ))}
               </>
@@ -279,6 +334,10 @@ export const template = {
   displayName: 'Daglig salgsbrief',
   previewData: {
     displayName: 'Robin',
+    topp3: [
+      { tittel: 'Ring Kari hos Acme Corp', selskap: 'Acme Corp', hvorfor: 'Kontrakt sendt for 9 dager siden, ingen svar', handling: 'Ring 900 00 000 før kl. 11 og be om signering denne uken', risiko: 'Lukkedato 5. april ryker', lenke: 'https://snakk-ai-crm.lovable.app/salgsmuligheter' },
+      { tittel: 'Send tilbud til Trale.ai', selskap: 'Trale.ai', hvorfor: 'Demo gjennomført i forrige uke, tilbud lovet', handling: 'Send tilbud på 8 500 kr/mnd til ola@trale.ai i dag', risiko: null, lenke: 'https://snakk-ai-crm.lovable.app/salgsmuligheter' },
+    ],
     overdueCount: 2,
     todayCount: 3,
     meetingCount: 2,
@@ -383,3 +442,13 @@ const quickActionsRow: React.CSSProperties = { textAlign: 'center', margin: '8px
 const footerSection: React.CSSProperties = { padding: '18px 28px', textAlign: 'center', borderRadius: '0 0 8px 8px', backgroundColor: '#ffffff', borderTop: `2px solid ${BRAND_RED}` }
 const footerText: React.CSSProperties = { fontSize: '12px', color: '#999999', margin: '0 0 4px' }
 const footerCopy: React.CSSProperties = { fontSize: '11px', color: '#bbbbbb', margin: '6px 0 0' }
+const topCard: React.CSSProperties = { backgroundColor: '#fffaf7', border: '1px solid #f3d9c8', borderRadius: '8px', padding: '12px 14px', margin: '0 0 10px' }
+const topTitle: React.CSSProperties = { fontSize: '15px', fontWeight: 600, color: '#1a1917', margin: '0 0 4px' }
+const rankBadge: React.CSSProperties = { display: 'inline-block', backgroundColor: BRAND_RED, color: '#ffffff', borderRadius: '10px', fontSize: '11px', fontWeight: 700, padding: '2px 8px', marginRight: '8px' }
+const topMeta: React.CSSProperties = { fontSize: '12px', color: '#78716c', margin: '0 0 4px' }
+const topWhy: React.CSSProperties = { fontSize: '13px', color: '#57534e', margin: '0 0 6px', lineHeight: '19px' }
+const topAction: React.CSSProperties = { fontSize: '14px', fontWeight: 600, color: '#1a1917', margin: 0, lineHeight: '20px' }
+const topRisk: React.CSSProperties = { fontSize: '12px', color: '#b45309', margin: '6px 0 0' }
+const inlineLink: React.CSSProperties = { fontSize: '13px', color: BRAND_RED, fontWeight: 600 }
+const noteText: React.CSSProperties = { fontSize: '12px', color: '#78716c', margin: '4px 0 0', lineHeight: '17px' }
+const nesteStegMissing: React.CSSProperties = { fontSize: '13px', color: '#b45309', fontWeight: 600, margin: '6px 0 0' }
