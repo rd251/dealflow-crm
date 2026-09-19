@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import {
   useSignatur, medSignatur, finnPlassholdere, pentNavn, fornavn, signaturPromptLinje,
 } from "@/lib/email-signature";
+import { useGoogleConnection } from "@/hooks/use-google-connection";
 
 interface SendEmailDialogProps {
   open: boolean;
@@ -47,6 +48,7 @@ export default function SendEmailDialog({ open, onOpenChange, defaultTo, default
   const [showPrompt, setShowPrompt] = useState(false);
   const [customPrompt, setCustomPrompt] = useState("");
   const { signatur } = useSignatur();
+  const { tilkoblet: googleTilkoblet, loading: googleLoading } = useGoogleConnection();
 
   const pentSelskap = pentNavn(context.selskapNavn);
   const pentKontakt = pentNavn(context.kontaktperson);
