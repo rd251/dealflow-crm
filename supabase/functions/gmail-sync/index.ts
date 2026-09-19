@@ -485,7 +485,55 @@ async function syncGmailForUser(supabase: any, connection: any) {
     };
 
     insertBatch.push(aktivitetData);
+
+    // Grunnlag for «venter på svar»: siste melding i tråden avgjør
+    if (isSent) {
+      utgaendeTrader.set(msg.threadId, {
+        emne: subject,
+        tekst: snippet,
+        ePost: emailList[0] ?? null,
+        kontaktId,
+        leadId,
+        salgsmulighetId,
+        selskapId,
+        dato,
+      });
+    } else {
+      innkommendeTrader.set(msg.threadId, dato);
+    }
+
     synced++;
+  }
+
+  // Innkommende svar avslutter ventingen
+  for (const [threadId, dato] of innkommendeTrader) {
+    const utgaende = utgaendeTrader.get(threadId);
+    if (utgaende && new Date(utgaende.dato) > new Date(dato)) continue;
+    utgaendeTrader.delete(threadId);
+    await supabase
+      .from('venter_pa_svar')
+      .update({ status: 'besvart' })
+      .eq('user_id', connection.user_id)
+      .eq('thread_id', threadId)
+      .in('status', ['venter', 'varslet']);
+  }
+
+  // Klassifiser nye utgående tråder (begrenset antall per kjøring)
+  let klassifisert = 0;
+  for (const [threadId, u] of utgaendeTrader) {
+    if (klassifisert >= MAKS_KLASSIFISERINGER_PER_SYNK) break;
+    klassifisert++;
+    await registrerVenterPaSvar(supabase, {
+      userId: connection.user_id,
+      threadId,
+      emne: u.emne,
+      tekst: u.tekst,
+      ePost: u.ePost,
+      kontaktId: u.kontaktId,
+      leadId: u.leadId,
+      salgsmulighetId: u.salgsmulighetId,
+      selskapId: u.selskapId,
+    });
   }
 
   // Batch insert new aktiviteter
