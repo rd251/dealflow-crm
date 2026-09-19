@@ -32,7 +32,13 @@ const UTFALL_FOR_TYPE: Record<LoggType, LeadUtfallNokkel> = {
   neste_steg: "snakket",
 };
 
+/** Terskler for søket i «Gjelder». */
+const SOK_GRENSE = 25;
+const SOK_MAKS_TREFF = 12;
+const SOK_DEBOUNCE_MS = 250;
+
 interface KontaktOption { id: string; navn: string }
+
 
 interface TargetOption {
   key: string;
@@ -97,31 +103,51 @@ export default function LogActivityDialog({
     setMeetingDeltakere([]);
   }, [open, defaultType]);
 
+  // Søker direkte i databasen slik at hele CRM-et er tilgjengelig, ikke bare de først lastede radene.
   useEffect(() => {
-    if (!open || !allowTargetPick || options.length) return;
+    if (!open || !allowTargetPick) return;
     let avbrutt = false;
-    (async () => {
-      const [sel, lead, sm] = await Promise.all([
-        supabase.from("selskaper").select("id, firmanavn").order("firmanavn").limit(300),
-        supabase.from("leads").select("id, firmanavn, kontaktperson").order("sist_aktivitet", { ascending: false }).limit(300),
-        supabase.from("salgsmuligheter").select("id, navn, selskap_id").order("sist_aktivitet", { ascending: false }).limit(300),
-      ]);
+    const q = søk.trim();
+    const timer = setTimeout(async () => {
+      const like = `%${q}%`;
+      const selQ = supabase.from("selskaper").select("id, firmanavn").order("firmanavn").limit(SOK_GRENSE);
+      const leadQ = supabase.from("leads").select("id, firmanavn, kontaktperson").order("sist_aktivitet", { ascending: false }).limit(SOK_GRENSE);
+      const smQ = supabase.from("salgsmuligheter").select("id, navn, selskap_id, selskaper(firmanavn)").order("sist_aktivitet", { ascending: false }).limit(SOK_GRENSE);
+      if (q) {
+        selQ.ilike("firmanavn", like);
+        leadQ.or(`firmanavn.ilike.${like},kontaktperson.ilike.${like}`);
+        smQ.or(`navn.ilike.${like}`);
+      }
+      const [sel, lead, sm] = await Promise.all([selQ, leadQ, smQ]);
       if (avbrutt) return;
+
+      const smRader = (sm.data || []) as Array<{ id: string; navn: string | null; selskap_id: string | null; selskaper?: { firmanavn: string | null } | null }>;
+      // Selskapsnavn er alltid hovedetiketten – salgsmulighetens navn er ofte et use case og dårlig søkbart.
       const liste: TargetOption[] = [
-        ...(sm.data || []).map(s => ({ key: `sm-${s.id}`, label: s.navn, sublabel: "Salgsmulighet", target: { salgsmulighet_id: s.id, selskap_id: s.selskap_id } })),
-        ...(lead.data || []).map(l => ({ key: `lead-${l.id}`, label: l.firmanavn, sublabel: l.kontaktperson ? `Lead · ${l.kontaktperson}` : "Lead", target: { lead_id: l.id } })),
+        ...smRader.map(s => {
+          const firma = s.selskaper?.firmanavn?.trim();
+          return {
+            key: `sm-${s.id}`,
+            label: firma || s.navn || "Uten navn",
+            sublabel: firma && s.navn ? `Salgsmulighet · ${s.navn}` : "Salgsmulighet",
+            target: { salgsmulighet_id: s.id, selskap_id: s.selskap_id ?? undefined },
+          } as TargetOption;
+        }),
+        ...(lead.data || []).map(l => ({
+          key: `lead-${l.id}`,
+          label: (l.firmanavn || l.kontaktperson || "Uten navn") as string,
+          sublabel: l.kontaktperson ? `Lead · ${l.kontaktperson}` : "Lead",
+          target: { lead_id: l.id },
+        })),
         ...(sel.data || []).map(s => ({ key: `sel-${s.id}`, label: s.firmanavn, sublabel: "Kunde", target: { selskap_id: s.id } })),
       ];
       setOptions(liste);
-    })();
-    return () => { avbrutt = true; };
-  }, [open, allowTargetPick, options.length]);
+    }, q ? SOK_DEBOUNCE_MS : 0);
+    return () => { avbrutt = true; clearTimeout(timer); };
+  }, [open, allowTargetPick, søk]);
 
-  const filtrerte = useMemo(() => {
-    const q = søk.trim().toLowerCase();
-    if (!q) return options.slice(0, 8);
-    return options.filter(o => o.label.toLowerCase().includes(q) || o.sublabel.toLowerCase().includes(q)).slice(0, 8);
-  }, [options, søk]);
+  const filtrerte = useMemo(() => options.slice(0, SOK_MAKS_TREFF), [options]);
+
 
   const effektivtTarget = allowTargetPick ? valgt?.target : target;
   const kanLagre = Boolean(effektivtTarget) && !saving;
