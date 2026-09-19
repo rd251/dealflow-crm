@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { useLocation } from "react-router-dom";
 import logo from "@/assets/logo.svg";
 import { getSafeNextParam, stashNext } from "@/lib/post-login-redirect";
+import { SNAKK_EPOSTDOMENE } from "@/lib/access-control";
 
 export default function Login() {
   const { signIn } = useAuth();
@@ -82,6 +83,7 @@ export default function Login() {
               console.info("[Auth] OAuth startet: Google");
               const result = await lovable.auth.signInWithOAuth("google", {
                 redirect_uri: `${window.location.origin}/~oauth`,
+                extraParams: { hd: SNAKK_EPOSTDOMENE },
               });
               if (result?.error) {
                 console.error("[Auth] Google OAuth feilet:", result.error.message);
