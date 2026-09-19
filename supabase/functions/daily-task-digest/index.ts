@@ -143,6 +143,8 @@ Deno.serve(async (req) => {
   for (const userId of allUserIds) {
     const profile = profileMap.get(userId)
     if (!profile?.email) continue
+    // Personlig av/på for daglig e-post
+    if ((profile as any).daglig_epost_aktiv === false) continue
 
     const userTasks = tasksByUser.get(userId) || []
     const userMeetings = meetingsByUser.get(userId) || []
