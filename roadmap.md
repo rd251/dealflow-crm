@@ -43,3 +43,10 @@
 - [ ] Personlige innstillinger per bruker; delt CRM-data fortsatt synlig for alle
 - [ ] Gjennomgang av RLS: delt data lesbar, tokens og personlige innstillinger private
 - [ ] Aktivitetslogg registrerer hvem som gjorde hva
+
+## Investorvisning
+- [ ] Rollen «investor» med adminstyrt e-postallowlist
+- [ ] Én skrivebeskyttet side: MRR/ARR, aktive kunder, MRR-trend, churn, netto ny MRR
+- [ ] Kundeliste (navn, bransje, status, MRR, kunde siden) og inntektskonsentrasjon topp 1/3/5
+- [ ] Partnerinntekt kun som samlet linje
+- [ ] RLS og ruting hindrer all annen CRM-tilgang for investorer
