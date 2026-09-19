@@ -38,6 +38,7 @@ import Login from "./pages/Login";
 import Ringeliste from "./pages/Ringeliste";
 import Investor from "./pages/Investor";
 import { useInvestor } from "@/hooks/use-investor";
+import { harSnakkEpost, IKKE_SNAKK_KONTO_MELDING } from "@/lib/access-control";
 import Onboarding from "./pages/Onboarding";
 import OAuthConsent from "./pages/OAuthConsent";
 import { consumeStashedNext, getSafeNextParam } from "@/lib/post-login-redirect";
@@ -135,9 +136,23 @@ function AppRoutes() {
   );
 }
 
+/** Kontoer utenfor @snakk.ai slippes ikke inn i CRM-et. */
+function AvvistKonto() {
+  const { signOut } = useAuth();
+  const navigate = useNavigate();
+  useEffect(() => {
+    (async () => {
+      await signOut();
+      navigate("/login", { replace: true, state: { authError: IKKE_SNAKK_KONTO_MELDING } });
+    })();
+  }, [navigate, signOut]);
+  return <AuthSpinner />;
+}
+
 /** Investorer når kun investoroversikten – interne beholder full tilgang. */
 function RoleRoutes() {
   const { erInvestor, loading } = useInvestor();
+  const { user } = useAuth();
   if (loading) return <AuthSpinner />;
   if (erInvestor) {
     return (
@@ -147,7 +162,11 @@ function RoleRoutes() {
       </Routes>
     );
   }
+  if (!harSnakkEpost(user?.email)) {
+    return <AvvistKonto />;
+  }
   return (
+
             <CrmProvider>
               <AppSidebar />
               <Routes>

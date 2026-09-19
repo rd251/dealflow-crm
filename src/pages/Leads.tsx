@@ -42,6 +42,8 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { loggAktivitet } from "@/lib/activity-logging";
 import { toast } from "sonner";
+import MineTeametToggle from "@/components/MineTeametToggle";
+import { useMineFilter } from "@/hooks/use-mine-filter";
 
 // Only user-selectable statuses – no conversion statuses in dropdown
 const statusOptions: LeadStatus[] = ["Ny", "Kontaktet", "Svarte ikke telefon", "Kvalifisert", "Ikke aktuelt"];
@@ -56,6 +58,7 @@ export default function Leads() {
   const navigate = useNavigate();
   const { leads, partnere, updateLeads, updateOppgaver, konverterLead, konverterTilPartner, generateId } = useCrmStore();
   const [search, setSearch] = useState("");
+  const { filter: eierFilter, setFilter: setEierFilter, tilhorerFilter } = useMineFilter("leads");
   const [visning, setVisning] = useState<"leads" | "ringeliste" | "kalde">("leads");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
@@ -171,6 +174,7 @@ export default function Leads() {
       const cutoff = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
       if (l.sist_aktivitet && new Date(l.sist_aktivitet) >= cutoff) return false;
     }
+    if (!tilhorerFilter(l.ansvarlig)) return false;
     if (statusParam && l.status !== statusParam) return false;
     if (kildeFilter !== "alle" && kildeGruppe(l.kilde) !== kildeFilter) return false;
     if (statusFilter !== "alle" && l.status !== statusFilter) return false;
@@ -765,6 +769,7 @@ export default function Leads() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input placeholder="Søk leads..." className="pl-9 h-9" value={search} onChange={e => setSearch(e.target.value)} />
         </div>
+        <MineTeametToggle verdi={eierFilter} onEndre={setEierFilter} />
         {filterUtenOppfolging && (
           <Badge variant="secondary" className="gap-1 cursor-pointer hover:bg-destructive/10" onClick={() => setFilterUtenOppfolging(false)}>
             Uten oppfølging ✕

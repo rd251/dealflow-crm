@@ -37,12 +37,17 @@
 
 ## Flerbruker
 - [x] Per bruker Google-tilkobling (Gmail + Kalender) med egne tokens
-- [ ] Tydelig koble-til/koble-på-nytt-tilstand på Gmail-knapper
+- [x] Tydelig koble-til/koble-på-nytt-tilstand på Gmail-knapper
 - [x] Sending fra egen Gmail med egen signatur; kalender leser/skriver mot egen kalender
-- [ ] Eierskap på leads, salgsmuligheter, kunder og partnere + «Mine»/«Teamet»-visninger
-- [ ] Påminnelser og ukesagenda kun om egne poster
+- [x] Eierskap på leads, salgsmuligheter, kunder og partnere + «Mine»/«Teamet»-visninger (kun bekvemmelighetsfilter)
+- [x] Påminnelser og ukesagenda kun om egne poster
 - [x] Personlige innstillinger per bruker; delt CRM-data fortsatt synlig for alle
-- [ ] Gjennomgang av RLS: delt data lesbar, tokens og personlige innstillinger private
+- [x] Gjennomgang av RLS: delt data lesbar, tokens og personlige innstillinger private
+
+## Kun Snakk-ansatte
+- [x] Kun @snakk.ai-kontoer får opprettet konto (investor-allowlist er eneste unntak)
+- [x] Tydelig melding ved avvist konto, og Google-innlogging begrenset til snakk.ai
+- [x] Ingen multi-tenant-logikk: ett felles arbeidsområde
 - [x] Aktivitetslogg registrerer hvem som gjorde hva
 
 ## Investorvisning

@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import {
   useSignatur, medSignatur, finnPlassholdere, pentNavn, fornavn, signaturPromptLinje,
 } from "@/lib/email-signature";
+import { useGoogleConnection } from "@/hooks/use-google-connection";
 
 interface SendEmailDialogProps {
   open: boolean;
@@ -47,6 +48,7 @@ export default function SendEmailDialog({ open, onOpenChange, defaultTo, default
   const [showPrompt, setShowPrompt] = useState(false);
   const [customPrompt, setCustomPrompt] = useState("");
   const { signatur } = useSignatur();
+  const { tilkoblet: googleTilkoblet, loading: googleLoading } = useGoogleConnection();
 
   const pentSelskap = pentNavn(context.selskapNavn);
   const pentKontakt = pentNavn(context.kontaktperson);
@@ -156,6 +158,18 @@ ${signaturPromptLinje(signatur)}`;
             Skriv manuelt eller generer AI-utkast for {context.selskapNavn}
           </DialogDescription>
         </DialogHeader>
+
+        {!googleLoading && !googleTilkoblet && (
+          <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-sm">
+            <p className="font-medium">Google-kontoen din er ikke tilkoblet</p>
+            <p className="text-muted-foreground">
+              E-posten sendes fra din egen Gmail. Koble til kontoen din i Innstillinger for å sende.
+            </p>
+            <a href="/innstillinger" className="mt-2 inline-block font-medium text-primary underline underline-offset-2">
+              Koble til Google
+            </a>
+          </div>
+        )}
 
         <div className="space-y-3">
           <div>

@@ -2100,6 +2100,7 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      epost_har_tilgang: { Args: { _epost: string }; Returns: boolean }
       er_intern: { Args: { _user_id: string }; Returns: boolean }
       har_investorinnsyn: { Args: { _user_id: string }; Returns: boolean }
       has_role: {

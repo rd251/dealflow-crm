@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { useLocation } from "react-router-dom";
 import logo from "@/assets/logo.svg";
 import { getSafeNextParam, stashNext } from "@/lib/post-login-redirect";
+import { SNAKK_EPOSTDOMENE } from "@/lib/access-control";
 
 export default function Login() {
   const { signIn } = useAuth();
@@ -43,7 +44,7 @@ export default function Login() {
         <CardHeader className="text-center space-y-2">
           <img src={logo} alt="Snakk CRM" className="h-10 mx-auto mb-2" />
           <CardTitle className="text-xl">Logg inn</CardTitle>
-          <CardDescription>Skriv inn e-post og passord for å logge inn</CardDescription>
+          <CardDescription>Internt verktøy for Snakk Teknologi AS – logg inn med @snakk.ai-kontoen din</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -82,6 +83,7 @@ export default function Login() {
               console.info("[Auth] OAuth startet: Google");
               const result = await lovable.auth.signInWithOAuth("google", {
                 redirect_uri: `${window.location.origin}/~oauth`,
+                extraParams: { hd: SNAKK_EPOSTDOMENE },
               });
               if (result?.error) {
                 console.error("[Auth] Google OAuth feilet:", result.error.message);
