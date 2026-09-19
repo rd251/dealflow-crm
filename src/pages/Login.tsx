@@ -43,7 +43,7 @@ export default function Login() {
         <CardHeader className="text-center space-y-2">
           <img src={logo} alt="Snakk CRM" className="h-10 mx-auto mb-2" />
           <CardTitle className="text-xl">Logg inn</CardTitle>
-          <CardDescription>Skriv inn e-post og passord for å logge inn</CardDescription>
+          <CardDescription>Internt verktøy for Snakk Teknologi AS – logg inn med @snakk.ai-kontoen din</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
