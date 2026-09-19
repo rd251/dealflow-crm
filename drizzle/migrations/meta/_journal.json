@@ -113,6 +113,13 @@
       "when": 1789833834199,
       "tag": "0015_profiles_rls_kun_interne",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1789834049226,
+      "tag": "0016_begrens_tilgang_til_snakk_domene",
+      "breakpoints": true
     }
   ]
 }
