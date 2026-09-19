@@ -15,6 +15,7 @@ import { template as weeklyPriorities } from './weekly-priorities.tsx'
 import { template as welcomeCustomer } from './welcome-customer.tsx'
 import { template as leadForwardedToPartner } from './lead-forwarded-to-partner.tsx'
 import { template as dealForwardedToPartner } from './deal-forwarded-to-partner.tsx'
+import { template as followUpNudge } from './follow-up-nudge.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'daily-task-reminder': dailyTaskReminder,
