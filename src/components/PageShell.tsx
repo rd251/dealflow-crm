@@ -57,6 +57,7 @@ export default function PageShell({ title, subtitle, actions, children }: PageSh
         {actions && <div className="flex flex-wrap items-center gap-2 mt-3">{actions}</div>}
       </header>
       <main className={isMobile ? "p-4" : "p-8 lg:p-10"}>{children}</main>
+      <QuickAddPersonDialog open={nyPersonÅpen} onOpenChange={setNyPersonÅpen} onCreated={id => navigate(`/kontakter?open=${id}`)} />
     </div>
   );
 }
