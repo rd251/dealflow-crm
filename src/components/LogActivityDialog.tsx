@@ -32,7 +32,13 @@ const UTFALL_FOR_TYPE: Record<LoggType, LeadUtfallNokkel> = {
   neste_steg: "snakket",
 };
 
+/** Terskler for søket i «Gjelder». */
+const SOK_GRENSE = 25;
+const SOK_MAKS_TREFF = 12;
+const SOK_DEBOUNCE_MS = 250;
+
 interface KontaktOption { id: string; navn: string }
+
 
 interface TargetOption {
   key: string;
