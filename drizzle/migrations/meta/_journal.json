@@ -99,6 +99,13 @@
       "when": 1789833359817,
       "tag": "0013_investor_tilgang_og_visning",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1789833699283,
+      "tag": "0014_cron_nudge_awaiting_reply",
+      "breakpoints": true
     }
   ]
 }
