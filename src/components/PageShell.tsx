@@ -20,6 +20,7 @@ export default function PageShell({ title, subtitle, actions, children }: PageSh
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const { collapsed } = useSidebarCollapsed();
+  const [nyPersonÅpen, setNyPersonÅpen] = useState(false);
 
   return (
     <div className={`min-h-screen bg-background ${isMobile ? "ml-0" : collapsed ? "ml-14" : "ml-60"} transition-all duration-200`}>
@@ -30,6 +31,15 @@ export default function PageShell({ title, subtitle, actions, children }: PageSh
             {subtitle && <p className="text-sm text-muted-foreground mt-0.5 truncate">{subtitle}</p>}
           </div>
           <div className="flex items-center gap-1 shrink-0">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 text-muted-foreground hover:text-foreground"
+              onClick={() => setNyPersonÅpen(true)}
+              title="Ny person"
+            >
+              <UserPlus className="w-5 h-5" />
+            </Button>
             <LogActivityButton allowTargetPick variant="outline" label={isMobile ? "Logg" : "Logg aktivitet"} className="mr-1" />
             <ThemeToggle />
             <NotificationBell />
