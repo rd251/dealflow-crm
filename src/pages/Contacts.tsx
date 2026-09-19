@@ -18,6 +18,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Kontakt, Selskap, Salgsmulighet } from "@/data/crm-data";
 import DataImportDialog from "@/components/DataImportDialog";
 import ActivityLog from "@/components/ActivityLog";
+import PersonTimeline from "@/components/PersonTimeline";
+import QuickAddPersonDialog from "@/components/QuickAddPersonDialog";
 import EntityChangelog from "@/components/EntityChangelog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -475,10 +477,16 @@ export default function Contacts() {
             </div>
           ),
           interaksjoner: (
-            <>
+            <div className="space-y-4">
+              <PersonTimeline
+                kontakt_id={currentKontakt.id}
+                selskap_id={currentKontakt.selskap_id || undefined}
+                e_post={currentKontakt.e_post || undefined}
+                tittel="Relasjonstidslinje"
+              />
               <ActivityLog kontakt_id={currentKontakt.id} />
               <EntityChangelog entity_type="kontakt" entity_id={currentKontakt.id} />
-            </>
+            </div>
           ),
           notater: (
             <div className="space-y-1">
