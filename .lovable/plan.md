@@ -65,3 +65,38 @@ Google-tilkoblingen er allerede lagret per bruker. Det som mangler er eierskap, 
 **Frontend** — `useMineFilter`-hook med `Mine/Teamet`-bryter (lagret i localStorage per bruker) brukt i Leads, Salgsmuligheter, Dashboard-drilldowns og Relasjoner; `loggAktivitet` setter `user_id`; `ActivityLog`/`PersonTimeline` viser hvem som utførte handlingen; «Venter på svar»-merke i tidslinjen; Gmail-avhengige knapper viser «Koble til Google» når tilkobling mangler; nudge-innstillinger i `Innstillinger.tsx`.
 
 **Mal** `follow-up-nudge.tsx`: samme rolige Snakk-stil — overskrift, dager siden kontakt, emne, AI-setning, én primærknapp med dyplenke, signaturblokk nederst.
+
+---
+
+# Del 3: Investorvisning (skrivebeskyttet)
+
+Én rolig, faktabasert rapportside for investorer — den eneste flaten utenfor teamet.
+
+## Tilgang
+
+- Ny rolle **investor**, adskilt fra interne brukere. En admin styrer en e-postallowlist under Innstillinger, slik at det alltid er lett å se hvem som har investortilgang.
+- En investor logger inn med sin egen e-post og lander rett på investorsiden. Alle andre sider er stengt — også hvis noen skriver inn adressen manuelt.
+- Sperren ligger i databasen, ikke bare i grensesnittet: investorer får lese kun de aggregerte tallene, aldri rådataene.
+- Interne beholder full tilgang nøyaktig som i dag.
+
+## Hva siden viser
+
+- Nøkkeltall: samlet MRR og ARR, antall aktive kunder, MRR-utvikling over tid, churn og netto ny MRR.
+- Kundeliste: firmanavn, bransje, status (aktiv/pause), MRR og kunde siden.
+- Inntektskonsentrasjon: hvor stor andel av MRR som kommer fra største kunde, topp 3 og topp 5.
+- Partnerinntekt som én samlet linje.
+
+## Hva den aldri viser
+
+Ingen kontaktpersoner, e-post eller telefon. Ingen tidslinje, notater, samtalelogg eller dialog. Ingen pipeline, leads, stadier eller AI-oppsummeringer. Ingen avtalevilkår eller partnerbetingelser.
+
+## Teknisk
+
+- `app_role`-enum utvides med `investor` (additivt). Allowlist-tabell `investor_tilgang`: `id`, `e_post`, `aktiv`, `opprettet_av`, `created_at`; admin-styrt via `has_role(auth.uid(),'admin')`-policyer, med `GRANT`.
+- Rolle tildeles ved innlogging: trigger på `auth.users` (insert + e-postbekreftelse) gir `investor` når verifisert e-post står i allowlisten, ellers dagens logikk. Tildeling krever verifisert e-post.
+- Ny database-view `investor_portefolje` (aggregater: firmanavn, bransje, status, mrr, kunde siden) og `investor_noekkeltall`/`investor_mrr_trend` som `security invoker`-views med `GRANT SELECT` kun til `authenticated` og policyer som krever `has_role(auth.uid(),'investor') OR has_role(auth.uid(),'admin')`. Investorer får ingen `SELECT`-policy på `leads`, `salgsmuligheter`, `aktiviteter`, `kontakter`, `partnere` — dagens policyer strammes fra «alle innloggede» til «interne roller».
+- Frontend: ny side `src/pages/Investor.tsx` på `/investor` med dagens kortdesign, `nok()`-formatering og tabular-nums; `useAuth` eksponerer `erInvestor`; `App.tsx` ruter investorer til `/investor` og blokkerer øvrige ruter; sidebar skjules for investorer; Innstillinger får adminseksjon «Investortilgang» med liste, legg til og deaktiver.
+
+## Rekkefølge
+
+Del 1 (påminnelser) → Del 2 (flerbruker, inkludert eierskap og RLS-opprydding) → Del 3 (investorvisning), siden Del 3 bygger på det strammere rolleoppsettet i Del 2.
