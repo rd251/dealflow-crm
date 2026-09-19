@@ -1,7 +1,6 @@
 /**
  * Snakk CRM er et internt verktøy for Snakk Teknologi AS.
- * Kun ansatte med @snakk.ai-konto får tilgang. Investorer på adminstyrt
- * allowlist er eneste unntak, og de når kun den skrivebeskyttede siden.
+ * Kun ansatte med @snakk.ai-konto får tilgang. Ingen unntak.
  */
 export const SNAKK_EPOSTDOMENE = "snakk.ai";
 

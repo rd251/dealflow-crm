@@ -120,6 +120,13 @@
       "when": 1789834049226,
       "tag": "0016_begrens_tilgang_til_snakk_domene",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1789836492066,
+      "tag": "0017_fjern_investortilgang",
+      "breakpoints": true
     }
   ]
 }
