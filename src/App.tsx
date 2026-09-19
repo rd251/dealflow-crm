@@ -36,8 +36,6 @@ import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 
 import Ringeliste from "./pages/Ringeliste";
-import Investor from "./pages/Investor";
-import { useInvestor } from "@/hooks/use-investor";
 import { harSnakkEpost, IKKE_SNAKK_KONTO_MELDING } from "@/lib/access-control";
 import Onboarding from "./pages/Onboarding";
 import OAuthConsent from "./pages/OAuthConsent";
@@ -185,7 +183,6 @@ function RoleRoutes() {
                 <Route path="/nyhetsbrev/:id/rediger" element={<NyhetsbrevEditor />} />
                 <Route path="/admin" element={<Admin />} />
                 <Route path="/innstillinger" element={<Innstillinger />} />
-                <Route path="/investor" element={<Investor />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </CrmProvider>
