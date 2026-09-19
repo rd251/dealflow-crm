@@ -149,19 +149,9 @@ function AvvistKonto() {
   return <AuthSpinner />;
 }
 
-/** Investorer når kun investoroversikten – interne beholder full tilgang. */
+/** Kun ansatte i Snakk har tilgang. */
 function RoleRoutes() {
-  const { erInvestor, loading } = useInvestor();
   const { user } = useAuth();
-  if (loading) return <AuthSpinner />;
-  if (erInvestor) {
-    return (
-      <Routes>
-        <Route path="/investor" element={<Investor />} />
-        <Route path="*" element={<Navigate to="/investor" replace />} />
-      </Routes>
-    );
-  }
   if (!harSnakkEpost(user?.email)) {
     return <AvvistKonto />;
   }
