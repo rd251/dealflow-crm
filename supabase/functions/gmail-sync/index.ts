@@ -319,6 +319,8 @@ async function syncGmailForUser(supabase: any, connection: any) {
 
   let synced = 0;
   const insertBatch: any[] = [];
+  const utgaendeTrader = new Map<string, any>();
+  const innkommendeTrader = new Map<string, string>();
 
   // Collect email_contacts updates: email -> { sent, received, lastDate, lastType, name }
   const emailContactUpdates = new Map<string, {
