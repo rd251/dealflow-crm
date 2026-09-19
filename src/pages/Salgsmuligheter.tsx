@@ -34,6 +34,7 @@ import SendContractModal from "@/components/SendContractModal";
 import DealRecapCard from "@/components/DealRecapCard";
 import LastMeetingCard from "@/components/LastMeetingCard";
 import NesteStegTaskButton from "@/components/NesteStegTaskButton";
+import MineTeametToggle from "@/components/MineTeametToggle";
 import confetti from "canvas-confetti";
 import { tilKanbanStadium, dagerSiden, initialer, idag, datoOm } from "@/lib/sales-flow";
 import {
@@ -968,6 +969,10 @@ export default function Salgsmuligheter() {
                 <button type="button" onClick={() => setSearchQuery("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground text-xs">✕</button>
               )}
             </div>
+            <MineTeametToggle
+              verdi={user && ownerFilter === user.id ? "mine" : "teamet"}
+              onEndre={neste => setOwnerFilter(neste === "mine" && user ? user.id : "")}
+            />
             <select
               value={ownerFilter}
               onChange={e => setOwnerFilter(e.target.value)}
