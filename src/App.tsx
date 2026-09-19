@@ -38,6 +38,7 @@ import Login from "./pages/Login";
 import Ringeliste from "./pages/Ringeliste";
 import Investor from "./pages/Investor";
 import { useInvestor } from "@/hooks/use-investor";
+import { harSnakkEpost, IKKE_SNAKK_KONTO_MELDING } from "@/lib/access-control";
 import Onboarding from "./pages/Onboarding";
 import OAuthConsent from "./pages/OAuthConsent";
 import { consumeStashedNext, getSafeNextParam } from "@/lib/post-login-redirect";
