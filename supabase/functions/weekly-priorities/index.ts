@@ -82,7 +82,7 @@ Deno.serve(async (req) => {
   for (const p of prosjekter || []) if (p.ansvarlig) userIds.add(p.ansvarlig)
 
   const { data: profiles } = await supabase
-    .from('profiles').select('user_id, display_name, email').in('user_id', Array.from(userIds))
+    .from('profiles').select('user_id, display_name, email, ukesagenda_aktiv').in('user_id', Array.from(userIds))
 
   let sent = 0
   const errors: string[] = []
@@ -92,6 +92,8 @@ Deno.serve(async (req) => {
 
   for (const profile of (profiles || []).slice(0, MAKS_BRUKERE)) {
     if (!profile.email) continue
+    // Personlig av/på for ukesagenda
+    if ((profile as any).ukesagenda_aktiv === false && !kunEpost) continue
     if (kunEpost && profile.email !== kunEpost) continue
     const uid = profile.user_id
 

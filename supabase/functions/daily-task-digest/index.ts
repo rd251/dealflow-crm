@@ -122,7 +122,7 @@ Deno.serve(async (req) => {
 
   const { data: profiles, error: profilesError } = await supabase
     .from('profiles')
-    .select('user_id, display_name, email')
+    .select('user_id, display_name, email, daglig_epost_aktiv')
     .in('user_id', Array.from(allUserIds))
 
   if (profilesError) {
@@ -143,6 +143,8 @@ Deno.serve(async (req) => {
   for (const userId of allUserIds) {
     const profile = profileMap.get(userId)
     if (!profile?.email) continue
+    // Personlig av/på for daglig e-post
+    if ((profile as any).daglig_epost_aktiv === false) continue
 
     const userTasks = tasksByUser.get(userId) || []
     const userMeetings = meetingsByUser.get(userId) || []

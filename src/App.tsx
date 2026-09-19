@@ -36,6 +36,8 @@ import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 
 import Ringeliste from "./pages/Ringeliste";
+import Investor from "./pages/Investor";
+import { useInvestor } from "@/hooks/use-investor";
 import Onboarding from "./pages/Onboarding";
 import OAuthConsent from "./pages/OAuthConsent";
 import { consumeStashedNext, getSafeNextParam } from "@/lib/post-login-redirect";
@@ -125,6 +127,27 @@ function AppRoutes() {
         path="/*"
         element={
           <ProtectedRoute>
+            <RoleRoutes />
+          </ProtectedRoute>
+        }
+      />
+    </Routes>
+  );
+}
+
+/** Investorer når kun investoroversikten – interne beholder full tilgang. */
+function RoleRoutes() {
+  const { erInvestor, loading } = useInvestor();
+  if (loading) return <AuthSpinner />;
+  if (erInvestor) {
+    return (
+      <Routes>
+        <Route path="/investor" element={<Investor />} />
+        <Route path="*" element={<Navigate to="/investor" replace />} />
+      </Routes>
+    );
+  }
+  return (
             <CrmProvider>
               <AppSidebar />
               <Routes>
@@ -153,13 +176,10 @@ function AppRoutes() {
                 <Route path="/nyhetsbrev/:id/rediger" element={<NyhetsbrevEditor />} />
                 <Route path="/admin" element={<Admin />} />
                 <Route path="/innstillinger" element={<Innstillinger />} />
+                <Route path="/investor" element={<Investor />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </CrmProvider>
-          </ProtectedRoute>
-        }
-      />
-    </Routes>
   );
 }
 

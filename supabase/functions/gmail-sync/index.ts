@@ -1,4 +1,8 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { registrerVenterPaSvar } from "../_shared/awaiting-reply.ts";
+
+/** Maks antall AI-vurderinger av utgående tråder per synkronisering. */
+const MAKS_KLASSIFISERINGER_PER_SYNK = 10;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -319,6 +323,8 @@ async function syncGmailForUser(supabase: any, connection: any) {
 
   let synced = 0;
   const insertBatch: any[] = [];
+  const utgaendeTrader = new Map<string, any>();
+  const innkommendeTrader = new Map<string, string>();
 
   // Collect email_contacts updates: email -> { sent, received, lastDate, lastType, name }
   const emailContactUpdates = new Map<string, {
@@ -485,7 +491,55 @@ async function syncGmailForUser(supabase: any, connection: any) {
     };
 
     insertBatch.push(aktivitetData);
+
+    // Grunnlag for «venter på svar»: siste melding i tråden avgjør
+    if (isSent) {
+      utgaendeTrader.set(msg.threadId, {
+        emne: subject,
+        tekst: snippet,
+        ePost: emailList[0] ?? null,
+        kontaktId,
+        leadId,
+        salgsmulighetId,
+        selskapId,
+        dato,
+      });
+    } else {
+      innkommendeTrader.set(msg.threadId, dato);
+    }
+
     synced++;
+  }
+
+  // Innkommende svar avslutter ventingen
+  for (const [threadId, dato] of innkommendeTrader) {
+    const utgaende = utgaendeTrader.get(threadId);
+    if (utgaende && new Date(utgaende.dato) > new Date(dato)) continue;
+    utgaendeTrader.delete(threadId);
+    await supabase
+      .from('venter_pa_svar')
+      .update({ status: 'besvart' })
+      .eq('user_id', connection.user_id)
+      .eq('thread_id', threadId)
+      .in('status', ['venter', 'varslet']);
+  }
+
+  // Klassifiser nye utgående tråder (begrenset antall per kjøring)
+  let klassifisert = 0;
+  for (const [threadId, u] of utgaendeTrader) {
+    if (klassifisert >= MAKS_KLASSIFISERINGER_PER_SYNK) break;
+    klassifisert++;
+    await registrerVenterPaSvar(supabase, {
+      userId: connection.user_id,
+      threadId,
+      emne: u.emne,
+      tekst: u.tekst,
+      ePost: u.ePost,
+      kontaktId: u.kontaktId,
+      leadId: u.leadId,
+      salgsmulighetId: u.salgsmulighetId,
+      selskapId: u.selskapId,
+    });
   }
 
   // Batch insert new aktiviteter
