@@ -478,6 +478,7 @@ export type Database = {
           ansvarlig: string | null
           created_at: string
           e_post: string | null
+          eier_id: string | null
           firmanavn: string
           id: string
           kilde: Database["public"]["Enums"]["lead_kilde"] | null
@@ -500,6 +501,7 @@ export type Database = {
           ansvarlig?: string | null
           created_at?: string
           e_post?: string | null
+          eier_id?: string | null
           firmanavn: string
           id?: string
           kilde?: Database["public"]["Enums"]["lead_kilde"] | null
@@ -522,6 +524,7 @@ export type Database = {
           ansvarlig?: string | null
           created_at?: string
           e_post?: string | null
+          eier_id?: string | null
           firmanavn?: string
           id?: string
           kilde?: Database["public"]["Enums"]["lead_kilde"] | null
@@ -1011,6 +1014,7 @@ export type Database = {
           ansvarlig: string | null
           created_at: string
           e_post: string | null
+          eier_id: string | null
           id: string
           kontaktperson: string | null
           notater: string | null
@@ -1032,6 +1036,7 @@ export type Database = {
           ansvarlig?: string | null
           created_at?: string
           e_post?: string | null
+          eier_id?: string | null
           id?: string
           kontaktperson?: string | null
           notater?: string | null
@@ -1053,6 +1058,7 @@ export type Database = {
           ansvarlig?: string | null
           created_at?: string
           e_post?: string | null
+          eier_id?: string | null
           id?: string
           kontaktperson?: string | null
           notater?: string | null
@@ -1084,36 +1090,48 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          daglig_epost_aktiv: boolean
           display_name: string
           email: string
           id: string
+          nudge_aktiv: boolean
+          nudge_dager: number
           signatur_navn: string | null
           signatur_selskap: string | null
           signatur_tittel: string | null
+          ukesagenda_aktiv: boolean
           updated_at: string
           user_id: string
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          daglig_epost_aktiv?: boolean
           display_name?: string
           email?: string
           id?: string
+          nudge_aktiv?: boolean
+          nudge_dager?: number
           signatur_navn?: string | null
           signatur_selskap?: string | null
           signatur_tittel?: string | null
+          ukesagenda_aktiv?: boolean
           updated_at?: string
           user_id: string
         }
         Update: {
           avatar_url?: string | null
           created_at?: string
+          daglig_epost_aktiv?: boolean
           display_name?: string
           email?: string
           id?: string
+          nudge_aktiv?: boolean
+          nudge_dager?: number
           signatur_navn?: string | null
           signatur_selskap?: string | null
           signatur_tittel?: string | null
+          ukesagenda_aktiv?: boolean
           updated_at?: string
           user_id?: string
         }
@@ -1338,6 +1356,7 @@ export type Database = {
           created_at: string
           dealbuilder_dokument_id: string | null
           e_post: string | null
+          eier_id: string | null
           forventet_lukkedato: string | null
           forventet_mrr: number | null
           id: string
@@ -1378,6 +1397,7 @@ export type Database = {
           created_at?: string
           dealbuilder_dokument_id?: string | null
           e_post?: string | null
+          eier_id?: string | null
           forventet_lukkedato?: string | null
           forventet_mrr?: number | null
           id?: string
@@ -1418,6 +1438,7 @@ export type Database = {
           created_at?: string
           dealbuilder_dokument_id?: string | null
           e_post?: string | null
+          eier_id?: string | null
           forventet_lukkedato?: string | null
           forventet_mrr?: number | null
           id?: string
@@ -1588,6 +1609,7 @@ export type Database = {
           bransje: string | null
           created_at: string
           domene: string
+          eier_id: string | null
           firmaadresse: string
           firmanavn: string
           go_live_dato: string | null
@@ -1622,6 +1644,7 @@ export type Database = {
           bransje?: string | null
           created_at?: string
           domene?: string
+          eier_id?: string | null
           firmaadresse?: string
           firmanavn: string
           go_live_dato?: string | null
@@ -1656,6 +1679,7 @@ export type Database = {
           bransje?: string | null
           created_at?: string
           domene?: string
+          eier_id?: string | null
           firmaadresse?: string
           firmanavn?: string
           go_live_dato?: string | null
@@ -1787,6 +1811,99 @@ export type Database = {
             columns: ["oppgave_id"]
             isOneToOne: false
             referencedRelation: "oppgaver"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      venter_pa_svar: {
+        Row: {
+          ai_begrunnelse: string | null
+          aktivitet_id: string | null
+          created_at: string
+          e_post: string | null
+          emne: string | null
+          id: string
+          kontakt_id: string | null
+          lead_id: string | null
+          salgsmulighet_id: string | null
+          selskap_id: string | null
+          sendt_dato: string
+          status: string
+          thread_id: string
+          updated_at: string
+          user_id: string
+          varslet_at: string | null
+        }
+        Insert: {
+          ai_begrunnelse?: string | null
+          aktivitet_id?: string | null
+          created_at?: string
+          e_post?: string | null
+          emne?: string | null
+          id?: string
+          kontakt_id?: string | null
+          lead_id?: string | null
+          salgsmulighet_id?: string | null
+          selskap_id?: string | null
+          sendt_dato?: string
+          status?: string
+          thread_id: string
+          updated_at?: string
+          user_id: string
+          varslet_at?: string | null
+        }
+        Update: {
+          ai_begrunnelse?: string | null
+          aktivitet_id?: string | null
+          created_at?: string
+          e_post?: string | null
+          emne?: string | null
+          id?: string
+          kontakt_id?: string | null
+          lead_id?: string | null
+          salgsmulighet_id?: string | null
+          selskap_id?: string | null
+          sendt_dato?: string
+          status?: string
+          thread_id?: string
+          updated_at?: string
+          user_id?: string
+          varslet_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venter_pa_svar_aktivitet_id_fkey"
+            columns: ["aktivitet_id"]
+            isOneToOne: false
+            referencedRelation: "aktiviteter"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "venter_pa_svar_kontakt_id_fkey"
+            columns: ["kontakt_id"]
+            isOneToOne: false
+            referencedRelation: "kontakter"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "venter_pa_svar_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "venter_pa_svar_salgsmulighet_id_fkey"
+            columns: ["salgsmulighet_id"]
+            isOneToOne: false
+            referencedRelation: "salgsmuligheter"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "venter_pa_svar_selskap_id_fkey"
+            columns: ["selskap_id"]
+            isOneToOne: false
+            referencedRelation: "selskaper"
             referencedColumns: ["id"]
           },
         ]
