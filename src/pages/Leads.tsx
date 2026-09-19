@@ -42,6 +42,8 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { loggAktivitet } from "@/lib/activity-logging";
 import { toast } from "sonner";
+import MineTeametToggle from "@/components/MineTeametToggle";
+import { useMineFilter } from "@/hooks/use-mine-filter";
 
 // Only user-selectable statuses – no conversion statuses in dropdown
 const statusOptions: LeadStatus[] = ["Ny", "Kontaktet", "Svarte ikke telefon", "Kvalifisert", "Ikke aktuelt"];
