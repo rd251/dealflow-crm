@@ -566,7 +566,7 @@ export default function Companies() {
                   <td data-metric className="px-4 py-3 text-right">{nok(totalSla)}</td>
                   <td data-metric className="px-4 py-3 text-right">{nok(s.oppstartskostnad)}</td>
                   <td className="px-4 py-3 text-muted-foreground text-xs font-mono">{s.lukkedato || "–"}</td>
-                  <td className="px-4 py-3"><LastActivityBadge selskap_id={s.id} sist_aktivitet={s.sist_aktivitet} /></td>
+                  <td className="px-4 py-3"><LastActivityBadge selskap_id={s.id} sist_aktivitet={s.sist_aktivitet} visVarme /></td>
                   {canEdit && (
                   <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
                     <div className="flex gap-1 justify-end">

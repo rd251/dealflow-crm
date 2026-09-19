@@ -6,6 +6,7 @@ import { beregnTotalKontraktsverdi, beregnVektetPipeline, Prosjekt, ProsjektStat
 import StatCard from "@/components/StatCard";
 import InlineTaskForm from "@/components/InlineTaskForm";
 import ActivityLog from "@/components/ActivityLog";
+import PersonTimeline from "@/components/PersonTimeline";
 import EntityChangelog from "@/components/EntityChangelog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -539,6 +540,8 @@ export default function CompanyProfile() {
             <div className="bg-card border rounded-xl p-4 sm:p-5">
               <InlineTaskForm selskap_id={id!} />
             </div>
+
+            <PersonTimeline selskap_id={id!} maks={8} tittel="Relasjonstidslinje" onSeAlt={() => navigate("/kontakter")} />
 
             <div className="bg-card border rounded-xl p-4 sm:p-5">
               <ActivityLog selskap_id={id!} onActivityLogged={() => {

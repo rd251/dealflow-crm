@@ -18,6 +18,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Kontakt, Selskap, Salgsmulighet } from "@/data/crm-data";
 import DataImportDialog from "@/components/DataImportDialog";
 import ActivityLog from "@/components/ActivityLog";
+import PersonTimeline from "@/components/PersonTimeline";
+import QuickAddPersonDialog from "@/components/QuickAddPersonDialog";
 import EntityChangelog from "@/components/EntityChangelog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -125,7 +127,6 @@ export default function Contacts() {
   const [selected, setSelected] = useState<Kontakt | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
-  const [form, setForm] = useState({ navn: "", selskap_id: "", rolle: "", e_post: "", telefon: "", linkedin: "", notater: "" });
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
 
   // Delete state
@@ -149,12 +150,6 @@ export default function Contacts() {
 
   const getSelskapNavn = (id: string) => selskaper.find(s => s.id === id)?.firmanavn || "–";
 
-  const addKontakt = () => {
-    const id = generateId("K", kontakter);
-    updateKontakter(prev => [...prev, { id, ...form }]);
-    setDialogOpen(false);
-    setForm({ navn: "", selskap_id: "", rolle: "", e_post: "", telefon: "", linkedin: "", notater: "" });
-  };
 
   const currentKontakt = selected ? kontakter.find(k => k.id === selected.id) || selected : null;
   const relatedDeals = currentKontakt ? salgsmuligheter.filter(s => s.kontakt_id === currentKontakt.id || s.selskap_id === currentKontakt.selskap_id) : [];
@@ -238,28 +233,12 @@ export default function Contacts() {
       actions={canEdit ? (
         <div className="flex gap-2">
         <Button size="sm" variant="outline" onClick={() => setImportOpen(true)}><Upload className="w-4 h-4 mr-1" />{!isMobile && "Importer"}</Button>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button size="sm"><Plus className="w-4 h-4 mr-1" />{!isMobile && "Ny kontakt"}</Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-[95vw] sm:max-w-lg">
-            <DialogHeader><DialogTitle>Ny kontakt</DialogTitle><DialogDescription>Fyll inn detaljer for den nye kontakten.</DialogDescription></DialogHeader>
-            <div className="space-y-3">
-              <Input placeholder="Navn" value={form.navn} onChange={e => setForm(f => ({ ...f, navn: e.target.value }))} />
-              <select className="w-full border rounded-lg px-3 py-2 text-sm bg-background" value={form.selskap_id} onChange={e => setForm(f => ({ ...f, selskap_id: e.target.value }))}>
-                <option value="">Velg selskap</option>
-                {selskaper.map(s => <option key={s.id} value={s.id}>{s.firmanavn}</option>)}
-              </select>
-              <Input placeholder="Rolle" value={form.rolle} onChange={e => setForm(f => ({ ...f, rolle: e.target.value }))} />
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <Input placeholder="E-post" value={form.e_post} onChange={e => setForm(f => ({ ...f, e_post: e.target.value }))} />
-                <Input placeholder="Telefon" value={form.telefon} onChange={e => setForm(f => ({ ...f, telefon: e.target.value }))} />
-              </div>
-              <Input placeholder="LinkedIn URL" value={form.linkedin} onChange={e => setForm(f => ({ ...f, linkedin: e.target.value }))} />
-              <Button onClick={addKontakt} className="w-full" disabled={!form.navn}>Opprett kontakt</Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <Button size="sm" onClick={() => setDialogOpen(true)}><Plus className="w-4 h-4 mr-1" />{!isMobile && "Ny person"}</Button>
+        <QuickAddPersonDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          onCreated={id => { const k = kontakter.find(x => x.id === id); if (k) setSelected(k); }}
+        />
         </div>
       ) : undefined}
     >
@@ -475,10 +454,16 @@ export default function Contacts() {
             </div>
           ),
           interaksjoner: (
-            <>
+            <div className="space-y-4">
+              <PersonTimeline
+                kontakt_id={currentKontakt.id}
+                selskap_id={currentKontakt.selskap_id || undefined}
+                e_post={currentKontakt.e_post || undefined}
+                tittel="Relasjonstidslinje"
+              />
               <ActivityLog kontakt_id={currentKontakt.id} />
               <EntityChangelog entity_type="kontakt" entity_id={currentKontakt.id} />
-            </>
+            </div>
           ),
           notater: (
             <div className="space-y-1">
