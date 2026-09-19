@@ -127,6 +127,27 @@ function AppRoutes() {
         path="/*"
         element={
           <ProtectedRoute>
+            <RoleRoutes />
+          </ProtectedRoute>
+        }
+      />
+    </Routes>
+  );
+}
+
+/** Investorer når kun investoroversikten – interne beholder full tilgang. */
+function RoleRoutes() {
+  const { erInvestor, loading } = useInvestor();
+  if (loading) return <AuthSpinner />;
+  if (erInvestor) {
+    return (
+      <Routes>
+        <Route path="/investor" element={<Investor />} />
+        <Route path="*" element={<Navigate to="/investor" replace />} />
+      </Routes>
+    );
+  }
+  return (
             <CrmProvider>
               <AppSidebar />
               <Routes>
