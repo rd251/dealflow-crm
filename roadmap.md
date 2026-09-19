@@ -29,3 +29,17 @@
 ## Ukentlig prioritering
 - [x] Ukesagenda med AI-rangering sendes mandag morgen (weekly-priorities)
 - [x] Daglig e-post gjort konkret: topp 3 handlinger, kontaktinfo og direktelenker
+
+## Oppfølgingspåminnelser per person
+- [ ] Oppdag «venter på svar» på utgående e-post med AI
+- [ ] Én fokusert påminnelses-e-post per person etter 3 dager
+- [ ] Kontroller: én per samtale, maks 5 per dag, av/på og terskel i Innstillinger
+
+## Flerbruker
+- [ ] Per bruker Google-tilkobling (Gmail + Kalender) med egne tokens og tydelig koble-til/koble-på-nytt-tilstand
+- [ ] Sending fra egen Gmail med egen signatur; kalender leser/skriver mot egen kalender
+- [ ] Eierskap på leads, salgsmuligheter, kunder og partnere + «Mine»/«Teamet»-visninger
+- [ ] Påminnelser og ukesagenda kun om egne poster
+- [ ] Personlige innstillinger per bruker; delt CRM-data fortsatt synlig for alle
+- [ ] Gjennomgang av RLS: delt data lesbar, tokens og personlige innstillinger private
+- [ ] Aktivitetslogg registrerer hvem som gjorde hva
