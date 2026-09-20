@@ -29,7 +29,7 @@ import DataImportDialog from "@/components/DataImportDialog";
 import LastActivityBadge from "@/components/LastActivityBadge";
 import CompanyDocuments from "@/components/CompanyDocuments";
 import KundeKort from "@/components/kunde/KundeKort";
-import { INAKTIV_DAGER, dagerSiden, erSammeMaaned } from "@/lib/kundeforhold";
+import { INAKTIV_DAGER, STANDARD_TIMEPRIS, dagerSiden, erSammeMaaned } from "@/lib/kundeforhold";
 
 /** Statusfiltre på kundeoversikten. */
 type Kundefilter = "Alle" | "Live" | "Risiko" | "Pilot" | "Kansellert";
