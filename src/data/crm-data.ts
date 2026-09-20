@@ -93,6 +93,10 @@ export interface Salgsmulighet {
   valgt_pakke: string;
   videresendt_til_partner_id?: string;
   videresendt_dato?: string;
+  /** Kort notat som vises direkte på kortet i kanban. */
+  pinned_notat?: string;
+  pinned_notat_av?: string;
+  pinned_notat_dato?: string;
 }
 
 // Package definitions
@@ -136,6 +140,10 @@ export interface Prosjekt {
   notater_ansvarlig: string;
   /** Settes av databasen, brukes til «dager siden opprettet». */
   created_at?: string;
+  /** Kort notat som vises direkte på prosjektkortet. */
+  pinned_notat?: string;
+  pinned_notat_av?: string;
+  pinned_notat_dato?: string;
 }
 
 export interface Selskap {
