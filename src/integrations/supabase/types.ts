@@ -1195,6 +1195,76 @@ export type Database = {
         }
         Relationships: []
       }
+      prosjekt_timer: {
+        Row: {
+          beskrivelse: string
+          created_at: string
+          dato: string
+          fakturert: boolean
+          fakturert_dato: string | null
+          id: string
+          opprettet_av: string | null
+          prosjekt_id: string | null
+          selskap_id: string | null
+          timepris: number
+          timer: number
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          beskrivelse?: string
+          created_at?: string
+          dato?: string
+          fakturert?: boolean
+          fakturert_dato?: string | null
+          id?: string
+          opprettet_av?: string | null
+          prosjekt_id?: string | null
+          selskap_id?: string | null
+          timepris?: number
+          timer?: number
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          beskrivelse?: string
+          created_at?: string
+          dato?: string
+          fakturert?: boolean
+          fakturert_dato?: string | null
+          id?: string
+          opprettet_av?: string | null
+          prosjekt_id?: string | null
+          selskap_id?: string | null
+          timepris?: number
+          timer?: number
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prosjekt_timer_prosjekt_id_fkey"
+            columns: ["prosjekt_id"]
+            isOneToOne: false
+            referencedRelation: "prosjekter"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prosjekt_timer_selskap_id_fkey"
+            columns: ["selskap_id"]
+            isOneToOne: false
+            referencedRelation: "investor_portefolje"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prosjekt_timer_selskap_id_fkey"
+            columns: ["selskap_id"]
+            isOneToOne: false
+            referencedRelation: "selskaper"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       prosjekter: {
         Row: {
           ansvarlig: string | null
@@ -1204,6 +1274,9 @@ export type Database = {
           id: string
           integrasjon: Database["public"]["Enums"]["integrasjon"] | null
           notater: string | null
+          notater_ansvarlig: string | null
+          onboarding_steg: Json
+          onboarding_type: string
           oppstart_betalt: boolean | null
           oppstart_faktura_dato: string | null
           oppstart_fakturert: boolean | null
@@ -1213,6 +1286,7 @@ export type Database = {
           selskap_id: string | null
           startdato: string | null
           status: Database["public"]["Enums"]["prosjekt_status"] | null
+          timepris: number
           updated_at: string
         }
         Insert: {
@@ -1223,6 +1297,9 @@ export type Database = {
           id?: string
           integrasjon?: Database["public"]["Enums"]["integrasjon"] | null
           notater?: string | null
+          notater_ansvarlig?: string | null
+          onboarding_steg?: Json
+          onboarding_type?: string
           oppstart_betalt?: boolean | null
           oppstart_faktura_dato?: string | null
           oppstart_fakturert?: boolean | null
@@ -1232,6 +1309,7 @@ export type Database = {
           selskap_id?: string | null
           startdato?: string | null
           status?: Database["public"]["Enums"]["prosjekt_status"] | null
+          timepris?: number
           updated_at?: string
         }
         Update: {
@@ -1242,6 +1320,9 @@ export type Database = {
           id?: string
           integrasjon?: Database["public"]["Enums"]["integrasjon"] | null
           notater?: string | null
+          notater_ansvarlig?: string | null
+          onboarding_steg?: Json
+          onboarding_type?: string
           oppstart_betalt?: boolean | null
           oppstart_faktura_dato?: string | null
           oppstart_fakturert?: boolean | null
@@ -1251,6 +1332,7 @@ export type Database = {
           selskap_id?: string | null
           startdato?: string | null
           status?: Database["public"]["Enums"]["prosjekt_status"] | null
+          timepris?: number
           updated_at?: string
         }
         Relationships: [
@@ -2209,6 +2291,7 @@ export type Database = {
         | "Test med kunde"
         | "Live"
         | "Blokkert"
+        | "Klar for live"
       provisjonstype: "Engangsprovisjon" | "Løpende provisjon" | "Hybrid"
       salgsmulighet_status:
         | "Møte booket"
@@ -2458,6 +2541,7 @@ export const Constants = {
         "Test med kunde",
         "Live",
         "Blokkert",
+        "Klar for live",
       ],
       provisjonstype: ["Engangsprovisjon", "Løpende provisjon", "Hybrid"],
       salgsmulighet_status: [
