@@ -120,6 +120,8 @@ export default function Companies() {
     const isPartnerCust = !!s.partner_id;
     if (portfolio === "egen" && isPartnerCust) return false;
     if (portfolio === "partner" && !isPartnerCust) return false;
+    if (statusFilter === "Risiko" && s.kundetilstand !== "Risiko") return false;
+    if (statusFilter !== "Alle" && statusFilter !== "Risiko" && s.kundestatus !== statusFilter) return false;
     if (lukkedatoFra || lukkedatoTil) {
       if (!s.lukkedato) return false;
       const ld = new Date(s.lukkedato);
