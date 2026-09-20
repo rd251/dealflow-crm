@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
+import { PinnedNotatBoks, PinnedNotatFelt } from "@/components/PinnedNotat";
 import DetailPanelShell, { DetailSection, DetailField, DetailDivider, DetailStatGrid, DetailStatCard } from "@/components/DetailPanelShell";
 import EntityCalendarTab from "@/components/EntityCalendarTab";
 import { Plus, GripVertical, Trophy, XCircle, Trash2, Phone, User, AlertTriangle, Clock, Building2, DollarSign, Mail, FileSignature, PartyPopper, Globe, ExternalLink, Linkedin, PenLine, Send } from "lucide-react";
@@ -685,6 +686,8 @@ export default function Salgsmuligheter() {
           </div>
         )}
 
+        <PinnedNotatBoks notat={deal.pinned_notat} className="mt-2" />
+
         {isBlocked && <p className="mt-2 text-[10px] font-medium text-warning">Legg til neste steg før du flytter kortet.</p>}
       </>
     );
@@ -1209,6 +1212,17 @@ export default function Salgsmuligheter() {
           return {
             detaljer: (
               <>
+                <PinnedNotatFelt
+                  verdi={currentSm.pinned_notat}
+                  av={currentSm.pinned_notat_av}
+                  dato={currentSm.pinned_notat_dato}
+                  disabled={!canEdit}
+                  onLagre={(notat, av, dato) => {
+                    updateSalgsmuligheter(prev => prev.map(s =>
+                      s.id === currentSm.id ? { ...s, pinned_notat: notat, pinned_notat_av: av, pinned_notat_dato: dato } : s));
+                  }}
+                />
+
                 {/* AI Recap (auto-genereres ved nye aktiviteter) */}
                 <DealRecapCard
                   salgsmulighetId={currentSm.id}
