@@ -26,6 +26,7 @@ import DataImportDialog from "@/components/DataImportDialog";
 import CompanyLogo from "@/components/CompanyLogo";
 import LeadForwardEmailPreview from "@/components/LeadForwardEmailPreview";
 import NesteStegTaskButton from "@/components/NesteStegTaskButton";
+import { PinnedNotatBoks, PinnedNotatFelt } from "@/components/PinnedNotat";
 import LeadQuickActions from "@/components/LeadQuickActions";
 import RingelisteIdag from "@/components/RingelisteIdag";
 import FolgOppIDag from "@/components/FolgOppIDag";
@@ -826,6 +827,7 @@ export default function Leads() {
                     <Badge variant="outline" className={`text-[10px] ${statusColors[lead.status] || ""}`}>{leadStatusKort[lead.status] || lead.status}</Badge>
                   </div>
                   <p className="text-xs text-muted-foreground">{lead.kontaktperson}</p>
+                  <PinnedNotatBoks notat={lead.pinned_notat} />
                   <div className="flex items-center justify-between">
                     <Badge variant="secondary" className="text-[10px]">{kildeGruppe(lead.kilde)}</Badge>
                     <span className="text-[10px] text-muted-foreground">{relativTid(lead.sist_aktivitet)}</span>
@@ -904,6 +906,7 @@ export default function Leads() {
                           <CompanyLogo firmanavn={lead.firmanavn} kontaktEmails={lead.e_post ? [lead.e_post] : undefined} size="sm" />
                           <span className="truncate">{lead.firmanavn}</span>
                         </div>
+                        <PinnedNotatBoks notat={lead.pinned_notat} className="mt-1.5 max-w-[260px]" />
                       </td>
                       <td className="px-4 py-2.5 text-muted-foreground truncate max-w-[160px]">{lead.kontaktperson || "—"}</td>
                       <td className="px-4 py-2.5"><Badge variant="secondary" className="text-[11px]">{kildeGruppe(lead.kilde)}</Badge></td>
@@ -1027,6 +1030,16 @@ export default function Leads() {
           return {
             detaljer: (
               <div className="space-y-3">
+                <PinnedNotatFelt
+                  verdi={currentLead.pinned_notat}
+                  av={currentLead.pinned_notat_av}
+                  dato={currentLead.pinned_notat_dato}
+                  disabled={!canEdit || currentIsLocked}
+                  onLagre={(notat, av, dato) => {
+                    updateLeads(prev => prev.map(l => l.id === currentLead.id
+                      ? { ...l, pinned_notat: notat, pinned_notat_av: av, pinned_notat_dato: dato } : l));
+                  }}
+                />
                 {/* Hurtighandlinger for samtale */}
                 {canEdit && !currentIsLocked && (
                   <div className="rounded-lg border bg-card p-3">
