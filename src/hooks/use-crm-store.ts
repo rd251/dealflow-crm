@@ -3,6 +3,7 @@ import { useState, useCallback, useEffect, useRef, createContext, useContext, cr
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
+import { loggAktivitet } from "@/lib/activity-logging";
 import {
   Lead, LeadStatus, Salgsmulighet, SalgsmulighetStatus, Prosjekt, Selskap, Kontakt, Oppgave, Partner,
 } from "@/data/crm-data";
@@ -73,6 +74,11 @@ function rowToProsjekt(r: any): Prosjekt {
     go_live_dato: r.go_live_dato || "", oppstartskostnad: Number(r.oppstartskostnad) || 0,
     oppstart_fakturert: r.oppstart_fakturert || false, oppstart_faktura_dato: r.oppstart_faktura_dato || "",
     oppstart_betalt: r.oppstart_betalt || false, integrasjon: r.integrasjon || "Ingen", notater: r.notater || "",
+    onboarding_type: r.onboarding_type || "Selvbetjening",
+    onboarding_steg: Array.isArray(r.onboarding_steg) ? r.onboarding_steg : [],
+    timepris: Number(r.timepris) || 1500,
+    notater_ansvarlig: r.notater_ansvarlig || "",
+    created_at: r.created_at || undefined,
   };
 }
 function rowToOppgave(r: any): Oppgave {
@@ -713,6 +719,10 @@ function useCrmStoreInternal() {
           oppstartskostnad: item.oppstartskostnad, oppstart_fakturert: item.oppstart_fakturert,
           oppstart_faktura_dato: emptyToNull(item.oppstart_faktura_dato), oppstart_betalt: item.oppstart_betalt,
           integrasjon: item.integrasjon, notater: emptyToNull(item.notater),
+          onboarding_type: item.onboarding_type || "Selvbetjening",
+          onboarding_steg: item.onboarding_steg || [],
+          timepris: item.timepris ?? 1500,
+          notater_ansvarlig: emptyToNull(item.notater_ansvarlig || ""),
         });
       }
     }
@@ -727,6 +737,10 @@ function useCrmStoreInternal() {
           oppstartskostnad: item.oppstartskostnad, oppstart_fakturert: item.oppstart_fakturert,
           oppstart_faktura_dato: emptyToNull(item.oppstart_faktura_dato), oppstart_betalt: item.oppstart_betalt,
           integrasjon: item.integrasjon, notater: emptyToNull(item.notater),
+          onboarding_type: item.onboarding_type || "Selvbetjening",
+          onboarding_steg: item.onboarding_steg || [],
+          timepris: item.timepris ?? 1500,
+          notater_ansvarlig: emptyToNull(item.notater_ansvarlig || ""),
         });
       }
     }
@@ -931,6 +945,7 @@ function useCrmStoreInternal() {
       ansvarlig: sm.ansvarlig, status: "Ny", startdato: today, forventet_go_live: "",
       go_live_dato: "", oppstartskostnad: sm.oppstartskostnad, oppstart_fakturert: false,
       oppstart_faktura_dato: "", oppstart_betalt: false, integrasjon: "Ingen", notater: "",
+      onboarding_type: "Selvbetjening", onboarding_steg: [], timepris: 1500, notater_ansvarlig: "",
     };
     updateProsjekter(prev => [...prev, nyttProsjekt]);
 
@@ -980,7 +995,37 @@ function useCrmStoreInternal() {
     } catch (err) {
       console.warn("Could not clean KB files:", err);
     }
-  }, [prosjekter, updateProsjekter, updateSelskaper]);
+
+    // Logg aktivitet og varsle kundeansvarlig
+    const selskap = selskaper.find(s => s.id === prosjekt.selskap_id);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData?.session?.user?.id ?? null;
+      const { data: profilRader } = await supabase.from("profiles").select("user_id, display_name");
+      const utforer = profilRader?.find(p => p.user_id === userId)?.display_name || "en kollega";
+
+      await loggAktivitet({
+        logg: "notat",
+        target: { selskap_id: prosjekt.selskap_id, prosjekt_id: pId },
+        tittel: "Kunde satt live",
+        notat: `Kunde satt live av ${utforer}`,
+      });
+
+      const ansvarligId = profilRader?.find(p => p.display_name === selskap?.kundeansvarlig)?.user_id;
+      if (ansvarligId) {
+        await supabase.from("varsler").insert({
+          user_id: ansvarligId,
+          type: "kunde_live",
+          tittel: "Kunde er live",
+          beskrivelse: `${selskap?.firmanavn ?? "Kunden"} er nå live!`,
+          fra_user_id: userId,
+          lenke: `/selskaper/${prosjekt.selskap_id}`,
+        });
+      }
+    } catch (err) {
+      console.warn("Kunne ikke logge go-live:", err);
+    }
+  }, [prosjekter, selskaper, updateProsjekter, updateSelskaper]);
 
   const kansellerSelskap = useCallback((selskapId: string, aarsak: Selskap["kanselleringsaarsak"], notat: string) => {
     const today = new Date().toISOString().split("T")[0];
