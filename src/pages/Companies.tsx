@@ -317,7 +317,35 @@ export default function Companies() {
         </TabsList>
       </Tabs>
 
-      {/* ─── KPI ─── */}
+      {/* ─── Hoved-KPI (2x2) ─── */}
+      {(() => {
+        const scope = selskaper.filter(s => portfolio === "partner" ? !!s.partner_id : !s.partner_id);
+        const live = scope.filter(s => s.kundestatus === "Live");
+        const kansellertDenneMnd = scope.filter(s => s.kundestatus === "Kansellert" && erSammeMaaned(s.kansellert_dato));
+        const basis = live.length + kansellertDenneMnd.length;
+        const churn = basis > 0 ? Math.round((kansellertDenneMnd.length / basis) * 100) : 0;
+        const kort = [
+          { label: "Aktive kunder", value: `${live.length}`, icon: <Users className="w-4 h-4" />, tone: "bg-success/10 text-success" },
+          { label: "Total MRR", value: nok(live.reduce((sum, s) => sum + s.mrr, 0)), icon: <DollarSign className="w-4 h-4" />, tone: "bg-success/10 text-success" },
+          { label: "Kansellerte denne måneden", value: `${kansellertDenneMnd.length}`, icon: <UserMinus className="w-4 h-4" />, tone: "bg-warning/10 text-warning" },
+          { label: "Churn-rate denne måneden", value: `${churn}%`, icon: <PieChart className="w-4 h-4" />, tone: "bg-warning/10 text-warning" },
+        ];
+        return (
+          <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {kort.map(k => (
+              <div key={k.label} className="flex min-h-24 items-center gap-3 rounded-xl border bg-card p-4 shadow-card">
+                <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-md", k.tone)}>{k.icon}</div>
+                <div className="min-w-0">
+                  <p className="text-xs font-medium text-muted-foreground">{k.label}</p>
+                  <p data-metric className="truncate text-2xl font-semibold tabular-nums">{k.value}</p>
+                </div>
+              </div>
+            ))}
+          </section>
+        );
+      })()}
+
+      {/* ─── Flere nøkkeltall ─── */}
       {(() => {
         const scopeSelskaper = selskaper.filter(s => portfolio === "partner" ? !!s.partner_id : !s.partner_id);
         const scopeIds = new Set(scopeSelskaper.map(s => s.id));
