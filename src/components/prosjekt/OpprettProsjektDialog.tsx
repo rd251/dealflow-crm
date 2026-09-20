@@ -29,7 +29,7 @@ interface Props {
 export default function OpprettProsjektDialog({ open, onOpenChange, selskapId, firmanavn, salgsmulighetId = "" }: Props) {
   const { user } = useAuth();
   const { profiles } = useProfiles();
-  const { prosjekter, updateProsjekter, oppgaver, updateOppgaver, generateId } = useCrmStore();
+  const { prosjekter, updateProsjekter, oppgaver, updateOppgaver, generateId, varsleProsjektTildelt, varsleOppgaveTildelt } = useCrmStore();
   const [lagrer, setLagrer] = useState(false);
   const [form, setForm] = useState({
     prosjektnavn: "",
@@ -96,6 +96,9 @@ export default function OpprettProsjektDialog({ open, onOpenChange, selskapId, f
       notater: form.notater_ansvarlig.trim(),
     };
     updateOppgaver(prev => [...prev, oppgave]);
+
+    varsleProsjektTildelt(nyttProsjekt.id);
+    varsleOppgaveTildelt(oppgave.id);
 
     if (form.ansvarligUserId) {
       await supabase.from("varsler").insert({
