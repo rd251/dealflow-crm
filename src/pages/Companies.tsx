@@ -60,6 +60,7 @@ export default function Companies() {
   const { canEdit } = useAuth();
   const { selskaper, kontakter, salgsmuligheter, prosjekter, partnere, updateSelskaper, updateProsjekter, kansellerSelskap, slettSelskap, konverterSelskapTilPartner, angreTilSalgsmulighet, generateId } = useCrmStore();
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<Kundefilter>("Alle");
   const [portfolio, setPortfolio] = useState<"egen" | "partner">("egen");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
