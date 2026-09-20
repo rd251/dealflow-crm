@@ -73,6 +73,11 @@ function rowToProsjekt(r: any): Prosjekt {
     go_live_dato: r.go_live_dato || "", oppstartskostnad: Number(r.oppstartskostnad) || 0,
     oppstart_fakturert: r.oppstart_fakturert || false, oppstart_faktura_dato: r.oppstart_faktura_dato || "",
     oppstart_betalt: r.oppstart_betalt || false, integrasjon: r.integrasjon || "Ingen", notater: r.notater || "",
+    onboarding_type: r.onboarding_type || "Selvbetjening",
+    onboarding_steg: Array.isArray(r.onboarding_steg) ? r.onboarding_steg : [],
+    timepris: Number(r.timepris) || 1500,
+    notater_ansvarlig: r.notater_ansvarlig || "",
+    created_at: r.created_at || undefined,
   };
 }
 function rowToOppgave(r: any): Oppgave {
