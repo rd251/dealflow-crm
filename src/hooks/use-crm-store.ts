@@ -3,6 +3,7 @@ import { useState, useCallback, useEffect, useRef, createContext, useContext, cr
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
+import { loggAktivitet } from "@/lib/activity-logging";
 import {
   Lead, LeadStatus, Salgsmulighet, SalgsmulighetStatus, Prosjekt, Selskap, Kontakt, Oppgave, Partner,
 } from "@/data/crm-data";
