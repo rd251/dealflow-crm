@@ -472,6 +472,13 @@ export default function Companies() {
           <Input placeholder="Søk selskaper..." className="pl-9" value={search} onChange={e => setSearch(e.target.value)} />
         </div>
 
+        <Tabs value={statusFilter} onValueChange={v => setStatusFilter(v as Kundefilter)}>
+          <TabsList className="bg-muted/60">
+            {KUNDEFILTRE.map(f => <TabsTrigger key={f} value={f} className="text-xs">{f}</TabsTrigger>)}
+          </TabsList>
+        </Tabs>
+
+
         <Popover>
           <PopoverTrigger asChild>
             <Button variant="outline" size="sm" className={cn("gap-1.5 text-xs", lukkedatoFra && "border-primary text-primary")}>
