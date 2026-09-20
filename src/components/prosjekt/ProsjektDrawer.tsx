@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Rocket } from "lucide-react";
 import ActivityLog from "@/components/ActivityLog";
+import { PinnedNotatFelt } from "@/components/PinnedNotat";
 import Timeregistrering from "@/components/kunde/Timeregistrering";
 import ProsjektFremdrift from "./ProsjektFremdrift";
 import { PROSJEKT_STATUSER, harTimeregistrering, prosjektStatusFarge, type OnboardingType } from "@/lib/kundeforhold";
@@ -58,6 +59,13 @@ export default function ProsjektDrawer({ prosjekt: p, firmanavn, onClose, onEndr
             </div>
 
             <div className="mt-6 space-y-6">
+              <PinnedNotatFelt
+                verdi={p.pinned_notat}
+                av={p.pinned_notat_av}
+                dato={p.pinned_notat_dato}
+                onLagre={(notat, av, dato) => onEndre({ pinned_notat: notat, pinned_notat_av: av, pinned_notat_dato: dato })}
+              />
+
               <section>
                 <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">Fremdrift</h3>
                 <ProsjektFremdrift
