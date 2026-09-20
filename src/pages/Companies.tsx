@@ -466,129 +466,51 @@ export default function Companies() {
         )}
       </section>
 
-      {/* Mobile: card layout */}
-      {isMobile ? (
-        <div className="space-y-3">
-          {filtered.map(s => {
-            const selskapSm = salgsmuligheter.filter(sm => sm.selskap_id === s.id && sm.status !== "Tapt");
-            const totalSla = selskapSm.reduce((sum, sm) => sum + (sm.sla || 0), 0);
-            return (
-              <div key={s.id} className="space-y-3 rounded-lg border bg-card p-4 shadow-card transition-colors active:bg-muted/50" onClick={() => navigate(`/selskaper/${s.id}`)}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <CompanyLogo domain={s.domene} firmanavn={s.firmanavn} kontaktEmails={kontakter.filter(k => k.selskap_id === s.id).map(k => k.e_post)} size="sm" />
-                    <p className="font-semibold text-sm truncate">{s.firmanavn}</p>
-                  </div>
-                  <Badge className={`text-[10px] shrink-0 ${kundestatusColors[s.kundestatus]}`}>{s.kundestatus}</Badge>
-                </div>
-                {s.bransje && <p className="text-xs text-muted-foreground">{s.bransje}</p>}
-                <div className="flex items-center justify-between text-xs">
-                  <span data-metric className="font-semibold text-success">MRR: {nok(s.mrr)}</span>
-                  <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${tilstandColors[s.kundetilstand]}`}>{s.kundetilstand}</span>
-                </div>
-                {canEdit && (
-                <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
-                  <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => setRevertDialog(s.id)}>
-                    <Undo2 className="w-3 h-3" /> Angre
-                  </Button>
-                  <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => setTransferDialog(s.id)}>
-                    <ArrowRightLeft className="w-3 h-3" /> Partner
-                  </Button>
-                  <Button variant="ghost" size="sm" className="h-7 text-xs gap-1 text-destructive hover:text-destructive" onClick={() => setDeleteDialog(s.id)}>
-                    <Trash2 className="w-3 h-3" /> Slett
-                  </Button>
-                  <ChevronRight className="w-3.5 h-3.5 text-muted-foreground ml-auto" />
-                </div>
-                )}
-              </div>
-            );
-          })}
-          {filtered.length === 0 && <p className="text-center text-sm text-muted-foreground py-8">Ingen selskaper å vise</p>}
-        </div>
-      ) : (
-        <div className="overflow-hidden overflow-x-auto rounded-lg border bg-card shadow-card">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b bg-muted/60">
-                {([
-                  ["firmanavn", "Firma", "left"],
-                  ["bransje", "Bransje", "left"],
-                  ["kundestatus", "Kundestatus", "left"],
-                  ["live", "Live", "left"],
-                  ["tilstand", "Tilstand", "left"],
-                  ["mrr", "MRR", "right"],
-                  ["arr", "ARR", "right"],
-                  ["sla", "SLA", "right"],
-                  ["oppstart", "Oppstart", "right"],
-                  ["lukkedato", "Lukkedato", "left"],
-                  ["sist_aktivitet", "Sist aktivitet", "left"],
-                ] as [SortKey, string, string][]).map(([key, label, align]) => (
-                  <th
-                    key={key}
-                    className={`text-${align} px-4 py-3 text-xs font-medium cursor-pointer select-none hover:bg-muted transition-colors`}
-                    onClick={() => toggleSort(key)}
-                  >
-                    <span className={`inline-flex items-center gap-1 ${align === "right" ? "justify-end w-full" : ""}`}>
-                      {label} <SortIcon col={key} />
-                    </span>
-                  </th>
+      {/* Kundeliste i to seksjoner */}
+      {(() => {
+        const pakkeNavnFor = (s: Selskap) => partnerPakker.find(p => p.id === s.partner_pakke_id)?.navn;
+        const emailsFor = (s: Selskap) => kontakter.filter(k => k.selskap_id === s.id).map(k => k.e_post);
+        const trengerOppmerksomhet = filtered.filter(s => {
+          if (s.kundetilstand === "Risiko" || s.kundetilstand === "Usikker") return true;
+          const dager = dagerSiden(s.sist_aktivitet);
+          return dager === null || dager > INAKTIV_DAGER;
+        });
+        const attentionIds = new Set(trengerOppmerksomhet.map(s => s.id));
+        const ovrige = filtered
+          .filter(s => !attentionIds.has(s.id))
+          .sort((a, b) => (b.sist_aktivitet || "").localeCompare(a.sist_aktivitet || ""));
+
+        const Seksjon = ({ tittel, rader, varselFarge }: { tittel: string; rader: Selskap[]; varselFarge: boolean }) => (
+          <section className="space-y-3">
+            <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              {tittel} <span className="tabular-nums">({rader.length})</span>
+            </h2>
+            {rader.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Ingen kunder her.</p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                {rader.map(s => (
+                  <KundeKort
+                    key={s.id}
+                    selskap={s}
+                    pakkenavn={pakkeNavnFor(s)}
+                    kontaktEmails={emailsFor(s)}
+                    varsel={varselFarge ? (s.kundetilstand === "Risiko" ? "risiko" : "usikker") : null}
+                    onClick={() => navigate(`/selskaper/${s.id}`)}
+                  />
                 ))}
-                {canEdit && <th className="text-right px-4 py-3 font-medium">Handlinger</th>}
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map(s => {
-                const selskapSm = salgsmuligheter.filter(sm => sm.selskap_id === s.id && sm.status !== "Tapt");
-                const totalSla = selskapSm.reduce((sum, sm) => sum + (sm.sla || 0), 0);
-                return (
-                <tr key={s.id} className="group border-b last:border-0 hover:bg-primary/[0.035] transition-colors cursor-pointer" onClick={() => navigate(`/selskaper/${s.id}`)}>
-                  <td className="px-4 py-3 font-medium">
-                    <div className="flex items-center gap-2">
-                      <CompanyLogo domain={s.domene} firmanavn={s.firmanavn} kontaktEmails={kontakter.filter(k => k.selskap_id === s.id).map(k => k.e_post)} size="sm" />
-                      <span className="transition-colors group-hover:text-primary">{s.firmanavn}</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground">{s.bransje || "–"}</td>
-                  <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
-                    <select className={`text-xs px-2 py-1 rounded-full font-medium border-0 cursor-pointer ${kundestatusColors[s.kundestatus]}`}
-                      value={s.kundestatus} onChange={e => changeKundestatus(s.id, e.target.value as Kundestatus)} disabled={!canEdit}>
-                      {kundestatuser.map(k => <option key={k} value={k}>{k}</option>)}
-                    </select>
-                  </td>
-                  <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
-                    <Switch checked={s.live_status} onCheckedChange={v => toggleLive(s.id, v)} disabled={!canEdit} />
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${tilstandColors[s.kundetilstand]}`}>{s.kundetilstand}</span>
-                  </td>
-                  <td data-metric className="px-4 py-3 text-right font-semibold text-success">{nok(s.mrr)}</td>
-                  <td data-metric className="px-4 py-3 text-right">{nok(s.arr)}</td>
-                  <td data-metric className="px-4 py-3 text-right">{nok(totalSla)}</td>
-                  <td data-metric className="px-4 py-3 text-right">{nok(s.oppstartskostnad)}</td>
-                  <td className="px-4 py-3 text-muted-foreground text-xs font-mono">{s.lukkedato || "–"}</td>
-                  <td className="px-4 py-3"><LastActivityBadge selskap_id={s.id} sist_aktivitet={s.sist_aktivitet} visVarme /></td>
-                  {canEdit && (
-                  <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
-                    <div className="flex gap-1 justify-end">
-                      <Button variant="ghost" size="icon" className="h-7 w-7" title="Angre til salgsmulighet" onClick={() => setRevertDialog(s.id)}>
-                        <Undo2 className="w-3.5 h-3.5" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-7 w-7" title={s.partner_id ? "Endre/ta tilbake partner" : "Delegér til partner"} onClick={() => setTransferDialog(s.id)}>
-                        <ArrowRightLeft className="w-3.5 h-3.5" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" title="Slett" onClick={() => setDeleteDialog(s.id)}>
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </Button>
-                    </div>
-                  </td>
-                  )}
-                </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
+              </div>
+            )}
+          </section>
+        );
+
+        return (
+          <div className="space-y-8">
+            <Seksjon tittel="Krever oppmerksomhet" rader={trengerOppmerksomhet} varselFarge />
+            <Seksjon tittel="Live kunder" rader={ovrige} varselFarge={false} />
+          </div>
+        );
+      })()}
       </div>
 
       <DetailPanelShell
