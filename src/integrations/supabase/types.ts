@@ -532,6 +532,9 @@ export type Database = {
           neste_steg: string | null
           notater: string | null
           opprettet_dato: string | null
+          pinned_notat: string | null
+          pinned_notat_av: string | null
+          pinned_notat_dato: string | null
           rolle_i_firma: string | null
           sist_aktivitet: string | null
           status: Database["public"]["Enums"]["lead_status"] | null
@@ -555,6 +558,9 @@ export type Database = {
           neste_steg?: string | null
           notater?: string | null
           opprettet_dato?: string | null
+          pinned_notat?: string | null
+          pinned_notat_av?: string | null
+          pinned_notat_dato?: string | null
           rolle_i_firma?: string | null
           sist_aktivitet?: string | null
           status?: Database["public"]["Enums"]["lead_status"] | null
@@ -578,6 +584,9 @@ export type Database = {
           neste_steg?: string | null
           notater?: string | null
           opprettet_dato?: string | null
+          pinned_notat?: string | null
+          pinned_notat_av?: string | null
+          pinned_notat_dato?: string | null
           rolle_i_firma?: string | null
           sist_aktivitet?: string | null
           status?: Database["public"]["Enums"]["lead_status"] | null
@@ -1281,6 +1290,9 @@ export type Database = {
           oppstart_faktura_dato: string | null
           oppstart_fakturert: boolean | null
           oppstartskostnad: number | null
+          pinned_notat: string | null
+          pinned_notat_av: string | null
+          pinned_notat_dato: string | null
           prosjektnavn: string
           salgsmulighet_id: string | null
           selskap_id: string | null
@@ -1304,6 +1316,9 @@ export type Database = {
           oppstart_faktura_dato?: string | null
           oppstart_fakturert?: boolean | null
           oppstartskostnad?: number | null
+          pinned_notat?: string | null
+          pinned_notat_av?: string | null
+          pinned_notat_dato?: string | null
           prosjektnavn: string
           salgsmulighet_id?: string | null
           selskap_id?: string | null
@@ -1327,6 +1342,9 @@ export type Database = {
           oppstart_faktura_dato?: string | null
           oppstart_fakturert?: boolean | null
           oppstartskostnad?: number | null
+          pinned_notat?: string | null
+          pinned_notat_av?: string | null
+          pinned_notat_dato?: string | null
           prosjektnavn?: string
           salgsmulighet_id?: string | null
           selskap_id?: string | null
@@ -1522,6 +1540,9 @@ export type Database = {
           partner_id: string | null
           partner_kostnad: number | null
           partner_provisjon: number | null
+          pinned_notat: string | null
+          pinned_notat_av: string | null
+          pinned_notat_dato: string | null
           rolle_i_firma: string | null
           sannsynlighet: number | null
           selskap_id: string | null
@@ -1563,6 +1584,9 @@ export type Database = {
           partner_id?: string | null
           partner_kostnad?: number | null
           partner_provisjon?: number | null
+          pinned_notat?: string | null
+          pinned_notat_av?: string | null
+          pinned_notat_dato?: string | null
           rolle_i_firma?: string | null
           sannsynlighet?: number | null
           selskap_id?: string | null
@@ -1604,6 +1628,9 @@ export type Database = {
           partner_id?: string | null
           partner_kostnad?: number | null
           partner_provisjon?: number | null
+          pinned_notat?: string | null
+          pinned_notat_av?: string | null
+          pinned_notat_dato?: string | null
           rolle_i_firma?: string | null
           sannsynlighet?: number | null
           selskap_id?: string | null

@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import CompanyLogo from "@/components/CompanyLogo";
+import { PinnedNotatBoks } from "@/components/PinnedNotat";
 import { dagerSiden, prosjektStatusFarge } from "@/lib/kundeforhold";
 import { fremdrift } from "./ProsjektFremdrift";
 import type { Prosjekt } from "@/data/crm-data";
@@ -32,6 +33,8 @@ export default function ProsjektKort({ prosjekt: p, firmanavn, domene, onClick }
           <p className="text-xs text-muted-foreground truncate">{p.prosjektnavn}</p>
         </div>
       </div>
+
+      <PinnedNotatBoks notat={p.pinned_notat} av={p.pinned_notat_av} visAv />
 
       <div className="flex flex-wrap gap-1.5">
         <Badge className={`text-[10px] ${prosjektStatusFarge[p.status] || "bg-muted text-muted-foreground"}`}>{p.status}</Badge>

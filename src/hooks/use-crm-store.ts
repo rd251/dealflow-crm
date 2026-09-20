@@ -20,6 +20,9 @@ function rowToLead(r: any): Lead {
     rolle_i_firma: r.rolle_i_firma || "", use_case: r.use_case || "",
     videresendt_til_partner_id: r.videresendt_til_partner_id || "",
     videresendt_dato: r.videresendt_dato || "",
+    pinned_notat: r.pinned_notat || "",
+    pinned_notat_av: r.pinned_notat_av || "",
+    pinned_notat_dato: r.pinned_notat_dato || "",
   };
 }
 function rowToSelskap(r: any): Selskap {
@@ -64,6 +67,9 @@ function rowToSalgsmulighet(r: any): Salgsmulighet {
     ai_recap: r.ai_recap || null,
     videresendt_til_partner_id: r.videresendt_til_partner_id || "",
     videresendt_dato: r.videresendt_dato || "",
+    pinned_notat: r.pinned_notat || "",
+    pinned_notat_av: r.pinned_notat_av || "",
+    pinned_notat_dato: r.pinned_notat_dato || "",
   } as Salgsmulighet;
 }
 function rowToProsjekt(r: any): Prosjekt {
@@ -79,6 +85,9 @@ function rowToProsjekt(r: any): Prosjekt {
     timepris: Number(r.timepris) || 1500,
     notater_ansvarlig: r.notater_ansvarlig || "",
     created_at: r.created_at || undefined,
+    pinned_notat: r.pinned_notat || "",
+    pinned_notat_av: r.pinned_notat_av || "",
+    pinned_notat_dato: r.pinned_notat_dato || "",
   };
 }
 function rowToOppgave(r: any): Oppgave {
@@ -550,6 +559,9 @@ function useCrmStoreInternal() {
           rolle_i_firma: emptyToNull(item.rolle_i_firma), use_case: emptyToNull(item.use_case),
           videresendt_til_partner_id: emptyToNull(item.videresendt_til_partner_id),
           videresendt_dato: emptyToNull(item.videresendt_dato),
+          pinned_notat: emptyToNull(item.pinned_notat),
+          pinned_notat_av: emptyToNull(item.pinned_notat_av),
+          pinned_notat_dato: emptyToNull(item.pinned_notat_dato),
         });
       }
     }
@@ -567,6 +579,9 @@ function useCrmStoreInternal() {
           rolle_i_firma: emptyToNull(item.rolle_i_firma), use_case: emptyToNull(item.use_case),
           videresendt_til_partner_id: emptyToNull(item.videresendt_til_partner_id),
           videresendt_dato: emptyToNull(item.videresendt_dato),
+          pinned_notat: emptyToNull(item.pinned_notat),
+          pinned_notat_av: emptyToNull(item.pinned_notat_av),
+          pinned_notat_dato: emptyToNull(item.pinned_notat_dato),
         });
       }
     }
@@ -675,6 +690,9 @@ function useCrmStoreInternal() {
           telefon: emptyToNull(item.telefon),
           videresendt_til_partner_id: emptyToNull(item.videresendt_til_partner_id),
           videresendt_dato: emptyToNull(item.videresendt_dato),
+          pinned_notat: emptyToNull(item.pinned_notat),
+          pinned_notat_av: emptyToNull(item.pinned_notat_av),
+          pinned_notat_dato: emptyToNull(item.pinned_notat_dato),
         });
       }
     }
@@ -698,6 +716,9 @@ function useCrmStoreInternal() {
           telefon: emptyToNull(item.telefon),
           videresendt_til_partner_id: emptyToNull(item.videresendt_til_partner_id),
           videresendt_dato: emptyToNull(item.videresendt_dato),
+          pinned_notat: emptyToNull(item.pinned_notat),
+          pinned_notat_av: emptyToNull(item.pinned_notat_av),
+          pinned_notat_dato: emptyToNull(item.pinned_notat_dato),
         });
       }
     }
@@ -723,6 +744,9 @@ function useCrmStoreInternal() {
           onboarding_steg: item.onboarding_steg || [],
           timepris: item.timepris ?? 1500,
           notater_ansvarlig: emptyToNull(item.notater_ansvarlig || ""),
+          pinned_notat: emptyToNull(item.pinned_notat),
+          pinned_notat_av: emptyToNull(item.pinned_notat_av),
+          pinned_notat_dato: emptyToNull(item.pinned_notat_dato),
         });
       }
     }
@@ -741,6 +765,9 @@ function useCrmStoreInternal() {
           onboarding_steg: item.onboarding_steg || [],
           timepris: item.timepris ?? 1500,
           notater_ansvarlig: emptyToNull(item.notater_ansvarlig || ""),
+          pinned_notat: emptyToNull(item.pinned_notat),
+          pinned_notat_av: emptyToNull(item.pinned_notat_av),
+          pinned_notat_dato: emptyToNull(item.pinned_notat_dato),
         });
       }
     }
