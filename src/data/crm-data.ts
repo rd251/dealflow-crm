@@ -49,6 +49,10 @@ export interface Lead {
   use_case: string;
   videresendt_til_partner_id: string;
   videresendt_dato: string;
+  /** Kort notat som vises direkte på kortet i listen. */
+  pinned_notat?: string;
+  pinned_notat_av?: string;
+  pinned_notat_dato?: string;
 }
 
 export type KontraktStatus = "Ikke sendt" | "Sendt" | "Åpnet" | "Signert" | "Utløpt";

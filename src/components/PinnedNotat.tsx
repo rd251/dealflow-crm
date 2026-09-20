@@ -34,7 +34,7 @@ export function PinnedNotatBoks({
   return (
     <div className={`rounded-md border border-warning/40 bg-warning/10 px-2 py-1.5 ${className}`} title={notat}>
       {visAv && av && (
-        <p className="text-[10px] font-medium text-warning-foreground/70 mb-0.5">Notat fra {av}</p>
+        <p className="text-[10px] font-medium text-muted-foreground mb-0.5">Notat fra {av}</p>
       )}
       <p className="text-[11px] leading-snug text-foreground/85 line-clamp-2">{notat}</p>
     </div>
