@@ -23,7 +23,7 @@ interface InlineTaskFormProps {
 }
 
 export default function InlineTaskForm({ lead_id = "", selskap_id = "", salgsmulighet_id = "" }: InlineTaskFormProps) {
-  const { oppgaver, updateOppgaver, generateId } = useCrmStore();
+  const { oppgaver, updateOppgaver, generateId, varsleOppgaveTildelt } = useCrmStore();
   const { user } = useAuth();
   const { profiles } = useProfiles();
   const [showForm, setShowForm] = useState(false);
@@ -61,6 +61,7 @@ export default function InlineTaskForm({ lead_id = "", selskap_id = "", salgsmul
         fra_user_id: user.id,
         lenke: "/oppgaver",
       });
+      varsleOppgaveTildelt(id);
       const assignee = profiles.find(p => p.user_id === ansvarlig);
       toast.success(`Oppgave delegert til ${assignee?.display_name || "bruker"}`);
     }

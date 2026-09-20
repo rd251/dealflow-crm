@@ -1,5 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { sendTemplateEmailWithLog } from "../_shared/transactional-email-templates/send-and-log.ts";
+import { behandleHendelse } from "../_shared/crm-varsel/hendelser.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -259,6 +260,20 @@ Deno.serve(async (req) => {
             message: mailErr instanceof Error ? mailErr.message : String(mailErr),
           });
         }
+      }
+
+      // Internt driftsvarsel til ansvarlig + kopimottaker.
+      try {
+        await behandleHendelse(supabase, {
+          hendelse: "kontrakt_signert",
+          salgsmulighet_id: CRMid,
+          signert_av: signer_name || null,
+          signert_dato: String(updateData.kontrakt_signert_dato || ""),
+        });
+      } catch (varselErr) {
+        console.error("Kunne ikke sende internt kontraktvarsel", {
+          message: varselErr instanceof Error ? varselErr.message : String(varselErr),
+        });
       }
     }
     return new Response(JSON.stringify({ received: true, event, CRMid }), {

@@ -52,3 +52,7 @@ project_id = "tchmujgzcklwgptocbno"
     verify_jwt = false
   [functions.nudge-awaiting-reply]
     verify_jwt = false
+  [functions.crm-varsel]
+    verify_jwt = true
+  [functions.crm-forfalte-oppgaver]
+    verify_jwt = false

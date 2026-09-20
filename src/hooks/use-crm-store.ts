@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import { loggAktivitet } from "@/lib/activity-logging";
+import { varsleCrm, type CrmVarselPayload } from "@/lib/crm-varsel";
 import {
   Lead, LeadStatus, Salgsmulighet, SalgsmulighetStatus, Prosjekt, Selskap, Kontakt, Oppgave, Partner,
 } from "@/data/crm-data";
@@ -542,6 +543,25 @@ function useCrmStoreInternal() {
       .catch(syncErrorHandler("Partnere", prev, partnereRef, setPartnere));
   }, []);
 
+  // Interne varslings-e-poster sendes først når raden faktisk er lagret, slik at
+  // edge-funksjonen finner den igjen i databasen.
+  const varsleEtterLagring = useCallback(
+    (ko: { current: Promise<void> }, payload: CrmVarselPayload) => {
+      ko.current = ko.current.then(() => varsleCrm(payload)).catch(() => {});
+    },
+    [],
+  );
+
+  /** Varsler ansvarlig om at et nytt prosjekt er tildelt. */
+  const varsleProsjektTildelt = useCallback((prosjektId: string) => {
+    varsleEtterLagring(prosjekterSyncQueueRef, { hendelse: "prosjekt_tildelt", prosjekt_id: prosjektId });
+  }, [varsleEtterLagring]);
+
+  /** Varsler ansvarlig om en ny tildelt oppgave. */
+  const varsleOppgaveTildelt = useCallback((oppgaveId: string) => {
+    varsleEtterLagring(oppgaverSyncQueueRef, { hendelse: "oppgave_tildelt", oppgave_id: oppgaveId });
+  }, [varsleEtterLagring]);
+
   // Sync helpers - detect new/updated/deleted items
   async function syncLeads(prev: Lead[], next: Lead[]) {
     const prevIds = new Set(prev.map(i => i.id));
@@ -910,8 +930,9 @@ function useCrmStoreInternal() {
     updateLeads(prev => prev.map(l =>
       l.id === leadId ? { ...l, status: "Konvertert til salg" as LeadStatus, konvertert_til: "salg" as const, konvertert_dato: today, sist_aktivitet: today } : l
     ));
+    varsleEtterLagring(salgsmuligheterSyncQueueRef, { hendelse: "lead_konvertert", salgsmulighet_id: smId, lead_id: leadId });
     return smId;
-  }, [leads, selskaper, kontakter, updateLeads, updateSalgsmuligheter, updateSelskaper, updateKontakter]);
+  }, [leads, selskaper, kontakter, updateLeads, updateSalgsmuligheter, updateSelskaper, updateKontakter, varsleEtterLagring]);
 
   const konverterTilPartner = useCallback((leadId: string, enrichment?: { orgnr?: string; bransje?: string; firmaadresse?: string; postadresse?: string }) => {
     const lead = leads.find(l => l.id === leadId);
@@ -986,7 +1007,9 @@ function useCrmStoreInternal() {
         partner_id: partnerId !== undefined ? (partnerId || "") : s.partner_id,
       } : s
     ));
-  }, [salgsmuligheter, updateSalgsmuligheter, updateProsjekter, updateSelskaper]);
+
+    varsleEtterLagring(salgsmuligheterSyncQueueRef, { hendelse: "deal_vunnet", salgsmulighet_id: smId });
+  }, [salgsmuligheter, updateSalgsmuligheter, updateProsjekter, updateSelskaper, varsleEtterLagring]);
 
   const tapSalgsmulighet = useCallback((smId: string, tapsaarsak: Salgsmulighet["tapsaarsak"]) => {
     const today = new Date().toISOString().split("T")[0];
@@ -1052,7 +1075,13 @@ function useCrmStoreInternal() {
     } catch (err) {
       console.warn("Kunne ikke logge go-live:", err);
     }
-  }, [prosjekter, selskaper, updateProsjekter, updateSelskaper]);
+
+    varsleEtterLagring(selskaperSyncQueueRef, {
+      hendelse: "kunde_live",
+      selskap_id: prosjekt.selskap_id,
+      prosjekt_id: pId,
+    });
+  }, [prosjekter, selskaper, updateProsjekter, updateSelskaper, varsleEtterLagring]);
 
   const kansellerSelskap = useCallback((selskapId: string, aarsak: Selskap["kanselleringsaarsak"], notat: string) => {
     const today = new Date().toISOString().split("T")[0];
@@ -1144,6 +1173,7 @@ function useCrmStoreInternal() {
     leads, salgsmuligheter, prosjekter, selskaper, kontakter, oppgaver, partnere,
     updateLeads, updateSalgsmuligheter, updateProsjekter, updateSelskaper, updateKontakter, updateOppgaver, updatePartnere,
     konverterLead, konverterTilPartner, vinnSalgsmulighet, tapSalgsmulighet, settProsjektLive, kansellerSelskap,
+    varsleProsjektTildelt, varsleOppgaveTildelt,
     slettSelskap, konverterSelskapTilPartner, angreTilSalgsmulighet,
     generateId, loaded, refresh,
   };
