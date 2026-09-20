@@ -736,6 +736,10 @@ function useCrmStoreInternal() {
           oppstartskostnad: item.oppstartskostnad, oppstart_fakturert: item.oppstart_fakturert,
           oppstart_faktura_dato: emptyToNull(item.oppstart_faktura_dato), oppstart_betalt: item.oppstart_betalt,
           integrasjon: item.integrasjon, notater: emptyToNull(item.notater),
+          onboarding_type: item.onboarding_type || "Selvbetjening",
+          onboarding_steg: item.onboarding_steg || [],
+          timepris: item.timepris ?? 1500,
+          notater_ansvarlig: emptyToNull(item.notater_ansvarlig || ""),
         });
       }
     }
