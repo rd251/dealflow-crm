@@ -10,7 +10,7 @@ const KANT = '#ece9e4'
 const NOTAT_GUL_BG = '#fff8e1'
 const NOTAT_GUL_KANT = '#f0c419'
 const LOGO_URL =
-  'https://tchmujgzcklwgptocbno.supabase.co/storage/v1/object/public/email-assets/snakk-logo-hvit.svg'
+  'https://tchmujgzcklwgptocbno.supabase.co/storage/v1/object/public/email-assets/snakk-logo-hvit.png'
 
 export interface VarselFelt {
   label: string
