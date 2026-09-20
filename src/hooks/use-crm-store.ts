@@ -944,6 +944,7 @@ function useCrmStoreInternal() {
       ansvarlig: sm.ansvarlig, status: "Ny", startdato: today, forventet_go_live: "",
       go_live_dato: "", oppstartskostnad: sm.oppstartskostnad, oppstart_fakturert: false,
       oppstart_faktura_dato: "", oppstart_betalt: false, integrasjon: "Ingen", notater: "",
+      onboarding_type: "Selvbetjening", onboarding_steg: [], timepris: 1500, notater_ansvarlig: "",
     };
     updateProsjekter(prev => [...prev, nyttProsjekt]);
 
