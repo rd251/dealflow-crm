@@ -493,7 +493,7 @@ export default function CompanyProfile() {
 
                   <div className="bg-card border rounded-xl p-4 sm:p-5">
                     <h2 className="font-semibold text-base mb-3">Siste aktiviteter</h2>
-                    <ActivityLog selskap_id={id!} maks={3} />
+                    <ActivityLog selskap_id={id!} />
                   </div>
 
                   <div className="bg-card border rounded-xl p-4 sm:p-5">
