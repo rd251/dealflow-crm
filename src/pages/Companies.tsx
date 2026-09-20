@@ -28,6 +28,12 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DataImportDialog from "@/components/DataImportDialog";
 import LastActivityBadge from "@/components/LastActivityBadge";
 import CompanyDocuments from "@/components/CompanyDocuments";
+import KundeKort from "@/components/kunde/KundeKort";
+import { INAKTIV_DAGER, dagerSiden, erSammeMaaned } from "@/lib/kundeforhold";
+
+/** Statusfiltre på kundeoversikten. */
+type Kundefilter = "Alle" | "Live" | "Risiko" | "Pilot" | "Kansellert";
+const KUNDEFILTRE: Kundefilter[] = ["Alle", "Live", "Risiko", "Pilot", "Kansellert"];
 
 const kundestatuser: Kundestatus[] = ["Ikke kunde", "Pilot", "Live", "Pause", "Kansellert"];
 const onboardingStatuser: OnboardingStatus[] = ["Ikke startet", "Pågår", "Venter på kunde", "Klar for live", "Ferdig"];
