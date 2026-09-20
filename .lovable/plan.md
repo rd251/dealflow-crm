@@ -45,3 +45,36 @@ Knapper: «Forhåndsvis faktura» (pen liste i dialog), «Eksporter til Triplete
 - Nye filer: `src/lib/kundeforhold.ts` (navngitte konstanter: `INAKTIV_DAGER = 14`, `STANDARD_TIMEPRIS = 1500`, onboarding-typer og stegdefinisjoner, timetyper), `src/components/kunde/Timeregistrering.tsx`, `src/components/kunde/ProsjektOnboarding.tsx`, `src/components/kunde/KundeKort.tsx`.
 - Endres: `src/pages/Companies.tsx` (oversikt), `src/pages/CompanyProfile.tsx` (faner), `src/components/CompanyDocuments.tsx` (gjenbrukes uendret), `src/hooks/use-crm-store.ts` (prosjektfelter).
 - Eksisterende data, queries og integrasjoner beholdes; alt norsk UI og gjeldende designsystem.
+
+## 4. Prosjektsiden (oversikt)
+
+Ren oversikt — ingen opprettelse her. Fire nøkkeltall øverst (2x2): aktive prosjekter (ikke Live/Kansellert), klar for go-live, gjennomsnittlig onboarding-tid i dager (opprettet → Live), live denne måneden.
+
+Filterfaner: Alle / Ny / I produksjon / Test med kunde / Klar for live / Live / Blokkert. (Statusen «Klar for live» legges til i prosjektstatus.)
+
+Prosjektkort: firmanavn + logo/initialer, prosjektnavn, onboarding-type-merke, statusmerke med farge, ansvarlig, opprettet dato, forventet go-live, dager siden opprettet, fremdriftsbar (fullførte steg av totalt). Rød ramme hvis blokkert eller forventet go-live er passert.
+
+Klikk åpner prosjekt-panelet. «Nytt prosjekt»-knappen fjernes fra siden.
+
+## 5. Opprette prosjekt (fra kundeprofil)
+
+Under fanen Prosjekt på kundeprofilen: knapp «Opprett prosjekt» når kunden ikke har prosjekt. Modal med prosjektnavn (auto «Onboarding — [firmanavn]»), ansvarlig (nedtrekk med brukere, standard Roberto Garcia Bjertnes), onboarding-type, timepris (kun Assistert/Konsulent, standard 1500), startdato (i dag), forventet go-live, integrasjon og notater til ansvarlig.
+
+Ved opprettelse: prosjektet lagres og kobles til selskapet med status «Ny», det opprettes oppgave «Start onboarding — [firmanavn]» til ansvarlig, ansvarlig får intern varsling «Nytt prosjekt tildelt: [firmanavn] — [type]», og aktiviteten «Prosjekt opprettet av [bruker]» logges på selskapet.
+
+## 6. Prosjekt-panel
+
+Header: firmanavn, prosjektnavn, status, onboarding-type, ansvarlig, forventet go-live.
+
+Seksjoner: fremdrift (steg med avkryssing tilpasset type), timeregistrering (samme komponent som på kundeprofilen), notater, integrasjon med tekniske notater, og aktivitetslogg.
+
+Statusvalg: Ny / I produksjon / Test med kunde / Klar for live / Live / Blokkert.
+
+Ved «Live»: kundens status settes til Live, go-live dato settes på selskapet, KB-filer slettes fra lagring, aktiviteten «Kunde satt live av [bruker]» logges, og kundeansvarlig varsles «[firmanavn] er nå live!».
+
+## Teknisk (tillegg)
+
+- Migrering: `prosjekt_status`-enum utvides med «Klar for live»; `prosjekter` får `notater_ansvarlig` text.
+- Nye filer: `src/components/prosjekt/OpprettProsjektDialog.tsx`, `src/components/prosjekt/ProsjektDrawer.tsx`, `src/components/prosjekt/ProsjektKort.tsx`.
+- `src/pages/Prosjekter.tsx` skrives om til oversikt med nøkkeltall, filtre og kort (dagens kanban-drag erstattes av statusvalg i panelet).
+- Varslinger skrives til `varsler`-tabellen; oppgaver til `oppgaver`; aktiviteter via eksisterende `loggAktivitet`.

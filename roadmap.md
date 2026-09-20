@@ -56,3 +56,12 @@
 - [x] Kundeliste (navn, bransje, status, MRR, kunde siden) og inntektskonsentrasjon topp 1/3/5
 - [x] Partnerinntekt kun som samlet linje
 - [x] RLS og ruting hindrer all annen CRM-tilgang for investorer
+
+## Kundeforhold og prosjekt (redesign)
+- [ ] Kundeforhold-oversikt: KPI-kort, filtre, «Krever oppmerksomhet» + «Live kunder»
+- [ ] Kundeprofil med 5 faner (Oversikt / Aktivitet / Prosjekt / Dokumenter / Onboarding)
+- [ ] Onboarding-type og steg per prosjekt
+- [ ] Timeregistrering (prosjekt_timer) med summer, fakturagrunnlag og Tripletex-klargjøring
+- [ ] Prosjektside: KPI-kort, statusfiltre, prosjektkort med fremdrift, drawer
+- [ ] Opprettelse av prosjekt flyttet til kundeprofil (modal + oppgave, varsling, aktivitetslogg)
+- [ ] Live-overgang: kundestatus, go-live dato, sletting av KB-filer, varsling
