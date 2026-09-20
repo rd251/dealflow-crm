@@ -994,7 +994,37 @@ function useCrmStoreInternal() {
     } catch (err) {
       console.warn("Could not clean KB files:", err);
     }
-  }, [prosjekter, updateProsjekter, updateSelskaper]);
+
+    // Logg aktivitet og varsle kundeansvarlig
+    const selskap = selskaper.find(s => s.id === prosjekt.selskap_id);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData?.session?.user?.id ?? null;
+      const { data: profilRader } = await supabase.from("profiles").select("user_id, display_name");
+      const utforer = profilRader?.find(p => p.user_id === userId)?.display_name || "en kollega";
+
+      await loggAktivitet({
+        logg: "notat",
+        target: { selskap_id: prosjekt.selskap_id, prosjekt_id: pId },
+        tittel: "Kunde satt live",
+        notat: `Kunde satt live av ${utforer}`,
+      });
+
+      const ansvarligId = profilRader?.find(p => p.display_name === selskap?.kundeansvarlig)?.user_id;
+      if (ansvarligId) {
+        await supabase.from("varsler").insert({
+          user_id: ansvarligId,
+          type: "kunde_live",
+          tittel: "Kunde er live",
+          beskrivelse: `${selskap?.firmanavn ?? "Kunden"} er nå live!`,
+          fra_user_id: userId,
+          lenke: `/selskaper/${prosjekt.selskap_id}`,
+        });
+      }
+    } catch (err) {
+      console.warn("Kunne ikke logge go-live:", err);
+    }
+  }, [prosjekter, selskaper, updateProsjekter, updateSelskaper]);
 
   const kansellerSelskap = useCallback((selskapId: string, aarsak: Selskap["kanselleringsaarsak"], notat: string) => {
     const today = new Date().toISOString().split("T")[0];
