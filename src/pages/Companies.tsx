@@ -770,6 +770,10 @@ export default function Companies() {
                 oppstart_betalt: false,
                 integrasjon: projectForm.integrasjon,
                 notater: "",
+                onboarding_type: "Selvbetjening",
+                onboarding_steg: [],
+                timepris: STANDARD_TIMEPRIS,
+                notater_ansvarlig: "",
               };
               updateProsjekter(prev => [...prev, newP]);
               setNewProjectDialog(null);
