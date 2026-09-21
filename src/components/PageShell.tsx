@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import NotificationBell from "@/components/NotificationBell";
 import ThemeToggle from "@/components/ThemeToggle";
 import LogActivityButton from "@/components/LogActivityButton";
+import GlobalSearch from "@/components/GlobalSearch";
 
 interface PageShellProps {
   title: string;
