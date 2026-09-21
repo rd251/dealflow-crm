@@ -1323,20 +1323,30 @@ export default function Salgsmuligheter() {
                         }
                       }}>
                       <option value="">Velg pakke…</option>
-                      {PAKKER.map(p => (
-                        <option key={p.navn} value={p.navn}>
-                          {p.navn} {p.mrr != null ? `— ${nok(p.mrr)}/mnd` : p.navn === "Enterprise" ? "— kontakt for pris" : "— fritekst"}{p.minutter ? ` (${p.minutter})` : ""}
-                        </option>
-                      ))}
+                      {PAKKE_KATEGORIER.map(kat => {
+                        const iKat = PAKKER.filter(p => p.kategori === kat);
+                        if (iKat.length === 0) return null;
+                        return (
+                          <optgroup key={kat} label={kat}>
+                            {iKat.map(p => (
+                              <option key={p.navn} value={p.navn}>
+                                {p.navn} {p.mrr != null ? `— ${nok(p.mrr)}/mnd` : p.navn === "Enterprise" ? "— kontakt for pris" : "— fritekst"}
+                              </option>
+                            ))}
+                          </optgroup>
+                        );
+                      })}
                     </select>
                   </DetailField>
                   {currentSm.valgt_pakke && (() => {
                     const pakke = PAKKER.find(p => p.navn === currentSm.valgt_pakke);
-                    return pakke?.minutter ? (
+                    if (!pakke?.minutter) return null;
+                    return (
                       <div className="text-xs text-muted-foreground bg-muted/30 rounded-md px-2 py-1">
-                        📞 {pakke.minutter} inkludert
+                        {pakke.minutter} inkludert{pakke.merbruk ? ` · ekstra: ${pakke.merbruk}` : ""}
+                        {pakke.utgatt ? " · tidligere prisliste" : ""}
                       </div>
-                    ) : null;
+                    );
                   })()}
                   <div className="grid grid-cols-2 gap-2">
                     <DetailField label="MRR">
