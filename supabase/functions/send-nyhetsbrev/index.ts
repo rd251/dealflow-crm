@@ -37,6 +37,13 @@ async function brevo(path: string, init: RequestInit = {}) {
   return text ? JSON.parse(text) : {}
 }
 
+/** Domener som aldri skal motta nyhetsbrev. */
+const EKSKLUDERTE_DOMENER = ['unifon.no']
+
+function erEkskludertDomene(e: string): boolean {
+  return EKSKLUDERTE_DOMENER.some((d) => e.endsWith(`@${d}`))
+}
+
 interface Mottaker {
   e_post: string
   firmanavn: string | null
@@ -57,6 +64,7 @@ async function hentMottakere(supabase: any): Promise<Mottaker[]> {
   const add = (e: string, firmanavn: string | null, kilde: string, id: string | null) => {
     const key = (e || '').trim().toLowerCase()
     if (!EMAIL_RE.test(key) || blokkert.has(key) || map.has(key)) return
+    if (erEkskludertDomene(key)) return
     map.set(key, { e_post: key, firmanavn, kilde, kilde_id: id })
   }
 
@@ -252,6 +260,7 @@ Deno.serve(async (req) => {
       for (const r of lagrede as any[]) {
         const key = (r.e_post || '').trim().toLowerCase()
         if (!EMAIL_RE.test(key) || avmeldtSet.has(key) || map.has(key)) continue
+        if (erEkskludertDomene(key)) continue
         map.set(key, {
           e_post: key,
           firmanavn: r.firmanavn ?? null,

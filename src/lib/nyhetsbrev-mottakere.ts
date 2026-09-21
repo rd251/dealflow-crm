@@ -10,6 +10,14 @@ export interface Mottaker {
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+/** Domener som aldri skal motta nyhetsbrev. */
+export const EKSKLUDERTE_DOMENER = ["unifon.no"];
+
+export function erEkskludertDomene(e?: string | null): boolean {
+  const adr = (e ?? "").trim().toLowerCase();
+  return EKSKLUDERTE_DOMENER.some((d) => adr.endsWith(`@${d}`));
+}
+
 export function erGyldigEpost(e?: string | null): boolean {
   return !!e && EMAIL_RE.test(e.trim());
 }
@@ -31,6 +39,7 @@ export async function hentMottakere(): Promise<Mottaker[]> {
   const add = (m: Mottaker) => {
     const key = m.e_post.trim().toLowerCase();
     if (!erGyldigEpost(key)) return;
+    if (erEkskludertDomene(key)) return;
     if (map.has(key)) return;
     map.set(key, { ...m, e_post: key, avmeldt: avmeldte.has(key) });
   };
