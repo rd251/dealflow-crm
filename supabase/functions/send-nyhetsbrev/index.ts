@@ -260,6 +260,7 @@ Deno.serve(async (req) => {
       for (const r of lagrede as any[]) {
         const key = (r.e_post || '').trim().toLowerCase()
         if (!EMAIL_RE.test(key) || avmeldtSet.has(key) || map.has(key)) continue
+        if (erEkskludertDomene(key)) continue
         map.set(key, {
           e_post: key,
           firmanavn: r.firmanavn ?? null,
