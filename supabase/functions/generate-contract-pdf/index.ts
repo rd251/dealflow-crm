@@ -104,8 +104,18 @@ const MALER: Record<KontraktType, KontraktMal> = {
         ],
       },
       {
+        tittel: "Møter Ubegrenset",
+        punkter: [
+          "Prisen er 499 kr per bruker per måned og gir ubegrenset antall møtetimer og AI-spørsmål",
+          "Antall brukere avtales ved bestilling; nye brukere faktureres fra måneden de opprettes",
+          "Ubegrenset bruk forutsetter normal bruk i egen virksomhet, og gjelder ikke videresalg eller deling av konto med andre virksomheter",
+          "Ved årlig betaling gis 10 % rabatt på abonnementsprisen",
+        ],
+      },
+      {
         tittel: "Bruk utover inkludert kapasitet",
         punkter: [
+          "Gjelder pakkene Start, Bedrift og Pro; Møter Ubegrenset har ingen volumgrense",
           "Møtetimer utover inkludert volum faktureres med 69 kr per time",
           "AI-spørsmål utover inkludert volum faktureres med 49 kr per 100 spørsmål",
           "Ekstra medarbeiderplass: 249 kr per måned",
