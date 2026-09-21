@@ -25,7 +25,7 @@ const typeConfig = {
   moete: { icon: Calendar, label: "Møte", color: "text-orange-600 bg-orange-500/10", path: (id: string) => `/moetenotater?meeting=${id}` },
 } as const;
 
-export default function GlobalSearch() {
+export default function GlobalSearch({ className = "mb-4" }: { className?: string } = {}) {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -175,7 +175,7 @@ export default function GlobalSearch() {
   };
 
   return (
-    <div ref={containerRef} className="relative w-full mb-4">
+    <div ref={containerRef} className={`relative w-full ${className}`}>
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
         <Input

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import NotificationBell from "@/components/NotificationBell";
 import ThemeToggle from "@/components/ThemeToggle";
 import LogActivityButton from "@/components/LogActivityButton";
+import GlobalSearch from "@/components/GlobalSearch";
 
 interface PageShellProps {
   title: string;
@@ -30,6 +31,11 @@ export default function PageShell({ title, subtitle, actions, children }: PageSh
             <h1 className="font-display text-2xl font-semibold truncate">{title}</h1>
             {subtitle && <p className="text-sm text-muted-foreground mt-0.5 truncate">{subtitle}</p>}
           </div>
+          {!isMobile && (
+            <div className="flex-1 max-w-md mx-6">
+              <GlobalSearch className="" />
+            </div>
+          )}
           <div className="flex items-center gap-1 shrink-0">
             <Button
               variant="ghost"
