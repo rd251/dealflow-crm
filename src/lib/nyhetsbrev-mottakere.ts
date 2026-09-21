@@ -10,6 +10,14 @@ export interface Mottaker {
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+/** Domener som aldri skal motta nyhetsbrev. */
+export const EKSKLUDERTE_DOMENER = ["unifon.no"];
+
+export function erEkskludertDomene(e?: string | null): boolean {
+  const adr = (e ?? "").trim().toLowerCase();
+  return EKSKLUDERTE_DOMENER.some((d) => adr.endsWith(`@${d}`));
+}
+
 export function erGyldigEpost(e?: string | null): boolean {
   return !!e && EMAIL_RE.test(e.trim());
 }
