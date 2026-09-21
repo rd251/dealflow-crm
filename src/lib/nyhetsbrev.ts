@@ -129,6 +129,7 @@ function pilLenke(b: Blokk): string {
 }
 
 function renderBlokk(b: Blokk): string {
+  if (!b || typeof b !== "object") return "";
   switch (b.type) {
     case "header":
       return `
@@ -266,7 +267,10 @@ function renderBlokk(b: Blokk): string {
 }
 
 export function renderNewsletterHtml(blokker: Blokk[], preheader?: string): string {
-  const body = blokker.map(renderBlokk).join("");
+  const body = (blokker ?? [])
+    .filter((b): b is Blokk => !!b && typeof b === "object")
+    .map(renderBlokk)
+    .join("");
   return `<!DOCTYPE html>
 <html lang="no"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /></head>
 <body style="margin:0;padding:0;background:#f1ede7;">
