@@ -39,6 +39,7 @@ export async function hentMottakere(): Promise<Mottaker[]> {
   const add = (m: Mottaker) => {
     const key = m.e_post.trim().toLowerCase();
     if (!erGyldigEpost(key)) return;
+    if (erEkskludertDomene(key)) return;
     if (map.has(key)) return;
     map.set(key, { ...m, e_post: key, avmeldt: avmeldte.has(key) });
   };
