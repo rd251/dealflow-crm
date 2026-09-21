@@ -52,10 +52,11 @@ interface Mottaker {
 }
 
 async function hentMottakere(supabase: any): Promise<Mottaker[]> {
-  const [leads, kontakter, deals, avmeldte] = await Promise.all([
+  const [leads, kontakter, deals, epostKontakter, avmeldte] = await Promise.all([
     supabase.from('leads').select('id, e_post, firmanavn, status'),
     supabase.from('kontakter').select('id, e_post, navn, selskaper(firmanavn)'),
     supabase.from('salgsmuligheter').select('id, e_post, navn'),
+    supabase.from('email_contacts').select('id, primary_email, display_name, selskaper(firmanavn)'),
     supabase.from('nyhetsbrev_avmeldte').select('e_post'),
   ])
 
@@ -74,6 +75,7 @@ async function hentMottakere(supabase: any): Promise<Mottaker[]> {
   }
   for (const d of deals.data || []) add(d.e_post, d.navn, 'kunde', d.id)
   for (const k of kontakter.data || []) add(k.e_post, k.selskaper?.firmanavn ?? k.navn, 'kontakt', k.id)
+  for (const ec of epostKontakter.data || []) add(ec.primary_email, ec.selskaper?.firmanavn ?? ec.display_name, 'kontakt', ec.id)
 
   return Array.from(map.values())
 }

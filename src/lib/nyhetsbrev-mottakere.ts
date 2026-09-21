@@ -24,10 +24,11 @@ export function erGyldigEpost(e?: string | null): boolean {
 
 /** Henter unike mottakere fra leads, kontakter og kunder (salgsmuligheter). */
 export async function hentMottakere(): Promise<Mottaker[]> {
-  const [leadsRes, kontakterRes, dealsRes, avmeldtRes] = await Promise.all([
+  const [leadsRes, kontakterRes, dealsRes, epostKontakterRes, avmeldtRes] = await Promise.all([
     supabase.from("leads").select("id, e_post, firmanavn, status"),
     supabase.from("kontakter").select("id, e_post, navn, selskap_id, selskaper(firmanavn)"),
     supabase.from("salgsmuligheter").select("id, e_post, navn, status"),
+    supabase.from("email_contacts").select("id, primary_email, display_name, selskap_id, selskaper(firmanavn)"),
     supabase.from("nyhetsbrev_avmeldte").select("e_post"),
   ]);
 
@@ -57,6 +58,14 @@ export async function hentMottakere(): Promise<Mottaker[]> {
       firmanavn: k.selskaper?.firmanavn || k.navn,
       kilde: "kontakt",
       kilde_id: k.id,
+    });
+  }
+  for (const ec of (epostKontakterRes.data || []) as any[]) {
+    add({
+      e_post: ec.primary_email,
+      firmanavn: ec.selskaper?.firmanavn || ec.display_name,
+      kilde: "kontakt",
+      kilde_id: ec.id,
     });
   }
 
