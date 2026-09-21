@@ -117,6 +117,9 @@ export interface PakkeDef {
 /** Årsbetaling gir 10 % rabatt på abonnementet (priser eks. mva). */
 export const AARSRABATT = 0.1;
 
+/** Møter Ubegrenset prises per bruker per måned, eks. mva. */
+export const MOETER_UBEGRENSET_PRIS_PER_BRUKER = 499;
+
 /** Prisliste per 21.09.2026, jf. snakk.ai/priser. Alle priser eks. mva, månedsbetaling. */
 export const PAKKER: PakkeDef[] = [
   // Alt samlet — telefon, chat, AI-e-post og møter
@@ -141,6 +144,7 @@ export const PAKKER: PakkeDef[] = [
   { navn: "Møter Start", mrr: 499, minutter: "10 møtetimer · 100 spørsmål · 3 plasser", kategori: "Møter", merbruk: "69 kr/time" },
   { navn: "Møter Bedrift", mrr: 1390, minutter: "30 møtetimer · 300 spørsmål · 3 plasser", kategori: "Møter", merbruk: "69 kr/time" },
   { navn: "Møter Pro", mrr: 2490, minutter: "60 møtetimer · 600 spørsmål · 3 plasser", kategori: "Møter", merbruk: "69 kr/time" },
+  { navn: "Møter Ubegrenset", mrr: MOETER_UBEGRENSET_PRIS_PER_BRUKER, minutter: "Ubegrenset møtetimer og AI-spørsmål · pris per bruker", kategori: "Møter", merbruk: "Ingen merbruk" },
   // Åpne alternativer
   { navn: "Enterprise", mrr: null, minutter: "Tilpasset kapasitet", kategori: "Annet" },
   { navn: "Tilpasset", mrr: null, minutter: "", kategori: "Annet" },

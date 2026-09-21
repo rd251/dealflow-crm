@@ -26,6 +26,8 @@ interface PakkeRad {
   navn: string;
   pris: number;
   inkludert: string;
+  /** Overstyrer prisvisningen, f.eks. for pakker som prises per bruker. */
+  prisTekst?: string;
 }
 
 interface EkstraSeksjon {
@@ -75,6 +77,12 @@ const MALER: Record<KontraktType, KontraktMal> = {
       { navn: "Møter Start", pris: 499, inkludert: "10 møtetimer · 100 spørsmål" },
       { navn: "Møter Bedrift", pris: 1390, inkludert: "30 møtetimer · 300 spørsmål" },
       { navn: "Møter Pro", pris: 2490, inkludert: "60 møtetimer · 600 spørsmål" },
+      {
+        navn: "Møter Ubegrenset",
+        pris: 499,
+        prisTekst: "499 kr per bruker",
+        inkludert: "Ubegrenset møtetimer og AI-spørsmål",
+      },
     ],
     ekstraSeksjoner: [
       {
@@ -96,8 +104,18 @@ const MALER: Record<KontraktType, KontraktMal> = {
         ],
       },
       {
+        tittel: "Møter Ubegrenset",
+        punkter: [
+          "Prisen er 499 kr per bruker per måned og gir ubegrenset antall møtetimer og AI-spørsmål",
+          "Antall brukere avtales ved bestilling; nye brukere faktureres fra måneden de opprettes",
+          "Ubegrenset bruk forutsetter normal bruk i egen virksomhet, og gjelder ikke videresalg eller deling av konto med andre virksomheter",
+          "Ved årlig betaling gis 10 % rabatt på abonnementsprisen",
+        ],
+      },
+      {
         tittel: "Bruk utover inkludert kapasitet",
         punkter: [
+          "Gjelder pakkene Start, Bedrift og Pro; Møter Ubegrenset har ingen volumgrense",
           "Møtetimer utover inkludert volum faktureres med 69 kr per time",
           "AI-spørsmål utover inkludert volum faktureres med 49 kr per 100 spørsmål",
           "Ekstra medarbeiderplass: 249 kr per måned",
@@ -288,7 +306,7 @@ Deno.serve(async (req) => {
         doc.setFont("helvetica", "normal");
       }
       doc.text(p.navn, colX[0] + 2, y);
-      doc.text(nok(p.pris), colX[1] + 2, y);
+      doc.text(p.prisTekst ?? nok(p.pris), colX[1] + 2, y);
       doc.text(p.inkludert, colX[2] + 2, y);
       doc.text(isSelected ? "X" : "", colX[3] + 2, y);
       y += rowH;
@@ -300,7 +318,11 @@ Deno.serve(async (req) => {
 
     y += 6;
     doc.setFont("helvetica", "bold");
-    doc.text(`Valgt pakke: ${data.valgt_pakke} — ${nok(data.pakke_pris)}/mnd`, margin, y);
+    const valgtRad = mal.pakker.find((p) => p.navn === data.valgt_pakke);
+    const valgtPrisTekst = valgtRad?.prisTekst
+      ? `${valgtRad.prisTekst}/mnd`
+      : `${nok(data.pakke_pris)}/mnd`;
+    doc.text(`Valgt pakke: ${data.valgt_pakke} — ${valgtPrisTekst}`, margin, y);
     doc.setFont("helvetica", "normal");
     y += 4;
     if (data.minutter) {
