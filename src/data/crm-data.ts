@@ -100,23 +100,83 @@ export interface Salgsmulighet {
 }
 
 // Package definitions
+export type PakkeKategori = "Samlet" | "Telefon" | "Chat" | "AI-e-post" | "Møter" | "Annet" | "Tidligere pakker";
+
 export interface PakkeDef {
   navn: string;
   mrr: number | null; // null = custom
+  /** Kort beskrivelse av inkludert kapasitet per måned. */
   minutter: string;
+  kategori: PakkeKategori;
+  /** Sats for ekstra bruk, eks. mva. */
+  merbruk?: string;
+  /** Gamle pakker som beholdes for historiske avtaler. */
+  utgatt?: boolean;
 }
 
+/** Årsbetaling gir 10 % rabatt på abonnementet (priser eks. mva). */
+export const AARSRABATT = 0.1;
+
+/** Prisliste per 21.09.2026, jf. snakk.ai/priser. Alle priser eks. mva, månedsbetaling. */
 export const PAKKER: PakkeDef[] = [
-  { navn: "Chatbot + 100 min", mrr: 990, minutter: "100 min" },
-  { navn: "Starter", mrr: 2500, minutter: "500 min" },
-  { navn: "800 min", mrr: 4000, minutter: "800 min" },
-  { navn: "Vekst", mrr: 7500, minutter: "1 500 min" },
-  { navn: "Pro", mrr: 12500, minutter: "2 500 min" },
-  { navn: "Team", mrr: 15000, minutter: "3 000 min" },
-  { navn: "Bedrift", mrr: 30000, minutter: "6 000 min" },
-  { navn: "Enterprise", mrr: null, minutter: "Tilpasset" },
-  { navn: "Tilpasset", mrr: null, minutter: "" },
+  // Alt samlet — telefon, chat, AI-e-post og møter
+  { navn: "Samlet Start", mrr: 6990, minutter: "500 min · 1 500 chat · 1 500 e-post · 10 møtetimer · 5 plasser", kategori: "Samlet", merbruk: "4,5 kr/min" },
+  { navn: "Samlet Bedrift", mrr: 14990, minutter: "2 000 min · 3 000 chat · 3 000 e-post · 30 møtetimer · 10 plasser", kategori: "Samlet", merbruk: "4 kr/min" },
+  { navn: "Samlet Pro", mrr: 34990, minutter: "5 000 min · 8 000 chat · 8 000 e-post · 60 møtetimer · 20 plasser", kategori: "Samlet", merbruk: "3,9 kr/min" },
+  // Kun AI-telefon
+  { navn: "Telefon Basis", mrr: 990, minutter: "100 min · 3 plasser", kategori: "Telefon", merbruk: "4,9 kr/min" },
+  { navn: "Telefon Start", mrr: 2490, minutter: "500 min · 3 plasser", kategori: "Telefon", merbruk: "4,5 kr/min" },
+  { navn: "Telefon Pro", mrr: 3990, minutter: "1 000 min · 3 plasser", kategori: "Telefon", merbruk: "4,2 kr/min" },
+  { navn: "Telefon Pluss", mrr: 7490, minutter: "2 000 min · 3 plasser", kategori: "Telefon", merbruk: "4 kr/min" },
+  { navn: "Telefon Volum", mrr: 13990, minutter: "4 000 min · 3 plasser", kategori: "Telefon", merbruk: "3,9 kr/min" },
+  // Kun chat
+  { navn: "Kun chat Start", mrr: 990, minutter: "500 AI-svar · 3 plasser", kategori: "Chat", merbruk: "0,5 kr/svar" },
+  { navn: "Kun chat Bedrift", mrr: 1490, minutter: "1 500 AI-svar · 3 plasser", kategori: "Chat", merbruk: "0,5 kr/svar" },
+  { navn: "Kun chat Pro", mrr: 2490, minutter: "4 000 AI-svar · 3 plasser", kategori: "Chat", merbruk: "0,5 kr/svar" },
+  // AI-e-post
+  { navn: "AI-e-post Start", mrr: 1490, minutter: "500 AI-e-postsvar · 3 plasser", kategori: "AI-e-post", merbruk: "1,99 kr/svar" },
+  { navn: "AI-e-post Bedrift", mrr: 2990, minutter: "1 500 AI-e-postsvar · 3 plasser", kategori: "AI-e-post", merbruk: "1,99 kr/svar" },
+  { navn: "AI-e-post Pro", mrr: 4990, minutter: "3 000 AI-e-postsvar · 3 plasser", kategori: "AI-e-post", merbruk: "1,99 kr/svar" },
+  // Møter og transkribering
+  { navn: "Møter Start", mrr: 499, minutter: "10 møtetimer · 100 spørsmål · 3 plasser", kategori: "Møter", merbruk: "69 kr/time" },
+  { navn: "Møter Bedrift", mrr: 1390, minutter: "30 møtetimer · 300 spørsmål · 3 plasser", kategori: "Møter", merbruk: "69 kr/time" },
+  { navn: "Møter Pro", mrr: 2490, minutter: "60 møtetimer · 600 spørsmål · 3 plasser", kategori: "Møter", merbruk: "69 kr/time" },
+  // Åpne alternativer
+  { navn: "Enterprise", mrr: null, minutter: "Tilpasset kapasitet", kategori: "Annet" },
+  { navn: "Tilpasset", mrr: null, minutter: "", kategori: "Annet" },
+  // Historiske pakker — beholdes så gamle avtaler vises riktig
+  { navn: "Chatbot + 100 min", mrr: 990, minutter: "100 min", kategori: "Tidligere pakker", utgatt: true },
+  { navn: "Starter", mrr: 2500, minutter: "500 min", kategori: "Tidligere pakker", utgatt: true },
+  { navn: "800 min", mrr: 4000, minutter: "800 min", kategori: "Tidligere pakker", utgatt: true },
+  { navn: "Vekst", mrr: 7500, minutter: "1 500 min", kategori: "Tidligere pakker", utgatt: true },
+  { navn: "Pro", mrr: 12500, minutter: "2 500 min", kategori: "Tidligere pakker", utgatt: true },
+  { navn: "Team", mrr: 15000, minutter: "3 000 min", kategori: "Tidligere pakker", utgatt: true },
+  { navn: "Bedrift", mrr: 30000, minutter: "6 000 min", kategori: "Tidligere pakker", utgatt: true },
 ];
+
+export const PAKKE_KATEGORIER: PakkeKategori[] = ["Samlet", "Telefon", "Chat", "AI-e-post", "Møter", "Annet", "Tidligere pakker"];
+
+/** Engangspriser for oppsett, eks. mva. */
+export const OPPSETT_PRISER = [
+  { navn: "Sett opp selv", pris: 0 },
+  { navn: "Samlet standardoppsett", pris: 9990 },
+  { navn: "Chat-agent", pris: 3990 },
+  { navn: "Telefonagent", pris: 6990 },
+  { navn: "Én e-postinnboks", pris: 2990 },
+  { navn: "Én kalenderkobling", pris: 1490 },
+];
+
+/** Timepris for tilpasninger og integrasjoner, eks. mva. */
+export const TILPASNING_TIMEPRIS = 1490;
+
+/** Løpende tillegg, eks. mva. */
+export const TILLEGGSPRISER = {
+  ekstraMedarbeider: 249,
+  ekstraTelefonnummer: 99,
+  smsSegment: 1.99,
+  moteSporsmaal100: 49,
+  lagring20Gb: 99,
+};
 
 export interface Prosjekt {
   id: string;
