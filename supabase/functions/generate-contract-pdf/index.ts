@@ -73,10 +73,8 @@ const MALER: Record<KontraktType, KontraktMal> = {
       "Denne avtalen regulerer levering og bruk av Snakk Møter — AI-drevet opptak, transkripsjon, møtereferat og oppfølgingsoppgaver fra kundens videomøter, samt tilhørende tjenester.",
     tjenesten:
       "Snakk leverer en møtebot som blir med som deltaker i kundens videomøter og lager transkripsjon med talernavn, referat med viktige punkter og tiltak, samt oppfølgingsoppgaver med eier og frist. Kunden kan stille AI-spørsmål om innholdet i det enkelte møtet. Oppgaver speiles til Saker for videre oppfølging. Tjenesten inkluderer oppsett av kalenderkobling, konfigurasjon av regler for deltakelse og løpende drift.",
+    utenKonsulent: true,
     pakker: [
-      { navn: "Møter Start", pris: 499, inkludert: "10 møtetimer · 100 spørsmål" },
-      { navn: "Møter Bedrift", pris: 1390, inkludert: "30 møtetimer · 300 spørsmål" },
-      { navn: "Møter Pro", pris: 2490, inkludert: "60 møtetimer · 600 spørsmål" },
       {
         navn: "Møter Ubegrenset",
         pris: 499,
