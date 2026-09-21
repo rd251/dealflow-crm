@@ -141,9 +141,9 @@ export const PAKKER: PakkeDef[] = [
   { navn: "AI-e-post Bedrift", mrr: 2990, minutter: "1 500 AI-e-postsvar · 3 plasser", kategori: "AI-e-post", merbruk: "1,99 kr/svar" },
   { navn: "AI-e-post Pro", mrr: 4990, minutter: "3 000 AI-e-postsvar · 3 plasser", kategori: "AI-e-post", merbruk: "1,99 kr/svar" },
   // Møter og transkribering
-  { navn: "Møter Start", mrr: 499, minutter: "10 møtetimer · 100 spørsmål · 3 plasser", kategori: "Møter", merbruk: "69 kr/time" },
-  { navn: "Møter Bedrift", mrr: 1390, minutter: "30 møtetimer · 300 spørsmål · 3 plasser", kategori: "Møter", merbruk: "69 kr/time" },
-  { navn: "Møter Pro", mrr: 2490, minutter: "60 møtetimer · 600 spørsmål · 3 plasser", kategori: "Møter", merbruk: "69 kr/time" },
+  { navn: "Møter Start", mrr: 499, minutter: "10 møtetimer · 100 spørsmål · 3 plasser", kategori: "Tidligere pakker", merbruk: "69 kr/time", utgatt: true },
+  { navn: "Møter Bedrift", mrr: 1390, minutter: "30 møtetimer · 300 spørsmål · 3 plasser", kategori: "Tidligere pakker", merbruk: "69 kr/time", utgatt: true },
+  { navn: "Møter Pro", mrr: 2490, minutter: "60 møtetimer · 600 spørsmål · 3 plasser", kategori: "Tidligere pakker", merbruk: "69 kr/time", utgatt: true },
   { navn: "Møter Ubegrenset", mrr: MOETER_UBEGRENSET_PRIS_PER_BRUKER, minutter: "Ubegrenset møtetimer og AI-spørsmål · pris per bruker", kategori: "Møter", merbruk: "Ingen merbruk" },
   // Åpne alternativer
   { navn: "Enterprise", mrr: null, minutter: "Tilpasset kapasitet", kategori: "Annet" },

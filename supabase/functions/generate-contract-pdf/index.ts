@@ -306,14 +306,20 @@ Deno.serve(async (req) => {
 
     y += 6;
     doc.setFont("helvetica", "bold");
-    const valgtRad = mal.pakker.find((p) => p.navn === data.valgt_pakke);
+    const valgtRad = mal.pakker.find((p) => p.navn === data.valgt_pakke)
+      ?? (mal.utenKonsulent ? mal.pakker[0] : undefined);
     const valgtPrisTekst = valgtRad?.prisTekst
       ? `${valgtRad.prisTekst}/mnd`
       : `${nok(data.pakke_pris)}/mnd`;
-    doc.text(`Valgt pakke: ${data.valgt_pakke} — ${valgtPrisTekst}`, margin, y);
+    doc.text(`Valgt pakke: ${valgtRad?.navn ?? data.valgt_pakke} — ${valgtPrisTekst}`, margin, y);
     doc.setFont("helvetica", "normal");
     y += 4;
-    if (data.minutter) {
+    if (mal.utenKonsulent) {
+      if (valgtRad?.inkludert) {
+        doc.text(`Inkludert: ${valgtRad.inkludert}`, margin, y);
+        y += 5;
+      }
+    } else if (data.minutter) {
       doc.text(`${mal.kapasitetLabel}: ${data.minutter}`, margin, y);
       y += 5;
     }
