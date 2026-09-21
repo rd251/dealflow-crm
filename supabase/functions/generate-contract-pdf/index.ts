@@ -45,6 +45,7 @@ interface KontraktMal {
   pakker: PakkeRad[];
   /** Settes inn etter Support-seksjonen. */
   ekstraSeksjoner: EkstraSeksjon[];
+  utenKonsulent?: boolean;
 }
 
 const MALER: Record<KontraktType, KontraktMal> = {
@@ -73,10 +74,8 @@ const MALER: Record<KontraktType, KontraktMal> = {
       "Denne avtalen regulerer levering og bruk av Snakk Møter — AI-drevet opptak, transkripsjon, møtereferat og oppfølgingsoppgaver fra kundens videomøter, samt tilhørende tjenester.",
     tjenesten:
       "Snakk leverer en møtebot som blir med som deltaker i kundens videomøter og lager transkripsjon med talernavn, referat med viktige punkter og tiltak, samt oppfølgingsoppgaver med eier og frist. Kunden kan stille AI-spørsmål om innholdet i det enkelte møtet. Oppgaver speiles til Saker for videre oppfølging. Tjenesten inkluderer oppsett av kalenderkobling, konfigurasjon av regler for deltakelse og løpende drift.",
+    utenKonsulent: true,
     pakker: [
-      { navn: "Møter Start", pris: 499, inkludert: "10 møtetimer · 100 spørsmål" },
-      { navn: "Møter Bedrift", pris: 1390, inkludert: "30 møtetimer · 300 spørsmål" },
-      { navn: "Møter Pro", pris: 2490, inkludert: "60 møtetimer · 600 spørsmål" },
       {
         navn: "Møter Ubegrenset",
         pris: 499,
@@ -110,17 +109,6 @@ const MALER: Record<KontraktType, KontraktMal> = {
           "Antall brukere avtales ved bestilling; nye brukere faktureres fra måneden de opprettes",
           "Ubegrenset bruk forutsetter normal bruk i egen virksomhet, og gjelder ikke videresalg eller deling av konto med andre virksomheter",
           "Ved årlig betaling gis 10 % rabatt på abonnementsprisen",
-        ],
-      },
-      {
-        tittel: "Bruk utover inkludert kapasitet",
-        punkter: [
-          "Gjelder pakkene Start, Bedrift og Pro; Møter Ubegrenset har ingen volumgrense",
-          "Møtetimer utover inkludert volum faktureres med 69 kr per time",
-          "AI-spørsmål utover inkludert volum faktureres med 49 kr per 100 spørsmål",
-          "Ekstra medarbeiderplass: 249 kr per måned",
-          "Ekstra lagring, 20 GB: 99 kr per måned",
-          "Kvoter gjelder per kalendermåned for hele virksomheten og overføres ikke",
         ],
       },
     ],
@@ -372,6 +360,7 @@ Deno.serve(async (req) => {
     ]);
 
     // ---- Konsulenttjenester ----
+    if (!mal.utenKonsulent) {
     heading("Konsulenttjenester");
     const prisTekst = data.konsulent_timepris && data.konsulent_timepris > 0
       ? `Pris: ${nok(data.konsulent_timepris)}/time`
@@ -381,6 +370,7 @@ Deno.serve(async (req) => {
       `Bistand til utvidet funksjonalitet faktureres separat — ${prisTekst}`,
       `Hjelp til API-koblinger eller videreutvikling faktureres separat — ${prisTekst}`,
     ]);
+    }
 
     // ---- Support ----
     heading("Support");
