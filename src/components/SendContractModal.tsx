@@ -1,14 +1,30 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { FileSignature, Eye, Send, Loader2, Building2, User, Phone, Mail, Package, Briefcase } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FileSignature, Eye, Send, Loader2, Building2, User, Phone, Mail, Package, Briefcase, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { nok } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { PAKKER } from "@/data/crm-data";
+
+/** Egen kontraktsmal per tjeneste. Utvides når flere tjenester får egen avtaletekst. */
+export const KONTRAKT_MALER = [
+  { verdi: "telefon", navn: "AI-telefon" },
+  { verdi: "moeter", navn: "Møter og transkribering" },
+] as const;
+
+export type KontraktType = (typeof KONTRAKT_MALER)[number]["verdi"];
+
+/** Foreslår mal ut fra pakkekategorien på salgsmuligheten. */
+export function standardKontraktType(pakkeNavn: string): KontraktType {
+  const kategori = PAKKER.find((p) => p.navn === pakkeNavn)?.kategori;
+  return kategori === "Møter" ? "moeter" : "telefon";
+}
+
 
 interface ContractData {
   salgsmulighet_id: string;
@@ -43,6 +59,12 @@ export default function SendContractModal({
   const [previewing, setPreviewing] = useState(false);
   const [sending, setSending] = useState(false);
   const [konsulentTimepris, setKonsulentTimepris] = useState<number>(1399);
+  const [kontraktType, setKontraktType] = useState<KontraktType>(() => standardKontraktType(contractData.valgt_pakke));
+
+  useEffect(() => {
+    if (open) setKontraktType(standardKontraktType(contractData.valgt_pakke));
+  }, [open, contractData.valgt_pakke]);
+
 
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
   const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
@@ -73,6 +95,8 @@ export default function SendContractModal({
           sla: contractData.sla ?? null,
           oppstartskostnad: contractData.oppstartskostnad ?? null,
           konsulent_timepris: konsulentTimepris || null,
+          kontrakt_type: kontraktType,
+
         }),
       });
 
@@ -106,6 +130,8 @@ export default function SendContractModal({
         body: JSON.stringify({
           ...contractData,
           konsulent_timepris: konsulentTimepris || null,
+          kontrakt_type: kontraktType,
+
           sender_email: senderEmail,
         }),
       });
@@ -140,7 +166,28 @@ export default function SendContractModal({
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* Kontraktsmal per tjeneste */}
+          <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
+            <Label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <FileText className="w-3 h-3" /> Kontraktsmal
+            </Label>
+            <Select value={kontraktType} onValueChange={(v) => setKontraktType(v as KontraktType)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {KONTRAKT_MALER.map((m) => (
+                  <SelectItem key={m.verdi} value={m.verdi}>{m.navn}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              Foreslått ut fra valgt pakke. Malen bestemmer tjenestebeskrivelse, pakketabell og vilkår i avtalen.
+            </p>
+          </div>
+
           {/* Contract info preview */}
+
           <div className="rounded-lg border bg-muted/30 p-4 space-y-3">
             <h4 className="text-sm font-semibold text-foreground">Kontraktsinformasjon</h4>
 
