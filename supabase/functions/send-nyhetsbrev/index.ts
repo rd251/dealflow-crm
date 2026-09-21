@@ -64,6 +64,7 @@ async function hentMottakere(supabase: any): Promise<Mottaker[]> {
   const add = (e: string, firmanavn: string | null, kilde: string, id: string | null) => {
     const key = (e || '').trim().toLowerCase()
     if (!EMAIL_RE.test(key) || blokkert.has(key) || map.has(key)) return
+    if (erEkskludertDomene(key)) return
     map.set(key, { e_post: key, firmanavn, kilde, kilde_id: id })
   }
 
