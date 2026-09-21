@@ -11,16 +11,26 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { nok } from "@/lib/utils";
 import { toast } from "sonner";
 
-// Standard Snakk-pakker (sluttkunde-utsalg)
+// Standard Snakk-pakker (sluttkunde-utsalg), prisliste per 21.09.2026 — eks. mva
 const PRESET_PAKKER: Array<{ navn: string; beskrivelse: string; inkluderte_minutter: number; utsalgspris_sluttkunde: number; ekstra_min_pris: number }> = [
-  { navn: "Chatbot + 100 min", beskrivelse: "Unlimited chat (fair use) + 100 min voice", inkluderte_minutter: 100, utsalgspris_sluttkunde: 990, ekstra_min_pris: 0 },
-  { navn: "Starter", beskrivelse: "500 min/mo (~250 samtaler)", inkluderte_minutter: 500, utsalgspris_sluttkunde: 2500, ekstra_min_pris: 0 },
-  { navn: "Growth", beskrivelse: "1 500 min/mo (~750 samtaler) — MEST POPULÆR", inkluderte_minutter: 1500, utsalgspris_sluttkunde: 7500, ekstra_min_pris: 0 },
-  { navn: "Pro", beskrivelse: "2 500 min/mo (~1 250 samtaler)", inkluderte_minutter: 2500, utsalgspris_sluttkunde: 12500, ekstra_min_pris: 0 },
-  { navn: "800 min", beskrivelse: "800 min/mo (~400 samtaler)", inkluderte_minutter: 800, utsalgspris_sluttkunde: 4000, ekstra_min_pris: 0 },
-  { navn: "Team", beskrivelse: "3 000 min/mo (~1 500 samtaler)", inkluderte_minutter: 3000, utsalgspris_sluttkunde: 15000, ekstra_min_pris: 0 },
-  { navn: "Business", beskrivelse: "6 000 min/mo (~3 000 samtaler)", inkluderte_minutter: 6000, utsalgspris_sluttkunde: 30000, ekstra_min_pris: 0 },
-  { navn: "Enterprise", beskrivelse: "22 500+ min/mo — Custom SLA & dedikert support", inkluderte_minutter: 22500, utsalgspris_sluttkunde: 0, ekstra_min_pris: 0 },
+  { navn: "Samlet Start", beskrivelse: "500 min, 1 500 chat, 1 500 e-post, 10 møtetimer, 5 plasser", inkluderte_minutter: 500, utsalgspris_sluttkunde: 6990, ekstra_min_pris: 4.5 },
+  { navn: "Samlet Bedrift", beskrivelse: "2 000 min, 3 000 chat, 3 000 e-post, 30 møtetimer, 10 plasser", inkluderte_minutter: 2000, utsalgspris_sluttkunde: 14990, ekstra_min_pris: 4 },
+  { navn: "Samlet Pro", beskrivelse: "5 000 min, 8 000 chat, 8 000 e-post, 60 møtetimer, 20 plasser", inkluderte_minutter: 5000, utsalgspris_sluttkunde: 34990, ekstra_min_pris: 3.9 },
+  { navn: "Telefon Basis", beskrivelse: "100 telefonminutter, 3 plasser", inkluderte_minutter: 100, utsalgspris_sluttkunde: 990, ekstra_min_pris: 4.9 },
+  { navn: "Telefon Start", beskrivelse: "500 telefonminutter, 3 plasser", inkluderte_minutter: 500, utsalgspris_sluttkunde: 2490, ekstra_min_pris: 4.5 },
+  { navn: "Telefon Pro", beskrivelse: "1 000 telefonminutter, 3 plasser", inkluderte_minutter: 1000, utsalgspris_sluttkunde: 3990, ekstra_min_pris: 4.2 },
+  { navn: "Telefon Pluss", beskrivelse: "2 000 telefonminutter, 3 plasser", inkluderte_minutter: 2000, utsalgspris_sluttkunde: 7490, ekstra_min_pris: 4 },
+  { navn: "Telefon Volum", beskrivelse: "4 000 telefonminutter, 3 plasser", inkluderte_minutter: 4000, utsalgspris_sluttkunde: 13990, ekstra_min_pris: 3.9 },
+  { navn: "Kun chat Start", beskrivelse: "500 AI-svar i chat, 3 plasser", inkluderte_minutter: 0, utsalgspris_sluttkunde: 990, ekstra_min_pris: 0 },
+  { navn: "Kun chat Bedrift", beskrivelse: "1 500 AI-svar i chat, 3 plasser", inkluderte_minutter: 0, utsalgspris_sluttkunde: 1490, ekstra_min_pris: 0 },
+  { navn: "Kun chat Pro", beskrivelse: "4 000 AI-svar i chat, 3 plasser", inkluderte_minutter: 0, utsalgspris_sluttkunde: 2490, ekstra_min_pris: 0 },
+  { navn: "AI-e-post Start", beskrivelse: "500 AI-e-postsvar, 3 plasser", inkluderte_minutter: 0, utsalgspris_sluttkunde: 1490, ekstra_min_pris: 0 },
+  { navn: "AI-e-post Bedrift", beskrivelse: "1 500 AI-e-postsvar, 3 plasser", inkluderte_minutter: 0, utsalgspris_sluttkunde: 2990, ekstra_min_pris: 0 },
+  { navn: "AI-e-post Pro", beskrivelse: "3 000 AI-e-postsvar, 3 plasser", inkluderte_minutter: 0, utsalgspris_sluttkunde: 4990, ekstra_min_pris: 0 },
+  { navn: "Møter Start", beskrivelse: "10 møtetimer, 100 spørsmål, 3 plasser", inkluderte_minutter: 0, utsalgspris_sluttkunde: 499, ekstra_min_pris: 0 },
+  { navn: "Møter Bedrift", beskrivelse: "30 møtetimer, 300 spørsmål, 3 plasser", inkluderte_minutter: 0, utsalgspris_sluttkunde: 1390, ekstra_min_pris: 0 },
+  { navn: "Møter Pro", beskrivelse: "60 møtetimer, 600 spørsmål, 3 plasser", inkluderte_minutter: 0, utsalgspris_sluttkunde: 2490, ekstra_min_pris: 0 },
+  { navn: "Enterprise", beskrivelse: "Tilpasset kapasitet, oppsett og eventuell SLA", inkluderte_minutter: 0, utsalgspris_sluttkunde: 0, ekstra_min_pris: 0 },
 ];
 
 type Prismodell = {
