@@ -17,6 +17,8 @@ const BodySchema = z.object({
   sla: z.number().nullable().optional(),
   oppstartskostnad: z.number().nullable().optional(),
   konsulent_timepris: z.number().nullable().optional(),
+  kontrakt_type: z.enum(["telefon", "moeter"]).optional(),
+
 });
 
 Deno.serve(async (req) => {
@@ -64,6 +66,8 @@ Deno.serve(async (req) => {
         sla: data.sla ?? null,
         oppstartskostnad: data.oppstartskostnad ?? null,
         konsulent_timepris: data.konsulent_timepris ?? null,
+        kontrakt_type: data.kontrakt_type ?? "telefon",
+
       }),
     });
 
