@@ -21,14 +21,20 @@ export function formaterOrgnr(orgnr?: string | null): string {
 
 /**
  * Setter sammen en lesbar kontraktsadresse. Postadresse inneholder ofte bare
- * postnummer (f.eks. "4376"), og da må gateadressen fra firmaadresse med.
+ * postnummer (f.eks. "4376"), mens firmaadresse er "Sirdalsveien 38, HELLELAND".
+ * Da blir resultatet "Sirdalsveien 38, 4376 HELLELAND".
  */
 export function kontraktAdresse(postadresse?: string | null, firmaadresse?: string | null): string {
   const post = (postadresse || "").trim();
   const firma = (firmaadresse || "").trim();
-  const barePostnummer = /^\d{4}$/.test(post.replace(/\s/g, "").slice(0, POSTNUMMER_LENGDE)) && post.replace(/\D/g, "").length === post.replace(/\s/g, "").length;
   if (!post) return firma;
   if (!firma) return post;
-  if (barePostnummer) return `${firma}, ${post}`.replace(/,\s*,/g, ",");
-  return post;
+  const erBarePostnummer = new RegExp(`^\\d{${POSTNUMMER_LENGDE}}$`).test(post);
+  if (!erBarePostnummer) return post;
+  const deler = firma.split(",").map(d => d.trim()).filter(Boolean);
+  if (deler.length > 1) {
+    const sted = deler.pop() as string;
+    return `${deler.join(", ")}, ${post} ${sted}`;
+  }
+  return `${firma}, ${post}`;
 }
