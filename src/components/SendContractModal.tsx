@@ -166,7 +166,28 @@ export default function SendContractModal({
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* Kontraktsmal per tjeneste */}
+          <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
+            <Label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <FileText className="w-3 h-3" /> Kontraktsmal
+            </Label>
+            <Select value={kontraktType} onValueChange={(v) => setKontraktType(v as KontraktType)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {KONTRAKT_MALER.map((m) => (
+                  <SelectItem key={m.verdi} value={m.verdi}>{m.navn}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              Foreslått ut fra valgt pakke. Malen bestemmer tjenestebeskrivelse, pakketabell og vilkår i avtalen.
+            </p>
+          </div>
+
           {/* Contract info preview */}
+
           <div className="rounded-lg border bg-muted/30 p-4 space-y-3">
             <h4 className="text-sm font-semibold text-foreground">Kontraktsinformasjon</h4>
 
