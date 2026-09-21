@@ -155,11 +155,46 @@ Deno.serve(async (req) => {
     }
 
     const data = parsed.data;
+    const mal = MALER[data.kontrakt_type ?? "telefon"];
     const doc = new jsPDF({ unit: "mm", format: "a4" });
     const W = 210;
     const margin = 20;
     const contentW = W - margin * 2;
     let y = 20;
+
+    function checkPage(needed = 20) {
+      if (y > 270 - needed) { doc.addPage(); y = 20; }
+    }
+
+    let sec = 0;
+    function heading(tittel: string) {
+      checkPage(24);
+      sec++;
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(30, 30, 30);
+      doc.text(`${sec}. ${tittel}`, margin, y);
+      y += 6;
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(80, 80, 80);
+    }
+    function para(tekst: string) {
+      const lines = doc.splitTextToSize(tekst, contentW);
+      checkPage(lines.length * 4 + 6);
+      doc.text(lines, margin, y);
+      y += lines.length * 4 + 6;
+    }
+    function bullets(items: string[]) {
+      for (const item of items) {
+        const wrapped = doc.splitTextToSize(item, contentW - 6);
+        checkPage(wrapped.length * 4 + 6);
+        doc.text("•", margin, y);
+        doc.text(wrapped, margin + 5, y);
+        y += wrapped.length * 4 + 2;
+      }
+      y += 4;
+    }
 
     // ---- HEADER with logo ----
     y = addLogoHeader(doc, margin, y);
@@ -174,7 +209,7 @@ Deno.serve(async (req) => {
     doc.setFontSize(16);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(30, 30, 30);
-    doc.text("Avtale om bruk av Snakk Teknologi AS", margin, y);
+    doc.text(mal.tittel, margin, y);
     y += 10;
 
     doc.setFontSize(9);
@@ -183,14 +218,9 @@ Deno.serve(async (req) => {
     doc.text(`Dato: ${today()}`, margin, y);
     y += 10;
 
-    // ---- PARTIES ----
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "bold");
+    // ---- 1. Avtaleparter ----
+    heading("Avtaleparter");
     doc.setTextColor(30, 30, 30);
-    doc.text("1. Avtaleparter", margin, y);
-    y += 7;
-
-    doc.setFontSize(9);
     doc.setFont("helvetica", "bold");
     doc.text("Leverandør:", margin, y);
     doc.setFont("helvetica", "normal");
@@ -212,45 +242,25 @@ Deno.serve(async (req) => {
     }
     y += 6;
 
-    // ---- SECTION: Formål ----
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "bold");
-    doc.text("2. Formål", margin, y); y += 6;
-    doc.setFontSize(9);
-    doc.setFont("helvetica", "normal");
-    const formaal = "Denne avtalen regulerer levering og bruk av Snakk sin AI-drevne telefonassistent og tilhørende tjenester. Tjenesten gir kunden tilgang til en intelligent telefonsvarer som håndterer innkommende og utgående samtaler.";
-    const formaalLines = doc.splitTextToSize(formaal, contentW);
-    doc.text(formaalLines, margin, y);
-    y += formaalLines.length * 4 + 6;
+    // ---- 2. Formål ----
+    heading("Formål");
+    para(mal.formaal);
 
-    // ---- SECTION: Tjenesten ----
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "bold");
-    doc.text("3. Tjenesten", margin, y); y += 6;
-    doc.setFontSize(9);
-    doc.setFont("helvetica", "normal");
-    const tjenesten = "Snakk leverer en AI-basert telefonassistent som kan svare på spørsmål, ta imot bestillinger, booke møter og utføre andre oppgaver over telefon på vegne av kunden. Tjenesten inkluderer oppsett, konfigurasjon og løpende drift.";
-    const tjenesteLines = doc.splitTextToSize(tjenesten, contentW);
-    doc.text(tjenesteLines, margin, y);
-    y += tjenesteLines.length * 4 + 6;
+    // ---- 3. Tjenesten ----
+    heading("Tjenesten");
+    para(mal.tjenesten);
 
-    // ---- Helper: check page break ----
-    function checkPage(needed = 20) {
-      if (y > 270 - needed) { doc.addPage(); y = 20; }
-    }
-
-    // ---- SECTION 3: Pris og betalingsmodell ----
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "bold");
+    // ---- 4. Pris og betalingsmodell ----
+    heading("Pris og betalingsmodell");
     doc.setTextColor(30, 30, 30);
-    doc.text("3. Pris og betalingsmodell", margin, y); y += 6;
-    doc.setFontSize(9);
-    doc.setFont("helvetica", "normal");
-    doc.text("Kunden betaler en fast månedlig pris avhengig av valgt pakke:", margin, y);
+    doc.text("Kunden betaler en fast månedlig pris avhengig av valgt pakke (priser eks. mva.):", margin, y);
     y += 7;
 
-    const colX = [margin, margin + 60, margin + 100, margin + 140];
+    const colX = [margin, margin + 45, margin + 80, margin + 150];
     const rowH = 7;
+
+    checkPage(rowH * (mal.pakker.length + 2));
+    const tabellStart = y - 4;
 
     doc.setFillColor(218, 41, 28);
     doc.rect(margin, y - 4, contentW, rowH, "F");
@@ -258,13 +268,13 @@ Deno.serve(async (req) => {
     doc.setFont("helvetica", "bold");
     doc.text("Pakke", colX[0] + 2, y);
     doc.text("Pris/mnd", colX[1] + 2, y);
-    doc.text("Minutter", colX[2] + 2, y);
+    doc.text(mal.kolonneInkludert, colX[2] + 2, y);
     doc.text("Valgt", colX[3] + 2, y);
     y += rowH;
 
     doc.setTextColor(30, 30, 30);
-    for (let i = 0; i < PAKKER_TABLE.length; i++) {
-      const p = PAKKER_TABLE[i];
+    for (let i = 0; i < mal.pakker.length; i++) {
+      const p = mal.pakker[i];
       const isSelected = p.navn === data.valgt_pakke;
       if (isSelected) {
         doc.setFillColor(255, 235, 238);
@@ -279,22 +289,24 @@ Deno.serve(async (req) => {
       }
       doc.text(p.navn, colX[0] + 2, y);
       doc.text(nok(p.pris), colX[1] + 2, y);
-      doc.text(p.minutter, colX[2] + 2, y);
-      doc.text(isSelected ? "✓" : "", colX[3] + 2, y);
+      doc.text(p.inkludert, colX[2] + 2, y);
+      doc.text(isSelected ? "X" : "", colX[3] + 2, y);
       y += rowH;
       if (isSelected) doc.setFont("helvetica", "normal");
     }
 
     doc.setDrawColor(200, 200, 200);
-    doc.rect(margin, y - 4 - rowH * (PAKKER_TABLE.length + 1), contentW, rowH * (PAKKER_TABLE.length + 1));
+    doc.rect(margin, tabellStart, contentW, y - 4 - tabellStart);
 
     y += 6;
     doc.setFont("helvetica", "bold");
     doc.text(`Valgt pakke: ${data.valgt_pakke} — ${nok(data.pakke_pris)}/mnd`, margin, y);
     doc.setFont("helvetica", "normal");
     y += 4;
-    doc.text(`Inkluderte ringeminutter: ${data.minutter}`, margin, y);
-    y += 5;
+    if (data.minutter) {
+      doc.text(`${mal.kapasitetLabel}: ${data.minutter}`, margin, y);
+      y += 5;
+    }
     if (data.oppstartskostnad) {
       doc.text(`Oppstartskostnad: ${nok(data.oppstartskostnad)} (engangsbeløp)`, margin, y);
       y += 5;
@@ -302,167 +314,90 @@ Deno.serve(async (req) => {
     y += 4;
 
     // Betalingsvilkår bullet list
+    checkPage(16);
     doc.setFont("helvetica", "bold");
+    doc.setTextColor(30, 30, 30);
     doc.text("Betalingsvilkår:", margin, y); y += 5;
     doc.setFont("helvetica", "normal");
     doc.setTextColor(80, 80, 80);
-    const betalingsvilkaar = [
+    bullets([
       "Faktureres forskuddsvis per måned, med forfallsdato den 15. i hver måned",
       "Ved oppstart faktureres både gjenværende del av inneværende måned og hele påfølgende måned",
       "Tjenesten aktiveres først når betaling er mottatt",
-      "Minutter gjelder kun for den aktuelle kalendermåneden og bortfaller ved månedsslutt",
-      "Ubenyttede minutter overføres ikke",
+      "Inkludert kapasitet gjelder kun for den aktuelle kalendermåneden og bortfaller ved månedsslutt",
+      "Ubenyttet kapasitet overføres ikke",
       "Bruk utover inkludert volum faktureres i etterkant",
       "Betalingsintervaller kan etter avtale endres til kvartalsvis, halvårlig eller årlig fakturering",
       "Ved årlig betaling gis 10 % rabatt på abonnementsprisen",
-    ];
-    for (const item of betalingsvilkaar) {
-      checkPage(8);
-      const wrapped = doc.splitTextToSize(item, contentW - 6);
-      doc.text("•", margin, y);
-      doc.text(wrapped, margin + 5, y);
-      y += wrapped.length * 4 + 2;
-    }
-    y += 4;
+    ]);
 
-    // ---- SECTION 4: Endring av abonnement ----
-    checkPage(20);
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(30, 30, 30);
-    doc.text("4. Endring av abonnement", margin, y); y += 6;
-    doc.setFontSize(9);
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(80, 80, 80);
-    const s4 = doc.splitTextToSize("Kunden kan oppgradere abonnementsnivå ved skriftlig forespørsel. Endringer trer i kraft fra neste faktureringsperiode, eller etter avtale.", contentW);
-    doc.text(s4, margin, y); y += s4.length * 4 + 6;
+    // ---- Endring av abonnement ----
+    heading("Endring av abonnement");
+    para("Kunden kan oppgradere abonnementsnivå ved skriftlig forespørsel. Endringer trer i kraft fra neste faktureringsperiode, eller etter avtale.");
 
-    // ---- SECTION 5: Avtaleperiode ----
-    checkPage(20);
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(30, 30, 30);
-    doc.text("5. Avtaleperiode", margin, y); y += 6;
-    doc.setFontSize(9);
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(80, 80, 80);
-    doc.text("• Avtalen gjelder fra aktivering (kontrakt er signert)", margin, y); y += 5;
-    doc.text("• Bindingstid: Ingen", margin, y); y += 8;
+    // ---- Avtaleperiode ----
+    heading("Avtaleperiode");
+    bullets([
+      "Avtalen gjelder fra aktivering (kontrakt er signert)",
+      "Bindingstid: Ingen",
+    ]);
 
-    // ---- SECTION 6: Oppsigelse ----
-    checkPage(20);
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(30, 30, 30);
-    doc.text("6. Oppsigelse", margin, y); y += 6;
-    doc.setFontSize(9);
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(80, 80, 80);
-    doc.text("• Oppsigelsestid: 1 måned, oppsigelse gjelder fra den 1. påfølgende måned", margin, y); y += 5;
-    doc.text("• Oppsigelse skal være skriftlig", margin, y); y += 8;
+    // ---- Oppsigelse ----
+    heading("Oppsigelse");
+    bullets([
+      "Oppsigelsestid: 1 måned, oppsigelse gjelder fra den 1. påfølgende måned",
+      "Oppsigelse skal være skriftlig",
+    ]);
 
-    // ---- SECTION 7: Konsulenttjenester ----
-    checkPage(30);
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(30, 30, 30);
-    doc.text("7. Konsulenttjenester", margin, y); y += 6;
-    doc.setFontSize(9);
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(80, 80, 80);
+    // ---- Konsulenttjenester ----
+    heading("Konsulenttjenester");
     const prisTekst = data.konsulent_timepris && data.konsulent_timepris > 0
       ? `Pris: ${nok(data.konsulent_timepris)}/time`
       : "Pris: avtales med en av våre integrasjonspartnere";
-    const konsulent = [
+    bullets([
       `Bistand til oppsett eller utvikling faktureres separat — ${prisTekst}`,
       `Bistand til utvidet funksjonalitet faktureres separat — ${prisTekst}`,
       `Hjelp til API-koblinger eller videreutvikling faktureres separat — ${prisTekst}`,
-    ];
-    for (const item of konsulent) {
-      checkPage(8);
-      const wrapped = doc.splitTextToSize(item, contentW - 6);
-      doc.text("•", margin, y);
-      doc.text(wrapped, margin + 5, y);
-      y += wrapped.length * 4 + 2;
-    }
-    y += 4;
+    ]);
 
-    // ---- SECTION 8: Support ----
-    checkPage(30);
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(30, 30, 30);
-    doc.text("8. Support", margin, y); y += 6;
-    doc.setFontSize(9);
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(80, 80, 80);
-    const supportItems = [
+    // ---- Support ----
+    heading("Support");
+    bullets([
       "Henvendelser besvares normalt innen 48 timer på virkedager",
       "Gjelder veiledning, feilsøking og generelle spørsmål knyttet til plattformen",
       "Support leveres via e-post",
       data.sla
         ? `SLA: Avtalt SLA på ${nok(data.sla)}/mnd — utvidet support inkludert`
         : "SLA: Utvidet SLA eller prioritert support kan avtales særskilt og prises basert på kundens behov",
-    ];
-    for (const item of supportItems) {
-      checkPage(8);
-      const wrapped = doc.splitTextToSize(item, contentW - 6);
-      doc.text("•", margin, y);
-      doc.text(wrapped, margin + 5, y);
-      y += wrapped.length * 4 + 2;
+    ]);
+
+    // ---- Tjenestespesifikke seksjoner ----
+    for (const seksjon of mal.ekstraSeksjoner) {
+      heading(seksjon.tittel);
+      if (seksjon.tekst) para(seksjon.tekst);
+      if (seksjon.punkter) bullets(seksjon.punkter);
     }
-    y += 4;
 
-    // ---- SECTION 9: Konfidensialitet ----
-    checkPage(20);
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(30, 30, 30);
-    doc.text("9. Konfidensialitet", margin, y); y += 6;
-    doc.setFontSize(9);
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(80, 80, 80);
-    const s9 = doc.splitTextToSize("Begge parter forplikter seg til å behandle all informasjon knyttet til samarbeidet konfidensielt.", contentW);
-    doc.text(s9, margin, y); y += s9.length * 4 + 6;
+    // ---- Konfidensialitet ----
+    heading("Konfidensialitet");
+    para("Begge parter forplikter seg til å behandle all informasjon knyttet til samarbeidet konfidensielt.");
 
-    // ---- SECTION 10: Markedsføring ----
-    checkPage(20);
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(30, 30, 30);
-    doc.text("10. Markedsføring", margin, y); y += 6;
-    doc.setFontSize(9);
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(80, 80, 80);
-    const s10 = doc.splitTextToSize("Leverandøren kan benytte Kunden som referanse i markedsføring, med mindre annet er avtalt skriftlig.", contentW);
-    doc.text(s10, margin, y); y += s10.length * 4 + 6;
+    // ---- Markedsføring ----
+    heading("Markedsføring");
+    para("Leverandøren kan benytte Kunden som referanse i markedsføring, med mindre annet er avtalt skriftlig.");
 
-    // ---- SECTION 11: Personvern og vilkår ----
-    checkPage(20);
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(30, 30, 30);
-    doc.text("11. Personvern og vilkår", margin, y); y += 6;
-    doc.setFontSize(9);
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(80, 80, 80);
+    // ---- Personvern og vilkår ----
+    heading("Personvern og vilkår");
     doc.text("Følgende dokumenter gjelder som en del av avtalen:", margin, y); y += 5;
     doc.setTextColor(0, 0, 200);
     doc.text("• https://www.snakk.ai/vilkar", margin, y); y += 5;
     doc.text("• https://www.snakk.ai/personvern", margin, y); y += 8;
     doc.setTextColor(80, 80, 80);
 
-    // ---- SECTION 12: Tvister ----
-    checkPage(20);
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(30, 30, 30);
-    doc.text("12. Tvister", margin, y); y += 6;
-    doc.setFontSize(9);
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(80, 80, 80);
-    const s12 = doc.splitTextToSize("Tvister søkes løst i minnelighet. Dersom dette ikke lykkes, avgjøres saken etter norsk rett, med Oslo tingrett som verneting.", contentW);
-    doc.text(s12, margin, y); y += s12.length * 4 + 6;
+    // ---- Tvister ----
+    heading("Tvister");
+    para("Tvister søkes løst i minnelighet. Dersom dette ikke lykkes, avgjøres saken etter norsk rett, med Oslo tingrett som verneting.");
+
 
     // ---- SIGNATURE AREA ----
     checkPage(50);
