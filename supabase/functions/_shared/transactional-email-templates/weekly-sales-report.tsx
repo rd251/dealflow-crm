@@ -8,7 +8,7 @@ const SITE_NAME = "Snakk"
 const BRAND_RED = '#da291c'
 const BRAND_DARK = '#1a1917'
 const LOGO_URL = 'https://tchmujgzcklwgptocbno.supabase.co/storage/v1/object/public/email-assets/snakk-logo-dark.svg'
-const APP_URL_DEFAULT = 'https://snakk-ai-crm.lovable.app'
+const APP_URL_DEFAULT = 'https://snakk-ai.lovable.app'
 
 // ── Types ──
 
@@ -456,7 +456,7 @@ export const template = {
       { selskap: 'OldClient AS', status: 'Kansellert', aarsak: 'Lav bruk' },
       { selskap: 'PausedCo', status: 'Pause', aarsak: null },
     ],
-    appUrl: 'https://snakk-ai-crm.lovable.app',
+    appUrl: 'https://snakk-ai.lovable.app',
   },
 } satisfies TemplateEntry
 

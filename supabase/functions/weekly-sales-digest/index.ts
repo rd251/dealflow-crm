@@ -234,7 +234,7 @@ Deno.serve(async (req) => {
     planlagtGoLive,
     pauseChurn,
     periodLabel: 'Siste 7 dager',
-    appUrl: 'https://snakk-ai-crm.lovable.app',
+    appUrl: 'https://snakk-ai.lovable.app',
   }
 
   // ── Send to all relevant users ──

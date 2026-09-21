@@ -6,7 +6,7 @@ import type { TemplateEntry } from './registry.ts'
 
 const BRAND_RED = '#da291c'
 const LOGO_URL = 'https://tchmujgzcklwgptocbno.supabase.co/storage/v1/object/public/email-assets/snakk-logo-dark.svg'
-const APP_URL_DEFAULT = 'https://snakk-ai-crm.lovable.app'
+const APP_URL_DEFAULT = 'https://snakk-ai.lovable.app'
 
 interface AgendaPunkt {
   tittel: string
@@ -132,11 +132,11 @@ export const template = {
     antallLanseringer: 3,
     antallForfalte: 2,
     agenda: [
-      { tittel: 'Lukk kontrakten med Acme Corp', selskap: 'Acme Corp', hvorfor: 'Kontrakt sendt for 9 dager siden, ingen svar', handling: 'Ring Kari Nordmann i dag og be om signering før fredag', risiko: 'Lukkedato 5. april ryker', lenke: 'https://snakk-ai-crm.lovable.app/salgsmuligheter' },
-      { tittel: 'Få Trale.ai live', selskap: 'Trale.ai', hvorfor: 'Lansering planlagt om 4 dager, integrasjon ikke bekreftet', handling: 'Avtal 20 min teknisk sjekk med Ola tirsdag', risiko: null, lenke: 'https://snakk-ai-crm.lovable.app/prosjekter' },
+      { tittel: 'Lukk kontrakten med Acme Corp', selskap: 'Acme Corp', hvorfor: 'Kontrakt sendt for 9 dager siden, ingen svar', handling: 'Ring Kari Nordmann i dag og be om signering før fredag', risiko: 'Lukkedato 5. april ryker', lenke: 'https://snakk-ai.lovable.app/salgsmuligheter' },
+      { tittel: 'Få Trale.ai live', selskap: 'Trale.ai', hvorfor: 'Lansering planlagt om 4 dager, integrasjon ikke bekreftet', handling: 'Avtal 20 min teknisk sjekk med Ola tirsdag', risiko: null, lenke: 'https://snakk-ai.lovable.app/prosjekter' },
     ],
     risikoer: ['FjordTech: 14 dager uten aktivitet i Demo-prosjekt'],
-    appUrl: 'https://snakk-ai-crm.lovable.app',
+    appUrl: 'https://snakk-ai.lovable.app',
   },
 } satisfies TemplateEntry
 
