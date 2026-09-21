@@ -296,7 +296,7 @@ Deno.serve(async (req) => {
         doc.setFont("helvetica", "normal");
       }
       doc.text(p.navn, colX[0] + 2, y);
-      doc.text(nok(p.pris), colX[1] + 2, y);
+      doc.text(p.prisTekst ?? nok(p.pris), colX[1] + 2, y);
       doc.text(p.inkludert, colX[2] + 2, y);
       doc.text(isSelected ? "X" : "", colX[3] + 2, y);
       y += rowH;
@@ -308,7 +308,11 @@ Deno.serve(async (req) => {
 
     y += 6;
     doc.setFont("helvetica", "bold");
-    doc.text(`Valgt pakke: ${data.valgt_pakke} — ${nok(data.pakke_pris)}/mnd`, margin, y);
+    const valgtRad = mal.pakker.find((p) => p.navn === data.valgt_pakke);
+    const valgtPrisTekst = valgtRad?.prisTekst
+      ? `${valgtRad.prisTekst}/mnd`
+      : `${nok(data.pakke_pris)}/mnd`;
+    doc.text(`Valgt pakke: ${data.valgt_pakke} — ${valgtPrisTekst}`, margin, y);
     doc.setFont("helvetica", "normal");
     y += 4;
     if (data.minutter) {
