@@ -25,7 +25,7 @@ const typeConfig = {
   moete: { icon: Calendar, label: "Møte", color: "text-orange-600 bg-orange-500/10", path: (id: string) => `/moetenotater?meeting=${id}` },
 } as const;
 
-export default function GlobalSearch() {
+export default function GlobalSearch({ className = "mb-4" }: { className?: string } = {}) {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
