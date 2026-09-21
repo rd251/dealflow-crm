@@ -11,7 +11,7 @@ export interface Mottaker {
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /** Domener som aldri skal motta nyhetsbrev. */
-export const EKSKLUDERTE_DOMENER = ["unifon.no"];
+export const EKSKLUDERTE_DOMENER = ["unifon.no", "trale.ai"];
 
 export function erEkskludertDomene(e?: string | null): boolean {
   const adr = (e ?? "").trim().toLowerCase();
