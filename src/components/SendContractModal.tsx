@@ -59,6 +59,12 @@ export default function SendContractModal({
   const [previewing, setPreviewing] = useState(false);
   const [sending, setSending] = useState(false);
   const [konsulentTimepris, setKonsulentTimepris] = useState<number>(1399);
+  const [kontraktType, setKontraktType] = useState<KontraktType>(() => standardKontraktType(contractData.valgt_pakke));
+
+  useEffect(() => {
+    if (open) setKontraktType(standardKontraktType(contractData.valgt_pakke));
+  }, [open, contractData.valgt_pakke]);
+
 
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
   const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
