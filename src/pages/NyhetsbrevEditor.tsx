@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, ArrowDown, ArrowUp, Loader2, Plus, Save, Send, Sparkles, Trash2, Users } from "lucide-react";
+import { ArrowLeft, ArrowDown, ArrowUp, Download, Loader2, Plus, Save, Send, Sparkles, Trash2, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -390,7 +390,27 @@ export default function NyhetsbrevEditor() {
           </div>
 
           <div className="space-y-2">
-            <h2 className="text-sm font-semibold">Forhåndsvisning</h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-semibold">Forhåndsvisning</h2>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = `${(tittel || "nyhetsbrev").replace(/[^\wæøåÆØÅ -]+/g, "").trim() || "nyhetsbrev"}.html`;
+                  a.rel = "noopener";
+                  a.click();
+                  setTimeout(() => URL.revokeObjectURL(url), 60_000);
+                  toast.success("Forhåndsvisning lastet ned");
+                }}
+              >
+                <Download className="w-4 h-4 mr-1.5" />
+                Last ned HTML
+              </Button>
+            </div>
             <iframe
               title="Forhåndsvisning"
               srcDoc={html}
