@@ -1436,9 +1436,9 @@ export default function Salgsmuligheter() {
                         onOpenChange={setContractModalOpen}
                         contractData={{
                           salgsmulighet_id: currentSm.id,
-                          firmanavn: selskap?.firmanavn || "",
-                          orgnr: selskap?.orgnr || "",
-                          adresse: selskap?.postadresse || selskap?.firmaadresse || "",
+                          firmanavn: (selskap?.firmanavn || "").trim(),
+                          orgnr: formaterOrgnr(selskap?.orgnr),
+                          adresse: kontraktAdresse(selskap?.postadresse, selskap?.firmaadresse),
                           kontaktperson: currentSm.kontaktperson || "",
                           telefon: currentSm.telefon || "",
                           e_post: currentSm.e_post || "",
