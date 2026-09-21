@@ -5,7 +5,7 @@ import PageShell from "@/components/PageShell";
 import { useCrmStore } from "@/hooks/use-crm-store";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/use-auth";
-import { nok } from "@/lib/utils";
+import { nok, formaterOrgnr, kontraktAdresse } from "@/lib/utils";
 import { useProfiles } from "@/hooks/use-profiles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -1436,9 +1436,9 @@ export default function Salgsmuligheter() {
                         onOpenChange={setContractModalOpen}
                         contractData={{
                           salgsmulighet_id: currentSm.id,
-                          firmanavn: selskap?.firmanavn || "",
-                          orgnr: selskap?.orgnr || "",
-                          adresse: selskap?.postadresse || selskap?.firmaadresse || "",
+                          firmanavn: (selskap?.firmanavn || "").trim(),
+                          orgnr: formaterOrgnr(selskap?.orgnr),
+                          adresse: kontraktAdresse(selskap?.postadresse, selskap?.firmaadresse),
                           kontaktperson: currentSm.kontaktperson || "",
                           telefon: currentSm.telefon || "",
                           e_post: currentSm.e_post || "",
