@@ -26,6 +26,8 @@ interface PakkeRad {
   navn: string;
   pris: number;
   inkludert: string;
+  /** Overstyrer prisvisningen, f.eks. for pakker som prises per bruker. */
+  prisTekst?: string;
 }
 
 interface EkstraSeksjon {
@@ -75,6 +77,12 @@ const MALER: Record<KontraktType, KontraktMal> = {
       { navn: "Møter Start", pris: 499, inkludert: "10 møtetimer · 100 spørsmål" },
       { navn: "Møter Bedrift", pris: 1390, inkludert: "30 møtetimer · 300 spørsmål" },
       { navn: "Møter Pro", pris: 2490, inkludert: "60 møtetimer · 600 spørsmål" },
+      {
+        navn: "Møter Ubegrenset",
+        pris: 499,
+        prisTekst: "499 kr per bruker",
+        inkludert: "Ubegrenset møtetimer og AI-spørsmål",
+      },
     ],
     ekstraSeksjoner: [
       {
