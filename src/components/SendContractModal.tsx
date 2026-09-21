@@ -106,7 +106,17 @@ export default function SendContractModal({
 
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
-      window.open(url, "_blank");
+      // Nettleserutvidelser kan blokkere window.open på blob-URL-er (ERR_BLOCKED_BY_CLIENT).
+      // Vi laster derfor ned filen via en midlertidig lenke i stedet.
+      const lenke = document.createElement("a");
+      lenke.href = url;
+      lenke.download = `kontrakt-${contractData.firmanavn.replace(/\s+/g, "-")}.pdf`;
+      lenke.rel = "noopener";
+      document.body.appendChild(lenke);
+      lenke.click();
+      document.body.removeChild(lenke);
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      toast.success("PDF lastet ned");
     } catch (err: any) {
       toast.error(err.message || "Feil ved PDF-generering");
     } finally {
