@@ -95,6 +95,8 @@ export default function SendContractModal({
           sla: contractData.sla ?? null,
           oppstartskostnad: contractData.oppstartskostnad ?? null,
           konsulent_timepris: konsulentTimepris || null,
+          kontrakt_type: kontraktType,
+
         }),
       });
 
@@ -128,6 +130,8 @@ export default function SendContractModal({
         body: JSON.stringify({
           ...contractData,
           konsulent_timepris: konsulentTimepris || null,
+          kontrakt_type: kontraktType,
+
           sender_email: senderEmail,
         }),
       });
