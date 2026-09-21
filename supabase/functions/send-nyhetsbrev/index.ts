@@ -37,6 +37,13 @@ async function brevo(path: string, init: RequestInit = {}) {
   return text ? JSON.parse(text) : {}
 }
 
+/** Domener som aldri skal motta nyhetsbrev. */
+const EKSKLUDERTE_DOMENER = ['unifon.no']
+
+function erEkskludertDomene(e: string): boolean {
+  return EKSKLUDERTE_DOMENER.some((d) => e.endsWith(`@${d}`))
+}
+
 interface Mottaker {
   e_post: string
   firmanavn: string | null
