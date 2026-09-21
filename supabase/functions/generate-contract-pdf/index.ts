@@ -45,6 +45,7 @@ interface KontraktMal {
   pakker: PakkeRad[];
   /** Settes inn etter Support-seksjonen. */
   ekstraSeksjoner: EkstraSeksjon[];
+  utenKonsulent?: boolean;
 }
 
 const MALER: Record<KontraktType, KontraktMal> = {
@@ -108,17 +109,6 @@ const MALER: Record<KontraktType, KontraktMal> = {
           "Antall brukere avtales ved bestilling; nye brukere faktureres fra måneden de opprettes",
           "Ubegrenset bruk forutsetter normal bruk i egen virksomhet, og gjelder ikke videresalg eller deling av konto med andre virksomheter",
           "Ved årlig betaling gis 10 % rabatt på abonnementsprisen",
-        ],
-      },
-      {
-        tittel: "Bruk utover inkludert kapasitet",
-        punkter: [
-          "Gjelder pakkene Start, Bedrift og Pro; Møter Ubegrenset har ingen volumgrense",
-          "Møtetimer utover inkludert volum faktureres med 69 kr per time",
-          "AI-spørsmål utover inkludert volum faktureres med 49 kr per 100 spørsmål",
-          "Ekstra medarbeiderplass: 249 kr per måned",
-          "Ekstra lagring, 20 GB: 99 kr per måned",
-          "Kvoter gjelder per kalendermåned for hele virksomheten og overføres ikke",
         ],
       },
     ],
@@ -370,6 +360,7 @@ Deno.serve(async (req) => {
     ]);
 
     // ---- Konsulenttjenester ----
+    if (!mal.utenKonsulent) {
     heading("Konsulenttjenester");
     const prisTekst = data.konsulent_timepris && data.konsulent_timepris > 0
       ? `Pris: ${nok(data.konsulent_timepris)}/time`
@@ -379,6 +370,7 @@ Deno.serve(async (req) => {
       `Bistand til utvidet funksjonalitet faktureres separat — ${prisTekst}`,
       `Hjelp til API-koblinger eller videreutvikling faktureres separat — ${prisTekst}`,
     ]);
+    }
 
     // ---- Support ----
     heading("Support");
