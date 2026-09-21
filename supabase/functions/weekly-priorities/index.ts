@@ -7,7 +7,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const APP_URL = 'https://snakk-ai-crm.lovable.app'
+const APP_URL = 'https://snakk-ai.lovable.app'
 const MAKS_BRUKERE = 10
 const MAKS_PUNKTER = 7
 const KALD_DEAL_DAGER = 10

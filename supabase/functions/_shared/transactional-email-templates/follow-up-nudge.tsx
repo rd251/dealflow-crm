@@ -7,7 +7,7 @@ import type { TemplateEntry } from './registry.ts'
 const BRAND_RED = '#da291c'
 const BRAND_DARK = '#1a1917'
 const LOGO_URL = 'https://tchmujgzcklwgptocbno.supabase.co/storage/v1/object/public/email-assets/snakk-logo-dark.svg'
-const APP_URL_DEFAULT = 'https://snakk-ai-crm.lovable.app'
+const APP_URL_DEFAULT = 'https://snakk-ai.lovable.app'
 
 export interface FollowUpNudgeProps {
   /** Fullt navn på personen som ikke har svart. */
@@ -111,7 +111,7 @@ export const template: TemplateEntry = {
     emne: 'Bekreftelse av møtetidspunkt',
     begrunnelse:
       'Du ba dem bekrefte et tidspunkt for et kort introduksjonsmøte, noe som krever svar — følg opp hvis du ikke har fått svar.',
-    lenke: 'https://snakk-ai-crm.lovable.app/relasjoner',
+    lenke: 'https://snakk-ai.lovable.app/relasjoner',
     lenkeTekst: 'Åpne relasjonen',
     signaturNavn: 'Ola Nordmann',
     signaturTittel: 'Salgssjef',

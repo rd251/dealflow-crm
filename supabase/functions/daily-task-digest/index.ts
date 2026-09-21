@@ -2,7 +2,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2'
 import { sendTemplateEmailWithLog } from '../_shared/transactional-email-templates/send-and-log.ts'
 import { rangerAgenda, AgendaAiError, type AgendaPunkt } from '../_shared/agenda-ai.ts'
 
-const APP_URL = 'https://snakk-ai-crm.lovable.app'
+const APP_URL = 'https://snakk-ai.lovable.app'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -273,7 +273,7 @@ Deno.serve(async (req) => {
           todayCount: prioritertIDag.length,
           meetingCount: todayMeetings.length,
           dealCount: aktiveSalgsmuligheter.length,
-          appUrl: 'https://snakk-ai-crm.lovable.app',
+          appUrl: 'https://snakk-ai.lovable.app',
         },
       })
 

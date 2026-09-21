@@ -1,7 +1,7 @@
 // HTML-mal for interne driftsvarsler i Snakk CRM.
 // Dette er interne varsler – ingen avmeldingslenke og ingen markedsføringsinnhold.
 
-export const APP_URL = 'https://snakk-ai-crm.lovable.app'
+export const APP_URL = 'https://snakk-ai.lovable.app'
 
 const HEADER_ROD = '#c0392b'
 const TEKST_MORK = '#1a1917'

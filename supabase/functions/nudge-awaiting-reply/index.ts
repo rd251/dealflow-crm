@@ -10,7 +10,7 @@ const corsHeaders = {
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const APP_URL = "https://snakk-ai-crm.lovable.app";
+const APP_URL = "https://snakk-ai.lovable.app";
 
 /** Terskler – speiler src/lib/nudge-rules.ts */
 const NUDGE_DAGER_STANDARD = 3;

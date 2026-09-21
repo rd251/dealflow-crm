@@ -8,7 +8,7 @@ const SITE_NAME = "Snakk"
 const BRAND_RED = '#da291c'
 const BRAND_DARK = '#1a1917'
 const LOGO_URL = 'https://tchmujgzcklwgptocbno.supabase.co/storage/v1/object/public/email-assets/snakk-logo-dark.svg'
-const APP_URL_DEFAULT = 'https://snakk-ai-crm.lovable.app'
+const APP_URL_DEFAULT = 'https://snakk-ai.lovable.app'
 
 // ── Types ──
 
@@ -335,8 +335,8 @@ export const template = {
   previewData: {
     displayName: 'Robin',
     topp3: [
-      { tittel: 'Ring Kari hos Acme Corp', selskap: 'Acme Corp', hvorfor: 'Kontrakt sendt for 9 dager siden, ingen svar', handling: 'Ring 900 00 000 før kl. 11 og be om signering denne uken', risiko: 'Lukkedato 5. april ryker', lenke: 'https://snakk-ai-crm.lovable.app/salgsmuligheter' },
-      { tittel: 'Send tilbud til Trale.ai', selskap: 'Trale.ai', hvorfor: 'Demo gjennomført i forrige uke, tilbud lovet', handling: 'Send tilbud på 8 500 kr/mnd til ola@trale.ai i dag', risiko: null, lenke: 'https://snakk-ai-crm.lovable.app/salgsmuligheter' },
+      { tittel: 'Ring Kari hos Acme Corp', selskap: 'Acme Corp', hvorfor: 'Kontrakt sendt for 9 dager siden, ingen svar', handling: 'Ring 900 00 000 før kl. 11 og be om signering denne uken', risiko: 'Lukkedato 5. april ryker', lenke: 'https://snakk-ai.lovable.app/salgsmuligheter' },
+      { tittel: 'Send tilbud til Trale.ai', selskap: 'Trale.ai', hvorfor: 'Demo gjennomført i forrige uke, tilbud lovet', handling: 'Send tilbud på 8 500 kr/mnd til ola@trale.ai i dag', risiko: null, lenke: 'https://snakk-ai.lovable.app/salgsmuligheter' },
     ],
     overdueCount: 2,
     todayCount: 3,
@@ -366,7 +366,7 @@ export const template = {
       'Følg opp Straye AS – 5 dager uten aktivitet',
       'Acme Corp nærmer seg lukkedato – forbered closing',
     ],
-    appUrl: 'https://snakk-ai-crm.lovable.app',
+    appUrl: 'https://snakk-ai.lovable.app',
   },
 } satisfies TemplateEntry
 
