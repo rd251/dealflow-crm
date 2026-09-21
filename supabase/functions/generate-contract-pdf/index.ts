@@ -231,6 +231,7 @@ Deno.serve(async (req) => {
       "Ubenyttede minutter overføres ikke",
       "Bruk utover inkludert volum faktureres i etterkant",
       "Betalingsintervaller kan etter avtale endres til kvartalsvis, halvårlig eller årlig fakturering",
+      "Ved årlig betaling gis 10 % rabatt på abonnementsprisen",
     ];
     for (const item of betalingsvilkaar) {
       checkPage(8);
@@ -274,7 +275,7 @@ Deno.serve(async (req) => {
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(80, 80, 80);
-    doc.text("• Oppsigelsestid: 60 dager, oppsigelse gjelder fra den 1. påfølgende måned", margin, y); y += 5;
+    doc.text("• Oppsigelsestid: 1 måned, oppsigelse gjelder fra den 1. påfølgende måned", margin, y); y += 5;
     doc.text("• Oppsigelse skal være skriftlig", margin, y); y += 8;
 
     // ---- SECTION 7: Konsulenttjenester ----
