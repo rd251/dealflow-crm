@@ -353,7 +353,7 @@ export default function PartnerPricing({
                 <SelectItem value="__all__">⚡ Legg til alle pakker</SelectItem>
                 {PRESET_PAKKER.map((p) => (
                   <SelectItem key={p.navn} value={p.navn}>
-                    {p.navn} — {p.inkluderte_minutter} min{p.utsalgspris_sluttkunde > 0 ? ` / ${nok(p.utsalgspris_sluttkunde)}` : ""}
+                    {p.navn}{p.inkluderte_minutter > 0 ? ` — ${p.inkluderte_minutter} min` : ""}{p.utsalgspris_sluttkunde > 0 ? ` / ${nok(p.utsalgspris_sluttkunde)}` : ""}
                   </SelectItem>
                 ))}
               </SelectContent>
