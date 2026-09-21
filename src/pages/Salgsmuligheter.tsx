@@ -24,7 +24,7 @@ import EntityLinkPicker from "@/components/EntityLinkPicker";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles, ArrowRight, Check, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { Salgsmulighet, SalgsmulighetStatus, Tapsaarsak, KontraktStatus, beregnTotalKontraktsverdi, beregnVektetPipeline, PAKKER } from "@/data/crm-data";
+import { Salgsmulighet, SalgsmulighetStatus, Tapsaarsak, KontraktStatus, beregnTotalKontraktsverdi, beregnVektetPipeline, PAKKER, PAKKE_KATEGORIER } from "@/data/crm-data";
 import InlineTaskForm from "@/components/InlineTaskForm";
 import ActivityLog from "@/components/ActivityLog";
 import PersonTimeline from "@/components/PersonTimeline";
