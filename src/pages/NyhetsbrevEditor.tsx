@@ -97,6 +97,73 @@ export default function NyhetsbrevEditor() {
 
   const html = useMemo(() => renderNewsletterHtml(blokker, preheader), [blokker, preheader]);
 
+  const [lasterPdf, setLasterPdf] = useState(false);
+
+  const lastNedPdf = async () => {
+    setLasterPdf(true);
+    const vertDiv = document.createElement("div");
+    try {
+      const { default: html2canvas } = await import("html2canvas");
+      const { jsPDF } = await import("jspdf");
+
+      // Rendre e-post-HTML-en i et skjult element med fast bredde (som i e-postklient)
+      const parsed = new DOMParser().parseFromString(html, "text/html");
+      vertDiv.style.cssText = "position:fixed;left:-10000px;top:0;width:680px;background:#ffffff;";
+      parsed.querySelectorAll("style").forEach((s) => vertDiv.appendChild(document.importNode(s, true)));
+      Array.from(parsed.body.childNodes).forEach((n) => vertDiv.appendChild(document.importNode(n, true)));
+      document.body.appendChild(vertDiv);
+
+      // Vent på at bilder er lastet
+      await Promise.all(
+        Array.from(vertDiv.querySelectorAll("img")).map(
+          (img) =>
+            new Promise<void>((resolve) => {
+              if (img.complete) return resolve();
+              img.onload = () => resolve();
+              img.onerror = () => resolve();
+            })
+        )
+      );
+
+      const canvas = await html2canvas(vertDiv, { scale: 2, useCORS: true, backgroundColor: "#ffffff", logging: false });
+
+      const pdf = new jsPDF({ unit: "mm", format: "a4" });
+      const sideBredde = pdf.internal.pageSize.getWidth();
+      const sideHoyde = pdf.internal.pageSize.getHeight();
+      const pxPerMm = canvas.width / sideBredde;
+      const sideHoydePx = Math.floor(sideHoyde * pxPerMm);
+
+      let offset = 0;
+      let forste = true;
+      while (offset < canvas.height) {
+        const hoyde = Math.min(sideHoydePx, canvas.height - offset);
+        const del = document.createElement("canvas");
+        del.width = canvas.width;
+        del.height = hoyde;
+        const ctx = del.getContext("2d");
+        if (ctx) {
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, del.width, del.height);
+          ctx.drawImage(canvas, 0, offset, canvas.width, hoyde, 0, 0, canvas.width, hoyde);
+        }
+        if (!forste) pdf.addPage();
+        pdf.addImage(del.toDataURL("image/jpeg", 0.92), "JPEG", 0, 0, sideBredde, hoyde / pxPerMm);
+        offset += hoyde;
+        forste = false;
+      }
+
+      const filnavn = `${(tittel || "nyhetsbrev").replace(/[^\wæøåÆØÅ -]+/g, "").trim() || "nyhetsbrev"}.pdf`;
+      pdf.save(filnavn);
+      toast.success("PDF lastet ned");
+    } catch (e) {
+      console.error(e);
+      toast.error("Kunne ikke lage PDF – prøv HTML-nedlasting i stedet");
+    } finally {
+      vertDiv.remove();
+      setLasterPdf(false);
+    }
+  };
+
   const lagre = async (stille = false) => {
     setLagrer(true);
     const { error } = await supabase
@@ -392,24 +459,35 @@ export default function NyhetsbrevEditor() {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-semibold">Forhåndsvisning</h2>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  const blob = new Blob([html], { type: "text/html;charset=utf-8" });
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement("a");
-                  a.href = url;
-                  a.download = `${(tittel || "nyhetsbrev").replace(/[^\wæøåÆØÅ -]+/g, "").trim() || "nyhetsbrev"}.html`;
-                  a.rel = "noopener";
-                  a.click();
-                  setTimeout(() => URL.revokeObjectURL(url), 60_000);
-                  toast.success("Forhåndsvisning lastet ned");
-                }}
-              >
-                <Download className="w-4 h-4 mr-1.5" />
-                Last ned HTML
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = `${(tittel || "nyhetsbrev").replace(/[^\wæøåÆØÅ -]+/g, "").trim() || "nyhetsbrev"}.html`;
+                    a.rel = "noopener";
+                    a.click();
+                    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+                    toast.success("HTML lastet ned");
+                  }}
+                >
+                  <Download className="w-4 h-4 mr-1.5" />
+                  HTML
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={lasterPdf}
+                  onClick={lastNedPdf}
+                >
+                  {lasterPdf ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Download className="w-4 h-4 mr-1.5" />}
+                  PDF
+                </Button>
+              </div>
             </div>
             <iframe
               title="Forhåndsvisning"
