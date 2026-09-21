@@ -392,24 +392,35 @@ export default function NyhetsbrevEditor() {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-semibold">Forhåndsvisning</h2>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  const blob = new Blob([html], { type: "text/html;charset=utf-8" });
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement("a");
-                  a.href = url;
-                  a.download = `${(tittel || "nyhetsbrev").replace(/[^\wæøåÆØÅ -]+/g, "").trim() || "nyhetsbrev"}.html`;
-                  a.rel = "noopener";
-                  a.click();
-                  setTimeout(() => URL.revokeObjectURL(url), 60_000);
-                  toast.success("Forhåndsvisning lastet ned");
-                }}
-              >
-                <Download className="w-4 h-4 mr-1.5" />
-                Last ned HTML
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = `${(tittel || "nyhetsbrev").replace(/[^\wæøåÆØÅ -]+/g, "").trim() || "nyhetsbrev"}.html`;
+                    a.rel = "noopener";
+                    a.click();
+                    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+                    toast.success("HTML lastet ned");
+                  }}
+                >
+                  <Download className="w-4 h-4 mr-1.5" />
+                  HTML
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={lasterPdf}
+                  onClick={lastNedPdf}
+                >
+                  {lasterPdf ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Download className="w-4 h-4 mr-1.5" />}
+                  PDF
+                </Button>
+              </div>
             </div>
             <iframe
               title="Forhåndsvisning"
