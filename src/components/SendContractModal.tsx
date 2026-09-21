@@ -1,14 +1,30 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { FileSignature, Eye, Send, Loader2, Building2, User, Phone, Mail, Package, Briefcase } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FileSignature, Eye, Send, Loader2, Building2, User, Phone, Mail, Package, Briefcase, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { nok } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { PAKKER } from "@/data/crm-data";
+
+/** Egen kontraktsmal per tjeneste. Utvides når flere tjenester får egen avtaletekst. */
+export const KONTRAKT_MALER = [
+  { verdi: "telefon", navn: "AI-telefon" },
+  { verdi: "moeter", navn: "Møter og transkribering" },
+] as const;
+
+export type KontraktType = (typeof KONTRAKT_MALER)[number]["verdi"];
+
+/** Foreslår mal ut fra pakkekategorien på salgsmuligheten. */
+export function standardKontraktType(pakkeNavn: string): KontraktType {
+  const kategori = PAKKER.find((p) => p.navn === pakkeNavn)?.kategori;
+  return kategori === "Møter" ? "moeter" : "telefon";
+}
+
 
 interface ContractData {
   salgsmulighet_id: string;
