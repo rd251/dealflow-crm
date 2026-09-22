@@ -27,7 +27,7 @@ import CompanyLogo from "@/components/CompanyLogo";
 import LeadForwardEmailPreview from "@/components/LeadForwardEmailPreview";
 import NesteStegTaskButton from "@/components/NesteStegTaskButton";
 import { PinnedNotatBoks, PinnedNotatFelt } from "@/components/PinnedNotat";
-import { skjemaOnske } from "@/lib/lead-notater";
+import { skjemaOnske, produktInteresse } from "@/lib/lead-notater";
 import LeadQuickActions from "@/components/LeadQuickActions";
 import RingelisteIdag from "@/components/RingelisteIdag";
 import FolgOppIDag from "@/components/FolgOppIDag";
@@ -837,8 +837,13 @@ export default function Leads() {
                     <p className="text-xs text-muted-foreground">Ønsker: {skjemaOnske(lead.notater)}</p>
                   )}
                   <PinnedNotatBoks notat={lead.pinned_notat} />
-                  <div className="flex items-center justify-between">
-                    <Badge variant="secondary" className="text-[10px]">{kildeGruppe(lead.kilde)}</Badge>
+                   <div className="flex items-center justify-between">
+                     <span className="flex items-center gap-1">
+                       <Badge variant="secondary" className="text-[10px]">{kildeGruppe(lead.kilde)}</Badge>
+                       {produktInteresse(lead.notater, lead.use_case).map(p => (
+                         <Badge key={p} className="text-[10px]">{p}</Badge>
+                       ))}
+                     </span>
                     <span className="text-[10px] text-muted-foreground">{relativTid(lead.sist_aktivitet)}</span>
                     <Badge variant="outline" className={`text-[10px] ${oppfolgingFarge[oppfolgingTilstand(effektivOppfolging(lead))]}`}>
                       {oppfolgingEtikett(effektivOppfolging(lead))}
@@ -930,7 +935,14 @@ export default function Leads() {
                           </div>
                         )}
                       </td>
-                      <td className="px-4 py-2.5"><Badge variant="secondary" className="text-[11px]">{kildeGruppe(lead.kilde)}</Badge></td>
+                      <td className="px-4 py-2.5">
+                        <div className="flex flex-wrap items-center gap-1">
+                          <Badge variant="secondary" className="text-[11px]">{kildeGruppe(lead.kilde)}</Badge>
+                          {produktInteresse(lead.notater, lead.use_case).map(p => (
+                            <Badge key={p} className="text-[10px]">{p}</Badge>
+                          ))}
+                        </div>
+                      </td>
                       <td className="px-4 py-2.5" onClick={e => e.stopPropagation()}>
                         <select
                           className={`text-xs px-2 py-1 rounded-full font-medium border cursor-pointer ${statusColors[lead.status] || ""}`}
