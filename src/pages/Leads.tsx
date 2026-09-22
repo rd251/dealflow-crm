@@ -27,6 +27,7 @@ import CompanyLogo from "@/components/CompanyLogo";
 import LeadForwardEmailPreview from "@/components/LeadForwardEmailPreview";
 import NesteStegTaskButton from "@/components/NesteStegTaskButton";
 import { PinnedNotatBoks, PinnedNotatFelt } from "@/components/PinnedNotat";
+import { skjemaOnske } from "@/lib/lead-notater";
 import LeadQuickActions from "@/components/LeadQuickActions";
 import RingelisteIdag from "@/components/RingelisteIdag";
 import FolgOppIDag from "@/components/FolgOppIDag";
@@ -827,6 +828,14 @@ export default function Leads() {
                     <Badge variant="outline" className={`text-[10px] ${statusColors[lead.status] || ""}`}>{leadStatusKort[lead.status] || lead.status}</Badge>
                   </div>
                   <p className="text-xs text-muted-foreground">{lead.kontaktperson}</p>
+                  {lead.telefon && (
+                    <a href={`tel:${lead.telefon}`} onClick={e => e.stopPropagation()} className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline">
+                      <Phone className="w-3 h-3" />{lead.telefon}
+                    </a>
+                  )}
+                  {skjemaOnske(lead.notater) && (
+                    <p className="text-xs text-muted-foreground">Ønsker: {skjemaOnske(lead.notater)}</p>
+                  )}
                   <PinnedNotatBoks notat={lead.pinned_notat} />
                   <div className="flex items-center justify-between">
                     <Badge variant="secondary" className="text-[10px]">{kildeGruppe(lead.kilde)}</Badge>
@@ -908,7 +917,19 @@ export default function Leads() {
                         </div>
                         <PinnedNotatBoks notat={lead.pinned_notat} className="mt-1.5 max-w-[260px]" />
                       </td>
-                      <td className="px-4 py-2.5 text-muted-foreground truncate max-w-[160px]">{lead.kontaktperson || "—"}</td>
+                      <td className="px-4 py-2.5 text-muted-foreground max-w-[220px]">
+                        <div className="truncate">{lead.kontaktperson || "—"}</div>
+                        {lead.telefon && (
+                          <a href={`tel:${lead.telefon}`} onClick={e => e.stopPropagation()} className="text-xs hover:text-foreground">
+                            {lead.telefon}
+                          </a>
+                        )}
+                        {skjemaOnske(lead.notater) && (
+                          <div className="text-[11px] truncate" title={skjemaOnske(lead.notater) || undefined}>
+                            Ønsker: {skjemaOnske(lead.notater)}
+                          </div>
+                        )}
+                      </td>
                       <td className="px-4 py-2.5"><Badge variant="secondary" className="text-[11px]">{kildeGruppe(lead.kilde)}</Badge></td>
                       <td className="px-4 py-2.5" onClick={e => e.stopPropagation()}>
                         <select
