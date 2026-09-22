@@ -38,9 +38,9 @@ export function skjemaOnske(notater?: string | null): string | null {
 
 /** Produktinteresse gjenkjent i skjemasvar/use_case, i prioritert visningsrekkefølge. */
 const PRODUKT_REGLER: { produkt: string; matcher: RegExp }[] = [
-  { produkt: "Telefon", matcher: /telefon|ring|anrop|samtale|kundesvar|reservasjon|bestilling.*telefon/i },
-  { produkt: "Chat", matcher: /chat|chatbot|nettside/i },
-  { produkt: "Møter", matcher: /møte|referat|transkrib|notat/i },
+  { produkt: "Telefon", matcher: /telefon|ring|anrop|samtale|kundesvar|reservasjon|sentralbord|telefoni|telefonsystem/i },
+  { produkt: "Chat", matcher: /chat|chatbot|nettside|intercom|zendesk|live ?chat|webchat/i },
+  { produkt: "Møter", matcher: /møte|moteref|transkrib|notat|teams|zoom|webex|google ?meet|møteløsning|videomøte/i },
   { produkt: "E-post", matcher: /e[- ]?post|mail|innboks/i },
 ];
 
