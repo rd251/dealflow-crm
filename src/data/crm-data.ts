@@ -53,6 +53,9 @@ export interface Lead {
   pinned_notat?: string;
   pinned_notat_av?: string;
   pinned_notat_dato?: string;
+  /** Produkter AI-en ser at leadet er ute etter, lest ut av notatene. */
+  produkt_interesse?: string[];
+  produkt_oppsummering?: string;
 }
 
 export type KontraktStatus = "Ikke sendt" | "Sendt" | "Åpnet" | "Signert" | "Utløpt";

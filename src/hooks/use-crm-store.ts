@@ -24,6 +24,8 @@ function rowToLead(r: any): Lead {
     pinned_notat: r.pinned_notat || "",
     pinned_notat_av: r.pinned_notat_av || "",
     pinned_notat_dato: r.pinned_notat_dato || "",
+    produkt_interesse: r.produkt_interesse || [],
+    produkt_oppsummering: r.produkt_oppsummering || "",
   };
 }
 function rowToSelskap(r: any): Selskap {

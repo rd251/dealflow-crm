@@ -535,6 +535,9 @@ export type Database = {
           pinned_notat: string | null
           pinned_notat_av: string | null
           pinned_notat_dato: string | null
+          produkt_analysert_at: string | null
+          produkt_interesse: string[] | null
+          produkt_oppsummering: string | null
           rolle_i_firma: string | null
           sist_aktivitet: string | null
           status: Database["public"]["Enums"]["lead_status"] | null
@@ -561,6 +564,9 @@ export type Database = {
           pinned_notat?: string | null
           pinned_notat_av?: string | null
           pinned_notat_dato?: string | null
+          produkt_analysert_at?: string | null
+          produkt_interesse?: string[] | null
+          produkt_oppsummering?: string | null
           rolle_i_firma?: string | null
           sist_aktivitet?: string | null
           status?: Database["public"]["Enums"]["lead_status"] | null
@@ -587,6 +593,9 @@ export type Database = {
           pinned_notat?: string | null
           pinned_notat_av?: string | null
           pinned_notat_dato?: string | null
+          produkt_analysert_at?: string | null
+          produkt_interesse?: string[] | null
+          produkt_oppsummering?: string | null
           rolle_i_firma?: string | null
           sist_aktivitet?: string | null
           status?: Database["public"]["Enums"]["lead_status"] | null

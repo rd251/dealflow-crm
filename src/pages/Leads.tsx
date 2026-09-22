@@ -833,14 +833,14 @@ export default function Leads() {
                       <Phone className="w-3 h-3" />{lead.telefon}
                     </a>
                   )}
-                  {skjemaOnske(lead.notater) && (
-                    <p className="text-xs text-muted-foreground">Ønsker: {skjemaOnske(lead.notater)}</p>
+                  {(lead.produkt_oppsummering || skjemaOnske(lead.notater)) && (
+                    <p className="text-xs text-muted-foreground">Ønsker: {(lead.produkt_oppsummering || skjemaOnske(lead.notater))}</p>
                   )}
                   <PinnedNotatBoks notat={lead.pinned_notat} />
                    <div className="flex items-center justify-between">
                      <span className="flex items-center gap-1">
                        <Badge variant="secondary" className="text-[10px]">{kildeGruppe(lead.kilde)}</Badge>
-                       {produktInteresse(lead.notater, lead.use_case).map(p => (
+                       {produktInteresse(lead.notater, lead.use_case, lead.produkt_interesse).map(p => (
                          <Badge key={p} className="text-[10px]">{p}</Badge>
                        ))}
                      </span>
@@ -929,16 +929,16 @@ export default function Leads() {
                             {lead.telefon}
                           </a>
                         )}
-                        {skjemaOnske(lead.notater) && (
-                          <div className="text-[11px] truncate" title={skjemaOnske(lead.notater) || undefined}>
-                            Ønsker: {skjemaOnske(lead.notater)}
+                        {(lead.produkt_oppsummering || skjemaOnske(lead.notater)) && (
+                          <div className="text-[11px] truncate" title={(lead.produkt_oppsummering || skjemaOnske(lead.notater)) || undefined}>
+                            Ønsker: {(lead.produkt_oppsummering || skjemaOnske(lead.notater))}
                           </div>
                         )}
                       </td>
                       <td className="px-4 py-2.5">
                         <div className="flex flex-wrap items-center gap-1">
                           <Badge variant="secondary" className="text-[11px]">{kildeGruppe(lead.kilde)}</Badge>
-                          {produktInteresse(lead.notater, lead.use_case).map(p => (
+                          {produktInteresse(lead.notater, lead.use_case, lead.produkt_interesse).map(p => (
                             <Badge key={p} className="text-[10px]">{p}</Badge>
                           ))}
                         </div>

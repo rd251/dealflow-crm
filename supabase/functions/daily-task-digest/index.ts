@@ -30,7 +30,7 @@ Deno.serve(async (req) => {
   // Fetch open tasks with deadline <= today
   const { data: tasks, error: tasksError } = await supabase
     .from('oppgaver')
-    .select('id, oppgave, frist, ansvarlig, prioritet, status, user_id, selskap_id, kontakt_id, salgsmulighet_id, notater')
+    .select('id, oppgave, frist, ansvarlig, prioritet, status, user_id, selskap_id, kontakt_id, salgsmulighet_id, lead_id, notater')
     .neq('status', 'Ferdig')
     .not('user_id', 'is', null)
     .not('frist', 'is', null)
@@ -92,6 +92,25 @@ Deno.serve(async (req) => {
       .in('id', Array.from(allKontaktIds))
     for (const k of kontakter || []) kontaktMap.set(k.id, k)
   }
+
+  // Hva leadene bak oppgavene er ute etter (lest ut av notatene)
+  const allLeadIds = new Set<string>()
+  for (const t of tasks || []) if ((t as any).lead_id) allLeadIds.add((t as any).lead_id)
+
+  const leadOnskerMap = new Map<string, string>()
+  if (allLeadIds.size > 0) {
+    const { data: leads } = await supabase
+      .from('leads')
+      .select('id, produkt_interesse, produkt_oppsummering')
+      .in('id', Array.from(allLeadIds))
+    for (const l of leads || []) {
+      const produkter = ((l as any).produkt_interesse || []).join(' · ')
+      const tekst = [produkter, (l as any).produkt_oppsummering].filter(Boolean).join(' — ')
+      if (tekst) leadOnskerMap.set(l.id, tekst)
+    }
+  }
+
+
 
   // Collect all user IDs
   const tasksByUser = new Map<string, typeof tasks>()
@@ -162,6 +181,7 @@ Deno.serve(async (req) => {
       telefon: t.kontakt_id ? kontaktMap.get(t.kontakt_id)?.telefon || null : null,
       ePost: t.kontakt_id ? kontaktMap.get(t.kontakt_id)?.e_post || null : null,
       notat: t.notater ? String(t.notater).slice(0, 160) : null,
+      onsker: t.lead_id ? leadOnskerMap.get(t.lead_id) || null : null,
       lenke: t.salgsmulighet_id ? `${APP_URL}/salgsmuligheter?open=${t.salgsmulighet_id}` : `${APP_URL}/oppgaver`,
     })
 

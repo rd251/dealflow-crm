@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
       .select('id, navn, status, forventet_mrr, forventet_lukkedato, sist_aktivitet, neste_steg, kontaktperson, ansvarlig, selskap_id')
       .not('status', 'in', '("Vunnet","Tapt")'),
     supabase.from('leads')
-      .select('id, firmanavn, kontaktperson, telefon, e_post, status, neste_steg, neste_oppfolging, sist_aktivitet, ansvarlig, use_case')
+      .select('id, firmanavn, kontaktperson, telefon, e_post, status, neste_steg, neste_oppfolging, sist_aktivitet, ansvarlig, use_case, produkt_interesse, produkt_oppsummering')
       .not('status', 'in', '("Ikke aktuelt","Konvertert til salg","Konvertert til partner")'),
     supabase.from('partnere')
       .select('id, partnernavn, kontaktperson, partnerstatus, pipeline_status, sist_aktivitet, ansvarlig'),
@@ -115,6 +115,8 @@ Deno.serve(async (req) => {
       e_post: l.e_post,
       status: l.status,
       use_case: l.use_case,
+      produkt_interesse: (l.produkt_interesse || []).join(', ') || null,
+      onsker: l.produkt_oppsummering || null,
       neste_steg: l.neste_steg,
       neste_oppfolging: l.neste_oppfolging,
       dager_uten_aktivitet: dager(l.sist_aktivitet),
