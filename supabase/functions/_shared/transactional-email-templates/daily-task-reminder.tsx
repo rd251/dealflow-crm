@@ -32,6 +32,8 @@ interface TaskItem {
   telefon?: string | null
   ePost?: string | null
   notat?: string | null
+  /** Hva leadet er ute etter, lest ut av notatene (f.eks. «Møter — vil ha referat fra Teams»). */
+  onsker?: string | null
   lenke?: string | null
 }
 
@@ -187,6 +189,7 @@ const DailyBriefEmail = ({
                       {task.telefon && <span style={metaChip}>📞 {task.telefon}</span>}
                       {task.ePost && <span style={metaChip}>✉️ {task.ePost}</span>}
                     </Text>
+                    {task.onsker && <Text style={noteText}>🎯 {task.onsker}</Text>}
                     {task.notat && <Text style={noteText}>{task.notat}</Text>}
                     {task.lenke && <Text style={{ margin: '6px 0 0' }}><Link href={task.lenke} style={inlineLink}>Åpne</Link></Text>}
                   </Section>
@@ -236,6 +239,7 @@ const DailyBriefEmail = ({
                       {task.telefon && <span style={metaChip}>📞 {task.telefon}</span>}
                       {task.ePost && <span style={metaChip}>✉️ {task.ePost}</span>}
                     </Text>
+                    {task.onsker && <Text style={noteText}>🎯 {task.onsker}</Text>}
                     {task.notat && <Text style={noteText}>{task.notat}</Text>}
                     {task.lenke && <Text style={{ margin: '6px 0 0' }}><Link href={task.lenke} style={inlineLink}>Åpne</Link></Text>}
                   </Section>
