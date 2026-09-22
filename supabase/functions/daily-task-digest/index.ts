@@ -93,6 +93,25 @@ Deno.serve(async (req) => {
     for (const k of kontakter || []) kontaktMap.set(k.id, k)
   }
 
+  // Hva leadene bak oppgavene er ute etter (lest ut av notatene)
+  const allLeadIds = new Set<string>()
+  for (const t of tasks || []) if ((t as any).lead_id) allLeadIds.add((t as any).lead_id)
+
+  const leadOnskerMap = new Map<string, string>()
+  if (allLeadIds.size > 0) {
+    const { data: leads } = await supabase
+      .from('leads')
+      .select('id, produkt_interesse, produkt_oppsummering')
+      .in('id', Array.from(allLeadIds))
+    for (const l of leads || []) {
+      const produkter = ((l as any).produkt_interesse || []).join(' · ')
+      const tekst = [produkter, (l as any).produkt_oppsummering].filter(Boolean).join(' — ')
+      if (tekst) leadOnskerMap.set(l.id, tekst)
+    }
+  }
+
+
+
   // Collect all user IDs
   const tasksByUser = new Map<string, typeof tasks>()
   for (const task of tasks || []) {
