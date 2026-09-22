@@ -56,3 +56,6 @@ project_id = "tchmujgzcklwgptocbno"
     verify_jwt = true
   [functions.crm-forfalte-oppgaver]
     verify_jwt = false
+
+  [functions.lead-produkt-analyse]
+    verify_jwt = false

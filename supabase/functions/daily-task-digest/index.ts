@@ -181,6 +181,7 @@ Deno.serve(async (req) => {
       telefon: t.kontakt_id ? kontaktMap.get(t.kontakt_id)?.telefon || null : null,
       ePost: t.kontakt_id ? kontaktMap.get(t.kontakt_id)?.e_post || null : null,
       notat: t.notater ? String(t.notater).slice(0, 160) : null,
+      onsker: t.lead_id ? leadOnskerMap.get(t.lead_id) || null : null,
       lenke: t.salgsmulighet_id ? `${APP_URL}/salgsmuligheter?open=${t.salgsmulighet_id}` : `${APP_URL}/oppgaver`,
     })
 
