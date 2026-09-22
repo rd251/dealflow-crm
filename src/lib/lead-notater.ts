@@ -35,3 +35,18 @@ export function skjemaOnske(notater?: string | null): string | null {
   if (svar.length === 0) return null;
   return svar.map(s => s.svar).join(" · ");
 }
+
+/** Produktinteresse gjenkjent i skjemasvar/use_case, i prioritert visningsrekkefølge. */
+const PRODUKT_REGLER: { produkt: string; matcher: RegExp }[] = [
+  { produkt: "Telefon", matcher: /telefon|ring|anrop|samtale|kundesvar|reservasjon|bestilling.*telefon/i },
+  { produkt: "Chat", matcher: /chat|chatbot|nettside/i },
+  { produkt: "Møter", matcher: /møte|referat|transkrib|notat/i },
+  { produkt: "E-post", matcher: /e[- ]?post|mail|innboks/i },
+];
+
+/** Finner hvilke produkter leadet er på jakt etter, ut fra notater og use_case. */
+export function produktInteresse(notater?: string | null, useCase?: string | null): string[] {
+  const tekst = [skjemaSvarFraNotater(notater).map(s => `${s.sporsmal} ${s.svar}`).join(" "), useCase || ""].join(" ");
+  if (!tekst.trim()) return [];
+  return PRODUKT_REGLER.filter(r => r.matcher.test(tekst)).map(r => r.produkt);
+}
