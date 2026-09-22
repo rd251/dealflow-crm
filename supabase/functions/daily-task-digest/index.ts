@@ -30,7 +30,7 @@ Deno.serve(async (req) => {
   // Fetch open tasks with deadline <= today
   const { data: tasks, error: tasksError } = await supabase
     .from('oppgaver')
-    .select('id, oppgave, frist, ansvarlig, prioritet, status, user_id, selskap_id, kontakt_id, salgsmulighet_id, notater')
+    .select('id, oppgave, frist, ansvarlig, prioritet, status, user_id, selskap_id, kontakt_id, salgsmulighet_id, lead_id, notater')
     .neq('status', 'Ferdig')
     .not('user_id', 'is', null)
     .not('frist', 'is', null)
