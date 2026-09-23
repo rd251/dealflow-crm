@@ -61,4 +61,4 @@ project_id = "tchmujgzcklwgptocbno"
     verify_jwt = false
 
   [functions.merge-duplicates]
-  verify_jwt = true
+    verify_jwt = true
