@@ -62,3 +62,7 @@ project_id = "tchmujgzcklwgptocbno"
 
   [functions.merge-duplicates]
     verify_jwt = true
+
+  [functions.dealbuilder-auto-kunde]
+    verify_jwt = false
+

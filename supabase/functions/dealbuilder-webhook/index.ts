@@ -1,6 +1,8 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { sendTemplateEmailWithLog } from "../_shared/transactional-email-templates/send-and-log.ts";
 import { behandleHendelse } from "../_shared/crm-varsel/hendelser.ts";
+import { hentDealBuilderDokumenter, opprettKundeFraDokument } from "../_shared/auto-kunde.ts";
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -71,11 +73,36 @@ Deno.serve(async (req) => {
     }
 
     if (!CRMid) {
+      // Selvbetjent signering via plattformen: ingen salgsmulighet finnes ennå.
+      if (event === "document_signed" && document_id) {
+        try {
+          const alle = await hentDealBuilderDokumenter();
+          const doc = alle.find((d) => String(d.id) === String(document_id));
+          if (doc) {
+            const res = await opprettKundeFraDokument(supabase, doc);
+            if (res.status === "opprettet" && res.salgsmulighet_id) {
+              await behandleHendelse(supabase, {
+                hendelse: "kontrakt_signert",
+                salgsmulighet_id: res.salgsmulighet_id,
+                signert_av: signer_name || null,
+                signert_dato: new Date().toISOString(),
+              }).catch(() => {});
+            }
+            return new Response(JSON.stringify({ received: true, event, auto_kunde: res }), {
+              status: 200,
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+          }
+        } catch (autoErr) {
+          console.error("auto-kunde feilet", String(autoErr));
+        }
+      }
       return new Response(JSON.stringify({ received: true, warning: "Could not match to CRM entity", document_id, signer_email }), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
 
     // First try salgsmulighet
     const { data: deal, error: findError } = await supabase
