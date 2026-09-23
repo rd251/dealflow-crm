@@ -235,6 +235,33 @@ export type Database = {
         }
         Relationships: []
       }
+      dublett_ignorert: {
+        Row: {
+          created_at: string
+          id: string
+          id_a: string
+          id_b: string
+          ignorert_av: string | null
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          id_a: string
+          id_b: string
+          ignorert_av?: string | null
+          type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          id_a?: string
+          id_b?: string
+          ignorert_av?: string | null
+          type?: string
+        }
+        Relationships: []
+      }
       email_contacts: {
         Row: {
           all_emails: string[]
