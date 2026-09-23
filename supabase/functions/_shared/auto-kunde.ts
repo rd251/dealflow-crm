@@ -350,5 +350,5 @@ export async function opprettKundeFraDokument(
     new_value: "Signert",
   });
 
-  return { dokument_id: docId, status: "opprettet", selskap_id: selskapId!, salgsmulighet_id: deal.id, mrr };
+  return { dokument_id: docId, status: "opprettet", selskap_id: selskapId!, salgsmulighet_id: deal.id, mrr, signert_dato: signertDato };
 }
