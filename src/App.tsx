@@ -26,6 +26,7 @@ import CompanyProfile from "./pages/CompanyProfile";
 import Admin from "./pages/Admin";
 import Aktiviteter from "./pages/Aktiviteter";
 import Kontaktstrom from "./pages/Kontaktstrom";
+import Dubletter from "./pages/Dubletter";
 import Rapporter from "./pages/Rapporter";
 import Kalender from "./pages/Kalender";
 import Innstillinger from "./pages/Innstillinger";
