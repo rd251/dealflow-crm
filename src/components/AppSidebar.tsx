@@ -32,6 +32,7 @@ const moreItems: NavItem[] = [
   { to: "/ringeliste", icon: ListTodo, label: "Kampanjelister" },
   { to: "/alle-selskaper", icon: Building2, label: "Alle selskaper" },
   { to: "/kontaktstrom", icon: GitMerge, label: "Kontaktstrøm" },
+  { to: "/dubletter", icon: Copy, label: "Dubletter" },
   { to: "/moetenotater", icon: NotebookPen, label: "Møtenotater" },
   { to: "/aktiviteter", icon: Activity, label: "Endringslogg" },
   { to: "/partner-pipeline", icon: GitBranch, label: "Partnerløp" },
