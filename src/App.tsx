@@ -26,6 +26,7 @@ import CompanyProfile from "./pages/CompanyProfile";
 import Admin from "./pages/Admin";
 import Aktiviteter from "./pages/Aktiviteter";
 import Kontaktstrom from "./pages/Kontaktstrom";
+import Dubletter from "./pages/Dubletter";
 import Rapporter from "./pages/Rapporter";
 import Kalender from "./pages/Kalender";
 import Innstillinger from "./pages/Innstillinger";
@@ -170,6 +171,7 @@ function RoleRoutes() {
                 <Route path="/kontakter" element={<Contacts />} />
                 <Route path="/relasjoner" element={<Relasjoner />} />
                 <Route path="/kontaktstrom" element={<Kontaktstrom />} />
+                <Route path="/dubletter" element={<Dubletter />} />
                 <Route path="/oppgaver" element={<Tasks />} />
                 <Route path="/ringeliste" element={<Ringeliste />} />
                 <Route path="/kalender" element={<Kalender />} />
