@@ -1,7 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { sendTemplateEmailWithLog } from "../_shared/transactional-email-templates/send-and-log.ts";
 import { behandleHendelse } from "../_shared/crm-varsel/hendelser.ts";
-import { hentDealBuilderDokumenter, opprettKundeFraDokument } from "../_shared/auto-kunde.ts";
+import { hentDealBuilderDokumenter, opprettKundeFraDokument, erFerskSignering } from "../_shared/auto-kunde.ts";
 
 
 const corsHeaders = {
@@ -80,7 +80,7 @@ Deno.serve(async (req) => {
           const doc = alle.find((d) => String(d.id) === String(document_id));
           if (doc) {
             const res = await opprettKundeFraDokument(supabase, doc);
-            if (res.status === "opprettet" && res.salgsmulighet_id) {
+            if (res.status === "opprettet" && res.salgsmulighet_id && erFerskSignering(res.signert_dato)) {
               await behandleHendelse(supabase, {
                 hendelse: "kontrakt_signert",
                 salgsmulighet_id: res.salgsmulighet_id,
