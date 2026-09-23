@@ -41,7 +41,7 @@ Deno.serve(async (req) => {
     for (const doc of aktuelle) {
       const res = await opprettKundeFraDokument(supabase, doc);
       resultater.push(res);
-      if (res.status === "opprettet" && res.salgsmulighet_id) {
+      if (res.status === "opprettet" && res.salgsmulighet_id && erFerskSignering(res.signert_dato)) {
         try {
           await behandleHendelse(supabase, {
             hendelse: "kontrakt_signert",
