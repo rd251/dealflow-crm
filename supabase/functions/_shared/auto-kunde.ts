@@ -138,6 +138,16 @@ export async function lesPrisFraKontrakt(doc: DbDokument): Promise<KontraktPris 
   }
 }
 
+/** Signeringer eldre enn dette regnes som etterslep – ingen varsel sendes. */
+export const VARSEL_MAKS_ALDER_DAGER = 2;
+
+export function erFerskSignering(signertDato?: string | null): boolean {
+  if (!signertDato) return false;
+  const t = Date.parse(signertDato);
+  if (Number.isNaN(t)) return false;
+  return Date.now() - t <= VARSEL_MAKS_ALDER_DAGER * 24 * 60 * 60 * 1000;
+}
+
 export interface AutoResultat {
   dokument_id: string;
   status: "opprettet" | "hoppet_over";
@@ -145,6 +155,7 @@ export interface AutoResultat {
   selskap_id?: string;
   salgsmulighet_id?: string;
   mrr?: number;
+  signert_dato?: string;
 }
 
 /**
