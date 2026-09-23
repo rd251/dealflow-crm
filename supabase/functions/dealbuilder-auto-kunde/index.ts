@@ -6,6 +6,7 @@ import {
   hentDealBuilderDokumenter,
   opprettKundeFraDokument,
   erPartneravtale,
+  erFerskSignering,
   SIGNERTE_STATUSER,
   MAKS_PER_KJORING,
   type AutoResultat,
