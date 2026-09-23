@@ -170,6 +170,7 @@ function RoleRoutes() {
                 <Route path="/kontakter" element={<Contacts />} />
                 <Route path="/relasjoner" element={<Relasjoner />} />
                 <Route path="/kontaktstrom" element={<Kontaktstrom />} />
+                <Route path="/dubletter" element={<Dubletter />} />
                 <Route path="/oppgaver" element={<Tasks />} />
                 <Route path="/ringeliste" element={<Ringeliste />} />
                 <Route path="/kalender" element={<Kalender />} />
