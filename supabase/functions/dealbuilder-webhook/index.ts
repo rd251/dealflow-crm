@@ -1,6 +1,8 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { sendTemplateEmailWithLog } from "../_shared/transactional-email-templates/send-and-log.ts";
 import { behandleHendelse } from "../_shared/crm-varsel/hendelser.ts";
+import { hentDealBuilderDokumenter, opprettKundeFraDokument } from "../_shared/auto-kunde.ts";
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
