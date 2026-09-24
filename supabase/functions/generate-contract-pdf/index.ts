@@ -332,6 +332,27 @@ function lagTilbudPdf(data: z.infer<typeof BodySchema>) {
 
   y += 8;
   doc.setFont("helvetica", "bold");
+  doc.setFontSize(11);
+  doc.setTextColor(30, 30, 30);
+  doc.text("Viktige avtalevilkår", margin, y);
+  y += 8;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(80, 80, 80);
+  const vilkar = [
+    "Oppsigelsestid: 1 måned, gjeldende fra 1. i påfølgende måned.",
+    "Årlig betaling gir 10 % rabatt på månedsprisen.",
+    "Fakturering månedlig, alle priser er eks. mva.",
+    "Tilbudet blir først bindende når kontrakten er signert.",
+  ];
+  for (const vilkarLinje of vilkar) {
+    doc.text("•", margin, y);
+    doc.text(vilkarLinje, margin + 5, y);
+    y += 6;
+  }
+
+  y += 4;
+  doc.setFont("helvetica", "bold");
   doc.setTextColor(30, 30, 30);
   doc.text("Har dere spørsmål om tilbudet?", margin, y);
   y += 6;
