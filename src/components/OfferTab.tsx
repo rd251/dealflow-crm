@@ -7,6 +7,7 @@ import { Building2, Download, Eye, Loader2, Mail, Package, Phone, User } from "l
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { standardKontraktType } from "@/components/SendContractModal";
 import { toast } from "sonner";
+import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 
 export interface OfferData {
   salgsmulighet_id: string;
@@ -29,6 +30,7 @@ export default function OfferTab({ offerData }: { offerData: OfferData }) {
   const [lasterNed, setLasterNed] = useState(false);
   const [lasterVisning, setLasterVisning] = useState(false);
   const [visningUrl, setVisningUrl] = useState<string | null>(null);
+  const [sider, setSider] = useState<string[]>([]);
 
   const hentPdf = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -60,7 +62,21 @@ export default function OfferTab({ offerData }: { offerData: OfferData }) {
     setLasterVisning(true);
     try {
       const blob = await hentPdf();
-      setVisningUrl(URL.createObjectURL(blob));
+      const pdfjs = await import("pdfjs-dist");
+      pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
+      const doc = await pdfjs.getDocument({ data: await blob.arrayBuffer() }).promise;
+      const bilder: string[] = [];
+      for (let n = 1; n <= doc.numPages; n++) {
+        const side = await doc.getPage(n);
+        const viewport = side.getViewport({ scale: 2 });
+        const canvas = document.createElement("canvas");
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        await side.render({ canvasContext: canvas.getContext("2d")!, viewport }).promise;
+        bilder.push(canvas.toDataURL("image/png"));
+      }
+      setSider(bilder);
+      setVisningUrl("vis");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Kunne ikke forhåndsvise tilbudet");
     } finally {
@@ -69,8 +85,8 @@ export default function OfferTab({ offerData }: { offerData: OfferData }) {
   };
 
   const lukkVisning = () => {
-    if (visningUrl) URL.revokeObjectURL(visningUrl);
     setVisningUrl(null);
+    setSider([]);
   };
 
   const lastNedPdf = async () => {
@@ -151,7 +167,11 @@ export default function OfferTab({ offerData }: { offerData: OfferData }) {
       <Dialog open={!!visningUrl} onOpenChange={(o) => !o && lukkVisning()}>
         <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
           <DialogHeader><DialogTitle>Forhåndsvisning av tilbud</DialogTitle></DialogHeader>
-          {visningUrl && <iframe src={visningUrl} title="Forhåndsvisning av tilbud" className="w-full flex-1 rounded border" />}
+          <div className="flex-1 overflow-y-auto rounded border bg-muted p-4 space-y-4">
+            {sider.map((src, i) => (
+              <img key={i} src={src} alt={`Side ${i + 1} av tilbudet`} className="mx-auto w-full max-w-3xl bg-background shadow" />
+            ))}
+          </div>
         </DialogContent>
       </Dialog>
 
