@@ -147,12 +147,83 @@ function addLogoHeader(doc: any, margin: number, y: number): number {
   return y + 4;
 }
 
-const TILBUD_GYLDIG_DAGER = 30;
+const TILBUD_GYLDIG_DAGER = 14;
 
 function datoOmDager(dager: number) {
   const dato = new Date();
   dato.setDate(dato.getDate() + dager);
   return dato.toLocaleDateString("nb-NO", { day: "2-digit", month: "2-digit", year: "numeric" });
+}
+
+const TELEFON_SEKSJONER: { tittel: string; punkter: string[] }[] = [
+  {
+    tittel: "AI som svarer på telefonen",
+    punkter: [
+      "Snakk svarer med bedriftens egen kunnskap, avklarer behov og hjelper kunden videre etter oppgavene dere har avtalt.",
+      "Tar imot samtaler døgnet rundt – også når teamet er opptatt.",
+      "Følger avtalte regler for videre hjelp, og dere velger selv hvilken informasjon agenten skal bruke.",
+      "Human-in-the-loop: sømløs overføring til riktig medarbeider når det trengs – med kontekst fra samtalen.",
+      "Utgående anrop: følg opp leads, kjør kampanjer og samle inn data automatisk.",
+    ],
+  },
+  {
+    tittel: "Integrasjonsmuligheter",
+    punkter: [
+      "Koble til deres egne API-er: stemmeagenten kaller funksjoner, henter data og utfører oppgaver underveis i samtalen.",
+      "Webhooks som sender avklarte henvendelser videre til systemet eller medarbeideren som skal følge opp.",
+      "Ferdige koblinger mot blant annet HubSpot, Salesforce, Lime og GastroPlanner, samt kalender for timebestilling.",
+      "BankID og Vipps for oppgaver som krever identifisering.",
+      "MCP-server: koble Claude, ChatGPT eller egne verktøy til samtaledataene.",
+      "Saker, kunnskap og godkjent læring følger med – agenten blir bedre av teamets svar.",
+    ],
+  },
+  {
+    tittel: "Slik kommer dere i gang",
+    punkter: [
+      "1. Finn oppgaven – hva spør kundene om, og hva skal skje etter svaret?",
+      "2. Avklar oppsettet – kunnskap, systembehov og hvem som gjør hva.",
+      "3. Test forløpet – vi prøver oppgavene og unntakene før drift.",
+    ],
+  },
+];
+
+function leggTilTelefonInfo(doc: jsPDF, margin: number, contentW: number, W: number) {
+  doc.addPage();
+  let y = addLogoHeader(doc, margin, 20) + 4;
+  doc.setDrawColor(218, 41, 28);
+  doc.setLineWidth(0.5);
+  doc.line(margin, y, W - margin, y);
+  y += 14;
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(18);
+  doc.setTextColor(30, 30, 30);
+  doc.text("Om Snakk AI Telefon", margin, y);
+  y += 10;
+  for (const seksjon of TELEFON_SEKSJONER) {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    doc.setTextColor(218, 41, 28);
+    doc.text(seksjon.tittel, margin, y);
+    y += 7;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9.5);
+    doc.setTextColor(70, 70, 70);
+    for (const punkt of seksjon.punkter) {
+      const nummerert = /^\d\./.test(punkt);
+      const linjer = doc.splitTextToSize(punkt, contentW - 6);
+      if (!nummerert) doc.text("•", margin, y);
+      doc.text(linjer, nummerert ? margin : margin + 5, y);
+      y += linjer.length * 4.6 + 1.8;
+    }
+    y += 6;
+  }
+  doc.setFontSize(9);
+  doc.setTextColor(100, 100, 100);
+  doc.text("Hør det selv: ring demoagenten vår på +47 85 33 02 00 · Les mer på snakk.ai/ai-telefonassistent", margin, y);
+  doc.setFontSize(7);
+  doc.setTextColor(150, 150, 150);
+  doc.text("Snakk Teknologi AS · Sørkedalsveien 6, 0369 Oslo · Org.nr. 835 505 812", W / 2, 288, { align: "center" });
+  doc.text("Dette dokumentet er et tilbud og er ikke en kontrakt.", W / 2, 293, { align: "center" });
 }
 
 function lagTilbudPdf(data: z.infer<typeof BodySchema>) {
@@ -261,6 +332,14 @@ function lagTilbudPdf(data: z.infer<typeof BodySchema>) {
   doc.setFont("helvetica", "normal");
   doc.setTextColor(80, 80, 80);
   doc.text("Ta kontakt med oss på rd@snakk.ai.", margin, y);
+  y += 10;
+  doc.setFillColor(255, 245, 238);
+  doc.roundedRect(margin, y, contentW, 12, 2, 2, "F");
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(218, 41, 28);
+  doc.text(`Tilbudet er gyldig i ${TILBUD_GYLDIG_DAGER} dager – til og med ${datoOmDager(TILBUD_GYLDIG_DAGER)}.`, margin + 6, y + 7.5);
+
+  if ((data.kontrakt_type ?? "telefon") === "telefon") leggTilTelefonInfo(doc, margin, contentW, W);
 
   doc.setFontSize(7);
   doc.setTextColor(150, 150, 150);
