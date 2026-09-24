@@ -283,11 +283,14 @@ function lagTilbudPdf(data: z.infer<typeof BodySchema>) {
   doc.setTextColor(218, 41, 28);
   doc.text(`${nok(data.pakke_pris)} / mnd`, W - margin - 7, y + 11, { align: "right" });
   doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(150, 60, 50);
+  doc.text("eks. mva · faktureres månedlig", W - margin - 7, y + 19, { align: "right" });
   doc.setFontSize(9);
   doc.setTextColor(70, 70, 70);
   const inkludert = data.minutter || "Kapasitet som avtalt";
-  doc.text(doc.splitTextToSize(`Inkludert: ${inkludert}`, contentW - 14), margin + 7, y + 23);
-  doc.text("Faktureres månedlig · priser eks. mva.", margin + 7, y + 39);
+  doc.text(doc.splitTextToSize(`Inkludert: ${inkludert}`, contentW - 14), margin + 7, y + 26);
+  doc.text("Faktureres månedlig · pris eks. mva.", margin + 7, y + 40);
   y += 59;
 
   if (data.oppstartskostnad && data.oppstartskostnad > 0) {
@@ -301,6 +304,10 @@ function lagTilbudPdf(data: z.infer<typeof BodySchema>) {
     doc.setFontSize(13);
     doc.setTextColor(30, 30, 30);
     doc.text(`${nok(data.oppstartskostnad)} én gang`, W - margin - 7, y + 14, { align: "right" });
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(120, 120, 120);
+    doc.text("eks. mva", W - margin - 7, y + 19, { align: "right" });
     y += 34;
   }
 
@@ -312,9 +319,9 @@ function lagTilbudPdf(data: z.infer<typeof BodySchema>) {
   doc.setFontSize(9);
   doc.setTextColor(80, 80, 80);
   const punkter = [
-    `${data.valgt_pakke} til ${nok(data.pakke_pris)} per måned`,
+    `${data.valgt_pakke} til ${nok(data.pakke_pris)} per måned eks. mva.`,
     data.minutter ? `${data.minutter} inkludert` : "Inkludert kapasitet som avtalt",
-    data.oppstartskostnad ? `Oppkobling til ${nok(data.oppstartskostnad)}` : "Ingen oppkoblingskostnad",
+    data.oppstartskostnad ? `Oppkobling og etablering ${nok(data.oppstartskostnad)} eks. mva. (én gang)` : "Ingen oppkoblingskostnad",
     "Fakturering månedlig",
     "Alle priser er eks. mva.",
   ];
