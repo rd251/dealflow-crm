@@ -3,7 +3,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { nok } from "@/lib/utils";
-import { Building2, Download, Loader2, Mail, Package, Phone, User } from "lucide-react";
+import { Building2, Download, Eye, Loader2, Mail, Package, Phone, User } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { standardKontraktType } from "@/components/SendContractModal";
 import { toast } from "sonner";
 
 export interface OfferData {
@@ -25,10 +27,10 @@ const FILNAVN_UGYLDIGE_TEGN = /[^a-zA-Z0-9æøåÆØÅ-]+/g;
 
 export default function OfferTab({ offerData }: { offerData: OfferData }) {
   const [lasterNed, setLasterNed] = useState(false);
+  const [lasterVisning, setLasterVisning] = useState(false);
+  const [visningUrl, setVisningUrl] = useState<string | null>(null);
 
-  const lastNedPdf = async () => {
-    setLasterNed(true);
-    try {
+  const hentPdf = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
       const token = session?.access_token || anonKey;
@@ -42,7 +44,7 @@ export default function OfferTab({ offerData }: { offerData: OfferData }) {
         body: JSON.stringify({
           ...offerData,
           dokument_type: "tilbud",
-          kontrakt_type: "telefon",
+          kontrakt_type: standardKontraktType(offerData.valgt_pakke),
         }),
       });
 
@@ -51,7 +53,30 @@ export default function OfferTab({ offerData }: { offerData: OfferData }) {
         throw new Error(feil?.error || "Kunne ikke lage tilbudet");
       }
 
-      const blob = await res.blob();
+      return await res.blob();
+  };
+
+  const forhandsvis = async () => {
+    setLasterVisning(true);
+    try {
+      const blob = await hentPdf();
+      setVisningUrl(URL.createObjectURL(blob));
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Kunne ikke forhåndsvise tilbudet");
+    } finally {
+      setLasterVisning(false);
+    }
+  };
+
+  const lukkVisning = () => {
+    if (visningUrl) URL.revokeObjectURL(visningUrl);
+    setVisningUrl(null);
+  };
+
+  const lastNedPdf = async () => {
+    setLasterNed(true);
+    try {
+      const blob = await hentPdf();
       const url = URL.createObjectURL(blob);
       const lenke = document.createElement("a");
       lenke.href = url;
@@ -73,7 +98,7 @@ export default function OfferTab({ offerData }: { offerData: OfferData }) {
     <div className="space-y-5">
       <div>
         <h3 className="text-base font-semibold">Tilbud</h3>
-        <p className="mt-1 text-sm text-muted-foreground">Et pristilbud uten kontraktsvilkår eller signering.</p>
+        <p className="mt-1 text-sm text-muted-foreground">Et pristilbud uten kontraktsvilkår eller signering. Gyldig i 14 dager.</p>
       </div>
 
       <div className="rounded-lg border bg-card p-4 space-y-4">
@@ -117,6 +142,18 @@ export default function OfferTab({ offerData }: { offerData: OfferData }) {
       {!offerData.valgt_pakke && (
         <p className="rounded-lg border border-warning/30 bg-warning/10 p-3 text-sm text-warning">Velg en pakke under Detaljer før du laster ned tilbudet.</p>
       )}
+
+      <Button variant="outline" className="w-full" onClick={forhandsvis} disabled={lasterVisning || !offerData.valgt_pakke || !offerData.firmanavn}>
+        {lasterVisning ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Eye className="mr-2 h-4 w-4" />}
+        Forhåndsvis tilbud
+      </Button>
+
+      <Dialog open={!!visningUrl} onOpenChange={(o) => !o && lukkVisning()}>
+        <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
+          <DialogHeader><DialogTitle>Forhåndsvisning av tilbud</DialogTitle></DialogHeader>
+          {visningUrl && <iframe src={visningUrl} title="Forhåndsvisning av tilbud" className="w-full flex-1 rounded border" />}
+        </DialogContent>
+      </Dialog>
 
       <Button className="w-full" onClick={lastNedPdf} disabled={lasterNed || !offerData.valgt_pakke || !offerData.firmanavn}>
         {lasterNed ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
