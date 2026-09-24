@@ -16,6 +16,7 @@ interface DetailPanelShellProps {
   /** Tabbed content: { detaljer, interaksjoner, notater } */
   tabContent?: {
     detaljer?: ReactNode;
+    tilbud?: ReactNode;
     selskap?: ReactNode;
     kontakt?: ReactNode;
     interaksjoner?: ReactNode;
@@ -27,11 +28,12 @@ interface DetailPanelShellProps {
   onActiveTabChange?: (tab: TabKey) => void;
 }
 
-export type TabKey = "detaljer" | "selskap" | "kontakt" | "interaksjoner" | "notater" | "kalender" | "dokumenter";
+export type TabKey = "detaljer" | "tilbud" | "selskap" | "kontakt" | "interaksjoner" | "notater" | "kalender" | "dokumenter";
 
-const TAB_KEYS = ["detaljer", "selskap", "kontakt", "interaksjoner", "notater", "kalender", "dokumenter"] as const;
+const TAB_KEYS = ["detaljer", "tilbud", "selskap", "kontakt", "interaksjoner", "notater", "kalender", "dokumenter"] as const;
 const TAB_LABELS: Record<(typeof TAB_KEYS)[number], string> = {
   detaljer: "Detaljer",
+  tilbud: "Tilbud",
   selskap: "Selskap",
   kontakt: "Kontakt",
   interaksjoner: "Interaksjoner",

@@ -32,6 +32,7 @@ import { loggAktivitet } from "@/lib/activity-logging";
 import EntityChangelog from "@/components/EntityChangelog";
 import MeetingNotesList from "@/components/MeetingNotesList";
 import SendContractModal from "@/components/SendContractModal";
+import OfferTab from "@/components/OfferTab";
 import DealRecapCard from "@/components/DealRecapCard";
 import LastMeetingCard from "@/components/LastMeetingCard";
 import NesteStegTaskButton from "@/components/NesteStegTaskButton";
@@ -508,7 +509,7 @@ export default function Salgsmuligheter() {
     return () => { cancelled = true; };
   }, [openDealIdsKey]);
   const openCreateActivityRef = useRef<(() => void) | null>(null);
-  const [detailTab, setDetailTab] = useState<"detaljer" | "selskap" | "kontakt" | "interaksjoner" | "notater" | "kalender" | "dokumenter">("detaljer");
+  const [detailTab, setDetailTab] = useState<"detaljer" | "tilbud" | "selskap" | "kontakt" | "interaksjoner" | "notater" | "kalender" | "dokumenter">("detaljer");
   const [pendingOpenActivity, setPendingOpenActivity] = useState(false);
 
   useEffect(() => {
@@ -1475,6 +1476,27 @@ export default function Salgsmuligheter() {
                 )}
               </>
             ),
+            tilbud: (() => {
+              const pakke = PAKKER.find(p => p.navn === currentSm.valgt_pakke);
+              return (
+                <OfferTab
+                  offerData={{
+                    salgsmulighet_id: currentSm.id,
+                    firmanavn: (selskap?.firmanavn || "").trim(),
+                    orgnr: formaterOrgnr(selskap?.orgnr),
+                    adresse: kontraktAdresse(selskap?.postadresse, selskap?.firmaadresse),
+                    kontaktperson: currentSm.kontaktperson || "",
+                    telefon: currentSm.telefon || "",
+                    e_post: currentSm.e_post || "",
+                    valgt_pakke: currentSm.valgt_pakke || "",
+                    pakke_pris: pakke?.mrr || currentSm.forventet_mrr || 0,
+                    minutter: pakke?.minutter || "",
+                    sla: currentSm.sla ?? null,
+                    oppstartskostnad: currentSm.oppstartskostnad ?? null,
+                  }}
+                />
+              );
+            })(),
             selskap: (
               <>
                 <DetailSection title="Selskapsinformasjon">

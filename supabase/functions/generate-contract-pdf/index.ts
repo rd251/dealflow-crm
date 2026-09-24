@@ -20,6 +20,7 @@ const BodySchema = z.object({
   oppstartskostnad: z.number().nullable().optional(),
   konsulent_timepris: z.number().nullable().optional(),
   kontrakt_type: z.enum(KONTRAKT_TYPER).optional(),
+  dokument_type: z.enum(["kontrakt", "tilbud"]).optional(),
 });
 
 interface PakkeRad {
@@ -146,6 +147,129 @@ function addLogoHeader(doc: any, margin: number, y: number): number {
   return y + 4;
 }
 
+const TILBUD_GYLDIG_DAGER = 30;
+
+function datoOmDager(dager: number) {
+  const dato = new Date();
+  dato.setDate(dato.getDate() + dager);
+  return dato.toLocaleDateString("nb-NO", { day: "2-digit", month: "2-digit", year: "numeric" });
+}
+
+function lagTilbudPdf(data: z.infer<typeof BodySchema>) {
+  const doc = new jsPDF({ unit: "mm", format: "a4" });
+  const W = 210;
+  const margin = 20;
+  const contentW = W - margin * 2;
+  let y = addLogoHeader(doc, margin, 20) + 4;
+
+  doc.setDrawColor(218, 41, 28);
+  doc.setLineWidth(0.5);
+  doc.line(margin, y, W - margin, y);
+  y += 14;
+
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(30, 30, 30);
+  doc.setFontSize(22);
+  doc.text("Tilbud", margin, y);
+  y += 7;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(100, 100, 100);
+  doc.text(`Utarbeidet ${today()} · Gyldig til ${datoOmDager(TILBUD_GYLDIG_DAGER)}`, margin, y);
+  y += 14;
+
+  doc.setFillColor(248, 248, 248);
+  doc.roundedRect(margin, y, contentW, 40, 2, 2, "F");
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(9);
+  doc.setTextColor(30, 30, 30);
+  doc.text("TIL", margin + 6, y + 8);
+  doc.setFontSize(12);
+  doc.text(data.firmanavn, margin + 6, y + 16);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(80, 80, 80);
+  let kundeY = y + 22;
+  if (data.orgnr) { doc.text(`Org.nr.: ${data.orgnr}`, margin + 6, kundeY); kundeY += 5; }
+  if (data.kontaktperson) { doc.text(`Kontaktperson: ${data.kontaktperson}`, margin + 6, kundeY); kundeY += 5; }
+  if (data.e_post) doc.text(data.e_post, margin + 6, kundeY);
+  y += 52;
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(13);
+  doc.setTextColor(30, 30, 30);
+  doc.text("Foreslått løsning", margin, y);
+  y += 9;
+
+  doc.setFillColor(255, 245, 238);
+  doc.setDrawColor(218, 41, 28);
+  doc.roundedRect(margin, y, contentW, 48, 2, 2, "FD");
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(14);
+  doc.setTextColor(30, 30, 30);
+  doc.text(data.valgt_pakke, margin + 7, y + 11);
+  doc.setFontSize(18);
+  doc.setTextColor(218, 41, 28);
+  doc.text(`${nok(data.pakke_pris)} / mnd`, W - margin - 7, y + 11, { align: "right" });
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(70, 70, 70);
+  const inkludert = data.minutter || "Kapasitet som avtalt";
+  doc.text(doc.splitTextToSize(`Inkludert: ${inkludert}`, contentW - 14), margin + 7, y + 23);
+  doc.text("Faktureres månedlig · priser eks. mva.", margin + 7, y + 39);
+  y += 59;
+
+  if (data.oppstartskostnad && data.oppstartskostnad > 0) {
+    doc.setFillColor(248, 248, 248);
+    doc.roundedRect(margin, y, contentW, 22, 2, 2, "F");
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(80, 80, 80);
+    doc.text("Oppkobling og etablering", margin + 7, y + 8);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(13);
+    doc.setTextColor(30, 30, 30);
+    doc.text(`${nok(data.oppstartskostnad)} én gang`, W - margin - 7, y + 14, { align: "right" });
+    y += 34;
+  }
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(11);
+  doc.text("Oppsummering", margin, y);
+  y += 8;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(80, 80, 80);
+  const punkter = [
+    `${data.valgt_pakke} til ${nok(data.pakke_pris)} per måned`,
+    data.minutter ? `${data.minutter} inkludert` : "Inkludert kapasitet som avtalt",
+    data.oppstartskostnad ? `Oppkobling til ${nok(data.oppstartskostnad)}` : "Ingen oppkoblingskostnad",
+    "Fakturering månedlig",
+    "Alle priser er eks. mva.",
+  ];
+  for (const punkt of punkter) {
+    doc.text("•", margin, y);
+    doc.text(punkt, margin + 5, y);
+    y += 6;
+  }
+
+  y += 8;
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(30, 30, 30);
+  doc.text("Har dere spørsmål om tilbudet?", margin, y);
+  y += 6;
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(80, 80, 80);
+  doc.text("Ta kontakt med oss på rd@snakk.ai.", margin, y);
+
+  doc.setFontSize(7);
+  doc.setTextColor(150, 150, 150);
+  doc.text("Snakk Teknologi AS · Sørkedalsveien 6, 0369 Oslo · Org.nr. 835 505 812", W / 2, 288, { align: "center" });
+  doc.text("Dette dokumentet er et tilbud og er ikke en kontrakt.", W / 2, 293, { align: "center" });
+
+  return doc;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -161,6 +285,17 @@ Deno.serve(async (req) => {
     }
 
     const data = parsed.data;
+    if (data.dokument_type === "tilbud") {
+      const tilbud = lagTilbudPdf(data);
+      const pdfOutput = tilbud.output("arraybuffer");
+      return new Response(new Uint8Array(pdfOutput), {
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/pdf",
+          "Content-Disposition": `attachment; filename="tilbud-${data.firmanavn.replace(/\s+/g, "-")}.pdf"`,
+        },
+      });
+    }
     const mal = MALER[data.kontrakt_type ?? "telefon"];
     const doc = new jsPDF({ unit: "mm", format: "a4" });
     const W = 210;
