@@ -295,7 +295,7 @@ function lagTilbudPdf(data: z.infer<typeof BodySchema>) {
 
   if (data.oppstartskostnad && data.oppstartskostnad > 0) {
     doc.setFillColor(248, 248, 248);
-    doc.roundedRect(margin, y, contentW, 22, 2, 2, "F");
+    doc.roundedRect(margin, y, contentW, 26, 2, 2, "F");
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
     doc.setTextColor(80, 80, 80);
