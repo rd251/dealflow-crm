@@ -15,6 +15,7 @@
 - [x] Verifiser drag-and-drop, filtre, desktop og mobil
 - [x] Legg til steget «Demo-prosjekt» før «Kontrakt sendt» i pipelinen
 - [x] Gjør tall og rader på Porteføljeoversikt klikkbare med deep-linkede filtre og filterchips
+- [x] Legg til egen Tilbud-fane på salgsmuligheter med nedlastbar PDF uten kontraktsvilkår
 
 ## Meta Lead Ads
 - [x] Webhook med challenge-verifisering og HMAC-signaturkontroll
