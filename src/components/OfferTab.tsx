@@ -30,6 +30,7 @@ export default function OfferTab({ offerData }: { offerData: OfferData }) {
   const [lasterNed, setLasterNed] = useState(false);
   const [lasterVisning, setLasterVisning] = useState(false);
   const [visningUrl, setVisningUrl] = useState<string | null>(null);
+  const [sider, setSider] = useState<string[]>([]);
 
   const hentPdf = async () => {
       const { data: { session } } = await supabase.auth.getSession();
