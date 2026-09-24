@@ -313,7 +313,7 @@ function lagTilbudPdf(data: z.infer<typeof BodySchema>) {
   doc.setFont("helvetica", "bold");
   doc.setFontSize(11);
   doc.text("Oppsummering", margin, y);
-  y += 8;
+  y += 7;
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
   doc.setTextColor(80, 80, 80);
@@ -321,50 +321,44 @@ function lagTilbudPdf(data: z.infer<typeof BodySchema>) {
     `${data.valgt_pakke} til ${nok(data.pakke_pris)} per måned eks. mva.`,
     data.minutter ? `${data.minutter} inkludert` : "Inkludert kapasitet som avtalt",
     data.oppstartskostnad ? `Oppkobling og etablering ${nok(data.oppstartskostnad)} eks. mva. (én gang)` : "Ingen oppkoblingskostnad",
-    "Fakturering månedlig",
-    "Alle priser er eks. mva.",
+    "Fakturering månedlig, alle priser eks. mva.",
   ];
   for (const punkt of punkter) {
     doc.text("•", margin, y);
     doc.text(punkt, margin + 5, y);
-    y += 6;
+    y += 5.5;
   }
 
-  y += 8;
+  y += 6;
   doc.setFont("helvetica", "bold");
   doc.setFontSize(11);
   doc.setTextColor(30, 30, 30);
   doc.text("Viktige avtalevilkår", margin, y);
-  y += 8;
+  y += 7;
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
   doc.setTextColor(80, 80, 80);
   const vilkar = [
     "Oppsigelsestid: 1 måned, gjeldende fra 1. i påfølgende måned.",
     "Årlig betaling gir 10 % rabatt på månedsprisen.",
-    "Fakturering månedlig, alle priser er eks. mva.",
     "Tilbudet blir først bindende når kontrakten er signert.",
   ];
   for (const vilkarLinje of vilkar) {
     doc.text("•", margin, y);
     doc.text(vilkarLinje, margin + 5, y);
-    y += 6;
+    y += 5.5;
   }
 
-  y += 4;
+  y += 2;
+  doc.setFillColor(255, 245, 238);
+  doc.roundedRect(margin, y, contentW, 20, 2, 2, "F");
   doc.setFont("helvetica", "bold");
-  doc.setTextColor(30, 30, 30);
-  doc.text("Har dere spørsmål om tilbudet?", margin, y);
-  y += 6;
+  doc.setFontSize(9);
+  doc.setTextColor(218, 41, 28);
+  doc.text(`Tilbudet er gyldig i ${TILBUD_GYLDIG_DAGER} dager – til og med ${datoOmDager(TILBUD_GYLDIG_DAGER)}.`, margin + 6, y + 8);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(80, 80, 80);
-  doc.text("Ta kontakt med oss på rd@snakk.ai.", margin, y);
-  y += 10;
-  doc.setFillColor(255, 245, 238);
-  doc.roundedRect(margin, y, contentW, 12, 2, 2, "F");
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(218, 41, 28);
-  doc.text(`Tilbudet er gyldig i ${TILBUD_GYLDIG_DAGER} dager – til og med ${datoOmDager(TILBUD_GYLDIG_DAGER)}.`, margin + 6, y + 7.5);
+  doc.text("Spørsmål? Ta kontakt med oss på rd@snakk.ai.", margin + 6, y + 15);
 
   if ((data.kontrakt_type ?? "telefon") === "telefon") leggTilTelefonInfo(doc, margin, contentW, W);
 
