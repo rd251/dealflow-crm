@@ -289,8 +289,7 @@ function lagTilbudPdf(data: z.infer<typeof BodySchema>) {
   doc.setFontSize(9);
   doc.setTextColor(70, 70, 70);
   const inkludert = data.minutter || "Kapasitet som avtalt";
-  doc.text(doc.splitTextToSize(`Inkludert: ${inkludert}`, contentW - 14), margin + 7, y + 26);
-  doc.text("Faktureres månedlig · pris eks. mva.", margin + 7, y + 40);
+  doc.text(doc.splitTextToSize(`Inkludert: ${inkludert}`, contentW - 14), margin + 7, y + 30);
   y += 59;
 
   if (data.oppstartskostnad && data.oppstartskostnad > 0) {
