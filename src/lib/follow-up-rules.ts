@@ -101,8 +101,11 @@ export function oppfolgingEtikett(dato?: string | null): string {
 
 /** Faller tilbake til en beregnet dato slik at ingen lead står uten oppfølging. */
 export function effektivOppfolging(lead: { neste_oppfolging?: string; sist_aktivitet?: string; opprettet_dato?: string }): string {
-  if (lead.neste_oppfolging) return lead.neste_oppfolging;
-  const basis = lead.sist_aktivitet || lead.opprettet_dato;
+  const sist = lead.sist_aktivitet?.slice(0, 10);
+  // Kontakt (f.eks. sendt e-post) på eller etter planlagt dato teller som fulgt opp.
+  const fulgtOpp = !!(lead.neste_oppfolging && sist && sist >= lead.neste_oppfolging.slice(0, 10));
+  if (lead.neste_oppfolging && !fulgtOpp) return lead.neste_oppfolging;
+  const basis = sist || lead.opprettet_dato;
   if (!basis) return idag();
   const d = new Date(`${basis}T00:00:00`);
   if (isNaN(d.getTime())) return idag();
