@@ -12,6 +12,7 @@ import ScrollToTop from "@/components/ScrollToTop";
 import Dashboard from "./pages/Dashboard";
 import Leads from "./pages/Leads";
 import Salg from "./pages/Salg";
+import Ringemodus from "./pages/Ringemodus";
 import Salgsmuligheter from "./pages/Salgsmuligheter";
 import Prosjekter from "./pages/Prosjekter";
 import Companies from "./pages/Companies";
@@ -163,6 +164,7 @@ function RoleRoutes() {
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/salg" element={<Salg />} />
                 <Route path="/leads" element={<Leads />} />
+                <Route path="/ringemodus" element={<Ringemodus />} />
                 <Route path="/salgsmuligheter" element={<Salgsmuligheter />} />
                 <Route path="/prosjekter" element={<Prosjekter />} />
                 <Route path="/selskaper" element={<Companies />} />

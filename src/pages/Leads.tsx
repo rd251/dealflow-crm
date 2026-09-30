@@ -739,7 +739,10 @@ export default function Leads() {
 
 
 
-      <div className="mb-5 flex gap-1.5">
+      <div className="mb-5 flex flex-wrap gap-1.5">
+        <Button size="sm" className="mr-2" onClick={() => navigate("/ringemodus")}>
+          <Phone className="w-4 h-4 mr-1.5" />Start ringemodus
+        </Button>
         <Button size="sm" variant={visning === "leads" ? "default" : "outline"} onClick={() => setVisning("leads")}>
           Alle leads
         </Button>
