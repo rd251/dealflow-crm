@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
 import CompanyLogo from "@/components/CompanyLogo";
+import LogActivityDialog from "@/components/LogActivityDialog";
 import { useCrmStore } from "@/hooks/use-crm-store";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,7 +14,7 @@ import { loggAktivitet, type LoggType } from "@/lib/activity-logging";
 import { effektivOppfolging, nesteOppfolgingFraUtfall, type LeadUtfallNokkel } from "@/lib/follow-up-rules";
 import { idag, relativTid } from "@/lib/sales-flow";
 import { toast } from "sonner";
-import { X, Phone, Mail, ChevronLeft, ChevronRight, PhoneMissed, MessageSquare, CalendarCheck, Clock, Ban, ExternalLink, Check } from "lucide-react";
+import { X, Phone, Mail, ChevronLeft, ChevronRight, PhoneMissed, MessageSquare, CalendarCheck, Clock, Ban, ExternalLink, Check, Pencil, ListPlus } from "lucide-react";
 import type { Lead, LeadStatus } from "@/data/crm-data";
 
 /** Hvor mange aktiviteter som vises i historikken for hver lead. */
@@ -56,6 +59,9 @@ export default function Ringemodus() {
   const [notat, setNotat] = useState("");
   const [busy, setBusy] = useState(false);
   const [historikk, setHistorikk] = useState<Historikk[]>([]);
+  const [redigerApen, setRedigerApen] = useState(false);
+  const [loggDialogApen, setLoggDialogApen] = useState(false);
+  const [redigering, setRedigering] = useState({ kontaktperson: "", telefon: "", e_post: "", rolle_i_firma: "", neste_steg: "" });
   const notatRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -72,20 +78,45 @@ export default function Ringemodus() {
 
   const lead = useMemo(() => (ko ? leads.find(l => l.id === ko[index]) : undefined), [ko, index, leads]);
 
+  const hentHistorikk = useCallback(async (leadId: string) => {
+    const { data } = await supabase
+      .from("aktiviteter")
+      .select("id, type, tittel, beskrivelse, dato")
+      .eq("lead_id", leadId)
+      .order("dato", { ascending: false })
+      .limit(HISTORIKK_ANTALL);
+    setHistorikk((data as Historikk[]) || []);
+  }, []);
+
   useEffect(() => {
     setNotat("");
     setHistorikk([]);
+    setRedigerApen(false);
     if (!lead) return;
-    let avbrutt = false;
-    supabase
-      .from("aktiviteter")
-      .select("id, type, tittel, beskrivelse, dato")
-      .eq("lead_id", lead.id)
-      .order("dato", { ascending: false })
-      .limit(HISTORIKK_ANTALL)
-      .then(({ data }) => { if (!avbrutt) setHistorikk((data as Historikk[]) || []); });
-    return () => { avbrutt = true; };
-  }, [lead?.id]);
+    setRedigering({
+      kontaktperson: lead.kontaktperson || "",
+      telefon: lead.telefon || "",
+      e_post: lead.e_post || "",
+      rolle_i_firma: lead.rolle_i_firma || "",
+      neste_steg: lead.neste_steg || "",
+    });
+    hentHistorikk(lead.id);
+  }, [lead?.id, hentHistorikk]);
+
+  const lagreRedigering = useCallback(() => {
+    if (!lead || !canEdit) return;
+    const tomTilNull = (v: string) => v.trim() || "";
+    updateLeads(prev => prev.map(l => l.id === lead.id ? {
+      ...l,
+      kontaktperson: tomTilNull(redigering.kontaktperson),
+      telefon: tomTilNull(redigering.telefon),
+      e_post: tomTilNull(redigering.e_post),
+      rolle_i_firma: tomTilNull(redigering.rolle_i_firma),
+      neste_steg: tomTilNull(redigering.neste_steg),
+    } : l));
+    setRedigerApen(false);
+    toast.success("Lead oppdatert");
+  }, [lead, canEdit, redigering, updateLeads]);
 
   const neste = useCallback(() => setIndex(i => Math.min(i + 1, (ko?.length ?? 1))), [ko]);
   const forrige = useCallback(() => setIndex(i => Math.max(i - 1, 0)), []);
@@ -190,10 +221,48 @@ export default function Ringemodus() {
                     {ferdige[lead.id] && <Badge className="bg-success/10 text-success border-0">Logget: {ferdige[lead.id]}</Badge>}
                   </div>
                 </div>
-                <Button variant="ghost" size="sm" onClick={() => navigate(`/leads?open=${lead.id}`)}>
-                  <ExternalLink className="w-4 h-4 mr-1" />Åpne
-                </Button>
+                <div className="flex gap-1">
+                  {canEdit && (
+                    <Button variant="ghost" size="sm" onClick={() => setRedigerApen(a => !a)}>
+                      <Pencil className="w-4 h-4 mr-1" />Rediger
+                    </Button>
+                  )}
+                  <Button variant="ghost" size="sm" onClick={() => navigate(`/leads?open=${lead.id}`)}>
+                    <ExternalLink className="w-4 h-4 mr-1" />Åpne
+                  </Button>
+                </div>
               </div>
+
+              {redigerApen && (
+                <div className="space-y-3 rounded-xl border bg-card p-4">
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Kontaktperson</Label>
+                      <Input value={redigering.kontaktperson} onChange={e => setRedigering(r => ({ ...r, kontaktperson: e.target.value }))} />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Rolle</Label>
+                      <Input value={redigering.rolle_i_firma} onChange={e => setRedigering(r => ({ ...r, rolle_i_firma: e.target.value }))} />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Telefon</Label>
+                      <Input value={redigering.telefon} onChange={e => setRedigering(r => ({ ...r, telefon: e.target.value }))} />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">E-post</Label>
+                      <Input type="email" value={redigering.e_post} onChange={e => setRedigering(r => ({ ...r, e_post: e.target.value }))} />
+                    </div>
+                    <div className="space-y-1 sm:col-span-2">
+                      <Label className="text-xs">Neste steg</Label>
+                      <Input value={redigering.neste_steg} onChange={e => setRedigering(r => ({ ...r, neste_steg: e.target.value }))} />
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button size="sm" onClick={lagreRedigering}>Lagre endringer</Button>
+                    <Button size="sm" variant="ghost" onClick={() => setRedigerApen(false)}>Avbryt</Button>
+                  </div>
+                </div>
+              )}
 
               <div className="flex flex-wrap gap-2">
                 {lead.telefon ? (
@@ -230,6 +299,11 @@ export default function Ringemodus() {
                   rows={2}
                   placeholder="Notat fra samtalen (valgfritt) – trykk N for å skrive"
                 />
+                <div className="flex justify-end">
+                  <Button variant="ghost" size="sm" className="text-xs" onClick={() => setLoggDialogApen(true)}>
+                    <ListPlus className="w-3.5 h-3.5 mr-1.5" />Logg e-post, møte eller annet
+                  </Button>
+                </div>
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
                   {UTFALL.map(u => {
                     const Icon = u.icon;
@@ -286,6 +360,25 @@ export default function Ringemodus() {
           </div>
         )}
       </main>
+
+      {lead && (
+        <LogActivityDialog
+          open={loggDialogApen}
+          onOpenChange={setLoggDialogApen}
+          target={{ lead_id: lead.id }}
+          entityName={lead.firmanavn}
+          onLogged={(res) => {
+            updateLeads(prev => prev.map(l => l.id === lead.id ? {
+              ...l,
+              status: l.status === "Ny" ? "Kontaktet" : l.status,
+              sist_aktivitet: idag(),
+              neste_oppfolging: res?.nesteOppfolging || l.neste_oppfolging,
+            } : l));
+            setFerdige(f => ({ ...f, [lead.id]: "Logget" }));
+            hentHistorikk(lead.id);
+          }}
+        />
+      )}
     </div>
   );
 }
