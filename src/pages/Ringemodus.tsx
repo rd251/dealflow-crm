@@ -59,6 +59,9 @@ export default function Ringemodus() {
   const [notat, setNotat] = useState("");
   const [busy, setBusy] = useState(false);
   const [historikk, setHistorikk] = useState<Historikk[]>([]);
+  const [redigerApen, setRedigerApen] = useState(false);
+  const [loggDialogApen, setLoggDialogApen] = useState(false);
+  const [redigering, setRedigering] = useState({ kontaktperson: "", telefon: "", e_post: "", rolle_i_firma: "", neste_steg: "" });
   const notatRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -75,20 +78,47 @@ export default function Ringemodus() {
 
   const lead = useMemo(() => (ko ? leads.find(l => l.id === ko[index]) : undefined), [ko, index, leads]);
 
+  const hentHistorikk = useCallback(async (leadId: string) => {
+    const { data } = await supabase
+      .from("aktiviteter")
+      .select("id, type, tittel, beskrivelse, dato")
+      .eq("lead_id", leadId)
+      .order("dato", { ascending: false })
+      .limit(HISTORIKK_ANTALL);
+    setHistorikk((data as Historikk[]) || []);
+  }, []);
+
   useEffect(() => {
     setNotat("");
     setHistorikk([]);
+    setRedigerApen(false);
     if (!lead) return;
+    setRedigering({
+      kontaktperson: lead.kontaktperson || "",
+      telefon: lead.telefon || "",
+      e_post: lead.e_post || "",
+      rolle_i_firma: lead.rolle_i_firma || "",
+      neste_steg: lead.neste_steg || "",
+    });
     let avbrutt = false;
-    supabase
-      .from("aktiviteter")
-      .select("id, type, tittel, beskrivelse, dato")
-      .eq("lead_id", lead.id)
-      .order("dato", { ascending: false })
-      .limit(HISTORIKK_ANTALL)
-      .then(({ data }) => { if (!avbrutt) setHistorikk((data as Historikk[]) || []); });
+    hentHistorikk(lead.id);
     return () => { avbrutt = true; };
-  }, [lead?.id]);
+  }, [lead?.id, hentHistorikk]);
+
+  const lagreRedigering = useCallback(() => {
+    if (!lead || !canEdit) return;
+    const tomTilNull = (v: string) => v.trim() || "";
+    updateLeads(prev => prev.map(l => l.id === lead.id ? {
+      ...l,
+      kontaktperson: tomTilNull(redigering.kontaktperson),
+      telefon: tomTilNull(redigering.telefon),
+      e_post: tomTilNull(redigering.e_post),
+      rolle_i_firma: tomTilNull(redigering.rolle_i_firma),
+      neste_steg: tomTilNull(redigering.neste_steg),
+    } : l));
+    setRedigerApen(false);
+    toast.success("Lead oppdatert");
+  }, [lead, canEdit, redigering, updateLeads]);
 
   const neste = useCallback(() => setIndex(i => Math.min(i + 1, (ko?.length ?? 1))), [ko]);
   const forrige = useCallback(() => setIndex(i => Math.max(i - 1, 0)), []);
