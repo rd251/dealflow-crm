@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
 import CompanyLogo from "@/components/CompanyLogo";
+import LogActivityDialog from "@/components/LogActivityDialog";
 import { useCrmStore } from "@/hooks/use-crm-store";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,7 +14,7 @@ import { loggAktivitet, type LoggType } from "@/lib/activity-logging";
 import { effektivOppfolging, nesteOppfolgingFraUtfall, type LeadUtfallNokkel } from "@/lib/follow-up-rules";
 import { idag, relativTid } from "@/lib/sales-flow";
 import { toast } from "sonner";
-import { X, Phone, Mail, ChevronLeft, ChevronRight, PhoneMissed, MessageSquare, CalendarCheck, Clock, Ban, ExternalLink, Check } from "lucide-react";
+import { X, Phone, Mail, ChevronLeft, ChevronRight, PhoneMissed, MessageSquare, CalendarCheck, Clock, Ban, ExternalLink, Check, Pencil, ListPlus } from "lucide-react";
 import type { Lead, LeadStatus } from "@/data/crm-data";
 
 /** Hvor mange aktiviteter som vises i historikken for hver lead. */
