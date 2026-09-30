@@ -100,9 +100,7 @@ export default function Ringemodus() {
       rolle_i_firma: lead.rolle_i_firma || "",
       neste_steg: lead.neste_steg || "",
     });
-    let avbrutt = false;
     hentHistorikk(lead.id);
-    return () => { avbrutt = true; };
   }, [lead?.id, hentHistorikk]);
 
   const lagreRedigering = useCallback(() => {
