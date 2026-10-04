@@ -826,11 +826,11 @@ export default function Leads() {
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2 min-w-0 flex-1">
                       <CompanyLogo firmanavn={lead.firmanavn} kontaktEmails={lead.e_post ? [lead.e_post] : undefined} size="sm" />
-                      <p className="font-semibold text-sm truncate">{lead.firmanavn}</p>
+                      <p className="font-semibold text-sm truncate">{lead.kontaktperson || lead.firmanavn}</p>
                     </div>
                     <Badge variant="outline" className={`text-[10px] ${statusColors[lead.status] || ""}`}>{leadStatusKort[lead.status] || lead.status}</Badge>
                   </div>
-                  <p className="text-xs text-muted-foreground">{lead.kontaktperson}</p>
+                  <p className="text-xs text-muted-foreground truncate">{lead.firmanavn && lead.firmanavn.trim().toLocaleLowerCase("nb") !== lead.kontaktperson.trim().toLocaleLowerCase("nb") ? lead.firmanavn : "Bedrift ikke oppgitt"}</p>
                   {lead.telefon && (
                     <a href={`tel:${lead.telefon}`} onClick={e => e.stopPropagation()} className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline">
                       <Phone className="w-3 h-3" />{lead.telefon}
