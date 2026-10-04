@@ -158,9 +158,13 @@ export default function Ringemodus() {
   // Hurtigtaster: 1–5 = utfall, piler = bla, N = notat, Esc = avslutt.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      const iTekst = document.activeElement === notatRef.current;
-      if (e.key === "Escape") { if (iTekst) notatRef.current?.blur(); else navigate("/leads"); return; }
-      if (iTekst && !(e.metaKey || e.ctrlKey)) return;
+      // Ikke fang hurtigtaster mens en dialog er åpen eller fokus er i et skjemafelt.
+      if (loggDialogApen) return;
+      const el = document.activeElement as HTMLElement | null;
+      const iFelt = !!el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.tagName === "SELECT" || el.isContentEditable);
+      const iTekst = el === notatRef.current;
+      if (e.key === "Escape") { if (iFelt) (el as HTMLElement).blur(); else navigate("/leads"); return; }
+      if (iFelt && !(e.metaKey || e.ctrlKey)) return;
       const u = UTFALL.find(x => x.tast === e.key);
       if (u) { e.preventDefault(); registrer(u); return; }
       if (iTekst) return;
@@ -170,7 +174,7 @@ export default function Ringemodus() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [registrer, neste, forrige, navigate]);
+  }, [registrer, neste, forrige, navigate, loggDialogApen]);
 
   const totalt = ko?.length ?? 0;
   const antallFerdig = Object.keys(ferdige).length;
