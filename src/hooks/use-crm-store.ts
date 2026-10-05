@@ -117,6 +117,19 @@ function emptyToNull(v: string | undefined) { return v === "" || v === undefined
 function numOrNull(v: number | undefined) { return v === 0 || v === undefined ? 0 : v; }
 
 // Seed function only available in dev mode, triggered manually
+/** Auth-låsen i nettleseren kan «stjeles» av en annen fane/forespørsel. Prøv på nytt før vi viser feil. */
+const LAAS_RETRY_ANTALL = 3;
+const LAAS_RETRY_VENT_MS = 300;
+async function medLaasRetry<T>(fn: () => Promise<T>): Promise<T> {
+  for (let i = 0; ; i++) {
+    try { return await fn(); } catch (e) {
+      const msg = (e as Error)?.message || "";
+      if (i >= LAAS_RETRY_ANTALL || !/lock/i.test(msg)) throw e;
+      await new Promise(r => setTimeout(r, LAAS_RETRY_VENT_MS * (i + 1)));
+    }
+  }
+}
+
 export async function seedDatabase(userId: string) {
   if (!import.meta.env.DEV) {
     console.warn("seedDatabase is only available in development mode");
@@ -476,7 +489,7 @@ function useCrmStoreInternal() {
     leadsRef.current = next;
     setLeads(next);
     leadsSyncQueueRef.current = leadsSyncQueueRef.current
-      .then(() => syncLeads(prev, next))
+      .then(() => medLaasRetry(() => syncLeads(prev, next)))
       .catch(syncErrorHandler("Leads", prev, leadsRef, setLeads));
   }, []);
 
@@ -486,7 +499,7 @@ function useCrmStoreInternal() {
     selskaperRef.current = next;
     setSelskaper(next);
     selskaperSyncQueueRef.current = selskaperSyncQueueRef.current
-      .then(() => syncSelskaper(prev, next))
+      .then(() => medLaasRetry(() => syncSelskaper(prev, next)))
       .catch(syncErrorHandler("Selskaper", prev, selskaperRef, setSelskaper));
   }, []);
 
@@ -497,7 +510,7 @@ function useCrmStoreInternal() {
     setKontakter(next);
     kontakterSyncQueueRef.current = kontakterSyncQueueRef.current
       .then(() => selskaperSyncQueueRef.current)
-      .then(() => syncKontakter(prev, next))
+      .then(() => medLaasRetry(() => syncKontakter(prev, next)))
       .catch(syncErrorHandler("Kontakter", prev, kontakterRef, setKontakter));
   }, []);
 
@@ -508,7 +521,7 @@ function useCrmStoreInternal() {
     setSalgsmuligheter(next);
     salgsmuligheterSyncQueueRef.current = salgsmuligheterSyncQueueRef.current
       .then(() => Promise.all([selskaperSyncQueueRef.current, kontakterSyncQueueRef.current]))
-      .then(() => syncSalgsmuligheter(prev, next))
+      .then(() => medLaasRetry(() => syncSalgsmuligheter(prev, next)))
       .catch(syncErrorHandler("Salgsmuligheter", prev, salgsmuligheterRef, setSalgsmuligheter));
   }, []);
 
@@ -519,7 +532,7 @@ function useCrmStoreInternal() {
     setProsjekter(next);
     prosjekterSyncQueueRef.current = prosjekterSyncQueueRef.current
       .then(() => selskaperSyncQueueRef.current)
-      .then(() => syncProsjekter(prev, next))
+      .then(() => medLaasRetry(() => syncProsjekter(prev, next)))
       .catch(syncErrorHandler("Prosjekter", prev, prosjekterRef, setProsjekter));
   }, []);
 
@@ -530,7 +543,7 @@ function useCrmStoreInternal() {
     setOppgaver(next);
     oppgaverSyncQueueRef.current = oppgaverSyncQueueRef.current
       .then(() => selskaperSyncQueueRef.current)
-      .then(() => syncOppgaver(prev, next))
+      .then(() => medLaasRetry(() => syncOppgaver(prev, next)))
       .catch(syncErrorHandler("Oppgaver", prev, oppgaverRef, setOppgaver));
   }, []);
 
@@ -541,7 +554,7 @@ function useCrmStoreInternal() {
     setPartnere(next);
     partnereSyncQueueRef.current = partnereSyncQueueRef.current
       .then(() => selskaperSyncQueueRef.current)
-      .then(() => syncPartnere(prev, next))
+      .then(() => medLaasRetry(() => syncPartnere(prev, next)))
       .catch(syncErrorHandler("Partnere", prev, partnereRef, setPartnere));
   }, []);
 
