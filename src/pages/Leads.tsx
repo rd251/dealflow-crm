@@ -47,6 +47,18 @@ import { toast } from "sonner";
 import MineTeametToggle from "@/components/MineTeametToggle";
 import { useMineFilter } from "@/hooks/use-mine-filter";
 
+/** Generiske e-postdomener som ikke peker på et firma. */
+const GENERISKE_EPOSTDOMENER = /^(gmail\.com|hotmail\.com|outlook\.com|yahoo\.com|live\.com|icloud\.com|me\.com|msn\.com|aol\.com|protonmail\.com|proton\.me)$/i;
+
+/** Bedriftsvisning: lagret firmanavn, ellers domenet fra e-posten. */
+function bedriftVisning(lead: Pick<Lead, "firmanavn" | "e_post">): string | null {
+  const navn = (lead.firmanavn || "").trim();
+  if (navn) return navn;
+  const domene = (lead.e_post || "").split("@")[1]?.toLowerCase().trim() || "";
+  if (domene && !GENERISKE_EPOSTDOMENER.test(domene)) return domene.replace(/^www\./, "");
+  return null;
+}
+
 // Only user-selectable statuses – no conversion statuses in dropdown
 const statusOptions: LeadStatus[] = ["Ny", "Kontaktet", "Svarte ikke telefon", "Kvalifisert", "Ikke aktuelt"];
 const kildeOptions: string[] = ["Nettside", "LinkedIn", "Partner", "Referanse", "Kald outbound", "E-post", "Telefon", "Organisk", "Facebook ads", "Instantly kald e-post", "Google ads", "Agent Builder", "Annet"];
@@ -830,7 +842,7 @@ export default function Leads() {
                     </div>
                     <Badge variant="outline" className={`text-[10px] ${statusColors[lead.status] || ""}`}>{leadStatusKort[lead.status] || lead.status}</Badge>
                   </div>
-                  <p className="text-xs text-muted-foreground truncate">{lead.firmanavn && lead.firmanavn.trim().toLocaleLowerCase("nb") !== lead.kontaktperson.trim().toLocaleLowerCase("nb") ? lead.firmanavn : "Bedrift ikke oppgitt"}</p>
+                  <p className="text-xs text-muted-foreground truncate">{bedriftVisning(lead) || "Bedrift ikke oppgitt"}</p>
                   {lead.telefon && (
                     <a href={`tel:${lead.telefon}`} onClick={e => e.stopPropagation()} className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline">
                       <Phone className="w-3 h-3" />{lead.telefon}
@@ -921,7 +933,7 @@ export default function Leads() {
                       <td className="px-4 py-2.5 font-medium">
                         <div className="flex items-center gap-2 min-w-0">
                           <CompanyLogo firmanavn={lead.firmanavn} kontaktEmails={lead.e_post ? [lead.e_post] : undefined} size="sm" />
-                          <span className="truncate">{lead.firmanavn}</span>
+                          <span className="truncate">{bedriftVisning(lead) || "Bedrift ikke oppgitt"}</span>
                         </div>
                         <PinnedNotatBoks notat={lead.pinned_notat} className="mt-1.5 max-w-[260px]" />
                       </td>
@@ -1011,8 +1023,8 @@ export default function Leads() {
         onClose={() => setSelectedLead(null)}
         activeTab={detailTab}
         onActiveTabChange={(t) => setDetailTab(t)}
-        title={currentLead?.firmanavn || ""}
-        subtitle={currentLead?.kontaktperson || undefined}
+        title={currentLead ? bedriftVisning(currentLead) || currentLead.kontaktperson || "Ukjent" : ""}
+        subtitle={currentLead && bedriftVisning(currentLead) ? currentLead.kontaktperson || undefined : undefined}
         badges={currentLead ? (
           <>
             <Badge className={`text-xs ${statusColors[currentLead.status] || ""}`}>{currentLead.status}</Badge>
