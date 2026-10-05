@@ -127,7 +127,7 @@ Deno.serve(async (req) => {
     const today = new Date().toISOString().split("T")[0];
 
     const { data, error } = await supabase.from("leads").insert({
-      firmanavn: firmanavn || kontaktperson || "Ukjent",
+      firmanavn: firmanavn || "",
       kontaktperson,
       e_post,
       telefon,
