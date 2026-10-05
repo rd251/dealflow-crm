@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Pin } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/use-auth";
@@ -54,11 +54,26 @@ export function PinnedNotatFelt({
   const forfatter = useNotatForfatter();
   const [tekst, setTekst] = useState(verdi || "");
 
-  useEffect(() => { setTekst(verdi || ""); }, [verdi]);
+  /** Sist lagrede tekst som ennå ikke er bekreftet fra databasen. */
+  const ventende = useRef<string | null>(null);
+  const fokusert = useRef(false);
+
+  useEffect(() => {
+    const v = (verdi || "").trim();
+    if (ventende.current !== null) {
+      // Ignorer gamle verdier fra en oppfrisking som kom før lagringen var ferdig
+      if (v !== ventende.current) return;
+      ventende.current = null;
+    }
+    if (fokusert.current) return;
+    setTekst(verdi || "");
+  }, [verdi]);
 
   const lagre = () => {
+    fokusert.current = false;
     const ny = tekst.trim();
     if (ny === (verdi || "").trim()) return;
+    ventende.current = ny;
     onLagre(ny, ny ? forfatter : "", ny ? new Date().toISOString() : "");
   };
 
@@ -77,6 +92,7 @@ export function PinnedNotatFelt({
         value={tekst}
         readOnly={disabled}
         onChange={e => setTekst(e.target.value)}
+        onFocus={() => { fokusert.current = true; }}
         onBlur={lagre}
       />
       {av && tid && (
