@@ -1,9 +1,9 @@
 # Roadmap
 
 ## Snakk V2-nyhetsbrev
-- [ ] Oppdater overskrift til «Mindre styr. Mer Snakk.» og bruk nye nettsidefarger
-- [ ] Ta med vedlagt informasjon og relevante illustrasjoner fra nettsiden
-- [ ] Kontroller lagret utkast og bilder uten utsending
+- [x] Oppdater overskrift til «Mindre styr. Mer Snakk.» og bruk nye nettsidefarger
+- [x] Ta med vedlagt informasjon og relevante illustrasjoner fra nettsiden
+- [x] Kontroller lagret utkast og bilder uten utsending
 - [x] Oppdater utkastet med nettsidens grønne farger og bilder
 - [x] Ta med opplastede telefon- og e-postfigurer i e-postvennlig format
 - [x] Kontroller bilder, forhåndsvisning og lagring uten utsending
