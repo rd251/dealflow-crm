@@ -3,6 +3,12 @@ import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
 
 const GATEWAY = 'https://connector-gateway.lovable.dev/brevo'
 const SENDER = { name: 'Snakk AI', email: 'rd@snakk.ai' }
+const DOCUMENT_SENDER = { name: 'Robin i Snakk', email: 'rd@snakk.ai' }
+function campaignSender(nb: { innhold_json?: any }) {
+  return nb.innhold_json?.theme === 'snakk-v2-document'
+    ? { sender: DOCUMENT_SENDER, replyTo: DOCUMENT_SENDER.email }
+    : { sender: SENDER }
+}
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -203,7 +209,7 @@ Deno.serve(async (req) => {
       if (campaignId) {
         await brevo(`/emailCampaigns/${campaignId}`, {
           method: 'PUT',
-          body: JSON.stringify({ subject: nb.emne, htmlContent: nb.innhold_html }),
+          body: JSON.stringify({ subject: nb.emne, htmlContent: nb.innhold_html, ...campaignSender(nb) }),
         }).catch(() => { campaignId = null })
       }
       if (!campaignId) {
@@ -212,7 +218,7 @@ Deno.serve(async (req) => {
           body: JSON.stringify({
             name: `[TEST] ${nb.tittel} – ${new Date().toISOString().slice(0, 16)}`,
             subject: nb.emne,
-            sender: SENDER,
+            ...campaignSender(nb),
             type: 'classic',
             htmlContent: nb.innhold_html,
             recipients: { listIds: [testListId] },
@@ -310,7 +316,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         name: nb.tittel,
         subject: nb.emne,
-        sender: SENDER,
+        ...campaignSender(nb),
         type: 'classic',
         htmlContent: nb.innhold_html,
         recipients: { listIds: [listId] },
