@@ -1021,6 +1021,7 @@ export default function Leads() {
 
 
       <DetailPanelShell
+        presentation="dialog"
         open={!!currentLead}
         onClose={() => setSelectedLead(null)}
         activeTab={detailTab}
