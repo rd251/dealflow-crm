@@ -1,8 +1,9 @@
 # Roadmap
 
 ## Snakk V2-nyhetsbrev
-- [ ] Bygg dokumentets struktur, nye kort, lenker, kontaktfelt og bildeplassering i eksisterende utkast
-- [ ] Kontroller lagret dokumentversjon og bilder uten utsending
+- [x] Bygg dokumentets struktur, nye kort, lenker, kontaktfelt og bildeplassering i eksisterende utkast
+- [x] Kontroller lagret dokumentversjon og bilder uten utsending
+- [ ] Før utsending: bekreft AI-coach/medlytt er lansert og avklar informasjon til eksisterende kunder (venter på bruker)
 - [x] Oppdater overskrift til «Mindre styr. Mer Snakk.» og bruk nye nettsidefarger
 - [x] Ta med vedlagt informasjon og relevante illustrasjoner fra nettsiden
 - [x] Kontroller lagret utkast og bilder uten utsending
