@@ -25,12 +25,9 @@ export default function PageShell({ title, subtitle, actions, children }: PageSh
 
   return (
     <div className={`min-h-screen bg-background ${isMobile ? "ml-0" : collapsed ? "ml-14" : "ml-60"} transition-all duration-200`}>
-      <header className={`sticky top-0 z-40 border-b bg-background/90 backdrop-blur-md ${isMobile ? "px-4 py-4 pl-14" : "px-8 py-5"}`}>
-        <div className="flex items-center justify-between">
-          <div className="min-w-0">
-            <h1 className="font-display text-2xl font-semibold truncate">{title}</h1>
-            {subtitle && <p className="text-sm text-muted-foreground mt-0.5 truncate">{subtitle}</p>}
-          </div>
+      <header className={`sticky top-0 z-40 border-b bg-background/95 backdrop-blur-md ${isMobile ? "px-4 py-3 pl-14" : "px-8 py-4"}`}>
+        <div className="flex items-center justify-between gap-2">
+          <span className="font-display text-sm font-bold shrink-0">Snakk CRM</span>
           {!isMobile && (
             <div className="flex-1 max-w-md mx-6">
               <GlobalSearch className="" />
@@ -40,7 +37,7 @@ export default function PageShell({ title, subtitle, actions, children }: PageSh
             <Button
               variant="ghost"
               size="icon"
-              className="h-9 w-9 text-muted-foreground hover:text-foreground"
+              className="hidden sm:inline-flex h-9 w-9 text-muted-foreground hover:text-foreground"
               onClick={() => setNyPersonÅpen(true)}
               title="Ny person"
             >
@@ -52,7 +49,7 @@ export default function PageShell({ title, subtitle, actions, children }: PageSh
             <Button
               variant="ghost"
               size="icon"
-              className="h-9 w-9 text-muted-foreground hover:text-foreground"
+              className="hidden sm:inline-flex h-9 w-9 text-muted-foreground hover:text-foreground"
               onClick={() => navigate("/innstillinger")}
               title="Innstillinger"
             >
@@ -62,7 +59,13 @@ export default function PageShell({ title, subtitle, actions, children }: PageSh
         </div>
         {actions && <div className="flex flex-wrap items-center gap-2 mt-3">{actions}</div>}
       </header>
-      <main className={isMobile ? "p-4" : "p-8 lg:p-10"}>{children}</main>
+      <main className={isMobile ? "p-4" : "p-8 lg:p-10"}>
+        <div className="mb-7 border-b-2 border-secondary pb-5">
+          <h1 className="font-display text-3xl font-bold leading-tight break-words sm:text-4xl lg:text-5xl">{title}</h1>
+          {subtitle && <p className="mt-2 text-sm text-muted-foreground">{subtitle}</p>}
+        </div>
+        {children}
+      </main>
       <QuickAddPersonDialog open={nyPersonÅpen} onOpenChange={setNyPersonÅpen} onCreated={id => navigate(`/kontakter?open=${id}`)} />
     </div>
   );
