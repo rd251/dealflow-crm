@@ -1,6 +1,7 @@
 import { ReactNode, useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 interface DetailPanelShellProps {
   open: boolean;
@@ -66,7 +67,7 @@ export default function DetailPanelShell({
   const useTabs = !!tabContent;
   // Only show tabs that have content
   const visibleTabs = useTabs
-    ? TAB_KEYS.filter(k => tabContent![k])
+    ? TAB_KEYS.filter(k => tabContent?.[k])
     : [];
 
   return (
@@ -78,9 +79,9 @@ export default function DetailPanelShell({
 
         <div className="flex flex-col">
           {/* Hero header */}
-          <div className="border-b bg-muted/35 px-6 pb-5 pt-10">
+          <div className="border-b-2 border-secondary bg-background px-6 pb-5 pt-10">
             <div className="flex items-start gap-3">
-              <div className="w-11 h-11 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-base shrink-0">
+              <div className="w-11 h-11 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-semibold text-base shrink-0">
                 {initials || title.charAt(0).toUpperCase()}
               </div>
               <div className="min-w-0 flex-1">
@@ -91,10 +92,10 @@ export default function DetailPanelShell({
                     onChange={e => onTitleChange(e.target.value)}
                   />
                 ) : (
-                   <h2 className="font-display text-xl font-semibold truncate">{title}</h2>
+                   <h2 className="font-display text-2xl font-bold break-words">{title}</h2>
                 )}
                 {subtitle && (
-                  <p className="text-sm text-muted-foreground truncate mt-0.5">{subtitle}</p>
+                  <p className="text-sm text-muted-foreground break-words mt-0.5">{subtitle}</p>
                 )}
               </div>
             </div>
@@ -112,11 +113,11 @@ export default function DetailPanelShell({
           {useTabs && visibleTabs.length > 1 && (
             <div className="border-b px-6 flex flex-wrap gap-0">
               {visibleTabs.map(key => (
-                <button
+                <Button variant="ghost"
                   key={key}
                   onClick={() => setActiveTab(key)}
                   className={cn(
-                    "px-4 py-2.5 text-sm font-medium transition-colors relative",
+                    "h-10 rounded-none px-3 py-2.5 text-sm font-medium transition-colors relative",
                     activeTab === key
                       ? "text-foreground"
                       : "text-muted-foreground hover:text-foreground"
@@ -126,14 +127,14 @@ export default function DetailPanelShell({
                   {activeTab === key && (
                     <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-t" />
                   )}
-                </button>
+                </Button>
               ))}
             </div>
           )}
 
           {/* Content sections */}
           <div className="px-6 py-5 space-y-5">
-            {useTabs ? tabContent![activeTab] : children}
+            {useTabs ? tabContent?.[activeTab] : children}
           </div>
         </div>
       </SheetContent>

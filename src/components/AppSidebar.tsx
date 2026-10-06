@@ -53,7 +53,7 @@ function SidebarNav({ onNavigate, isAdmin, displayName }: { onNavigate?: () => v
         onClick={onNavigate}
         className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
           active
-            ? "bg-sidebar-primary/10 text-sidebar-primary"
+            ? "bg-sidebar-primary text-sidebar-primary-foreground"
             : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
         }`}
       >
@@ -68,13 +68,13 @@ function SidebarNav({ onNavigate, isAdmin, displayName }: { onNavigate?: () => v
       <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto scrollbar-sidebar">
         <div className="space-y-0.5">{mainItems.map(renderItem)}</div>
         <div className="pt-3">
-          <button
+          <Button variant="ghost"
             onClick={() => setMoreOpen((v) => !v)}
             className="flex w-full items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
           >
             <ChevronDown className={cn("w-4 h-4 shrink-0 transition-transform", !moreOpen && "-rotate-90")} />
             Mer
-          </button>
+          </Button>
           {moreOpen && <div className="space-y-0.5 pt-0.5">{moreItems.map(renderItem)}</div>}
         </div>
         {isAdmin && (
@@ -89,13 +89,13 @@ function SidebarNav({ onNavigate, isAdmin, displayName }: { onNavigate?: () => v
             <p className="text-sm font-medium text-sidebar-foreground truncate">{displayName || user.email}</p>
             {displayName && <span className="text-xs text-sidebar-foreground/60 truncate">{user.email}</span>}
           </div>
-          <button
+          <Button variant="ghost"
             onClick={() => { signOut(); onNavigate?.(); }}
             className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors w-full"
           >
             <LogOut className="w-4 h-4 shrink-0" />
             Logg ut
-          </button>
+          </Button>
         </div>
       )}
     </>
@@ -120,7 +120,7 @@ function CollapsedSidebarNav({ isAdmin }: { isAdmin: boolean }) {
               title={label}
               className={`flex items-center justify-center p-2 rounded-md transition-colors ${
                 active
-                  ? "bg-sidebar-primary/10 text-sidebar-primary"
+                  ? "bg-sidebar-primary text-sidebar-primary-foreground"
                   : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
               }`}
             >
@@ -131,13 +131,13 @@ function CollapsedSidebarNav({ isAdmin }: { isAdmin: boolean }) {
       </nav>
       {user && (
         <div className="px-2 pb-2">
-          <button
+          <Button variant="ghost" size="icon"
             onClick={() => signOut()}
             title="Logg ut"
             className="flex items-center justify-center p-2 rounded-md text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors w-full"
           >
             <LogOut className="w-4 h-4" />
-          </button>
+          </Button>
         </div>
       )}
     </>
@@ -161,6 +161,7 @@ export default function AppSidebar() {
           size="icon"
           className="fixed top-3 left-3 z-50 bg-sidebar text-sidebar-foreground hover:bg-sidebar-accent"
           onClick={() => setOpen(true)}
+          aria-label="Åpne navigasjon"
         >
           <Menu className="w-5 h-5" />
         </Button>
@@ -195,6 +196,7 @@ export default function AppSidebar() {
             size="icon"
             className="h-7 w-7 text-sidebar-foreground hover:bg-sidebar-accent"
             onClick={() => setCollapsed(true)}
+            aria-label="Skjul navigasjon"
           >
             <ChevronLeft className="w-4 h-4" />
           </Button>
@@ -207,6 +209,7 @@ export default function AppSidebar() {
             size="icon"
             className="h-8 w-8 text-sidebar-foreground hover:bg-sidebar-accent"
             onClick={() => setCollapsed(false)}
+            aria-label="Utvid navigasjon"
           >
             <Menu className="w-4 h-4" />
           </Button>

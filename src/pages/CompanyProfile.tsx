@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useCrmStore } from "@/hooks/use-crm-store";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useSidebarCollapsed } from "@/hooks/use-sidebar-collapsed";
 import { supabase } from "@/integrations/supabase/client";
 import {
   beregnTotalKontraktsverdi, beregnVektetPipeline,
@@ -56,6 +57,7 @@ export default function CompanyProfile() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { collapsed } = useSidebarCollapsed();
   const {
     selskaper, updateSelskaper, kontakter, updateKontakter, salgsmuligheter, updateSalgsmuligheter,
     prosjekter, updateProsjekter, oppgaver, updateOppgaver, partnere, generateId, settProsjektLive,
@@ -142,7 +144,7 @@ export default function CompanyProfile() {
 
   if (!selskap) {
     return (
-      <div className={`${isMobile ? "ml-0" : "ml-60"} min-h-screen bg-background flex items-center justify-center`}>
+      <div className={`${isMobile ? "ml-0" : collapsed ? "ml-14" : "ml-60"} min-h-screen bg-background flex items-center justify-center`}>
         <div className="text-center">
           <p className="text-muted-foreground">Selskap ikke funnet</p>
           <Button variant="ghost" className="mt-2" onClick={() => navigate("/selskaper")}>
@@ -187,8 +189,8 @@ export default function CompanyProfile() {
 
   return (
     <>
-      <div className={`${isMobile ? "ml-0" : "ml-60"} min-h-screen bg-background transition-all duration-200`}>
-        <header className={`sticky top-0 z-40 bg-background/80 backdrop-blur-sm border-b ${isMobile ? "px-4 py-4 pl-14" : "px-8 py-5"}`}>
+      <div className={`${isMobile ? "ml-0" : collapsed ? "ml-14" : "ml-60"} min-h-screen bg-background transition-all duration-200`}>
+        <header className={`sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b-2 border-secondary ${isMobile ? "px-4 py-4 pl-14" : "px-8 py-6"}`}>
           <div className="flex items-center gap-3 mb-3">
             <Button variant="ghost" size="sm" onClick={() => navigate("/selskaper")}>
               <ArrowLeft className="w-4 h-4 mr-1" /> Kundeforhold
@@ -198,7 +200,7 @@ export default function CompanyProfile() {
             <div className="flex items-center gap-3 sm:gap-4 min-w-0">
               <CompanyLogo domain={selskap.domene} firmanavn={selskap.firmanavn} kontaktEmails={selskapKontakter.map(k => k.e_post)} size={isMobile ? "md" : "lg"} />
               <div className="min-w-0">
-                <h1 className="text-xl sm:text-2xl font-bold tracking-tight truncate">{selskap.firmanavn}</h1>
+                <h1 className="text-2xl sm:text-4xl font-bold break-words">{selskap.firmanavn}</h1>
                 <div className="flex items-center gap-2 mt-1 flex-wrap text-sm text-muted-foreground">
                   {selskap.orgnr && <span className="tabular-nums">Org.nr {selskap.orgnr}</span>}
                   {pakkenavn && <span>· {pakkenavn}</span>}
