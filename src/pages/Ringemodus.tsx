@@ -163,7 +163,7 @@ export default function Ringemodus() {
       const el = document.activeElement as HTMLElement | null;
       const iFelt = !!el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.tagName === "SELECT" || el.isContentEditable);
       const iTekst = el === notatRef.current;
-      if (e.key === "Escape") { if (iFelt) (el as HTMLElement).blur(); else navigate("/leads"); return; }
+      if (e.key === "Escape") { if (iFelt) (el as HTMLElement).blur(); else navigate("/salg"); return; }
       if (iFelt && !(e.metaKey || e.ctrlKey)) return;
       const u = UTFALL.find(x => x.tast === e.key);
       if (u) { e.preventDefault(); registrer(u); return; }
@@ -191,7 +191,7 @@ export default function Ringemodus() {
         <div className="hidden sm:block w-48 h-1.5 rounded-full bg-muted overflow-hidden">
           <div className="h-full bg-primary transition-all" style={{ width: `${totalt ? (antallFerdig / totalt) * 100 : 0}%` }} />
         </div>
-        <Button variant="ghost" size="icon" onClick={() => navigate("/leads")} aria-label="Avslutt ringemodus">
+        <Button variant="ghost" size="icon" onClick={() => navigate("/salg")} aria-label="Avslutt ringemodus">
           <X className="w-5 h-5" />
         </Button>
       </header>
@@ -206,7 +206,7 @@ export default function Ringemodus() {
             <p className="text-sm text-muted-foreground mt-1 tabular-nums">Du ringte {antallFerdig} av {totalt}.</p>
             <div className="mt-5 flex justify-center gap-2">
               {totalt > 0 && <Button variant="outline" onClick={() => setIndex(0)}>Gå gjennom igjen</Button>}
-              <Button onClick={() => navigate("/leads")}>Tilbake til leads</Button>
+              <Button onClick={() => navigate("/salg")}>Tilbake til salg</Button>
             </div>
           </div>
         ) : (

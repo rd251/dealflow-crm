@@ -168,7 +168,6 @@ export default function Salg() {
       setKonvertering({ kort: item, steg });
       return;
     }
-    if (steg === "Vunnet" || steg === "Tapt") return;
     if (steg === "Avsluttet") {
       setKonvertering({ kort: item, steg });
       return;
