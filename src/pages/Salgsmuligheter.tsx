@@ -1136,6 +1136,7 @@ export default function Salgsmuligheter() {
       )}
 
       <DetailPanelShell
+        presentation="dialog"
         open={!!currentSm}
         onClose={() => setSelectedSm(null)}
         activeTab={detailTab}
