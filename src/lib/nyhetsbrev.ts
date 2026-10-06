@@ -283,7 +283,7 @@ function renderBlokk(b: Blokk): string {
 // Semantic website palette serialized inline for email-client compatibility.
 const DOCUMENT_COLORS = {
   ink: "#222b25", muted: "#526057", accent: "#1d513d", deep: "#123b2f",
-  paper: "#ffffff", soft: "#f7f6f0", line: "#dedfd8", hero: "#191919", onHero: "#ffffff", highlight: "#b5ff6d",
+  paper: "#ffffff", soft: "#f7f6f0", line: "#dedfd8", hero: "#b5ff6d", onHero: "#ffffff", highlight: "#b5ff6d",
 };
 
 function renderDocumentBlock(b: Blokk): string {
@@ -295,7 +295,7 @@ function renderDocumentBlock(b: Blokk): string {
     case "header":
       return wrap(`<img src="https://snakk-ai.lovable.app${websiteLogo.url}" alt="Snakk" width="90" style="display:inline-block;width:90px;height:auto;vertical-align:middle;" /><span style="font-size:12px;color:${c.muted};margin-left:16px;">&middot; &nbsp;${esc(b.overskrift)}</span>`, `background:${c.soft};`);
     case "hero":
-      return wrap(`<div style="font-size:11px;font-weight:600;color:${c.highlight};">${esc(b.kicker)}</div><h1 style="margin:18px 0;font-size:40px;line-height:1.2;font-weight:700;color:${c.onHero};">${esc(b.overskrift).replace(/\. /g, ".<br />")}</h1><div style="font-size:17px;line-height:1.65;color:${c.onHero};">${richText(b.tekst)}</div>`, `background:${c.hero};padding-top:36px;padding-bottom:36px;`);
+      return wrap(`<div style="font-size:11px;font-weight:600;color:${c.accent};">${esc(b.kicker)}</div><h1 style="margin:18px 0;font-size:40px;line-height:1.2;font-weight:700;color:${c.deep};">${esc(b.overskrift).replace(/\. /g, ".<br />")}</h1><div style="font-size:17px;line-height:1.65;color:${c.deep};">${richText(b.tekst)}</div>`, `background:${c.hero};padding-top:36px;padding-bottom:36px;`);
     case "bilde":
       return wrap(image, `background:${c.soft};`);
     case "deler":
