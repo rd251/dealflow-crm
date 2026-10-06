@@ -1,7 +1,7 @@
 // CRM App
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { BrowserRouter, Route, Routes, Navigate, useNavigate } from "react-router-dom";
+import { BrowserRouter, Route, Routes, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -115,6 +115,12 @@ function OAuthCallbackRoute() {
   return <AuthSpinner />;
 }
 
+function LegacySalesRoute({ type }: { type: "lead" | "deal" }) {
+  const { search } = useLocation();
+  if (!search) return <Navigate to="/salg" replace />;
+  return type === "lead" ? <Leads /> : <Salgsmuligheter />;
+}
+
 function AppRoutes() {
   return (
     <Routes>
@@ -163,9 +169,9 @@ function RoleRoutes() {
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/salg" element={<Salg />} />
-                <Route path="/leads" element={<Leads />} />
+                <Route path="/leads" element={<LegacySalesRoute type="lead" />} />
                 <Route path="/ringemodus" element={<Ringemodus />} />
-                <Route path="/salgsmuligheter" element={<Salgsmuligheter />} />
+                <Route path="/salgsmuligheter" element={<LegacySalesRoute type="deal" />} />
                 <Route path="/prosjekter" element={<Prosjekter />} />
                 <Route path="/selskaper" element={<Companies />} />
                 <Route path="/alle-selskaper" element={<AlleSelskaper />} />

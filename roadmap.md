@@ -3,7 +3,7 @@
 ## Hele CRM-et – nytt uttrykk oktober 2026
 - [x] Samle Leads og Salgsmuligheter i én synlig Salg-side med seks kanbansteg
 - [x] Behold gamle detaljlenker og eksisterende konverterings-, tilbuds- og vinnerflyter
-- [ ] Verifiser samlet Salg-side, kortflytting og detaljvinduer på desktop og mobil
+- [x] Verifiser samlet Salg-side, kortflytting og detaljvinduer på desktop og mobil
 - [x] Avklar omfang, farger, skrifter og oppsett
 - [x] Vis tre designretninger; valgt «Store tall og kontrast»
 - [x] Implementer valgt forside og felles uttrykk via farger, skrifter, navigasjon, overskrifter, knapper, faner og detaljpaneler
