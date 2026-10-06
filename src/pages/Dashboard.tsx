@@ -155,7 +155,7 @@ export default function Dashboard() {
             <span data-metric className="text-5xl font-bold">{activeCustomers.length}</span>
             <span className="text-xs text-muted-foreground">Live</span>
           </Button>
-          <Button variant="outline" onClick={() => navigate("/leads")} className="bento-tile h-auto min-h-44 flex-col items-start justify-between bg-card text-left whitespace-normal md:col-span-2 xl:col-span-1">
+          <Button variant="outline" onClick={() => navigate("/salg")} className="bento-tile h-auto min-h-44 flex-col items-start justify-between bg-card text-left whitespace-normal md:col-span-2 xl:col-span-1">
             <span className="text-xs text-muted-foreground">Leads</span>
             <span data-metric className="text-5xl font-bold">{aktiveLeads.length}</span>
             <span className="text-xs text-muted-foreground">Aktive leads</span>
@@ -170,15 +170,15 @@ export default function Dashboard() {
             </div>
             <div className="mt-5 flex flex-wrap items-center gap-2">
               <Button variant="contrast" size="sm" onClick={() => navigate("/ringemodus")}>Start ringemodus <ArrowUpRight /></Button>
-              <Button variant="ghost" size="sm" onClick={() => navigate("/leads?filter=oppfolging")}>Se leads</Button>
+              <Button variant="ghost" size="sm" onClick={() => navigate("/salg")}>Se salg</Button>
             </div>
           </div>
-          <Button variant="outline" onClick={() => navigate("/salgsmuligheter")} className="bento-tile h-auto min-h-44 flex-col items-start justify-between bg-card text-left whitespace-normal md:col-span-2 xl:col-span-2">
+          <Button variant="outline" onClick={() => navigate("/salg")} className="bento-tile h-auto min-h-44 flex-col items-start justify-between bg-card text-left whitespace-normal md:col-span-2 xl:col-span-2">
             <span className="text-xs text-muted-foreground">Forventet månedlig inntekt</span>
             <span data-metric className="text-3xl font-bold sm:text-4xl break-words">{nok(totalPipelineMrr)}</span>
             <span className="text-xs text-muted-foreground">Åpne salgsmuligheter</span>
           </Button>
-          <Button variant="secondary" onClick={() => navigate("/salgsmuligheter")} className="bento-tile h-auto min-h-40 flex-col items-start justify-between bg-secondary text-left md:col-span-2 xl:col-span-2">
+          <Button variant="secondary" onClick={() => navigate("/salg")} className="bento-tile h-auto min-h-40 flex-col items-start justify-between bg-secondary text-left md:col-span-2 xl:col-span-2">
             <span className="text-xs text-secondary-foreground/70">Salgsmuligheter i prosess</span>
             <span className="flex items-baseline gap-3"><span data-metric className="text-6xl font-bold">{openDeals.length}</span><span className="text-sm">Åpne</span></span>
             <span className="flex items-center gap-2 text-xs">Se salgsmuligheter <ArrowUpRight className="h-3 w-3" /></span>
@@ -196,7 +196,7 @@ export default function Dashboard() {
             title="Leads"
             subtitle={`${aktiveLeads.length} aktive · ${leadsTrengerOppfoelging} trenger oppfølging`}
             accent="pipeline"
-            onTitleClick={aktiveLeads.length > 0 ? () => navigate("/leads") : undefined}
+            onTitleClick={aktiveLeads.length > 0 ? () => navigate("/salg") : undefined}
             titleLinkLabel="Se alle aktive leads"
           >
             <div className="divide-y">
@@ -224,7 +224,7 @@ export default function Dashboard() {
             title="Salgsmuligheter"
             subtitle={`${openDeals.length} åpne · ${nok(totalPipelineMrr)} forventet MRR`}
             accent="pipeline"
-            onTitleClick={openDeals.length > 0 ? () => navigate("/salgsmuligheter") : undefined}
+            onTitleClick={openDeals.length > 0 ? () => navigate("/salg") : undefined}
             titleLinkLabel="Se alle åpne salgsmuligheter"
           >
             <div className="divide-y">
