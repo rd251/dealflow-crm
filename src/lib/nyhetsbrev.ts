@@ -22,7 +22,7 @@ export interface Blokk {
   lenke_tekst?: string;
 }
 
-export type NewsletterTheme = "snakk-v2";
+export type NewsletterTheme = "snakk-v2" | "snakk-v2-launch";
 
 export const BLOKK_LABELS: Record<BlokkType, string> = {
   header: "Header",
@@ -299,7 +299,7 @@ export function renderNewsletterHtml(blokker: Blokk[], preheader?: string, theme
     </td></tr>
   </table>
 </body></html>`;
-  if (theme !== "snakk-v2") return html;
+  if (theme !== "snakk-v2" && theme !== "snakk-v2-launch") return html;
   // Website brand tokens are serialized inline because email clients cannot use app CSS.
   const websitePalette: Record<string, string> = {
     "#FF6B0A": "#244b3d",
@@ -310,8 +310,20 @@ export function renderNewsletterHtml(blokker: Blokk[], preheader?: string, theme
     "#f1ede7": "#f7f6f0",
     "#ffffff": "#fbfaf7",
   };
-  return html.replace(/#[0-9a-f]{6}\b/gi, color => websitePalette[color] ?? color)
+  if (theme === "snakk-v2-launch") {
+    Object.assign(websitePalette, {
+      "#FF6B0A": "#1d513d",
+      "#FAFAF9": "#f7f6f0",
+      "#E1DED9": "#dedfd8",
+      "#f1ede7": "#e9eee5",
+    });
+  }
+  const themedHtml = html.replace(/#[0-9a-f]{6}\b/gi, color => websitePalette[color] ?? color)
     .split(LOGO).join(`https://snakk-ai.lovable.app${websiteLogo.url}`)
     .replace(/letter-spacing:(?:-0\.02em|2px)/g, "letter-spacing:0")
     .replace(/border-radius:999px/g, "border-radius:6px");
+  if (theme !== "snakk-v2-launch") return themedHtml;
+  return themedHtml
+    .replace("Mer tid til menneskene.", "Mindre styr. Mer Snakk.")
+    .replace(/background:#f7f6f0;padding:36px/, "background:#e2f0cd;padding:36px");
 }
