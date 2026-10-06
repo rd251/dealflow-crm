@@ -283,7 +283,7 @@ function renderBlokk(b: Blokk): string {
 // Semantic website palette serialized inline for email-client compatibility.
 const DOCUMENT_COLORS = {
   ink: "#222b25", muted: "#526057", accent: "#1d513d", deep: "#123b2f",
-  paper: "#ffffff", soft: "#f7f6f0", line: "#dedfd8", hero: "#b5ff6d", onHero: "#ffffff", highlight: "#b5ff6d",
+  paper: "#ffffff", soft: "#f7f6f0", line: "#dedfd8", hero: "#e9eee5", onHero: "#ffffff", highlight: "#b5ff6d",
 };
 
 function renderDocumentBlock(b: Blokk): string {
