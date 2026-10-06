@@ -91,7 +91,7 @@ export default function NyhetsbrevEditor() {
       setStatus(data.status);
       setPlanlagt(data.planlagt_dato ? new Date(data.planlagt_dato).toISOString().slice(0, 16) : "");
       const json = data.innhold_json as any;
-      setTheme(json?.theme === "snakk-v2" ? "snakk-v2" : undefined);
+      setTheme(json?.theme === "snakk-v2" || json?.theme === "snakk-v2-launch" ? json.theme : undefined);
       setBlokker(Array.isArray(json?.blokker) ? json.blokker : [nyBlokk("header"), nyBlokk("tekst")]);
       setLoading(false);
     })();
