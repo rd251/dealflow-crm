@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useParams, useNavigate } from "react-router-dom";
 import { useCrmStore } from "@/hooks/use-crm-store";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useSidebarCollapsed } from "@/hooks/use-sidebar-collapsed";
 import { beregnTotalKontraktsverdi } from "@/data/crm-data";
 import { nok } from "@/lib/utils";
 import StatCard from "@/components/StatCard";
@@ -39,6 +40,7 @@ export default function PartnerProfile() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { collapsed } = useSidebarCollapsed();
   const {
     partnere, updatePartnere, selskaper, updateSelskaper, salgsmuligheter, updateSalgsmuligheter,
     kontakter, updateKontakter, generateId,
@@ -71,7 +73,7 @@ export default function PartnerProfile() {
   const partner = partnere.find(p => p.id === id);
   if (!partner) {
     return (
-      <div className={`${isMobile ? "ml-0" : "ml-60"} min-h-screen bg-background flex items-center justify-center`}>
+      <div className={`${isMobile ? "ml-0" : collapsed ? "ml-14" : "ml-60"} min-h-screen bg-background flex items-center justify-center`}>
         <div className="text-center">
           <p className="text-muted-foreground">Partner ikke funnet</p>
           <Button variant="ghost" className="mt-2" onClick={() => navigate("/partnere")}>
@@ -161,28 +163,28 @@ export default function PartnerProfile() {
   };
 
   return (
-    <div className={`${isMobile ? "ml-0" : "ml-60"} min-h-screen bg-background transition-all duration-200`}>
+    <div className={`${isMobile ? "ml-0" : collapsed ? "ml-14" : "ml-60"} min-h-screen bg-background transition-all duration-200`}>
       {/* Header */}
-      <header className={`sticky top-0 z-40 bg-background/80 backdrop-blur-sm border-b ${isMobile ? "px-4 py-4 pl-14" : "px-8 py-5"}`}>
+      <header className={`sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b-2 border-secondary ${isMobile ? "px-4 py-4 pl-14" : "px-8 py-6"}`}>
         <div className="flex items-center gap-3 mb-3">
           <Button variant="ghost" size="sm" onClick={() => navigate("/partnere")}>
             <ArrowLeft className="w-4 h-4 mr-1" /> Partnere
           </Button>
         </div>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3 sm:gap-4 min-w-0">
             <div className="p-2 sm:p-3 rounded-xl bg-primary/10 text-primary shrink-0">
               <Handshake className={isMobile ? "w-5 h-5" : "w-6 h-6"} />
             </div>
             <div className="min-w-0">
-              <h1 className="text-xl sm:text-2xl font-bold tracking-tight truncate">{partner.partnernavn}</h1>
+              <h1 className="text-2xl sm:text-4xl font-bold break-words">{partner.partnernavn}</h1>
               <div className="flex items-center gap-2 mt-1 flex-wrap">
                 <Badge className={statusColors[partner.partnerstatus]}>{partner.partnerstatus}</Badge>
                 <Badge variant="secondary">{partner.partnertype}</Badge>
               </div>
             </div>
           </div>
-          <Button variant="destructive" size="lg" onClick={() => setShowPartnerContract(true)}>
+          <Button variant="contrast" size="lg" onClick={() => setShowPartnerContract(true)}>
             <FileSignature className="w-4 h-4 mr-2" />
             Send samarbeidsavtale
           </Button>
@@ -191,7 +193,7 @@ export default function PartnerProfile() {
 
       <main className={`${isMobile ? "p-4" : "p-8"} space-y-6 sm:space-y-8`}>
         {/* KPI cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3 sm:gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
           <StatCard label="Kunder fra partner" value={antallKunder} icon={<Users className="w-5 h-5" />} />
           <StatCard label="Aktiv MRR" value={nok(aktivMrr)} icon={<DollarSign className="w-5 h-5" />} />
           <StatCard label="ARR" value={nok(arr)} icon={<TrendingUp className="w-5 h-5" />} />

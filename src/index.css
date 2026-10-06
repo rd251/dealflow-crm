@@ -12,6 +12,7 @@
     --popover-foreground: var(--foreground);
     --primary: 46.74418604651163 86.86868686868686% 61.1764705882353%;
     --primary-foreground: var(--foreground);
+    --primary-emphasis: var(--foreground);
     --secondary: 77.99999999999993 17.857142857142836% 89.01960784313725%;
     --secondary-foreground: var(--foreground);
     --muted: 78 18% 94%;
@@ -65,6 +66,7 @@
     --popover-foreground: 30 11% 96%;
     --primary: 46.74418604651163 86.86868686868686% 61.1764705882353%;
     --primary-foreground: 90 6% 14%;
+    --primary-emphasis: var(--primary);
     --contrast: 90 6% 14%;
     --contrast-foreground: 60 33% 97%;
     --secondary: 0 0% 14%;
@@ -151,6 +153,8 @@
 }
 
 @layer utilities {
+  .text-primary { color: hsl(var(--primary-emphasis)); }
+
   .scrollbar-thin {
     scrollbar-width: thin;
     scrollbar-color: hsl(var(--border)) transparent;
