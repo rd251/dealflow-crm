@@ -310,5 +310,5 @@ export function renderNewsletterHtml(blokker: Blokk[], preheader?: string, theme
   };
   return html.replace(/#[0-9a-f]{6}\b/gi, color => websitePalette[color] ?? color)
     .replace(/letter-spacing:(?:-0\.02em|2px)/g, "letter-spacing:0")
-    .replaceAll("border-radius:999px", "border-radius:6px");
+    .replace(/border-radius:999px/g, "border-radius:6px");
 }
