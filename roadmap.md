@@ -2,9 +2,9 @@
 
 ## Hele CRM-et – nytt uttrykk oktober 2026
 - [x] Avklar omfang, farger, skrifter og oppsett
-- [ ] Vis tre designretninger med godkjente valg (venter på brukerens valg)
-- [ ] Implementer valgt uttrykk på alle CRM-sider (avhenger av valgt designretning)
-- [ ] Verifiser sentrale arbeidsflater og behold eksisterende data og funksjoner
+- [x] Vis tre designretninger; valgt «Store tall og kontrast»
+- [x] Implementer valgt forside og felles uttrykk via farger, skrifter, navigasjon, overskrifter, knapper, faner og detaljpaneler
+- [x] Verifiser innloggede arbeidsflater, mobilvisninger og navigasjon fra nøkkeltall til kunder/ringemodus; ingen endring av lagrede CRM-data
 
 - [x] Redesign Dashboard med globalt søk, KPI-er, handlinger, kommende aktiviteter og grafer
 - [x] Legg til «Dagens aktivitet» med dagens CRM-hendelser og kontraktstatus
