@@ -1,6 +1,8 @@
 # Roadmap
 
 ## Snakk V2-nyhetsbrev
+- [ ] Bygg dokumentets struktur, nye kort, lenker, kontaktfelt og bildeplassering i eksisterende utkast
+- [ ] Kontroller lagret dokumentversjon og bilder uten utsending
 - [x] Oppdater overskrift til «Mindre styr. Mer Snakk.» og bruk nye nettsidefarger
 - [x] Ta med vedlagt informasjon og relevante illustrasjoner fra nettsiden
 - [x] Kontroller lagret utkast og bilder uten utsending
