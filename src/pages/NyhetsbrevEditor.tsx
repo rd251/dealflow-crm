@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
-import { BLOKK_LABELS, nyBlokk, renderNewsletterHtml, type Blokk, type BlokkType } from "@/lib/nyhetsbrev";
+import { BLOKK_LABELS, nyBlokk, renderNewsletterHtml, type Blokk, type BlokkType, type NewsletterTheme } from "@/lib/nyhetsbrev";
 import { hentMottakere } from "@/lib/nyhetsbrev-mottakere";
 import { toast } from "sonner";
 
@@ -27,6 +27,7 @@ export default function NyhetsbrevEditor() {
   const [planlagt, setPlanlagt] = useState("");
   const [status, setStatus] = useState("utkast");
   const [blokker, setBlokker] = useState<Blokk[]>([]);
+  const [theme, setTheme] = useState<NewsletterTheme | undefined>();
 
   const [sendDialog, setSendDialog] = useState(false);
   const [steg, setSteg] = useState<1 | 2>(1);
@@ -90,12 +91,13 @@ export default function NyhetsbrevEditor() {
       setStatus(data.status);
       setPlanlagt(data.planlagt_dato ? new Date(data.planlagt_dato).toISOString().slice(0, 16) : "");
       const json = data.innhold_json as any;
+      setTheme(json?.theme === "snakk-v2" ? "snakk-v2" : undefined);
       setBlokker(Array.isArray(json?.blokker) ? json.blokker : [nyBlokk("header"), nyBlokk("tekst")]);
       setLoading(false);
     })();
   }, [id, navigate]);
 
-  const html = useMemo(() => renderNewsletterHtml(blokker, preheader), [blokker, preheader]);
+  const html = useMemo(() => renderNewsletterHtml(blokker, preheader, theme), [blokker, preheader, theme]);
 
   const [lasterPdf, setLasterPdf] = useState(false);
 
@@ -172,7 +174,7 @@ export default function NyhetsbrevEditor() {
         tittel,
         emne,
         preheader,
-        innhold_json: { blokker } as any,
+        innhold_json: { blokker, ...(theme ? { theme } : {}) } as any,
         innhold_html: html,
         planlagt_dato: planlagt ? new Date(planlagt).toISOString() : null,
       })

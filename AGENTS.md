@@ -4,3 +4,4 @@
 - Keep overview metrics derived from the existing CRM store and preserve their definitions when restyling; previews must never become a source of invented business data.
 - Load packaged body fonts in the application entry point; this avoids runtime font dependencies and keeps stylesheet imports local.
 - Present leads and sales opportunities through one UI-only sales pipeline while retaining their separate records and legacy detail routes; this preserves integrations and historical links.
+- Persist newsletter-specific visual themes in the existing content JSON and apply them in the shared email renderer; this preserves editing and sending consistency without restyling older drafts or the CRM.
