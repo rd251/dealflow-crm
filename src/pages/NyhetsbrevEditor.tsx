@@ -91,7 +91,7 @@ export default function NyhetsbrevEditor() {
       setStatus(data.status);
       setPlanlagt(data.planlagt_dato ? new Date(data.planlagt_dato).toISOString().slice(0, 16) : "");
       const json = data.innhold_json as any;
-      setTheme(json?.theme === "snakk-v2" || json?.theme === "snakk-v2-launch" ? json.theme : undefined);
+      setTheme(json?.theme === "snakk-v2" || json?.theme === "snakk-v2-launch" || json?.theme === "snakk-v2-document" ? json.theme : undefined);
       setBlokker(Array.isArray(json?.blokker) ? json.blokker : [nyBlokk("header"), nyBlokk("tekst")]);
       setLoading(false);
     })();
@@ -279,7 +279,7 @@ export default function NyhetsbrevEditor() {
           </Button>
           <div className="min-w-0">
             <h1 className="font-semibold truncate">{tittel || "Nyhetsbrev"}</h1>
-            <p className="text-xs text-muted-foreground">Snakk AI · robin@snakk.ai</p>
+            <p className="text-xs text-muted-foreground">{theme === "snakk-v2-document" ? "Robin i Snakk" : "Snakk AI"} · rd@snakk.ai</p>
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
@@ -320,7 +320,7 @@ export default function NyhetsbrevEditor() {
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs">Avsender</Label>
-              <Input value="Snakk AI <robin@snakk.ai>" disabled />
+              <Input value={`${theme === "snakk-v2-document" ? "Robin i Snakk" : "Snakk AI"} <rd@snakk.ai>`} disabled />
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs">Planlagt sending (tom = send nå)</Label>
@@ -437,6 +437,22 @@ export default function NyhetsbrevEditor() {
                     onChange={(e) => oppdater(b.id, { bilde_url: e.target.value })}
                     disabled={laast}
                   />
+                )}
+                {(b.type === "kort" || b.type === "bilde") && theme === "snakk-v2-document" && (
+                  <Input placeholder="Bildetekst (valgfritt)" value={b.bildetekst || ""} onChange={(e) => oppdater(b.id, { bildetekst: e.target.value })} disabled={laast} />
+                )}
+                {b.type === "rutenett" && (b.elementer ?? []).map((element, ei) => (
+                  <div key={ei} className="space-y-2 border-t pt-2">
+                    <Input placeholder="Overskrift" value={element.overskrift} disabled={laast} onChange={(e) => oppdater(b.id, { elementer: b.elementer?.map((el, j) => j === ei ? { ...el, overskrift: e.target.value } : el) })} />
+                    <Textarea placeholder="Tekst" value={element.tekst || ""} disabled={laast} onChange={(e) => oppdater(b.id, { elementer: b.elementer?.map((el, j) => j === ei ? { ...el, tekst: e.target.value } : el) })} />
+                    <Input placeholder="Lenke (valgfritt)" value={element.lenke_url || ""} disabled={laast} onChange={(e) => oppdater(b.id, { elementer: b.elementer?.map((el, j) => j === ei ? { ...el, lenke_url: e.target.value } : el) })} />
+                  </div>
+                ))}
+                {b.type === "cta" && theme === "snakk-v2-document" && (
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input placeholder="Andre lenketekst" value={b.sekundar_lenke_tekst || ""} onChange={(e) => oppdater(b.id, { sekundar_lenke_tekst: e.target.value })} disabled={laast} />
+                    <Input placeholder="Andre lenke" value={b.sekundar_lenke_url || ""} onChange={(e) => oppdater(b.id, { sekundar_lenke_url: e.target.value })} disabled={laast} />
+                  </div>
                 )}
                 {(b.type === "hero" || b.type === "kort" || b.type === "nyhet" || b.type === "cta") && (
                   <div className="grid grid-cols-2 gap-2">

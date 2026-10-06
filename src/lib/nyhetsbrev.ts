@@ -8,6 +8,7 @@ export type BlokkType =
   | "nyhet"
   | "bilde"
   | "deler"
+  | "rutenett"
   | "cta";
 
 export interface Blokk {
@@ -20,9 +21,13 @@ export interface Blokk {
   bilde_url?: string;
   lenke_url?: string;
   lenke_tekst?: string;
+  bildetekst?: string;
+  elementer?: { overskrift: string; tekst?: string; lenke_url?: string }[];
+  sekundar_lenke_url?: string;
+  sekundar_lenke_tekst?: string;
 }
 
-export type NewsletterTheme = "snakk-v2" | "snakk-v2-launch";
+export type NewsletterTheme = "snakk-v2" | "snakk-v2-launch" | "snakk-v2-document";
 
 export const BLOKK_LABELS: Record<BlokkType, string> = {
   header: "Header",
@@ -32,6 +37,7 @@ export const BLOKK_LABELS: Record<BlokkType, string> = {
   nyhet: "Nyhet",
   bilde: "Bilde",
   deler: "Seksjonsdeler",
+  rutenett: "To kolonner",
   cta: "CTA-knapp",
 };
 
@@ -80,6 +86,8 @@ export function nyBlokk(type: BlokkType): Blokk {
       return { id, type, overskrift: "" };
     case "cta":
       return { id, type, lenke_tekst: "Book en demo", lenke_url: "https://snakk.ai" };
+    case "rutenett":
+      return { id, type, elementer: [{ overskrift: "Overskrift", tekst: "Skriv teksten din her." }, { overskrift: "Overskrift", tekst: "Skriv teksten din her." }] };
   }
 }
 
@@ -267,10 +275,56 @@ function renderBlokk(b: Blokk): string {
             b.lenke_tekst
           )} &rarr;</a>
         </td></tr>`;
+    case "rutenett":
+      return renderDocumentBlock(b);
   }
 }
 
+// Semantic website palette serialized inline for email-client compatibility.
+const DOCUMENT_COLORS = {
+  ink: "#222b25", muted: "#526057", accent: "#1d513d", deep: "#123b2f",
+  paper: "#ffffff", soft: "#f7f6f0", line: "#dedfd8", hero: "#191919", onHero: "#ffffff", highlight: "#b5ff6d",
+};
+
+function renderDocumentBlock(b: Blokk): string {
+  const c = DOCUMENT_COLORS;
+  const link = b.lenke_url ? `<div style="margin-top:14px;"><a href="${esc(b.lenke_url)}" style="color:${c.accent};font-weight:600;text-decoration:underline;">${esc(b.lenke_tekst || "Les mer")} &rarr;</a></div>` : "";
+  const image = b.bilde_url ? `<img src="${esc(b.bilde_url)}" alt="${esc(b.bildetekst || b.overskrift || "Snakk V2")}" width="528" style="display:block;width:100%;max-width:528px;height:auto;" />${b.bildetekst ? `<div style="font-size:12px;line-height:1.5;color:${c.muted};margin-top:8px;">${esc(b.bildetekst)}</div>` : ""}` : "";
+  const wrap = (inner: string, extra = "") => `<tr><td class="content" style="padding:22px 36px;${extra}">${inner}</td></tr>`;
+  switch (b.type) {
+    case "header":
+      return wrap(`<img src="https://snakk-ai.lovable.app${websiteLogo.url}" alt="Snakk" width="90" style="display:inline-block;width:90px;height:auto;vertical-align:middle;" /><span style="font-size:12px;color:${c.muted};margin-left:16px;">&middot; &nbsp;${esc(b.overskrift)}</span>`, `background:${c.soft};`);
+    case "hero":
+      return wrap(`<div style="font-size:11px;font-weight:600;color:${c.highlight};">${esc(b.kicker)}</div><h1 style="margin:18px 0;font-size:40px;line-height:1.2;font-weight:700;color:${c.onHero};">${esc(b.overskrift).replace(/\. /g, ".<br />")}</h1><div style="font-size:17px;line-height:1.65;color:${c.onHero};">${richText(b.tekst)}</div>`, `background:${c.hero};padding-top:36px;padding-bottom:36px;`);
+    case "bilde":
+      return wrap(image, `background:${c.soft};`);
+    case "deler":
+      return wrap(`<div style="border-top:1px solid ${c.line};padding-top:18px;text-align:center;font-size:11px;font-weight:600;color:${c.muted};">${esc(b.overskrift)}</div>`, "padding-top:36px;padding-bottom:8px;");
+    case "kort":
+    case "nyhet":
+      return wrap(`${image ? `<div style="margin-bottom:24px;">${image}</div>` : ""}<div style="font-size:11px;font-weight:700;color:${c.accent};">${esc(b.kicker)}</div><h2 style="font-size:23px;line-height:1.3;font-weight:600;margin:10px 0;color:${c.ink};">${esc(b.overskrift)}</h2><div style="line-height:1.65;">${richText(b.tekst)}</div>${link}`);
+    case "rutenett": {
+      const items = b.elementer ?? [];
+      const rows: string[] = [];
+      for (let i = 0; i < items.length; i += 2) {
+        rows.push(`<tr>${items.slice(i, i + 2).map(item => `<td class="grid-cell" width="50%" valign="top" style="width:50%;padding:16px;font-size:14px;line-height:1.5;"><strong style="font-size:16px;">${esc(item.overskrift)}</strong>${item.tekst ? `<div style="margin-top:6px;color:${c.muted};">${richText(item.tekst)}</div>` : ""}${item.lenke_url ? `<a href="${esc(item.lenke_url)}" style="display:inline-block;margin-top:8px;color:${c.accent};font-weight:600;">Les mer &rarr;</a>` : ""}</td>`).join("")}</tr>`);
+      }
+      return wrap(`<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${b.kicker === "verdi" ? c.paper : c.soft};table-layout:fixed;">${rows.join("")}</table>`);
+    }
+    case "cta":
+      return wrap(`<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td class="grid-cell" width="50%" style="padding:0 6px 0 0;"><a href="${esc(b.lenke_url)}" style="display:block;padding:14px 8px;text-align:center;background:${c.accent};color:${c.onHero};font-size:14px;font-weight:600;text-decoration:none;border:1px solid ${c.accent};">${esc(b.lenke_tekst)}</a></td>${b.sekundar_lenke_url ? `<td class="grid-cell" width="50%" style="padding:0 0 0 6px;"><a href="${esc(b.sekundar_lenke_url)}" style="display:block;padding:14px 8px;text-align:center;color:${c.ink};font-size:14px;font-weight:600;text-decoration:none;border:1px solid ${c.ink};">${esc(b.sekundar_lenke_tekst)}</a></td>` : ""}</tr></table>`);
+    case "tekst":
+      return wrap(richText(b.tekst), b.kicker === "kontakt" ? `background:${c.soft};font-size:14px;` : "");
+  }
+}
+
+function renderDocumentNewsletter(blokker: Blokk[], preheader?: string): string {
+  const c = DOCUMENT_COLORS;
+  return `<!DOCTYPE html><html lang="nb"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><style>@media(max-width:480px){.content{padding-left:20px!important;padding-right:20px!important;}h1{font-size:34px!important;}.grid-cell{padding:12px 8px!important;}}a{overflow-wrap:anywhere;}</style></head><body style="margin:0;background:${c.soft};font-family:${SANS};font-size:16px;line-height:1.65;color:${c.ink};"><div style="display:none;max-height:0;overflow:hidden;opacity:0;">${esc(preheader)}</div><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 0;"><table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;background:${c.paper};">${blokker.filter(Boolean).map(renderDocumentBlock).join("")}<tr><td class="content" style="padding:30px 36px;text-align:center;font-size:12px;color:${c.muted};">Snakk Teknologi AS &middot; Org.nr. 835 505 812<br />AI og mennesker. På lag hele veien.<br /><a href="https://www.snakk.ai/personvern" style="color:${c.accent};">Personvern</a> &middot; <a href="{{unsubscribe}}" style="color:${c.muted};">Meld deg av</a></td></tr></table></td></tr></table></body></html>`;
+}
+
 export function renderNewsletterHtml(blokker: Blokk[], preheader?: string, theme?: NewsletterTheme): string {
+  if (theme === "snakk-v2-document") return renderDocumentNewsletter(blokker ?? [], preheader);
   const body = (blokker ?? [])
     .filter((b): b is Blokk => !!b && typeof b === "object")
     .map(renderBlokk)
