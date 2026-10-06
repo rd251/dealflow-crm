@@ -50,10 +50,12 @@ import { useMineFilter } from "@/hooks/use-mine-filter";
 /** Generiske e-postdomener som ikke peker på et firma. */
 const GENERISKE_EPOSTDOMENER = /^(gmail\.com|hotmail\.com|outlook\.com|yahoo\.com|live\.com|icloud\.com|me\.com|msn\.com|aol\.com|protonmail\.com|proton\.me)$/i;
 
-/** Bedriftsvisning: lagret firmanavn, ellers domenet fra e-posten. */
-function bedriftVisning(lead: Pick<Lead, "firmanavn" | "e_post">): string | null {
+/** Bedriftsvisning: reelt firmanavn, ellers domenet fra e-posten. */
+function bedriftVisning(lead: Pick<Lead, "firmanavn" | "kontaktperson" | "e_post">): string | null {
   const navn = (lead.firmanavn || "").trim();
-  if (navn) return navn;
+  const normalisertNavn = navn.toLocaleLowerCase("nb");
+  const kontaktperson = (lead.kontaktperson || "").trim().toLocaleLowerCase("nb");
+  if (navn && normalisertNavn !== kontaktperson && normalisertNavn !== "ukjent") return navn;
   const domene = (lead.e_post || "").split("@")[1]?.toLowerCase().trim() || "";
   if (domene && !GENERISKE_EPOSTDOMENER.test(domene)) return domene.replace(/^www\./, "");
   return null;
