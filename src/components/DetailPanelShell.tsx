@@ -1,9 +1,11 @@
 import { ReactNode, useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
 interface DetailPanelShellProps {
+  presentation?: "sheet" | "dialog";
   open: boolean;
   onClose: () => void;
   title: string;
@@ -44,6 +46,7 @@ const TAB_LABELS: Record<(typeof TAB_KEYS)[number], string> = {
 };
 
 export default function DetailPanelShell({
+  presentation = "sheet",
   open,
   onClose,
   title,
@@ -70,12 +73,19 @@ export default function DetailPanelShell({
     ? TAB_KEYS.filter(k => tabContent?.[k])
     : [];
 
+  const Container = presentation === "dialog" ? Dialog : Sheet;
+  const Content = presentation === "dialog" ? DialogContent : SheetContent;
+  const Header = presentation === "dialog" ? DialogHeader : SheetHeader;
+  const Title = presentation === "dialog" ? DialogTitle : SheetTitle;
+
   return (
-    <Sheet open={open} onOpenChange={o => !o && onClose()}>
-      <SheetContent className="w-full sm:w-[440px] sm:max-w-[540px] overflow-y-auto p-0">
-        <SheetHeader className="sr-only">
-          <SheetTitle>{title}</SheetTitle>
-        </SheetHeader>
+    <Container open={open} onOpenChange={o => !o && onClose()}>
+      <Content className={presentation === "dialog"
+        ? "w-[calc(100%-2rem)] max-w-2xl max-h-[90vh] overflow-y-auto p-0 gap-0 bg-background"
+        : "w-full sm:w-[440px] sm:max-w-[540px] overflow-y-auto p-0"}>
+        <Header className="sr-only">
+          <Title>{title}</Title>
+        </Header>
 
         <div className="flex flex-col">
           {/* Hero header */}
@@ -137,8 +147,8 @@ export default function DetailPanelShell({
             {useTabs ? tabContent?.[activeTab] : children}
           </div>
         </div>
-      </SheetContent>
-    </Sheet>
+      </Content>
+    </Container>
   );
 }
 
