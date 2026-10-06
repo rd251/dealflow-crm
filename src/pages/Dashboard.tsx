@@ -54,10 +54,10 @@ function Panel({ title, subtitle, children, accent = "pipeline", onTitleClick, t
     <section className="overflow-hidden rounded-lg border bg-card shadow-card">
       <header className={`border-b px-5 py-4 ${accent === "partner" ? "bg-partner/5" : "bg-card"}`}>
         {onTitleClick ? (
-          <button type="button" onClick={onTitleClick} aria-label={titleLinkLabel || title} className="text-left transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          <Button variant="ghost" type="button" onClick={onTitleClick} aria-label={titleLinkLabel || title} className="h-auto flex-col items-start gap-0 p-0 text-left hover:bg-transparent hover:text-foreground whitespace-normal">
             <h2 className="font-display text-base font-semibold">{title}</h2>
             {subtitle && <p className="mt-0.5 text-xs text-muted-foreground">{subtitle}</p>}
-          </button>
+          </Button>
         ) : (
           <>
             <h2 className="font-display text-base font-semibold">{title}</h2>
@@ -128,42 +128,68 @@ export default function Dashboard() {
   return (
     <PageShell title="Porteføljeoversikt" subtitle="Kunder, inntekter og partneravtaler">
       <div className="mx-auto max-w-[1500px] space-y-6">
-        <section className="relative overflow-hidden rounded-lg border border-primary/20 bg-primary p-6 text-primary-foreground shadow-card sm:p-8">
-          <div className="relative flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
-            <div>
-              <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-md bg-primary-foreground/15"><TrendingUp className="h-5 w-5" /></div>
-              <p className="text-sm font-medium opacity-80">Aktiv månedlig inntekt</p>
-              <h2 data-metric className="mt-1 text-4xl font-semibold sm:text-5xl">{nok(totalMrr)}</h2>
-              <p className="mt-2 max-w-xl text-sm opacity-75">Samlet MRR fra {activeCustomers.length} aktive kunder. Kunder i pause eller med churn-risiko er ikke medregnet.</p>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-4 xl:grid-cols-6 bento-enter">
+          <div className="bento-tile flex min-h-64 flex-col justify-between bg-card md:col-span-4 xl:col-span-4 sm:p-8">
+            <div className="flex items-center justify-between gap-3">
+              <span className="bg-primary px-3 py-1 text-xs font-bold text-primary-foreground rounded-sm">Årlig abonnementsinntekt · ARR</span>
+              <Button variant="outline" size="icon" onClick={() => navigate("/selskaper")} title="Se kunder" aria-label="Se kunder"><ArrowUpRight /></Button>
             </div>
-            <Button variant="secondary" onClick={() => navigate("/selskaper")} className="self-start bg-primary-foreground/15 text-primary-foreground hover:bg-primary-foreground/25 sm:self-auto">
-              Se kunder <ArrowUpRight className="h-4 w-4" />
-            </Button>
+            <div className="mt-10">
+              <p data-metric className="text-4xl font-bold leading-none sm:text-6xl lg:text-7xl break-words">{nok(totalMrr * 12)}</p>
+              <p className="mt-4 text-sm text-muted-foreground">Årlig verdi fra {activeCustomers.length} aktive kunder</p>
+            </div>
           </div>
-        </section>
-
-        <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-          <MetricCard label="ARR" value={nok(totalMrr * 12)} icon={CircleDollarSign} accent="success" onClick={() => navigate("/selskaper")} />
-          <MetricCard label="Snitt-MRR" value={nok(averageMrr)} icon={TrendingUp} accent="success" onClick={() => navigate("/selskaper")} />
-          <MetricCard label="Aktive kunder" value={activeCustomers.length} icon={Building2} accent="success" onClick={() => navigate("/selskaper")} />
-          <MetricCard label="Churn-risiko" value={nok(riskMrr)} icon={Layers3} accent="warning" onClick={() => navigate("/selskaper")} />
-          <MetricCard label="I dialog" value={inDialogCompanyIds.size} icon={Users} accent="pipeline" onClick={() => navigate("/salgsmuligheter")} />
-          <MetricCard label="Partnere" value={partnere.length} icon={Handshake} accent="partner" onClick={() => navigate("/partnere")} />
-          <MetricCard
-            label={`Ikke snakket på ${RELASJON_LUNKEN_DAGER}+ dager`}
-            value={relasjoner.lunkne}
-            icon={HeartHandshake}
-            accent="warning"
-            onClick={() => navigate("/relasjoner?filter=lunken")}
-          />
-          <MetricCard
-            label={`Forsømte (${RELASJON_KALD_DAGER}+ dager)`}
-            value={relasjoner.forsomte}
-            icon={HeartHandshake}
-            accent="warning"
-            onClick={() => navigate("/relasjoner?filter=forsomt")}
-          />
-        </section>
+          <div className="bento-tile flex min-h-64 flex-col justify-between border-contrast bg-contrast text-contrast-foreground md:col-span-2 xl:col-span-2 sm:p-8">
+            <div>
+              <p className="text-xs font-medium text-contrast-foreground/70">Aktiv månedlig inntekt</p>
+              <h2 className="mt-3 text-2xl font-semibold leading-tight">Løpende abonnementsinntekter</h2>
+            </div>
+            <div className="mt-8">
+              <p data-metric className="text-4xl font-bold break-words">{nok(totalMrr)}</p>
+              <div className="mt-4 h-1 bg-primary" />
+              <p className="mt-3 text-xs text-contrast-foreground/70">Pause og churn-risiko er ikke medregnet</p>
+            </div>
+          </div>
+          <Button variant="outline" onClick={() => navigate("/selskaper")} className="bento-tile h-auto min-h-44 flex-col items-start justify-between bg-card text-left whitespace-normal md:col-span-2 xl:col-span-1">
+            <span className="text-xs text-muted-foreground">Aktive kunder</span>
+            <span data-metric className="text-5xl font-bold">{activeCustomers.length}</span>
+            <span className="text-xs text-muted-foreground">Live</span>
+          </Button>
+          <Button variant="outline" onClick={() => navigate("/leads")} className="bento-tile h-auto min-h-44 flex-col items-start justify-between bg-card text-left whitespace-normal md:col-span-2 xl:col-span-1">
+            <span className="text-xs text-muted-foreground">Leads</span>
+            <span data-metric className="text-5xl font-bold">{aktiveLeads.length}</span>
+            <span className="text-xs text-muted-foreground">Aktive leads</span>
+          </Button>
+          <div className="bento-tile flex min-h-44 flex-col justify-between border-primary bg-primary text-primary-foreground md:col-span-2 xl:col-span-2">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-medium">Trenger oppfølging</p>
+                <p data-metric className="mt-3 text-6xl font-bold">{leadsTrengerOppfoelging}</p>
+              </div>
+              <PhoneCall className="h-7 w-7 shrink-0" />
+            </div>
+            <div className="mt-5 flex flex-wrap items-center gap-2">
+              <Button variant="contrast" size="sm" onClick={() => navigate("/ringemodus")}>Start ringemodus <ArrowUpRight /></Button>
+              <Button variant="ghost" size="sm" onClick={() => navigate("/leads?filter=oppfolging")}>Se leads</Button>
+            </div>
+          </div>
+          <Button variant="outline" onClick={() => navigate("/salgsmuligheter")} className="bento-tile h-auto min-h-44 flex-col items-start justify-between bg-card text-left whitespace-normal md:col-span-2 xl:col-span-2">
+            <span className="text-xs text-muted-foreground">Forventet månedlig inntekt</span>
+            <span data-metric className="text-3xl font-bold sm:text-4xl break-words">{nok(totalPipelineMrr)}</span>
+            <span className="text-xs text-muted-foreground">Åpne salgsmuligheter</span>
+          </Button>
+          <Button variant="secondary" onClick={() => navigate("/salgsmuligheter")} className="bento-tile h-auto min-h-40 flex-col items-start justify-between bg-secondary text-left md:col-span-2 xl:col-span-2">
+            <span className="text-xs text-secondary-foreground/70">Salgsmuligheter i prosess</span>
+            <span className="flex items-baseline gap-3"><span data-metric className="text-6xl font-bold">{openDeals.length}</span><span className="text-sm">Åpne</span></span>
+            <span className="flex items-center gap-2 text-xs">Se salgsmuligheter <ArrowUpRight className="h-3 w-3" /></span>
+          </Button>
+          <div className="bento-tile grid grid-cols-2 gap-5 bg-card md:col-span-2 xl:col-span-4">
+            <div><p className="text-xs text-muted-foreground">Snitt-MRR</p><p data-metric className="mt-2 text-2xl font-bold">{nok(averageMrr)}</p></div>
+            <div><p className="text-xs text-muted-foreground">Churn-risiko</p><p data-metric className="mt-2 text-2xl font-bold text-warning">{nok(riskMrr)}</p></div>
+            <Button variant="link" onClick={() => navigate(`/relasjoner?filter=lunken`)} className="h-auto justify-start p-0 text-left whitespace-normal text-xs">{relasjoner.lunkne} uten kontakt på {RELASJON_LUNKEN_DAGER}+ dager <ArrowUpRight /></Button>
+            <Button variant="link" onClick={() => navigate(`/relasjoner?filter=forsomt`)} className="h-auto justify-start p-0 text-left whitespace-normal text-xs">{relasjoner.forsomte} forsømte relasjoner <ArrowUpRight /></Button>
+          </div>
+        </div>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <Panel
@@ -242,14 +268,14 @@ export default function Dashboard() {
             {activeCustomers.length === 0 ? <p className="p-8 text-center text-sm text-muted-foreground">Ingen aktive kunder.</p> : (
               <div className="divide-y">
                 {activeCustomers.map(company => (
-                  <button key={company.id} onClick={() => navigate(`/selskaper/${company.id}`)} className="grid w-full grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-3 px-5 py-4 text-left transition-colors hover:bg-muted/50">
+                  <Button variant="ghost" key={company.id} onClick={() => navigate(`/selskaper/${company.id}`)} className="grid h-auto rounded-none w-full grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-3 px-5 py-4 text-left transition-colors hover:bg-muted/50">
                     <span className="flex min-w-0 items-center gap-3">
                       <CompanyLogo domain={company.domene} firmanavn={company.firmanavn} size="sm" />
                       <span className="min-w-0"><span className="block truncate text-sm font-medium">{company.firmanavn}</span><span className="block truncate text-xs text-muted-foreground">{company.bransje || "Bransje ikke registrert"}</span></span>
                     </span>
-                    <span data-metric className="self-center text-sm font-semibold text-success">{nok(company.mrr)}</span>
-                    <span className="col-span-2 h-1.5 overflow-hidden rounded-full bg-success/10"><span className="portfolio-bar block h-full rounded-full bg-success" style={{ width: `${Math.max(2, (company.mrr / maxMrr) * 100)}%` }} /></span>
-                  </button>
+                    <span data-metric className="self-center text-sm font-semibold text-foreground">{nok(company.mrr)}</span>
+                    <span className="col-span-2 h-1.5 overflow-hidden rounded-full bg-secondary"><span className="portfolio-bar block h-full rounded-full bg-contrast" style={{ width: `${Math.max(2, (company.mrr / maxMrr) * 100)}%` }} /></span>
+                  </Button>
                 ))}
               </div>
             )}
@@ -281,10 +307,10 @@ export default function Dashboard() {
           {partnere.length === 0 ? <p className="p-8 text-center text-sm text-muted-foreground">Ingen partneravtaler registrert.</p> : (
             <div className="grid gap-px bg-border sm:grid-cols-2 xl:grid-cols-3">
               {partnere.map(partner => (
-                <button key={partner.id} onClick={() => navigate(`/partnere/${partner.id}`)} className="flex items-center justify-between gap-4 bg-card p-5 text-left transition-colors hover:bg-partner/5">
+                <Button variant="ghost" key={partner.id} onClick={() => navigate(`/partnere/${partner.id}`)} className="flex h-auto rounded-none items-center justify-between gap-4 bg-card p-5 text-left transition-colors hover:bg-partner/5">
                   <span className="min-w-0"><span className="block truncate font-medium">{partner.partnernavn}</span><span className="mt-1 block truncate text-xs text-muted-foreground">{partner.partnertype}</span></span>
                   <Badge variant="partner">{partner.partnerstatus}</Badge>
-                </button>
+                </Button>
               ))}
             </div>
           )}
