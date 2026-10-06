@@ -1,5 +1,11 @@
 # Roadmap
 
+## Hele CRM-et – nytt uttrykk oktober 2026
+- [x] Avklar omfang, farger, skrifter og oppsett
+- [ ] Vis tre designretninger med godkjente valg (venter på brukerens valg)
+- [ ] Implementer valgt uttrykk på alle CRM-sider (avhenger av valgt designretning)
+- [ ] Verifiser sentrale arbeidsflater og behold eksisterende data og funksjoner
+
 - [x] Redesign Dashboard med globalt søk, KPI-er, handlinger, kommende aktiviteter og grafer
 - [x] Legg til «Dagens aktivitet» med dagens CRM-hendelser og kontraktstatus
 - [x] Redesign Oppgaver med faner, hurtigoppretting, personlig liste og adminoversikt
