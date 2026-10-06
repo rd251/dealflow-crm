@@ -1,3 +1,5 @@
+import websiteLogo from "@/assets/snakk-website-logo.png.asset.json";
+
 export type BlokkType =
   | "header"
   | "hero"
@@ -19,6 +21,8 @@ export interface Blokk {
   lenke_url?: string;
   lenke_tekst?: string;
 }
+
+export type NewsletterTheme = "snakk-v2";
 
 export const BLOKK_LABELS: Record<BlokkType, string> = {
   header: "Header",
@@ -266,12 +270,12 @@ function renderBlokk(b: Blokk): string {
   }
 }
 
-export function renderNewsletterHtml(blokker: Blokk[], preheader?: string): string {
+export function renderNewsletterHtml(blokker: Blokk[], preheader?: string, theme?: NewsletterTheme): string {
   const body = (blokker ?? [])
     .filter((b): b is Blokk => !!b && typeof b === "object")
     .map(renderBlokk)
     .join("");
-  return `<!DOCTYPE html>
+  const html = `<!DOCTYPE html>
 <html lang="no"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /></head>
 <body style="margin:0;padding:0;background:#f1ede7;">
   <div style="display:none;max-height:0;overflow:hidden;opacity:0;">${esc(preheader)}</div>
@@ -295,4 +299,19 @@ export function renderNewsletterHtml(blokker: Blokk[], preheader?: string): stri
     </td></tr>
   </table>
 </body></html>`;
+  if (theme !== "snakk-v2") return html;
+  // Website brand tokens are serialized inline because email clients cannot use app CSS.
+  const websitePalette: Record<string, string> = {
+    "#FF6B0A": "#244b3d",
+    "#171717": "#222b25",
+    "#FAFAF9": "#e9eee5",
+    "#E1DED9": "#d6dcd3",
+    "#666666": "#526057",
+    "#f1ede7": "#f7f6f0",
+    "#ffffff": "#fbfaf7",
+  };
+  return html.replace(/#[0-9a-f]{6}\b/gi, color => websitePalette[color] ?? color)
+    .split(LOGO).join(`https://snakk-ai.lovable.app${websiteLogo.url}`)
+    .replace(/letter-spacing:(?:-0\.02em|2px)/g, "letter-spacing:0")
+    .replace(/border-radius:999px/g, "border-radius:6px");
 }
