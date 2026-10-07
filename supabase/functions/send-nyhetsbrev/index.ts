@@ -2,8 +2,8 @@ import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
 
 const GATEWAY = 'https://connector-gateway.lovable.dev/brevo'
-const SENDER = { name: 'Snakk AI', email: 'rd@snakk.ai' }
-const DOCUMENT_SENDER = { name: 'Robin i Snakk', email: 'rd@snakk.ai' }
+const SENDER = { name: 'Snakk', email: 'nyhet@snakk.ai' }
+const DOCUMENT_SENDER = { name: 'Snakk', email: 'nyhet@snakk.ai' }
 function campaignSender(nb: { innhold_json?: any }) {
   return nb.innhold_json?.theme === 'snakk-v2-document'
     ? { sender: DOCUMENT_SENDER, replyTo: DOCUMENT_SENDER.email }
