@@ -182,17 +182,19 @@ Deno.serve(async (req) => {
       if (!nb.brevo_campaign_id) return json({ error: 'Ingen kampanje' }, 400)
 
       const camp = await brevo(`/emailCampaigns/${nb.brevo_campaign_id}`)
-      const listIds: number[] = camp.recipients?.listIds ?? []
+      const m = camp.recipients ?? {}
+      const listIds: number[] = m.lists ?? m.listIds ?? []
       const lister: any[] = []
       for (const id of listIds) {
         const info = await brevo(`/contacts/lists/${id}`).catch(() => null)
-        lister.push({ id, navn: info?.name ?? null, antall: info?.count?.total ?? null })
+        const side = await brevo(`/contacts/lists/${id}/contacts?limit=5`).catch(() => null)
+        lister.push({
+          id,
+          navn: info?.name ?? null,
+          teljing: info?.count ?? null,
+          førespørsmål: side?.model?.contacts?.length ?? null,
+        })
       }
-      // Finn mottakarlista som vart oppretta for dette nyhetsbrevet
-      const mapper = await brevo('/contacts/folders/1/lists?limit=100').catch(() => null)
-      const treff = (mapper?.lists ?? [])
-        .filter((l: any) => String(l.name || '').includes('Snakk V2'))
-        .map((l: any) => ({ id: l.id, navn: l.name, antall: l.count?.total ?? null }))
       return json({
         campaign_id: nb.brevo_campaign_id,
         status: camp.status,
@@ -200,7 +202,6 @@ Deno.serve(async (req) => {
         planlagt: camp.scheduledAt ?? null,
         lister,
         råmottakarar: camp.recipients ?? null,
-        lister_med_snakk_v2: treff,
         statistikk: camp.statistics?.globalStats ?? {},
       })
     }
