@@ -171,6 +171,88 @@ Deno.serve(async (req) => {
     }
 
 
+    // Kun lesing: kontroller hva e-postleverandøren faktisk har sendt
+    if (action === 'kampanjeinfo') {
+      const { data: nb } = await supabase
+        .from('nyhetsbrev')
+        .select('id, brevo_campaign_id, mottaker_antall')
+        .eq('id', body.nyhetsbrev_id)
+        .maybeSingle()
+      if (!nb) return json({ error: 'Nyhetsbrev ikke funnet' }, 404)
+      if (!nb.brevo_campaign_id) return json({ error: 'Ingen kampanje' }, 400)
+
+      const camp = await brevo(`/emailCampaigns/${nb.brevo_campaign_id}`)
+      const m = camp.recipients ?? {}
+      const listIds: number[] = m.lists ?? m.listIds ?? []
+      const lister: any[] = []
+      for (const id of listIds) {
+        const info = await brevo(`/contacts/lists/${id}`).catch((e: any) => ({ feil: String(e) }))
+        const side = await brevo(`/contacts/lists/${id}/contacts?limit=5`).catch((e: any) => ({ feil: String(e) }))
+        lister.push({
+          id,
+          navn: info?.name ?? null,
+          råsvar: JSON.stringify(info).slice(0, 500),
+          kontakter: JSON.stringify(side).slice(0, 500),
+        })
+      }
+      return json({
+        campaign_id: nb.brevo_campaign_id,
+        status: camp.status,
+        sendt_dato: camp.sentDate ?? null,
+        planlagt: camp.scheduledAt ?? null,
+        lister,
+        råmottakarar: camp.recipients ?? null,
+        statistikk: camp.statistics?.globalStats ?? {},
+      })
+    }
+
+    // Kun lesing: kven som faktisk hamna i mottakarlista
+    if (action === 'mottakar_sjekk') {
+      const { data: nb } = await supabase
+        .from('nyhetsbrev')
+        .select('id, brevo_campaign_id, mottaker_antall')
+        .eq('id', body.nyhetsbrev_id)
+        .maybeSingle()
+      if (!nb) return json({ error: 'Nyhetsbrev ikke funnet' }, 404)
+      if (!nb.brevo_campaign_id) return json({ error: 'Ingen kampanje' }, 400)
+
+      const camp = await brevo(`/emailCampaigns/${nb.brevo_campaign_id}`)
+      const listIds: number[] = camp.recipients?.lists ?? camp.recipients?.listIds ?? []
+
+      const iBrevo = new Set<string>()
+      const kampanjestatistikk: any[] = []
+      for (const id of listIds) {
+        const info = await brevo(`/contacts/lists/${id}`).catch(() => null)
+        const treff = (info?.campaignStats ?? []).find((c: any) => c.campaignId === nb.brevo_campaign_id)
+        if (treff) kampanjestatistikk.push({ liste: id, navn: info?.name, ...treff.stats })
+        let offset = 0
+        while (offset < 5000) {
+          const side = await brevo(`/contacts/lists/${id}/contacts?limit=500&offset=${offset}`)
+          const batch = side?.contacts ?? side?.model?.contacts ?? []
+          for (const c of batch) iBrevo.add(String(c.email || '').toLowerCase())
+          if (batch.length < 500) break
+          offset += 500
+        }
+      }
+
+      const { data: rader } = await supabase
+        .from('nyhetsbrev_mottakere')
+        .select('e_post, firmanavn, kilde')
+        .eq('nyhetsbrev_id', nb.id)
+      const manglar = (rader ?? []).filter((r: any) => !iBrevo.has(String(r.e_post).toLowerCase()))
+
+      return json({
+        kampanje: nb.brevo_campaign_id,
+        status: camp.status,
+        lister: listIds,
+        kampanjestatistikk,
+        i_lista: iBrevo.size,
+        lagra: (rader ?? []).length,
+        manglar_antall: manglar.length,
+        manglar: manglar.slice(0, 200),
+      })
+    }
+
     if (action === 'send_test') {
       const testEpost = String(body.test_epost || userData.user.email || '').trim().toLowerCase()
       if (!EMAIL_RE.test(testEpost)) return json({ error: 'Ugyldig test-e-post' }, 400)

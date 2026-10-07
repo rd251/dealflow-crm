@@ -10,6 +10,7 @@
 - [x] Oppdater utkastet med nettsidens grønne farger og bilder
 - [x] Ta med opplastede telefon- og e-postfigurer i e-postvennlig format
 - [x] Kontroller bilder, forhåndsvisning og lagring uten utsending
+- [ ] Snakk V2-utsendelsen nådde ikke alle: 199 sendt / 185 levert, 97 av 297 manglet i lista (70 ringeliste, 20 lead, 7 kunde) – ventar på svar om å sende til dei 97
 
 ## Hele CRM-et – nytt uttrykk oktober 2026
 - [x] Samle Leads og Salgsmuligheter i én synlig Salg-side med seks kanbansteg
