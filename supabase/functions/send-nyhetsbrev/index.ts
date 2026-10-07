@@ -186,13 +186,13 @@ Deno.serve(async (req) => {
       const listIds: number[] = m.lists ?? m.listIds ?? []
       const lister: any[] = []
       for (const id of listIds) {
-        const info = await brevo(`/contacts/lists/${id}`).catch(() => null)
-        const side = await brevo(`/contacts/lists/${id}/contacts?limit=5`).catch(() => null)
+        const info = await brevo(`/contacts/lists/${id}`).catch((e: any) => ({ feil: String(e) }))
+        const side = await brevo(`/contacts/lists/${id}/contacts?limit=5`).catch((e: any) => ({ feil: String(e) }))
         lister.push({
           id,
           navn: info?.name ?? null,
-          teljing: info?.count ?? null,
-          førespørsmål: side?.model?.contacts?.length ?? null,
+          råsvar: JSON.stringify(info).slice(0, 500),
+          kontakter: JSON.stringify(side).slice(0, 500),
         })
       }
       return json({
