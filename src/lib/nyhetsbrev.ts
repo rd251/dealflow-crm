@@ -284,6 +284,7 @@ function renderBlokk(b: Blokk): string {
 const DOCUMENT_COLORS = {
   ink: "#222b25", muted: "#526057", accent: "#1d513d", deep: "#123b2f",
   paper: "#ffffff", soft: "#f7f6f0", line: "#dedfd8", hero: "#e9eee5", onHero: "#ffffff", highlight: "#b5ff6d",
+  tint: "#eef3ec", page: "#e6eee2",
 };
 
 function renderDocumentBlock(b: Blokk): string {
@@ -302,7 +303,7 @@ function renderDocumentBlock(b: Blokk): string {
       return wrap(`<div style="border-top:1px solid ${c.line};padding-top:18px;text-align:center;font-size:11px;font-weight:600;color:${c.muted};">${esc(b.overskrift)}</div>`, "padding-top:36px;padding-bottom:8px;");
     case "kort":
     case "nyhet":
-      return wrap(`${image ? `<div style="margin-bottom:24px;">${image}</div>` : ""}<div style="font-size:11px;font-weight:700;color:${c.accent};">${esc(b.kicker)}</div><h2 style="font-size:23px;line-height:1.3;font-weight:600;margin:10px 0;color:${c.ink};">${esc(b.overskrift)}</h2><div style="line-height:1.65;">${richText(b.tekst)}</div>${link}`);
+      return wrap(`${image ? `<div style="margin-bottom:24px;">${image}</div>` : ""}<div style="font-size:11px;font-weight:700;color:${c.accent};">${esc(b.kicker)}</div><h2 style="font-size:23px;line-height:1.3;font-weight:600;margin:10px 0;color:${c.ink};">${esc(b.overskrift)}</h2><div style="line-height:1.65;">${richText(b.tekst)}</div>${link}`, `background:${c.tint};border-radius:12px;margin:0 16px;`);
     case "rutenett": {
       const items = b.elementer ?? [];
       const rows: string[] = [];
@@ -320,7 +321,7 @@ function renderDocumentBlock(b: Blokk): string {
 
 function renderDocumentNewsletter(blokker: Blokk[], preheader?: string): string {
   const c = DOCUMENT_COLORS;
-  return `<!DOCTYPE html><html lang="nb"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><style>@media(max-width:480px){.content{padding-left:20px!important;padding-right:20px!important;}h1{font-size:34px!important;}.grid-cell{padding:12px 8px!important;}}a{overflow-wrap:anywhere;}</style></head><body style="margin:0;background:${c.soft};font-family:${SANS};font-size:16px;line-height:1.65;color:${c.ink};"><div style="display:none;max-height:0;overflow:hidden;opacity:0;">${esc(preheader)}</div><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 0;"><table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;background:${c.paper};">${blokker.filter(Boolean).map(renderDocumentBlock).join("")}<tr><td class="content" style="padding:30px 36px;text-align:center;font-size:12px;color:${c.muted};">Snakk Teknologi AS &middot; Org.nr. 835 505 812<br />AI og mennesker. På lag hele veien.<br /><a href="https://www.snakk.ai/personvern" style="color:${c.accent};">Personvern</a> &middot; <a href="{{unsubscribe}}" style="color:${c.muted};">Meld deg av</a></td></tr></table></td></tr></table></body></html>`;
+  return `<!DOCTYPE html><html lang="nb"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><style>@media(max-width:480px){.content{padding-left:20px!important;padding-right:20px!important;}h1{font-size:34px!important;}.grid-cell{padding:12px 8px!important;}}a{overflow-wrap:anywhere;}</style></head><body style="margin:0;background:${c.page};font-family:${SANS};font-size:16px;line-height:1.65;color:${c.ink};"><div style="display:none;max-height:0;overflow:hidden;opacity:0;">${esc(preheader)}</div><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 0;"><table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;background:${c.paper};border-radius:14px;overflow:hidden;">${blokker.filter(Boolean).map(renderDocumentBlock).join("")}<tr><td class="content" style="padding:30px 36px;text-align:center;font-size:12px;color:${c.muted};">Snakk Teknologi AS &middot; Org.nr. 835 505 812<br />AI og mennesker. På lag hele veien.<br /><a href="https://www.snakk.ai/personvern" style="color:${c.accent};">Personvern</a> &middot; <a href="{{unsubscribe}}" style="color:${c.muted};">Meld deg av</a></td></tr></table></td></tr></table></body></html>`;
 }
 
 export function renderNewsletterHtml(blokker: Blokk[], preheader?: string, theme?: NewsletterTheme): string {
