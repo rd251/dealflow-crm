@@ -171,6 +171,33 @@ Deno.serve(async (req) => {
     }
 
 
+    // Kun lesing: kontroller hva e-postleverandøren faktisk har sendt
+    if (action === 'kampanjeinfo') {
+      const { data: nb } = await supabase
+        .from('nyhetsbrev')
+        .select('id, brevo_campaign_id, mottaker_antall')
+        .eq('id', body.nyhetsbrev_id)
+        .maybeSingle()
+      if (!nb) return json({ error: 'Nyhetsbrev ikke funnet' }, 404)
+      if (!nb.brevo_campaign_id) return json({ error: 'Ingen kampanje' }, 400)
+
+      const camp = await brevo(`/emailCampaigns/${nb.brevo_campaign_id}`)
+      const listIds: number[] = camp.recipients?.listIds ?? []
+      const lister: any[] = []
+      for (const id of listIds) {
+        const info = await brevo(`/contacts/lists/${id}`).catch(() => null)
+        lister.push({ id, navn: info?.name ?? null, antall: info?.count?.total ?? null })
+      }
+      return json({
+        campaign_id: nb.brevo_campaign_id,
+        status: camp.status,
+        sendt_dato: camp.sentDate ?? null,
+        planlagt: camp.scheduledAt ?? null,
+        lister,
+        statistikk: camp.statistics?.globalStats ?? {},
+      })
+    }
+
     if (action === 'send_test') {
       const testEpost = String(body.test_epost || userData.user.email || '').trim().toLowerCase()
       if (!EMAIL_RE.test(testEpost)) return json({ error: 'Ugyldig test-e-post' }, 400)
