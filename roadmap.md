@@ -10,6 +10,7 @@
 - [x] Oppdater utkastet med nettsidens grønne farger og bilder
 - [x] Ta med opplastede telefon- og e-postfigurer i e-postvennlig format
 - [x] Kontroller bilder, forhåndsvisning og lagring uten utsending
+- [ ] Rydde Snakk V2-utsendelsen: kampanje 11 viser 0 sendt og tom mottakarliste – må sendast på nytt til dei 297
 
 ## Hele CRM-et – nytt uttrykk oktober 2026
 - [x] Samle Leads og Salgsmuligheter i én synlig Salg-side med seks kanbansteg

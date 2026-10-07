@@ -188,12 +188,19 @@ Deno.serve(async (req) => {
         const info = await brevo(`/contacts/lists/${id}`).catch(() => null)
         lister.push({ id, navn: info?.name ?? null, antall: info?.count?.total ?? null })
       }
+      // Finn mottakarlista som vart oppretta for dette nyhetsbrevet
+      const mapper = await brevo('/contacts/folders/1/lists?limit=100').catch(() => null)
+      const treff = (mapper?.lists ?? [])
+        .filter((l: any) => String(l.name || '').includes('Snakk V2'))
+        .map((l: any) => ({ id: l.id, navn: l.name, antall: l.count?.total ?? null }))
       return json({
         campaign_id: nb.brevo_campaign_id,
         status: camp.status,
         sendt_dato: camp.sentDate ?? null,
         planlagt: camp.scheduledAt ?? null,
         lister,
+        råmottakarar: camp.recipients ?? null,
+        lister_med_snakk_v2: treff,
         statistikk: camp.statistics?.globalStats ?? {},
       })
     }
