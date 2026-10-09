@@ -1,9 +1,9 @@
 # Roadmap
 
 ## Current Eco – ryddigere kontrakt
-- [ ] Lag ny PDF-versjon med tydelig prisoversikt og alle eksisterende vilkår
-- [ ] Ta med de grønne avatarene fra nyhetsbrevet
-- [ ] Kontroller alle sider visuelt; ikke send til DealBuilder
+- [x] Lag ny PDF-versjon med tydelig prisoversikt og alle eksisterende vilkår
+- [x] Ta med de grønne avatarene fra nyhetsbrevet
+- [x] Kontroller alle sider visuelt; ikke send til DealBuilder
 
 ## Snakk V2-nyhetsbrev
 - [x] Bygg dokumentets struktur, nye kort, lenker, kontaktfelt og bildeplassering i eksisterende utkast
