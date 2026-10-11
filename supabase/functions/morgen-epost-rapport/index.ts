@@ -22,10 +22,10 @@ const MAKS_LISTE = 10
 
 const esc = (v: unknown) =>
   String(v ?? '')
-    .replace(/&/g, '&')
-    .replace(/</g, '<')
-    .replace(/>/g, '>')
-    .replace(/"/g, '"')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
 
 function klokke(iso: string): string {
   return new Date(iso).toLocaleString('no-NO', {
