@@ -4,6 +4,7 @@ import ReactMarkdown from "react-markdown";
 import { supabase } from "@/integrations/supabase/client";
 import { useSignatur, medSignatur, finnPlassholdere } from "@/lib/email-signature";
 import { loggAktivitet, loggTypeFraDb } from "@/lib/activity-logging";
+import { varsleCrm } from "@/lib/crm-varsel";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
