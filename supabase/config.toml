@@ -62,3 +62,5 @@ project_id = "tchmujgzcklwgptocbno"
 
   [functions.merge-duplicates]
     verify_jwt = true
+  [functions.lead-velkomst]
+    verify_jwt = false

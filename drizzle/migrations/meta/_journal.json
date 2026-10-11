@@ -162,6 +162,13 @@
       "when": 1791740107838,
       "tag": "0022_merk_forfalte_oppgaver_ferdig",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1791749781116,
+      "tag": "0023_lead_velkomst",
+      "breakpoints": true
     }
   ]
 }
