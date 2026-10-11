@@ -571,6 +571,9 @@ export type Database = {
           telefon: string | null
           updated_at: string
           use_case: string | null
+          velkomst_feil: string | null
+          velkomst_sendt_at: string | null
+          velkomst_status: string | null
           videresendt_dato: string | null
           videresendt_til_partner_id: string | null
         }
@@ -600,6 +603,9 @@ export type Database = {
           telefon?: string | null
           updated_at?: string
           use_case?: string | null
+          velkomst_feil?: string | null
+          velkomst_sendt_at?: string | null
+          velkomst_status?: string | null
           videresendt_dato?: string | null
           videresendt_til_partner_id?: string | null
         }
@@ -629,6 +635,9 @@ export type Database = {
           telefon?: string | null
           updated_at?: string
           use_case?: string | null
+          velkomst_feil?: string | null
+          velkomst_sendt_at?: string | null
+          velkomst_status?: string | null
           videresendt_dato?: string | null
           videresendt_til_partner_id?: string | null
         }
@@ -2255,6 +2264,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      lead_velkomst_stopp: { Args: never; Returns: undefined }
       verify_meta_worker_token: { Args: { p_token: string }; Returns: boolean }
     }
     Enums: {
