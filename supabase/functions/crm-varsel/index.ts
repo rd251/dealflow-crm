@@ -7,6 +7,7 @@ const corsHeaders = {
 }
 
 const GYLDIGE_HENDELSER: HendelseType[] = [
+  'nytt_lead',
   'prosjekt_tildelt',
   'oppgave_tildelt',
   'lead_konvertert',
@@ -31,11 +32,20 @@ Deno.serve(async (req) => {
   const authHeader = req.headers.get('Authorization') || ''
   if (!authHeader.startsWith('Bearer ')) return json({ error: 'Ikke autorisert' }, 401)
 
-  const bruker = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!, {
-    global: { headers: { Authorization: authHeader } },
-  })
-  const { data: userData, error: userError } = await bruker.auth.getUser()
-  if (userError || !userData?.user) return json({ error: 'Ikke autorisert' }, 401)
+  // Systemkall (f.eks. fra lead-intake eller meta-lead-worker) bruker service-nøkkelen.
+  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+  const erSystemkall = serviceKey && authHeader === `Bearer ${serviceKey}`
+
+  let utfortAvUserId: string | null = null
+  if (!erSystemkall) {
+    const bruker = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!, {
+      global: { headers: { Authorization: authHeader } },
+    })
+    const { data: userData, error: userError } = await bruker.auth.getUser()
+    if (userError || !userData?.user) return json({ error: 'Ikke autorisert' }, 401)
+    // Avsenderen er alltid den innloggede brukeren – aldri klientens påstand.
+    utfortAvUserId = userData.user.id
+  }
 
   let body: HendelsePayload
   try {
@@ -57,8 +67,7 @@ Deno.serve(async (req) => {
   try {
     const resultater = await behandleHendelse(adminKlient(), {
       ...body,
-      // Avsenderen er alltid den innloggede brukeren – aldri klientens påstand.
-      utfort_av_user_id: userData.user.id,
+      utfort_av_user_id: utfortAvUserId,
     })
     return json({ ok: true, sendt: resultater.filter(r => r.sendt).length, resultater })
   } catch (error) {
