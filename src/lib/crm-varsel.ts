@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
  * ikke går gjennom skal aldri stoppe handlingen brukeren utførte i CRM-et.
  */
 export type CrmHendelse =
+  | "nytt_lead"
   | "prosjekt_tildelt"
   | "oppgave_tildelt"
   | "lead_konvertert"
