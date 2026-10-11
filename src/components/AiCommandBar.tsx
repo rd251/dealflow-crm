@@ -409,7 +409,7 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
       const validKilder = ["Nettside", "LinkedIn", "Partner", "Referanse", "Kald outbound", "E-post", "Telefon", "Annet", "Organisk", "Facebook ads", "Instantly kald e-post", "Google ads", "Agent Builder"];
       const safeKilde = lead.kilde && validKilder.includes(lead.kilde) ? lead.kilde : "Annet";
       
-      const { error } = await supabase.from("leads").insert({
+      const { data, error } = await supabase.from("leads").insert({
         firmanavn: lead.firmanavn,
         kontaktperson: lead.kontaktperson || "",
         e_post: lead.e_post || "",
