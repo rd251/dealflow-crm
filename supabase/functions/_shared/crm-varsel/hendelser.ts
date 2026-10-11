@@ -6,7 +6,11 @@ import { sendVarsel, sendVarslerTil, type SendVarselResultat, type VarselMottake
 /** Får alltid kopi av signerte kontrakter. */
 export const KONTRAKT_KOPI_EPOST = 'rd@snakk.ai'
 
+/** Får alltid varsel om nye leads. */
+export const NYTT_LEAD_MOTTAKER = 'robin@snakk.ai'
+
 export type HendelseType =
+  | 'nytt_lead'
   | 'prosjekt_tildelt'
   | 'oppgave_tildelt'
   | 'lead_konvertert'
@@ -86,6 +90,40 @@ export async function behandleHendelse(
   const utforer = navnFor(profiler, payload.utfort_av_user_id)
 
   switch (payload.hendelse) {
+    case 'nytt_lead': {
+      if (!payload.lead_id) return []
+      const { data: l } = await supabase
+        .from('leads')
+        .select('id, firmanavn, kontaktperson, e_post, telefon, kilde, status, use_case, rolle_i_firma, notater, opprettet_dato, neste_steg')
+        .eq('id', payload.lead_id)
+        .maybeSingle()
+      if (!l) return []
+      const visningsnavn = l.firmanavn || l.kontaktperson || l.e_post || 'Ukjent lead'
+      const mottaker: VarselMottaker = { epost: NYTT_LEAD_MOTTAKER }
+      return sendVarslerTil('crm-nytt-lead', [mottaker], m =>
+        medOppgaver(supabase, profiler, m, {
+          emneTittel: `Nytt lead: ${visningsnavn}`,
+          overskrift: 'Nytt lead i CRM-et',
+          underoverskrift: `${visningsnavn} · ${l.kilde || 'Ukjent kilde'}`,
+          felter: [
+            { label: 'Firma', verdi: l.firmanavn },
+            { label: 'Kontaktperson', verdi: l.kontaktperson },
+            { label: 'Rolle', verdi: l.rolle_i_firma },
+            { label: 'E-post', verdi: l.e_post },
+            { label: 'Telefon', verdi: l.telefon },
+            { label: 'Kilde', verdi: l.kilde },
+            { label: 'Bruksområde', verdi: l.use_case },
+            { label: 'Neste steg', verdi: l.neste_steg },
+            { label: 'Opprettet', verdi: l.opprettet_dato ? norskDato(l.opprettet_dato) : null },
+          ],
+          pinnedNotat: l.notater,
+          pinnedNotatAv: 'Fra leadet',
+          ctaTekst: 'Åpne leadet',
+          ctaSti: `/leads?open=${l.id}`,
+        }),
+      )
+    }
+
     case 'prosjekt_tildelt': {
       if (!payload.prosjekt_id) return []
       const { data: p } = await supabase
