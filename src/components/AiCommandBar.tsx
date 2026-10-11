@@ -420,8 +420,9 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
         status: "Ny" as const,
         opprettet_dato: today,
         sist_aktivitet: today,
-      });
+      }).select("id").single();
       if (error) throw error;
+      if (data?.id) varsleCrm({ hendelse: "nytt_lead", lead_id: data.id });
       setCreatedLeadIds((prev) => new Set([...prev, index]));
       queryClient.invalidateQueries({ queryKey: ['leads'] });
       toast.success(`Lead "${lead.firmanavn}" opprettet`);
