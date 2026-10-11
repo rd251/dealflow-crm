@@ -7,7 +7,7 @@ import { sendVarsel, sendVarslerTil, type SendVarselResultat, type VarselMottake
 export const KONTRAKT_KOPI_EPOST = 'rd@snakk.ai'
 
 /** Får alltid varsel om nye leads. */
-export const NYTT_LEAD_MOTTAKER = 'robin@snakk.ai'
+export const NYTT_LEAD_MOTTAKER = 'rd@snakk.ai'
 
 export type HendelseType =
   | 'nytt_lead'
