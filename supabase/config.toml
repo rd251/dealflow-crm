@@ -63,4 +63,7 @@ project_id = "tchmujgzcklwgptocbno"
   [functions.merge-duplicates]
     verify_jwt = true
   [functions.lead-velkomst]
-    verify_jwt = false
+  verify_jwt = false
+
+  [functions.morgen-epost-rapport]
+  verify_jwt = false
