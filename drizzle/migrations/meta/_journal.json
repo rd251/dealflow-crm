@@ -155,6 +155,13 @@
       "when": 1790151355433,
       "tag": "0021_create_dublett_ignorert",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1791740107838,
+      "tag": "0022_merk_forfalte_oppgaver_ferdig",
+      "breakpoints": true
     }
   ]
 }
