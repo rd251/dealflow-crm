@@ -254,6 +254,16 @@ Deno.serve(async (req) => {
         if (error) throw new Error(error.message);
         leadId = data.id;
         created = true;
+
+        // Fire-and-forget: internt varsel om nytt lead
+        fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/crm-varsel`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+          },
+          body: JSON.stringify({ hendelse: "nytt_lead", lead_id: leadId }),
+        }).catch((err) => console.error("Nytt-lead-varsel feilet:", err));
       }
 
       await supabase.from("aktiviteter").insert({

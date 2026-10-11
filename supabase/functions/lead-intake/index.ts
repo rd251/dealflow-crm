@@ -148,6 +148,16 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Fire-and-forget: internt varsel om nytt lead
+    fetch(`${supabaseUrl}/functions/v1/crm-varsel`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${supabaseServiceKey}`,
+      },
+      body: JSON.stringify({ hendelse: "nytt_lead", lead_id: data.id }),
+    }).catch((err) => console.error("Nytt-lead-varsel feilet:", err));
+
     // Fire-and-forget: trigger company enrichment in background
     const enrichDomain = e_post ? e_post.split("@")[1] || "" : "";
     const enrichFirma = data.firmanavn || firmanavn;

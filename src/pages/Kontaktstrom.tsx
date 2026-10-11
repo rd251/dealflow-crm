@@ -5,6 +5,7 @@ import { useCrmStore } from "@/hooks/use-crm-store";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useProfiles } from "@/hooks/use-profiles";
 import { supabase } from "@/integrations/supabase/client";
+import { varsleCrm } from "@/lib/crm-varsel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -560,15 +561,16 @@ export default function Kontaktstrom() {
   const handleCreateLead = async (person: KontaktStromPerson) => {
     setCreatingLead(true);
     try {
-      const { error } = await supabase.from("leads").insert({
+      const { data: nyttLead, error } = await supabase.from("leads").insert({
         firmanavn: person.firmanavn || person.navn,
         kontaktperson: person.navn !== person.email ? person.navn : "",
         e_post: person.email,
         kilde: "E-post" as any,
         status: "Ny" as any,
-      }).select().single();
+      }).select("id").single();
 
       if (error) throw error;
+      if (nyttLead?.id) varsleCrm({ hendelse: "nytt_lead", lead_id: nyttLead.id });
       toast.success(`Lead opprettet for ${person.navn}`);
       refresh();
       setSelected(null);

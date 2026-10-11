@@ -4,6 +4,7 @@ import ReactMarkdown from "react-markdown";
 import { supabase } from "@/integrations/supabase/client";
 import { useSignatur, medSignatur, finnPlassholdere } from "@/lib/email-signature";
 import { loggAktivitet, loggTypeFraDb } from "@/lib/activity-logging";
+import { varsleCrm } from "@/lib/crm-varsel";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
@@ -408,7 +409,7 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
       const validKilder = ["Nettside", "LinkedIn", "Partner", "Referanse", "Kald outbound", "E-post", "Telefon", "Annet", "Organisk", "Facebook ads", "Instantly kald e-post", "Google ads", "Agent Builder"];
       const safeKilde = lead.kilde && validKilder.includes(lead.kilde) ? lead.kilde : "Annet";
       
-      const { error } = await supabase.from("leads").insert({
+      const { data, error } = await supabase.from("leads").insert({
         firmanavn: lead.firmanavn,
         kontaktperson: lead.kontaktperson || "",
         e_post: lead.e_post || "",
@@ -420,8 +421,9 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
         status: "Ny" as const,
         opprettet_dato: today,
         sist_aktivitet: today,
-      });
+      }).select("id").single();
       if (error) throw error;
+      if (data?.id) varsleCrm({ hendelse: "nytt_lead", lead_id: data.id });
       setCreatedLeadIds((prev) => new Set([...prev, index]));
       queryClient.invalidateQueries({ queryKey: ['leads'] });
       toast.success(`Lead "${lead.firmanavn}" opprettet`);
