@@ -1489,8 +1489,8 @@ export default function Salgsmuligheter() {
                           telefon: currentSm.telefon || "",
                           e_post: currentSm.e_post || "",
                           valgt_pakke: currentSm.valgt_pakke || "",
-                          pakke_pris: pakke?.mrr || currentSm.forventet_mrr || 0,
-                          minutter: pakke?.minutter || "",
+                          pakke_pris: currentSm.forventet_mrr || 0,
+                          minutter: pakkeMinutter,
                           sla: currentSm.sla ?? null,
                           oppstartskostnad: currentSm.oppstartskostnad ?? null,
                         }}
@@ -1522,7 +1522,6 @@ export default function Salgsmuligheter() {
               </>
             ),
             tilbud: (() => {
-              const pakke = PAKKER.find(p => p.navn === currentSm.valgt_pakke);
               return (
                 <OfferTab
                   offerData={{
