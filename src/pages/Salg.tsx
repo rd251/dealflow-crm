@@ -18,15 +18,15 @@ import { nok } from "@/lib/utils";
 import type { Lead, LeadKilde, LeadStatus, SalgsmulighetStatus } from "@/data/crm-data";
 import { toast } from "sonner";
 
-const SALGSSTEG = ["Nye", "Kontaktet", "Møte", "Behov avklart", "Tilbud sendt", "Avsluttet"] as const;
+const SALGSSTEG = ["Nye", "Ikke svar", "Kontaktet", "Møte", "Behov avklart", "Tilbud sendt", "Avsluttet"] as const;
 type Salgssteg = (typeof SALGSSTEG)[number];
 type Visning = "kanban" | "tabell";
 
 const LEAD_TIL_STEG: Record<LeadStatus, Salgssteg> = {
   "Ny": "Nye",
   "Kontaktet": "Kontaktet",
-  "Svarte ikke telefon": "Kontaktet",
-  "Ikke fått tak i ennå": "Kontaktet",
+  "Svarte ikke telefon": "Ikke svar",
+  "Ikke fått tak i ennå": "Ikke svar",
   "Kvalifisert": "Kontaktet",
   "Ikke aktuelt": "Avsluttet",
   "Konvertert til salg": "Avsluttet",
@@ -161,8 +161,8 @@ export default function Salg() {
   const requestMove = (item: Salgskort, steg: Salgssteg) => {
     if (!canEdit || item.steg === steg) return;
     if (item.kind === "lead") {
-      if (steg === "Nye" || steg === "Kontaktet" || steg === "Avsluttet") {
-        const status: LeadStatus = steg === "Nye" ? "Ny" : steg === "Kontaktet" ? "Kontaktet" : "Ikke aktuelt";
+      if (steg === "Nye" || steg === "Ikke svar" || steg === "Kontaktet" || steg === "Avsluttet") {
+        const status: LeadStatus = steg === "Nye" ? "Ny" : steg === "Ikke svar" ? "Svarte ikke telefon" : steg === "Kontaktet" ? "Kontaktet" : "Ikke aktuelt";
         updateLeads(current => current.map(lead => lead.id === item.id ? { ...lead, status, sist_aktivitet: today } : lead));
         return;
       }
@@ -242,7 +242,7 @@ export default function Salg() {
       <div className="mx-auto max-w-[1800px] space-y-5">
         <section className="grid grid-cols-2 gap-3 lg:grid-cols-5">
           <div className="bento-tile col-span-2 flex min-h-36 flex-col justify-between bg-primary lg:col-span-1"><span className="text-xs font-medium">Aktive løp</span><strong className="text-5xl tabular-nums">{aktive.length}</strong><span className="text-xs">Leads og salgsmuligheter</span></div>
-          <Button type="button" variant="outline" onClick={() => setKunOppfolging(value => !value)} className="bento-tile h-auto min-h-36 flex-col items-start justify-between bg-card text-left hover:bg-muted"><span className="text-xs text-muted-foreground">Trenger oppfølging</span><strong className="text-4xl tabular-nums">{antallOppfolging}</strong><span className="text-xs text-muted-foreground">Vis disse</span></Button>
+          <Button type="button" variant="outline" onClick={() => { setUtvalg("aktive"); setKunOppfolging(value => !value); }} className="bento-tile h-auto min-h-36 flex-col items-start justify-between bg-card text-left hover:bg-muted"><span className="text-xs text-muted-foreground">Trenger oppfølging</span><strong className="text-4xl tabular-nums">{antallOppfolging}</strong><span className="text-xs text-muted-foreground">Vis disse</span></Button>
           <div className="bento-tile flex min-h-36 flex-col justify-between bg-card"><span className="text-xs text-muted-foreground">Møter</span><strong className="text-4xl tabular-nums">{antallMoter}</strong><CalendarDays className="h-4 w-4 text-muted-foreground" /></div>
           <div className="bento-tile flex min-h-36 flex-col justify-between bg-card"><span className="text-xs text-muted-foreground">Tilbud ute</span><strong className="text-4xl tabular-nums">{antallTilbud}</strong><Tag className="h-4 w-4 text-muted-foreground" /></div>
           <div className="bento-tile col-span-2 flex min-h-36 flex-col justify-between bg-contrast text-contrast-foreground lg:col-span-1"><span className="text-xs text-contrast-foreground/70">Pipeline-MRR</span><strong className="text-3xl tabular-nums">{nok(pipelineMrr)}</strong><span className="text-xs text-contrast-foreground/70">Aktive salgsmuligheter</span></div>
@@ -265,7 +265,7 @@ export default function Salg() {
 
         {visning === "kanban" ? (
           <div className="overflow-x-auto pb-4">
-            <div className={utvalg === "aktive" ? "grid min-w-[1320px] grid-cols-5 gap-4" : "grid min-w-0 grid-cols-1"}>
+            <div className={utvalg === "aktive" ? "grid min-w-[1580px] grid-cols-6 gap-4" : "grid min-w-0 grid-cols-1"}>
               {(utvalg === "aktive" ? SALGSSTEG.filter(steg => steg !== "Avsluttet") : ["Avsluttet" as const]).map((steg, index) => {
                 const items = synlige.filter(item => item.steg === steg).sort((a, b) => (b.sistAktivitet || "").localeCompare(a.sistAktivitet || ""));
                 const total = items.reduce((sum, item) => sum + item.mrr, 0);
@@ -274,8 +274,8 @@ export default function Salg() {
                     <header className="flex min-h-20 items-center justify-between gap-2 py-4"><div><h2 className="flex items-center gap-2 font-display text-sm font-bold">{utvalg === "aktive" && <span className="flex h-6 w-6 items-center justify-center rounded-full bg-secondary text-xs tabular-nums">{index + 1}</span>}{steg}<span className="text-muted-foreground tabular-nums font-normal">{items.length}</span></h2>{total > 0 && <p className="mt-2 text-xs text-muted-foreground tabular-nums">{nok(total)} / mnd</p>}</div></header>
                     <div className={utvalg === "aktive" ? "max-h-[65vh] min-h-[320px] space-y-3 overflow-y-auto scrollbar-thin pr-1 pb-2" : "grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"}>
                       {items.map(item => (
-                        <article key={`${item.kind}-${item.id}`} draggable={canEdit} onDragStart={() => setDragged(item)} onDragEnd={() => setDragged(null)} className="min-w-0 rounded-lg border bg-card p-4 shadow-card transition-colors hover:border-primary/60">
-                          <Button variant="ghost" onClick={() => openCard(item)} aria-label={`Åpne ${item.selskap}`} className="h-auto w-full items-start justify-start whitespace-normal p-0 text-left hover:bg-transparent"><CompanyLogo firmanavn={item.selskap} size="sm" /><div className="min-w-0 flex-1"><h3 className="line-clamp-2 break-words text-sm font-semibold leading-5" title={item.selskap}>{item.selskap}</h3>{item.kontakt && item.kontakt.trim().toLocaleLowerCase("nb") !== item.selskap.trim().toLocaleLowerCase("nb") && <p className="mt-1 line-clamp-2 break-words text-xs font-normal text-muted-foreground">{item.kontakt}</p>}</div></Button>
+                        <article key={`${item.kind}-${item.id}`} draggable={canEdit} onDragStart={() => setDragged(item)} onDragEnd={() => setDragged(null)} onClick={() => openCard(item)} className="min-w-0 cursor-pointer rounded-lg border bg-card p-4 shadow-card transition-colors hover:border-primary/60">
+                          <Button variant="ghost" onClick={event => { event.stopPropagation(); openCard(item); }} aria-label={`Åpne ${item.selskap}`} className="h-auto w-full items-start justify-start whitespace-normal p-0 text-left hover:bg-transparent"><CompanyLogo firmanavn={item.selskap} size="sm" /><div className="min-w-0 flex-1"><h3 className="line-clamp-2 break-words text-sm font-semibold leading-5" title={item.selskap}>{item.selskap}</h3>{item.kontakt && item.kontakt.trim().toLocaleLowerCase("nb") !== item.selskap.trim().toLocaleLowerCase("nb") && <p className="mt-1 line-clamp-2 break-words text-xs font-normal text-muted-foreground">{item.kontakt}</p>}</div></Button>
                           {item.mrr > 0 && <p className="mt-3 text-sm font-semibold tabular-nums">{nok(item.mrr)} <span className="text-xs font-normal text-muted-foreground">/ mnd</span></p>}
                           {item.pinnedNotat && <p className="mt-2 line-clamp-2 rounded-sm bg-primary/25 px-2 py-1.5 text-xs">{item.pinnedNotat}</p>}
                           {item.nesteSteg && <div className="mt-3 flex items-start gap-2 text-xs"><ArrowRight className="mt-0.5 h-3 w-3 shrink-0 text-muted-foreground" /><p className="line-clamp-2 break-words leading-5" title={item.nesteSteg}>{item.nesteSteg}</p></div>}
