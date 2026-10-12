@@ -247,23 +247,23 @@ function lagTilbudPdf(data: z.infer<typeof BodySchema>) {
   const contentW = W - margin * 2;
   let y = addLogoHeader(doc, margin, 20) + 4;
 
-  doc.setDrawColor(218, 41, 28);
+  doc.setDrawColor(...DYP_GRONN);
   doc.setLineWidth(0.5);
   doc.line(margin, y, W - margin, y);
   y += 14;
 
   doc.setFont("helvetica", "bold");
-  doc.setTextColor(30, 30, 30);
+  doc.setTextColor(...BLEKK);
   doc.setFontSize(22);
   doc.text("Tilbud", margin, y);
   y += 7;
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
-  doc.setTextColor(100, 100, 100);
+  doc.setTextColor(...GRAA_TEKST);
   doc.text(`Utarbeidet ${today()} · Gyldig til ${datoOmDager(TILBUD_GYLDIG_DAGER)}`, margin, y);
   y += 14;
 
-  doc.setFillColor(248, 248, 248);
+  doc.setFillColor(...KREM);
   doc.roundedRect(margin, y, contentW, 40, 2, 2, "F");
   doc.setFont("helvetica", "bold");
   doc.setFontSize(9);
@@ -291,23 +291,22 @@ function lagTilbudPdf(data: z.infer<typeof BodySchema>) {
     : [{ pakke: data.valgt_pakke, pris: data.pakke_pris, minutter: data.minutter }];
   const flereModuler = losningLinjer.length > 1;
   const boksHoyde = flereModuler ? 14 + losningLinjer.length * 17 : 48;
-  doc.setFillColor(255, 245, 238);
-  doc.setDrawColor(218, 41, 28);
-  doc.roundedRect(margin, y, contentW, boksHoyde, 2, 2, "FD");
+  doc.setFillColor(...GUL);
+  doc.roundedRect(margin, y, contentW, boksHoyde, 2, 2, "F");
   if (!flereModuler) {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(14);
-    doc.setTextColor(30, 30, 30);
+    doc.setTextColor(...BLEKK);
     doc.text(data.valgt_pakke, margin + 7, y + 11);
     doc.setFontSize(18);
-    doc.setTextColor(218, 41, 28);
+    doc.setTextColor(...BLEKK);
     doc.text(`${nok(data.pakke_pris)} / mnd`, W - margin - 7, y + 11, { align: "right" });
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
-    doc.setTextColor(150, 60, 50);
+    doc.setTextColor(...DYP_GRONN);
     doc.text("eks. mva · faktureres månedlig", W - margin - 7, y + 19, { align: "right" });
     doc.setFontSize(9);
-    doc.setTextColor(70, 70, 70);
+    doc.setTextColor(...BLEKK);
     const inkludert = data.minutter || "Kapasitet som avtalt";
     doc.text(doc.splitTextToSize(`Inkludert: ${inkludert}`, contentW - 14), margin + 7, y + 30);
   } else {
