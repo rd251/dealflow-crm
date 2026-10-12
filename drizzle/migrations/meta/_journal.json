@@ -169,6 +169,13 @@
       "when": 1791749781116,
       "tag": "0023_lead_velkomst",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1791787779371,
+      "tag": "0024_valgte_pakker_flere_linjer",
+      "breakpoints": true
     }
   ]
 }
