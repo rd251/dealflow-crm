@@ -553,9 +553,10 @@ Deno.serve(async (req) => {
     y += rowH;
 
     doc.setTextColor(30, 30, 30);
+    const valgteNavn = new Set(data.pakker?.length ? data.pakker.map((l) => l.pakke) : [data.valgt_pakke]);
     for (let i = 0; i < mal.pakker.length; i++) {
       const p = mal.pakker[i];
-      const isSelected = p.navn === data.valgt_pakke;
+      const isSelected = valgteNavn.has(p.navn);
       if (isSelected) {
         doc.setFillColor(255, 235, 238);
         doc.rect(margin, y - 4, contentW, rowH, "F");
@@ -585,7 +586,8 @@ Deno.serve(async (req) => {
     const valgtPrisTekst = valgtRad?.prisTekst
       ? `${valgtRad.prisTekst}/mnd`
       : `${nok(data.pakke_pris)}/mnd`;
-    doc.text(`Valgt pakke: ${valgtRad?.navn ?? data.valgt_pakke} — ${valgtPrisTekst}`, margin, y);
+    const valgtLabel = data.pakker && data.pakker.length > 1 ? "Valgte pakker" : "Valgt pakke";
+    doc.text(`${valgtLabel}: ${valgtRad?.navn ?? data.valgt_pakke} — ${valgtPrisTekst}`, margin, y);
     doc.setFont("helvetica", "normal");
     y += 4;
     if (mal.utenKonsulent) {
