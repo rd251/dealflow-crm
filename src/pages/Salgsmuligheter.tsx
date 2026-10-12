@@ -24,7 +24,7 @@ import EntityLinkPicker from "@/components/EntityLinkPicker";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles, ArrowRight, Check, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { Salgsmulighet, SalgsmulighetStatus, Tapsaarsak, KontraktStatus, beregnTotalKontraktsverdi, beregnVektetPipeline, PAKKER, PAKKE_KATEGORIER } from "@/data/crm-data";
+import { Salgsmulighet, SalgsmulighetStatus, Tapsaarsak, KontraktStatus, PakkeLinje, beregnTotalKontraktsverdi, beregnVektetPipeline, PAKKER, PAKKE_KATEGORIER } from "@/data/crm-data";
 import InlineTaskForm from "@/components/InlineTaskForm";
 import ActivityLog from "@/components/ActivityLog";
 import PersonTimeline from "@/components/PersonTimeline";
@@ -394,7 +394,7 @@ export default function Salgsmuligheter() {
       kilde: form.kilde as any, partner_id: "", partner_provisjon: 0, partner_kostnad: 0, netto_inntekt: 0,
       rolle_i_firma: form.rolle_i_firma, use_case: form.use_case,
       kontaktperson: form.kontaktperson, e_post: form.e_post, telefon: form.telefon,
-      kontrakt_status: "Ikke sendt", kontrakt_signert_dato: "", dealbuilder_dokument_id: "", valgt_pakke: "",
+      kontrakt_status: "Ikke sendt", kontrakt_signert_dato: "", dealbuilder_dokument_id: "", valgt_pakke: "", valgte_pakker: [],
     };
     updateSalgsmuligheter(prev => [...prev, nySm]);
     setDialogOpen(false);
@@ -1205,6 +1205,26 @@ export default function Salgsmuligheter() {
               s.id === currentSm.selskap_id ? { ...s, [field]: value } : s
             ));
           };
+          // Pakkelinjer: kunden kan velge flere moduler. valgt_pakke og forventet_mrr avledes.
+          const pakkeLinjer: PakkeLinje[] = currentSm.valgte_pakker?.length
+            ? currentSm.valgte_pakker
+            : currentSm.valgt_pakke
+              ? (() => { const d = PAKKER.find(p => p.navn === currentSm.valgt_pakke); return [{ pakke: currentSm.valgt_pakke, pris: d?.mrr ?? currentSm.forventet_mrr ?? 0, minutter: d?.minutter || "" }]; })()
+              : [];
+          const settPakkeLinjer = (linjer: PakkeLinje[]) => {
+            const rene = linjer.filter(l => l.pakke);
+            const today = new Date().toISOString().split("T")[0];
+            updateSalgsmuligheter(prev => prev.map(s =>
+              s.id === currentSm.id ? {
+                ...s,
+                valgte_pakker: linjer,
+                valgt_pakke: rene.map(l => l.pakke).join(" + "),
+                forventet_mrr: rene.reduce((sum, l) => sum + (l.pris || 0), 0),
+                sist_aktivitet: today,
+              } : s
+            ));
+          };
+          const pakkeMinutter = pakkeLinjer.map(l => l.minutter).filter(Boolean).join(" · ");
           const arr = currentSm.forventet_mrr * 12;
           const totalKontraktsverdi = beregnTotalKontraktsverdi(currentSm);
           const vektetVerdi = beregnVektetPipeline(currentSm);
@@ -1312,47 +1332,72 @@ export default function Salgsmuligheter() {
 
                 {/* Seksjon 2 — Økonomi */}
                 <DetailSection title="Økonomi">
-                  <DetailField label="Pakke">
-                    <select className="w-full border rounded-lg px-2 py-1 text-xs bg-background h-7"
-                      value={currentSm.valgt_pakke || ""}
-                      disabled={!canEdit}
-                      onChange={e => {
-                        const pakkeNavn = e.target.value;
-                        const pakke = PAKKER.find(p => p.navn === pakkeNavn);
-                        updateField("valgt_pakke", pakkeNavn);
-                        if (pakke?.mrr != null) {
-                          updateField("forventet_mrr", pakke.mrr);
-                        }
-                      }}>
-                      <option value="">Velg pakke…</option>
-                      {PAKKE_KATEGORIER.map(kat => {
-                        const iKat = PAKKER.filter(p => p.kategori === kat);
-                        if (iKat.length === 0) return null;
+                  <DetailField label="Pakker / moduler">
+                    <div className="space-y-2">
+                      {pakkeLinjer.map((linje, i) => {
+                        const def = PAKKER.find(p => p.navn === linje.pakke);
                         return (
-                          <optgroup key={kat} label={kat}>
-                            {iKat.map(p => (
-                              <option key={p.navn} value={p.navn}>
-                                {p.navn} {p.mrr != null ? `— ${nok(p.mrr)}/mnd` : p.navn === "Enterprise" ? "— kontakt for pris" : "— fritekst"}
-                              </option>
-                            ))}
-                          </optgroup>
+                          <div key={i} className="rounded-lg border p-2 space-y-1.5">
+                            <div className="flex items-center gap-1.5">
+                              <select className="flex-1 border rounded-lg px-2 py-1 text-xs bg-background h-7"
+                                value={linje.pakke}
+                                disabled={!canEdit}
+                                onChange={e => {
+                                  const nyDef = PAKKER.find(p => p.navn === e.target.value);
+                                  settPakkeLinjer(pakkeLinjer.map((l, j) => j === i ? { pakke: e.target.value, pris: nyDef?.mrr ?? l.pris, minutter: nyDef?.minutter || "" } : l));
+                                }}>
+                                <option value="">Velg pakke…</option>
+                                {PAKKE_KATEGORIER.map(kat => {
+                                  const iKat = PAKKER.filter(p => p.kategori === kat);
+                                  if (iKat.length === 0) return null;
+                                  return (
+                                    <optgroup key={kat} label={kat}>
+                                      {iKat.map(p => (
+                                        <option key={p.navn} value={p.navn}>
+                                          {p.navn} {p.mrr != null ? `— ${nok(p.mrr)}/mnd` : p.navn === "Enterprise" ? "— kontakt for pris" : "— fritekst"}
+                                        </option>
+                                      ))}
+                                    </optgroup>
+                                  );
+                                })}
+                              </select>
+                              {canEdit && (
+                                <button type="button" className="text-muted-foreground hover:text-destructive" aria-label="Fjern pakke"
+                                  onClick={() => settPakkeLinjer(pakkeLinjer.filter((_, j) => j !== i))}>
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Input type="number" value={linje.pris || ""} disabled={!canEdit}
+                                onChange={e => settPakkeLinjer(pakkeLinjer.map((l, j) => j === i ? { ...l, pris: Number(e.target.value) } : l))}
+                                className="h-7 text-xs w-24" placeholder="Pris" />
+                              <span className="text-xs text-muted-foreground">kr/mnd eks. mva.</span>
+                            </div>
+                            {def?.minutter && (
+                              <div className="text-[11px] text-muted-foreground">
+                                {def.minutter} inkludert{def.merbruk ? ` · ekstra: ${def.merbruk}` : ""}{def.utgatt ? " · tidligere prisliste" : ""}
+                              </div>
+                            )}
+                          </div>
                         );
                       })}
-                    </select>
+                      {pakkeLinjer.length === 0 && <p className="text-xs text-muted-foreground">Ingen pakker valgt ennå.</p>}
+                      {canEdit && (
+                        <Button size="sm" variant="outline" className="w-full text-xs" onClick={() => settPakkeLinjer([...pakkeLinjer, { pakke: "", pris: 0, minutter: "" }])}>
+                          <Plus className="w-3.5 h-3.5 mr-1" />Legg til modul
+                        </Button>
+                      )}
+                      {pakkeLinjer.length > 1 && (
+                        <div className="flex justify-between text-xs font-medium border-t pt-2">
+                          <span>Totalt</span><span className="tabular-nums">{nok(pakkeLinjer.reduce((s, l) => s + (l.pris || 0), 0))}/mnd</span>
+                        </div>
+                      )}
+                    </div>
                   </DetailField>
-                  {currentSm.valgt_pakke && (() => {
-                    const pakke = PAKKER.find(p => p.navn === currentSm.valgt_pakke);
-                    if (!pakke?.minutter) return null;
-                    return (
-                      <div className="text-xs text-muted-foreground bg-muted/30 rounded-md px-2 py-1">
-                        {pakke.minutter} inkludert{pakke.merbruk ? ` · ekstra: ${pakke.merbruk}` : ""}
-                        {pakke.utgatt ? " · tidligere prisliste" : ""}
-                      </div>
-                    );
-                  })()}
                   <div className="grid grid-cols-2 gap-2">
                     <DetailField label="MRR">
-                      <Input type="number" value={currentSm.forventet_mrr || ""} onChange={e => updateField("forventet_mrr", Number(e.target.value))} className="h-7 text-xs" readOnly={!canEdit || (!!currentSm.valgt_pakke && PAKKER.find(p => p.navn === currentSm.valgt_pakke)?.mrr != null)} />
+                      <Input type="number" value={currentSm.forventet_mrr || ""} onChange={e => updateField("forventet_mrr", Number(e.target.value))} className="h-7 text-xs" readOnly={!canEdit || pakkeLinjer.length > 0} />
                     </DetailField>
                     <DetailField label="ARR">
                       <div className="text-sm font-medium">{nok(arr)}</div>
@@ -1431,7 +1476,6 @@ export default function Salgsmuligheter() {
                     </div>
                   )}
                   {currentSm && (() => {
-                    const pakke = PAKKER.find(p => p.navn === currentSm.valgt_pakke);
                     return (
                       <SendContractModal
                         open={contractModalOpen}
@@ -1445,8 +1489,9 @@ export default function Salgsmuligheter() {
                           telefon: currentSm.telefon || "",
                           e_post: currentSm.e_post || "",
                           valgt_pakke: currentSm.valgt_pakke || "",
-                          pakke_pris: pakke?.mrr || currentSm.forventet_mrr || 0,
-                          minutter: pakke?.minutter || "",
+                          pakke_pris: currentSm.forventet_mrr || 0,
+                          minutter: pakkeMinutter,
+                          pakker: pakkeLinjer.filter(l => l.pakke),
                           sla: currentSm.sla ?? null,
                           oppstartskostnad: currentSm.oppstartskostnad ?? null,
                         }}
@@ -1478,7 +1523,6 @@ export default function Salgsmuligheter() {
               </>
             ),
             tilbud: (() => {
-              const pakke = PAKKER.find(p => p.navn === currentSm.valgt_pakke);
               return (
                 <OfferTab
                   offerData={{
@@ -1490,8 +1534,9 @@ export default function Salgsmuligheter() {
                     telefon: currentSm.telefon || "",
                     e_post: currentSm.e_post || "",
                     valgt_pakke: currentSm.valgt_pakke || "",
-                    pakke_pris: pakke?.mrr || currentSm.forventet_mrr || 0,
-                    minutter: pakke?.minutter || "",
+                    pakke_pris: currentSm.forventet_mrr || 0,
+                    minutter: pakkeMinutter,
+                    pakker: pakkeLinjer.filter(l => l.pakke),
                     sla: currentSm.sla ?? null,
                     oppstartskostnad: currentSm.oppstartskostnad ?? null,
                   }}

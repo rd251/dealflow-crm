@@ -6,6 +6,7 @@ import { nok } from "@/lib/utils";
 import { Building2, Download, Eye, Loader2, Mail, Package, Phone, User } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { standardKontraktType } from "@/components/SendContractModal";
+import type { PakkeLinje } from "@/data/crm-data";
 import { toast } from "sonner";
 import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 
@@ -22,6 +23,8 @@ export interface OfferData {
   minutter: string;
   sla?: number | null;
   oppstartskostnad?: number | null;
+  /** Flere valgte moduler — vises som egne linjer i tilbudet. */
+  pakker?: PakkeLinje[];
 }
 
 const FILNAVN_UGYLDIGE_TEGN = /[^a-zA-Z0-9æøåÆØÅ-]+/g;
@@ -45,6 +48,7 @@ export default function OfferTab({ offerData }: { offerData: OfferData }) {
         },
         body: JSON.stringify({
           ...offerData,
+          pakker: offerData.pakker?.length ? offerData.pakker : undefined,
           dokument_type: "tilbud",
           kontrakt_type: standardKontraktType(offerData.valgt_pakke),
         }),
@@ -135,11 +139,31 @@ export default function OfferTab({ offerData }: { offerData: OfferData }) {
 
         <div className="border-t pt-4">
           <p className="flex items-center gap-1.5 text-xs text-muted-foreground"><Package className="h-3.5 w-3.5" />Valgt løsning</p>
-          <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-            <Badge variant="secondary" className="text-sm">{offerData.valgt_pakke || "Ingen pakke valgt"}</Badge>
-            <span className="font-semibold tabular-nums">{nok(offerData.pakke_pris)}/mnd</span>
-          </div>
-          {offerData.minutter && <p className="mt-2 text-sm text-muted-foreground">Inkludert: {offerData.minutter}</p>}
+          {offerData.pakker && offerData.pakker.length > 0 ? (
+            <div className="mt-2 space-y-2">
+              {offerData.pakker.map((linje, i) => (
+                <div key={i} className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <Badge variant="secondary" className="text-sm">{linje.pakke}</Badge>
+                    {linje.minutter && <p className="mt-1 text-xs text-muted-foreground">Inkludert: {linje.minutter}</p>}
+                  </div>
+                  <span className="font-medium tabular-nums">{nok(linje.pris)}/mnd</span>
+                </div>
+              ))}
+              <div className="flex items-center justify-between border-t pt-2">
+                <span className="text-sm font-medium">Totalt</span>
+                <span className="font-semibold tabular-nums">{nok(offerData.pakke_pris)}/mnd</span>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                <Badge variant="secondary" className="text-sm">{offerData.valgt_pakke || "Ingen pakke valgt"}</Badge>
+                <span className="font-semibold tabular-nums">{nok(offerData.pakke_pris)}/mnd</span>
+              </div>
+              {offerData.minutter && <p className="mt-2 text-sm text-muted-foreground">Inkludert: {offerData.minutter}</p>}
+            </>
+          )}
         </div>
 
         <div className="grid grid-cols-2 gap-3 border-t pt-4">

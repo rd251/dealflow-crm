@@ -67,6 +67,7 @@ function rowToSalgsmulighet(r: any): Salgsmulighet {
     kontrakt_signert_dato: r.kontrakt_signert_dato || "",
     dealbuilder_dokument_id: r.dealbuilder_dokument_id || "",
     valgt_pakke: r.valgt_pakke || "",
+    valgte_pakker: Array.isArray(r.valgte_pakker) ? r.valgte_pakker : [],
     ai_recap: r.ai_recap || null,
     videresendt_til_partner_id: r.videresendt_til_partner_id || "",
     videresendt_dato: r.videresendt_dato || "",
@@ -728,6 +729,7 @@ function useCrmStoreInternal() {
           pinned_notat: emptyToNull(item.pinned_notat),
           pinned_notat_av: emptyToNull(item.pinned_notat_av),
           pinned_notat_dato: emptyToNull(item.pinned_notat_dato),
+          valgte_pakker: item.valgte_pakker || [],
         });
       }
     }
@@ -754,6 +756,7 @@ function useCrmStoreInternal() {
           pinned_notat: emptyToNull(item.pinned_notat),
           pinned_notat_av: emptyToNull(item.pinned_notat_av),
           pinned_notat_dato: emptyToNull(item.pinned_notat_dato),
+          valgte_pakker: item.valgte_pakker || [],
         });
       }
     }
@@ -938,7 +941,7 @@ function useCrmStoreInternal() {
       kilde: "Direkte salg", partner_id: "", partner_provisjon: 0, partner_kostnad: 0, netto_inntekt: 0,
       rolle_i_firma: lead.rolle_i_firma || "", use_case: lead.use_case || "",
       kontaktperson: lead.kontaktperson || "", e_post: lead.e_post || "", telefon: lead.telefon || "",
-      kontrakt_status: "Ikke sendt", kontrakt_signert_dato: "", dealbuilder_dokument_id: "", valgt_pakke: "",
+      kontrakt_status: "Ikke sendt", kontrakt_signert_dato: "", dealbuilder_dokument_id: "", valgt_pakke: "", valgte_pakker: [],
     };
     updateSalgsmuligheter(prev => [...prev, nySm]);
 

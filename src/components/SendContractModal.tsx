@@ -39,6 +39,8 @@ interface ContractData {
   minutter: string;
   sla?: number | null;
   oppstartskostnad?: number | null;
+  /** Flere valgte moduler — pakke_pris er da totalsummen. */
+  pakker?: { pakke: string; pris: number; minutter: string }[];
 }
 
 interface SendContractModalProps {
@@ -92,6 +94,7 @@ export default function SendContractModal({
           valgt_pakke: contractData.valgt_pakke,
           pakke_pris: contractData.pakke_pris,
           minutter: contractData.minutter,
+          pakker: contractData.pakker,
           sla: contractData.sla ?? null,
           oppstartskostnad: contractData.oppstartskostnad ?? null,
           konsulent_timepris: konsulentTimepris || null,
@@ -233,7 +236,7 @@ export default function SendContractModal({
                 <Badge variant="destructive" className="text-sm">
                   {contractData.valgt_pakke}
                 </Badge>
-                <span className="font-semibold text-sm">{nok(contractData.pakke_pris)}/mnd</span>
+                <span className="font-semibold text-sm">{nok(contractData.pakke_pris)}/mnd{contractData.pakker && contractData.pakker.length > 1 ? " totalt" : ""}</span>
               </div>
               {contractData.minutter && (
                 <p className="text-xs text-muted-foreground mt-1">📞 {contractData.minutter} inkludert</p>

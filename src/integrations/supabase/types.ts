@@ -1600,6 +1600,7 @@ export type Database = {
           updated_at: string
           use_case: string | null
           valgt_pakke: string
+          valgte_pakker: Json
           videresendt_dato: string | null
           videresendt_til_partner_id: string | null
           vunnet_dato: string | null
@@ -1644,6 +1645,7 @@ export type Database = {
           updated_at?: string
           use_case?: string | null
           valgt_pakke?: string
+          valgte_pakker?: Json
           videresendt_dato?: string | null
           videresendt_til_partner_id?: string | null
           vunnet_dato?: string | null
@@ -1688,6 +1690,7 @@ export type Database = {
           updated_at?: string
           use_case?: string | null
           valgt_pakke?: string
+          valgte_pakker?: Json
           videresendt_dato?: string | null
           videresendt_til_partner_id?: string | null
           vunnet_dato?: string | null
