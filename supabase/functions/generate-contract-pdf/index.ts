@@ -314,14 +314,14 @@ function lagTilbudPdf(data: z.infer<typeof BodySchema>) {
     for (const linje of losningLinjer) {
       doc.setFont("helvetica", "bold");
       doc.setFontSize(11);
-      doc.setTextColor(30, 30, 30);
+      doc.setTextColor(...BLEKK);
       doc.text(linje.pakke, margin + 7, linjeY);
       doc.text(`${nok(linje.pris)} / mnd`, W - margin - 7, linjeY, { align: "right" });
       linjeY += 5;
       if (linje.minutter) {
         doc.setFont("helvetica", "normal");
         doc.setFontSize(8);
-        doc.setTextColor(90, 90, 90);
+        doc.setTextColor(...DYP_GRONN);
         doc.text(doc.splitTextToSize(`Inkludert: ${linje.minutter}`, contentW - 14), margin + 7, linjeY);
         linjeY += 5;
       }
@@ -329,17 +329,17 @@ function lagTilbudPdf(data: z.infer<typeof BodySchema>) {
     }
     doc.setFont("helvetica", "bold");
     doc.setFontSize(13);
-    doc.setTextColor(218, 41, 28);
+    doc.setTextColor(...BLEKK);
     doc.text(`Totalt ${nok(data.pakke_pris)} / mnd`, W - margin - 7, y + boksHoyde - 6, { align: "right" });
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
-    doc.setTextColor(150, 60, 50);
+    doc.setTextColor(...DYP_GRONN);
     doc.text("eks. mva · faktureres månedlig", margin + 7, y + boksHoyde - 6);
   }
   y += boksHoyde + 11;
 
   if (data.oppstartskostnad && data.oppstartskostnad > 0) {
-    doc.setFillColor(248, 248, 248);
+    doc.setFillColor(...KREM);
     doc.roundedRect(margin, y, contentW, 26, 2, 2, "F");
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
@@ -396,14 +396,14 @@ function lagTilbudPdf(data: z.infer<typeof BodySchema>) {
   }
 
   y += 2;
-  doc.setFillColor(255, 245, 238);
+  doc.setFillColor(...SALVIE);
   doc.roundedRect(margin, y, contentW, 20, 2, 2, "F");
   doc.setFont("helvetica", "bold");
   doc.setFontSize(9);
-  doc.setTextColor(218, 41, 28);
+  doc.setTextColor(...DYP_GRONN);
   doc.text(`Tilbudet er gyldig i ${TILBUD_GYLDIG_DAGER} dager – til og med ${datoOmDager(TILBUD_GYLDIG_DAGER)}.`, margin + 6, y + 8);
   doc.setFont("helvetica", "normal");
-  doc.setTextColor(80, 80, 80);
+  doc.setTextColor(...GRAA_TEKST);
   doc.text("Spørsmål? Ta kontakt med oss på rd@snakk.ai.", margin + 6, y + 15);
 
   if ((data.kontrakt_type ?? "telefon") === "telefon") leggTilTelefonInfo(doc, margin, contentW, W);
