@@ -1397,7 +1397,7 @@ export default function Salgsmuligheter() {
                   </DetailField>
                   <div className="grid grid-cols-2 gap-2">
                     <DetailField label="MRR">
-                      <Input type="number" value={currentSm.forventet_mrr || ""} onChange={e => updateField("forventet_mrr", Number(e.target.value))} className="h-7 text-xs" readOnly={!canEdit || (!!currentSm.valgt_pakke && PAKKER.find(p => p.navn === currentSm.valgt_pakke)?.mrr != null)} />
+                      <Input type="number" value={currentSm.forventet_mrr || ""} onChange={e => updateField("forventet_mrr", Number(e.target.value))} className="h-7 text-xs" readOnly={!canEdit || pakkeLinjer.length > 0} />
                     </DetailField>
                     <DetailField label="ARR">
                       <div className="text-sm font-medium">{nok(arr)}</div>
@@ -1476,7 +1476,6 @@ export default function Salgsmuligheter() {
                     </div>
                   )}
                   {currentSm && (() => {
-                    const pakke = PAKKER.find(p => p.navn === currentSm.valgt_pakke);
                     return (
                       <SendContractModal
                         open={contractModalOpen}
