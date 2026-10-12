@@ -148,7 +148,7 @@ const ALIASES: Record<keyof Omit<MappedLead, "qa">, string[]> = {
   kontaktperson: ["full_name", "name", "navn", "fullt_navn", "kontaktperson", "first_name", "fornavn"],
   e_post: ["email", "e_post", "epost", "e-post", "work_email", "jobb_e_post"],
   telefon: ["phone_number", "phone", "telefon", "telefonnummer", "mobil", "mobile_number"],
-  firmanavn: ["company_name", "company", "firmanavn", "firma", "bedrift", "bedriftsnavn", "selskap"],
+  firmanavn: ["company_name", "company", "firmanavn", "firma", "bedrift", "bedriftsnavn", "navn_på_bedrift", "navn_pa_bedrift", "selskap"],
   rolle_i_firma: ["job_title", "role", "rolle", "stilling", "rolle_i_firma", "tittel"],
   use_case: ["use_case", "bruksomrade", "bruksområde", "produktinteresse", "product_interest", "interesse", "tjeneste"],
 };
