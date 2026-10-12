@@ -591,30 +591,37 @@ Deno.serve(async (req) => {
     doc.rect(margin, tabellStart, contentW, y - 4 - tabellStart);
 
     y += 6;
-    doc.setFont("helvetica", "bold");
     const valgtRad = mal.pakker.find((p) => p.navn === data.valgt_pakke)
       ?? (mal.utenKonsulent ? mal.pakker[0] : undefined);
     const valgtPrisTekst = valgtRad?.prisTekst
       ? `${valgtRad.prisTekst}/mnd`
       : `${nok(data.pakke_pris)}/mnd`;
     const valgtLabel = data.pakker && data.pakker.length > 1 ? "Valgte pakker" : "Valgt pakke";
-    doc.text(`${valgtLabel}: ${valgtRad?.navn ?? data.valgt_pakke} — ${valgtPrisTekst}`, margin, y);
+    const inkludertTekst = mal.utenKonsulent
+      ? (valgtRad?.inkludert ? `Inkludert: ${valgtRad.inkludert}` : null)
+      : (data.minutter ? `${mal.kapasitetLabel}: ${data.minutter}` : null);
+    const oppstartTekst = data.oppstartskostnad
+      ? `Oppstartskostnad: ${nok(data.oppstartskostnad)} (engangsbeløp, eks. mva.)`
+      : null;
+    const ekstraLinjer = [inkludertTekst, oppstartTekst].filter(Boolean).length;
+    const boksH = 20 + ekstraLinjer * 5;
+    checkPage(boksH + 6);
+    doc.setFillColor(...GUL);
+    doc.roundedRect(margin, y - 4, contentW, boksH, 2, 2, "F");
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8);
+    doc.setTextColor(...DYP_GRONN);
+    doc.text(`${valgtLabel.toUpperCase()} — EKS. MVA.`, margin + 6, y + 2);
+    doc.setFontSize(14);
+    doc.setTextColor(...BLEKK);
+    doc.text(`${valgtRad?.navn ?? data.valgt_pakke} — ${valgtPrisTekst}`, margin + 6, y + 10);
+    let infoY = y + 16;
     doc.setFont("helvetica", "normal");
-    y += 4;
-    if (mal.utenKonsulent) {
-      if (valgtRad?.inkludert) {
-        doc.text(`Inkludert: ${valgtRad.inkludert}`, margin, y);
-        y += 5;
-      }
-    } else if (data.minutter) {
-      doc.text(`${mal.kapasitetLabel}: ${data.minutter}`, margin, y);
-      y += 5;
-    }
-    if (data.oppstartskostnad) {
-      doc.text(`Oppstartskostnad: ${nok(data.oppstartskostnad)} (engangsbeløp)`, margin, y);
-      y += 5;
-    }
-    y += 4;
+    doc.setFontSize(9);
+    doc.setTextColor(...BLEKK);
+    if (inkludertTekst) { doc.text(inkludertTekst, margin + 6, infoY); infoY += 5; }
+    if (oppstartTekst) { doc.text(oppstartTekst, margin + 6, infoY); infoY += 5; }
+    y += boksH + 2;
 
     // Betalingsvilkår bullet list
     checkPage(16);
