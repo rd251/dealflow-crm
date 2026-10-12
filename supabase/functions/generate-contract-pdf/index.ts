@@ -487,21 +487,25 @@ Deno.serve(async (req) => {
     y = addLogoHeader(doc, margin, y);
     y += 4;
 
-    doc.setDrawColor(218, 41, 28);
+    doc.setDrawColor(...DYP_GRONN);
     doc.setLineWidth(0.5);
     doc.line(margin, y, W - margin, y);
     y += 10;
 
     // ---- TITLE ----
-    doc.setFontSize(16);
+    doc.setFontSize(8);
     doc.setFont("helvetica", "bold");
-    doc.setTextColor(30, 30, 30);
+    doc.setTextColor(...GRAA_TEKST);
+    doc.text(`${data.firmanavn.toUpperCase()} / KONTRAKT`, margin, y);
+    y += 8;
+    doc.setFontSize(16);
+    doc.setTextColor(...BLEKK);
     doc.text(mal.tittel, margin, y);
     y += 10;
 
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
-    doc.setTextColor(80, 80, 80);
+    doc.setTextColor(...GRAA_TEKST);
     doc.text(`Dato: ${today()}`, margin, y);
     y += 10;
 
@@ -549,7 +553,7 @@ Deno.serve(async (req) => {
     checkPage(rowH * (mal.pakker.length + 2));
     const tabellStart = y - 4;
 
-    doc.setFillColor(218, 41, 28);
+    doc.setFillColor(...DYP_GRONN);
     doc.rect(margin, y - 4, contentW, rowH, "F");
     doc.setTextColor(255, 255, 255);
     doc.setFont("helvetica", "bold");
@@ -559,18 +563,18 @@ Deno.serve(async (req) => {
     doc.text("Valgt", colX[3] + 2, y);
     y += rowH;
 
-    doc.setTextColor(30, 30, 30);
+    doc.setTextColor(...BLEKK);
     const valgteNavn = new Set(data.pakker?.length ? data.pakker.map((l) => l.pakke) : [data.valgt_pakke]);
     for (let i = 0; i < mal.pakker.length; i++) {
       const p = mal.pakker[i];
       const isSelected = valgteNavn.has(p.navn);
       if (isSelected) {
-        doc.setFillColor(255, 235, 238);
+        doc.setFillColor(...GUL);
         doc.rect(margin, y - 4, contentW, rowH, "F");
         doc.setFont("helvetica", "bold");
       } else {
         if (i % 2 === 0) {
-          doc.setFillColor(248, 248, 248);
+          doc.setFillColor(...KREM);
           doc.rect(margin, y - 4, contentW, rowH, "F");
         }
         doc.setFont("helvetica", "normal");
