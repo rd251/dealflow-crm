@@ -21,6 +21,12 @@ const BodySchema = z.object({
   konsulent_timepris: z.number().nullable().optional(),
   kontrakt_type: z.enum(KONTRAKT_TYPER).optional(),
   dokument_type: z.enum(["kontrakt", "tilbud"]).optional(),
+  /** Flere valgte moduler. Når satt, vises hver som egen linje; pakke_pris er totalsummen. */
+  pakker: z.array(z.object({
+    pakke: z.string(),
+    pris: z.number(),
+    minutter: z.string(),
+  })).optional(),
 });
 
 interface PakkeRad {
@@ -272,25 +278,58 @@ function lagTilbudPdf(data: z.infer<typeof BodySchema>) {
   doc.text("Foreslått løsning", margin, y);
   y += 9;
 
+  const losningLinjer = data.pakker?.length
+    ? data.pakker
+    : [{ pakke: data.valgt_pakke, pris: data.pakke_pris, minutter: data.minutter }];
+  const flereModuler = losningLinjer.length > 1;
+  const boksHoyde = flereModuler ? 14 + losningLinjer.length * 17 : 48;
   doc.setFillColor(255, 245, 238);
   doc.setDrawColor(218, 41, 28);
-  doc.roundedRect(margin, y, contentW, 48, 2, 2, "FD");
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(14);
-  doc.setTextColor(30, 30, 30);
-  doc.text(data.valgt_pakke, margin + 7, y + 11);
-  doc.setFontSize(18);
-  doc.setTextColor(218, 41, 28);
-  doc.text(`${nok(data.pakke_pris)} / mnd`, W - margin - 7, y + 11, { align: "right" });
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(8);
-  doc.setTextColor(150, 60, 50);
-  doc.text("eks. mva · faktureres månedlig", W - margin - 7, y + 19, { align: "right" });
-  doc.setFontSize(9);
-  doc.setTextColor(70, 70, 70);
-  const inkludert = data.minutter || "Kapasitet som avtalt";
-  doc.text(doc.splitTextToSize(`Inkludert: ${inkludert}`, contentW - 14), margin + 7, y + 30);
-  y += 59;
+  doc.roundedRect(margin, y, contentW, boksHoyde, 2, 2, "FD");
+  if (!flereModuler) {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(14);
+    doc.setTextColor(30, 30, 30);
+    doc.text(data.valgt_pakke, margin + 7, y + 11);
+    doc.setFontSize(18);
+    doc.setTextColor(218, 41, 28);
+    doc.text(`${nok(data.pakke_pris)} / mnd`, W - margin - 7, y + 11, { align: "right" });
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(150, 60, 50);
+    doc.text("eks. mva · faktureres månedlig", W - margin - 7, y + 19, { align: "right" });
+    doc.setFontSize(9);
+    doc.setTextColor(70, 70, 70);
+    const inkludert = data.minutter || "Kapasitet som avtalt";
+    doc.text(doc.splitTextToSize(`Inkludert: ${inkludert}`, contentW - 14), margin + 7, y + 30);
+  } else {
+    let linjeY = y + 9;
+    for (const linje of losningLinjer) {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      doc.setTextColor(30, 30, 30);
+      doc.text(linje.pakke, margin + 7, linjeY);
+      doc.text(`${nok(linje.pris)} / mnd`, W - margin - 7, linjeY, { align: "right" });
+      linjeY += 5;
+      if (linje.minutter) {
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        doc.setTextColor(90, 90, 90);
+        doc.text(doc.splitTextToSize(`Inkludert: ${linje.minutter}`, contentW - 14), margin + 7, linjeY);
+        linjeY += 5;
+      }
+      linjeY += 7;
+    }
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(13);
+    doc.setTextColor(218, 41, 28);
+    doc.text(`Totalt ${nok(data.pakke_pris)} / mnd`, W - margin - 7, y + boksHoyde - 6, { align: "right" });
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(150, 60, 50);
+    doc.text("eks. mva · faktureres månedlig", margin + 7, y + boksHoyde - 6);
+  }
+  y += boksHoyde + 11;
 
   if (data.oppstartskostnad && data.oppstartskostnad > 0) {
     doc.setFillColor(248, 248, 248);
