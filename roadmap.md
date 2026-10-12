@@ -1,10 +1,10 @@
 # Roadmap
 
 ## Ryddigere salgsoversikt
-- [ ] Legg til «Ikke svar» som eget steg for leads som ikke har svart
+- [x] Legg til «Ikke svar» som eget steg for leads som ikke har svart
 - [x] Skill aktive løp fra avsluttede uten å endre eller slette data
 - [x] Gi kort tydeligere bedriftsnavn, roligere informasjon og avgrenset kolonnescrolling
-- [ ] Kontroller søk, faner og åpning av ekte leadkort
+- [x] Kontroller søk, faner og åpning av ekte leadkort
 
 ## Current Eco – ryddigere kontrakt
 - [x] Lag ny PDF-versjon med tydelig prisoversikt og alle eksisterende vilkår
