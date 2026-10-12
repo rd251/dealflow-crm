@@ -9,7 +9,14 @@ const AVSENDER_EPOST = "rd@snakk.ai";
 const FORSINKELSE_MINUTTER = 4;
 const MAKS_ALDER_TIMER = 24;
 const BATCH = 5;
-const EMNE = "Snakk AI – Skal vi ta en prat?";
+const EMNE_LANG = "Snakk AI – Skal vi ta en prat?";
+const EMNE_KORT = "Takk for henvendelsen – Snakk AI";
+const ARBEIDSTID_START = 8; // norsk tid
+const ARBEIDSTID_SLUTT = 16;
+function iArbeidstid(iso: string): boolean {
+  const t = Number(new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Oslo", hour: "2-digit", hourCycle: "h23" }).format(new Date(iso)));
+  return t >= ARBEIDSTID_START && t < ARBEIDSTID_SLUTT;
+}
 const MODEL = "openai/gpt-6-astra";
 const json = { "Content-Type": "application/json" };
 
@@ -101,10 +108,14 @@ Deno.serve(async (req) => {
   await sb.from("leads").update({ velkomst_status: "hoppet_over", velkomst_feil: "For gammel" })
     .eq("velkomst_status", "venter").lt("created_at", new Date(naa - MAKS_ALDER_TIMER * 3600e3).toISOString());
 
-  const { data: klare } = await sb.from("leads")
-    .select("id").eq("velkomst_status", "venter")
-    .lte("created_at", new Date(naa - FORSINKELSE_MINUTTER * 60e3).toISOString())
-    .order("created_at").limit(BATCH);
+  const { data: ventende } = await sb.from("leads")
+    .select("id, created_at").eq("velkomst_status", "venter")
+    .order("created_at").limit(50);
+  // I arbeidstid sendes kort takkemelding med en gang; ellers personlig e-post etter forsinkelse.
+  const klare = (ventende ?? []).filter((r: any) =>
+    iArbeidstid(r.created_at) || new Date(r.created_at).getTime() <= naa - FORSINKELSE_MINUTTER * 60e3
+  ).slice(0, BATCH);
+
 
   if (klare?.length) {
     const { data: prof } = await sb.from("profiles").select("user_id, signatur_navn, display_name").eq("email", AVSENDER_EPOST).maybeSingle();
@@ -134,7 +145,13 @@ Deno.serve(async (req) => {
       }
 
       const navn = prof.signatur_navn || prof.display_name || "Robin Sæter Diallo";
-      const tekst = `${(await aiTekst(l)) ?? malTekst(l)}\n\nMvh\n${navn}\nSnakk AI`;
+      const kort = iArbeidstid(l.created_at);
+      const EMNE = kort ? EMNE_KORT : EMNE_LANG;
+      const fn = fornavn(l.kontaktperson);
+      const brodtekst = kort
+        ? `Hei${fn ? " " + fn : ""}!\n\nTakk for henvendelsen, vi kontakter deg snart.`
+        : (await aiTekst(l)) ?? malTekst(l);
+      const tekst = `${brodtekst}\n\nMvh\n${navn}\nSnakk AI`;
       const raw = [
         `From: =?UTF-8?B?${b64(navn)}?= <${AVSENDER_EPOST}>`,
         `To: ${l.e_post}`,
