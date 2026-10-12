@@ -1205,6 +1205,26 @@ export default function Salgsmuligheter() {
               s.id === currentSm.selskap_id ? { ...s, [field]: value } : s
             ));
           };
+          // Pakkelinjer: kunden kan velge flere moduler. valgt_pakke og forventet_mrr avledes.
+          const pakkeLinjer: PakkeLinje[] = currentSm.valgte_pakker?.length
+            ? currentSm.valgte_pakker
+            : currentSm.valgt_pakke
+              ? (() => { const d = PAKKER.find(p => p.navn === currentSm.valgt_pakke); return [{ pakke: currentSm.valgt_pakke, pris: d?.mrr ?? currentSm.forventet_mrr ?? 0, minutter: d?.minutter || "" }]; })()
+              : [];
+          const settPakkeLinjer = (linjer: PakkeLinje[]) => {
+            const rene = linjer.filter(l => l.pakke);
+            const today = new Date().toISOString().split("T")[0];
+            updateSalgsmuligheter(prev => prev.map(s =>
+              s.id === currentSm.id ? {
+                ...s,
+                valgte_pakker: linjer,
+                valgt_pakke: rene.map(l => l.pakke).join(" + "),
+                forventet_mrr: rene.reduce((sum, l) => sum + (l.pris || 0), 0),
+                sist_aktivitet: today,
+              } : s
+            ));
+          };
+          const pakkeMinutter = pakkeLinjer.map(l => l.minutter).filter(Boolean).join(" · ");
           const arr = currentSm.forventet_mrr * 12;
           const totalKontraktsverdi = beregnTotalKontraktsverdi(currentSm);
           const vektetVerdi = beregnVektetPipeline(currentSm);
