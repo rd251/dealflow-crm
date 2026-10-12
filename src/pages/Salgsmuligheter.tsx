@@ -1491,6 +1491,7 @@ export default function Salgsmuligheter() {
                           valgt_pakke: currentSm.valgt_pakke || "",
                           pakke_pris: currentSm.forventet_mrr || 0,
                           minutter: pakkeMinutter,
+                          pakker: pakkeLinjer.filter(l => l.pakke),
                           sla: currentSm.sla ?? null,
                           oppstartskostnad: currentSm.oppstartskostnad ?? null,
                         }}
