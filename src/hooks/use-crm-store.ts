@@ -729,6 +729,7 @@ function useCrmStoreInternal() {
           pinned_notat: emptyToNull(item.pinned_notat),
           pinned_notat_av: emptyToNull(item.pinned_notat_av),
           pinned_notat_dato: emptyToNull(item.pinned_notat_dato),
+          valgte_pakker: item.valgte_pakker || [],
         });
       }
     }
@@ -755,6 +756,7 @@ function useCrmStoreInternal() {
           pinned_notat: emptyToNull(item.pinned_notat),
           pinned_notat_av: emptyToNull(item.pinned_notat_av),
           pinned_notat_dato: emptyToNull(item.pinned_notat_dato),
+          valgte_pakker: item.valgte_pakker || [],
         });
       }
     }
