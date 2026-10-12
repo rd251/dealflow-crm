@@ -94,6 +94,8 @@ export interface Salgsmulighet {
   kontrakt_signert_dato: string;
   dealbuilder_dokument_id: string;
   valgt_pakke: string;
+  /** Flere valgte moduler/pakker. valgt_pakke er oppsummering (navn sammenkjørt med " + "). */
+  valgte_pakker: PakkeLinje[];
   videresendt_til_partner_id?: string;
   videresendt_dato?: string;
   /** Kort notat som vises direkte på kortet i kanban. */
@@ -115,6 +117,13 @@ export interface PakkeDef {
   merbruk?: string;
   /** Gamle pakker som beholdes for historiske avtaler. */
   utgatt?: boolean;
+}
+
+/** Én valgt pakkelinje på en salgsmulighet — kunden kan velge flere moduler. */
+export interface PakkeLinje {
+  pakke: string;
+  pris: number;
+  minutter: string;
 }
 
 /** Årsbetaling gir 10 % rabatt på abonnementet (priser eks. mva). */
