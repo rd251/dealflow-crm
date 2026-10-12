@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, CalendarDays, Columns3, List, PhoneCall, Plus, Search, Tag } from "lucide-react";
+import { Archive, ArrowRight, CalendarDays, Columns3, List, PhoneCall, Plus, Search, Tag, UserRound } from "lucide-react";
 import PageShell from "@/components/PageShell";
 import CompanyLogo from "@/components/CompanyLogo";
 import MineTeametToggle from "@/components/MineTeametToggle";
@@ -86,6 +86,7 @@ export default function Salg() {
   const [search, setSearch] = useState("");
   const [owner, setOwner] = useState("alle");
   const [kunOppfolging, setKunOppfolging] = useState(false);
+  const [utvalg, setUtvalg] = useState<"aktive" | "avsluttede">("aktive");
   const [dragged, setDragged] = useState<Salgskort | null>(null);
   const [konvertering, setKonvertering] = useState<{ kort: Salgskort; steg: Salgssteg } | null>(null);
   const [konverterNavn, setKonverterNavn] = useState("");
@@ -143,10 +144,11 @@ export default function Salg() {
     return kort.filter(item => {
       if (!tilhorerFilter(item.ansvarlig, item.eierId)) return false;
       if (owner !== "alle" && item.ansvarlig !== owner && item.eierId !== owner) return false;
+      if ((item.steg === "Avsluttet") !== (utvalg === "avsluttede")) return false;
       if (kunOppfolging && !trengerOppfolging(item)) return false;
       return !query || [item.selskap, item.kontakt, item.nesteSteg, ownerName(item.ansvarlig)].some(value => value.toLocaleLowerCase("nb").includes(query));
     });
-  }, [kort, eierVisning, owner, kunOppfolging, search, profiles]);
+  }, [kort, eierVisning, owner, kunOppfolging, search, profiles, utvalg]);
 
   const aktive = kort.filter(item => item.steg !== "Avsluttet");
   const antallOppfolging = aktive.filter(trengerOppfolging).length;
@@ -246,11 +248,15 @@ export default function Salg() {
           <div className="bento-tile col-span-2 flex min-h-36 flex-col justify-between bg-contrast text-contrast-foreground lg:col-span-1"><span className="text-xs text-contrast-foreground/70">Pipeline-MRR</span><strong className="text-3xl tabular-nums">{nok(pipelineMrr)}</strong><span className="text-xs text-contrast-foreground/70">Aktive salgsmuligheter</span></div>
         </section>
 
-        <section className="flex flex-wrap items-center gap-2 border-y py-3">
+        <div className="flex flex-wrap items-center gap-2 border-b">
+          <Button variant="ghost" onClick={() => setUtvalg("aktive")} aria-pressed={utvalg === "aktive"} className={`h-12 rounded-none border-b-2 px-4 ${utvalg === "aktive" ? "border-primary font-semibold" : "border-transparent text-muted-foreground"}`}>Aktive <span className="tabular-nums">{aktive.length}</span></Button>
+          <Button variant="ghost" onClick={() => { setUtvalg("avsluttede"); setKunOppfolging(false); }} aria-pressed={utvalg === "avsluttede"} className={`h-12 rounded-none border-b-2 px-4 ${utvalg === "avsluttede" ? "border-primary font-semibold" : "border-transparent text-muted-foreground"}`}><Archive className="h-4 w-4" />Avsluttede <span className="tabular-nums">{kort.length - aktive.length}</span></Button>
+        </div>
+        <section className="flex flex-wrap items-center gap-2 py-1">
           <div className="relative min-w-[220px] flex-1 lg:max-w-md"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input value={search} onChange={event => setSearch(event.target.value)} placeholder="Søk bedrift, kontakt eller neste steg" className="pl-9" /></div>
           <MineTeametToggle verdi={eierVisning} onEndre={setEierVisning} />
           <Select value={owner} onValueChange={setOwner}><SelectTrigger className="w-[170px]"><SelectValue placeholder="Alle ansvarlige" /></SelectTrigger><SelectContent><SelectItem value="alle">Alle ansvarlige</SelectItem>{profiles.map(profile => <SelectItem key={profile.user_id} value={profile.user_id}>{profile.display_name}</SelectItem>)}</SelectContent></Select>
-          <Button variant={kunOppfolging ? "default" : "outline"} size="sm" onClick={() => setKunOppfolging(value => !value)}><PhoneCall className="h-4 w-4" />Oppfølging</Button>
+          {utvalg === "aktive" && <Button variant={kunOppfolging ? "default" : "outline"} size="sm" onClick={() => setKunOppfolging(value => !value)} aria-pressed={kunOppfolging}><PhoneCall className="h-4 w-4" />Oppfølging</Button>}
           <div className="ml-auto inline-flex rounded-md border bg-card p-0.5">
             <Button size="icon" variant={visning === "kanban" ? "secondary" : "ghost"} onClick={() => setVisning("kanban")} title="Kanban"><Columns3 className="h-4 w-4" /></Button>
             <Button size="icon" variant={visning === "tabell" ? "secondary" : "ghost"} onClick={() => setVisning("tabell")} title="Tabell"><List className="h-4 w-4" /></Button>
@@ -259,24 +265,26 @@ export default function Salg() {
 
         {visning === "kanban" ? (
           <div className="overflow-x-auto pb-4">
-            <div className="grid min-w-[1500px] grid-cols-6 gap-3">
-              {SALGSSTEG.map(steg => {
+            <div className={utvalg === "aktive" ? "grid min-w-[1320px] grid-cols-5 gap-4" : "grid min-w-0 grid-cols-1"}>
+              {(utvalg === "aktive" ? SALGSSTEG.filter(steg => steg !== "Avsluttet") : ["Avsluttet" as const]).map((steg, index) => {
                 const items = synlige.filter(item => item.steg === steg).sort((a, b) => (b.sistAktivitet || "").localeCompare(a.sistAktivitet || ""));
                 const total = items.reduce((sum, item) => sum + item.mrr, 0);
                 return (
-                  <section key={steg} onDragOver={event => event.preventDefault()} onDrop={() => { if (dragged) requestMove(dragged, steg); setDragged(null); }} className="min-h-[420px] rounded-lg border bg-muted/35 p-2">
-                    <header className="mb-2 flex min-h-12 items-start justify-between gap-2 px-1 py-1"><div><h2 className="font-display text-sm font-bold">{steg}</h2><p className="mt-0.5 text-[11px] text-muted-foreground">{items.length} {items.length === 1 ? "kort" : "kort"}{total > 0 ? ` · ${nok(total)}` : ""}</p></div><span className="flex h-6 min-w-6 items-center justify-center rounded-sm bg-secondary px-1.5 text-xs font-semibold tabular-nums">{items.length}</span></header>
-                    <div className="space-y-2">
+                  <section key={steg} aria-label={steg} onDragOver={event => event.preventDefault()} onDrop={() => { if (dragged) requestMove(dragged, steg); setDragged(null); }} className="min-w-0 border-t-2 border-secondary">
+                    <header className="flex min-h-20 items-center justify-between gap-2 py-4"><div><h2 className="flex items-center gap-2 font-display text-sm font-bold">{utvalg === "aktive" && <span className="flex h-6 w-6 items-center justify-center rounded-full bg-secondary text-xs tabular-nums">{index + 1}</span>}{steg}<span className="text-muted-foreground tabular-nums font-normal">{items.length}</span></h2>{total > 0 && <p className="mt-2 text-xs text-muted-foreground tabular-nums">{nok(total)} / mnd</p>}</div></header>
+                    <div className={utvalg === "aktive" ? "max-h-[65vh] min-h-[320px] space-y-3 overflow-y-auto scrollbar-thin pr-1 pb-2" : "grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"}>
                       {items.map(item => (
-                        <article key={`${item.kind}-${item.id}`} draggable={canEdit} onDragStart={() => setDragged(item)} onDragEnd={() => setDragged(null)} onClick={() => openCard(item)} className="cursor-pointer rounded-md border bg-card p-3 shadow-sm transition-colors hover:border-primary/60 hover:bg-background">
-                          <div className="flex items-start gap-2"><CompanyLogo firmanavn={item.selskap} size="sm" /><div className="min-w-0 flex-1"><h3 className="truncate text-sm font-semibold">{item.selskap}</h3><p className="truncate text-xs text-muted-foreground">{item.kontakt || (item.kind === "lead" ? "Kontakt ikke oppgitt" : "Ingen kontakt")}</p></div>{item.mrr > 0 && <span className="shrink-0 text-xs font-semibold tabular-nums">{nok(item.mrr)}</span>}</div>
+                        <article key={`${item.kind}-${item.id}`} draggable={canEdit} onDragStart={() => setDragged(item)} onDragEnd={() => setDragged(null)} className="min-w-0 rounded-lg border bg-card p-4 shadow-card transition-colors hover:border-primary/60">
+                          <Button variant="ghost" onClick={() => openCard(item)} aria-label={`Åpne ${item.selskap}`} className="h-auto w-full items-start justify-start whitespace-normal p-0 text-left hover:bg-transparent"><CompanyLogo firmanavn={item.selskap} size="sm" /><div className="min-w-0 flex-1"><h3 className="line-clamp-2 break-words text-sm font-semibold leading-5" title={item.selskap}>{item.selskap}</h3>{item.kontakt && item.kontakt.trim().toLocaleLowerCase("nb") !== item.selskap.trim().toLocaleLowerCase("nb") && <p className="mt-1 line-clamp-2 break-words text-xs font-normal text-muted-foreground">{item.kontakt}</p>}</div></Button>
+                          {item.mrr > 0 && <p className="mt-3 text-sm font-semibold tabular-nums">{nok(item.mrr)} <span className="text-xs font-normal text-muted-foreground">/ mnd</span></p>}
                           {item.pinnedNotat && <p className="mt-2 line-clamp-2 rounded-sm bg-primary/25 px-2 py-1.5 text-xs">{item.pinnedNotat}</p>}
-                          <div className="mt-3 flex items-center justify-between gap-2"><span className="min-w-0 truncate text-xs text-muted-foreground">{item.nesteSteg || "Mangler neste steg"}</span>{trengerOppfolging(item) && item.steg !== "Avsluttet" && <span className="h-2 w-2 shrink-0 rounded-full bg-warning" title="Trenger oppfølging" />}</div>
-                          <div className="mt-2 flex items-center justify-between gap-2 border-t pt-2 text-[11px] text-muted-foreground"><span className="truncate">{ownerName(item.ansvarlig)}</span><span className="shrink-0">{relativTid(item.sistAktivitet)}</span></div>
+                          {item.nesteSteg && <div className="mt-3 flex items-start gap-2 text-xs"><ArrowRight className="mt-0.5 h-3 w-3 shrink-0 text-muted-foreground" /><p className="line-clamp-2 break-words leading-5" title={item.nesteSteg}>{item.nesteSteg}</p></div>}
+                          <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground">{item.ansvarlig && <span className="flex min-w-0 items-center gap-1"><UserRound className="h-3 w-3 shrink-0" /><span className="truncate">{ownerName(item.ansvarlig)}</span></span>}<span title="Siste aktivitet">{relativTid(item.sistAktivitet)}</span></div>
+                          {trengerOppfolging(item) && <p className="mt-3 flex items-center gap-1.5 text-[11px] text-warning"><span className="h-1.5 w-1.5 rounded-full bg-warning" />Trenger oppfølging</p>}
                           {item.sluttstatus && <Badge variant={item.sluttstatus === "Vunnet" ? "success" : "secondary"} className="mt-2">{item.sluttstatus}</Badge>}
                         </article>
                       ))}
-                      {items.length === 0 && <div className="rounded-md border border-dashed px-3 py-8 text-center text-xs text-muted-foreground">Ingen her</div>}
+                      {items.length === 0 && <div className="rounded-md border border-dashed px-3 py-8 text-center text-xs text-muted-foreground">Ingen {steg === "Avsluttet" ? "avsluttede løp" : "kort i dette steget"}</div>}
                     </div>
                   </section>
                 );
