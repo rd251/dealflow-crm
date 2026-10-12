@@ -636,7 +636,9 @@ Deno.serve(async (req) => {
       "Tjenesten aktiveres først når betaling er mottatt",
       "Inkludert kapasitet gjelder kun for den aktuelle kalendermåneden og bortfaller ved månedsslutt",
       "Ubenyttet kapasitet overføres ikke",
-      "Bruk utover inkludert volum faktureres i etterkant",
+      (data.kontrakt_type ?? "telefon") === "telefon"
+        ? "Bruk utover pakken: 4,20 kr per telefonsamtaleminutt eks. mva., faktureres i etterkant av månedsslutt"
+        : "Bruk utover inkludert volum faktureres i etterkant",
       "Betalingsintervaller kan etter avtale endres til kvartalsvis, halvårlig eller årlig fakturering",
       "Ved årlig betaling gis 10 % rabatt på abonnementsprisen",
     ]);
