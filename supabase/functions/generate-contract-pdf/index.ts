@@ -701,7 +701,7 @@ Deno.serve(async (req) => {
     // ---- Personvern og vilkår ----
     heading("Personvern og vilkår");
     doc.text("Følgende dokumenter gjelder som en del av avtalen:", margin, y); y += 5;
-    doc.setTextColor(0, 0, 200);
+    doc.setTextColor(...DYP_GRONN);
     doc.text("• https://www.snakk.ai/vilkar", margin, y); y += 5;
     doc.text("• https://www.snakk.ai/personvern", margin, y); y += 8;
     doc.setTextColor(80, 80, 80);
