@@ -6,6 +6,7 @@ import { nok } from "@/lib/utils";
 import { Building2, Download, Eye, Loader2, Mail, Package, Phone, User } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { standardKontraktType } from "@/components/SendContractModal";
+import type { PakkeLinje } from "@/data/crm-data";
 import { toast } from "sonner";
 import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 
@@ -22,6 +23,8 @@ export interface OfferData {
   minutter: string;
   sla?: number | null;
   oppstartskostnad?: number | null;
+  /** Flere valgte moduler — vises som egne linjer i tilbudet. */
+  pakker?: PakkeLinje[];
 }
 
 const FILNAVN_UGYLDIGE_TEGN = /[^a-zA-Z0-9æøåÆØÅ-]+/g;
@@ -45,6 +48,7 @@ export default function OfferTab({ offerData }: { offerData: OfferData }) {
         },
         body: JSON.stringify({
           ...offerData,
+          pakker: offerData.pakker?.length ? offerData.pakker : undefined,
           dokument_type: "tilbud",
           kontrakt_type: standardKontraktType(offerData.valgt_pakke),
         }),
