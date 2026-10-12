@@ -139,11 +139,31 @@ export default function OfferTab({ offerData }: { offerData: OfferData }) {
 
         <div className="border-t pt-4">
           <p className="flex items-center gap-1.5 text-xs text-muted-foreground"><Package className="h-3.5 w-3.5" />Valgt løsning</p>
-          <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-            <Badge variant="secondary" className="text-sm">{offerData.valgt_pakke || "Ingen pakke valgt"}</Badge>
-            <span className="font-semibold tabular-nums">{nok(offerData.pakke_pris)}/mnd</span>
-          </div>
-          {offerData.minutter && <p className="mt-2 text-sm text-muted-foreground">Inkludert: {offerData.minutter}</p>}
+          {offerData.pakker && offerData.pakker.length > 0 ? (
+            <div className="mt-2 space-y-2">
+              {offerData.pakker.map((linje, i) => (
+                <div key={i} className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <Badge variant="secondary" className="text-sm">{linje.pakke}</Badge>
+                    {linje.minutter && <p className="mt-1 text-xs text-muted-foreground">Inkludert: {linje.minutter}</p>}
+                  </div>
+                  <span className="font-medium tabular-nums">{nok(linje.pris)}/mnd</span>
+                </div>
+              ))}
+              <div className="flex items-center justify-between border-t pt-2">
+                <span className="text-sm font-medium">Totalt</span>
+                <span className="font-semibold tabular-nums">{nok(offerData.pakke_pris)}/mnd</span>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                <Badge variant="secondary" className="text-sm">{offerData.valgt_pakke || "Ingen pakke valgt"}</Badge>
+                <span className="font-semibold tabular-nums">{nok(offerData.pakke_pris)}/mnd</span>
+              </div>
+              {offerData.minutter && <p className="mt-2 text-sm text-muted-foreground">Inkludert: {offerData.minutter}</p>}
+            </>
+          )}
         </div>
 
         <div className="grid grid-cols-2 gap-3 border-t pt-4">
