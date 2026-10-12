@@ -30,6 +30,7 @@ export default function FolgOppIDag({ leads, onOpenLead }: Props) {
   const rader = useMemo(() => {
     return leads
       .filter(l => !erKaldtLead(l))
+      .filter(l => !["Ikke aktuelt", "Konvertert til salg", "Konvertert til partner"].includes(l.status))
       .map(l => ({ lead: l, dato: effektivOppfolging(l) }))
       .filter(r => (dagerTilOppfolging(r.dato) ?? 0) <= 0)
       .sort((a, b) => (dagerTilOppfolging(a.dato) ?? 0) - (dagerTilOppfolging(b.dato) ?? 0));
