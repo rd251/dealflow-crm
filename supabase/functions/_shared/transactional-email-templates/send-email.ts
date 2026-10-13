@@ -2,7 +2,7 @@ import * as React from 'npm:react@18.3.1'
 import { renderAsync } from 'npm:@react-email/components@0.0.22'
 import { EmailAPIError, sendLovableEmail } from 'npm:@lovable.dev/email-js@0.1.0'
 import { TEMPLATES } from './registry.ts'
-import { appendRobinHtml, robinSignatureText } from '../robin-signature.ts'
+import { appendRobinHtml, robinSignatureText, ROBIN_SIGNATURE } from '../robin-signature.ts'
 
 // Server-only: reads LOVABLE_API_KEY. Import from edge functions only — never
 // expose sending to the browser.
@@ -61,7 +61,8 @@ export async function sendTemplateEmail(
   const templateData = options.templateData ?? {}
   const element = React.createElement(template.component, templateData)
   const html = appendRobinHtml(await renderAsync(element))
-  const text = `${await renderAsync(element, { plainText: true })}\n\n${robinSignatureText()}`
+  const renderedText = await renderAsync(element, { plainText: true })
+  const text = renderedText.includes(ROBIN_SIGNATURE.adresse) ? renderedText : `${renderedText}\n\n${robinSignatureText()}`
   const subject =
     typeof template.subject === 'function'
       ? template.subject(templateData)
