@@ -1,5 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { byggHtml, byggTekst, emne, type VarselInnhold } from './mal.ts'
+import { appendRobinHtml, robinSignatureText } from '../robin-signature.ts'
 
 // Interne driftsvarsler sendes via Brevos transaksjons-API. Disse e-postene er
 // ikke markedsføring og skal derfor ikke ha avmeldingslenke.
@@ -54,8 +55,8 @@ export async function sendVarsel(
         sender: AVSENDER,
         to: [{ email: mottaker.epost, name: mottaker.navn || undefined }],
         subject: emne(innhold),
-        htmlContent: byggHtml(innhold),
-        textContent: byggTekst(innhold),
+        htmlContent: appendRobinHtml(byggHtml(innhold)),
+        textContent: `${byggTekst(innhold)}\n\n${robinSignatureText()}`,
       }),
     })
 

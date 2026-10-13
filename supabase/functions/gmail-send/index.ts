@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { registrerVenterPaSvar } from "../_shared/awaiting-reply.ts";
+import { ROBIN_SIGNATURE, robinSignatureText, robinSignatureHtml, withoutRobinSignature, escapeEmailHtml } from "../_shared/robin-signature.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -43,7 +44,7 @@ async function getValidAccessToken(supabase: any, connection: any): Promise<stri
   return refreshed.access_token;
 }
 
-function buildRawEmail(to: string, subject: string, body: string, fromEmail: string): string {
+function buildRawEmail(to: string, subject: string, body: string, fromEmail: string, htmlBody: string): string {
   const boundary = "boundary_" + Date.now();
   const lines = [
     `From: ${fromEmail}`,
@@ -62,7 +63,7 @@ function buildRawEmail(to: string, subject: string, body: string, fromEmail: str
     "Content-Type: text/html; charset=UTF-8",
     "Content-Transfer-Encoding: base64",
     "",
-    btoa(unescape(encodeURIComponent(body.replace(/\n/g, "<br>")))),
+    btoa(unescape(encodeURIComponent(htmlBody))),
     "",
     `--${boundary}--`,
   ];
@@ -126,7 +127,7 @@ Deno.serve(async (req) => {
       .select("display_name, signatur_navn, signatur_tittel, signatur_selskap")
       .eq("user_id", user.id)
       .maybeSingle();
-    const sig = {
+    const sig = user.email?.toLowerCase() === ROBIN_SIGNATURE.epost ? ROBIN_SIGNATURE : {
       navn: (profileRow as any)?.signatur_navn || (profileRow as any)?.display_name || "",
       tittel: (profileRow as any)?.signatur_tittel || "",
       selskap: (profileRow as any)?.signatur_selskap || "",
@@ -190,8 +191,11 @@ Deno.serve(async (req) => {
     const fromEmail = profile.emailAddress;
 
     // Build and send email
-    const fullBody = finalBody;
-    const rawEmail = buildRawEmail(to, finalSubject, fullBody, fromEmail);
+    const isRobin = fromEmail.toLowerCase() === ROBIN_SIGNATURE.epost;
+    const messageBody = isRobin ? withoutRobinSignature(finalBody) : finalBody;
+    const fullBody = isRobin ? `${messageBody}\n\n${robinSignatureText()}` : finalBody;
+    const htmlBody = `<div style="font-family:Arial,Helvetica,sans-serif;white-space:normal;">${escapeEmailHtml(messageBody).replace(/\n/g, "<br>")}</div>${isRobin ? robinSignatureHtml() : ""}`;
+    const rawEmail = buildRawEmail(to, finalSubject, fullBody, fromEmail, htmlBody);
     const encodedEmail = btoa(unescape(encodeURIComponent(rawEmail)))
       .replace(/\+/g, "-")
       .replace(/\//g, "_")
