@@ -36,7 +36,10 @@ export function appendRobinHtml(html: string): string {
 /** Only remove a trailing signature, never a name mentioned in the message. */
 export function withoutRobinSignature(body: string): string {
   const lines = body.trimEnd().split("\n");
-  const nameIndex = lines.findLastIndex(line => line.trim() === ROBIN_SIGNATURE.navn);
+  let nameIndex = -1;
+  for (let index = lines.length - 1; index >= 0; index--) {
+    if (lines[index].trim() === ROBIN_SIGNATURE.navn) { nameIndex = index; break; }
+  }
   if (nameIndex < 0) return body.trimEnd();
   const allowed = new Set([
     ...Object.values(ROBIN_SIGNATURE), "Snakk AI", "Salgssjef i Snakk", "",

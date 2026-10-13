@@ -1,6 +1,7 @@
 /// <reference types="npm:@types/react@18.3.1" />
 
 import * as React from 'npm:react@18.3.1'
+import { RobinSignatureEmail } from '../robin-signature-email.tsx'
 
 import {
   Body,
@@ -40,6 +41,7 @@ export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => 
           </Text>
         </Section>
         <Section style={footerSection}>
+          <RobinSignatureEmail />
           <Text style={footerBrand}>Snakk CRM</Text>
           <Text style={footerCopy}>©2026 Snakk. Alle rettigheter reservert.</Text>
         </Section>

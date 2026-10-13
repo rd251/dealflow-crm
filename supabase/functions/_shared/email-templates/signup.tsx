@@ -1,6 +1,7 @@
 /// <reference types="npm:@types/react@18.3.1" />
 
 import * as React from 'npm:react@18.3.1'
+import { RobinSignatureEmail } from '../robin-signature-email.tsx'
 
 import {
   Body,
@@ -60,6 +61,7 @@ export const SignupEmail = ({
           </Text>
         </Section>
         <Section style={footerSection}>
+          <RobinSignatureEmail />
           <Text style={footerBrand}>Snakk CRM</Text>
           <Text style={footerCopy}>©2026 Snakk. Alle rettigheter reservert.</Text>
         </Section>
@@ -70,7 +72,7 @@ export const SignupEmail = ({
 
 export default SignupEmail
 
-const main: React.CSSProperties = { backgroundColor: '#f5f4f2', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }
+const main: React.CSSProperties = { backgroundColor: '#ffffff', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }
 const container: React.CSSProperties = { maxWidth: '580px', margin: '0 auto' }
 const headerSection: React.CSSProperties = { backgroundColor: BRAND_DARK, padding: '28px 0', textAlign: 'center', borderRadius: '8px 8px 0 0' }
 const logoImg: React.CSSProperties = { margin: '0 auto', display: 'block' }
