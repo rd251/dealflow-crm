@@ -2,6 +2,7 @@
 // Kjøres daglig kl. 06:00 UTC (08:00 norsk tid) og sendes til rd@snakk.ai.
 // Internt driftsvarsel – ingen avmeldingslenke.
 import { createClient } from 'npm:@supabase/supabase-js@2'
+import { robinSignatureHtml, robinSignatureText } from '../_shared/robin-signature.ts'
 
 const AVSENDER = { name: 'Snakk CRM', email: 'rd@snakk.ai' }
 const MOTTAKER = 'rd@snakk.ai'
@@ -175,6 +176,7 @@ Deno.serve(async () => {
           ${blokk('Nyhetsbrev', nyhetsbrevLinjer)}
           ${blokk(`Velkommere som feilet (${(velkomstFeilet ?? []).length})`, feilLinjer)}
           <hr style="border:none;border-top:1px solid ${KANT};margin:28px 0 14px;" />
+          ${robinSignatureHtml()}
           <p style="margin:0;color:${TEKST_DEMPET};font-size:12px;line-height:18px;">
             Snakk Teknologi AS · <a href="https://snakk.ai" style="color:${TEKST_DEMPET};text-decoration:underline;">snakk.ai</a><br />
             Internt driftsvarsel fra Snakk CRM.
@@ -197,6 +199,8 @@ Deno.serve(async () => {
     ``,
     `Åpne i CRM: ${APP_URL}/aktiviteter`,
     `Snakk Teknologi AS · snakk.ai`,
+    ``,
+    robinSignatureText(),
   ].join('\n')
 
   const apiKey = Deno.env.get('BREVO_DIRECT_API_KEY') || Deno.env.get('BREVO_API_KEY')

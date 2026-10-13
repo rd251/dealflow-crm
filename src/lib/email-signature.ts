@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { ROBIN_SIGNATURE, robinSignatureText } from "../../supabase/functions/_shared/robin-signature";
 
 export interface EmailSignatur {
   navn: string;
@@ -68,6 +69,7 @@ export function fyllInnSignatur(tekst: string, sig: EmailSignatur): string {
 }
 
 export function signaturBlokk(sig: EmailSignatur): string {
+  if (sig.navn === ROBIN_SIGNATURE.navn) return robinSignatureText();
   const linjer = [sig.navn, sig.tittel, sig.selskap].filter(Boolean);
   return linjer.length ? `Vennlig hilsen\n${linjer.join("\n")}` : "";
 }
@@ -107,7 +109,7 @@ export function useSignatur() {
       .eq("user_id", user.id)
       .maybeSingle();
     const p = data as any;
-    setSignatur({
+    setSignatur(user.email?.toLowerCase() === ROBIN_SIGNATURE.epost ? ROBIN_SIGNATURE : {
       navn: p?.signatur_navn || p?.display_name || "",
       tittel: p?.signatur_tittel || "",
       selskap: p?.signatur_selskap || "",

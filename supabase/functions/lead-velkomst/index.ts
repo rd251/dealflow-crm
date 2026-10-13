@@ -2,6 +2,7 @@
 // Vekkes av en minuttsjobb som bare finnes mens leads venter, og som stopper seg selv når køen er tom.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { registrerVenterPaSvar } from "../_shared/awaiting-reply.ts";
+import { ROBIN_SIGNATURE, robinSignatureText, robinSignatureHtml, escapeEmailHtml } from "../_shared/robin-signature.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -144,23 +145,34 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      const navn = prof.signatur_navn || prof.display_name || "Robin Sæter Diallo";
+      const navn = ROBIN_SIGNATURE.navn;
       const kort = iArbeidstid(l.created_at);
       const EMNE = kort ? EMNE_KORT : EMNE_LANG;
       const fn = fornavn(l.kontaktperson);
       const brodtekst = kort
         ? `Hei${fn ? " " + fn : ""}!\n\nTakk for henvendelsen, vi kontakter deg snart.`
         : (await aiTekst(l)) ?? malTekst(l);
-      const tekst = `${brodtekst}\n\nMvh\n${navn}\nSnakk AI`;
+      const tekst = `${brodtekst}\n\n${robinSignatureText()}`;
+      const html = `<div style="font-family:Arial,Helvetica,sans-serif;">${escapeEmailHtml(brodtekst).replace(/\n/g, "<br>")}</div>${robinSignatureHtml()}`;
+      const boundary = `snakk_${id}`;
       const raw = [
         `From: =?UTF-8?B?${b64(navn)}?= <${AVSENDER_EPOST}>`,
         `To: ${l.e_post}`,
         `Subject: =?UTF-8?B?${b64(EMNE)}?=`,
         "MIME-Version: 1.0",
+        `Content-Type: multipart/alternative; boundary="${boundary}"`,
+        "",
+        `--${boundary}`,
         'Content-Type: text/plain; charset="UTF-8"',
         "Content-Transfer-Encoding: base64",
         "",
         b64(tekst),
+        `--${boundary}`,
+        'Content-Type: text/html; charset="UTF-8"',
+        "Content-Transfer-Encoding: base64",
+        "",
+        b64(html),
+        `--${boundary}--`,
       ].join("\r\n");
       const send = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/send", {
         method: "POST",
