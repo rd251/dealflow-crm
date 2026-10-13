@@ -6,7 +6,7 @@ describe("Robin email signature", () => {
     const text = robinSignatureText();
     for (const value of ["Robin Sæter Diallo", "Head of sales & Partner", "Snakk Teknologi AS", "+47 934 38 816", "rd@snakk.ai", "snakk.ai", "Sørkedalsveien 6, 0369 Oslo"]) expect(text).toContain(value);
     const html = robinSignatureHtml();
-    expect(html).toContain('href="tel:+4793438816"');
+    expect(html).toContain('href="tel:+47+93+43+88+16"');
     expect(html).toContain('href="mailto:rd@snakk.ai"');
     expect(html).toContain("Head of sales &amp; Partner");
   });
