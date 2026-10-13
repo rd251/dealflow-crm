@@ -44,7 +44,7 @@ Deno.serve(async () => {
   const sb = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
 
   const grense24 = new Date(Date.now() - 24 * 3600e3).toISOString()
-  const grense7 = new Date(Date.now() - 7 * 3600e3).toISOString()
+  const grense7 = new Date(Date.now() - 7 * 24 * 3600e3).toISOString()
 
   // 1. Automatiske velkomst-e-poster
   const { data: velkomst } = await sb
