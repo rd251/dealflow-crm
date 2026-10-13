@@ -1,5 +1,10 @@
 # Roadmap
 
+## Ekte e-postsignatur
+- [ ] Legg til felles signatur med Robins godkjente kontaktinformasjon
+- [ ] Bruk signaturen i personlige Gmail-e-poster og automatiske e-poster uten å endre andre avsenderes identitet
+- [ ] Kontroller signaturen og deploy berørte e-postfunksjoner uten utsending til kunder
+
 ## Ryddigere salgsoversikt
 - [x] Legg til «Ikke svar» som eget steg for leads som ikke har svart
 - [x] Skill aktive løp fra avsluttede uten å endre eller slette data
