@@ -3,6 +3,7 @@ import {
   Body, Container, Head, Heading, Html, Preview, Text, Button, Section, Hr, Img,
 } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
+import { RobinSignatureEmail } from '../robin-signature-email.tsx'
 
 const BRAND_RED = '#da291c'
 const BRAND_DARK = '#1a1917'
@@ -87,13 +88,7 @@ const FollowUpNudgeEmail = ({
 
           <Hr style={{ borderColor: '#ece9e4', margin: '28px 0 16px' }} />
 
-          <Text style={{ color: '#6b6560', fontSize: 13, lineHeight: '20px', margin: 0 }}>
-            Vennlig hilsen
-            <br />
-            {signaturNavn}
-            {signaturTittel ? <><br />{signaturTittel}</> : null}
-            {signaturSelskap ? <><br />{signaturSelskap}</> : null}
-          </Text>
+          <RobinSignatureEmail />
         </Container>
       </Body>
     </Html>
