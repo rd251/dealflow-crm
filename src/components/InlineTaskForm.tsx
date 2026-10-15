@@ -97,6 +97,7 @@ export default function InlineTaskForm({ lead_id = "", selskap_id = "", salgsmul
           <Input placeholder="Hva skal gjøres?" value={oppgave} onChange={e => setOppgave(e.target.value)} className="h-8 text-sm" />
           <div className="flex gap-2">
             <Input type="date" value={frist} onChange={e => setFrist(e.target.value)} className="h-8 text-sm flex-1" />
+            <Input type="time" value={fristTid} onChange={e => setFristTid(e.target.value)} className="h-8 text-sm w-24" title="Klokkeslett (valgfritt)" />
             <select className="border rounded-md px-2 py-1 text-xs bg-background h-8" value={prioritet} onChange={e => setPrioritet(e.target.value as Prioritet)}>
               <option value="Lav">Lav</option>
               <option value="Medium">Medium</option>
