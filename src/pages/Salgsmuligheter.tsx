@@ -322,6 +322,7 @@ export default function Salgsmuligheter() {
       kontakt_id: deal.kontakt_id || "",
       ansvarlig: deal.ansvarlig || user?.id || "",
       frist,
+      frist_tid: "",
       prioritet: "Høy",
       status: "Åpen",
       paaminnelse: true,

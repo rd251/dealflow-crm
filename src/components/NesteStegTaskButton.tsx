@@ -61,6 +61,7 @@ export default function NesteStegTaskButton({
       kontakt_id,
       ansvarlig: user?.id || "",
       frist,
+      frist_tid: "",
       prioritet,
       status: "Åpen",
       paaminnelse: true,

@@ -90,6 +90,7 @@ export default function OpprettProsjektDialog({ open, onOpenChange, selskapId, f
       kontakt_id: "",
       ansvarlig: form.ansvarligUserId,
       frist: form.startdato,
+      frist_tid: "",
       prioritet: "Høy",
       status: "Åpen",
       paaminnelse: true,

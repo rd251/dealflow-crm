@@ -29,6 +29,7 @@ export default function InlineTaskForm({ lead_id = "", selskap_id = "", salgsmul
   const [showForm, setShowForm] = useState(false);
   const [oppgave, setOppgave] = useState("");
   const [frist, setFrist] = useState("");
+  const [fristTid, setFristTid] = useState("");
   const [prioritet, setPrioritet] = useState<Prioritet>("Medium");
   const [ansvarlig, setAnsvarlig] = useState("");
 
@@ -45,7 +46,7 @@ export default function InlineTaskForm({ lead_id = "", selskap_id = "", salgsmul
     const id = generateId("O", oppgaver);
     const ny: Oppgave = {
       id, oppgave, lead_id, selskap_id, salgsmulighet_id, kontakt_id: "",
-      ansvarlig, frist, prioritet, status: "Åpen", paaminnelse: true, notater: "",
+      ansvarlig, frist, frist_tid: fristTid, prioritet, status: "Åpen", paaminnelse: true, notater: "",
     };
     updateOppgaver(prev => [...prev, ny]);
 
@@ -68,6 +69,7 @@ export default function InlineTaskForm({ lead_id = "", selskap_id = "", salgsmul
 
     setOppgave("");
     setFrist("");
+    setFristTid("");
     setPrioritet("Medium");
     setAnsvarlig("");
     setShowForm(false);
@@ -95,6 +97,7 @@ export default function InlineTaskForm({ lead_id = "", selskap_id = "", salgsmul
           <Input placeholder="Hva skal gjøres?" value={oppgave} onChange={e => setOppgave(e.target.value)} className="h-8 text-sm" />
           <div className="flex gap-2">
             <Input type="date" value={frist} onChange={e => setFrist(e.target.value)} className="h-8 text-sm flex-1" />
+            <Input type="time" value={fristTid} onChange={e => setFristTid(e.target.value)} className="h-8 text-sm w-24" title="Klokkeslett (valgfritt)" />
             <select className="border rounded-md px-2 py-1 text-xs bg-background h-8" value={prioritet} onChange={e => setPrioritet(e.target.value as Prioritet)}>
               <option value="Lav">Lav</option>
               <option value="Medium">Medium</option>

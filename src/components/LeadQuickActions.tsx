@@ -44,6 +44,7 @@ export default function LeadQuickActions({ lead, onBookMoete, onHandled, size = 
       kontakt_id: "",
       ansvarlig: lead.ansvarlig || user?.id || "",
       frist: datoOm(2),
+      frist_tid: "",
       prioritet: "Medium",
       status: "Åpen",
       paaminnelse: true,

@@ -935,6 +935,7 @@ export type Database = {
           ansvarlig: string | null
           created_at: string
           frist: string | null
+          frist_tid: string | null
           google_event_id: string | null
           id: string
           kontakt_id: string | null
@@ -953,6 +954,7 @@ export type Database = {
           ansvarlig?: string | null
           created_at?: string
           frist?: string | null
+          frist_tid?: string | null
           google_event_id?: string | null
           id?: string
           kontakt_id?: string | null
@@ -971,6 +973,7 @@ export type Database = {
           ansvarlig?: string | null
           created_at?: string
           frist?: string | null
+          frist_tid?: string | null
           google_event_id?: string | null
           id?: string
           kontakt_id?: string | null
