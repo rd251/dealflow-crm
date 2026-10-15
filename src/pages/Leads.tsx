@@ -530,6 +530,7 @@ export default function Leads() {
                       kontakt_id: "",
                       ansvarlig: convertDialogLead.ansvarlig || user?.id || "",
                       frist: datoOm(7),
+                      frist_tid: "",
                       prioritet: "Høy",
                       status: "Åpen",
                       paaminnelse: true,
