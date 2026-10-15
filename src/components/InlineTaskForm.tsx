@@ -29,6 +29,7 @@ export default function InlineTaskForm({ lead_id = "", selskap_id = "", salgsmul
   const [showForm, setShowForm] = useState(false);
   const [oppgave, setOppgave] = useState("");
   const [frist, setFrist] = useState("");
+  const [fristTid, setFristTid] = useState("");
   const [prioritet, setPrioritet] = useState<Prioritet>("Medium");
   const [ansvarlig, setAnsvarlig] = useState("");
 
@@ -45,7 +46,7 @@ export default function InlineTaskForm({ lead_id = "", selskap_id = "", salgsmul
     const id = generateId("O", oppgaver);
     const ny: Oppgave = {
       id, oppgave, lead_id, selskap_id, salgsmulighet_id, kontakt_id: "",
-      ansvarlig, frist, prioritet, status: "Åpen", paaminnelse: true, notater: "",
+      ansvarlig, frist, frist_tid: fristTid, prioritet, status: "Åpen", paaminnelse: true, notater: "",
     };
     updateOppgaver(prev => [...prev, ny]);
 
@@ -68,6 +69,7 @@ export default function InlineTaskForm({ lead_id = "", selskap_id = "", salgsmul
 
     setOppgave("");
     setFrist("");
+    setFristTid("");
     setPrioritet("Medium");
     setAnsvarlig("");
     setShowForm(false);
