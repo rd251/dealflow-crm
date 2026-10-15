@@ -67,3 +67,6 @@ project_id = "tchmujgzcklwgptocbno"
 
   [functions.morgen-epost-rapport]
   verify_jwt = false
+
+[functions.oppgave-kalender]
+verify_jwt = false

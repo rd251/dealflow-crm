@@ -237,6 +237,9 @@ async function syncForUser(supabase: any, connection: any) {
   for (const event of result.events) {
     const eksternId = event.id;
     const cancelled = event.status === 'cancelled';
+    // Oppgaver som CRM-et selv har lagt i kalenderen skal ikke importeres som aktiviteter.
+    if (event.extendedProperties?.private?.snakk_oppgave_id) continue;
+
 
     if (cancelled) {
       await supabase
