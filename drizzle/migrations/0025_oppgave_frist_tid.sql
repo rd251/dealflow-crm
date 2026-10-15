@@ -1,0 +1,1 @@
+ALTER TABLE public.oppgaver ADD COLUMN IF NOT EXISTS frist_tid text;

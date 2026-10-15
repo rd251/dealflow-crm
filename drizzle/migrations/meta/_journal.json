@@ -176,6 +176,13 @@
       "when": 1791787779371,
       "tag": "0024_valgte_pakker_flere_linjer",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1792062817883,
+      "tag": "0025_oppgave_frist_tid",
+      "breakpoints": true
     }
   ]
 }
