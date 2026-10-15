@@ -31,11 +31,6 @@ async function tilgangsnokkel(sb: any, conn: any): Promise<string | null> {
   return t.access_token;
 }
 
-function nesteDag(d: string): string {
-  const [y, m, day] = d.split("-").map(Number);
-  const dt = new Date(Date.UTC(y, m - 1, day + 1));
-  return dt.toISOString().slice(0, 10);
-}
 
 Deno.serve(async (req) => {
   try {
