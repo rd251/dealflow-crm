@@ -179,7 +179,7 @@ export default function CompanyProfile() {
       id: generateId("O", oppgaver),
       oppgave: selskap.neste_steg.trim(),
       lead_id: "", selskap_id: id!, salgsmulighet_id: "", kontakt_id: "",
-      ansvarlig: "", frist: today, prioritet: "Medium", status: "Åpen", paaminnelse: true, notater: "",
+      ansvarlig: "", frist: today, frist_tid: "", prioritet: "Medium", status: "Åpen", paaminnelse: true, notater: "",
     };
     updateOppgaver(prev => [...prev, ny]);
     toast.success("Neste steg lagt til som oppgave");
