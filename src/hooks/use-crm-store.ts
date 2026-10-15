@@ -98,7 +98,7 @@ function rowToOppgave(r: any): Oppgave {
   return {
     id: r.id, oppgave: r.oppgave, lead_id: r.lead_id || "", selskap_id: r.selskap_id || "",
     salgsmulighet_id: r.salgsmulighet_id || "", kontakt_id: r.kontakt_id || "", ansvarlig: r.ansvarlig || "",
-    frist: r.frist || "", prioritet: r.prioritet || "Medium", status: r.status || "Åpen",
+    frist: r.frist || "", frist_tid: r.frist_tid || "", prioritet: r.prioritet || "Medium", status: r.status || "Åpen",
     paaminnelse: r.paaminnelse ?? true, notater: r.notater || "",
   };
 }
@@ -824,7 +824,7 @@ function useCrmStoreInternal() {
           lead_id: emptyToNull(item.lead_id), selskap_id: emptyToNull(item.selskap_id),
           salgsmulighet_id: emptyToNull(item.salgsmulighet_id), kontakt_id: emptyToNull(item.kontakt_id),
           ansvarlig: emptyToNull(item.ansvarlig),
-          frist: emptyToNull(item.frist), prioritet: item.prioritet,
+          frist: emptyToNull(item.frist), frist_tid: emptyToNull(item.frist_tid), prioritet: item.prioritet,
           status: item.status, paaminnelse: item.paaminnelse, notater: emptyToNull(item.notater),
         });
       }
@@ -837,6 +837,7 @@ function useCrmStoreInternal() {
           selskap_id: emptyToNull(item.selskap_id), salgsmulighet_id: emptyToNull(item.salgsmulighet_id),
           kontakt_id: emptyToNull(item.kontakt_id),
           ansvarlig: emptyToNull(item.ansvarlig), frist: emptyToNull(item.frist),
+          frist_tid: emptyToNull(item.frist_tid),
           prioritet: item.prioritet, status: item.status,
           paaminnelse: item.paaminnelse, notater: emptyToNull(item.notater),
         });

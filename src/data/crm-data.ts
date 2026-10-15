@@ -272,6 +272,7 @@ export interface Oppgave {
   kontakt_id: string;
   ansvarlig: string;
   frist: string;
+  frist_tid: string;
   prioritet: Prioritet;
   status: OppgaveStatus;
   paaminnelse: boolean;
