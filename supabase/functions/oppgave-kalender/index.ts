@@ -66,12 +66,14 @@ Deno.serve(async (req) => {
       if (s?.firmanavn) kobling = s.firmanavn;
     }
     // Timet oppføring (ikke heldags) slik at den ikke fyller hele kalenderdagen.
-    // Bruker klokkeslett fra fristen hvis det finnes, ellers STANDARD_STARTTID.
+    // Bruker klokkeslett fra frist_tid hvis satt, ellers fra fristen, ellers STANDARD_STARTTID.
     const TIDSSONE = "Europe/Oslo";
     const STANDARD_STARTTID = "09:00";
     const VARIGHET_MINUTTER = 30;
     const dato = (o.frist || new Date().toISOString().slice(0, 10)).slice(0, 10);
-    const tidMatch = typeof o.frist === "string" ? o.frist.match(/T(\d{2}:\d{2})/) : null;
+    const tidMatch = typeof o.frist_tid === "string" && /^\d{2}:\d{2}/.test(o.frist_tid)
+      ? [null, o.frist_tid.slice(0, 5)]
+      : (typeof o.frist === "string" ? o.frist.match(/T(\d{2}:\d{2})/) : null);
     const startTid = tidMatch ? tidMatch[1] : STANDARD_STARTTID;
     const [t, min] = startTid.split(":").map(Number);
     const sluttMinTotal = t * 60 + min + VARIGHET_MINUTTER;
