@@ -32,7 +32,7 @@ const priorityDot: Record<Prioritet, string> = {
   Lav: "bg-muted-foreground",
 };
 
-const emptyForm = { oppgave: "", frist: "", prioritet: "Medium" as Prioritet, lead_id: "", selskap_id: "", salgsmulighet_id: "", kontakt_id: "", ansvarlig: "", notater: "" };
+const emptyForm = { oppgave: "", frist: "", frist_tid: "", prioritet: "Medium" as Prioritet, lead_id: "", selskap_id: "", salgsmulighet_id: "", kontakt_id: "", ansvarlig: "", notater: "" };
 
 function initials(name: string) {
   return name.split(" ").map(part => part[0]).filter(Boolean).slice(0, 2).join("").toUpperCase();
@@ -45,6 +45,7 @@ export default function Tasks() {
   const [filter, setFilter] = useState<ActiveFilter>(searchParams.get("filter") === "forfalte" ? "forfalte" : initialFilter);
   const [quickTitle, setQuickTitle] = useState("");
   const [quickDue, setQuickDue] = useState("");
+  const [quickTid, setQuickTid] = useState("");
   const [quickLink, setQuickLink] = useState("");
   const [editingTask, setEditingTask] = useState<Oppgave | null>(null);
   const { user, isAdmin, canEdit } = useAuth();
@@ -78,6 +79,7 @@ export default function Tasks() {
       ...emptyForm,
       oppgave: quickTitle.trim(),
       frist: quickDue,
+      frist_tid: quickTid,
       ansvarlig: user?.id || "",
       selskap_id: type === "selskap" ? id : "",
       lead_id: type === "lead" ? id : "",
@@ -88,6 +90,7 @@ export default function Tasks() {
     updateOppgaver(previous => [task, ...previous]);
     setQuickTitle("");
     setQuickDue("");
+    setQuickTid("");
     setQuickLink("");
     toast.success("Oppgave opprettet");
   };
@@ -170,6 +173,7 @@ export default function Tasks() {
               aria-label="Ny oppgave"
             />
             <Input type="date" value={quickDue} onChange={event => setQuickDue(event.target.value)} className="h-10 lg:w-40" aria-label="Frist" />
+            <Input type="time" value={quickTid} onChange={event => setQuickTid(event.target.value)} className="h-10 lg:w-28" aria-label="Klokkeslett (valgfritt)" title="Klokkeslett (valgfritt)" />
             <select value={quickLink} onChange={event => setQuickLink(event.target.value)} className="h-10 rounded-md border bg-background px-3 text-sm lg:w-64" aria-label="Tilknytning">
               <option value="">Ingen tilknytning</option>
               {relationOptions.map(item => <option key={item.value} value={item.value}>{item.label}</option>)}
@@ -258,6 +262,7 @@ export default function Tasks() {
               <Input value={editingTask.oppgave} onChange={event => setEditingTask({ ...editingTask, oppgave: event.target.value })} />
               <div className="grid grid-cols-2 gap-3">
                 <Input type="date" value={editingTask.frist} onChange={event => setEditingTask({ ...editingTask, frist: event.target.value })} />
+                <Input type="time" value={editingTask.frist_tid} onChange={event => setEditingTask({ ...editingTask, frist_tid: event.target.value })} aria-label="Klokkeslett (valgfritt)" title="Klokkeslett (valgfritt)" />
                 <select className="rounded-md border bg-background px-3 text-sm" value={editingTask.prioritet} onChange={event => setEditingTask({ ...editingTask, prioritet: event.target.value as Prioritet })}>{(["Lav", "Medium", "Høy"] as Prioritet[]).map(value => <option key={value}>{value}</option>)}</select>
               </div>
               <select className="h-10 w-full rounded-md border bg-background px-3 text-sm" value={editingTask.ansvarlig} onChange={event => setEditingTask({ ...editingTask, ansvarlig: event.target.value })}><option value="">Ikke tildelt</option>{profiles.map(profile => <option key={profile.user_id} value={profile.user_id}>{profile.display_name}</option>)}</select>
