@@ -31,11 +31,6 @@ async function tilgangsnokkel(sb: any, conn: any): Promise<string | null> {
   return t.access_token;
 }
 
-function nesteDag(d: string): string {
-  const [y, m, day] = d.split("-").map(Number);
-  const dt = new Date(Date.UTC(y, m - 1, day + 1));
-  return dt.toISOString().slice(0, 10);
-}
 
 Deno.serve(async (req) => {
   try {
@@ -70,12 +65,22 @@ Deno.serve(async (req) => {
       const { data: s } = await sb.from("selskaper").select("firmanavn").eq("id", o.selskap_id).maybeSingle();
       if (s?.firmanavn) kobling = s.firmanavn;
     }
-    const dato = o.frist || new Date().toISOString().slice(0, 10);
+    // Timet oppføring (ikke heldags) slik at den ikke fyller hele kalenderdagen.
+    // Bruker klokkeslett fra fristen hvis det finnes, ellers STANDARD_STARTTID.
+    const TIDSSONE = "Europe/Oslo";
+    const STANDARD_STARTTID = "09:00";
+    const VARIGHET_MINUTTER = 30;
+    const dato = (o.frist || new Date().toISOString().slice(0, 10)).slice(0, 10);
+    const tidMatch = typeof o.frist === "string" ? o.frist.match(/T(\d{2}:\d{2})/) : null;
+    const startTid = tidMatch ? tidMatch[1] : STANDARD_STARTTID;
+    const [t, min] = startTid.split(":").map(Number);
+    const sluttMinTotal = t * 60 + min + VARIGHET_MINUTTER;
+    const sluttTid = `${String(Math.floor(sluttMinTotal / 60) % 24).padStart(2, "0")}:${String(sluttMinTotal % 60).padStart(2, "0")}`;
     const event = {
       summary: `✅ ${o.oppgave}${kobling ? ` – ${kobling}` : ""}`,
       description: [o.notater, `Prioritet: ${o.prioritet}`, `Åpne i CRM: ${CRM_URL}`].filter(Boolean).join("\n\n"),
-      start: { date: dato },
-      end: { date: nesteDag(dato) },
+      start: { dateTime: `${dato}T${startTid}:00`, timeZone: TIDSSONE },
+      end: { dateTime: `${dato}T${sluttTid}:00`, timeZone: TIDSSONE },
       transparency: "transparent",
       extendedProperties: { private: { snakk_oppgave_id: o.id } },
     };
