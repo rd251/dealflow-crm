@@ -1,8 +1,8 @@
 # Roadmap
 
 ## Dekkpartner – white-label kundemal
-- [ ] Lag redigerbar kundeavtale og PDF for Dekkpartners egne kunder, basert på vår kundeavtale
-- [ ] Kontroller alle sider og behold åpne felt for kundedata, moduler, priser og leverandørens juridiske opplysninger; ikke send til signering
+- [x] Lag redigerbar kundeavtale og PDF for Dekkpartners egne kunder, basert på vår kundeavtale
+- [x] Kontroller alle sider og behold åpne felt for kundedata, moduler, priser og leverandørens juridiske opplysninger; ikke send til signering
 
 ## Ekte e-postsignatur
 - [x] Legg til felles signatur med Robins godkjente kontaktinformasjon
