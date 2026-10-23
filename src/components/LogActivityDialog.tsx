@@ -371,6 +371,7 @@ export default function LogActivityDialog({
               </PopoverContent>
             </Popover>
           </div>
+          )}
 
           <Button className="w-full" onClick={lagre} disabled={!kanLagre}>
             {saving && <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />}
