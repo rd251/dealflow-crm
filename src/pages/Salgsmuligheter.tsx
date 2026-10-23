@@ -692,7 +692,7 @@ export default function Salgsmuligheter() {
 
         <PinnedNotatBoks notat={deal.pinned_notat} className="mt-2" />
 
-        {isBlocked && <p className="mt-2 text-[10px] font-medium text-warning">Legg til neste steg før du flytter kortet.</p>}
+        {isBlocked && <p className="mt-2 text-[10px] font-medium text-warning">Husk å legge inn neste steg.</p>}
       </>
     );
   };
