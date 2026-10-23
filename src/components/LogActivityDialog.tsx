@@ -285,6 +285,29 @@ export default function LogActivityDialog({
             />
           </div>
 
+          {erLead && (
+            <label
+              className={cn(
+                "flex items-start gap-2.5 rounded-lg border p-3 cursor-pointer transition-colors",
+                ikkeInteressert ? "border-destructive/40 bg-destructive/5" : "border-border hover:bg-muted/40"
+              )}
+            >
+              <input
+                type="checkbox"
+                checked={ikkeInteressert}
+                onChange={e => setIkkeInteressert(e.target.checked)}
+                className="mt-0.5 h-4 w-4 accent-destructive"
+              />
+              <span>
+                <span className="block text-sm font-medium">Ikke interessert</span>
+                <span className="block text-xs text-muted-foreground">
+                  Leadet markeres «Ikke aktuelt» og tas ut av automatisk oppfølging.
+                </span>
+              </span>
+            </label>
+          )}
+
+          {!ikkeInteressert && (
           <div className="space-y-1.5 rounded-lg border border-blue-500/20 bg-blue-500/5 p-3">
             <Label htmlFor="logg-neste-steg" className="text-xs font-medium uppercase tracking-wide text-blue-600">
               Neste steg <span className="normal-case font-normal text-muted-foreground">(valgfritt)</span>
