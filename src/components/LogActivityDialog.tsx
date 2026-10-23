@@ -57,7 +57,7 @@ interface Props {
   entityName?: string;
   kontaktListe?: KontaktOption[];
   defaultType?: LoggType;
-  onLogged?: (res?: { id: string | null; nesteOppfolging: string }) => void;
+  onLogged?: (res?: { id: string | null; nesteOppfolging: string; ikkeAktuelt: boolean }) => void;
 }
 
 export default function LogActivityDialog({
@@ -75,6 +75,7 @@ export default function LogActivityDialog({
   const [nesteSteg, setNesteSteg] = useState("");
   const [nesteStegDato, setNesteStegDato] = useState<Date | undefined>();
   const [oppfolgingDato, setOppfolgingDato] = useState<Date | undefined>();
+  const [ikkeInteressert, setIkkeInteressert] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const [meetingTittel, setMeetingTittel] = useState("");
