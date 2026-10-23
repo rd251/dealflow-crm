@@ -340,7 +340,9 @@ export default function LogActivityDialog({
               </PopoverContent>
             </Popover>
           </div>
+          )}
 
+          {!ikkeInteressert && (
           <div className="space-y-1.5 rounded-lg border bg-muted/30 p-3">
             <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               Neste oppfølging <span className="normal-case font-normal">(settes automatisk)</span>
