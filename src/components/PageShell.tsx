@@ -14,10 +14,11 @@ interface PageShellProps {
   title: string;
   subtitle?: string;
   actions?: ReactNode;
+  navigation?: ReactNode;
   children: ReactNode;
 }
 
-export default function PageShell({ title, subtitle, actions, children }: PageShellProps) {
+export default function PageShell({ title, subtitle, actions, navigation, children }: PageShellProps) {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const { collapsed } = useSidebarCollapsed();
@@ -64,6 +65,7 @@ export default function PageShell({ title, subtitle, actions, children }: PageSh
           <h1 className="font-display text-3xl font-bold leading-tight break-words sm:text-4xl lg:text-5xl">{title}</h1>
           {subtitle && <p className="mt-2 text-sm text-muted-foreground">{subtitle}</p>}
         </div>
+        {navigation}
         {children}
       </main>
       <QuickAddPersonDialog open={nyPersonÅpen} onOpenChange={setNyPersonÅpen} onCreated={id => navigate(`/kontakter?open=${id}`)} />

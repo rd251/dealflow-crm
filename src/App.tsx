@@ -1,7 +1,7 @@
 // CRM App
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { BrowserRouter, Route, Routes, Navigate, useNavigate } from "react-router-dom";
+import { BrowserRouter, Route, Routes, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,7 +11,6 @@ import AppSidebar from "@/components/AppSidebar";
 import ScrollToTop from "@/components/ScrollToTop";
 import Dashboard from "./pages/Dashboard";
 import Leads from "./pages/Leads";
-import Salg from "./pages/Salg";
 import Ringemodus from "./pages/Ringemodus";
 import Salgsmuligheter from "./pages/Salgsmuligheter";
 import Prosjekter from "./pages/Prosjekter";
@@ -45,6 +44,11 @@ import { consumeStashedNext, getSafeNextParam } from "@/lib/post-login-redirect"
 
 
 const queryClient = new QueryClient();
+
+function SalesRedirect() {
+  const { search } = useLocation();
+  return <Navigate to={`/leads${search}`} replace />;
+}
 
 function AuthSpinner() {
   return (
@@ -162,7 +166,7 @@ function RoleRoutes() {
               <Routes>
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
                 <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/salg" element={<Salg />} />
+                <Route path="/salg" element={<SalesRedirect />} />
                 <Route path="/leads" element={<Leads />} />
                 <Route path="/ringemodus" element={<Ringemodus />} />
                 <Route path="/salgsmuligheter" element={<Salgsmuligheter />} />

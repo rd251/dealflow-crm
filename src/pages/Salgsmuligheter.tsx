@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { toast } from "sonner";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import PageShell from "@/components/PageShell";
+import SalesTabs from "@/components/SalesTabs";
 import { useCrmStore } from "@/hooks/use-crm-store";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/use-auth";
@@ -700,6 +701,7 @@ export default function Salgsmuligheter() {
   return (
     <PageShell
       title="Salgsmuligheter"
+      navigation={<SalesTabs value="salgsmuligheter" />}
       subtitle={`${openDeals.length} åpne · ${nok(pipelineValue)} i pipeline`}
       actions={canEdit ? (
         <Dialog open={dialogOpen} onOpenChange={open => { setDialogOpen(open); if (!open) setCreateStage("Møte booket"); }}>
