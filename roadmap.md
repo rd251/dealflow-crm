@@ -1,10 +1,10 @@
 # Roadmap
 
 ## Enklere leads og salg
-- [ ] Vis Leads som en ryddig kontaktliste inspirert av referansebildet
-- [ ] Forenkle Salgsmuligheter til rolige kolonner med søk og samlede filtre som i det nye bildet
-- [ ] Skill Leads og Salgsmuligheter i to tydelige faner og behold konvertering og gamle lenker
-- [ ] Kontroller innlogget liste, søk, fanebytte og detaljpaneler
+- [x] Vis Leads som en ryddig kontaktliste inspirert av referansebildet
+- [x] Forenkle Salgsmuligheter til rolige kolonner med søk og samlede filtre som i det nye bildet
+- [x] Skill Leads og Salgsmuligheter i to tydelige faner og behold konvertering og gamle lenker
+- [x] Kontroller innlogget liste, søk, fanebytte og detaljpaneler
 
 ## Dekkpartner – white-label kundemal
 - [x] Lag redigerbar kundeavtale og PDF for Dekkpartners egne kunder, basert på vår kundeavtale
