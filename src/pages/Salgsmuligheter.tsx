@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import PageShell from "@/components/PageShell";
 import SalesTabs from "@/components/SalesTabs";
+import { SlidersHorizontal, Columns3, List, Search } from "lucide-react";
 import { useCrmStore } from "@/hooks/use-crm-store";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/use-auth";
@@ -218,6 +219,7 @@ export default function Salgsmuligheter() {
   const [form, setForm] = useState({ selskap_id: "", kontakt_id: "", forventet_mrr: 0, sla: 0, oppstartskostnad: 0, kontraktslengde_mnd: 12, sannsynlighet: 50, forventet_lukkedato: "", neste_steg: "", rolle_i_firma: "", use_case: "", kontaktperson: "", e_post: "", telefon: "", ansvarlig: "", kilde: "Nettside" as string });
   const [filterUtenAktivitet, setFilterUtenAktivitet] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
   const [ownerFilter, setOwnerFilter] = useState<string>("");
   const [dateFrom, setDateFrom] = useState<string>("");
   const [dateTo, setDateTo] = useState<string>("");
@@ -927,89 +929,34 @@ export default function Salgsmuligheter() {
               )}
             </div>
           )}
-          <div className="mb-4 grid grid-cols-1 divide-y rounded-lg border bg-card shadow-card sm:grid-cols-3 sm:divide-x sm:divide-y-0">
-            {[
-              ["Pipelineverdi", nok(pipelineValue)],
-              ["Vektet verdi", nok(weightedValue)],
-              ["Win rate", `${winRate} %`],
-            ].map(([label, value]) => (
-              <div key={label} className="flex items-baseline justify-between gap-3 px-4 py-3 sm:block">
-                <p className="text-xs font-medium text-muted-foreground">{label}</p>
-                <p className="mt-0.5 font-display text-lg font-semibold tabular-nums">{value}</p>
-              </div>
-            ))}
-          </div>
-          {/* Hurtigfiltre */}
-          <div className="mb-3 flex flex-wrap items-center gap-2">
-            {([["mine", "Mine"], ["forfalt", "Forfalt"], ["denne-uka", "Denne uka"]] as const).map(([v, l]) => (
-              <Button
-                key={v}
-                type="button"
-                size="sm"
-                variant={hurtigFilter === v ? "default" : "outline"}
-                className="h-7 rounded-full px-3 text-[11px]"
-                onClick={() => setHurtigFilter(prev => (prev === v ? "" : v))}
-              >
-                {l}
-              </Button>
-            ))}
-            <Button
-              type="button"
-              size="sm"
-              variant={kompaktKort ? "default" : "outline"}
-              className="ml-auto h-7 rounded-full px-3 text-[11px]"
-              onClick={() => setKompaktKort(v => { localStorage.setItem("pipelineKompakt", v ? "0" : "1"); return !v; })}
-            >
-              Kompakte kort
-            </Button>
-          </div>
-          {/* Søk og filtre */}
-          <div className="flex flex-wrap items-center gap-2 mb-3">
-            <div className="relative flex-1 min-w-[200px] max-w-xs">
-              <Input
-                placeholder="Søk selskap, kontakt, e-post…"
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                className="h-8 text-xs pr-7"
-              />
-              {searchQuery && (
-                <button type="button" onClick={() => setSearchQuery("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground text-xs">✕</button>
-              )}
+          <div className="mb-5 flex flex-wrap items-center gap-2">
+            <div className="relative min-w-[200px] max-w-sm flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input aria-label="Søk salgsmuligheter" placeholder="Søk bedrift eller kontakt…" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="h-9 pl-9" />
             </div>
-            <MineTeametToggle
-              verdi={user && ownerFilter === user.id ? "mine" : "teamet"}
-              onEndre={neste => setOwnerFilter(neste === "mine" && user ? user.id : "")}
-            />
-            <select
-              value={ownerFilter}
-              onChange={e => setOwnerFilter(e.target.value)}
-              className="h-8 text-xs rounded-md border bg-card px-2 min-w-[130px]"
-            >
-              <option value="">Alle ansvarlige</option>
-              {Array.from(new Set(salgsmuligheter.map(s => s.ansvarlig).filter(Boolean))).sort().map(a => (
-                <option key={a} value={a}>{profiles.find(p => p.user_id === a)?.display_name || a}</option>
-              ))}
+            <div className="inline-flex rounded-md border bg-card p-0.5">
+              <Button size="icon" variant={pipelineView === "kanban" ? "secondary" : "ghost"} className="h-8 w-8" title="Kolonner" aria-label="Kolonner" onClick={() => setPipelineView("kanban")}><Columns3 className="h-4 w-4" /></Button>
+              <Button size="icon" variant={pipelineView === "table" ? "secondary" : "ghost"} className="h-8 w-8" title="Tabell" aria-label="Tabell" onClick={() => setPipelineView("table")}><List className="h-4 w-4" /></Button>
+            </div>
+            <Button size="sm" variant={showFilters ? "secondary" : "ghost"} aria-expanded={showFilters} onClick={() => setShowFilters(v => !v)}><SlidersHorizontal className="h-4 w-4" />Filtre{(ownerFilter || dateFrom || dateTo || hurtigFilter) ? " •" : ""}</Button>
+            <span className="ml-auto text-xs text-muted-foreground tabular-nums">{openDeals.length} åpne · {nok(pipelineValue)}</span>
+          </div>
+          {showFilters && <div className="mb-5 flex flex-wrap items-center gap-2 border-y py-3">
+            <MineTeametToggle verdi={user && ownerFilter === user.id ? "mine" : "teamet"} onEndre={neste => setOwnerFilter(neste === "mine" && user ? user.id : "")} />
+            <select aria-label="Ansvarlig" value={ownerFilter} onChange={e => setOwnerFilter(e.target.value)} className="h-9 rounded-md border bg-card px-2 text-xs">
+              <option value="">Alle ansvarlige</option>{Array.from(new Set(salgsmuligheter.map(s => s.ansvarlig).filter(Boolean))).sort().map(a => <option key={a} value={a}>{profiles.find(p => p.user_id === a)?.display_name || a}</option>)}
             </select>
-            <div className="flex items-center gap-1">
-              <span className="text-[11px] text-muted-foreground">Lukkedato:</span>
-              <Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="h-8 text-xs w-[140px]" />
-              <span className="text-[11px] text-muted-foreground">–</span>
-              <Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="h-8 text-xs w-[140px]" />
-            </div>
-            {(searchQuery || ownerFilter || dateFrom || dateTo) && (
-              <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => { setSearchQuery(""); setOwnerFilter(""); setDateFrom(""); setDateTo(""); }}>
-                Nullstill
-              </Button>
-            )}
-            <div className="ml-auto inline-flex rounded-md border bg-card p-0.5">
-              <button type="button" onClick={() => setPipelineView("kanban")} className={`px-3 py-1 text-xs font-medium rounded ${pipelineView === "kanban" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>Kanban</button>
-              <button type="button" onClick={() => setPipelineView("table")} className={`px-3 py-1 text-xs font-medium rounded ${pipelineView === "table" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>Tabell</button>
-            </div>
-          </div>
+            {([["forfalt", "Forfalt"], ["denne-uka", "Denne uka"]] as const).map(([v, l]) => <Button key={v} size="sm" variant={hurtigFilter === v ? "secondary" : "outline"} onClick={() => setHurtigFilter(prev => prev === v ? "" : v)}>{l}</Button>)}
+            <Input aria-label="Lukkedato fra" type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="h-9 w-[145px] text-xs" />
+            <Input aria-label="Lukkedato til" type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="h-9 w-[145px] text-xs" />
+            <Button size="sm" variant={kompaktKort ? "secondary" : "outline"} onClick={() => setKompaktKort(v => { localStorage.setItem("pipelineKompakt", v ? "0" : "1"); return !v; })}>Kompakte kort</Button>
+            <Button size="sm" variant="ghost" onClick={() => { setOwnerFilter(""); setDateFrom(""); setDateTo(""); setHurtigFilter(""); }}>Nullstill</Button>
+            <span className="text-xs text-muted-foreground">Vektet: {nok(weightedValue)} · Vinnrate: {winRate} %</span>
+          </div>}
           {pipelineView === "table" ? (
             <DealList deals={sortDeals(openDeals)} getSelskapNavn={getSelskapNavn} getSelskapDomain={getSelskapDomain} onSelect={setSelectedSm} label="Åpne salgsmuligheter" onNavigateSelskap={id => navigate(`/selskaper/${id}`)} isMobile={isMobile} showKontraktStatus showLukkedato showSignalAndNextStep />
           ) : (
-          <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-4 scrollbar-thin items-start">
+          <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-thin items-stretch">
             {(stageFilter ? [stageFilter] : ACTIVE_KANBAN_STAGES).map(stadium => {
               const stage = stadium as SalgsmulighetStatus;
               const alleIStadium = sortKanbanDeals(openDeals.filter(d => tilKanbanStadium(d.status) === stadium));
@@ -1021,15 +968,14 @@ export default function Salgsmuligheter() {
               const stageDeals = utvidet ? grunnlag : grunnlag.slice(0, KANBAN_SYNLIGE_KORT);
               const stageMrr = alleIStadium.reduce((s, d) => s + d.forventet_mrr, 0);
               return (
-                <div key={stage} className={`${isMobile ? "min-w-[270px] w-[270px]" : "min-w-[290px] w-[290px]"} flex-shrink-0 flex flex-col rounded-lg border border-border/70 bg-muted p-2.5 transition-colors ${dragOverStage === stage ? "bg-pipeline/10 ring-2 ring-pipeline/30" : ""}`}
+                <div key={stage} className={`min-w-[230px] flex-1 flex flex-col rounded-md bg-muted/60 p-3 min-h-[560px] transition-colors ${dragOverStage === stage ? "bg-pipeline/10 ring-2 ring-pipeline/30" : ""}`}
                   onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; setDragOverStage(stage); }}
                   onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOverStage(null); }}
                   onDragEnd={() => { setDragOverStage(null); setDraggedId(null); }}
                   onDrop={e => handleDrop(e, stage)}>
-                  <div className="mb-2.5 flex min-h-8 items-center gap-2 px-1">
-                    <div className={`h-2 w-2 shrink-0 rounded-full ${statusColors[stage]}`} />
-                    <h3 className="min-w-0 flex-1 truncate text-xs font-semibold">{stage}</h3>
-                    <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">{alleIStadium.length} · {stageMrr > 0 ? nok(stageMrr) : "—"}</span>
+                  <div className="mb-4 flex min-h-12 items-start gap-2 px-1">
+                    <div className={`mt-1 h-2 w-2 shrink-0 rounded-sm ${statusColors[stage]}`} />
+                    <div className="min-w-0 flex-1"><h3 className="break-words text-xs font-semibold">{stage}</h3><p className="mt-1 text-[11px] tabular-nums text-muted-foreground">{alleIStadium.length} muligheter · {nok(stageMrr)}</p></div>
                     {canEdit && (
                       <Button type="button" variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground" title={`Ny mulighet i ${stage}`} onClick={() => openCreateDialog(stage)}>
                         <Plus className="h-3.5 w-3.5" />
@@ -1078,7 +1024,7 @@ export default function Salgsmuligheter() {
                     )}
 
                     {alleIStadium.length === 0 && (
-                      <div className="border-2 border-dashed rounded-lg p-6 text-center text-xs text-muted-foreground">Dra hit</div>
+                      <div className="py-6 text-center text-xs text-muted-foreground">Ingen salgsmuligheter</div>
                     )}
                   </div>
                 </div>
