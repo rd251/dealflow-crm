@@ -15,7 +15,6 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import DetailPanelShell, { DetailSection, DetailField, DetailDivider } from "@/components/DetailPanelShell";
 import EntityCalendarTab from "@/components/EntityCalendarTab";
 import { Plus, Search, ArrowRightCircle, Trash2, Users2, Upload, Lock, Mail, ArrowUp, ArrowDown, ChevronsUpDown, PenLine, Send, Phone, CalendarDays, UserPlus, CheckCircle2, TrendingUp } from "lucide-react";
-import StatCard from "@/components/StatCard";
 import { relativTid, dagerSiden, kildeGruppe, KILDE_GRUPPER, leadStatusFarge, leadStatusKort, idag, datoOm, type KildeGruppe } from "@/lib/sales-flow";
 import SendEmailDialog from "@/components/SendEmailDialog";
 import SelskapInnsikt from "@/components/SelskapInnsikt";
@@ -33,7 +32,6 @@ import { PinnedNotatBoks, PinnedNotatFelt } from "@/components/PinnedNotat";
 import { skjemaOnske, produktInteresse } from "@/lib/lead-notater";
 import LeadQuickActions from "@/components/LeadQuickActions";
 import RingelisteIdag from "@/components/RingelisteIdag";
-import FolgOppIDag from "@/components/FolgOppIDag";
 import {
   NYTT_LEAD_OPPFOLGING_DAGER,
   oppfolgingDatoOm,
@@ -271,24 +269,6 @@ export default function Leads() {
     setEmailDialogOpen(true);
   };
 
-  /* ---- KPI-er ---- */
-  const startOfWeek = (() => {
-    const d = new Date();
-    const day = (d.getDay() + 6) % 7;
-    d.setDate(d.getDate() - day);
-    return d.toISOString().split("T")[0];
-  })();
-  const startOfMonth = idag().slice(0, 7) + "-01";
-
-  const nyeDenneUken = leads.filter(l => (l.opprettet_dato || "") >= startOfWeek).length;
-  const kvalifiserteDenneMnd = leads.filter(l =>
-    (l.status === "Kvalifisert" || l.status === "Konvertert til salg") &&
-    ((l.sist_aktivitet || l.opprettet_dato || "") >= startOfMonth)
-  ).length;
-  const konverterteTotalt = leads.filter(l => l.status === "Konvertert til salg").length;
-  const kvalifiserteTotalt = leads.filter(l => l.status === "Kvalifisert").length + konverterteTotalt;
-  const konverteringsrate = kvalifiserteTotalt > 0 ? Math.round((konverterteTotalt / kvalifiserteTotalt) * 100) : 0;
-
   // Open the "forward to partner" dialog, and auto-detect if lead has self-builder onboarding answers
   const openForwardDialog = async (lead: Lead) => {
     setForwardDialogLead(lead);
@@ -472,7 +452,7 @@ export default function Leads() {
       <Dialog open={!!convertDialogLead} onOpenChange={open => { if (!open) { setConvertDialogLead(null); setConvertNavn(""); setEnrichFields({ orgnr: "", bransje: "", firmaadresse: "", postadresse: "" }); } }}>
         <DialogContent className="max-w-[95vw] sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Konverter til salgsmulighet</DialogTitle>
+            <DialogTitle>Kvalifiser til salgsmulighet</DialogTitle>
             <DialogDescription>Gi salgsmuligheten et navn og fyll inn selskapsinfo for {convertDialogLead?.firmanavn}.</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
@@ -549,7 +529,7 @@ export default function Leads() {
                 }
               }}
             >
-              Konverter
+              Kvalifiser og opprett salgsmulighet
             </Button>
           </div>
         </DialogContent>
@@ -833,7 +813,7 @@ export default function Leads() {
                         <Mail className="w-3.5 h-3.5" />E-post
                       </Button>
                       <Button size="sm" variant="ghost" className="text-xs gap-1 flex-1 min-w-[80px]" onClick={() => { setConvertDialogLead(lead); setConvertNavn(lead.use_case || lead.firmanavn); }}>
-                        <ArrowRightCircle className="w-3.5 h-3.5" />Salg
+                        <ArrowRightCircle className="w-3.5 h-3.5" />Kvalifiser
                       </Button>
                       <Button size="sm" variant="ghost" className="text-xs gap-1 flex-1 min-w-[80px]" onClick={() => setPartnerDialogLead(lead)}>
                         <Users2 className="w-3.5 h-3.5" />Partner
@@ -873,10 +853,10 @@ export default function Leads() {
                 <tbody>
                   {filtered.map(lead => (
                     <tr key={lead.id} className="group cursor-pointer border-b last:border-0 transition-colors hover:bg-muted/30" onClick={() => setSelectedLead(lead)}>
-                      <td className="px-4 py-3"><Button variant="ghost" className="h-auto max-w-full justify-start whitespace-normal p-0 text-left text-sm" onClick={e => { e.stopPropagation(); setSelectedLead(lead); }}>{lead.kontaktperson || "Kontakt ikke oppgitt"}</Button></td>
+                      <td className="px-4 py-3"><Button variant="ghost" className="h-auto max-w-full justify-start p-0 text-left text-sm" onClick={e => { e.stopPropagation(); setSelectedLead(lead); }}><span className="truncate" title={lead.kontaktperson}>{lead.kontaktperson || "Kontakt ikke oppgitt"}</span></Button></td>
                       <td className="px-4 py-3"><div className="flex min-w-0 items-center gap-2"><CompanyLogo firmanavn={lead.firmanavn} kontaktEmails={lead.e_post ? [lead.e_post] : undefined} size="sm" /><span className="truncate" title={bedriftVisning(lead) || undefined}>{bedriftVisning(lead) || "Bedrift ikke oppgitt"}</span></div><PinnedNotatBoks notat={lead.pinned_notat} className="mt-1.5" /></td>
                       <td className="truncate px-4 py-3 text-muted-foreground" title={lead.e_post}>{lead.e_post || "—"}</td>
-                      <td className="px-4 py-3 tabular-nums text-muted-foreground">{lead.telefon ? <a href={`tel:${lead.telefon}`} onClick={e => e.stopPropagation()} className="hover:underline">{lead.telefon}</a> : "—"}</td>
+                      <td className="truncate px-4 py-3 tabular-nums text-muted-foreground">{lead.telefon ? <a href={`tel:${lead.telefon}`} onClick={e => e.stopPropagation()} className="hover:underline">{lead.telefon}</a> : "—"}</td>
                       <td className="truncate px-4 py-3 text-muted-foreground" title={lead.rolle_i_firma}>{lead.rolle_i_firma || "—"}</td>
                       <td className="px-4 py-3 text-xs text-muted-foreground">{kildeGruppe(lead.kilde)}</td>
                       <td className="px-4 py-3" onClick={e => e.stopPropagation()}><Select value={lead.status} onValueChange={value => changeStatus(lead.id, value as LeadStatus)} disabled={!canEdit}><SelectTrigger aria-label={`Status for ${lead.kontaktperson || lead.firmanavn}`} className={`h-8 text-xs ${statusColors[lead.status] || ""}`}><SelectValue /></SelectTrigger><SelectContent>{statusOptions.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select></td>
@@ -935,7 +915,7 @@ export default function Leads() {
               </Button>
             )}
             <Button size="sm" onClick={() => { setConvertDialogLead(currentLead); setConvertNavn(currentLead.use_case || currentLead.firmanavn); }}>
-              <ArrowRightCircle className="w-4 h-4 mr-1.5" />Til salg
+              <ArrowRightCircle className="w-4 h-4 mr-1.5" />Kvalifiser til salgsmulighet
             </Button>
             <Button size="sm" variant="secondary" onClick={() => setPartnerDialogLead(currentLead)}>
               <Users2 className="w-4 h-4 mr-1.5" />Til partner
