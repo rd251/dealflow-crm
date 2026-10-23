@@ -130,6 +130,8 @@ export interface LoggAktivitetInput {
   utfall?: LeadUtfallNokkel;
   /** Manuell overstyring av oppfølgingsdato (yyyy-mm-dd). Tom streng = ikke rør. */
   nesteOppfolging?: string;
+  /** Marker leadet som «Ikke aktuelt» og ta det ut av automatisk oppfølging. */
+  markerIkkeAktuelt?: boolean;
 }
 
 /** Standardutfall per aktivitetstype når ingen er oppgitt. */
@@ -152,7 +154,7 @@ const harTarget = (t: ActivityTarget) =>
  * Skriver til den eksisterende `aktiviteter`-tabellen, oppdaterer «sist kontaktet»
  * og oppretter oppgave for neste steg når det er fylt ut.
  */
-export async function loggAktivitet(input: LoggAktivitetInput): Promise<{ id: string | null; nesteOppfolging: string }> {
+export async function loggAktivitet(input: LoggAktivitetInput): Promise<{ id: string | null; nesteOppfolging: string; ikkeAktuelt: boolean }> {
   const def = loggTypeDef(input.logg);
   const { data: sessionData } = await supabase.auth.getSession();
   const userId = sessionData?.session?.user?.id ?? null;
