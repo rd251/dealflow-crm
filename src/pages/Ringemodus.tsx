@@ -372,6 +372,17 @@ export default function Ringemodus() {
           target={{ lead_id: lead.id }}
           entityName={lead.firmanavn}
           onLogged={(res) => {
+            if (res?.ikkeAktuelt) {
+              updateLeads(prev => prev.map(l => l.id === lead.id ? {
+                ...l,
+                status: "Ikke aktuelt",
+                sist_aktivitet: idag(),
+                neste_oppfolging: "",
+              } : l));
+              setFerdige(f => ({ ...f, [lead.id]: "Ikke aktuelt" }));
+              neste();
+              return;
+            }
             updateLeads(prev => prev.map(l => l.id === lead.id ? {
               ...l,
               status: l.status === "Ny" ? "Kontaktet" : l.status,
