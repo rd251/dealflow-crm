@@ -2,6 +2,7 @@
 
 ## Enklere leads og salg
 - [ ] Vis Leads som en ryddig kontaktliste inspirert av referansebildet
+- [ ] Forenkle Salgsmuligheter til rolige kolonner med søk og samlede filtre som i det nye bildet
 - [ ] Skill Leads og Salgsmuligheter i to tydelige faner og behold konvertering og gamle lenker
 - [ ] Kontroller innlogget liste, søk, fanebytte og detaljpaneler
 
