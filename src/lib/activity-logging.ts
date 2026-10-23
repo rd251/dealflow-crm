@@ -214,14 +214,16 @@ export async function loggAktivitet(input: LoggAktivitetInput): Promise<{ id: st
 
   // «Sist kontaktet» + neste steg på selve posten
   const dag = idag();
-  const oppfolgingDato =
-    input.nesteOppfolging?.trim() ||
-    input.nesteStegDato?.trim() ||
-    nesteOppfolgingFraUtfall(input.utfall ?? UTFALL_FRA_TYPE[input.logg]);
+  const ikkeAktuelt = Boolean(input.markerIkkeAktuelt && t.lead_id);
+  const oppfolgingDato = ikkeAktuelt
+    ? ""
+    : input.nesteOppfolging?.trim() ||
+      input.nesteStegDato?.trim() ||
+      nesteOppfolgingFraUtfall(input.utfall ?? UTFALL_FRA_TYPE[input.logg]);
 
   const oppdater = async (tabell: "leads" | "salgsmuligheter" | "selskaper" | "partnere", id: string, medNesteSteg: boolean) => {
     const patch: Record<string, unknown> = { sist_aktivitet: dag };
-    if (tabell === "leads") patch.neste_oppfolging = oppfolgingDato;
+    if (tabell === "leads") patch.neste_oppfolging = ikkeAktuelt ? null : oppfolgingDato;
     if (medNesteSteg && nesteSteg && tabell !== "partnere") patch.neste_steg = nesteSteg;
     try {
       await supabase.from(tabell).update(patch as never).eq("id", id);
@@ -235,5 +237,14 @@ export async function loggAktivitet(input: LoggAktivitetInput): Promise<{ id: st
   if (t.selskap_id) await oppdater("selskaper", t.selskap_id, true);
   if (t.partner_id) await oppdater("partnere", t.partner_id, false);
 
-  return { id: (data as { id?: string } | null)?.id ?? null, nesteOppfolging: oppfolgingDato };
+  // «Ikke interessert» → status «Ikke aktuelt», så leadet faller ut av alle oppfølgingslister.
+  if (ikkeAktuelt && t.lead_id) {
+    try {
+      await supabase.from("leads").update({ status: "Ikke aktuelt" } as never).eq("id", t.lead_id);
+    } catch (err) {
+      console.warn("Kunne ikke sette lead til Ikke aktuelt", err);
+    }
+  }
+
+  return { id: (data as { id?: string } | null)?.id ?? null, nesteOppfolging: oppfolgingDato, ikkeAktuelt };
 }
