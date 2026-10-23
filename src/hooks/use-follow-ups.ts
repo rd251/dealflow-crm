@@ -231,6 +231,7 @@ export function useFollowUps(
         : leads.find((l) => l.id === entityId);
       if (!entity) return;
       if (entityType === "salgsmulighet" && (entity.status === "Vunnet" || entity.status === "Tapt")) return;
+      if (entityType === "lead" && (entity.status === "Ikke aktuelt" || entity.konvertert_til)) return;
 
       items.push({
         id: `post-meeting-${meeting.id}`,
@@ -289,6 +290,7 @@ export function useFollowUps(
         : leads.find((l) => l.id === entityId);
       if (!entity) return;
       if (entityType === "salgsmulighet" && (entity.status === "Vunnet" || entity.status === "Tapt")) return;
+      if (entityType === "lead" && (entity.status === "Ikke aktuelt" || entity.konvertert_til)) return;
 
       const isSent = email.aktivitet_kilde === "gmail_sendt";
       const followUpType: FollowUpType = isSent ? "email_awaiting_reply" : "email_needs_reply";
