@@ -1,6 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import PageShell from "@/components/PageShell";
+import SalesTabs from "@/components/SalesTabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useProfiles } from "@/hooks/use-profiles";
 import { useCrmStore } from "@/hooks/use-crm-store";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/use-auth";
@@ -12,7 +15,6 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import DetailPanelShell, { DetailSection, DetailField, DetailDivider } from "@/components/DetailPanelShell";
 import EntityCalendarTab from "@/components/EntityCalendarTab";
 import { Plus, Search, ArrowRightCircle, Trash2, Users2, Upload, Lock, Mail, ArrowUp, ArrowDown, ChevronsUpDown, PenLine, Send, Phone, CalendarDays, UserPlus, CheckCircle2, TrendingUp } from "lucide-react";
-import StatCard from "@/components/StatCard";
 import { relativTid, dagerSiden, kildeGruppe, KILDE_GRUPPER, leadStatusFarge, leadStatusKort, idag, datoOm, type KildeGruppe } from "@/lib/sales-flow";
 import SendEmailDialog from "@/components/SendEmailDialog";
 import SelskapInnsikt from "@/components/SelskapInnsikt";
@@ -30,7 +32,6 @@ import { PinnedNotatBoks, PinnedNotatFelt } from "@/components/PinnedNotat";
 import { skjemaOnske, produktInteresse } from "@/lib/lead-notater";
 import LeadQuickActions from "@/components/LeadQuickActions";
 import RingelisteIdag from "@/components/RingelisteIdag";
-import FolgOppIDag from "@/components/FolgOppIDag";
 import {
   NYTT_LEAD_OPPFOLGING_DAGER,
   oppfolgingDatoOm,
@@ -69,6 +70,8 @@ const statusColors: Record<string, string> = leadStatusFarge;
 
 export default function Leads() {
   const isMobile = useIsMobile();
+  const { profiles } = useProfiles();
+  const ownerName = (value: string) => profiles.find(p => p.user_id === value)?.display_name || value || "Ikke fordelt";
   const { canEdit, isAdmin, user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -266,24 +269,6 @@ export default function Leads() {
     setEmailDialogOpen(true);
   };
 
-  /* ---- KPI-er ---- */
-  const startOfWeek = (() => {
-    const d = new Date();
-    const day = (d.getDay() + 6) % 7;
-    d.setDate(d.getDate() - day);
-    return d.toISOString().split("T")[0];
-  })();
-  const startOfMonth = idag().slice(0, 7) + "-01";
-
-  const nyeDenneUken = leads.filter(l => (l.opprettet_dato || "") >= startOfWeek).length;
-  const kvalifiserteDenneMnd = leads.filter(l =>
-    (l.status === "Kvalifisert" || l.status === "Konvertert til salg") &&
-    ((l.sist_aktivitet || l.opprettet_dato || "") >= startOfMonth)
-  ).length;
-  const konverterteTotalt = leads.filter(l => l.status === "Konvertert til salg").length;
-  const kvalifiserteTotalt = leads.filter(l => l.status === "Kvalifisert").length + konverterteTotalt;
-  const konverteringsrate = kvalifiserteTotalt > 0 ? Math.round((konverterteTotalt / kvalifiserteTotalt) * 100) : 0;
-
   // Open the "forward to partner" dialog, and auto-detect if lead has self-builder onboarding answers
   const openForwardDialog = async (lead: Lead) => {
     setForwardDialogLead(lead);
@@ -386,6 +371,7 @@ export default function Leads() {
   return (
     <PageShell
       title="Leads"
+      navigation={<SalesTabs value="leads" />}
       subtitle={`${filtered.length} leads`}
       actions={canEdit ? (
         <div className="flex gap-2">
@@ -466,7 +452,7 @@ export default function Leads() {
       <Dialog open={!!convertDialogLead} onOpenChange={open => { if (!open) { setConvertDialogLead(null); setConvertNavn(""); setEnrichFields({ orgnr: "", bransje: "", firmaadresse: "", postadresse: "" }); } }}>
         <DialogContent className="max-w-[95vw] sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Konverter til salgsmulighet</DialogTitle>
+            <DialogTitle>Kvalifiser til salgsmulighet</DialogTitle>
             <DialogDescription>Gi salgsmuligheten et navn og fyll inn selskapsinfo for {convertDialogLead?.firmanavn}.</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
@@ -543,7 +529,7 @@ export default function Leads() {
                 }
               }}
             >
-              Konverter
+              Kvalifiser og opprett salgsmulighet
             </Button>
           </div>
         </DialogContent>
@@ -754,85 +740,32 @@ export default function Leads() {
 
 
 
-      <div className="mb-5 flex flex-wrap gap-1.5">
-        <Button size="sm" className="mr-2" onClick={() => navigate("/ringemodus")}>
-          <Phone className="w-4 h-4 mr-1.5" />Start ringemodus
-        </Button>
-        <Button size="sm" variant={visning === "leads" ? "default" : "outline"} onClick={() => setVisning("leads")}>
-          Alle leads
-        </Button>
-        <Button size="sm" variant={visning === "ringeliste" ? "default" : "outline"} onClick={() => setVisning("ringeliste")}>
-          Ringeliste i dag
-        </Button>
-        <Button size="sm" variant={visning === "kalde" ? "default" : "outline"} onClick={() => setVisning("kalde")}>
-          Kalde leads <span className="ml-1 tabular-nums opacity-70">{kaldeLeads.length}</span>
-        </Button>
-      </div>
-
-      {visning === "ringeliste" ? <RingelisteIdag /> : <>
-      {visning === "kalde" ? (
-        <p className="mb-4 rounded-lg border border-warning/25 bg-warning/5 p-3 text-xs text-muted-foreground">
-          Ingen aktivitet på {LEAD_KALD_DAGER} dager eller mer. Logg en aktivitet for å vekke leadet – da flyttes det tilbake i hovedflyten.
-        </p>
-      ) : (
-        <FolgOppIDag leads={aktiveLeads} onOpenLead={setSelectedLead} />
-      )}
-      {/* KPI-er */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
-        <StatCard label="Nye leads denne uken" value={nyeDenneUken} icon={<UserPlus className="w-5 h-5" />} />
-        <StatCard label="Kvalifiserte denne måneden" value={kvalifiserteDenneMnd} icon={<CheckCircle2 className="w-5 h-5" />} />
-        <StatCard label="Konverteringsrate" value={`${konverteringsrate} %`} icon={<TrendingUp className="w-5 h-5" />} trend="Kvalifisert → salgsmulighet" />
-      </div>
-
-      <div className="mb-3 flex flex-wrap items-center gap-2">
-        <div className="relative max-w-sm flex-1 min-w-[200px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input placeholder="Søk leads..." className="pl-9 h-9" value={search} onChange={e => setSearch(e.target.value)} />
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <div className="relative min-w-[200px] max-w-sm flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input aria-label="Søk leads" placeholder="Søk kontakt, bedrift, e-post eller telefon…" className="h-9 pl-9" value={search} onChange={e => setSearch(e.target.value)} />
         </div>
+        <Select value={visning} onValueChange={value => setVisning(value as typeof visning)}>
+          <SelectTrigger aria-label="Leadliste" className="h-9 w-[160px]"><SelectValue /></SelectTrigger>
+          <SelectContent><SelectItem value="leads">Aktive leads</SelectItem><SelectItem value="ringeliste">Ringeliste i dag</SelectItem><SelectItem value="kalde">Kalde leads ({kaldeLeads.length})</SelectItem></SelectContent>
+        </Select>
+        <Select value={statusFilter} onValueChange={value => setStatusFilter(value as typeof statusFilter)}>
+          <SelectTrigger aria-label="Filtrer status" className="h-9 w-[170px]"><SelectValue /></SelectTrigger>
+          <SelectContent><SelectItem value="alle">Alle statuser</SelectItem>{statusOptions.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+        </Select>
+        <Select value={kildeFilter} onValueChange={value => setKildeFilter(value as typeof kildeFilter)}>
+          <SelectTrigger aria-label="Filtrer kilde" className="h-9 w-[150px]"><SelectValue /></SelectTrigger>
+          <SelectContent><SelectItem value="alle">Alle kilder</SelectItem>{KILDE_GRUPPER.map(k => <SelectItem key={k} value={k}>{k}</SelectItem>)}</SelectContent>
+        </Select>
         <MineTeametToggle verdi={eierFilter} onEndre={setEierFilter} />
-        {filterUtenOppfolging && (
-          <Badge variant="secondary" className="gap-1 cursor-pointer hover:bg-destructive/10" onClick={() => setFilterUtenOppfolging(false)}>
-            Uten oppfølging ✕
-          </Badge>
-        )}
-        {statusParam && (
-          <button type="button" onClick={() => clearDeepFilter("status")} aria-label={`Fjern filter ${statusParam}`} className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-            <Badge variant="secondary" className="gap-1 cursor-pointer hover:bg-destructive/10">{statusParam} · {filteredUnsorted.length} ✕</Badge>
-          </button>
-        )}
-        {oppfolgingFilter && (
-          <button type="button" onClick={() => clearDeepFilter("filter")} aria-label="Fjern filter trenger oppfølging" className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-            <Badge variant="secondary" className="gap-1 cursor-pointer hover:bg-destructive/10">Trenger oppfølging · {filteredUnsorted.length} ✕</Badge>
-          </button>
-        )}
+        <Button size="sm" variant="outline" className="ml-auto" onClick={() => navigate("/ringemodus")}><Phone className="h-4 w-4" />Ringemodus</Button>
       </div>
-
-      <div className="mb-4 flex flex-wrap gap-1.5">
-        {(["alle", ...KILDE_GRUPPER] as const).map(k => (
-          <button
-            key={k}
-            onClick={() => setKildeFilter(k as any)}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-              kildeFilter === k ? "bg-primary text-primary-foreground border-primary" : "bg-background text-muted-foreground border-border hover:bg-muted"
-            }`}
-          >
-            {k === "alle" ? "Alle kilder" : k}
-          </button>
-        ))}
-        <span className="w-px bg-border mx-1 self-stretch" />
-        {(["alle", ...statusOptions] as const).map(s => (
-          <button
-            key={s}
-            onClick={() => setStatusFilter(s as any)}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-              statusFilter === s ? "bg-foreground text-background border-foreground" : "bg-background text-muted-foreground border-border hover:bg-muted"
-            }`}
-          >
-            {s === "alle" ? "Alle statuser" : s}
-          </button>
-        ))}
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        {filterUtenOppfolging && <Button size="sm" variant="secondary" onClick={() => setFilterUtenOppfolging(false)}>Uten oppfølging ×</Button>}
+        {statusParam && <Button size="sm" variant="secondary" onClick={() => clearDeepFilter("status")}>{statusParam} ×</Button>}
+        {oppfolgingFilter && <Button size="sm" variant="secondary" onClick={() => clearDeepFilter("filter")}>Trenger oppfølging ×</Button>}
       </div>
-
+      {visning === "ringeliste" ? <RingelisteIdag /> : <>
       {/* Mobile: card layout */}
       {isMobile ? (
             <div className="space-y-3">
@@ -880,7 +813,7 @@ export default function Leads() {
                         <Mail className="w-3.5 h-3.5" />E-post
                       </Button>
                       <Button size="sm" variant="ghost" className="text-xs gap-1 flex-1 min-w-[80px]" onClick={() => { setConvertDialogLead(lead); setConvertNavn(lead.use_case || lead.firmanavn); }}>
-                        <ArrowRightCircle className="w-3.5 h-3.5" />Salg
+                        <ArrowRightCircle className="w-3.5 h-3.5" />Kvalifiser
                       </Button>
                       <Button size="sm" variant="ghost" className="text-xs gap-1 flex-1 min-w-[80px]" onClick={() => setPartnerDialogLead(lead)}>
                         <Users2 className="w-3.5 h-3.5" />Partner
@@ -904,113 +837,36 @@ export default function Leads() {
             </div>
           ) : (
             /* Desktop: table layout */
-            <div className="bg-card border rounded-xl overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b bg-muted/40 text-xs uppercase tracking-wide text-muted-foreground">
-                    {([
-                      ["firmanavn", "Firmanavn"],
-                      ["kontaktperson", "Kontaktperson"],
-                      ["kilde", "Kilde"],
-                      ["status", "Status"],
-                    ] as [LeadSortKey, string][]).map(([key, label]) => (
-                      <th key={key} className="text-left px-4 py-2.5 font-medium cursor-pointer select-none hover:text-foreground transition-colors" onClick={() => toggleSort(key)}>
-                        <span className="inline-flex items-center gap-1">{label} <SortIcon col={key} /></span>
-                      </th>
-                    ))}
-                    <th className="text-left px-4 py-2.5 font-medium">Ansvarlig</th>
-                    <th className="text-left px-4 py-2.5 font-medium cursor-pointer select-none hover:text-foreground" onClick={() => toggleSort("sist_aktivitet")}>
-                      <span className="inline-flex items-center gap-1">Siste aktivitet <SortIcon col="sist_aktivitet" /></span>
-                    </th>
-                    <th className="text-left px-4 py-2.5 font-medium">Oppfølging</th>
-                    <th className="text-left px-4 py-2.5 font-medium">Neste steg</th>
-                    <th className="text-right px-4 py-2.5 font-medium cursor-pointer select-none hover:text-foreground" onClick={() => toggleSort("opprettet_dato")}>
-                      <span className="inline-flex items-center gap-1">Dager <SortIcon col="opprettet_dato" /></span>
-                    </th>
-                    <th className="text-right px-4 py-2.5 font-medium w-[190px]">Handling</th>
-                  </tr>
-                </thead>
+            <div className="min-h-[480px] overflow-x-auto rounded-md border bg-card">
+              <table className="w-full min-w-[1250px] table-fixed text-sm">
+                <thead><tr className="border-b bg-muted/40 text-left text-xs text-muted-foreground">
+                  <th className="w-[185px] border-r px-4 py-3"><Button variant="ghost" className="h-auto p-0 text-xs" onClick={() => toggleSort("kontaktperson")}>Kontakt <SortIcon col="kontaktperson" /></Button></th>
+                  <th className="w-[200px] border-r px-4 py-3"><Button variant="ghost" className="h-auto p-0 text-xs" onClick={() => toggleSort("firmanavn")}>Bedrift <SortIcon col="firmanavn" /></Button></th>
+                  <th className="w-[220px] border-r px-4 py-3">E-post</th>
+                  <th className="w-[140px] border-r px-4 py-3">Telefon</th>
+                  <th className="w-[130px] border-r px-4 py-3">Stilling</th>
+                  <th className="w-[120px] border-r px-4 py-3"><Button variant="ghost" className="h-auto p-0 text-xs" onClick={() => toggleSort("kilde")}>Kilde <SortIcon col="kilde" /></Button></th>
+                  <th className="w-[165px] border-r px-4 py-3"><Button variant="ghost" className="h-auto p-0 text-xs" onClick={() => toggleSort("status")}>Status <SortIcon col="status" /></Button></th>
+                  <th className="w-[140px] border-r px-4 py-3">Ansvarlig</th>
+                  <th className="w-[145px] px-4 py-3">Handlinger</th>
+                </tr></thead>
                 <tbody>
                   {filtered.map(lead => (
-                    <tr key={lead.id} className="group border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => setSelectedLead(lead)}>
-                      <td className="px-4 py-2.5 font-medium">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <CompanyLogo firmanavn={lead.firmanavn} kontaktEmails={lead.e_post ? [lead.e_post] : undefined} size="sm" />
-                          <span className="truncate">{bedriftVisning(lead) || "Bedrift ikke oppgitt"}</span>
-                        </div>
-                        <PinnedNotatBoks notat={lead.pinned_notat} className="mt-1.5 max-w-[260px]" />
-                      </td>
-                      <td className="px-4 py-2.5 text-muted-foreground max-w-[220px]">
-                        <div className="truncate">{lead.kontaktperson || "—"}</div>
-                        {lead.telefon && (
-                          <a href={`tel:${lead.telefon}`} onClick={e => e.stopPropagation()} className="text-xs hover:text-foreground">
-                            {lead.telefon}
-                          </a>
-                        )}
-                        {(lead.produkt_oppsummering || skjemaOnske(lead.notater)) && (
-                          <div className="text-[11px] truncate" title={(lead.produkt_oppsummering || skjemaOnske(lead.notater)) || undefined}>
-                            Ønsker: {(lead.produkt_oppsummering || skjemaOnske(lead.notater))}
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-4 py-2.5">
-                        <div className="flex flex-wrap items-center gap-1">
-                          <Badge variant="secondary" className="text-[11px]">{kildeGruppe(lead.kilde)}</Badge>
-                          {produktInteresse(lead.notater, lead.use_case, lead.produkt_interesse).map(p => (
-                            <Badge key={p} className="text-[10px]">{p}</Badge>
-                          ))}
-                        </div>
-                      </td>
-                      <td className="px-4 py-2.5" onClick={e => e.stopPropagation()}>
-                        <select
-                          className={`text-xs px-2 py-1 rounded-full font-medium border cursor-pointer ${statusColors[lead.status] || ""}`}
-                          value={lead.status}
-                          onChange={e => changeStatus(lead.id, e.target.value as LeadStatus)}
-                          disabled={!canEdit}
-                        >
-                          {statusOptions.map(s => <option key={s} value={s}>{s}</option>)}
-                        </select>
-                      </td>
-                      <td className="px-4 py-2.5 text-muted-foreground text-xs truncate max-w-[120px]">{lead.ansvarlig || "—"}</td>
-                      <td className="px-4 py-2.5 text-muted-foreground text-xs">{relativTid(lead.sist_aktivitet)}</td>
-                      <td className="px-4 py-2.5">
-                        <Badge variant="outline" className={`text-[10px] ${oppfolgingFarge[oppfolgingTilstand(effektivOppfolging(lead))]}`}>
-                          {oppfolgingEtikett(effektivOppfolging(lead))}
-                        </Badge>
-                      </td>
-                      <td className="px-4 py-2.5 text-muted-foreground text-xs truncate max-w-[200px]">{lead.neste_steg || "—"}</td>
-                      <td className="px-4 py-2.5 text-right text-xs tabular-nums text-muted-foreground">{dagerSiden(lead.opprettet_dato) ?? "—"}</td>
-                      <td className="px-4 py-2.5 text-right" onClick={e => e.stopPropagation()}>
-                        {lead.status !== "Ikke aktuelt" && (
-                          <div className="flex gap-0.5 justify-end opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
-                            <Button size="icon" variant="ghost" className="h-7 w-7" title="Logg samtale" onClick={() => loggSamtale(lead)}>
-                              <Phone className="w-3.5 h-3.5" />
-                            </Button>
-                            <Button size="icon" variant="ghost" className="h-7 w-7" title="Book møte" onClick={() => bookMoete(lead)}>
-                              <CalendarDays className="w-3.5 h-3.5" />
-                            </Button>
-                            <Button size="icon" variant="ghost" className="h-7 w-7" title="Send e-post" onClick={() => sendEpost(lead)}>
-                              <Mail className="w-3.5 h-3.5" />
-                            </Button>
-                            <Button size="icon" variant="ghost" className="h-7 w-7" title="Konverter til salgsmulighet" onClick={() => { setConvertDialogLead(lead); setConvertNavn(lead.use_case || lead.firmanavn); }}>
-                              <ArrowRightCircle className="w-3.5 h-3.5" />
-                            </Button>
-                            <Button size="icon" variant="ghost" className="h-7 w-7" title="Konverter til partner" onClick={() => setPartnerDialogLead(lead)}>
-                              <Users2 className="w-3.5 h-3.5" />
-                            </Button>
-                            {isAdmin && (
-                              <Button size="icon" variant="ghost" className="h-7 w-7" title="Videresend til partner" onClick={() => openForwardDialog(lead)}>
-                                <Send className="w-3.5 h-3.5" />
-                              </Button>
-                            )}
-                          </div>
-                        )}
-                        {lead.videresendt_til_partner_id && (
-                          <div className="text-[10px] text-muted-foreground inline-flex items-center gap-1">
-                            <Send className="w-3 h-3" />Videresendt {lead.videresendt_dato}
-                          </div>
-                        )}
-                      </td>
+                    <tr key={lead.id} className="group cursor-pointer border-b last:border-0 transition-colors hover:bg-muted/30" onClick={() => setSelectedLead(lead)}>
+                      <td className="px-4 py-3"><Button variant="ghost" className="h-auto max-w-full justify-start p-0 text-left text-sm" onClick={e => { e.stopPropagation(); setSelectedLead(lead); }}><span className="truncate" title={lead.kontaktperson}>{lead.kontaktperson || "Kontakt ikke oppgitt"}</span></Button></td>
+                      <td className="px-4 py-3"><div className="flex min-w-0 items-center gap-2"><CompanyLogo firmanavn={lead.firmanavn} kontaktEmails={lead.e_post ? [lead.e_post] : undefined} size="sm" /><span className="truncate" title={bedriftVisning(lead) || undefined}>{bedriftVisning(lead) || "Bedrift ikke oppgitt"}</span></div><PinnedNotatBoks notat={lead.pinned_notat} className="mt-1.5" /></td>
+                      <td className="truncate px-4 py-3 text-muted-foreground" title={lead.e_post}>{lead.e_post || "—"}</td>
+                      <td className="truncate px-4 py-3 tabular-nums text-muted-foreground">{lead.telefon ? <a href={`tel:${lead.telefon}`} onClick={e => e.stopPropagation()} className="hover:underline">{lead.telefon}</a> : "—"}</td>
+                      <td className="truncate px-4 py-3 text-muted-foreground" title={lead.rolle_i_firma}>{lead.rolle_i_firma || "—"}</td>
+                      <td className="px-4 py-3 text-xs text-muted-foreground">{kildeGruppe(lead.kilde)}</td>
+                      <td className="px-4 py-3" onClick={e => e.stopPropagation()}><Select value={lead.status} onValueChange={value => changeStatus(lead.id, value as LeadStatus)} disabled={!canEdit}><SelectTrigger aria-label={`Status for ${lead.kontaktperson || lead.firmanavn}`} className={`h-8 text-xs ${statusColors[lead.status] || ""}`}><SelectValue /></SelectTrigger><SelectContent>{statusOptions.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select></td>
+                      <td className="truncate px-4 py-3 text-xs text-muted-foreground" title={ownerName(lead.ansvarlig)}>{ownerName(lead.ansvarlig)}</td>
+                      <td className="px-2 py-3" onClick={e => e.stopPropagation()}>{canEdit && lead.status !== "Ikke aktuelt" && <div className="flex items-center gap-0.5">
+                        <Button size="icon" variant="ghost" className="h-7 w-7" title="Logg samtale" onClick={() => loggSamtale(lead)}><Phone className="h-3.5 w-3.5" /></Button>
+                        <Button size="icon" variant="ghost" className="h-7 w-7" title="Book møte" onClick={() => bookMoete(lead)}><CalendarDays className="h-3.5 w-3.5" /></Button>
+                        <Button size="icon" variant="ghost" className="h-7 w-7" title="Send e-post" onClick={() => sendEpost(lead)}><Mail className="h-3.5 w-3.5" /></Button>
+                        <Button size="icon" variant="ghost" className="h-7 w-7" title="Kvalifiser til salgsmulighet" onClick={() => { setConvertDialogLead(lead); setConvertNavn(lead.use_case || lead.firmanavn); }}><ArrowRightCircle className="h-3.5 w-3.5" /></Button>
+                      </div>}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -1059,7 +915,7 @@ export default function Leads() {
               </Button>
             )}
             <Button size="sm" onClick={() => { setConvertDialogLead(currentLead); setConvertNavn(currentLead.use_case || currentLead.firmanavn); }}>
-              <ArrowRightCircle className="w-4 h-4 mr-1.5" />Til salg
+              <ArrowRightCircle className="w-4 h-4 mr-1.5" />Kvalifiser til salgsmulighet
             </Button>
             <Button size="sm" variant="secondary" onClick={() => setPartnerDialogLead(currentLead)}>
               <Users2 className="w-4 h-4 mr-1.5" />Til partner

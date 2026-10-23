@@ -15,7 +15,7 @@ type NavItem = { to: string; icon: any; label: string };
 // Salgsflyten – alltid synlig
 const mainItems: NavItem[] = [
   { to: "/dashboard", icon: LayoutDashboard, label: "Oversikt" },
-  { to: "/salg", icon: Handshake, label: "Salg" },
+  { to: "/leads", icon: Handshake, label: "Leads og salg" },
   { to: "/selskaper", icon: Building2, label: "Kundeforhold" },
   { to: "/prosjekter", icon: FolderKanban, label: "Prosjekter" },
   { to: "/kontakter", icon: Users, label: "Kontakter" },
@@ -44,7 +44,7 @@ function SidebarNav({ onNavigate, isAdmin, displayName }: { onNavigate?: () => v
   const [moreOpen, setMoreOpen] = useState(() => moreItems.some((i) => i.to === location.pathname));
 
   const renderItem = ({ to, icon: Icon, label }: NavItem) => {
-    const active = location.pathname === to;
+    const active = location.pathname === to || (to === "/leads" && ["/salgsmuligheter", "/salg"].includes(location.pathname));
     return (
       <NavLink
         key={to}
@@ -111,7 +111,7 @@ function CollapsedSidebarNav({ isAdmin }: { isAdmin: boolean }) {
     <>
       <nav className="flex-1 px-2 space-y-0.5 mt-1 overflow-y-auto scrollbar-sidebar">
         {items.map(({ to, icon: Icon, label }) => {
-          const active = location.pathname === to;
+          const active = location.pathname === to || (to === "/leads" && ["/salgsmuligheter", "/salg"].includes(location.pathname));
           return (
             <NavLink
               key={to}
