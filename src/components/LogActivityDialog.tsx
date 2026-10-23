@@ -57,7 +57,7 @@ interface Props {
   entityName?: string;
   kontaktListe?: KontaktOption[];
   defaultType?: LoggType;
-  onLogged?: (res?: { id: string | null; nesteOppfolging: string }) => void;
+  onLogged?: (res?: { id: string | null; nesteOppfolging: string; ikkeAktuelt: boolean }) => void;
 }
 
 export default function LogActivityDialog({
@@ -75,6 +75,7 @@ export default function LogActivityDialog({
   const [nesteSteg, setNesteSteg] = useState("");
   const [nesteStegDato, setNesteStegDato] = useState<Date | undefined>();
   const [oppfolgingDato, setOppfolgingDato] = useState<Date | undefined>();
+  const [ikkeInteressert, setIkkeInteressert] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const [meetingTittel, setMeetingTittel] = useState("");
@@ -94,6 +95,7 @@ export default function LogActivityDialog({
     setNesteSteg("");
     setNesteStegDato(undefined);
     setOppfolgingDato(undefined);
+    setIkkeInteressert(false);
     setValgt(null);
     setSøk("");
     setMeetingTittel("");
@@ -150,6 +152,7 @@ export default function LogActivityDialog({
 
 
   const effektivtTarget = allowTargetPick ? valgt?.target : target;
+  const erLead = Boolean(effektivtTarget?.lead_id);
   const kanLagre = Boolean(effektivtTarget) && !saving;
 
   const lagre = async () => {
@@ -160,9 +163,10 @@ export default function LogActivityDialog({
         logg: type,
         target: effektivtTarget,
         notat,
-        nesteSteg,
-        nesteStegDato: nesteStegDato ? format(nesteStegDato, "yyyy-MM-dd") : undefined,
-        nesteOppfolging: oppfolgingDato ? format(oppfolgingDato, "yyyy-MM-dd") : undefined,
+        nesteSteg: ikkeInteressert ? undefined : nesteSteg,
+        nesteStegDato: !ikkeInteressert && nesteStegDato ? format(nesteStegDato, "yyyy-MM-dd") : undefined,
+        nesteOppfolging: !ikkeInteressert && oppfolgingDato ? format(oppfolgingDato, "yyyy-MM-dd") : undefined,
+        markerIkkeAktuelt: ikkeInteressert && erLead,
         meeting: type === "moete"
           ? { tittel: meetingTittel, dato: meetingDato, startTid: meetingStartTid, sluttTid: meetingSluttTid, deltakere: meetingDeltakere }
           : undefined,
@@ -281,6 +285,29 @@ export default function LogActivityDialog({
             />
           </div>
 
+          {erLead && (
+            <label
+              className={cn(
+                "flex items-start gap-2.5 rounded-lg border p-3 cursor-pointer transition-colors",
+                ikkeInteressert ? "border-destructive/40 bg-destructive/5" : "border-border hover:bg-muted/40"
+              )}
+            >
+              <input
+                type="checkbox"
+                checked={ikkeInteressert}
+                onChange={e => setIkkeInteressert(e.target.checked)}
+                className="mt-0.5 h-4 w-4 accent-destructive"
+              />
+              <span>
+                <span className="block text-sm font-medium">Ikke interessert</span>
+                <span className="block text-xs text-muted-foreground">
+                  Leadet markeres «Ikke aktuelt» og tas ut av automatisk oppfølging.
+                </span>
+              </span>
+            </label>
+          )}
+
+          {!ikkeInteressert && (
           <div className="space-y-1.5 rounded-lg border border-blue-500/20 bg-blue-500/5 p-3">
             <Label htmlFor="logg-neste-steg" className="text-xs font-medium uppercase tracking-wide text-blue-600">
               Neste steg <span className="normal-case font-normal text-muted-foreground">(valgfritt)</span>
@@ -313,7 +340,9 @@ export default function LogActivityDialog({
               </PopoverContent>
             </Popover>
           </div>
+          )}
 
+          {!ikkeInteressert && (
           <div className="space-y-1.5 rounded-lg border bg-muted/30 p-3">
             <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               Neste oppfølging <span className="normal-case font-normal">(settes automatisk)</span>
@@ -342,6 +371,7 @@ export default function LogActivityDialog({
               </PopoverContent>
             </Popover>
           </div>
+          )}
 
           <Button className="w-full" onClick={lagre} disabled={!kanLagre}>
             {saving && <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />}
