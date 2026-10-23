@@ -95,6 +95,7 @@ export default function LogActivityDialog({
     setNesteSteg("");
     setNesteStegDato(undefined);
     setOppfolgingDato(undefined);
+    setIkkeInteressert(false);
     setValgt(null);
     setSøk("");
     setMeetingTittel("");
@@ -151,6 +152,7 @@ export default function LogActivityDialog({
 
 
   const effektivtTarget = allowTargetPick ? valgt?.target : target;
+  const erLead = Boolean(effektivtTarget?.lead_id);
   const kanLagre = Boolean(effektivtTarget) && !saving;
 
   const lagre = async () => {
@@ -161,9 +163,10 @@ export default function LogActivityDialog({
         logg: type,
         target: effektivtTarget,
         notat,
-        nesteSteg,
-        nesteStegDato: nesteStegDato ? format(nesteStegDato, "yyyy-MM-dd") : undefined,
-        nesteOppfolging: oppfolgingDato ? format(oppfolgingDato, "yyyy-MM-dd") : undefined,
+        nesteSteg: ikkeInteressert ? undefined : nesteSteg,
+        nesteStegDato: !ikkeInteressert && nesteStegDato ? format(nesteStegDato, "yyyy-MM-dd") : undefined,
+        nesteOppfolging: !ikkeInteressert && oppfolgingDato ? format(oppfolgingDato, "yyyy-MM-dd") : undefined,
+        markerIkkeAktuelt: ikkeInteressert && erLead,
         meeting: type === "moete"
           ? { tittel: meetingTittel, dato: meetingDato, startTid: meetingStartTid, sluttTid: meetingSluttTid, deltakere: meetingDeltakere }
           : undefined,
