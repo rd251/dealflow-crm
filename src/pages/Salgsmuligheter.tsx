@@ -350,14 +350,13 @@ export default function Salgsmuligheter() {
     setDragOverStage(null);
     if (!draggedId) return;
 
-    // Block move if neste_steg is empty (for open stages)
+    // Påminn om neste steg, men ikke stopp flyttingen
     if (stage !== "Vunnet" && stage !== "Tapt") {
       const deal = salgsmuligheter.find(s => s.id === draggedId);
       if (deal && !deal.neste_steg?.trim()) {
         setMoveBlockedId(draggedId);
         setTimeout(() => setMoveBlockedId(null), 2500);
-        setDraggedId(null);
-        return;
+        toast.info("Flyttet – husk å legge inn neste steg");
       }
     }
 
@@ -1649,9 +1648,14 @@ export default function Salgsmuligheter() {
               </>
             ),
             notater: (
-              <DetailField label="Notater">
-                <Textarea value={currentSm.notater} onChange={e => updateField("notater", e.target.value)} rows={6} readOnly={!canEdit} />
-              </DetailField>
+              <div className="space-y-6">
+                <ActivityLog salgsmulighet_id={currentSm.id} onActivityLogged={() => {
+                  updateSalgsmuligheter(prev => prev.map(s => s.id === currentSm.id ? { ...s, sist_aktivitet: new Date().toISOString().split("T")[0] } : s));
+                }} />
+                <DetailField label="Bakgrunn">
+                  <Textarea value={currentSm.notater} onChange={e => updateField("notater", e.target.value)} rows={6} readOnly={!canEdit} />
+                </DetailField>
+              </div>
             ),
             kalender: (
               <EntityCalendarTab salgsmulighet_id={currentSm.id} />
