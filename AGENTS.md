@@ -11,4 +11,5 @@
 - Send automatic first-contact emails to new leads from a single queue worker woken by an insert trigger and unscheduled when drained; this avoids permanent polling and prevents duplicate sends.
 - Send the daily morning email report (`morgen-epost-rapport`, 06:00 UTC cron, rd@snakk.ai) with counts derived from leads.velkomst_sendt_at, aktiviteter (gmail_sendt), venter_pa_svar and nyhetsbrev; internal driftsvarsel without unsubscribe.
 
-- Push new tasks to the assignee's (fallback: creator's) Google Calendar as all-day events via a DB trigger and the oppgave-kalender function, tagged so calendar sync never re-imports them; this works for every task entry point without client changes.
+- Sync tasks to the assignee's (fallback: creator's) Google Calendar as timed events via a DB trigger on deadline/date changes and oppgave-kalender; PATCH stored event IDs instead of duplicating entries, and tag events so calendar sync never re-imports them.
+- Forward saved activity outcomes through ActivityLog and apply them to the lead store before persistence; this prevents stale lead status and follow-up dates overwriting the saved outcome.
