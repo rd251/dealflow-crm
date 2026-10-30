@@ -1,12 +1,12 @@
 // Legger nye oppgaver i Google Kalender til ansvarlig (eller den som opprettet).
 // Kalles av databasetriggeren trg_oppgave_kalender. Idempotent via oppgaver.google_event_id.
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { saveTaskCalendarEvent } from "../_shared/task-calendar.ts";
 
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const GOOGLE_CLIENT_ID = Deno.env.get("GOOGLE_CLIENT_ID")!;
-const GOOGLE_CLIENT_SECRET = Deno.env.get("GOOGLE_CLIENT_SECRET")!;
-const CRM_URL = "https://snakk-ai.lovable.app/oppgaver";
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
+const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+const GOOGLE_CLIENT_ID = Deno.env.get("GOOGLE_CLIENT_ID") ?? "";
+const GOOGLE_CLIENT_SECRET = Deno.env.get("GOOGLE_CLIENT_SECRET") ?? "";
 const UUID = /^[0-9a-f-]{36}$/i;
 
 const json = (b: unknown, status = 200) =>
@@ -40,7 +40,7 @@ Deno.serve(async (req) => {
 
     const { data: o } = await sb.from("oppgaver").select("*").eq("id", oppgave_id).maybeSingle();
     if (!o) return json({ skipped: "fant ikke oppgaven" });
-    if (o.google_event_id || o.status === "Ferdig") return json({ skipped: "allerede i kalender eller ferdig" });
+    if (o.status === "Ferdig") return json({ skipped: "oppgaven er ferdig" });
 
     // Ansvarlig lagres som bruker-ID, eldre oppgaver som visningsnavn.
     let mottaker: string | null = null;
@@ -65,39 +65,17 @@ Deno.serve(async (req) => {
       const { data: s } = await sb.from("selskaper").select("firmanavn").eq("id", o.selskap_id).maybeSingle();
       if (s?.firmanavn) kobling = s.firmanavn;
     }
-    // Timet oppføring (ikke heldags) slik at den ikke fyller hele kalenderdagen.
-    // Bruker klokkeslett fra frist_tid hvis satt, ellers fra fristen, ellers STANDARD_STARTTID.
-    const TIDSSONE = "Europe/Oslo";
-    const STANDARD_STARTTID = "09:00";
-    const VARIGHET_MINUTTER = 30;
-    const dato = (o.frist || new Date().toISOString().slice(0, 10)).slice(0, 10);
-    const tidMatch = typeof o.frist_tid === "string" && /^\d{2}:\d{2}/.test(o.frist_tid)
-      ? [null, o.frist_tid.slice(0, 5)]
-      : (typeof o.frist === "string" ? o.frist.match(/T(\d{2}:\d{2})/) : null);
-    const startTid = tidMatch ? tidMatch[1] : STANDARD_STARTTID;
-    const [t, min] = startTid.split(":").map(Number);
-    const sluttMinTotal = t * 60 + min + VARIGHET_MINUTTER;
-    const sluttTid = `${String(Math.floor(sluttMinTotal / 60) % 24).padStart(2, "0")}:${String(sluttMinTotal % 60).padStart(2, "0")}`;
-    const event = {
-      summary: `✅ ${o.oppgave}${kobling ? ` – ${kobling}` : ""}`,
-      description: [o.notater, `Prioritet: ${o.prioritet}`, `Åpne i CRM: ${CRM_URL}`].filter(Boolean).join("\n\n"),
-      start: { dateTime: `${dato}T${startTid}:00`, timeZone: TIDSSONE },
-      end: { dateTime: `${dato}T${sluttTid}:00`, timeZone: TIDSSONE },
-      transparency: "transparent",
-      extendedProperties: { private: { snakk_oppgave_id: o.id } },
-    };
-    const res = await fetch("https://www.googleapis.com/calendar/v3/calendars/primary/events", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify(event),
-    });
+    const res = await saveTaskCalendarEvent(o, token, kobling);
     if (!res.ok) {
       const body = await res.text();
       console.error(`Google Kalender feilet [${res.status}]: ${body}`);
       return json({ error: "Google Kalender feilet", status: res.status, details: body }, res.status);
     }
     const created = await res.json();
-    await sb.from("oppgaver").update({ google_event_id: created.id }).eq("id", o.id);
+    if (!o.google_event_id) {
+      const { error } = await sb.from("oppgaver").update({ google_event_id: created.id }).eq("id", o.id);
+      if (error) throw error;
+    }
     return json({ ok: true, event_id: created.id, kalender_eier: conn.user_id });
   } catch (e) {
     console.error("oppgave-kalender", e);

@@ -44,6 +44,7 @@ import {
 } from "@/lib/follow-up-rules";
 import { supabase } from "@/integrations/supabase/client";
 import { loggAktivitet } from "@/lib/activity-logging";
+import { applyLeadActivityResult } from "@/lib/lead-activity-result";
 import { toast } from "sonner";
 import MineTeametToggle from "@/components/MineTeametToggle";
 import { useMineFilter } from "@/hooks/use-mine-filter";
@@ -1067,8 +1068,8 @@ export default function Leads() {
             interaksjoner: (
               <>
                 <InlineTaskForm lead_id={currentLead.id} selskap_id="" />
-                <ActivityLog lead_id={currentLead.id} onOpenCreateRef={openCreateActivityRef} onActivityLogged={() => {
-                  updateLeads(prev => prev.map(l => l.id === currentLead.id ? { ...l, sist_aktivitet: new Date().toISOString().split("T")[0] } : l));
+                <ActivityLog lead_id={currentLead.id} onOpenCreateRef={openCreateActivityRef} onActivityLogged={(result) => {
+                  updateLeads(prev => prev.map(l => l.id === currentLead.id ? applyLeadActivityResult(l, result) : l));
                 }} />
                 <EntityChangelog entity_type="lead" entity_id={currentLead.id} />
               </>

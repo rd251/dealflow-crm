@@ -15,6 +15,7 @@ import SendEmailDialog from "@/components/SendEmailDialog";
 import { useAuth } from "@/hooks/use-auth";
 import LogActivityDialog from "@/components/LogActivityDialog";
 import { QUICK_ACTIONS, loggAktivitet, type ActivityTarget } from "@/lib/activity-logging";
+import type { ActivityLogResult } from "@/lib/lead-activity-result";
 
 const API_URL = import.meta.env.VITE_SUPABASE_URL + '/rest/v1';
 const getApiHeaders = async () => {
@@ -99,7 +100,7 @@ interface ActivityLogProps {
   prosjekt_id?: string;
   kontakt_id?: string;
   email?: string;
-  onActivityLogged?: () => void;
+  onActivityLogged?: (result?: ActivityLogResult) => void;
   kontaktListe?: KontaktOption[];
   entityName?: string;
   kontaktperson?: string;
@@ -187,10 +188,10 @@ export default function ActivityLog(props: ActivityLogProps) {
     if (!handling || !harTarget) return;
     setQuickBusy(id);
     try {
-      await loggAktivitet({ logg: handling.logg, target: aktivitetTarget, tittel: handling.tittel, notat: handling.beskrivelse });
+      const result = await loggAktivitet({ logg: handling.logg, target: aktivitetTarget, tittel: handling.tittel, notat: handling.beskrivelse });
       toast.success(`${handling.label} · logget`);
       await fetchAktiviteter();
-      props.onActivityLogged?.();
+      props.onActivityLogged?.(result);
     } catch (e) {
       console.error(e);
       toast.error("Kunne ikke logge aktiviteten");
@@ -646,7 +647,7 @@ export default function ActivityLog(props: ActivityLogProps) {
         target={aktivitetTarget}
         entityName={props.entityName}
         kontaktListe={props.kontaktListe}
-        onLogged={() => { fetchAktiviteter(); props.onActivityLogged?.(); }}
+        onLogged={(result) => { fetchAktiviteter(); props.onActivityLogged?.(result); }}
       />
     </div>
   );
