@@ -39,6 +39,7 @@ const DEAL_TIL_STEG: Record<SalgsmulighetStatus, Salgssteg> = {
   "Løsning presentert": "Behov avklart",
   "Demo gjennomført": "Behov avklart",
   "Demo-prosjekt": "Behov avklart",
+  "Tilbud sendt": "Tilbud sendt",
   "Kontrakt sendt": "Tilbud sendt",
   "Vunnet": "Avsluttet",
   "Tapt": "Avsluttet",
@@ -47,7 +48,7 @@ const DEAL_TIL_STEG: Record<SalgsmulighetStatus, Salgssteg> = {
 const STEG_TIL_DEAL: Partial<Record<Salgssteg, SalgsmulighetStatus>> = {
   "Møte": "Møte booket",
   "Behov avklart": "Behov avklart",
-  "Tilbud sendt": "Kontrakt sendt",
+  "Tilbud sendt": "Tilbud sendt",
 };
 
 const STALE_DAGER = 7;
