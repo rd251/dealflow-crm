@@ -52,10 +52,10 @@ import {
 } from "@/lib/follow-up-rules";
 
 /** Aktive stadier i kanban (rekkefølge). */
-const allStatuses: SalgsmulighetStatus[] = ["Møte booket", "Demo gjennomført", "Demo-prosjekt", "Kontrakt sendt"];
+const allStatuses: SalgsmulighetStatus[] = ["Møte booket", "Demo gjennomført", "Demo-prosjekt", "Tilbud sendt", "Kontrakt sendt"];
 /** Alle statuser som regnes som åpne – inkl. eldre statuser fra før omleggingen. */
-const openStatuses: SalgsmulighetStatus[] = ["Møte booket", "Behov avklart", "Løsning presentert", "Demo gjennomført", "Demo-prosjekt", "Kontrakt sendt"];
-const ACTIVE_KANBAN_STAGES: SalgsmulighetStatus[] = ["Møte booket", "Demo gjennomført", "Demo-prosjekt", "Kontrakt sendt"];
+const openStatuses: SalgsmulighetStatus[] = ["Møte booket", "Behov avklart", "Løsning presentert", "Demo gjennomført", "Demo-prosjekt", "Tilbud sendt", "Kontrakt sendt"];
+const ACTIVE_KANBAN_STAGES: SalgsmulighetStatus[] = ["Møte booket", "Demo gjennomført", "Demo-prosjekt", "Tilbud sendt", "Kontrakt sendt"];
 const STALE_STAGE_DAYS = 90;
 type PipelineSegment = "aktive" | "avklaring" | "vunnet" | "tapt" | "arkiv";
 type HurtigFilter = "" | "mine" | "forfalt" | "denne-uka";
@@ -153,6 +153,7 @@ const statusColors: Record<SalgsmulighetStatus, string> = {
   "Løsning presentert": "bg-stage-demo",
   "Demo gjennomført": "bg-stage-demo",
   "Demo-prosjekt": "bg-stage-demo",
+  "Tilbud sendt": "bg-stage-proposal",
   "Kontrakt sendt": "bg-stage-proposal",
   "Vunnet": "bg-stage-won",
   "Tapt": "bg-stage-lost",
