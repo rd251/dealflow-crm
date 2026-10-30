@@ -2379,6 +2379,7 @@ export type Database = {
         | "Møte booket"
         | "Behov avklart"
         | "Løsning presentert"
+        | "Tilbud sendt"
         | "Kontrakt sendt"
         | "Vunnet"
         | "Tapt"
@@ -2630,6 +2631,7 @@ export const Constants = {
         "Møte booket",
         "Behov avklart",
         "Løsning presentert",
+        "Tilbud sendt",
         "Kontrakt sendt",
         "Vunnet",
         "Tapt",
