@@ -1,5 +1,10 @@
 # Roadmap
 
+## Project monitoring – leadstatus og oppgavekalender
+- [ ] Verifiser og rett overskriving av «Ikke interessert» fra leadets detaljside
+- [ ] Verifiser og rett flytting av eksisterende kalenderoppføring ved endret oppgavedato eller klokkeslett
+- [ ] Kjør regresjonstester og kontroller lagring og kalenderoppdatering
+
 ## Enklere leads og salg
 - [x] Vis Leads som en ryddig kontaktliste inspirert av referansebildet
 - [x] Forenkle Salgsmuligheter til rolige kolonner med søk og samlede filtre som i det nye bildet
