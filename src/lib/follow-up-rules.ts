@@ -28,6 +28,7 @@ export const STADIUM_BUDSJETT_DAGER: Record<string, number> = {
   "Møte booket": 7,
   "Demo gjennomført": 14,
   "Demo-prosjekt": 30,
+  "Tilbud sendt": 14,
   "Kontrakt sendt": 14,
 };
 
