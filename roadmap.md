@@ -1,9 +1,10 @@
 # Roadmap
 
 ## Project monitoring – leadstatus og oppgavekalender
-- [ ] Verifiser og rett overskriving av «Ikke interessert» fra leadets detaljside
-- [ ] Verifiser og rett flytting av eksisterende kalenderoppføring ved endret oppgavedato eller klokkeslett
-- [ ] Kjør regresjonstester og kontroller lagring og kalenderoppdatering
+- [x] Verifiser og rett overskriving av «Ikke interessert» fra leadets detaljside
+- [x] Verifiser og rett flytting av eksisterende kalenderoppføring ved endret oppgavedato eller klokkeslett
+- [x] Kjør regresjonstester og kontroller lagring og kalenderoppdatering (8 tester; lead lagret etter ny åpning; Google returnerte 200 for oppdatering av samme hendelse)
+- [ ] Fjern kalenderens «Kontroll – kalenderflytting» 3. november kl. 14:00 (CRM-testoppgaven er fjernet; kalenderens direkte lesing/sletting er blokkert av tilgangsreglene)
 
 ## Enklere leads og salg
 - [x] Vis Leads som en ryddig kontaktliste inspirert av referansebildet
