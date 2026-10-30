@@ -183,6 +183,13 @@
       "when": 1792062817883,
       "tag": "0025_oppgave_frist_tid",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1793350376031,
+      "tag": "0026_sync_task_calendar_date_and_time",
+      "breakpoints": true
     }
   ]
 }
