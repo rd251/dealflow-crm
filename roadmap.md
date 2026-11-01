@@ -119,3 +119,9 @@
 - [ ] Prosjektside: KPI-kort, statusfiltre, prosjektkort med fremdrift, drawer
 - [ ] Opprettelse av prosjekt flyttet til kundeprofil (modal + oppgave, varsling, aktivitetslogg)
 - [ ] Live-overgang: kundestatus, go-live dato, sletting av KB-filer, varsling
+
+## Oversikt som «I dag»
+- [x] Flytt porteføljetallene uendret til /portefolje (fane på Rapporter, under «Mer»)
+- [x] Ny Oversikt med tall, møter, Følg opp nå, Venter på svar, Nytt i Innboks og Salg som står stille
+- [x] Tester for Følg opp nå, Venter på svar-filter og Mine/Teamet
+- [ ] Prøv «Følg opp»-utkast ende til ende (venter på at Robin kobler Google til på nytt for utkast-tilgang)
