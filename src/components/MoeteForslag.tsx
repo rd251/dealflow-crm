@@ -25,7 +25,7 @@ export default function MoeteForslag() {
       .select("id, tittel, dato, eksterne_deltakere, lead_id, salgsmulighet_id")
       .eq("type", "Møte").gte("dato", fra)
       .is("salgsmulighet_id", null).is("lead_id", null).is("selskap_id", null).is("kontakt_id", null)
-      .neq("eksterne_deltakere", "{}")
+      .not("eksterne_deltakere", "eq", "{}")
       .order("dato", { ascending: false }).limit(20)
       .then(({ data }) => setMoeter((data as Moete[]) || []));
   }, []);
