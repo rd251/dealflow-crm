@@ -205,6 +205,7 @@ export default function Salgsmuligheter() {
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [dragOverStage, setDragOverStage] = useState<string | null>(null);
   const [selectedSm, setSelectedSm] = useState<Salgsmulighet | null>(null);
+  const [slettSm, setSlettSm] = useState<Salgsmulighet | null>(null);
   const [lossDialog, setLossDialog] = useState<string | null>(null);
   const [winDialog, setWinDialog] = useState<string | null>(null);
   const [winPartnerId, setWinPartnerId] = useState<string>("");
@@ -1700,6 +1701,32 @@ export default function Salgsmuligheter() {
           }}
         />
       )}
+      <AlertDialog open={!!slettSm} onOpenChange={o => { if (!o) setSlettSm(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Slette salgsmuligheten?</AlertDialogTitle>
+            <AlertDialogDescription>
+              «{slettSm?.navn}» flyttes til papirkurven og kan gjenopprettes i 30 dager. E-poster og møter beholdes og flyttes over til selskapet.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Avbryt</AlertDialogCancel>
+            <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={async () => {
+              if (!slettSm) return;
+              const sm = slettSm;
+              setSlettSm(null);
+              try {
+                await slettSalgsmulighetTrygt(sm.id, sm.selskap_id || null);
+                updateSalgsmuligheter(prev => prev.filter(s => s.id !== sm.id));
+                if (selectedSm?.id === sm.id) setSelectedSm(null);
+                toast("Salgsmulighet flyttet til papirkurven");
+              } catch (err: any) {
+                toast.error(`Kunne ikke slette: ${err?.message || "ukjent feil"}`);
+              }
+            }}>Slett</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </PageShell>
   );
 }
