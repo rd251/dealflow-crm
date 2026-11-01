@@ -297,6 +297,7 @@ async function syncForUser(supabase: any, connection: any) {
       ekstern_provider: 'google_calendar',
       aktivitet_kilde: 'google_calendar',
       deltakere: deltakere.length > 0 ? deltakere : [],
+      eksterne_deltakere: getExternalAttendees(event.attendees || []).map((a: any) => (a.email || '').toLowerCase()).filter(Boolean),
       kontakt_id: kontaktIdFromExt,
       selskap_id: selskapId,
       salgsmulighet_id: salgsmulighetId,

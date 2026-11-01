@@ -234,6 +234,7 @@ Deno.serve(async (req) => {
       type: "Møte",
       tittel: meeting.name || meeting.title || "Trale-møte",
       beskrivelse: `Deltakere: ${attendeeDesc}`,
+      eksterne_deltakere: attendeeEmails.filter((e: string) => !e.endsWith("@snakk.ai")),
       moetenotater: meetingNotes,
       dato: meeting.createdAt || today,
       start_tid: meeting.createdAt || null,

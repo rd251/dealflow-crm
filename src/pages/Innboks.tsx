@@ -1,3 +1,4 @@
+import MoeteForslag from "@/components/MoeteForslag";
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import PageShell from "@/components/PageShell";
@@ -659,6 +660,7 @@ export default function Innboks() {
         </div>
       }
     >
+      <MoeteForslag />
       {/* Søk – øverst over fanene */}
       <div className="relative mb-4">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />

@@ -197,6 +197,20 @@
       "when": 1793350952196,
       "tag": "0027_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1793554777206,
+      "tag": "0028_moete_til_salgsmulighet",
+      "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1793554877187,
+      "tag": "0029_moete_trigger_ikke_ved_frakobling",
+      "breakpoints": true
     }
   ]
 }
