@@ -17,10 +17,10 @@ interface SearchResult {
 }
 
 const typeConfig = {
-  selskap: { icon: Building2, label: "Selskap", color: "text-secondary-foreground bg-secondary", path: (id: string) => `/selskaper/${id}` },
-  kontakt: { icon: User, label: "Kontakt", color: "text-foreground bg-muted", path: (id: string) => `/kontakter?open=${id}` },
-  lead: { icon: Users, label: "Lead", color: "text-primary-foreground bg-primary", path: (id: string) => `/leads?open=${id}` },
-  salgsmulighet: { icon: Briefcase, label: "Salg", color: "text-success bg-success/10", path: (id: string) => `/salgsmuligheter?open=${id}` },
+  selskap: { icon: Building2, label: "Selskap", color: "text-secondary-foreground bg-secondary", path: (id: string) => `?selskap=${id}` },
+  kontakt: { icon: User, label: "Kontakt", color: "text-foreground bg-muted", path: (id: string) => `?kunde=kontakt:${id}` },
+  lead: { icon: Users, label: "Lead", color: "text-primary-foreground bg-primary", path: (id: string) => `?kunde=lead:${id}` },
+  salgsmulighet: { icon: Briefcase, label: "Salg", color: "text-success bg-success/10", path: (id: string) => `?kunde=sm:${id}` },
   partner: { icon: Handshake, label: "Partner", color: "text-partner bg-partner/10", path: (id: string) => `/partnere/${id}` },
   moete: { icon: Calendar, label: "Møte", color: "text-pipeline bg-pipeline/10", path: (id: string) => `/moetenotater?meeting=${id}` },
 } as const;
