@@ -283,7 +283,10 @@ export default function IDag() {
                       <li key={v.id} className="space-y-2 px-3 py-3">
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
-                            <p className="truncate text-sm font-medium">{info.navn}{info.firma && <span className="font-normal text-muted-foreground"> · {info.firma}</span>}</p>
+                            <p className="truncate text-sm font-medium">
+                              <KundeNavn r={v.kontakt_id ? { type: "kontakt", id: v.kontakt_id } : v.lead_id ? { type: "lead", id: v.lead_id } : v.salgsmulighet_id ? { type: "sm", id: v.salgsmulighet_id } : null}>{info.navn}</KundeNavn>
+                              {info.firma && <span className="font-normal text-muted-foreground"> · <SelskapNavn id={v.selskap_id || kontakter.find(k => k.id === v.kontakt_id)?.selskap_id}>{info.firma}</SelskapNavn></span>}
+                            </p>
                             <p className="truncate text-xs">{v.emne || "(uten emne)"}</p>
                             {v.ai_begrunnelse && <p className="line-clamp-1 text-xs text-muted-foreground">{v.ai_begrunnelse}</p>}
                           </div>
