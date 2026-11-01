@@ -14,7 +14,8 @@ import { useCrmStore } from "@/hooks/use-crm-store";
 import { useAuth } from "@/hooks/use-auth";
 import { useMineFilter } from "@/hooks/use-mine-filter";
 import { eksterneDeltakere } from "@/lib/moete-kobling";
-import { dagStr, dagerForfalt, erMin, filtrerVenter, folgOppNa, salgSomStarStille } from "@/lib/i-dag";
+import { dagStr, dagerForfalt, erMin, filtrerVenter, folgOppNa, salgSomStarStille, type FolgOppRad } from "@/lib/i-dag";
+import KundeKort from "@/components/KundeKort";
 import { cn } from "@/lib/utils";
 
 interface Moete {
@@ -54,6 +55,7 @@ export default function IDag() {
   const [visAlleStille, setVisAlleStille] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [utkast, setUtkast] = useState<Utkast | null>(null);
+  const [valgtRad, setValgtRad] = useState<FolgOppRad | null>(null);
 
   const now = new Date();
   const iDag = dagStr(now);
@@ -246,15 +248,19 @@ export default function IDag() {
               <>
                 <ul className="divide-y">
                   {(visAlleFolg ? folgOpp : folgOpp.slice(0, 8)).map(r => (
-                    <li key={r.key} className="flex flex-wrap items-center gap-3 px-3 py-3">
+                    <li key={r.key} role="button" tabIndex={0} aria-label={`Åpne kundekort: ${r.navn}`}
+                      onClick={() => setValgtRad(r)} onKeyDown={e => { if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); setValgtRad(r); } }}
+                      className="flex cursor-pointer flex-wrap items-center gap-3 rounded-md px-3 py-3 hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-medium">{r.navn}</p>
                         <p className={cn("text-xs tabular-nums", r.dagerForfalt > 0 ? "text-warning" : "text-muted-foreground")}>
                           {r.hva} · {r.dagerForfalt > 0 ? `${r.dagerForfalt} ${r.dagerForfalt === 1 ? "dag" : "dager"} forfalt` : "i dag"}
                         </p>
                       </div>
-                      <div className="flex gap-2">
-                        {r.telefon && <Button asChild size="sm" variant="outline" className="h-8 gap-1"><a href={`tel:${r.telefon.replace(/\s/g, "")}`}><Phone className="h-3.5 w-3.5" />Ring</a></Button>}
+                      <div className="flex gap-2" onClick={e => e.stopPropagation()} onKeyDown={e => e.stopPropagation()}>
+                        {r.telefon
+                          ? <Button asChild size="sm" variant="outline" className="h-8 gap-1"><a href={`tel:${r.telefon.replace(/\s/g, "")}`}><Phone className="h-3.5 w-3.5" />Ring</a></Button>
+                          : canEdit && <Button size="sm" variant="outline" className="h-8" onClick={() => setValgtRad(r)}>Legg til nummer</Button>}
                         {canEdit && <Button size="sm" className="h-8 gap-1" onClick={() => r.type === "oppgave" ? fullforOppgave(r.id) : navigate(`/leads?open=${r.id}`)}><Check className="h-3.5 w-3.5" />Ferdig</Button>}
                       </div>
                     </li>

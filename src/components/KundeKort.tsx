@@ -76,7 +76,7 @@ export default function KundeKort({ rad, onClose }: { rad: FolgOppRad | null; on
   const [hist, setHist] = useState<Hist[]>([]);
 
   useEffect(() => {
-    setForm(info); setRedigerer(!!rad && !info.telefon && false);
+    setForm(info); setRedigerer(false); setBekreftTapt(false);
     setUtfall(null); setNotat(""); setNesteForslag(null); setMalKanal(null); setVentende(null); setBekreftMelding(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rad?.key]);
