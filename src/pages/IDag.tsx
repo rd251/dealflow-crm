@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react
 import { Link, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { nb } from "date-fns/locale";
-import { AlarmClock, CalendarDays, Check, ExternalLink, Hourglass, Mail, Phone, Sparkles, TrendingDown, UserPlus } from "lucide-react";
+import { AlarmClock, CalendarDays, Check, ExternalLink, Mail, Phone, Sparkles, TrendingDown, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import PageShell from "@/components/PageShell";
 import MoeteForslag from "@/components/MoeteForslag";
