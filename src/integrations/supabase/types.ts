@@ -24,6 +24,7 @@ export type Database = {
           deltakere: string[] | null
           ekstern_id: string | null
           ekstern_provider: string | null
+          eksterne_deltakere: string[]
           id: string
           kontakt_id: string | null
           lead_id: string | null
@@ -49,6 +50,7 @@ export type Database = {
           deltakere?: string[] | null
           ekstern_id?: string | null
           ekstern_provider?: string | null
+          eksterne_deltakere?: string[]
           id?: string
           kontakt_id?: string | null
           lead_id?: string | null
@@ -74,6 +76,7 @@ export type Database = {
           deltakere?: string[] | null
           ekstern_id?: string | null
           ekstern_provider?: string | null
+          eksterne_deltakere?: string[]
           id?: string
           kontakt_id?: string | null
           lead_id?: string | null
@@ -2274,6 +2277,26 @@ export type Database = {
         Returns: boolean
       }
       lead_velkomst_stopp: { Args: never; Returns: undefined }
+      moete_forslag_til_salgsmulighet: {
+        Args: { _moete_id: string }
+        Returns: string
+      }
+      opprett_sm_fra_moete: {
+        Args: {
+          _ansvarlig: string
+          _epost: string
+          _firmanavn: string
+          _kontaktperson: string
+          _lead_id: string
+          _moete_id: string
+          _neste_steg: string
+          _notater: string
+          _rolle: string
+          _telefon: string
+          _use_case: string
+        }
+        Returns: string
+      }
       verify_meta_worker_token: { Args: { p_token: string }; Returns: boolean }
     }
     Enums: {
