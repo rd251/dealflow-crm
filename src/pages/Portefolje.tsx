@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import RapportTabs from "@/components/RapportTabs";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowUpRight, Building2, CircleDollarSign, Handshake, HeartHandshake, Layers3, PhoneCall, Target, TrendingUp, Users } from "lucide-react";
 import { dagerSiden, KANBAN_STADIER, leadStatusFarge, stadiumFarge, tilKanbanStadium } from "@/lib/sales-flow";
@@ -70,7 +71,7 @@ function Panel({ title, subtitle, children, accent = "pipeline", onTitleClick, t
   );
 }
 
-export default function Dashboard() {
+export default function Portefolje() {
   const navigate = useNavigate();
   const { selskaper, salgsmuligheter, partnere, leads } = useCrmStore();
 
@@ -126,7 +127,7 @@ export default function Dashboard() {
   });
 
   return (
-    <PageShell title="Porteføljeoversikt" subtitle="Kunder, inntekter og partneravtaler">
+    <PageShell title="Portefølje" subtitle="Kunder, inntekter og partneravtaler" navigation={<RapportTabs value="portefolje" />}>
       <div className="mx-auto max-w-[1500px] space-y-6">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-4 xl:grid-cols-6 bento-enter">
           <div className="bento-tile flex min-h-64 flex-col justify-between bg-card md:col-span-4 xl:col-span-4 sm:p-8">
