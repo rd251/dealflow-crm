@@ -31,7 +31,7 @@ import NesteStegTaskButton from "@/components/NesteStegTaskButton";
 import { PinnedNotatBoks, PinnedNotatFelt } from "@/components/PinnedNotat";
 import { skjemaOnske, produktInteresse } from "@/lib/lead-notater";
 import LeadHvaSkjedde from "@/components/LeadHvaSkjedde";
-import { leadKvalitet, ekteOnske, nesteTekst, komInnTekst } from "@/lib/lead-kort";
+import { leadKvalitet, ekteOnske, nesteTekst, komInnTekst, kortDato } from "@/lib/lead-kort";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import RingelisteIdag from "@/components/RingelisteIdag";
 import {
@@ -761,15 +761,15 @@ export default function Leads() {
         {oppfolgingFilter && <Button size="sm" variant="secondary" onClick={() => clearDeepFilter("filter")}>Trenger oppfølging ×</Button>}
       </div>
       {visning === "ringeliste" ? <RingelisteIdag /> : <>
-      <ul className="grid gap-3 md:grid-cols-2 2xl:grid-cols-3" aria-label="Leads">
+      <ul className="grid grid-cols-1 gap-3 md:grid-cols-2 2xl:grid-cols-3" aria-label="Leads">
         {filtered.map(lead => {
           const kvalitet = leadKvalitet(lead);
           const onske = ekteOnske(lead.produkt_oppsummering) || ekteOnske(skjemaOnske(lead.notater));
           const neste = nesteTekst(effektivOppfolging(lead), lead.status);
           const linje2 = [bedriftVisning(lead) || "Firma ikke oppgitt", kildeGruppe(lead.kilde), komInnTekst(lead.opprettet_dato)].filter(Boolean).join(" · ");
           return (
-            <li key={lead.id} className="flex flex-col gap-2 rounded-xl border bg-card p-4 transition-colors hover:border-foreground/20">
-              <button type="button" className="flex min-w-0 flex-col gap-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md" onClick={() => setSelectedLead(lead)}>
+            <li key={lead.id} className="flex min-w-0 flex-col gap-2 rounded-xl border bg-card p-4 transition-colors hover:border-foreground/20">
+              <button type="button" className="flex w-full min-w-0 flex-col gap-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md" onClick={() => setSelectedLead(lead)}>
                 <span className="flex w-full items-start justify-between gap-2">
                   <span className="min-w-0 truncate font-display text-base font-semibold">{lead.kontaktperson || bedriftVisning(lead) || "Kontakt ikke oppgitt"}</span>
                   <Badge variant="outline" className={`shrink-0 text-[11px] ${statusColors[lead.status] || ""}`}>{leadStatusKort[lead.status] || lead.status}</Badge>
@@ -875,7 +875,7 @@ export default function Leads() {
                   <div className="min-w-0">
                     <dt className="text-[11px] uppercase tracking-wide text-muted-foreground">Neste oppfølging</dt>
                     <dd className={`truncate tabular-nums ${currentLead.status !== "Ikke aktuelt" && ["forfalt", "i-dag"].includes(oppfolgingTilstand(neste)) ? "font-semibold text-warning" : ""}`}>
-                      {currentLead.status === "Ikke aktuelt" ? "Ikke i oppfølging" : oppfolgingEtikett(neste)}
+                      {currentLead.status === "Ikke aktuelt" ? "Ikke i oppfølging" : ["forfalt", "i-dag"].includes(oppfolgingTilstand(neste)) ? "I dag" : kortDato(neste)}
                     </dd>
                   </div>
                 </dl>
