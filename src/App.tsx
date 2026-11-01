@@ -25,7 +25,7 @@ import PartnerPipeline from "./pages/PartnerPipeline";
 import CompanyProfile from "./pages/CompanyProfile";
 import Admin from "./pages/Admin";
 import Aktiviteter from "./pages/Aktiviteter";
-import Kontaktstrom from "./pages/Kontaktstrom";
+import Innboks from "./pages/Innboks";
 import Dubletter from "./pages/Dubletter";
 import Rapporter from "./pages/Rapporter";
 import Kalender from "./pages/Kalender";
@@ -176,7 +176,8 @@ function RoleRoutes() {
                 <Route path="/selskaper/:id" element={<CompanyProfile />} />
                 <Route path="/kontakter" element={<Contacts />} />
                 <Route path="/relasjoner" element={<Relasjoner />} />
-                <Route path="/kontaktstrom" element={<Kontaktstrom />} />
+                <Route path="/innboks" element={<Innboks />} />
+                <Route path="/kontaktstrom" element={<Navigate to="/innboks" replace />} />
                 <Route path="/dubletter" element={<Dubletter />} />
                 <Route path="/oppgaver" element={<Tasks />} />
                 <Route path="/ringeliste" element={<Ringeliste />} />

@@ -102,7 +102,7 @@ function formatAktivitetDato(dato: string | null) {
   return formatDistanceToNow(d, { addSuffix: true, locale: nb });
 }
 
-export default function Kontaktstrom() {
+export default function Innboks() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { kontakter, leads, salgsmuligheter, selskaper, partnere, refresh } = useCrmStore();
@@ -629,7 +629,7 @@ export default function Kontaktstrom() {
 
   return (
     <PageShell
-      title="Kontaktstrøm"
+      title="Innboks"
       subtitle="Alle kontakter fra e-post – leads, kunder og partnere samlet"
       actions={
         <div className="flex flex-wrap items-center gap-3">
