@@ -358,13 +358,24 @@ export default function Leads() {
     const smId = konverterLead(lead.id, navn, enrich);
     if (selectedLead?.id === lead.id) setSelectedLead(null);
     if (!smId) return;
-    updateOppgaver(prev => [...prev, {
-      id: crypto.randomUUID(), oppgave: "Gjennomfør demo", lead_id: "", selskap_id: "", salgsmulighet_id: smId, kontakt_id: "",
-      ansvarlig: lead.ansvarlig || user?.id || "", frist: datoOm(7), frist_tid: "", prioritet: "Høy", status: "Åpen", paaminnelse: true, notater: "",
-    }]);
-    toast.success(`${lead.firmanavn || lead.kontaktperson} er nå salgsmulighet (Møte booket) · oppgave «Gjennomfør demo» opprettet`, {
+    toast.success(`${lead.firmanavn || lead.kontaktperson} er nå salgsmulighet (Møte booket)`, {
       action: { label: "Åpne", onClick: () => navigate(`/salgsmuligheter?open=${smId}`) },
     });
+    // Vent til salgsmuligheten er lagret før oppgave og aktiviteter kobles på (ellers avvises koblingen).
+    void (async () => {
+      for (let i = 0; i < 20; i++) {
+        const { data } = await supabase.from("salgsmuligheter").select("id").eq("id", smId).maybeSingle();
+        if (data) break;
+        await new Promise(r => setTimeout(r, 500));
+      }
+      const { error } = await supabase.from("aktiviteter").update({ salgsmulighet_id: smId })
+        .eq("lead_id", lead.id).is("salgsmulighet_id", null);
+      if (error) console.warn("Kunne ikke flytte aktiviteter", error);
+      updateOppgaver(prev => [...prev, {
+        id: crypto.randomUUID(), oppgave: "Gjennomfør demo", lead_id: "", selskap_id: "", salgsmulighet_id: smId, kontakt_id: "",
+        ansvarlig: lead.ansvarlig || user?.id || "", frist: datoOm(7), frist_tid: "", prioritet: "Høy", status: "Åpen", paaminnelse: true, notater: "",
+      }]);
+    })();
   };
 
   const currentLead = selectedLead ? leads.find(l => l.id === selectedLead.id) || selectedLead : null;
