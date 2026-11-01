@@ -211,6 +211,20 @@
       "when": 1793554877187,
       "tag": "0029_moete_trigger_ikke_ved_frakobling",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1793555820998,
+      "tag": "0030_moete_regel_kunde_partner",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1793555876152,
+      "tag": "0031_moete_regel_kunde_via_kontakter",
+      "breakpoints": true
     }
   ]
 }
