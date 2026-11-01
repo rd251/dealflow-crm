@@ -225,6 +225,13 @@
       "when": 1793555876152,
       "tag": "0031_moete_regel_kunde_via_kontakter",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1793570832806,
+      "tag": "0032_selskap_telefon_epost",
+      "breakpoints": true
     }
   ]
 }
