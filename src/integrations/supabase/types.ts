@@ -2281,6 +2281,41 @@ export type Database = {
         Args: { _moete_id: string }
         Returns: string
       }
+      moete_til_salgsmulighet_kjor: {
+        Args: { new: Database["public"]["Tables"]["aktiviteter"]["Row"] }
+        Returns: {
+          ai_oppsummering: Json | null
+          aktivitet_kilde: string | null
+          beskrivelse: string
+          created_at: string
+          dato: string
+          deltakere: string[] | null
+          ekstern_id: string | null
+          ekstern_provider: string | null
+          eksterne_deltakere: string[]
+          id: string
+          kontakt_id: string | null
+          lead_id: string | null
+          moetenotater: string | null
+          no_show: boolean
+          partner_id: string | null
+          prosjekt_id: string | null
+          salgsmulighet_id: string | null
+          selskap_id: string | null
+          slutt_tid: string | null
+          start_tid: string | null
+          tittel: string | null
+          type: Database["public"]["Enums"]["aktivitet_type"]
+          updated_at: string
+          user_id: string | null
+        }
+        SetofOptions: {
+          from: "aktiviteter"
+          to: "aktiviteter"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       opprett_sm_fra_moete: {
         Args: {
           _ansvarlig: string
