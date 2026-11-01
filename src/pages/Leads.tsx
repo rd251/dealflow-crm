@@ -31,7 +31,7 @@ import NesteStegTaskButton from "@/components/NesteStegTaskButton";
 import { PinnedNotatBoks, PinnedNotatFelt } from "@/components/PinnedNotat";
 import { skjemaOnske, produktInteresse } from "@/lib/lead-notater";
 import LeadHvaSkjedde from "@/components/LeadHvaSkjedde";
-import { leadKvalitet, ekteOnske, nesteTekst, komInnTekst, kortDato } from "@/lib/lead-kort";
+import { leadKvalitet, ekteOnske, nesteTekst, komInnTekst, kortDato, kildeVisning } from "@/lib/lead-kort";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import RingelisteIdag from "@/components/RingelisteIdag";
 import {
@@ -766,7 +766,7 @@ export default function Leads() {
           const kvalitet = leadKvalitet(lead);
           const onske = ekteOnske(lead.produkt_oppsummering) || ekteOnske(skjemaOnske(lead.notater));
           const neste = nesteTekst(effektivOppfolging(lead), lead.status);
-          const linje2 = [bedriftVisning(lead) || "Firma ikke oppgitt", kildeGruppe(lead.kilde), komInnTekst(lead.opprettet_dato)].filter(Boolean).join(" · ");
+          const linje2 = [bedriftVisning(lead) || "Firma ikke oppgitt", kildeVisning(lead.kilde), komInnTekst(lead.opprettet_dato)].filter(Boolean).join(" · ");
           return (
             <li key={lead.id} className="flex min-w-0 flex-col gap-2 rounded-xl border bg-card p-4 transition-colors hover:border-foreground/20">
               <button type="button" className="flex w-full min-w-0 flex-col gap-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md" onClick={() => setSelectedLead(lead)}>
@@ -870,7 +870,7 @@ export default function Leads() {
                   </div>
                   <div className="min-w-0">
                     <dt className="text-[11px] uppercase tracking-wide text-muted-foreground">Kom inn</dt>
-                    <dd className="truncate tabular-nums">{[komInnTekst(currentLead.opprettet_dato), kildeGruppe(currentLead.kilde)].filter(Boolean).join(" · ")}</dd>
+                    <dd className="truncate tabular-nums">{[komInnTekst(currentLead.opprettet_dato), kildeVisning(currentLead.kilde)].filter(Boolean).join(" · ")}</dd>
                   </div>
                   <div className="min-w-0">
                     <dt className="text-[11px] uppercase tracking-wide text-muted-foreground">Neste oppfølging</dt>

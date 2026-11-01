@@ -71,6 +71,7 @@ const KILDE_MAP: Record<string, KildeGruppe> = {
   "Agent Builder": "Inbound",
   "Facebook ads": "Inbound",
   "Google ads": "Inbound",
+  "Meta Lead Ads": "Inbound",
   "Kald outbound": "Outbound",
   "Instantly kald e-post": "Outbound",
   "Kasoleads": "Outbound",
