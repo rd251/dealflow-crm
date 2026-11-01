@@ -6,14 +6,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useCrmStore } from "@/hooks/use-crm-store";
 import { useAuth } from "@/hooks/use-auth";
-import { vurderMoete, eksterneDeltakere } from "@/lib/moete-kobling";
+import { vurderMoete, eksterneDeltakere, GENERISKE_DOMENER } from "@/lib/moete-kobling";
 import { kortDato } from "@/lib/lead-kort";
 
 interface Moete { id: string; tittel: string | null; dato: string; eksterne_deltakere: string[]; lead_id: string | null; salgsmulighet_id: string | null }
 
 /** Forslag i Innboks: møter med eksterne deltakere som ikke matcher noe i CRM-et. */
 export default function MoeteForslag() {
-  const { leads, salgsmuligheter } = useCrmStore();
+  const { leads, salgsmuligheter, kontakter, selskaper } = useCrmStore();
   const { canEdit } = useAuth();
   const navigate = useNavigate();
   const [moeter, setMoeter] = useState<Moete[]>([]);
@@ -30,7 +30,11 @@ export default function MoeteForslag() {
       .then(({ data }) => setMoeter((data as Moete[]) || []));
   }, []);
 
-  const forslag = moeter.filter(m => vurderMoete({ type: "Møte", ...m }, leads, salgsmuligheter).type === "forslag");
+  const kjente = new Set<string>([
+    ...kontakter.map(k => (k.e_post || "").toLowerCase()).filter(Boolean),
+    ...selskaper.map(s => (s.domene || "").toLowerCase()).filter(d => d && !GENERISKE_DOMENER.has(d)),
+  ]);
+  const forslag = moeter.filter(m => vurderMoete({ type: "Møte", ...m }, leads, salgsmuligheter, kjente).type === "forslag");
   if (!canEdit || forslag.length === 0) return null;
 
   const gjorTilSalg = async (m: Moete) => {
