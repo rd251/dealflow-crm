@@ -13,3 +13,5 @@
 
 - Sync tasks to the assignee's (fallback: creator's) Google Calendar as timed events via a DB trigger on deadline/date changes and oppgave-kalender; PATCH stored event IDs instead of duplicating entries, and tag events so calendar sync never re-imports them.
 - Forward saved activity outcomes through ActivityLog and apply them to the lead store before persistence; this prevents stale lead status and follow-up dates overwriting the saved outcome.
+- Convert leads to sales opportunities from meetings in the database trigger on aktiviteter (moete_til_salgsmulighet_vakt/_kjor, external emails in eksterne_deltakere), mirrored by src/lib/moete-kobling.ts for UI suggestions and tests; this works for every meeting source and stays idempotent across re-syncs.
+- Detach activities (salgsmulighet_id = null, keep selskap) before deleting a sales opportunity; this preserves email and meeting history.
