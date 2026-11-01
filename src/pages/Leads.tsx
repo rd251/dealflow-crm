@@ -197,6 +197,8 @@ export default function Leads() {
       const cutoff = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
       if (l.sist_aktivitet && new Date(l.sist_aktivitet) >= cutoff) return false;
     }
+    // «Ikke aktuelt» holdes ute av aktive leads – vises kun når man filtrerer på den statusen.
+    if (l.status === "Ikke aktuelt" && statusFilter !== "Ikke aktuelt" && statusParam !== "Ikke aktuelt") return false;
     if (!tilhorerFilter(l.ansvarlig)) return false;
     if (statusParam && l.status !== statusParam) return false;
     if (kildeFilter !== "alle" && kildeGruppe(l.kilde) !== kildeFilter) return false;
