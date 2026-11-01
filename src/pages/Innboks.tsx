@@ -891,10 +891,10 @@ export default function Innboks() {
                 <>
                   <DetailSection title="E-poststatistikk">
                     {(selected.totalSent > 0 || selected.totalReceived > 0) && (
-                      <SharedDetailField label="Totalt interaksjoner" value={`${selected.totalSent + selected.totalReceived}`} />
+                      <SharedDetailField label="Totalt aktiviteter" value={`${selected.totalSent + selected.totalReceived}`} />
                     )}
                     {selected.sistKontaktetDato && (
-                      <SharedDetailField label="Siste interaksjon" value={format(new Date(selected.sistKontaktetDato), "d. MMM yyyy, HH:mm", { locale: nb })} />
+                      <SharedDetailField label="Siste aktivitet" value={format(new Date(selected.sistKontaktetDato), "d. MMM yyyy, HH:mm", { locale: nb })} />
                     )}
                     {(selected.totalSent > 0 || selected.totalReceived > 0) && (
                       <DetailStatGrid>
