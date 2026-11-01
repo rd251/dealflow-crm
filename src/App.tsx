@@ -1,6 +1,7 @@
 // CRM App
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect } from "react";
+import GlobaleKort from "@/components/GlobaleKort";
 import { BrowserRouter, Route, Routes, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
@@ -196,6 +197,7 @@ function RoleRoutes() {
                 <Route path="/innstillinger" element={<Innstillinger />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              <GlobaleKort />
             </CrmProvider>
   );
 }

@@ -15,7 +15,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { useMineFilter } from "@/hooks/use-mine-filter";
 import { eksterneDeltakere } from "@/lib/moete-kobling";
 import { dagStr, dagerForfalt, erMin, filtrerVenter, folgOppNa, salgSomStarStille, type FolgOppRad } from "@/lib/i-dag";
-import KundeKort from "@/components/KundeKort";
+import { useKort } from "@/hooks/use-kort";
+import { KundeNavn, SelskapNavn } from "@/components/KortLenker";
 import { cn } from "@/lib/utils";
 
 interface Moete {
@@ -55,7 +56,8 @@ export default function IDag() {
   const [visAlleStille, setVisAlleStille] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [utkast, setUtkast] = useState<Utkast | null>(null);
-  const [valgtRad, setValgtRad] = useState<FolgOppRad | null>(null);
+  const { openKunde } = useKort();
+  const setValgtRad = (r: FolgOppRad) => openKunde({ type: r.type, id: r.id });
 
   const now = new Date();
   const iDag = dagStr(now);
@@ -349,7 +351,6 @@ export default function IDag() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <KundeKort rad={valgtRad} onClose={() => setValgtRad(null)} />
     </PageShell>
   );
 }
