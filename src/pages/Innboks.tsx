@@ -1,3 +1,4 @@
+import MoeteForslag from "@/components/MoeteForslag";
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import PageShell from "@/components/PageShell";
@@ -640,6 +641,7 @@ export default function Innboks() {
             disabled={syncing}
             className="gap-2"
           >
+      <MoeteForslag />
             <RefreshCw className={`w-4 h-4 ${syncing ? "animate-spin" : ""}`} />
             {syncing ? "Synkroniserer..." : "Synk Gmail"}
           </Button>
