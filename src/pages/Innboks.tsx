@@ -641,7 +641,6 @@ export default function Innboks() {
             disabled={syncing}
             className="gap-2"
           >
-      <MoeteForslag />
             <RefreshCw className={`w-4 h-4 ${syncing ? "animate-spin" : ""}`} />
             {syncing ? "Synkroniserer..." : "Synk Gmail"}
           </Button>
@@ -661,6 +660,7 @@ export default function Innboks() {
         </div>
       }
     >
+      <MoeteForslag />
       {/* Søk – øverst over fanene */}
       <div className="relative mb-4">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
