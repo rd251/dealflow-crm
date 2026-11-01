@@ -136,9 +136,9 @@ export default function Tasks() {
   });
 
   const relationFor = (task: Oppgave) => {
-    if (task.selskap_id) return { label: companyMap.get(task.selskap_id)?.firmanavn, href: `/selskaper/${task.selskap_id}` };
-    if (task.lead_id) return { label: leadMap.get(task.lead_id)?.firmanavn, href: `/leads?open=${task.lead_id}` };
-    if (task.salgsmulighet_id) return { label: dealMap.get(task.salgsmulighet_id)?.navn, href: `/salgsmuligheter?open=${task.salgsmulighet_id}` };
+    if (task.selskap_id) return { label: companyMap.get(task.selskap_id)?.firmanavn, href: `?selskap=${task.selskap_id}` };
+    if (task.lead_id) return { label: leadMap.get(task.lead_id)?.firmanavn, href: `?kunde=lead:${task.lead_id}` };
+    if (task.salgsmulighet_id) return { label: dealMap.get(task.salgsmulighet_id)?.navn, href: `?kunde=sm:${task.salgsmulighet_id}` };
     return null;
   };
 

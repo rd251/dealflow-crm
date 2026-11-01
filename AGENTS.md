@@ -16,3 +16,4 @@
 - Convert leads to sales opportunities from meetings in the database trigger on aktiviteter (moete_til_salgsmulighet_vakt/_kjor, external emails in eksterne_deltakere), mirrored by src/lib/moete-kobling.ts for UI suggestions and tests; this works for every meeting source and stays idempotent across re-syncs.
 - Detach activities (salgsmulighet_id = null, keep selskap) before deleting a sales opportunity; this preserves email and meeting history.
 - Keep Oversikt (/dashboard) as a daily «I dag» work list derived in src/lib/i-dag.ts from the CRM store and live tables, with portfolio metrics on /portefolje unchanged; follow-up replies are only created as Gmail drafts via gmail-utkast, never sent.
+- Open customer and company cards app-wide through URL params (?kunde=<lead|kontakt|sm|oppgave>:ID, ?selskap=ID, fra=selskap for back) rendered once by GlobaleKort; link names with KortLenker; this keeps one card open at a time and makes cards linkable without new tables.

@@ -1,3 +1,4 @@
+import { KundeNavn, SelskapNavn } from "@/components/KortLenker";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
@@ -82,9 +83,7 @@ export default function RingelisteIdag() {
               <CompanyLogo firmanavn={l.firmanavn} kontaktEmails={l.e_post ? [l.e_post] : undefined} size="sm" />
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <button className="font-semibold text-sm hover:underline" onClick={() => navigate(`/leads?open=${l.id}`)}>
-                    {l.kontaktperson || l.firmanavn}
-                  </button>
+                  <KundeNavn r={{ type: "lead", id: l.id }} className="font-semibold text-sm">{l.kontaktperson || l.firmanavn}</KundeNavn>
                   <span className="text-xs text-muted-foreground truncate">{l.firmanavn}</span>
                   <Badge variant="outline" className="text-[10px] gap-1">
                     <Clock className="w-2.5 h-2.5" />{rad.grunn}

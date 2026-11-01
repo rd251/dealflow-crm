@@ -1847,6 +1847,7 @@ export type Database = {
           bransje: string | null
           created_at: string
           domene: string
+          e_post: string | null
           eier_id: string | null
           firmaadresse: string
           firmanavn: string
@@ -1875,6 +1876,7 @@ export type Database = {
           partner_pakke_id: string | null
           postadresse: string
           sist_aktivitet: string | null
+          telefon: string | null
           updated_at: string
         }
         Insert: {
@@ -1882,6 +1884,7 @@ export type Database = {
           bransje?: string | null
           created_at?: string
           domene?: string
+          e_post?: string | null
           eier_id?: string | null
           firmaadresse?: string
           firmanavn: string
@@ -1910,6 +1913,7 @@ export type Database = {
           partner_pakke_id?: string | null
           postadresse?: string
           sist_aktivitet?: string | null
+          telefon?: string | null
           updated_at?: string
         }
         Update: {
@@ -1917,6 +1921,7 @@ export type Database = {
           bransje?: string | null
           created_at?: string
           domene?: string
+          e_post?: string | null
           eier_id?: string | null
           firmaadresse?: string
           firmanavn?: string
@@ -1945,6 +1950,7 @@ export type Database = {
           partner_pakke_id?: string | null
           postadresse?: string
           sist_aktivitet?: string | null
+          telefon?: string | null
           updated_at?: string
         }
         Relationships: [

@@ -1,3 +1,4 @@
+import { KundeNavn, SelskapNavn } from "@/components/KortLenker";
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import PageShell from "@/components/PageShell";
@@ -286,11 +287,11 @@ export default function Contacts() {
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
-                  <p className="font-semibold text-sm truncate">{k.navn}</p>
+                  <p className="font-semibold text-sm truncate"><KundeNavn r={{ type: "kontakt", id: k.id }}>{k.navn}</KundeNavn></p>
                   <div className="flex items-center gap-1.5 mt-0.5">
                     <span
                       className="text-xs text-primary truncate"
-                      onClick={e => { e.stopPropagation(); if (k.selskap_id) navigate(`/selskaper/${k.selskap_id}`); }}
+                      onClick={e => { e.stopPropagation(); if (k.selskap_id) navigate(`?selskap=${k.selskap_id}`); }}
                     >
                       {getSelskapNavn(k.selskap_id)}
                     </span>
@@ -323,8 +324,8 @@ export default function Contacts() {
             <tbody>
               {filtered.map(k => (
                 <tr key={k.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => setSelected(k)}>
-                  <td className="px-4 py-3 font-medium">{k.navn}</td>
-                  <td className="px-4 py-3 text-muted-foreground"><span className="cursor-pointer hover:text-primary hover:underline" onClick={e => { e.stopPropagation(); navigate(`/selskaper/${k.selskap_id}`); }}>{getSelskapNavn(k.selskap_id)}</span></td>
+                  <td className="px-4 py-3 font-medium"><KundeNavn r={{ type: "kontakt", id: k.id }}>{k.navn}</KundeNavn></td>
+                  <td className="px-4 py-3 text-muted-foreground"><span className="cursor-pointer hover:text-primary hover:underline" onClick={e => { e.stopPropagation(); if (k.selskap_id) navigate(`?selskap=${k.selskap_id}`); }}>{getSelskapNavn(k.selskap_id)}</span></td>
                   <td className="px-4 py-3 text-muted-foreground">{k.rolle}</td>
                   <td className="px-4 py-3 text-muted-foreground text-xs">{k.e_post}</td>
                   <td className="px-4 py-3 text-muted-foreground text-xs">{k.telefon}</td>

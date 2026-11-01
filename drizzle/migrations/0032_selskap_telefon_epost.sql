@@ -1,0 +1,1 @@
+ALTER TABLE public.selskaper ADD COLUMN IF NOT EXISTS telefon text, ADD COLUMN IF NOT EXISTS e_post text;

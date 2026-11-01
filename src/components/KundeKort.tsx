@@ -20,12 +20,18 @@ import {
   type MeldingMal, type SamtaleUtfall,
 } from "@/lib/kundekort";
 import { cn } from "@/lib/utils";
-import type { FolgOppRad } from "@/lib/i-dag";
+import { kundeParam, type KundeRef } from "@/hooks/use-kort";
+import KobleSelskap from "@/components/KobleSelskap";
+import { ArrowLeft } from "lucide-react";
+import type { Selskap } from "@/data/crm-data";
 
 interface Hist { id: string; type: string; tittel: string | null; beskrivelse: string; dato: string }
 type Kanal = "SMS" | "E-post";
 
-export default function KundeKort({ rad, onClose }: { rad: FolgOppRad | null; onClose: () => void }) {
+interface Props { r: KundeRef; onClose: () => void; onSelskap: (id: string) => void; onTilbake?: () => void }
+
+export default function KundeKort({ r, onClose, onSelskap, onTilbake }: Props) {
+  const rad = r;
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const { user, canEdit } = useAuth();
@@ -33,14 +39,25 @@ export default function KundeKort({ rad, onClose }: { rad: FolgOppRad | null; on
 
   // ---------- Kontekst ----------
   const ctx = useMemo(() => {
-    if (!rad) return null;
-    const oppgave = rad.type === "oppgave" ? oppgaver.find(o => o.id === rad.id) : undefined;
-    const lead = leads.find(l => l.id === (rad.type === "lead" ? rad.id : oppgave?.lead_id));
-    const sm = salgsmuligheter.find(s => s.id === oppgave?.salgsmulighet_id);
-    const kontakt = kontakter.find(k => k.id === (oppgave?.kontakt_id || sm?.kontakt_id));
-    const selskap = selskaper.find(s => s.id === (oppgave?.selskap_id || sm?.selskap_id || kontakt?.selskap_id));
+    const oppgave = r.type === "oppgave" ? oppgaver.find(o => o.id === r.id) : undefined;
+    const lead = leads.find(l => l.id === (r.type === "lead" ? r.id : oppgave?.lead_id));
+    const sm = salgsmuligheter.find(s => s.id === (r.type === "sm" ? r.id : oppgave?.salgsmulighet_id));
+    const kontakt = kontakter.find(k => k.id === (r.type === "kontakt" ? r.id : oppgave?.kontakt_id || sm?.kontakt_id));
+    const firmaLc = (lead?.firmanavn || "").trim().toLowerCase();
+    const selskap = selskaper.find(s => s.id === (oppgave?.selskap_id || sm?.selskap_id || kontakt?.selskap_id))
+      || (firmaLc ? selskaper.find(s => s.firmanavn.trim().toLowerCase() === firmaLc) : undefined);
+    if (!oppgave && !lead && !sm && !kontakt) return null;
     return { oppgave, lead, sm, kontakt, selskap };
-  }, [rad, oppgaver, leads, salgsmuligheter, kontakter, selskaper]);
+  }, [r, oppgaver, leads, salgsmuligheter, kontakter, selskaper]);
+
+  const kobleSelskap = (s: Selskap) => {
+    if (!ctx) return;
+    if (ctx.kontakt) { const id = ctx.kontakt.id; updateKontakter(p => p.map(k => k.id === id ? { ...k, selskap_id: s.id } : k)); }
+    if (ctx.sm) { const id = ctx.sm.id; updateSalgsmuligheter(p => p.map(x => x.id === id ? { ...x, selskap_id: s.id } : x)); }
+    if (ctx.lead) { const id = ctx.lead.id; updateLeads(p => p.map(l => l.id === id ? { ...l, firmanavn: s.firmanavn } : l)); }
+    if (ctx.oppgave && !ctx.kontakt && !ctx.sm && !ctx.lead) { const id = ctx.oppgave.id; updateOppgaver(p => p.map(o => o.id === id ? { ...o, selskap_id: s.id } : o)); }
+    toast.success(`Koblet til ${s.firmanavn}`);
+  };
 
   const info = useMemo(() => {
     const c = ctx;
@@ -79,7 +96,7 @@ export default function KundeKort({ rad, onClose }: { rad: FolgOppRad | null; on
     setForm(info); setRedigerer(false); setBekreftTapt(false);
     setUtfall(null); setNotat(""); setNesteForslag(null); setMalKanal(null); setVentende(null); setBekreftMelding(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rad?.key]);
+  }, [kundeParam(r)]);
 
   const hentHistorikk = useCallback(async () => {
     const deler = Object.entries(target).filter(([k, v]) => v && k !== "selskap_id").map(([k, v]) => `${k}.eq.${v}`);
@@ -105,7 +122,7 @@ export default function KundeKort({ rad, onClose }: { rad: FolgOppRad | null; on
     return () => { document.removeEventListener("visibilitychange", onVis); window.removeEventListener("focus", onFocus); window.removeEventListener("blur", onBlur); };
   }, [ventende]);
 
-  if (!rad || !ctx) return null;
+  if (!ctx) return null;
 
   // ---------- Kontaktinfo ----------
   const lagreKontakt = () => {
@@ -231,11 +248,21 @@ export default function KundeKort({ rad, onClose }: { rad: FolgOppRad | null; on
 
   return (
     <>
-      <Sheet open={!!rad} onOpenChange={o => !o && onClose()}>
+      <Sheet open onOpenChange={o => !o && onClose()}>
         <SheetContent side={isMobile ? "bottom" : "right"} className={cn("overflow-y-auto", isMobile ? "max-h-[90vh] rounded-t-xl" : "w-full sm:max-w-md")}>
           <SheetHeader className="text-left">
-            <SheetTitle className="font-display">{info.navn || info.firma || rad.navn}</SheetTitle>
-            <SheetDescription>{[info.firma, info.rolle].filter(Boolean).join(" · ") || rad.hva}</SheetDescription>
+            {onTilbake && ctx.selskap && (
+              <Button variant="ghost" size="sm" className="-ml-2 h-7 w-fit gap-1 text-muted-foreground" onClick={onTilbake}><ArrowLeft className="h-3.5 w-3.5" />Tilbake til {ctx.selskap.firmanavn}</Button>
+            )}
+            <SheetTitle className="font-display">{info.navn || info.firma || ctx.oppgave?.oppgave || "Kunde"}</SheetTitle>
+            <SheetDescription asChild>
+              <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm text-muted-foreground">
+                {ctx.selskap
+                  ? <button type="button" className="font-medium text-foreground underline-offset-2 hover:underline" onClick={() => onSelskap(ctx.selskap!.id)}>{ctx.selskap.firmanavn}</button>
+                  : <>{info.firma && <span>{info.firma}</span>}{canEdit && <KobleSelskap forslag={info.firma} onVelg={kobleSelskap} />}</>}
+                {info.rolle && <span>· {info.rolle}</span>}
+              </div>
+            </SheetDescription>
           </SheetHeader>
 
           <div className="mt-5 space-y-6">
