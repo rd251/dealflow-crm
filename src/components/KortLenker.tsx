@@ -9,9 +9,10 @@ export function KundeNavn({ r, children, className }: { r: KundeRef | null; chil
   const { openKunde } = useKort();
   if (!r?.id) return <span className={className}>{children}</span>;
   return (
-    <button type="button" className={cn(stil, className)} onClick={e => { e.stopPropagation(); e.preventDefault(); openKunde(r); }} onKeyDown={e => e.stopPropagation()}>
+    <span role="button" tabIndex={0} className={cn(stil, "cursor-pointer", className)} onClick={e => { e.stopPropagation(); e.preventDefault(); openKunde(r); }}
+      onKeyDown={e => { e.stopPropagation(); if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openKunde(r); } }}>
       {children}
-    </button>
+    </span>
   );
 }
 
@@ -20,8 +21,9 @@ export function SelskapNavn({ id, children, className }: { id?: string | null; c
   const { openSelskap } = useKort();
   if (!id) return <span className={className}>{children}</span>;
   return (
-    <button type="button" className={cn(stil, className)} onClick={e => { e.stopPropagation(); e.preventDefault(); openSelskap(id); }} onKeyDown={e => e.stopPropagation()}>
+    <span role="button" tabIndex={0} className={cn(stil, "cursor-pointer", className)} onClick={e => { e.stopPropagation(); e.preventDefault(); openSelskap(id); }}
+      onKeyDown={e => { e.stopPropagation(); if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openSelskap(id); } }}>
       {children}
-    </button>
+    </span>
   );
 }
