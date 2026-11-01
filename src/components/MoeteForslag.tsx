@@ -12,7 +12,7 @@ import { kortDato } from "@/lib/lead-kort";
 interface Moete { id: string; tittel: string | null; dato: string; eksterne_deltakere: string[]; lead_id: string | null; salgsmulighet_id: string | null }
 
 /** Forslag i Innboks: møter med eksterne deltakere som ikke matcher noe i CRM-et. */
-export default function MoeteForslag() {
+export default function MoeteForslag({ kompakt = false }: { kompakt?: boolean } = {}) {
   const { leads, salgsmuligheter, kontakter, selskaper } = useCrmStore();
   const { canEdit } = useAuth();
   const navigate = useNavigate();
@@ -36,6 +36,7 @@ export default function MoeteForslag() {
     ...selskaper.map(s => (s.domene || "").toLowerCase()).filter(d => d && !GENERISKE_DOMENER.has(d)),
   ]);
   const forslag = moeter.filter(m => vurderMoete({ type: "Møte", ...m }, leads, salgsmuligheter, kjente).type === "forslag");
+  if (kompakt && forslag.length === 0) return <p className="px-1 py-3 text-sm text-muted-foreground">Ingen nye forslag i Innboks.</p>;
   if (!canEdit || forslag.length === 0) return null;
 
   const gjorTilSalg = async (m: Moete) => {
@@ -48,7 +49,7 @@ export default function MoeteForslag() {
   };
 
   return (
-    <section aria-label="Møter uten kobling" className="mb-6 space-y-2">
+    <section aria-label="Møter uten kobling" className={kompakt ? "space-y-2" : "mb-6 space-y-2"}>
       {(visAlle ? forslag : forslag.slice(0, 3)).map(m => (
         <div key={m.id} className="flex flex-wrap items-center gap-3 rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm">
           <CalendarPlus className="h-4 w-4 shrink-0 text-warning" />
@@ -63,7 +64,7 @@ export default function MoeteForslag() {
           </Button>
         </div>
       ))}
-      {forslag.length > 3 && (
+      {!kompakt && forslag.length > 3 && (
         <Button variant="link" size="sm" className="h-auto p-0 text-xs" onClick={() => setVisAlle(v => !v)}>
           {visAlle ? "Vis færre" : `Vis alle ${forslag.length} møter uten kobling`}
         </Button>
