@@ -884,47 +884,16 @@ export default function Leads() {
         onClose={() => setSelectedLead(null)}
         activeTab={detailTab}
         onActiveTabChange={(t) => setDetailTab(t)}
-        title={currentLead ? bedriftVisning(currentLead) || currentLead.kontaktperson || "Ukjent" : ""}
-        subtitle={currentLead && bedriftVisning(currentLead) ? currentLead.kontaktperson || undefined : undefined}
+        title={currentLead ? currentLead.kontaktperson || bedriftVisning(currentLead) || "Ukjent" : ""}
+        subtitle={currentLead && currentLead.kontaktperson ? bedriftVisning(currentLead) || "Firma ikke oppgitt" : undefined}
         badges={currentLead ? (
           <>
-            <Badge className={`text-xs ${statusColors[currentLead.status] || ""}`}>{currentLead.status}</Badge>
+            <Badge variant="outline" className={`text-xs ${statusColors[currentLead.status] || ""}`}>{currentLead.status}</Badge>
             {getConversionType(currentLead) && (
               <Badge className={`text-xs gap-0.5 ${getConversionType(currentLead) === "salg" ? "bg-success/10 text-success" : "bg-primary/10 text-primary"}`}>
                 <Lock className="w-3 h-3" />
                 {getConversionType(currentLead) === "salg" ? "Konvertert → Salg" : "Konvertert → Partner"}
               </Badge>
-            )}
-            <Badge variant="secondary" className="text-xs">{currentLead.kilde}</Badge>
-          </>
-        ) : undefined}
-        actions={canEdit && currentLead && !currentIsLocked && currentLead.status !== "Ikke aktuelt" ? (
-          <>
-            <Button size="sm" variant="outline" onClick={() => {
-              if (detailTab === "interaksjoner") {
-                openCreateActivityRef.current?.();
-              } else {
-                setPendingOpenActivity(true);
-                setDetailTab("interaksjoner");
-              }
-            }}>
-              <PenLine className="w-3.5 h-3.5 mr-1.5" />Logg aktivitet
-            </Button>
-            {currentLead.e_post && (
-              <Button size="sm" variant="outline" onClick={() => setEmailDialogOpen(true)}>
-                <Mail className="w-4 h-4 mr-1.5" />E-post
-              </Button>
-            )}
-            <Button size="sm" onClick={() => { setConvertDialogLead(currentLead); setConvertNavn(currentLead.use_case || currentLead.firmanavn); }}>
-              <ArrowRightCircle className="w-4 h-4 mr-1.5" />Kvalifiser til salgsmulighet
-            </Button>
-            <Button size="sm" variant="secondary" onClick={() => setPartnerDialogLead(currentLead)}>
-              <Users2 className="w-4 h-4 mr-1.5" />Til partner
-            </Button>
-            {isAdmin && (
-              <Button size="sm" variant="outline" onClick={() => openForwardDialog(currentLead)}>
-                <Send className="w-4 h-4 mr-1.5" />Videresend
-              </Button>
             )}
           </>
         ) : undefined}
@@ -936,107 +905,106 @@ export default function Leads() {
               l.id === currentLead.id ? { ...l, [field]: value, sist_aktivitet: today } : l
             ));
           };
+          const kvalitet = leadKvalitet(currentLead);
+          const neste = effektivOppfolging(currentLead);
+          const kanEndre = canEdit && !currentIsLocked;
+          const pinnedFelt = (
+            <PinnedNotatFelt
+              verdi={currentLead.pinned_notat}
+              av={currentLead.pinned_notat_av}
+              dato={currentLead.pinned_notat_dato}
+              disabled={!kanEndre}
+              onLagre={(notat, av, dato) => {
+                updateLeads(prev => prev.map(l => l.id === currentLead.id
+                  ? { ...l, pinned_notat: notat, pinned_notat_av: av, pinned_notat_dato: dato } : l));
+              }}
+            />
+          );
           return {
             detaljer: (
-              <div className="space-y-3">
-                <PinnedNotatFelt
-                  verdi={currentLead.pinned_notat}
-                  av={currentLead.pinned_notat_av}
-                  dato={currentLead.pinned_notat_dato}
-                  disabled={!canEdit || currentIsLocked}
-                  onLagre={(notat, av, dato) => {
-                    updateLeads(prev => prev.map(l => l.id === currentLead.id
-                      ? { ...l, pinned_notat: notat, pinned_notat_av: av, pinned_notat_dato: dato } : l));
-                  }}
-                />
-                {/* Hurtighandlinger for samtale */}
-                {canEdit && !currentIsLocked && (
-                  <div className="rounded-lg border bg-card p-3">
-                    <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide mb-2">Registrer samtale</p>
-                    <LeadQuickActions
-                      lead={currentLead}
-                      onBookMoete={() => { setPendingOpenActivity(true); setDetailTab("interaksjoner"); }}
-                    />
+              <div className="space-y-5">
+                {kvalitet.meldinger.length > 0 && (
+                  <div role="alert" className="flex gap-2 rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm">
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
+                    <div className="space-y-1">{kvalitet.meldinger.map(m => <p key={m}>{m}</p>)}</div>
                   </div>
                 )}
 
-                {/* Neste steg – prominent at top */}
+                {/* Nøkkelinfo – synlig uten scrolling */}
+                <dl className="grid grid-cols-2 gap-3 rounded-lg border bg-muted/30 p-3 text-sm">
+                  <div className="min-w-0">
+                    <dt className="text-[11px] uppercase tracking-wide text-muted-foreground">Telefon</dt>
+                    <dd className="truncate tabular-nums font-medium">{currentLead.telefon ? <a href={`tel:${currentLead.telefon}`} className="hover:underline">{currentLead.telefon}</a> : "—"}</dd>
+                  </div>
+                  <div className="min-w-0">
+                    <dt className="text-[11px] uppercase tracking-wide text-muted-foreground">E-post</dt>
+                    <dd className="truncate font-medium">{currentLead.e_post ? <a href={`mailto:${currentLead.e_post}`} className="hover:underline" title={currentLead.e_post}>{currentLead.e_post}</a> : "—"}</dd>
+                  </div>
+                  <div className="min-w-0">
+                    <dt className="text-[11px] uppercase tracking-wide text-muted-foreground">Kom inn</dt>
+                    <dd className="truncate tabular-nums">{[komInnTekst(currentLead.opprettet_dato), kildeGruppe(currentLead.kilde)].filter(Boolean).join(" · ")}</dd>
+                  </div>
+                  <div className="min-w-0">
+                    <dt className="text-[11px] uppercase tracking-wide text-muted-foreground">Neste oppfølging</dt>
+                    <dd className={`truncate tabular-nums ${currentLead.status !== "Ikke aktuelt" && ["forfalt", "i-dag"].includes(oppfolgingTilstand(neste)) ? "font-semibold text-warning" : ""}`}>
+                      {currentLead.status === "Ikke aktuelt" ? "Ikke i oppfølging" : oppfolgingEtikett(neste)}
+                    </dd>
+                  </div>
+                </dl>
+
+                {currentLead.pinned_notat?.trim() && <PinnedNotatBoks notat={currentLead.pinned_notat} />}
+
+                {kanEndre && <LeadHvaSkjedde lead={currentLead} onBooketMoete={(l) => {
+                  konverterOgOpprettOppgave(l, l.use_case || l.firmanavn);
+                }} />}
+
+                {/* Neste steg */}
                 <div className={`rounded-lg border p-3 ${!currentLead.neste_steg ? "border-warning bg-warning/5" : "bg-muted/30"}`}>
                   <div className="flex items-center justify-between gap-2">
                     <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Neste steg</label>
-                    <NesteStegTaskButton nesteSteg={currentLead.neste_steg} lead_id={currentLead.id} disabled={!canEdit || currentIsLocked} />
+                    <NesteStegTaskButton nesteSteg={currentLead.neste_steg} lead_id={currentLead.id} disabled={!kanEndre} />
                   </div>
-                  <Input value={currentLead.neste_steg} onChange={e => updateField("neste_steg", e.target.value)} className="h-7 text-xs mt-1 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0" placeholder="Hva er neste steg?" readOnly={!canEdit || currentIsLocked} />
-                  {!currentLead.neste_steg && <p className="text-[10px] text-warning mt-0.5">⚠ Mangler neste steg</p>}
+                  <Input value={currentLead.neste_steg} onChange={e => updateField("neste_steg", e.target.value)} className="h-7 text-xs mt-1 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0" placeholder="Hva er neste steg?" readOnly={!kanEndre} />
                 </div>
 
-                {/* Compact key info */}
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="text-xs"><span className="text-muted-foreground">Kilde</span>
-                    <select className="w-full border rounded px-2 py-1 text-xs bg-background h-7 mt-0.5" value={currentLead.kilde}
-                      onChange={e => updateField("kilde", e.target.value)} disabled={!canEdit || currentIsLocked}>
-                      {kildeOptions.map(k => <option key={k} value={k}>{k}</option>)}
-                    </select>
+                {/* Redigerbare felter */}
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  <div className="text-xs"><span className="text-muted-foreground">Firmanavn</span>
+                    <Input value={currentLead.firmanavn} onChange={e => updateField("firmanavn", e.target.value)} className={`h-8 text-xs mt-0.5 ${kvalitet.firmaUklart ? "border-warning" : ""}`} readOnly={!kanEndre} />
+                  </div>
+                  <div className="text-xs"><span className="text-muted-foreground">Kontaktperson</span>
+                    <Input value={currentLead.kontaktperson} onChange={e => updateField("kontaktperson", e.target.value)} className="h-8 text-xs mt-0.5" readOnly={!kanEndre} />
+                  </div>
+                  <div className="text-xs"><span className="text-muted-foreground">Telefon</span>
+                    <Input value={currentLead.telefon} onChange={e => updateField("telefon", e.target.value)} className={`h-8 text-xs mt-0.5 tabular-nums ${kvalitet.telefonUgyldig ? "border-warning" : ""}`} readOnly={!kanEndre} />
+                  </div>
+                  <div className="text-xs"><span className="text-muted-foreground">E-post</span>
+                    <Input value={currentLead.e_post} onChange={e => updateField("e_post", e.target.value)} className="h-8 text-xs mt-0.5" readOnly={!kanEndre} />
                   </div>
                   <div className="text-xs"><span className="text-muted-foreground">Status</span>
-                    <select className={`w-full border rounded px-2 py-1 text-xs bg-background h-7 mt-0.5 ${statusColors[currentLead.status] || ""}`}
-                      value={currentLead.status} onChange={e => updateField("status", e.target.value)} disabled={!canEdit || currentIsLocked}>
+                    <select className={`w-full border rounded-md px-2 text-xs bg-background h-8 mt-0.5 ${statusColors[currentLead.status] || ""}`}
+                      value={currentLead.status} onChange={e => updateField("status", e.target.value)} disabled={!kanEndre}>
                       {statusOptions.map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
                   </div>
+                  <div className="text-xs"><span className="text-muted-foreground">Neste oppfølging</span>
+                    <Input type="date" value={currentLead.neste_oppfolging || neste} onChange={e => updateField("neste_oppfolging", e.target.value)} className="h-8 text-xs mt-0.5" readOnly={!kanEndre} />
+                  </div>
+                  <div className="text-xs"><span className="text-muted-foreground">Kilde</span>
+                    <select className="w-full border rounded-md px-2 text-xs bg-background h-8 mt-0.5" value={currentLead.kilde}
+                      onChange={e => updateField("kilde", e.target.value)} disabled={!kanEndre}>
+                      {kildeOptions.map(k => <option key={k} value={k}>{k}</option>)}
+                    </select>
+                  </div>
                   <div className="text-xs"><span className="text-muted-foreground">Ansvarlig</span>
-                    <Input value={currentLead.ansvarlig} onChange={e => updateField("ansvarlig", e.target.value)} className="h-7 text-xs mt-0.5" readOnly={!canEdit || currentIsLocked} />
+                    <Input value={currentLead.ansvarlig} onChange={e => updateField("ansvarlig", e.target.value)} className="h-8 text-xs mt-0.5" readOnly={!kanEndre} />
                   </div>
-                  <div className="text-xs"><span className="text-muted-foreground">Opprettet</span>
-                    <div className="h-7 flex items-center text-xs text-muted-foreground mt-0.5">{currentLead.opprettet_dato || "–"}</div>
-                  </div>
-                  <div className="text-xs col-span-2">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-muted-foreground">Neste oppfølging</span>
-                      <Badge variant="outline" className={`text-[10px] ${oppfolgingFarge[oppfolgingTilstand(effektivOppfolging(currentLead))]}`}>
-                        {oppfolgingEtikett(effektivOppfolging(currentLead))}
-                      </Badge>
-                    </div>
-                    <Input
-                      type="date"
-                      value={currentLead.neste_oppfolging || effektivOppfolging(currentLead)}
-                      onChange={e => updateField("neste_oppfolging", e.target.value)}
-                      className="h-7 text-xs mt-0.5"
-                      readOnly={!canEdit || currentIsLocked}
-                    />
+                  <div className="text-xs sm:col-span-2"><span className="text-muted-foreground">Use case</span>
+                    <Input value={currentLead.use_case} onChange={e => updateField("use_case", e.target.value)} className="h-8 text-xs mt-0.5" readOnly={!kanEndre} />
                   </div>
                 </div>
 
-                <div className="border-t" />
-
-                {/* Contact info – compact */}
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="text-xs"><span className="text-muted-foreground">Firmanavn</span>
-                    <Input value={currentLead.firmanavn} onChange={e => updateField("firmanavn", e.target.value)} className="h-7 text-xs mt-0.5" readOnly={!canEdit || currentIsLocked} />
-                  </div>
-                  <div className="text-xs"><span className="text-muted-foreground">Kontaktperson</span>
-                    <Input value={currentLead.kontaktperson} onChange={e => updateField("kontaktperson", e.target.value)} className="h-7 text-xs mt-0.5" readOnly={!canEdit || currentIsLocked} />
-                  </div>
-                  <div className="text-xs"><span className="text-muted-foreground">E-post</span>
-                    <Input value={currentLead.e_post} onChange={e => updateField("e_post", e.target.value)} className="h-7 text-xs mt-0.5" readOnly={!canEdit || currentIsLocked} />
-                  </div>
-                  <div className="text-xs"><span className="text-muted-foreground">Telefon</span>
-                    <Input value={currentLead.telefon} onChange={e => updateField("telefon", e.target.value)} className="h-7 text-xs mt-0.5" readOnly={!canEdit || currentIsLocked} />
-                  </div>
-                </div>
-
-                {/* Use case */}
-                <div className="text-xs"><span className="text-muted-foreground">Use case</span>
-                  <Input value={currentLead.use_case} onChange={e => updateField("use_case", e.target.value)} className="h-7 text-xs mt-0.5" readOnly={!canEdit || currentIsLocked} />
-                </div>
-
-
-                <div className="border-t" />
-                <SelskapInnsikt
-                  domene=""
-                  firmanavn={currentLead.firmanavn}
-                  e_post={currentLead.e_post}
-                />
+                <SelskapInnsikt domene="" firmanavn={currentLead.firmanavn} e_post={currentLead.e_post} />
 
                 {getConversionType(currentLead) && (
                   <div className={`p-2.5 rounded-lg text-xs font-medium flex items-center gap-2 ${getConversionType(currentLead) === "salg" ? "bg-success/10 text-success" : "bg-primary/10 text-primary"}`}>
@@ -1055,13 +1023,13 @@ export default function Leads() {
                   </div>
                 )}
 
-                {canEdit && !currentIsLocked && (
-                  <Button size="sm" variant="ghost" className="w-full text-xs text-destructive hover:text-destructive h-8" onClick={() => {
-                    updateLeads(prev => prev.filter(l => l.id !== currentLead.id));
-                    setSelectedLead(null);
-                  }}>
-                    <Trash2 className="w-3.5 h-3.5 mr-1" /> Slett lead
-                  </Button>
+                {kanEndre && (
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t pt-3 text-xs">
+                    <Button variant="link" size="sm" className="h-auto p-0 text-xs text-muted-foreground" onClick={() => setPartnerDialogLead(currentLead)}>Til partner</Button>
+                    {isAdmin && <Button variant="link" size="sm" className="h-auto p-0 text-xs text-muted-foreground" onClick={() => openForwardDialog(currentLead)}>Videresend</Button>}
+                    <Button variant="link" size="sm" className="h-auto p-0 text-xs text-muted-foreground" onClick={() => { setConvertDialogLead(currentLead); setConvertNavn(currentLead.use_case || currentLead.firmanavn); }}>Gjør til salgsmulighet</Button>
+                    <Button variant="link" size="sm" className="ml-auto h-auto p-0 text-xs text-destructive" onClick={() => setSlettLead(currentLead)}>Slett</Button>
+                  </div>
                 )}
               </div>
             ),
@@ -1075,9 +1043,12 @@ export default function Leads() {
               </>
             ),
             notater: (
-              <DetailField label="Notater">
-                <Textarea value={currentLead.notater} onChange={e => updateField("notater", e.target.value)} rows={6} readOnly={!canEdit || currentIsLocked} />
-              </DetailField>
+              <div className="space-y-4">
+                {!currentLead.pinned_notat?.trim() ? pinnedFelt : pinnedFelt}
+                <DetailField label="Notater">
+                  <Textarea value={currentLead.notater} onChange={e => updateField("notater", e.target.value)} rows={6} readOnly={!kanEndre} />
+                </DetailField>
+              </div>
             ),
             kalender: (
               <EntityCalendarTab lead_id={currentLead.id} />
@@ -1085,6 +1056,27 @@ export default function Leads() {
           };
         })() : undefined}
       />
+      <AlertDialog open={!!slettLead} onOpenChange={o => { if (!o) setSlettLead(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Slette leadet?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {slettLead?.kontaktperson || slettLead?.firmanavn} flyttes til papirkurven og kan gjenopprettes i 30 dager.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Avbryt</AlertDialogCancel>
+            <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => {
+              if (!slettLead) return;
+              const id = slettLead.id;
+              updateLeads(prev => prev.filter(l => l.id !== id));
+              setSlettLead(null);
+              setSelectedLead(null);
+              toast("Lead flyttet til papirkurven");
+            }}>Slett</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       {currentLead && (
         <SendEmailDialog
           open={emailDialogOpen}
