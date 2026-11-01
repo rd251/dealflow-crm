@@ -103,13 +103,13 @@ export default function IDag() {
 
   const hvemMed = (m: Moete) => {
     const sm = salgsmuligheter.find(s => s.id === m.salgsmulighet_id);
-    if (sm) return { navn: sm.navn, lenke: `/salgsmuligheter?open=${sm.id}` };
+    if (sm) return { navn: sm.navn, lenke: `?kunde=sm:${sm.id}` };
     const l = leads.find(x => x.id === m.lead_id);
-    if (l) return { navn: [l.kontaktperson, l.firmanavn].filter(Boolean).join(" · "), lenke: `/leads?open=${l.id}` };
+    if (l) return { navn: [l.kontaktperson, l.firmanavn].filter(Boolean).join(" · "), lenke: `?kunde=lead:${l.id}` };
     const s = selskaper.find(x => x.id === m.selskap_id);
-    if (s) return { navn: s.firmanavn, lenke: `/selskaper/${s.id}` };
+    if (s) return { navn: s.firmanavn, lenke: `?selskap=${s.id}` };
     const k = kontakter.find(x => x.id === m.kontakt_id);
-    if (k) return { navn: k.navn, lenke: `/kontakter?open=${k.id}` };
+    if (k) return { navn: k.navn, lenke: `?kunde=kontakt:${k.id}` };
     return { navn: eksterneDeltakere({ type: "Møte", eksterne_deltakere: m.eksterne_deltakere }).join(", "), lenke: "" };
   };
   const sisteFor = (m: Moete) => sisteAkt.find(a =>

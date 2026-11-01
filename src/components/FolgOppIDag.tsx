@@ -1,3 +1,4 @@
+import { KundeNavn, SelskapNavn } from "@/components/KortLenker";
 import { useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -64,9 +65,7 @@ export default function FolgOppIDag({ leads, onOpenLead }: Props) {
                 <CompanyLogo firmanavn={lead.firmanavn} kontaktEmails={lead.e_post ? [lead.e_post] : undefined} size="sm" />
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <button type="button" className="text-sm font-semibold hover:underline" onClick={() => onOpenLead(lead)}>
-                      {lead.kontaktperson || lead.firmanavn}
-                    </button>
+                    <KundeNavn r={{ type: "lead", id: lead.id }} className="text-sm font-semibold">{lead.kontaktperson || lead.firmanavn}</KundeNavn>
                     <span className="truncate text-xs text-muted-foreground">{lead.firmanavn}</span>
                     <Badge variant="outline" className={`text-[10px] ${oppfolgingFarge[tilstand]}`}>
                       {oppfolgingEtikett(dato)}

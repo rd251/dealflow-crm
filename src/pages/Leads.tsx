@@ -1,3 +1,4 @@
+import { KundeNavn, SelskapNavn } from "@/components/KortLenker";
 import { useState, useEffect, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import PageShell from "@/components/PageShell";
@@ -784,7 +785,7 @@ export default function Leads() {
             <li key={lead.id} className="flex min-w-0 flex-col gap-2 rounded-xl border bg-card p-4 transition-colors hover:border-foreground/20">
               <button type="button" className="flex w-full min-w-0 flex-col gap-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md" onClick={() => setSelectedLead(lead)}>
                 <span className="flex w-full items-start justify-between gap-2">
-                  <span className="min-w-0 truncate font-display text-base font-semibold">{lead.kontaktperson || bedriftVisning(lead) || "Kontakt ikke oppgitt"}</span>
+                  <KundeNavn r={{ type: "lead", id: lead.id }} className="font-display text-base font-semibold">{lead.kontaktperson || bedriftVisning(lead) || "Kontakt ikke oppgitt"}</KundeNavn>
                   <Badge variant="outline" className={`shrink-0 text-[11px] ${statusColors[lead.status] || ""}`}>{leadStatusKort[lead.status] || lead.status}</Badge>
                 </span>
                 <span className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground">

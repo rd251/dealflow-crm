@@ -1,3 +1,4 @@
+import { KundeNavn, SelskapNavn } from "@/components/KortLenker";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { slettSalgsmulighetTrygt } from "@/lib/slett-salgsmulighet";
@@ -599,7 +600,7 @@ export default function Salgsmuligheter() {
             className="min-w-0 flex-1 truncate text-left text-sm font-semibold text-foreground hover:text-pipeline"
             onClick={event => {
               event.stopPropagation();
-              if (deal.selskap_id) navigate(`/selskaper/${deal.selskap_id}`);
+              if (deal.selskap_id) navigate(`?selskap=${deal.selskap_id}`);
             }}
           >
             {companyName}
@@ -971,7 +972,7 @@ export default function Salgsmuligheter() {
             <span className="text-xs text-muted-foreground">Vektet: {nok(weightedValue)} · Vinnrate: {winRate} %</span>
           </div>}
           {pipelineView === "table" ? (
-            <DealList deals={sortDeals(openDeals)} getSelskapNavn={getSelskapNavn} getSelskapDomain={getSelskapDomain} onSelect={setSelectedSm} label="Åpne salgsmuligheter" onNavigateSelskap={id => navigate(`/selskaper/${id}`)} isMobile={isMobile} showKontraktStatus showLukkedato showSignalAndNextStep />
+            <DealList deals={sortDeals(openDeals)} getSelskapNavn={getSelskapNavn} getSelskapDomain={getSelskapDomain} onSelect={setSelectedSm} label="Åpne salgsmuligheter" onNavigateSelskap={id => navigate(`?selskap=${id}`)} isMobile={isMobile} showKontraktStatus showLukkedato showSignalAndNextStep />
           ) : (
           <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-thin items-stretch">
             {(stageFilter ? [stageFilter] : ACTIVE_KANBAN_STAGES).map(stadium => {
@@ -1084,9 +1085,9 @@ export default function Salgsmuligheter() {
           )}
         </div>
       ) : pipelineSegment === "vunnet" ? (
-        <DealList deals={sortDeals(salgsmuligheter.filter(deal => deal.status === "Vunnet"))} getSelskapNavn={getSelskapNavn} getSelskapDomain={getSelskapDomain} onSelect={setSelectedSm} label="Vunne salgsmuligheter" onNavigateSelskap={id => navigate(`/selskaper/${id}`)} isMobile={isMobile} showKontraktStatus />
+        <DealList deals={sortDeals(salgsmuligheter.filter(deal => deal.status === "Vunnet"))} getSelskapNavn={getSelskapNavn} getSelskapDomain={getSelskapDomain} onSelect={setSelectedSm} label="Vunne salgsmuligheter" onNavigateSelskap={id => navigate(`?selskap=${id}`)} isMobile={isMobile} showKontraktStatus />
       ) : pipelineSegment === "tapt" ? (
-        <DealList deals={sortDeals(salgsmuligheter.filter(deal => deal.status === "Tapt"))} getSelskapNavn={getSelskapNavn} getSelskapDomain={getSelskapDomain} onSelect={setSelectedSm} label="Tapte salgsmuligheter" onNavigateSelskap={id => navigate(`/selskaper/${id}`)} isMobile={isMobile} />
+        <DealList deals={sortDeals(salgsmuligheter.filter(deal => deal.status === "Tapt"))} getSelskapNavn={getSelskapNavn} getSelskapDomain={getSelskapDomain} onSelect={setSelectedSm} label="Tapte salgsmuligheter" onNavigateSelskap={id => navigate(`?selskap=${id}`)} isMobile={isMobile} />
       ) : (
         <div className="space-y-3">
           <div className="flex max-w-full gap-1 overflow-x-auto pb-1 scrollbar-hide">
@@ -1097,7 +1098,7 @@ export default function Salgsmuligheter() {
               <Button key={value} size="sm" variant={archiveFilter === value ? "secondary" : "ghost"} className="h-8 shrink-0 text-xs" onClick={() => setArchiveFilter(value)}>{label}</Button>
             ))}
           </div>
-          <DealList deals={sortDeals(archiveDeals)} getSelskapNavn={getSelskapNavn} getSelskapDomain={getSelskapDomain} onSelect={setSelectedSm} label="Arkiv" onNavigateSelskap={id => navigate(`/selskaper/${id}`)} isMobile={isMobile} showKontraktStatus showLukkedato />
+          <DealList deals={sortDeals(archiveDeals)} getSelskapNavn={getSelskapNavn} getSelskapDomain={getSelskapDomain} onSelect={setSelectedSm} label="Arkiv" onNavigateSelskap={id => navigate(`?selskap=${id}`)} isMobile={isMobile} showKontraktStatus showLukkedato />
         </div>
       )}
 
@@ -1755,7 +1756,7 @@ function DealList({ deals, getSelskapNavn, getSelskapDomain, onSelect, label, on
       <div className="space-y-3">
         {deals.map(d => (
           <div key={d.id} className="bg-card border rounded-xl p-4 space-y-1" onClick={() => onSelect(d)}>
-            <p className="font-semibold text-sm truncate">{d.kontaktperson || "–"}</p>
+            <p className="font-semibold text-sm truncate"><KundeNavn r={{ type: "sm", id: d.id }}>{d.kontaktperson || "–"}</KundeNavn></p>
             {d.use_case && <p className="text-xs text-muted-foreground">{d.use_case}</p>}
             <p className="text-xs text-muted-foreground cursor-pointer" onClick={e => { e.stopPropagation(); onNavigateSelskap?.(d.selskap_id); }}>{getSelskapNavn(d.selskap_id)}</p>
             <div className="flex items-center gap-2">
