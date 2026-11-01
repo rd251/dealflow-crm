@@ -349,6 +349,7 @@ export default function IDag() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <KundeKort rad={valgtRad} onClose={() => setValgtRad(null)} />
     </PageShell>
   );
 }
