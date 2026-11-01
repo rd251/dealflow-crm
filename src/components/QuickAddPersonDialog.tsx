@@ -182,7 +182,7 @@ export default function QuickAddPersonDialog({ open, onOpenChange, onCreated }: 
           <div className="space-y-2 rounded-lg border bg-muted/30 p-3">
             <label className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
               <input type="checkbox" checked={loggFørste} onChange={e => setLoggFørste(e.target.checked)} className="h-3.5 w-3.5 accent-[hsl(var(--primary))]" />
-              Logg første interaksjon
+              Logg første aktivitet
             </label>
             {loggFørste && (
               <>

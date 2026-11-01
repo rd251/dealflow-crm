@@ -39,7 +39,7 @@ const TAB_LABELS: Record<(typeof TAB_KEYS)[number], string> = {
   tilbud: "Tilbud",
   selskap: "Selskap",
   kontakt: "Kontakt",
-  interaksjoner: "Interaksjoner",
+  interaksjoner: "Aktivitet",
   notater: "Notater",
   kalender: "Kalender",
   dokumenter: "Dokumenter",

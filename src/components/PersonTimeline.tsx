@@ -134,7 +134,7 @@ export default function PersonTimeline({ kontakt_id, selskap_id, e_post, maks, t
           <Loader2 className="h-4 w-4 animate-spin" />Henter tidslinjen…
         </div>
       ) : synlige.length === 0 ? (
-        <p className="p-8 text-center text-sm text-muted-foreground">Ingen interaksjoner registrert ennå.</p>
+        <p className="p-8 text-center text-sm text-muted-foreground">Ingen aktiviteter registrert ennå.</p>
       ) : (
         <ol className="divide-y">
           {synlige.map(rad => {
