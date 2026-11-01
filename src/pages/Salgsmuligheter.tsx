@@ -1,3 +1,6 @@
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { slettSalgsmulighetTrygt } from "@/lib/slett-salgsmulighet";
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { toast } from "sonner";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -16,7 +19,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { PinnedNotatBoks, PinnedNotatFelt } from "@/components/PinnedNotat";
 import DetailPanelShell, { DetailSection, DetailField, DetailDivider, DetailStatGrid, DetailStatCard } from "@/components/DetailPanelShell";
 import EntityCalendarTab from "@/components/EntityCalendarTab";
-import { Plus, GripVertical, Trophy, XCircle, Trash2, Phone, User, AlertTriangle, Clock, Building2, DollarSign, Mail, FileSignature, PartyPopper, Globe, ExternalLink, Linkedin, PenLine, Send } from "lucide-react";
+import { MoreHorizontal, Plus, GripVertical, Trophy, XCircle, Trash2, Phone, User, AlertTriangle, Clock, Building2, DollarSign, Mail, FileSignature, PartyPopper, Globe, ExternalLink, Linkedin, PenLine, Send } from "lucide-react";
 import SendEmailDialog from "@/components/SendEmailDialog";
 import SelskapInnsikt from "@/components/SelskapInnsikt";
 import CompanyLogo from "@/components/CompanyLogo";
@@ -602,6 +605,19 @@ export default function Salgsmuligheter() {
           </button>
           {deal.forventet_mrr > 0 && (
             <span className="shrink-0 text-xs font-semibold tabular-nums text-foreground">{nok(deal.forventet_mrr)}</span>
+          )}
+          {canEdit && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button type="button" aria-label={`Flere valg for ${companyName}`} className="shrink-0 rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground" onClick={e => e.stopPropagation()} onPointerDown={e => e.stopPropagation()}>
+                  <MoreHorizontal className="h-4 w-4" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" onClick={e => e.stopPropagation()}>
+                <DropdownMenuItem onSelect={() => setSelectedSm(deal)}>Åpne</DropdownMenuItem>
+                <DropdownMenuItem className="text-destructive focus:text-destructive" onSelect={() => setSlettSm(deal)}>Slett</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
         </div>
 
@@ -1462,12 +1478,9 @@ export default function Salgsmuligheter() {
                 </DetailSection>
 
                 {canEdit && (
-                  <Button size="sm" variant="ghost" className="w-full text-destructive hover:bg-destructive/10 text-xs" onClick={() => {
-                    updateSalgsmuligheter(prev => prev.filter(s => s.id !== currentSm.id));
-                    setSelectedSm(null);
-                  }}>
-                    <Trash2 className="w-3 h-3 mr-1" />Slett
-                  </Button>
+                  <div className="flex justify-end border-t pt-3">
+                    <Button variant="link" size="sm" className="h-auto p-0 text-xs text-destructive" onClick={() => setSlettSm(currentSm)}>Slett salgsmulighet</Button>
+                  </div>
                 )}
               </>
             ),
