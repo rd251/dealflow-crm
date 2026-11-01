@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { leadKvalitet, erGyldigNorskTelefon, komInnTekst, nesteTekst, ekteOnske } from "@/lib/lead-kort";
+import { kildeVisning, leadKvalitet, erGyldigNorskTelefon, komInnTekst, nesteTekst, ekteOnske } from "@/lib/lead-kort";
 
 const now = new Date("2026-11-01T12:00:00");
 
@@ -42,5 +42,11 @@ describe("kortlinjer", () => {
     expect(ekteOnske("Leadet har ikke oppgitt hva de ønsker hjelp med")).toBeNull();
     expect(ekteOnske("Det fremgår ikke hva leadet ønsker hjelp med.")).toBeNull();
     expect(ekteOnske("AI på telefon")).toBe("AI på telefon");
+  });
+});
+
+describe("kilde", () => {
+  it("Meta Lead Ads vises som Meta-annonse, ikke Annet", () => {
+    expect(kildeVisning("Meta Lead Ads")).toBe("Meta-annonse");
   });
 });

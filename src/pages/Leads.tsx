@@ -31,7 +31,7 @@ import NesteStegTaskButton from "@/components/NesteStegTaskButton";
 import { PinnedNotatBoks, PinnedNotatFelt } from "@/components/PinnedNotat";
 import { skjemaOnske, produktInteresse } from "@/lib/lead-notater";
 import LeadHvaSkjedde from "@/components/LeadHvaSkjedde";
-import { leadKvalitet, ekteOnske, nesteTekst, komInnTekst, kortDato } from "@/lib/lead-kort";
+import { leadKvalitet, ekteOnske, nesteTekst, komInnTekst, kortDato, kildeVisning } from "@/lib/lead-kort";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import RingelisteIdag from "@/components/RingelisteIdag";
 import {
@@ -197,6 +197,8 @@ export default function Leads() {
       const cutoff = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
       if (l.sist_aktivitet && new Date(l.sist_aktivitet) >= cutoff) return false;
     }
+    // «Ikke aktuelt» holdes ute av aktive leads – vises kun når man filtrerer på den statusen.
+    if (l.status === "Ikke aktuelt" && statusFilter !== "Ikke aktuelt" && statusParam !== "Ikke aktuelt") return false;
     if (!tilhorerFilter(l.ansvarlig)) return false;
     if (statusParam && l.status !== statusParam) return false;
     if (kildeFilter !== "alle" && kildeGruppe(l.kilde) !== kildeFilter) return false;
@@ -358,13 +360,24 @@ export default function Leads() {
     const smId = konverterLead(lead.id, navn, enrich);
     if (selectedLead?.id === lead.id) setSelectedLead(null);
     if (!smId) return;
-    updateOppgaver(prev => [...prev, {
-      id: crypto.randomUUID(), oppgave: "Gjennomfør demo", lead_id: "", selskap_id: "", salgsmulighet_id: smId, kontakt_id: "",
-      ansvarlig: lead.ansvarlig || user?.id || "", frist: datoOm(7), frist_tid: "", prioritet: "Høy", status: "Åpen", paaminnelse: true, notater: "",
-    }]);
-    toast.success(`${lead.firmanavn || lead.kontaktperson} er nå salgsmulighet (Møte booket) · oppgave «Gjennomfør demo» opprettet`, {
+    toast.success(`${lead.firmanavn || lead.kontaktperson} er nå salgsmulighet (Møte booket)`, {
       action: { label: "Åpne", onClick: () => navigate(`/salgsmuligheter?open=${smId}`) },
     });
+    // Vent til salgsmuligheten er lagret før oppgave og aktiviteter kobles på (ellers avvises koblingen).
+    void (async () => {
+      for (let i = 0; i < 20; i++) {
+        const { data } = await supabase.from("salgsmuligheter").select("id").eq("id", smId).maybeSingle();
+        if (data) break;
+        await new Promise(r => setTimeout(r, 500));
+      }
+      const { error } = await supabase.from("aktiviteter").update({ salgsmulighet_id: smId })
+        .eq("lead_id", lead.id).is("salgsmulighet_id", null);
+      if (error) console.warn("Kunne ikke flytte aktiviteter", error);
+      updateOppgaver(prev => [...prev, {
+        id: crypto.randomUUID(), oppgave: "Gjennomfør demo", lead_id: "", selskap_id: "", salgsmulighet_id: smId, kontakt_id: "",
+        ansvarlig: lead.ansvarlig || user?.id || "", frist: datoOm(7), frist_tid: "", prioritet: "Høy", status: "Åpen", paaminnelse: true, notater: "",
+      }]);
+    })();
   };
 
   const currentLead = selectedLead ? leads.find(l => l.id === selectedLead.id) || selectedLead : null;
@@ -766,7 +779,7 @@ export default function Leads() {
           const kvalitet = leadKvalitet(lead);
           const onske = ekteOnske(lead.produkt_oppsummering) || ekteOnske(skjemaOnske(lead.notater));
           const neste = nesteTekst(effektivOppfolging(lead), lead.status);
-          const linje2 = [bedriftVisning(lead) || "Firma ikke oppgitt", kildeGruppe(lead.kilde), komInnTekst(lead.opprettet_dato)].filter(Boolean).join(" · ");
+          const linje2 = [bedriftVisning(lead) || "Firma ikke oppgitt", kildeVisning(lead.kilde), komInnTekst(lead.opprettet_dato)].filter(Boolean).join(" · ");
           return (
             <li key={lead.id} className="flex min-w-0 flex-col gap-2 rounded-xl border bg-card p-4 transition-colors hover:border-foreground/20">
               <button type="button" className="flex w-full min-w-0 flex-col gap-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md" onClick={() => setSelectedLead(lead)}>
@@ -870,7 +883,7 @@ export default function Leads() {
                   </div>
                   <div className="min-w-0">
                     <dt className="text-[11px] uppercase tracking-wide text-muted-foreground">Kom inn</dt>
-                    <dd className="truncate tabular-nums">{[komInnTekst(currentLead.opprettet_dato), kildeGruppe(currentLead.kilde)].filter(Boolean).join(" · ")}</dd>
+                    <dd className="truncate tabular-nums">{[komInnTekst(currentLead.opprettet_dato), kildeVisning(currentLead.kilde)].filter(Boolean).join(" · ")}</dd>
                   </div>
                   <div className="min-w-0">
                     <dt className="text-[11px] uppercase tracking-wide text-muted-foreground">Neste oppfølging</dt>

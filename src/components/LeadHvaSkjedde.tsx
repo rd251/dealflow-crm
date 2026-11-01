@@ -55,7 +55,7 @@ export default function LeadHvaSkjedde({ lead, onBooketMoete }: Props) {
 
   const ikkeNaa = () => kjør("ikke-naa", async () => {
     const neste = await hurtig("ringte-ikke-naa");
-    updateLeads(prev => prev.map(l => l.id === lead.id ? { ...l, status: l.status === "Ny" ? "Kontaktet" : l.status, sist_aktivitet: idag(), neste_oppfolging: neste || datoOm(30) } : l));
+    updateLeads(prev => prev.map(l => l.id === lead.id ? { ...l, status: l.status === "Ny" || l.status === "Svarte ikke telefon" ? "Kontaktet" : l.status, sist_aktivitet: idag(), neste_oppfolging: neste || datoOm(30) } : l));
     toast("Ikke nå – ny kontakt om 30 dager");
   });
 

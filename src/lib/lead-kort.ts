@@ -77,3 +77,10 @@ export function leadKvalitet(lead: { firmanavn?: string; kontaktperson?: string;
   if (telefonUgyldig) meldinger.push(`Telefonnummeret «${lead.telefon}» ser ikke ut som et gyldig norsk nummer. Sjekk nummeret før du ringer.`);
   return { firmaUklart, telefonUgyldig, meldinger };
 }
+
+const KILDE_NAVN: Record<string, string> = { "Meta Lead Ads": "Meta-annonse", "Facebook ads": "Meta-annonse", "Google ads": "Google-annonse" };
+/** Lesbar kilde på kortet, f.eks. «Meta-annonse» (ikke grupper som «Annet»). */
+export function kildeVisning(kilde?: string | null): string {
+  if (!kilde) return "Ukjent kilde";
+  return KILDE_NAVN[kilde] || kilde;
+}

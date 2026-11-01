@@ -31,4 +31,7 @@ describe("booket møte → salgsmulighet", () => {
   it("ekstern deltaker uten treff blir forslag", () => {
     expect(vurderMoete({ type: "Møte", eksterne_deltakere: ["ukjent@firma.no"] }, [lead], [])).toEqual({ type: "forslag" });
   });
+  it("ekstern deltaker som er kjent kontakt blir ikke forslag", () => {
+    expect(vurderMoete({ type: "Møte", eksterne_deltakere: ["kari@kunde.no"] }, [lead], [], new Set(["kari@kunde.no"])).type).toBe("ingen");
+  });
 });

@@ -6,18 +6,19 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useCrmStore } from "@/hooks/use-crm-store";
 import { useAuth } from "@/hooks/use-auth";
-import { vurderMoete, eksterneDeltakere } from "@/lib/moete-kobling";
+import { vurderMoete, eksterneDeltakere, GENERISKE_DOMENER } from "@/lib/moete-kobling";
 import { kortDato } from "@/lib/lead-kort";
 
 interface Moete { id: string; tittel: string | null; dato: string; eksterne_deltakere: string[]; lead_id: string | null; salgsmulighet_id: string | null }
 
 /** Forslag i Innboks: møter med eksterne deltakere som ikke matcher noe i CRM-et. */
 export default function MoeteForslag() {
-  const { leads, salgsmuligheter } = useCrmStore();
+  const { leads, salgsmuligheter, kontakter, selskaper } = useCrmStore();
   const { canEdit } = useAuth();
   const navigate = useNavigate();
   const [moeter, setMoeter] = useState<Moete[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
+  const [visAlle, setVisAlle] = useState(false);
 
   useEffect(() => {
     const fra = new Date(Date.now() - 60 * 86400e3).toISOString();
@@ -30,7 +31,11 @@ export default function MoeteForslag() {
       .then(({ data }) => setMoeter((data as Moete[]) || []));
   }, []);
 
-  const forslag = moeter.filter(m => vurderMoete({ type: "Møte", ...m }, leads, salgsmuligheter).type === "forslag");
+  const kjente = new Set<string>([
+    ...kontakter.map(k => (k.e_post || "").toLowerCase()).filter(Boolean),
+    ...selskaper.map(s => (s.domene || "").toLowerCase()).filter(d => d && !GENERISKE_DOMENER.has(d)),
+  ]);
+  const forslag = moeter.filter(m => vurderMoete({ type: "Møte", ...m }, leads, salgsmuligheter, kjente).type === "forslag");
   if (!canEdit || forslag.length === 0) return null;
 
   const gjorTilSalg = async (m: Moete) => {
@@ -44,7 +49,7 @@ export default function MoeteForslag() {
 
   return (
     <section aria-label="Møter uten kobling" className="mb-6 space-y-2">
-      {forslag.map(m => (
+      {(visAlle ? forslag : forslag.slice(0, 3)).map(m => (
         <div key={m.id} className="flex flex-wrap items-center gap-3 rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm">
           <CalendarPlus className="h-4 w-4 shrink-0 text-warning" />
           <div className="min-w-0 flex-1">
@@ -58,6 +63,11 @@ export default function MoeteForslag() {
           </Button>
         </div>
       ))}
+      {forslag.length > 3 && (
+        <Button variant="link" size="sm" className="h-auto p-0 text-xs" onClick={() => setVisAlle(v => !v)}>
+          {visAlle ? "Vis færre" : `Vis alle ${forslag.length} møter uten kobling`}
+        </Button>
+      )}
     </section>
   );
 }

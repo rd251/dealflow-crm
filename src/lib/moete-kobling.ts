@@ -31,7 +31,7 @@ export function eksterneDeltakere(m: MoeteInput): string[] {
     .filter(e => e.includes("@") && !e.endsWith("@snakk.ai"))));
 }
 
-export function vurderMoete(m: MoeteInput, leads: LeadInput[], sms: SmInput[]): MoeteBeslutning {
+export function vurderMoete(m: MoeteInput, leads: LeadInput[], sms: SmInput[], kjente: Set<string> = new Set()): MoeteBeslutning {
   if (m.type !== "Møte") return { type: "ingen", grunn: "ikke møte" };
   if (m.salgsmulighet_id) return { type: "ingen", grunn: "allerede koblet" };
   const eksterne = eksterneDeltakere(m);
@@ -51,7 +51,12 @@ export function vurderMoete(m: MoeteInput, leads: LeadInput[], sms: SmInput[]): 
       }).sort(sorter)[0];
     }
   }
-  if (!lead) return eksterne.length > 0 ? { type: "forslag" } : { type: "ingen", grunn: "ingen lead" };
+  if (!lead) {
+    if (eksterne.length === 0) return { type: "ingen", grunn: "ingen lead" };
+    // Kjent kontakt/selskap/salgsmulighet i CRM-et → ikke et forslag.
+    const kjent = eksterne.some(e => kjente.has(e) || kjente.has(domene(e)) || sms.some(s => (s.e_post || "").toLowerCase() === e));
+    return kjent ? { type: "ingen", grunn: "kjent i CRM" } : { type: "forslag" };
+  }
   if (lead.status === "Ikke aktuelt" || lead.status === "Konvertert til partner") return { type: "ingen", grunn: "lead utenfor salg" };
 
   const epost = (lead.e_post || "").toLowerCase();
