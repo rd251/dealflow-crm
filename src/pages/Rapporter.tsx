@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import RapportTabs from "@/components/RapportTabs";
 import { useNavigate } from "react-router-dom";
 import { format, startOfMonth, subMonths, isWithinInterval, startOfDay, endOfMonth } from "date-fns";
 import { nb } from "date-fns/locale";
@@ -240,6 +241,7 @@ export default function Rapporter() {
     <PageShell
       title="Rapporter"
       subtitle="Detaljerte grafer og innsikt"
+      navigation={<RapportTabs value="rapporter" />}
       actions={
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={handleDownloadPDF} disabled={downloadingPdf} className="gap-1.5">
@@ -247,7 +249,7 @@ export default function Rapporter() {
             {isMobile ? "PDF" : "Last ned salgsrapport"}
           </Button>
           <Button variant="outline" size="sm" onClick={() => navigate("/")} className="gap-1.5">
-            <ArrowLeft className="w-4 h-4" /> Dashboard
+            <ArrowLeft className="w-4 h-4" /> Oversikt
           </Button>
         </div>
       }

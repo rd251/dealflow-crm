@@ -29,6 +29,7 @@ const mainItems: NavItem[] = [
 
 // Alt annet – samlet under «Mer»
 const moreItems: NavItem[] = [
+  { to: "/portefolje", icon: Building2, label: "Portefølje" },
   { to: "/ringeliste", icon: ListTodo, label: "Kampanjelister" },
   { to: "/alle-selskaper", icon: Building2, label: "Alle selskaper" },
   { to: "/dubletter", icon: Copy, label: "Dubletter" },
