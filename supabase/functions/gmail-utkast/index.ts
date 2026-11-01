@@ -98,7 +98,11 @@ Deno.serve(async (req) => {
     const dr = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/drafts", {
       method: "POST", headers: H, body: JSON.stringify({ message: { raw: rawB64, threadId: v.thread_id } }),
     });
-    if (!dr.ok) { console.error("draft", dr.status, await dr.text()); return json({ error: "Kunne ikke lage utkast i Gmail" }, 500); }
+    if (!dr.ok) {
+      const t = await dr.text(); console.error("draft", dr.status, t);
+      if (dr.status === 403 && t.includes("SCOPE")) return json({ error: "Gmail må kobles til på nytt for å kunne lage utkast. Gå til Innstillinger og koble til Google igjen." }, 400);
+      return json({ error: "Kunne ikke lage utkast i Gmail" }, 500);
+    }
     const d = await dr.json();
     return json({ draft_id: d.id, message_id: d.message?.id, thread_id: v.thread_id, til, emne, tekst: plain });
   } catch (e) {
