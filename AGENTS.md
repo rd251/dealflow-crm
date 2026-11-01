@@ -15,3 +15,4 @@
 - Forward saved activity outcomes through ActivityLog and apply them to the lead store before persistence; this prevents stale lead status and follow-up dates overwriting the saved outcome.
 - Convert leads to sales opportunities from meetings in the database trigger on aktiviteter (moete_til_salgsmulighet_vakt/_kjor, external emails in eksterne_deltakere), mirrored by src/lib/moete-kobling.ts for UI suggestions and tests; this works for every meeting source and stays idempotent across re-syncs.
 - Detach activities (salgsmulighet_id = null, keep selskap) before deleting a sales opportunity; this preserves email and meeting history.
+- Keep Oversikt (/dashboard) as a daily «I dag» work list derived in src/lib/i-dag.ts from the CRM store and live tables, with portfolio metrics on /portefolje unchanged; follow-up replies are only created as Gmail drafts via gmail-utkast, never sent.

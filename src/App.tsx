@@ -9,7 +9,8 @@ import { CrmProvider } from "@/hooks/use-crm-store";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import AppSidebar from "@/components/AppSidebar";
 import ScrollToTop from "@/components/ScrollToTop";
-import Dashboard from "./pages/Dashboard";
+import Dashboard from "./pages/IDag";
+import Portefolje from "./pages/Portefolje";
 import Leads from "./pages/Leads";
 import Ringemodus from "./pages/Ringemodus";
 import Salgsmuligheter from "./pages/Salgsmuligheter";
@@ -188,6 +189,7 @@ function RoleRoutes() {
                 <Route path="/aktiviteter" element={<Aktiviteter />} />
                 <Route path="/moetenotater" element={<Moetenotater />} />
                 <Route path="/rapporter" element={<Rapporter />} />
+                <Route path="/portefolje" element={<Portefolje />} />
                 <Route path="/nyhetsbrev" element={<Nyhetsbrev />} />
                 <Route path="/nyhetsbrev/:id/rediger" element={<NyhetsbrevEditor />} />
                 <Route path="/admin" element={<Admin />} />
