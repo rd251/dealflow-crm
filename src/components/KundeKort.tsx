@@ -96,7 +96,7 @@ export default function KundeKort({ r, onClose, onSelskap, onTilbake }: Props) {
     setForm(info); setRedigerer(false); setBekreftTapt(false);
     setUtfall(null); setNotat(""); setNesteForslag(null); setMalKanal(null); setVentende(null); setBekreftMelding(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rad?.key]);
+  }, [kundeParam(r)]);
 
   const hentHistorikk = useCallback(async () => {
     const deler = Object.entries(target).filter(([k, v]) => v && k !== "selskap_id").map(([k, v]) => `${k}.eq.${v}`);
@@ -122,7 +122,7 @@ export default function KundeKort({ r, onClose, onSelskap, onTilbake }: Props) {
     return () => { document.removeEventListener("visibilitychange", onVis); window.removeEventListener("focus", onFocus); window.removeEventListener("blur", onBlur); };
   }, [ventende]);
 
-  if (!rad || !ctx) return null;
+  if (!ctx) return null;
 
   // ---------- Kontaktinfo ----------
   const lagreKontakt = () => {
@@ -248,7 +248,7 @@ export default function KundeKort({ r, onClose, onSelskap, onTilbake }: Props) {
 
   return (
     <>
-      <Sheet open={!!rad} onOpenChange={o => !o && onClose()}>
+      <Sheet open onOpenChange={o => !o && onClose()}>
         <SheetContent side={isMobile ? "bottom" : "right"} className={cn("overflow-y-auto", isMobile ? "max-h-[90vh] rounded-t-xl" : "w-full sm:max-w-md")}>
           <SheetHeader className="text-left">
             <SheetTitle className="font-display">{info.navn || info.firma || rad.navn}</SheetTitle>
