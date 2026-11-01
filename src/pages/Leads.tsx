@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import DetailPanelShell, { DetailSection, DetailField, DetailDivider } from "@/components/DetailPanelShell";
 import EntityCalendarTab from "@/components/EntityCalendarTab";
-import { Plus, Search, ArrowRightCircle, Trash2, Users2, Upload, Lock, Mail, ArrowUp, ArrowDown, ChevronsUpDown, PenLine, Send, Phone, CalendarDays, UserPlus, CheckCircle2, TrendingUp } from "lucide-react";
+import { Plus, Search, ArrowRightCircle, Trash2, Users2, Upload, Lock, Mail, ArrowUp, ArrowDown, ChevronsUpDown, PenLine, Send, Phone, CalendarDays, UserPlus, CheckCircle2, TrendingUp, AlertTriangle } from "lucide-react";
 import { relativTid, dagerSiden, kildeGruppe, KILDE_GRUPPER, leadStatusFarge, leadStatusKort, idag, datoOm, type KildeGruppe } from "@/lib/sales-flow";
 import SendEmailDialog from "@/components/SendEmailDialog";
 import SelskapInnsikt from "@/components/SelskapInnsikt";
@@ -30,7 +30,9 @@ import LeadForwardEmailPreview from "@/components/LeadForwardEmailPreview";
 import NesteStegTaskButton from "@/components/NesteStegTaskButton";
 import { PinnedNotatBoks, PinnedNotatFelt } from "@/components/PinnedNotat";
 import { skjemaOnske, produktInteresse } from "@/lib/lead-notater";
-import LeadQuickActions from "@/components/LeadQuickActions";
+import LeadHvaSkjedde from "@/components/LeadHvaSkjedde";
+import { leadKvalitet, ekteOnske, nesteTekst, komInnTekst, kortDato } from "@/lib/lead-kort";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import RingelisteIdag from "@/components/RingelisteIdag";
 import {
   NYTT_LEAD_OPPFOLGING_DAGER,
@@ -95,6 +97,7 @@ export default function Leads() {
   const [kildeFilter, setKildeFilter] = useState<"alle" | KildeGruppe>("alle");
   const [statusFilter, setStatusFilter] = useState<"alle" | LeadStatus>("alle");
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+  const [slettLead, setSlettLead] = useState<Lead | null>(null);
   // Forwarding to partner
   const [forwardDialogLead, setForwardDialogLead] = useState<Lead | null>(null);
   const [forwardPartnerId, setForwardPartnerId] = useState<string>("");
@@ -351,6 +354,19 @@ export default function Leads() {
     }
   };
 
+  const konverterOgOpprettOppgave = (lead: Lead, navn: string, enrich?: typeof enrichFields) => {
+    const smId = konverterLead(lead.id, navn, enrich);
+    if (selectedLead?.id === lead.id) setSelectedLead(null);
+    if (!smId) return;
+    updateOppgaver(prev => [...prev, {
+      id: crypto.randomUUID(), oppgave: "Gjennomfør demo", lead_id: "", selskap_id: "", salgsmulighet_id: smId, kontakt_id: "",
+      ansvarlig: lead.ansvarlig || user?.id || "", frist: datoOm(7), frist_tid: "", prioritet: "Høy", status: "Åpen", paaminnelse: true, notater: "",
+    }]);
+    toast.success(`${lead.firmanavn || lead.kontaktperson} er nå salgsmulighet (Møte booket) · oppgave «Gjennomfør demo» opprettet`, {
+      action: { label: "Åpne", onClick: () => navigate(`/salgsmuligheter?open=${smId}`) },
+    });
+  };
+
   const currentLead = selectedLead ? leads.find(l => l.id === selectedLead.id) || selectedLead : null;
   const currentIsLocked = currentLead ? isConverted(currentLead) : false;
   const currentForwardedPartner = currentLead?.videresendt_til_partner_id
@@ -501,32 +517,10 @@ export default function Leads() {
               disabled={!convertNavn.trim()}
               onClick={() => {
                 if (convertDialogLead) {
-                  const smId = konverterLead(convertDialogLead.id, convertNavn.trim(), enrichFields);
-                  const leadNavn = convertDialogLead.firmanavn;
+                  konverterOgOpprettOppgave(convertDialogLead, convertNavn.trim(), enrichFields);
                   setConvertDialogLead(null);
                   setConvertNavn("");
                   setEnrichFields({ orgnr: "", bransje: "", firmaadresse: "", postadresse: "" });
-                  if (selectedLead?.id === convertDialogLead.id) setSelectedLead(null);
-                  if (smId) {
-                    updateOppgaver(prev => [...prev, {
-                      id: crypto.randomUUID(),
-                      oppgave: "Gjennomfør demo",
-                      lead_id: "",
-                      selskap_id: "",
-                      salgsmulighet_id: smId,
-                      kontakt_id: "",
-                      ansvarlig: convertDialogLead.ansvarlig || user?.id || "",
-                      frist: datoOm(7),
-                      frist_tid: "",
-                      prioritet: "Høy",
-                      status: "Åpen",
-                      paaminnelse: true,
-                      notater: "",
-                    }]);
-                    toast.success(`${leadNavn} konvertert til salgsmulighet · oppgave «Gjennomfør demo» opprettet`, {
-                      action: { label: "Åpne", onClick: () => navigate(`/salgsmuligheter?open=${smId}`) },
-                    });
-                  }
                 }
               }}
             >
@@ -767,114 +761,48 @@ export default function Leads() {
         {oppfolgingFilter && <Button size="sm" variant="secondary" onClick={() => clearDeepFilter("filter")}>Trenger oppfølging ×</Button>}
       </div>
       {visning === "ringeliste" ? <RingelisteIdag /> : <>
-      {/* Mobile: card layout */}
-      {isMobile ? (
-            <div className="space-y-3">
-              {filtered.map(lead => (
-                <div key={lead.id} className="bg-card border rounded-xl p-4 space-y-2" onClick={() => setSelectedLead(lead)}>
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2 min-w-0 flex-1">
-                      <CompanyLogo firmanavn={lead.firmanavn} kontaktEmails={lead.e_post ? [lead.e_post] : undefined} size="sm" />
-                      <p className="font-semibold text-sm truncate">{lead.kontaktperson || lead.firmanavn}</p>
-                    </div>
-                    <Badge variant="outline" className={`text-[10px] ${statusColors[lead.status] || ""}`}>{leadStatusKort[lead.status] || lead.status}</Badge>
-                  </div>
-                  <p className="text-xs text-muted-foreground truncate">{bedriftVisning(lead) || "Bedrift ikke oppgitt"}</p>
-                  {lead.telefon && (
-                    <a href={`tel:${lead.telefon}`} onClick={e => e.stopPropagation()} className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline">
-                      <Phone className="w-3 h-3" />{lead.telefon}
-                    </a>
+      <ul className="grid grid-cols-1 gap-3 md:grid-cols-2 2xl:grid-cols-3" aria-label="Leads">
+        {filtered.map(lead => {
+          const kvalitet = leadKvalitet(lead);
+          const onske = ekteOnske(lead.produkt_oppsummering) || ekteOnske(skjemaOnske(lead.notater));
+          const neste = nesteTekst(effektivOppfolging(lead), lead.status);
+          const linje2 = [bedriftVisning(lead) || "Firma ikke oppgitt", kildeGruppe(lead.kilde), komInnTekst(lead.opprettet_dato)].filter(Boolean).join(" · ");
+          return (
+            <li key={lead.id} className="flex min-w-0 flex-col gap-2 rounded-xl border bg-card p-4 transition-colors hover:border-foreground/20">
+              <button type="button" className="flex w-full min-w-0 flex-col gap-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md" onClick={() => setSelectedLead(lead)}>
+                <span className="flex w-full items-start justify-between gap-2">
+                  <span className="min-w-0 truncate font-display text-base font-semibold">{lead.kontaktperson || bedriftVisning(lead) || "Kontakt ikke oppgitt"}</span>
+                  <Badge variant="outline" className={`shrink-0 text-[11px] ${statusColors[lead.status] || ""}`}>{leadStatusKort[lead.status] || lead.status}</Badge>
+                </span>
+                <span className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
+                  <span className="truncate tabular-nums">{linje2}</span>
+                  {kvalitet.firmaUklart && <span className="shrink-0 rounded bg-destructive/10 px-1.5 py-0.5 text-[10px] font-medium text-destructive">Firma uklart</span>}
+                </span>
+                {onske && <span className="line-clamp-2 text-xs text-foreground/80">Ønsker: {onske}</span>}
+                {lead.pinned_notat?.trim() && <PinnedNotatBoks notat={lead.pinned_notat} />}
+                {neste && <span className={`text-xs tabular-nums ${neste.haster ? "font-semibold text-warning" : "text-muted-foreground"}`}>{neste.tekst}</span>}
+              </button>
+              {canEdit && lead.status !== "Ikke aktuelt" && (
+                <div className="mt-auto flex gap-2 pt-1">
+                  {lead.telefon ? (
+                    <Button asChild size="sm" className="flex-1">
+                      <a href={`tel:${lead.telefon}`} onClick={() => setSelectedLead(lead)} title={kvalitet.telefonUgyldig ? "Sjekk nummeret før du ringer" : undefined}>
+                        <Phone className="h-4 w-4" />Ring
+                      </a>
+                    </Button>
+                  ) : (
+                    <Button size="sm" className="flex-1" disabled><Phone className="h-4 w-4" />Ring</Button>
                   )}
-                  {(lead.produkt_oppsummering || skjemaOnske(lead.notater)) && (
-                    <p className="text-xs text-muted-foreground">Ønsker: {(lead.produkt_oppsummering || skjemaOnske(lead.notater))}</p>
-                  )}
-                  <PinnedNotatBoks notat={lead.pinned_notat} />
-                   <div className="flex items-center justify-between">
-                     <span className="flex items-center gap-1">
-                       <Badge variant="secondary" className="text-[10px]">{kildeGruppe(lead.kilde)}</Badge>
-                       {produktInteresse(lead.notater, lead.use_case, lead.produkt_interesse).map(p => (
-                         <Badge key={p} className="text-[10px]">{p}</Badge>
-                       ))}
-                     </span>
-                    <span className="text-[10px] text-muted-foreground">{relativTid(lead.sist_aktivitet)}</span>
-                    <Badge variant="outline" className={`text-[10px] ${oppfolgingFarge[oppfolgingTilstand(effektivOppfolging(lead))]}`}>
-                      {oppfolgingEtikett(effektivOppfolging(lead))}
-                    </Badge>
-                  </div>
-                  {lead.neste_steg && <p className="text-[11px] text-muted-foreground truncate">→ {lead.neste_steg}</p>}
-                  {lead.status !== "Ikke aktuelt" && (
-                    <div className="flex gap-1 mt-1 flex-wrap" onClick={e => e.stopPropagation()}>
-                      <Button size="sm" variant="ghost" className="text-xs gap-1 flex-1 min-w-[80px]" onClick={() => loggSamtale(lead)}>
-                        <Phone className="w-3.5 h-3.5" />Ringt
-                      </Button>
-                      <Button size="sm" variant="ghost" className="text-xs gap-1 flex-1 min-w-[80px]" onClick={() => bookMoete(lead)}>
-                        <CalendarDays className="w-3.5 h-3.5" />Møte
-                      </Button>
-                      <Button size="sm" variant="ghost" className="text-xs gap-1 flex-1 min-w-[80px]" onClick={() => sendEpost(lead)}>
-                        <Mail className="w-3.5 h-3.5" />E-post
-                      </Button>
-                      <Button size="sm" variant="ghost" className="text-xs gap-1 flex-1 min-w-[80px]" onClick={() => { setConvertDialogLead(lead); setConvertNavn(lead.use_case || lead.firmanavn); }}>
-                        <ArrowRightCircle className="w-3.5 h-3.5" />Kvalifiser
-                      </Button>
-                      <Button size="sm" variant="ghost" className="text-xs gap-1 flex-1 min-w-[80px]" onClick={() => setPartnerDialogLead(lead)}>
-                        <Users2 className="w-3.5 h-3.5" />Partner
-                      </Button>
-                      {isAdmin && (
-                        <Button size="sm" variant="ghost" className="text-xs gap-1 flex-1 min-w-[80px]" onClick={() => openForwardDialog(lead)}>
-                          <Send className="w-3.5 h-3.5" />Videresend
-                        </Button>
-                      )}
-                    </div>
-                  )}
-                  {lead.videresendt_til_partner_id && (
-                    <Badge variant="secondary" className="text-[10px] gap-1">
-                      <Send className="w-2.5 h-2.5" />
-                      Videresendt {lead.videresendt_dato}
-                    </Badge>
-                  )}
+                  <Button size="sm" variant="outline" className="flex-1" onClick={() => setSelectedLead(lead)}>
+                    <PenLine className="h-4 w-4" />Logg utfall
+                  </Button>
                 </div>
-              ))}
-              {filtered.length === 0 && <p className="text-center text-sm text-muted-foreground py-8">Ingen aktive leads</p>}
-            </div>
-          ) : (
-            /* Desktop: table layout */
-            <div className="min-h-[480px] overflow-x-auto rounded-md border bg-card">
-              <table className="w-full min-w-[1250px] table-fixed text-sm">
-                <thead><tr className="border-b bg-muted/40 text-left text-xs text-muted-foreground">
-                  <th className="w-[185px] border-r px-4 py-3"><Button variant="ghost" className="h-auto p-0 text-xs" onClick={() => toggleSort("kontaktperson")}>Kontakt <SortIcon col="kontaktperson" /></Button></th>
-                  <th className="w-[200px] border-r px-4 py-3"><Button variant="ghost" className="h-auto p-0 text-xs" onClick={() => toggleSort("firmanavn")}>Bedrift <SortIcon col="firmanavn" /></Button></th>
-                  <th className="w-[220px] border-r px-4 py-3">E-post</th>
-                  <th className="w-[140px] border-r px-4 py-3">Telefon</th>
-                  <th className="w-[130px] border-r px-4 py-3">Stilling</th>
-                  <th className="w-[120px] border-r px-4 py-3"><Button variant="ghost" className="h-auto p-0 text-xs" onClick={() => toggleSort("kilde")}>Kilde <SortIcon col="kilde" /></Button></th>
-                  <th className="w-[165px] border-r px-4 py-3"><Button variant="ghost" className="h-auto p-0 text-xs" onClick={() => toggleSort("status")}>Status <SortIcon col="status" /></Button></th>
-                  <th className="w-[140px] border-r px-4 py-3">Ansvarlig</th>
-                  <th className="w-[145px] px-4 py-3">Handlinger</th>
-                </tr></thead>
-                <tbody>
-                  {filtered.map(lead => (
-                    <tr key={lead.id} className="group cursor-pointer border-b last:border-0 transition-colors hover:bg-muted/30" onClick={() => setSelectedLead(lead)}>
-                      <td className="px-4 py-3"><Button variant="ghost" className="h-auto max-w-full justify-start p-0 text-left text-sm" onClick={e => { e.stopPropagation(); setSelectedLead(lead); }}><span className="truncate" title={lead.kontaktperson}>{lead.kontaktperson || "Kontakt ikke oppgitt"}</span></Button></td>
-                      <td className="px-4 py-3"><div className="flex min-w-0 items-center gap-2"><CompanyLogo firmanavn={lead.firmanavn} kontaktEmails={lead.e_post ? [lead.e_post] : undefined} size="sm" /><span className="truncate" title={bedriftVisning(lead) || undefined}>{bedriftVisning(lead) || "Bedrift ikke oppgitt"}</span></div><PinnedNotatBoks notat={lead.pinned_notat} className="mt-1.5" /></td>
-                      <td className="truncate px-4 py-3 text-muted-foreground" title={lead.e_post}>{lead.e_post || "—"}</td>
-                      <td className="truncate px-4 py-3 tabular-nums text-muted-foreground">{lead.telefon ? <a href={`tel:${lead.telefon}`} onClick={e => e.stopPropagation()} className="hover:underline">{lead.telefon}</a> : "—"}</td>
-                      <td className="truncate px-4 py-3 text-muted-foreground" title={lead.rolle_i_firma}>{lead.rolle_i_firma || "—"}</td>
-                      <td className="px-4 py-3 text-xs text-muted-foreground">{kildeGruppe(lead.kilde)}</td>
-                      <td className="px-4 py-3" onClick={e => e.stopPropagation()}><Select value={lead.status} onValueChange={value => changeStatus(lead.id, value as LeadStatus)} disabled={!canEdit}><SelectTrigger aria-label={`Status for ${lead.kontaktperson || lead.firmanavn}`} className={`h-8 text-xs ${statusColors[lead.status] || ""}`}><SelectValue /></SelectTrigger><SelectContent>{statusOptions.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select></td>
-                      <td className="truncate px-4 py-3 text-xs text-muted-foreground" title={ownerName(lead.ansvarlig)}>{ownerName(lead.ansvarlig)}</td>
-                      <td className="px-2 py-3" onClick={e => e.stopPropagation()}>{canEdit && lead.status !== "Ikke aktuelt" && <div className="flex items-center gap-0.5">
-                        <Button size="icon" variant="ghost" className="h-7 w-7" title="Logg samtale" onClick={() => loggSamtale(lead)}><Phone className="h-3.5 w-3.5" /></Button>
-                        <Button size="icon" variant="ghost" className="h-7 w-7" title="Book møte" onClick={() => bookMoete(lead)}><CalendarDays className="h-3.5 w-3.5" /></Button>
-                        <Button size="icon" variant="ghost" className="h-7 w-7" title="Send e-post" onClick={() => sendEpost(lead)}><Mail className="h-3.5 w-3.5" /></Button>
-                        <Button size="icon" variant="ghost" className="h-7 w-7" title="Kvalifiser til salgsmulighet" onClick={() => { setConvertDialogLead(lead); setConvertNavn(lead.use_case || lead.firmanavn); }}><ArrowRightCircle className="h-3.5 w-3.5" /></Button>
-                      </div>}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {filtered.length === 0 && <p className="text-center text-sm text-muted-foreground py-8">Ingen leads funnet</p>}
-            </div>
-          )}
+              )}
+            </li>
+          );
+        })}
+      </ul>
+      {filtered.length === 0 && <p className="text-center text-sm text-muted-foreground py-8">Ingen leads funnet</p>}
       </>}
 
 
@@ -884,47 +812,16 @@ export default function Leads() {
         onClose={() => setSelectedLead(null)}
         activeTab={detailTab}
         onActiveTabChange={(t) => setDetailTab(t)}
-        title={currentLead ? bedriftVisning(currentLead) || currentLead.kontaktperson || "Ukjent" : ""}
-        subtitle={currentLead && bedriftVisning(currentLead) ? currentLead.kontaktperson || undefined : undefined}
+        title={currentLead ? currentLead.kontaktperson || bedriftVisning(currentLead) || "Ukjent" : ""}
+        subtitle={currentLead && currentLead.kontaktperson ? bedriftVisning(currentLead) || "Firma ikke oppgitt" : undefined}
         badges={currentLead ? (
           <>
-            <Badge className={`text-xs ${statusColors[currentLead.status] || ""}`}>{currentLead.status}</Badge>
+            <Badge variant="outline" className={`text-xs ${statusColors[currentLead.status] || ""}`}>{currentLead.status}</Badge>
             {getConversionType(currentLead) && (
               <Badge className={`text-xs gap-0.5 ${getConversionType(currentLead) === "salg" ? "bg-success/10 text-success" : "bg-primary/10 text-primary"}`}>
                 <Lock className="w-3 h-3" />
                 {getConversionType(currentLead) === "salg" ? "Konvertert → Salg" : "Konvertert → Partner"}
               </Badge>
-            )}
-            <Badge variant="secondary" className="text-xs">{currentLead.kilde}</Badge>
-          </>
-        ) : undefined}
-        actions={canEdit && currentLead && !currentIsLocked && currentLead.status !== "Ikke aktuelt" ? (
-          <>
-            <Button size="sm" variant="outline" onClick={() => {
-              if (detailTab === "interaksjoner") {
-                openCreateActivityRef.current?.();
-              } else {
-                setPendingOpenActivity(true);
-                setDetailTab("interaksjoner");
-              }
-            }}>
-              <PenLine className="w-3.5 h-3.5 mr-1.5" />Logg aktivitet
-            </Button>
-            {currentLead.e_post && (
-              <Button size="sm" variant="outline" onClick={() => setEmailDialogOpen(true)}>
-                <Mail className="w-4 h-4 mr-1.5" />E-post
-              </Button>
-            )}
-            <Button size="sm" onClick={() => { setConvertDialogLead(currentLead); setConvertNavn(currentLead.use_case || currentLead.firmanavn); }}>
-              <ArrowRightCircle className="w-4 h-4 mr-1.5" />Kvalifiser til salgsmulighet
-            </Button>
-            <Button size="sm" variant="secondary" onClick={() => setPartnerDialogLead(currentLead)}>
-              <Users2 className="w-4 h-4 mr-1.5" />Til partner
-            </Button>
-            {isAdmin && (
-              <Button size="sm" variant="outline" onClick={() => openForwardDialog(currentLead)}>
-                <Send className="w-4 h-4 mr-1.5" />Videresend
-              </Button>
             )}
           </>
         ) : undefined}
@@ -936,107 +833,106 @@ export default function Leads() {
               l.id === currentLead.id ? { ...l, [field]: value, sist_aktivitet: today } : l
             ));
           };
+          const kvalitet = leadKvalitet(currentLead);
+          const neste = effektivOppfolging(currentLead);
+          const kanEndre = canEdit && !currentIsLocked;
+          const pinnedFelt = (
+            <PinnedNotatFelt
+              verdi={currentLead.pinned_notat}
+              av={currentLead.pinned_notat_av}
+              dato={currentLead.pinned_notat_dato}
+              disabled={!kanEndre}
+              onLagre={(notat, av, dato) => {
+                updateLeads(prev => prev.map(l => l.id === currentLead.id
+                  ? { ...l, pinned_notat: notat, pinned_notat_av: av, pinned_notat_dato: dato } : l));
+              }}
+            />
+          );
           return {
             detaljer: (
-              <div className="space-y-3">
-                <PinnedNotatFelt
-                  verdi={currentLead.pinned_notat}
-                  av={currentLead.pinned_notat_av}
-                  dato={currentLead.pinned_notat_dato}
-                  disabled={!canEdit || currentIsLocked}
-                  onLagre={(notat, av, dato) => {
-                    updateLeads(prev => prev.map(l => l.id === currentLead.id
-                      ? { ...l, pinned_notat: notat, pinned_notat_av: av, pinned_notat_dato: dato } : l));
-                  }}
-                />
-                {/* Hurtighandlinger for samtale */}
-                {canEdit && !currentIsLocked && (
-                  <div className="rounded-lg border bg-card p-3">
-                    <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide mb-2">Registrer samtale</p>
-                    <LeadQuickActions
-                      lead={currentLead}
-                      onBookMoete={() => { setPendingOpenActivity(true); setDetailTab("interaksjoner"); }}
-                    />
+              <div className="space-y-5">
+                {kvalitet.meldinger.length > 0 && (
+                  <div role="alert" className="flex gap-2 rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm">
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
+                    <div className="space-y-1">{kvalitet.meldinger.map(m => <p key={m}>{m}</p>)}</div>
                   </div>
                 )}
 
-                {/* Neste steg – prominent at top */}
+                {/* Nøkkelinfo – synlig uten scrolling */}
+                <dl className="grid grid-cols-2 gap-3 rounded-lg border bg-muted/30 p-3 text-sm">
+                  <div className="min-w-0">
+                    <dt className="text-[11px] uppercase tracking-wide text-muted-foreground">Telefon</dt>
+                    <dd className="truncate tabular-nums font-medium">{currentLead.telefon ? <a href={`tel:${currentLead.telefon}`} className="hover:underline">{currentLead.telefon}</a> : "—"}</dd>
+                  </div>
+                  <div className="min-w-0">
+                    <dt className="text-[11px] uppercase tracking-wide text-muted-foreground">E-post</dt>
+                    <dd className="truncate font-medium">{currentLead.e_post ? <a href={`mailto:${currentLead.e_post}`} className="hover:underline" title={currentLead.e_post}>{currentLead.e_post}</a> : "—"}</dd>
+                  </div>
+                  <div className="min-w-0">
+                    <dt className="text-[11px] uppercase tracking-wide text-muted-foreground">Kom inn</dt>
+                    <dd className="truncate tabular-nums">{[komInnTekst(currentLead.opprettet_dato), kildeGruppe(currentLead.kilde)].filter(Boolean).join(" · ")}</dd>
+                  </div>
+                  <div className="min-w-0">
+                    <dt className="text-[11px] uppercase tracking-wide text-muted-foreground">Neste oppfølging</dt>
+                    <dd className={`truncate tabular-nums ${currentLead.status !== "Ikke aktuelt" && ["forfalt", "i-dag"].includes(oppfolgingTilstand(neste)) ? "font-semibold text-warning" : ""}`}>
+                      {currentLead.status === "Ikke aktuelt" ? "Ikke i oppfølging" : ["forfalt", "i-dag"].includes(oppfolgingTilstand(neste)) ? "I dag" : kortDato(neste)}
+                    </dd>
+                  </div>
+                </dl>
+
+                {currentLead.pinned_notat?.trim() && <PinnedNotatBoks notat={currentLead.pinned_notat} />}
+
+                {kanEndre && <LeadHvaSkjedde lead={currentLead} onBooketMoete={(l) => {
+                  konverterOgOpprettOppgave(l, l.use_case || l.firmanavn);
+                }} />}
+
+                {/* Neste steg */}
                 <div className={`rounded-lg border p-3 ${!currentLead.neste_steg ? "border-warning bg-warning/5" : "bg-muted/30"}`}>
                   <div className="flex items-center justify-between gap-2">
                     <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Neste steg</label>
-                    <NesteStegTaskButton nesteSteg={currentLead.neste_steg} lead_id={currentLead.id} disabled={!canEdit || currentIsLocked} />
+                    <NesteStegTaskButton nesteSteg={currentLead.neste_steg} lead_id={currentLead.id} disabled={!kanEndre} />
                   </div>
-                  <Input value={currentLead.neste_steg} onChange={e => updateField("neste_steg", e.target.value)} className="h-7 text-xs mt-1 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0" placeholder="Hva er neste steg?" readOnly={!canEdit || currentIsLocked} />
-                  {!currentLead.neste_steg && <p className="text-[10px] text-warning mt-0.5">⚠ Mangler neste steg</p>}
+                  <Input value={currentLead.neste_steg} onChange={e => updateField("neste_steg", e.target.value)} className="h-7 text-xs mt-1 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0" placeholder="Hva er neste steg?" readOnly={!kanEndre} />
                 </div>
 
-                {/* Compact key info */}
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="text-xs"><span className="text-muted-foreground">Kilde</span>
-                    <select className="w-full border rounded px-2 py-1 text-xs bg-background h-7 mt-0.5" value={currentLead.kilde}
-                      onChange={e => updateField("kilde", e.target.value)} disabled={!canEdit || currentIsLocked}>
-                      {kildeOptions.map(k => <option key={k} value={k}>{k}</option>)}
-                    </select>
+                {/* Redigerbare felter */}
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  <div className="text-xs"><span className="text-muted-foreground">Firmanavn</span>
+                    <Input value={currentLead.firmanavn} onChange={e => updateField("firmanavn", e.target.value)} className={`h-8 text-xs mt-0.5 ${kvalitet.firmaUklart ? "border-warning" : ""}`} readOnly={!kanEndre} />
+                  </div>
+                  <div className="text-xs"><span className="text-muted-foreground">Kontaktperson</span>
+                    <Input value={currentLead.kontaktperson} onChange={e => updateField("kontaktperson", e.target.value)} className="h-8 text-xs mt-0.5" readOnly={!kanEndre} />
+                  </div>
+                  <div className="text-xs"><span className="text-muted-foreground">Telefon</span>
+                    <Input value={currentLead.telefon} onChange={e => updateField("telefon", e.target.value)} className={`h-8 text-xs mt-0.5 tabular-nums ${kvalitet.telefonUgyldig ? "border-warning" : ""}`} readOnly={!kanEndre} />
+                  </div>
+                  <div className="text-xs"><span className="text-muted-foreground">E-post</span>
+                    <Input value={currentLead.e_post} onChange={e => updateField("e_post", e.target.value)} className="h-8 text-xs mt-0.5" readOnly={!kanEndre} />
                   </div>
                   <div className="text-xs"><span className="text-muted-foreground">Status</span>
-                    <select className={`w-full border rounded px-2 py-1 text-xs bg-background h-7 mt-0.5 ${statusColors[currentLead.status] || ""}`}
-                      value={currentLead.status} onChange={e => updateField("status", e.target.value)} disabled={!canEdit || currentIsLocked}>
+                    <select className={`w-full border rounded-md px-2 text-xs bg-background h-8 mt-0.5 ${statusColors[currentLead.status] || ""}`}
+                      value={currentLead.status} onChange={e => updateField("status", e.target.value)} disabled={!kanEndre}>
                       {statusOptions.map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
                   </div>
+                  <div className="text-xs"><span className="text-muted-foreground">Neste oppfølging</span>
+                    <Input type="date" value={currentLead.neste_oppfolging || neste} onChange={e => updateField("neste_oppfolging", e.target.value)} className="h-8 text-xs mt-0.5" readOnly={!kanEndre} />
+                  </div>
+                  <div className="text-xs"><span className="text-muted-foreground">Kilde</span>
+                    <select className="w-full border rounded-md px-2 text-xs bg-background h-8 mt-0.5" value={currentLead.kilde}
+                      onChange={e => updateField("kilde", e.target.value)} disabled={!kanEndre}>
+                      {kildeOptions.map(k => <option key={k} value={k}>{k}</option>)}
+                    </select>
+                  </div>
                   <div className="text-xs"><span className="text-muted-foreground">Ansvarlig</span>
-                    <Input value={currentLead.ansvarlig} onChange={e => updateField("ansvarlig", e.target.value)} className="h-7 text-xs mt-0.5" readOnly={!canEdit || currentIsLocked} />
+                    <Input value={currentLead.ansvarlig} onChange={e => updateField("ansvarlig", e.target.value)} className="h-8 text-xs mt-0.5" readOnly={!kanEndre} />
                   </div>
-                  <div className="text-xs"><span className="text-muted-foreground">Opprettet</span>
-                    <div className="h-7 flex items-center text-xs text-muted-foreground mt-0.5">{currentLead.opprettet_dato || "–"}</div>
-                  </div>
-                  <div className="text-xs col-span-2">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-muted-foreground">Neste oppfølging</span>
-                      <Badge variant="outline" className={`text-[10px] ${oppfolgingFarge[oppfolgingTilstand(effektivOppfolging(currentLead))]}`}>
-                        {oppfolgingEtikett(effektivOppfolging(currentLead))}
-                      </Badge>
-                    </div>
-                    <Input
-                      type="date"
-                      value={currentLead.neste_oppfolging || effektivOppfolging(currentLead)}
-                      onChange={e => updateField("neste_oppfolging", e.target.value)}
-                      className="h-7 text-xs mt-0.5"
-                      readOnly={!canEdit || currentIsLocked}
-                    />
+                  <div className="text-xs sm:col-span-2"><span className="text-muted-foreground">Use case</span>
+                    <Input value={currentLead.use_case} onChange={e => updateField("use_case", e.target.value)} className="h-8 text-xs mt-0.5" readOnly={!kanEndre} />
                   </div>
                 </div>
 
-                <div className="border-t" />
-
-                {/* Contact info – compact */}
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="text-xs"><span className="text-muted-foreground">Firmanavn</span>
-                    <Input value={currentLead.firmanavn} onChange={e => updateField("firmanavn", e.target.value)} className="h-7 text-xs mt-0.5" readOnly={!canEdit || currentIsLocked} />
-                  </div>
-                  <div className="text-xs"><span className="text-muted-foreground">Kontaktperson</span>
-                    <Input value={currentLead.kontaktperson} onChange={e => updateField("kontaktperson", e.target.value)} className="h-7 text-xs mt-0.5" readOnly={!canEdit || currentIsLocked} />
-                  </div>
-                  <div className="text-xs"><span className="text-muted-foreground">E-post</span>
-                    <Input value={currentLead.e_post} onChange={e => updateField("e_post", e.target.value)} className="h-7 text-xs mt-0.5" readOnly={!canEdit || currentIsLocked} />
-                  </div>
-                  <div className="text-xs"><span className="text-muted-foreground">Telefon</span>
-                    <Input value={currentLead.telefon} onChange={e => updateField("telefon", e.target.value)} className="h-7 text-xs mt-0.5" readOnly={!canEdit || currentIsLocked} />
-                  </div>
-                </div>
-
-                {/* Use case */}
-                <div className="text-xs"><span className="text-muted-foreground">Use case</span>
-                  <Input value={currentLead.use_case} onChange={e => updateField("use_case", e.target.value)} className="h-7 text-xs mt-0.5" readOnly={!canEdit || currentIsLocked} />
-                </div>
-
-
-                <div className="border-t" />
-                <SelskapInnsikt
-                  domene=""
-                  firmanavn={currentLead.firmanavn}
-                  e_post={currentLead.e_post}
-                />
+                <SelskapInnsikt domene="" firmanavn={currentLead.firmanavn} e_post={currentLead.e_post} />
 
                 {getConversionType(currentLead) && (
                   <div className={`p-2.5 rounded-lg text-xs font-medium flex items-center gap-2 ${getConversionType(currentLead) === "salg" ? "bg-success/10 text-success" : "bg-primary/10 text-primary"}`}>
@@ -1055,13 +951,13 @@ export default function Leads() {
                   </div>
                 )}
 
-                {canEdit && !currentIsLocked && (
-                  <Button size="sm" variant="ghost" className="w-full text-xs text-destructive hover:text-destructive h-8" onClick={() => {
-                    updateLeads(prev => prev.filter(l => l.id !== currentLead.id));
-                    setSelectedLead(null);
-                  }}>
-                    <Trash2 className="w-3.5 h-3.5 mr-1" /> Slett lead
-                  </Button>
+                {kanEndre && (
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t pt-3 text-xs">
+                    <Button variant="link" size="sm" className="h-auto p-0 text-xs text-muted-foreground" onClick={() => setPartnerDialogLead(currentLead)}>Til partner</Button>
+                    {isAdmin && <Button variant="link" size="sm" className="h-auto p-0 text-xs text-muted-foreground" onClick={() => openForwardDialog(currentLead)}>Videresend</Button>}
+                    <Button variant="link" size="sm" className="h-auto p-0 text-xs text-muted-foreground" onClick={() => { setConvertDialogLead(currentLead); setConvertNavn(currentLead.use_case || currentLead.firmanavn); }}>Gjør til salgsmulighet</Button>
+                    <Button variant="link" size="sm" className="ml-auto h-auto p-0 text-xs text-destructive" onClick={() => setSlettLead(currentLead)}>Slett</Button>
+                  </div>
                 )}
               </div>
             ),
@@ -1075,9 +971,12 @@ export default function Leads() {
               </>
             ),
             notater: (
-              <DetailField label="Notater">
-                <Textarea value={currentLead.notater} onChange={e => updateField("notater", e.target.value)} rows={6} readOnly={!canEdit || currentIsLocked} />
-              </DetailField>
+              <div className="space-y-4">
+                {pinnedFelt}
+                <DetailField label="Notater">
+                  <Textarea value={currentLead.notater} onChange={e => updateField("notater", e.target.value)} rows={6} readOnly={!kanEndre} />
+                </DetailField>
+              </div>
             ),
             kalender: (
               <EntityCalendarTab lead_id={currentLead.id} />
@@ -1085,6 +984,27 @@ export default function Leads() {
           };
         })() : undefined}
       />
+      <AlertDialog open={!!slettLead} onOpenChange={o => { if (!o) setSlettLead(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Slette leadet?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {slettLead?.kontaktperson || slettLead?.firmanavn} flyttes til papirkurven og kan gjenopprettes i 30 dager.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Avbryt</AlertDialogCancel>
+            <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => {
+              if (!slettLead) return;
+              const id = slettLead.id;
+              updateLeads(prev => prev.filter(l => l.id !== id));
+              setSlettLead(null);
+              setSelectedLead(null);
+              toast("Lead flyttet til papirkurven");
+            }}>Slett</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       {currentLead && (
         <SendEmailDialog
           open={emailDialogOpen}
