@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { LayoutDashboard, Handshake, FolderKanban, Building2, Users, ListTodo, Menu, ChevronLeft, ChevronDown, Users2, GitBranch, Shield, LogOut, Activity, BarChart3, CalendarDays, GitMerge, NotebookPen, Mail, HeartHandshake, Copy } from "lucide-react";
+import { LayoutDashboard, Handshake, FolderKanban, Building2, Users, ListTodo, Menu, ChevronLeft, ChevronDown, Users2, GitBranch, Shield, LogOut, Activity, BarChart3, CalendarDays, Inbox, NotebookPen, Mail, HeartHandshake, Copy } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -15,6 +15,7 @@ type NavItem = { to: string; icon: any; label: string };
 // Salgsflyten – alltid synlig
 const mainItems: NavItem[] = [
   { to: "/dashboard", icon: LayoutDashboard, label: "Oversikt" },
+  { to: "/innboks", icon: Inbox, label: "Innboks" },
   { to: "/leads", icon: Handshake, label: "Leads og salg" },
   { to: "/selskaper", icon: Building2, label: "Kundeforhold" },
   { to: "/prosjekter", icon: FolderKanban, label: "Prosjekter" },
@@ -30,7 +31,6 @@ const mainItems: NavItem[] = [
 const moreItems: NavItem[] = [
   { to: "/ringeliste", icon: ListTodo, label: "Kampanjelister" },
   { to: "/alle-selskaper", icon: Building2, label: "Alle selskaper" },
-  { to: "/kontaktstrom", icon: GitMerge, label: "Kontaktstrøm" },
   { to: "/dubletter", icon: Copy, label: "Dubletter" },
   { to: "/moetenotater", icon: NotebookPen, label: "Møtenotater" },
   { to: "/aktiviteter", icon: Activity, label: "Endringslogg" },
