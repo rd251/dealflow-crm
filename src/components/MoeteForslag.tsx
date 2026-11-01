@@ -18,6 +18,7 @@ export default function MoeteForslag() {
   const navigate = useNavigate();
   const [moeter, setMoeter] = useState<Moete[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
+  const [visAlle, setVisAlle] = useState(false);
 
   useEffect(() => {
     const fra = new Date(Date.now() - 60 * 86400e3).toISOString();
@@ -48,7 +49,7 @@ export default function MoeteForslag() {
 
   return (
     <section aria-label="Møter uten kobling" className="mb-6 space-y-2">
-      {forslag.map(m => (
+      {(visAlle ? forslag : forslag.slice(0, 3)).map(m => (
         <div key={m.id} className="flex flex-wrap items-center gap-3 rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm">
           <CalendarPlus className="h-4 w-4 shrink-0 text-warning" />
           <div className="min-w-0 flex-1">
@@ -62,6 +63,11 @@ export default function MoeteForslag() {
           </Button>
         </div>
       ))}
+      {forslag.length > 3 && (
+        <Button variant="link" size="sm" className="h-auto p-0 text-xs" onClick={() => setVisAlle(v => !v)}>
+          {visAlle ? "Vis færre" : `Vis alle ${forslag.length} møter uten kobling`}
+        </Button>
+      )}
     </section>
   );
 }
