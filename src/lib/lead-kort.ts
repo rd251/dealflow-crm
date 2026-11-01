@@ -33,7 +33,7 @@ export function nesteTekst(dato: string | undefined, status: string, now: Date =
   return { tekst: `${status === "Ny" ? "Ring" : "Ring igjen"} ${kortDato(dag)}`, haster: false };
 }
 
-const FYLLTEKST = /(ikke oppgitt|^leadet har sendt inn skjema|har ikke (skrevet|oppgitt)|ingen beskrivelse|^[-–—\s]*$)/i;
+const FYLLTEKST = /(ikke oppgitt|^leadet har (sendt inn skjema|meldt interesse|kun oppgitt)|fremgår ikke|uten å spesifisere|har ikke (skrevet|oppgitt)|ingen beskrivelse|^[-–—\s]*$)/i;
 
 /** «Ønsker»-tekst kun hvis leadet faktisk har skrevet noe. */
 export function ekteOnske(tekst?: string | null): string | null {

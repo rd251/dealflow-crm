@@ -40,6 +40,7 @@ describe("kortlinjer", () => {
   });
   it("fylltekst gir ingen «Ønsker»", () => {
     expect(ekteOnske("Leadet har ikke oppgitt hva de ønsker hjelp med")).toBeNull();
+    expect(ekteOnske("Det fremgår ikke hva leadet ønsker hjelp med.")).toBeNull();
     expect(ekteOnske("AI på telefon")).toBe("AI på telefon");
   });
 });
