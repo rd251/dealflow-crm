@@ -37,3 +37,12 @@ describe("Salgsmulighet fra Innboks", () => {
     expect(aapenSalgsmulighet(sm.slice(0, 2), "a")).toBeNull();
   });
 });
+
+import { visningsnavn } from "@/lib/innboks-salg";
+describe("Visningsnavn i Innboks", () => {
+  it("snur «Etternavn, Fornavn»", () => { expect(visningsnavn("Pietzner, Lars")).toBe("Lars Pietzner"); });
+  it("lar vanlige navn og firmanavn være", () => {
+    expect(visningsnavn("Lars Pietzner")).toBe("Lars Pietzner");
+    expect(visningsnavn("Boels Rental, Inc, Norway")).toBe("Boels Rental, Inc, Norway");
+  });
+});
