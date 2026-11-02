@@ -84,7 +84,7 @@ export default function Leads() {
   const { leads, partnere, updateLeads, updateOppgaver, konverterLead, konverterTilPartner, generateId } = useCrmStore();
   const [search, setSearch] = useState("");
   const { filter: eierFilter, setFilter: setEierFilter, tilhorerFilter } = useMineFilter("leads");
-  const [visning, setVisning] = useState<"leads" | "ringeliste" | "kalde">("leads");
+  const [visning, setVisning] = useState<"leads" | "ringeliste" | "kalde" | "senere">("leads");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
