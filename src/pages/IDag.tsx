@@ -256,7 +256,7 @@ export default function IDag() {
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-medium">{r.navn}</p>
                         <p className={cn("text-xs tabular-nums", r.dagerForfalt > 0 ? "text-warning" : "text-muted-foreground")}>
-                          {r.hva} · {r.dagerForfalt > 0 ? `${r.dagerForfalt} ${r.dagerForfalt === 1 ? "dag" : "dager"} forfalt` : "i dag"}
+                          {r.hva}{r.frist_tid ? ` · ${r.frist_tid.slice(0, 5)}` : ""} · {r.dagerForfalt > 0 ? `${r.dagerForfalt} ${r.dagerForfalt === 1 ? "dag" : "dager"} forfalt` : "i dag"}
                         </p>
                       </div>
                       <div className="flex gap-2" onClick={e => e.stopPropagation()} onKeyDown={e => e.stopPropagation()}>
