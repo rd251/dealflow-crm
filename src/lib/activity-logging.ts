@@ -132,6 +132,12 @@ export interface LoggAktivitetInput {
   nesteOppfolging?: string;
   /** Marker leadet som «Ikke aktuelt» og ta det ut av automatisk oppfølging. */
   markerIkkeAktuelt?: boolean;
+  /** Overstyrer databasetypen (f.eks. «SMS» for «Melding sendt»). */
+  dbType?: AktivitetDbType;
+  /** Ikke rør leadets oppfølgingsdato (rene notater). */
+  beholdOppfolging?: boolean;
+  /** Fjern leadets oppfølgingsdato (tom «Neste oppfølging»). */
+  fjernOppfolging?: boolean;
 }
 
 /** Standardutfall per aktivitetstype når ingen er oppgitt. */
@@ -164,7 +170,7 @@ export async function loggAktivitet(input: LoggAktivitetInput): Promise<{ id: st
   const notat = (input.notat ?? "").trim();
 
   const row: Record<string, unknown> = {
-    type: def.dbType,
+    type: input.dbType ?? def.dbType,
     tittel,
     beskrivelse: notat || tittel,
     dato: new Date().toISOString(),
@@ -215,7 +221,7 @@ export async function loggAktivitet(input: LoggAktivitetInput): Promise<{ id: st
   // «Sist kontaktet» + neste steg på selve posten
   const dag = idag();
   const ikkeAktuelt = Boolean(input.markerIkkeAktuelt && t.lead_id);
-  const oppfolgingDato = ikkeAktuelt
+  const oppfolgingDato = ikkeAktuelt || input.fjernOppfolging
     ? ""
     : input.nesteOppfolging?.trim() ||
       input.nesteStegDato?.trim() ||
@@ -223,7 +229,7 @@ export async function loggAktivitet(input: LoggAktivitetInput): Promise<{ id: st
 
   const oppdater = async (tabell: "leads" | "salgsmuligheter" | "selskaper" | "partnere", id: string, medNesteSteg: boolean) => {
     const patch: Record<string, unknown> = { sist_aktivitet: dag };
-    if (tabell === "leads") patch.neste_oppfolging = ikkeAktuelt ? null : oppfolgingDato;
+    if (tabell === "leads" && !input.beholdOppfolging) patch.neste_oppfolging = oppfolgingDato || null;
     if (medNesteSteg && nesteSteg && tabell !== "partnere") patch.neste_steg = nesteSteg;
     try {
       await supabase.from(tabell).update(patch as never).eq("id", id);
