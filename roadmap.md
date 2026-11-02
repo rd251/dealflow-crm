@@ -131,3 +131,6 @@
 - [x] Ny Oversikt med tall, møter, Følg opp nå, Venter på svar, Nytt i Innboks og Salg som står stille
 - [x] Tester for Følg opp nå, Venter på svar-filter og Mine/Teamet
 - [ ] Prøv «Følg opp»-utkast ende til ende (venter på at Robin kobler Google til på nytt for utkast-tilgang)
+
+## Felles logging
+- [x] Én «Hva skjedde?»-komponent i kundekort, lead-panel, «+ Logg», Følg opp/ringeliste, aktivitetslogger og Innboks; gamle varianter fjernet
