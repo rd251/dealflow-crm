@@ -1,3 +1,4 @@
+import { varsleLogget } from "@/lib/gjort-i-dag";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { nb } from "date-fns/locale";
@@ -154,6 +155,7 @@ export default function KundeKort({ r, onClose, onSelskap, onTilbake }: Props) {
       lead_id: target.lead_id, salgsmulighet_id: target.salgsmulighet_id, kontakt_id: target.kontakt_id, selskap_id: target.selskap_id,
     } as never);
     if (error) { toast.error("Kunne ikke logge meldingen"); return; }
+    varsleLogget();
     setBekreftMelding(null); setMeldingNotat("");
     toast.success("Meldingen er logget");
     void hentHistorikk();

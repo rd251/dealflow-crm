@@ -1,3 +1,4 @@
+import { varsleLogget } from "@/lib/gjort-i-dag";
 import { Phone, PhoneMissed, Users, Mail, FileText, ArrowRight, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { nesteOppfolgingFraUtfall, type LeadUtfallNokkel } from "@/lib/follow-up-rules";
@@ -194,6 +195,7 @@ export async function loggAktivitet(input: LoggAktivitetInput): Promise<{ id: st
 
   const { data, error } = await supabase.from("aktiviteter").insert(row as never).select("id").single();
   if (error) throw error;
+  varsleLogget();
 
   const nesteSteg = (input.nesteSteg ?? "").trim();
 
