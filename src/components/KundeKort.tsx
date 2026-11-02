@@ -312,6 +312,7 @@ export default function KundeKort({ r, onClose, onSelskap, onTilbake }: Props) {
         </SheetContent>
       </Sheet>
 
+      <EpostTraadDialog epost={visEpost} onOpenChange={o => !o && setVisEpost(null)} />
     </>
   );
 }

@@ -13,8 +13,10 @@ import { useAuth } from "@/hooks/use-auth";
 import { useIsMobile } from "@/hooks/use-mobile";
 import type { KundeRef } from "@/hooks/use-kort";
 import { cn } from "@/lib/utils";
+import EpostTraadDialog, { type EpostForVisning } from "@/components/EpostTraadDialog";
+import { epostKontaktTekst, epostTraadId, renAktivitetstekst } from "@/lib/aktivitet-visning";
 
-interface Hist { id: string; type: string; tittel: string | null; beskrivelse: string; dato: string }
+interface Hist { id: string; type: string; tittel: string | null; beskrivelse: string; dato: string; aktivitet_kilde?: string | null }
 const Tittel = ({ children }: { children: React.ReactNode }) => <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{children}</h3>;
 
 export default function SelskapKort({ id, onClose, onKunde }: { id: string; onClose: () => void; onKunde: (r: KundeRef) => void }) {
@@ -36,6 +38,7 @@ export default function SelskapKort({ id, onClose, onKunde }: { id: string; onCl
   const [form, setForm] = useState({ firmanavn: "", orgnr: "", telefon: "", e_post: "", domene: "" });
   const [ny, setNy] = useState<{ navn: string; telefon: string; e_post: string; rolle: string } | null>(null);
   const [hist, setHist] = useState<Hist[]>([]);
+  const [visEpost, setVisEpost] = useState<EpostForVisning | null>(null);
 
   useEffect(() => {
     supabase.from("selskaper").select("telefon, e_post").eq("id", id).maybeSingle()
@@ -49,7 +52,7 @@ export default function SelskapKort({ id, onClose, onKunde }: { id: string; onCl
     if (mineKontakter.length) deler.push(`kontakt_id.in.(${mineKontakter.map(k => k.id).join(",")})`);
     if (mineSm.length) deler.push(`salgsmulighet_id.in.(${mineSm.map(x => x.id).join(",")})`);
     if (mineLeads.length) deler.push(`lead_id.in.(${mineLeads.map(l => l.id).join(",")})`);
-    supabase.from("aktiviteter").select("id, type, tittel, beskrivelse, dato").or(deler.join(",")).order("dato", { ascending: false }).limit(25)
+    supabase.from("aktiviteter").select("id, type, tittel, beskrivelse, dato, aktivitet_kilde").or(deler.join(",")).order("dato", { ascending: false }).limit(25)
       .then(({ data }) => setHist((data as Hist[]) || []));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [histKey]);
