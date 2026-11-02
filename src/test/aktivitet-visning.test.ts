@@ -28,6 +28,10 @@ describe("Aktivitetsvisning", () => {
     expect(epostTraadId("Vanleg notat")).toBeNull();
   });
 
+  it("skriv ut HTML-eintetar frå Gmail-snippets", () => {
+    expect(renAktivitetstekst("Robin &lt;rd@snakk.ai&gt; &amp; Kari &#39;en&#39;")).toBe("Robin <rd@snakk.ai> & Kari 'en'");
+  });
+
   it("kontaktlinje seier til for utgåande og fra for innkommande", () => {
     expect(epostKontaktTekst(EKSEMPEL, true)).toBe("til jr@utvendigrenhold.no");
     expect(epostKontaktTekst(EKSEMPEL, false)).toBe("fra jr@utvendigrenhold.no");

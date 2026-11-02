@@ -8,6 +8,9 @@
 
 const TRAAD_RE = /\[threadId:([^\]]*)\]/i;
 const ADRESSE_RE = /\[([^\[\]@]+@[^\[\]@]+)\]/g;
+/** Gmail-snippets kjem med HTML-eintetar for vanlege teikn. */
+const ENTITETS_RE = /&(amp|lt|gt|quot|#39|#x27);/gi;
+const ENTITETAR: Record<string, string> = { amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'", "#x27": "'" };
 
 /** Gmail-tråd-ID hvis aktiviteten har en. */
 export function epostTraadId(beskrivelse?: string | null): string | null {
@@ -26,13 +29,14 @@ export function epostAdresser(beskrivelse?: string | null): string[] {
   return ut;
 }
 
-/** Brødtekst utan threadId- og adressetaggar. */
+/** Brødtekst utan threadId- og adressetaggar, og med vanlege HTML-eintetar skrivne ut. */
 export function renAktivitetstekst(beskrivelse?: string | null): string {
   return (beskrivelse || "")
     .replace(new RegExp(TRAAD_RE, "gi"), " ")
     .replace(ADRESSE_RE, " ")
     .replace(/[ \t]{2,}/g, " ")
     .replace(/\s*\n\s*/g, "\n")
+    .replace(ENTITETS_RE, (_, e: string) => ENTITETAR[e.slice(1, -1).toLowerCase()] ?? _)
     .trim();
 }
 
