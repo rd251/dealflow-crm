@@ -569,6 +569,7 @@ export type Database = {
           produkt_interesse: string[] | null
           produkt_oppsummering: string | null
           rolle_i_firma: string | null
+          senere_til: string | null
           sist_aktivitet: string | null
           status: Database["public"]["Enums"]["lead_status"] | null
           telefon: string | null
@@ -601,6 +602,7 @@ export type Database = {
           produkt_interesse?: string[] | null
           produkt_oppsummering?: string | null
           rolle_i_firma?: string | null
+          senere_til?: string | null
           sist_aktivitet?: string | null
           status?: Database["public"]["Enums"]["lead_status"] | null
           telefon?: string | null
@@ -633,6 +635,7 @@ export type Database = {
           produkt_interesse?: string[] | null
           produkt_oppsummering?: string | null
           rolle_i_firma?: string | null
+          senere_til?: string | null
           sist_aktivitet?: string | null
           status?: Database["public"]["Enums"]["lead_status"] | null
           telefon?: string | null
