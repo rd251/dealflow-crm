@@ -11,6 +11,9 @@ import { useCrmStore } from "@/hooks/use-crm-store";
 import { useAuth } from "@/hooks/use-auth";
 import { useIsMobile } from "@/hooks/use-mobile";
 import LoggUtfall from "@/components/LoggUtfall";
+import { erSenere } from "@/lib/logg-utfall";
+import { taActivNaa } from "@/lib/senere";
+import { Badge } from "@/components/ui/badge";
 import {
   EPOST_MALER, SMS_MALER, fyllMal, mailtoLenke, smsLenke,
   type MeldingMal,
@@ -178,6 +181,12 @@ export default function KundeKort({ r, onClose, onSelskap, onTilbake }: Props) {
           </SheetHeader>
 
           <div className="mt-5 space-y-6">
+            {ctx.lead && erSenere(ctx.lead.senere_til) && (
+              <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-muted/30 px-3 py-2">
+                <Badge variant="secondary" className="tabular-nums">Senere · tilbake {format(new Date(`${ctx.lead.senere_til}T12:00`), "d. MMM", { locale: nb })}</Badge>
+                {canEdit && <Button size="sm" variant="outline" onClick={() => { if (ctx.lead) { taActivNaa(ctx.lead, updateLeads, updateOppgaver); toast.success("Tatt opp igjen – ligger i Følg opp nå"); } }}>Ta opp nå</Button>}
+              </div>
+            )}
             {(ctx.oppgave || ctx.lead || ctx.sm || ctx.kontakt) && (
               <section aria-label="Oppgavetid" className="space-y-3">
                 {(ctx.oppgave ? [ctx.oppgave] : oppgaver.filter(o => o.status !== "Ferdig" && (

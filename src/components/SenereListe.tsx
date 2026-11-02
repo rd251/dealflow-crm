@@ -3,7 +3,7 @@ import { nb } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
 import { useCrmStore } from "@/hooks/use-crm-store";
 import { useAuth } from "@/hooks/use-auth";
-import { KundeLenke } from "@/components/KortLenker";
+import { KundeNavn } from "@/components/KortLenker";
 import { taActivNaa } from "@/lib/senere";
 import type { Lead } from "@/data/crm-data";
 
@@ -20,7 +20,7 @@ export default function SenereListe({ leads }: { leads: Lead[] }) {
         return (
           <li key={l.id} className="flex flex-wrap items-start gap-3 px-4 py-3">
             <div className="min-w-0 flex-1">
-              <p className="font-medium"><KundeLenke r={{ type: "lead", id: l.id }}>{l.kontaktperson || l.firmanavn}</KundeLenke>
+              <p className="font-medium"><KundeNavn r={{ type: "lead", id: l.id }}>{l.kontaktperson || l.firmanavn}</KundeNavn>
                 {l.kontaktperson && l.firmanavn && <span className="font-normal text-muted-foreground"> · {l.firmanavn}</span>}</p>
               {oppg?.notater && <p className="mt-0.5 line-clamp-2 text-sm text-muted-foreground">«{oppg.notater}»</p>}
             </div>
