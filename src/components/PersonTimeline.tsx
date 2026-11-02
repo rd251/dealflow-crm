@@ -5,6 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useProfiles } from "@/hooks/use-profiles";
 import { typeColors, typeIcons, type AktivitetType } from "@/components/ActivityLog";
+import EpostTraadDialog, { type EpostForVisning } from "@/components/EpostTraadDialog";
+import { epostKontaktTekst, epostTraadId, renAktivitetstekst } from "@/lib/aktivitet-visning";
 import { cn } from "@/lib/utils";
 
 /** Hvor mange rader som vises før «Vis alle». */
@@ -17,6 +19,7 @@ interface Rad {
   beskrivelse: string;
   dato: string;
   user_id?: string | null;
+  aktivitet_kilde?: string | null;
   fase: string;
 }
 
@@ -41,6 +44,7 @@ export default function PersonTimeline({ kontakt_id, selskap_id, e_post, maks, t
   const [rader, setRader] = useState<Rad[]>([]);
   const [laster, setLaster] = useState(true);
   const [utvidet, setUtvidet] = useState(false);
+  const [visEpost, setVisEpost] = useState<EpostForVisning | null>(null);
 
   const hent = useCallback(async () => {
     if (!kontakt_id && !selskap_id && !e_post) { setRader([]); setLaster(false); return; }
@@ -75,7 +79,7 @@ export default function PersonTimeline({ kontakt_id, selskap_id, e_post, maks, t
 
       const { data } = await supabase
         .from("aktiviteter")
-        .select("id, type, tittel, beskrivelse, dato, user_id, lead_id, salgsmulighet_id, selskap_id, partner_id, prosjekt_id")
+        .select("id, type, tittel, beskrivelse, dato, user_id, lead_id, salgsmulighet_id, selskap_id, partner_id, prosjekt_id, aktivitet_kilde")
         .or(filtre.join(","))
         .order("dato", { ascending: false })
         .limit(300);
@@ -94,6 +98,7 @@ export default function PersonTimeline({ kontakt_id, selskap_id, e_post, maks, t
           beskrivelse: a.beskrivelse || "",
           dato: a.dato,
           user_id: a.user_id,
+          aktivitet_kilde: a.aktivitet_kilde,
           fase,
         };
       });
