@@ -847,16 +847,19 @@ export default function Innboks() {
         subtitle={selected?.firmanavn && selected?.selskapId ? undefined : selected?.firmanavn || undefined}
         badges={selected ? (
           <>
-            <Badge variant="secondary" className={`text-xs ${TYPE_COLORS[selected.type]}`}>
-              {selected.type}
-            </Badge>
+            {selected.type === "Salgsmulighet" && selected.salgsmulighetId ? (
+              <button type="button" onClick={() => openKunde({ type: "sm", id: selected.salgsmulighetId! })} aria-label="Åpne salgsmulighet">
+                <Badge variant="secondary" className={`text-xs hover:underline ${TYPE_COLORS.Salgsmulighet}`}>Salgsmulighet</Badge>
+              </button>
+            ) : (
+              <Badge variant="secondary" className={`text-xs ${TYPE_COLORS[selected.type]}`}>
+                {selected.type}
+              </Badge>
+            )}
             {selected.salgsmulighetId && selected.type !== "Salgsmulighet" && (
               <button type="button" onClick={() => openKunde({ type: "sm", id: selected.salgsmulighetId! })} aria-label="Åpne salgsmulighet">
                 <Badge variant="secondary" className={`text-xs hover:underline ${TYPE_COLORS.Salgsmulighet}`}>Salgsmulighet</Badge>
               </button>
-            )}
-            {selected.salgsmulighetId && selected.type === "Salgsmulighet" && (
-              <button type="button" onClick={() => openKunde({ type: "sm", id: selected.salgsmulighetId! })} aria-label="Åpne salgsmulighet" className="sr-only focus:not-sr-only">Åpne</button>
             )}
             {selected.status && (
               <Badge variant="outline" className="text-xs">{selected.status}</Badge>
