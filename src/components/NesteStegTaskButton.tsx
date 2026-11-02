@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Oppgave, Prioritet } from "@/data/crm-data";
 import { useCrmStore } from "@/hooks/use-crm-store";
 import { useAuth } from "@/hooks/use-auth";
+import OppgaveTid from "@/components/OppgaveTid";
 
 interface NesteStegTaskButtonProps {
   nesteSteg: string;
@@ -33,6 +34,7 @@ export default function NesteStegTaskButton({
   const [open, setOpen] = useState(false);
   const [tittel, setTittel] = useState("");
   const [frist, setFrist] = useState("");
+  const [fristTid, setFristTid] = useState("");
   const [prioritet, setPrioritet] = useState<Prioritet>("Medium");
   const [lagret, setLagret] = useState(false);
 
@@ -43,6 +45,7 @@ export default function NesteStegTaskButton({
     if (v) {
       setTittel(tekst);
       setFrist("");
+      setFristTid("");
       setPrioritet("Medium");
       setLagret(false);
     }
@@ -61,7 +64,7 @@ export default function NesteStegTaskButton({
       kontakt_id,
       ansvarlig: user?.id || "",
       frist,
-      frist_tid: "",
+      frist_tid: fristTid,
       prioritet,
       status: "Åpen",
       paaminnelse: true,
@@ -129,6 +132,7 @@ export default function NesteStegTaskButton({
               </select>
             </div>
             <div className="flex justify-end gap-2 pt-1">
+              <span className="sr-only">Valgfritt klokkeslett</span>
               <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setOpen(false)}>
                 Avbryt
               </Button>
@@ -136,6 +140,7 @@ export default function NesteStegTaskButton({
                 Opprett oppgave
               </Button>
             </div>
+            <OppgaveTid value={fristTid} onChange={setFristTid} />
           </>
         )}
       </PopoverContent>

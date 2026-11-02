@@ -9,6 +9,9 @@ import { useProfiles } from "@/hooks/use-profiles";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import OppgaveTid from "@/components/OppgaveTid";
+import { compareTaskSchedule, taskTitle } from "@/lib/oppgave-tid";
+import { useKort } from "@/hooks/use-kort";
 
 const prioritetColors: Record<Prioritet, string> = {
   "Lav": "bg-muted text-muted-foreground",
@@ -25,6 +28,7 @@ interface InlineTaskFormProps {
 export default function InlineTaskForm({ lead_id = "", selskap_id = "", salgsmulighet_id = "" }: InlineTaskFormProps) {
   const { oppgaver, updateOppgaver, generateId, varsleOppgaveTildelt } = useCrmStore();
   const { user } = useAuth();
+  const { openKunde } = useKort();
   const { profiles } = useProfiles();
   const [showForm, setShowForm] = useState(false);
   const [oppgave, setOppgave] = useState("");
@@ -39,7 +43,7 @@ export default function InlineTaskForm({ lead_id = "", selskap_id = "", salgsmul
     (lead_id && o.lead_id === lead_id) ||
     (salgsmulighet_id && o.salgsmulighet_id === salgsmulighet_id) ||
     (!lead_id && !salgsmulighet_id && selskap_id && o.selskap_id === selskap_id)
-  );
+  ).sort(compareTaskSchedule);
 
   const addTask = async () => {
     if (!oppgave.trim()) return;
@@ -97,13 +101,13 @@ export default function InlineTaskForm({ lead_id = "", selskap_id = "", salgsmul
           <Input placeholder="Hva skal gjøres?" value={oppgave} onChange={e => setOppgave(e.target.value)} className="h-8 text-sm" />
           <div className="flex gap-2">
             <Input type="date" value={frist} onChange={e => setFrist(e.target.value)} className="h-8 text-sm flex-1" />
-            <Input type="time" value={fristTid} onChange={e => setFristTid(e.target.value)} className="h-8 text-sm w-24" title="Klokkeslett (valgfritt)" />
             <select className="border rounded-md px-2 py-1 text-xs bg-background h-8" value={prioritet} onChange={e => setPrioritet(e.target.value as Prioritet)}>
               <option value="Lav">Lav</option>
               <option value="Medium">Medium</option>
               <option value="Høy">Høy</option>
             </select>
           </div>
+          <OppgaveTid value={fristTid} onChange={setFristTid} />
           <div className="flex gap-2">
             <select className="border rounded-md px-2 py-1 text-xs bg-background h-8 flex-1" value={ansvarlig} onChange={e => setAnsvarlig(e.target.value)}>
               <option value="">Velg ansvarlig</option>
@@ -137,11 +141,12 @@ export default function InlineTaskForm({ lead_id = "", selskap_id = "", salgsmul
                 >
                   {task.status === "Ferdig" && <CheckCircle2 className="w-3 h-3 text-primary-foreground" />}
                 </button>
-                <span className={`flex-1 truncate text-xs ${task.status === "Ferdig" ? "line-through" : ""}`}>{task.oppgave}</span>
+                <Button variant="link" className={`h-auto min-w-0 flex-1 justify-start truncate p-0 text-xs text-foreground ${task.status === "Ferdig" ? "line-through" : ""}`} onClick={() => openKunde({ type: "oppgave", id: task.id })}>{taskTitle(task.oppgave)}</Button>
                 {task.frist && (
                   <span className={`text-[10px] flex items-center gap-0.5 shrink-0 ${overdue ? "text-destructive font-medium" : "text-muted-foreground"}`}>
                     <Clock className="w-2.5 h-2.5" />
                     {task.frist === today ? "I dag" : new Date(task.frist).toLocaleDateString("nb-NO", { day: "numeric", month: "short" })}
+                    {task.frist_tid && ` · ${task.frist_tid.slice(0, 5)}`}
                   </span>
                 )}
                 <Badge variant="outline" className={`text-[9px] shrink-0 py-0 ${prioritetColors[task.prioritet]}`}>{task.prioritet}</Badge>

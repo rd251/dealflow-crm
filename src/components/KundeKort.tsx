@@ -24,6 +24,8 @@ import { kundeParam, type KundeRef } from "@/hooks/use-kort";
 import KobleSelskap from "@/components/KobleSelskap";
 import { ArrowLeft } from "lucide-react";
 import type { Selskap } from "@/data/crm-data";
+import OppgaveTid from "@/components/OppgaveTid";
+import { compareTaskSchedule, taskTitle } from "@/lib/oppgave-tid";
 
 interface Hist { id: string; type: string; tittel: string | null; beskrivelse: string; dato: string }
 type Kanal = "SMS" | "E-post";
@@ -86,6 +88,7 @@ export default function KundeKort({ r, onClose, onSelskap, onTilbake }: Props) {
   const [bekreftTapt, setBekreftTapt] = useState(false);
   const [nesteForslag, setNesteForslag] = useState<{ dager: number | null } | null>(null);
   const [egenDato, setEgenDato] = useState("");
+  const [nesteTid, setNesteTid] = useState("");
   const [malKanal, setMalKanal] = useState<Kanal | null>(null);
   const [ventende, setVentende] = useState<{ kanal: Kanal; mal: MeldingMal } | null>(null);
   const [bekreftMelding, setBekreftMelding] = useState<{ kanal: Kanal; mal?: MeldingMal } | null>(null);
@@ -94,7 +97,7 @@ export default function KundeKort({ r, onClose, onSelskap, onTilbake }: Props) {
 
   useEffect(() => {
     setForm(info); setRedigerer(false); setBekreftTapt(false);
-    setUtfall(null); setNotat(""); setNesteForslag(null); setMalKanal(null); setVentende(null); setBekreftMelding(null);
+    setUtfall(null); setNotat(""); setNesteForslag(null); setNesteTid(""); setMalKanal(null); setVentende(null); setBekreftMelding(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [kundeParam(r)]);
 
@@ -156,7 +159,7 @@ export default function KundeKort({ r, onClose, onSelskap, onTilbake }: Props) {
     if (utfall === "ikke_interessert" && !bekreftTapt) { setBekreftTapt(true); return; }
     setBekreftTapt(false);
     setLagrer(true);
-    const label = SAMTALE_UTFALL.find(u => u.id === utfall)!.label;
+    const label = SAMTALE_UTFALL.find(u => u.id === utfall)?.label || "Samtale";
     const dager = forslagDager(utfall);
     try {
       await loggAktivitet({
@@ -201,6 +204,7 @@ export default function KundeKort({ r, onClose, onSelskap, onTilbake }: Props) {
       }
       setNesteForslag(dager !== null || utfall === "fikk_svar" ? { dager } : null);
       setEgenDato("");
+      setNesteTid("");
       setUtfall(null); setNotat("");
       void hentHistorikk();
     } catch (err) {
@@ -214,7 +218,7 @@ export default function KundeKort({ r, onClose, onSelskap, onTilbake }: Props) {
     updateOppgaver(prev => [...prev, {
       id: crypto.randomUUID(), oppgave: `Ring ${navn} igjen`, lead_id: ctx.lead?.id || "", selskap_id: ctx.selskap?.id || "",
       salgsmulighet_id: ctx.sm?.id || "", kontakt_id: ctx.kontakt?.id || "",
-      ansvarlig, frist, frist_tid: "", prioritet: "Medium", status: "Åpen", paaminnelse: true, notater: "",
+      ansvarlig, frist, frist_tid: nesteTid, prioritet: "Medium", status: "Åpen", paaminnelse: true, notater: "",
     }]);
     if (ctx.lead) { const id = ctx.lead.id; updateLeads(prev => prev.map(l => l.id === id ? { ...l, neste_oppfolging: frist } : l)); }
     setNesteForslag(null);
@@ -258,7 +262,7 @@ export default function KundeKort({ r, onClose, onSelskap, onTilbake }: Props) {
             <SheetDescription asChild>
               <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm text-muted-foreground">
                 {ctx.selskap
-                  ? <button type="button" className="font-medium text-foreground underline-offset-2 hover:underline" onClick={() => onSelskap(ctx.selskap!.id)}>{ctx.selskap.firmanavn}</button>
+                  ? <Button variant="link" className="h-auto p-0 font-medium text-foreground" onClick={() => { if (ctx.selskap) onSelskap(ctx.selskap.id); }}>{ctx.selskap.firmanavn}</Button>
                   : <>{info.firma && <span>{info.firma}</span>}{canEdit && <KobleSelskap forslag={info.firma} onVelg={kobleSelskap} />}</>}
                 {info.rolle && <span>· {info.rolle}</span>}
               </div>
@@ -266,6 +270,21 @@ export default function KundeKort({ r, onClose, onSelskap, onTilbake }: Props) {
           </SheetHeader>
 
           <div className="mt-5 space-y-6">
+            {(ctx.oppgave || ctx.lead || ctx.sm || ctx.kontakt) && (
+              <section aria-label="Oppgavetid" className="space-y-3">
+                {(ctx.oppgave ? [ctx.oppgave] : oppgaver.filter(o => o.status !== "Ferdig" && (
+                  (ctx.lead && o.lead_id === ctx.lead.id) || (ctx.sm && o.salgsmulighet_id === ctx.sm.id) || (ctx.kontakt && o.kontakt_id === ctx.kontakt.id)
+                )).sort(compareTaskSchedule)).map(o => (
+                  <div key={o.id} className="space-y-2 border-b pb-3">
+                    <h3 className="text-sm font-semibold">{taskTitle(o.oppgave)}</h3>
+                    <label className="grid gap-1 text-xs text-muted-foreground">Dato
+                      <Input type="date" value={o.frist} disabled={!canEdit} onChange={e => updateOppgaver(p => p.map(x => x.id === o.id ? { ...x, frist: e.target.value } : x))} />
+                    </label>
+                    <OppgaveTid value={o.frist_tid} disabled={!canEdit} onChange={v => updateOppgaver(p => p.map(x => x.id === o.id ? { ...x, frist_tid: v } : x))} />
+                  </div>
+                ))}
+              </section>
+            )}
             {/* 1. Kontaktinfo */}
             <section aria-labelledby="kk-kontakt" className="space-y-2">
               <div className="flex items-center justify-between">
@@ -353,15 +372,16 @@ export default function KundeKort({ r, onClose, onSelskap, onTilbake }: Props) {
               <section aria-labelledby="kk-neste" className="space-y-2 rounded-lg border bg-muted/30 p-3">
                 <h3 id="kk-neste" className="text-sm font-semibold">Neste steg: ny oppfølging?</h3>
                 {nesteForslag.dager && <p className="text-xs text-muted-foreground">Forslag: ring igjen om {nesteForslag.dager} dager ({format(new Date(datoOm(nesteForslag.dager)), "d. MMM", { locale: nb })})</p>}
+                <OppgaveTid value={nesteTid} onChange={setNesteTid} />
                 <div className="flex flex-wrap gap-2">
                   {dagerValg.map(v => (
                     <Button key={v.d} size="sm" variant={nesteForslag.dager === v.d ? "default" : "outline"} onClick={() => lagNesteOppgave(datoOm(v.d))}>{v.l}</Button>
                   ))}
                   {nesteForslag.dager && !dagerValg.some(v => v.d === nesteForslag.dager) && (
-                    <Button size="sm" onClick={() => lagNesteOppgave(datoOm(nesteForslag.dager!))}>Om {nesteForslag.dager} dager</Button>
+                    <Button size="sm" onClick={() => { if (nesteForslag.dager) lagNesteOppgave(datoOm(nesteForslag.dager)); }}>Om {nesteForslag.dager} dager</Button>
                   )}
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <Input type="date" aria-label="Egendefinert dato" value={egenDato} min={idag()} onChange={e => setEgenDato(e.target.value)} className="h-8 w-auto" />
                   <Button size="sm" variant="outline" disabled={!egenDato} onClick={() => lagNesteOppgave(egenDato)}>Lag oppgave</Button>
                   <Button size="sm" variant="ghost" onClick={() => setNesteForslag(null)}>Hopp over</Button>
