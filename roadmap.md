@@ -1,5 +1,11 @@
 # Roadmap
 
+## Valgfrie oppgavetider
+- [ ] Legg til felles klokkeslettvalg og rask lagring i oppgave- og kundekortflyter
+- [ ] Vis tidsbestemte oppgaver i 15 minutter og oppgaver uten tid i egen dagrad
+- [ ] Ringemerking og dato/tid-sortering i oppgavelister og Følg opp nå
+- [ ] Kjør tester og kontroller innlogget desktop/mobil uten å endre ekte oppgaver
+
 ## Project monitoring – leadstatus og oppgavekalender
 - [x] Verifiser og rett overskriving av «Ikke interessert» fra leadets detaljside
 - [x] Verifiser og rett flytting av eksisterende kalenderoppføring ved endret oppgavedato eller klokkeslett
