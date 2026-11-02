@@ -16,7 +16,7 @@ import { useAuth } from "@/hooks/use-auth";
 import LogActivityDialog from "@/components/LogActivityDialog";
 import type { ActivityTarget } from "@/lib/activity-logging";
 import type { ActivityLogResult } from "@/lib/lead-activity-result";
-import { epostKontaktTekst, epostTraadId, renAktivitetstekst } from "@/lib/aktivitet-visning";
+import { epostAdresser, epostKontaktTekst, epostTraadId, renAktivitetstekst } from "@/lib/aktivitet-visning";
 
 const API_URL = import.meta.env.VITE_SUPABASE_URL + '/rest/v1';
 const getApiHeaders = async () => {

@@ -1,4 +1,5 @@
 /** Ren logikk for «Gjort i dag» på Oversikt. Leser kun eksisterende aktiviteter og ferdige oppgaver. */
+import { renAktivitetstekst } from "@/lib/aktivitet-visning";
 
 export type GjortType = "snakket" | "svarte_ikke" | "ring_tilbake" | "booket" | "ikke_naa" | "ikke_interessert" | "melding" | "notat" | "oppgave" | "annet";
 
