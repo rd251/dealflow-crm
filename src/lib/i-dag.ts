@@ -1,4 +1,5 @@
 /** Ren logikk for «I dag»-siden (Oversikt). Ingen datamodell-endringer. */
+import { compareTaskSchedule, taskTitle } from "@/lib/oppgave-tid";
 
 export function dagStr(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -13,7 +14,7 @@ export function dagerForfalt(dato: string, now: Date = new Date()): number {
 
 const LUKKET_LEAD = ["Ikke aktuelt", "Konvertert til salg", "Konvertert til partner"];
 
-export interface FolgOppOppgave { id: string; oppgave: string; frist: string; status: string; ansvarlig: string; lead_id?: string; kontakt_id?: string; selskap_id?: string; salgsmulighet_id?: string }
+export interface FolgOppOppgave { id: string; oppgave: string; frist: string; frist_tid?: string; status: string; ansvarlig: string; lead_id?: string; kontakt_id?: string; selskap_id?: string; salgsmulighet_id?: string }
 export interface FolgOppLead { id: string; kontaktperson: string; firmanavn: string; telefon: string; status: string; neste_oppfolging?: string; ansvarlig: string }
 
 export interface FolgOppRad {
@@ -23,6 +24,7 @@ export interface FolgOppRad {
   navn: string;
   hva: string;
   dato: string;
+  frist_tid?: string;
   dagerForfalt: number;
   telefon: string;
   ansvarlig: string;
@@ -39,7 +41,7 @@ export function folgOppNa(
   const rader: FolgOppRad[] = [];
   for (const o of oppgaver) {
     if (o.status === "Ferdig" || !o.frist || o.frist.slice(0, 10) > i) continue;
-    rader.push({ key: `o-${o.id}`, type: "oppgave", id: o.id, navn: o.oppgave, hva: "Oppgave", dato: o.frist.slice(0, 10), dagerForfalt: dagerForfalt(o.frist, now), telefon: telefonFor(o), ansvarlig: o.ansvarlig });
+    rader.push({ key: `o-${o.id}`, type: "oppgave", id: o.id, navn: taskTitle(o.oppgave), hva: "Oppgave", dato: o.frist.slice(0, 10), frist_tid: o.frist_tid, dagerForfalt: dagerForfalt(o.frist, now), telefon: telefonFor(o), ansvarlig: o.ansvarlig });
   }
   for (const l of leads) {
     if (LUKKET_LEAD.includes(l.status) || !l.neste_oppfolging || l.neste_oppfolging.slice(0, 10) > i) continue;
@@ -50,7 +52,7 @@ export function folgOppNa(
       dato: l.neste_oppfolging.slice(0, 10), dagerForfalt: dagerForfalt(l.neste_oppfolging, now), telefon: l.telefon, ansvarlig: l.ansvarlig,
     });
   }
-  return rader.sort((a, b) => a.dato.localeCompare(b.dato) || a.navn.localeCompare(b.navn));
+  return rader.sort((a, b) => compareTaskSchedule({ frist: a.dato, frist_tid: a.frist_tid }, { frist: b.dato, frist_tid: b.frist_tid }) || a.navn.localeCompare(b.navn));
 }
 
 export interface VenterRad { id: string; status: string; sendt_dato: string; user_id: string }

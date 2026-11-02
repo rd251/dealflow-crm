@@ -20,6 +20,9 @@ import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { useKort } from "@/hooks/use-kort";
+import { useCrmStore } from "@/hooks/use-crm-store";
+import { compareTaskSchedule, taskTime, taskTitle, TASK_DURATION_MINUTES } from "@/lib/oppgave-tid";
 
 interface UserProfile {
   user_id: string;
@@ -50,6 +53,7 @@ interface CalendarEvent {
   raw: any;
   kontaktNavn?: string;
   ownerUserId?: string;
+  allDay?: boolean;
 }
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
@@ -61,6 +65,8 @@ const ACTIVITY_COLOR = "bg-sky-500/15 border-sky-500 text-sky-800 dark:text-sky-
 export default function Kalender() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { openKunde } = useKort();
+  const { oppgaver } = useCrmStore();
   const [searchParams] = useSearchParams();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<"week" | "month">("week");
@@ -225,8 +231,8 @@ export default function Kalender() {
       from = validDays[0].toISOString();
       to = addDays(validDays[validDays.length - 1], 1).toISOString();
     }
-    const fromDate = from.split('T')[0];
-    const toDate = to.split('T')[0];
+    const fromDate = format(new Date(from), "yyyy-MM-dd");
+    const toDate = format(new Date(to), "yyyy-MM-dd");
     const allEvents: CalendarEvent[] = [];
 
     try {
@@ -250,16 +256,20 @@ export default function Kalender() {
 
       const { data: tasks } = await supabase
         .from("oppgaver")
-        .select("id, oppgave, frist, prioritet, ansvarlig, notater, selskap_id, lead_id, salgsmulighet_id")
+        .select("id, oppgave, frist, frist_tid, prioritet, ansvarlig, user_id, notater, selskap_id, lead_id, salgsmulighet_id, kontakt_id")
         .gte("frist", fromDate)
         .lte("frist", toDate)
         .neq("status", "Ferdig");
 
       (tasks || []).forEach((t: any) => {
         if (t.frist) {
+          const time = taskTime(t.frist_tid);
+          const start = new Date(`${t.frist}T${time || "00:00"}:00`);
           allEvents.push({
-            id: t.id, title: t.oppgave, description: t.notater || "",
-            start: new Date(t.frist + "T09:00:00"), type: "task",
+            id: t.id, title: taskTitle(t.oppgave), description: t.notater || "",
+            start, end: time ? new Date(start.getTime() + TASK_DURATION_MINUTES * 60000) : undefined,
+            allDay: !time, type: "task",
+            ownerUserId: profiles[t.ansvarlig]?.user_id || Object.values(profiles).find(p => p.display_name === t.ansvarlig)?.user_id || t.user_id,
             color: t.prioritet === "Høy" ? TASK_HIGH_COLOR : TASK_COLOR, raw: t,
           });
         }
@@ -271,9 +281,9 @@ export default function Kalender() {
     } catch (e) {
       console.error("Error fetching calendar events:", e);
     }
-  }, [viewMode, weekDays, monthDays, kontakter]);
+  }, [viewMode, weekDays, monthDays, kontakter, profiles]);
 
-  useEffect(() => { fetchEvents(); }, [fetchEvents]);
+  useEffect(() => { fetchEvents(); }, [fetchEvents, oppgaver]);
 
   // Auto-scroll week view to ~7 AM on mount
   useEffect(() => {
@@ -292,6 +302,7 @@ export default function Kalender() {
   const getEventsForDay = (day: Date) => filteredEvents.filter(e => isSameDay(e.start, day));
 
   const getEventHeight = (event: CalendarEvent) => {
+    if (event.type === "task") return TASK_DURATION_MINUTES;
     if (!event.end) return 28;
     const diffMs = event.end.getTime() - event.start.getTime();
     return Math.max(28, diffMs / 60000);
@@ -348,8 +359,8 @@ export default function Kalender() {
       }
       const total = columns.length;
       for (const item of group) {
-        const l = layout.get(item.event.id)!;
-        l.totalColumns = total;
+        const l = layout.get(item.event.id);
+        if (l) l.totalColumns = total;
       }
     }
 
@@ -369,6 +380,10 @@ export default function Kalender() {
 
   // Event click -> open drawer
   const handleEventClick = (event: CalendarEvent) => {
+    if (event.type === "task") {
+      openKunde({ type: "oppgave", id: event.id });
+      return;
+    }
     setSelectedEvent(event);
     setEditing(false);
     setDrawerOpen(true);
@@ -562,7 +577,7 @@ export default function Kalender() {
       >
         <div className="flex items-center gap-0.5">
           {event.type === "meeting" && !compact && <GripVertical className="w-2.5 h-2.5 shrink-0 opacity-40" />}
-          <span className="font-medium truncate flex-1">{event.title}</span>
+            <span className="font-medium truncate flex-1" title={event.title}>{event.title}</span>
           {ownerProfile && (
             <Tooltip>
               <TooltipTrigger asChild>
@@ -578,7 +593,7 @@ export default function Kalender() {
         </div>
         {!compact && (
           <span className="truncate block opacity-70 text-[9px]">
-            {format(event.start, "HH:mm")}
+            {event.allDay ? "Uten tid" : format(event.start, "HH:mm")}
             {event.end ? `–${format(event.end, "HH:mm")}` : ""}
             {event.kontaktNavn && <> · <Users className="w-2.5 h-2.5 inline shrink-0" /> {event.kontaktNavn}</>}
           </span>
@@ -674,7 +689,8 @@ export default function Kalender() {
       )}
 
       {viewMode === "week" && (
-        <div className="border rounded-xl overflow-hidden bg-card">
+        <div className="overflow-x-auto rounded-lg border bg-card">
+          <div className="min-w-[740px]">
           <div className="grid grid-cols-[60px_repeat(7,1fr)] border-b">
             <div className="p-2 border-r bg-muted/30" />
             {weekDays.map((day, i) => {
@@ -688,6 +704,14 @@ export default function Kalender() {
             })}
           </div>
 
+          <div className="grid grid-cols-[60px_repeat(7,1fr)] border-b" aria-label="Oppgaver uten tid">
+            <div className="border-r bg-muted/30 p-1 text-[10px] text-muted-foreground">Uten tid / i dag</div>
+            {weekDays.map(day => (
+              <div key={day.toISOString()} className="min-h-12 space-y-1 border-r p-1 last:border-r-0">
+                {getEventsForDay(day).filter(e => e.allDay).map(e => <EventCard key={e.id} event={e} compact />)}
+              </div>
+            ))}
+          </div>
           <div ref={weekGridRef} className="grid grid-cols-[60px_repeat(7,1fr)] max-h-[600px] overflow-y-auto">
             {/* Hour labels column */}
             <div className="row-span-1">
@@ -700,7 +724,7 @@ export default function Kalender() {
             {/* Day columns with events overlay */}
             {weekDays.map((day, di) => {
               const isToday = isSameDay(day, today);
-              const dayEvents = getEventsForDay(day);
+              const dayEvents = getEventsForDay(day).filter(e => !e.allDay);
               const overlapLayout = getOverlapLayout(dayEvents);
               const firstHour = HOURS[0];
               return (
@@ -744,13 +768,14 @@ export default function Kalender() {
                           paddingRight: '1px',
                         }}
                       >
-                        <EventCard event={event} />
+                        <EventCard event={event} compact={event.type === "task"} />
                       </div>
                     );
                   })}
                 </div>
               );
             })}
+          </div>
           </div>
         </div>
       )}
@@ -767,7 +792,7 @@ export default function Kalender() {
             {monthDays.map((day, i) => {
               if (!day) return <div key={i} className="min-h-[100px] border-b border-r last:border-r-0 bg-muted/10" />;
               const isToday = isSameDay(day, today);
-              const dayEvents = getEventsForDay(day);
+              const dayEvents = getEventsForDay(day).sort((a, b) => Number(!a.allDay) - Number(!b.allDay) || a.start.getTime() - b.start.getTime());
               return (
                 <div
                   key={i}
@@ -809,9 +834,9 @@ export default function Kalender() {
               Oppgaver med frist
             </h3>
             <div className="space-y-2">
-              {taskEvents.sort((a, b) => a.start.getTime() - b.start.getTime()).map(event => (
+              {taskEvents.sort((a, b) => compareTaskSchedule(a.raw, b.raw)).map(event => (
                 <div key={event.id} className={`flex items-center gap-3 p-2 rounded-lg border-l-2 cursor-pointer hover:opacity-80 transition-opacity ${event.color}`} onClick={() => handleEventClick(event)}>
-                  <span className="text-xs font-medium">{format(event.start, "EEE d. MMM", { locale: nb })}</span>
+                  <span className="text-xs font-medium">{format(event.start, "EEE d. MMM", { locale: nb })} · {event.allDay ? "Uten tid" : format(event.start, "HH:mm")}</span>
                   <span className="text-xs flex-1 truncate">{event.title}</span>
                   {event.raw?.prioritet && <Badge variant="outline" className="text-[9px]">{event.raw.prioritet}</Badge>}
                 </div>

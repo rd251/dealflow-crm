@@ -16,6 +16,9 @@ import { gravatarUrl } from "@/lib/gravatar";
 import { cn } from "@/lib/utils";
 import { Oppgave, OppgaveStatus, Prioritet } from "@/data/crm-data";
 import { toast } from "sonner";
+import OppgaveTid from "@/components/OppgaveTid";
+import { compareTaskSchedule, taskTitle } from "@/lib/oppgave-tid";
+import { useKort } from "@/hooks/use-kort";
 
 const tabs = [
   ["idag", "I dag"],
@@ -40,6 +43,7 @@ function initials(name: string) {
 
 export default function Tasks() {
   const navigate = useNavigate();
+  const { openKunde } = useKort();
   const [searchParams] = useSearchParams();
   const initialFilter = searchParams.get("filter") === "forfalte" ? "aapne" : "idag";
   const [filter, setFilter] = useState<ActiveFilter>(searchParams.get("filter") === "forfalte" ? "forfalte" : initialFilter);
@@ -132,7 +136,7 @@ export default function Tasks() {
     };
     const bucketDiff = bucket(a) - bucket(b);
     if (bucketDiff) return bucketDiff;
-    return (a.frist || "9999").localeCompare(b.frist || "9999");
+    return compareTaskSchedule(a, b);
   });
 
   const relationFor = (task: Oppgave) => {
@@ -173,7 +177,7 @@ export default function Tasks() {
               aria-label="Ny oppgave"
             />
             <Input type="date" value={quickDue} onChange={event => setQuickDue(event.target.value)} className="h-10 lg:w-40" aria-label="Frist" />
-            <Input type="time" value={quickTid} onChange={event => setQuickTid(event.target.value)} className="h-10 lg:w-28" aria-label="Klokkeslett (valgfritt)" title="Klokkeslett (valgfritt)" />
+            <OppgaveTid value={quickTid} onChange={setQuickTid} />
             <select value={quickLink} onChange={event => setQuickLink(event.target.value)} className="h-10 rounded-md border bg-background px-3 text-sm lg:w-64" aria-label="Tilknytning">
               <option value="">Ingen tilknytning</option>
               {relationOptions.map(item => <option key={item.value} value={item.value}>{item.label}</option>)}
@@ -210,10 +214,11 @@ export default function Tasks() {
                   <div className="flex items-start gap-3">
                     <span className={cn("mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full", priorityDot[task.prioritet])} title={`Prioritet: ${task.prioritet}`} />
                     <div className="min-w-0 flex-1">
-                      <button type="button" onClick={() => canEdit && setEditingTask({ ...task })} className={cn("block max-w-full text-left text-sm font-semibold hover:text-primary", task.status === "Ferdig" && "line-through")}>{task.oppgave}</button>
+                      <Button variant="link" onClick={() => openKunde({ type: "oppgave", id: task.id })} className={cn("h-auto max-w-full whitespace-normal p-0 text-left text-sm font-semibold text-foreground", task.status === "Ferdig" && "line-through")}>{taskTitle(task.oppgave)}</Button>
                       <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
                         {relation?.label && <Button variant="link" size="sm" onClick={() => navigate(relation.href)} className="h-auto p-0 text-xs"><Link2 className="mr-1 h-3 w-3" />{relation.label}</Button>}
-                        <span className={cn("flex items-center gap-1 text-muted-foreground", overdue && "font-medium text-destructive", dueToday && "font-medium text-warning-foreground")}><CalendarDays className="h-3 w-3" />{dueLabel(task.frist)}</span>
+                        <span className={cn("flex items-center gap-1 text-muted-foreground", overdue && "font-medium text-destructive", dueToday && "font-medium text-warning-foreground")}><CalendarDays className="h-3 w-3" />{dueLabel(task.frist)}{task.frist_tid ? ` · ${task.frist_tid.slice(0, 5)}` : " · Uten tid"}</span>
+                        {canEdit && <Button size="sm" variant="ghost" className="h-6 px-1" aria-label={`Rediger oppgave: ${task.oppgave}`} onClick={() => setEditingTask({ ...task })}><Pencil className="h-3 w-3" /></Button>}
                       </div>
                     </div>
                     {profile && (
@@ -262,7 +267,7 @@ export default function Tasks() {
               <Input value={editingTask.oppgave} onChange={event => setEditingTask({ ...editingTask, oppgave: event.target.value })} />
               <div className="grid grid-cols-2 gap-3">
                 <Input type="date" value={editingTask.frist} onChange={event => setEditingTask({ ...editingTask, frist: event.target.value })} />
-                <Input type="time" value={editingTask.frist_tid} onChange={event => setEditingTask({ ...editingTask, frist_tid: event.target.value })} aria-label="Klokkeslett (valgfritt)" title="Klokkeslett (valgfritt)" />
+                <div className="col-span-2"><OppgaveTid value={editingTask.frist_tid} onChange={v => { updateOppgaver(p => p.map(o => o.id === editingTask.id ? { ...o, frist_tid: v } : o)); setEditingTask({ ...editingTask, frist_tid: v }); }} /></div>
                 <select className="rounded-md border bg-background px-3 text-sm" value={editingTask.prioritet} onChange={event => setEditingTask({ ...editingTask, prioritet: event.target.value as Prioritet })}>{(["Lav", "Medium", "Høy"] as Prioritet[]).map(value => <option key={value}>{value}</option>)}</select>
               </div>
               <select className="h-10 w-full rounded-md border bg-background px-3 text-sm" value={editingTask.ansvarlig} onChange={event => setEditingTask({ ...editingTask, ansvarlig: event.target.value })}><option value="">Ikke tildelt</option>{profiles.map(profile => <option key={profile.user_id} value={profile.user_id}>{profile.display_name}</option>)}</select>
