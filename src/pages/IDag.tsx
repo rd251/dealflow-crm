@@ -133,7 +133,7 @@ export default function IDag() {
     if (r.lead_id) { const l = leads.find(x => x.id === r.lead_id); if (l) return { ref: { type: "lead" as const, id: l.id }, navn: l.kontaktperson || l.firmanavn }; }
     if (r.kontakt_id) { const k = kontakter.find(x => x.id === r.kontakt_id); if (k) return { ref: { type: "kontakt" as const, id: k.id }, navn: k.navn }; }
     if (r.salgsmulighet_id) { const s = salgsmuligheter.find(x => x.id === r.salgsmulighet_id); if (s) return { ref: { type: "sm" as const, id: s.id }, navn: s.navn }; }
-    if (r.selskap_id) { const s = selskaper.find(x => x.id === r.selskap_id); if (s) return { selskap: s.id, navn: s.navn }; }
+    if (r.selskap_id) { const s = selskaper.find(x => x.id === r.selskap_id); if (s) return { selskap: s.id, navn: s.firmanavn }; }
     return { navn: "" };
   };
   const initialer = (n: string) => n.split(/\s+/).filter(Boolean).slice(0, 2).map(x => x[0]!.toUpperCase()).join("");
