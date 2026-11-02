@@ -1585,7 +1585,7 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
                     )}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{activity.tittel}</p>
-                      <p className="text-xs text-muted-foreground truncate">{activity.beskrivelse}</p>
+                      <p className="text-xs text-muted-foreground truncate">{renAktivitetstekst(activity.beskrivelse)}</p>
                       <Badge variant="outline" className="text-[10px] mt-0.5">{activity.type}</Badge>
                     </div>
                     {!createdActivityIds.has(i) && (

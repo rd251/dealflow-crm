@@ -41,7 +41,7 @@ const UTFALL: Utfall[] = [
   { id: "ikke_aktuelt", tast: "5", label: "Ikke aktuelt", hint: "Fjernes fra listen", icon: Ban, tone: "text-destructive", logg: "ringte", status: "Ikke aktuelt" },
 ];
 
-interface Historikk { id: string; type: string; tittel: string | null; beskrivelse: string; dato: string }
+interface Historikk { id: string; type: string; tittel: string | null; beskrivelse: string; dato: string; aktivitet_kilde?: string | null }
 
 const erAktiv = (l: Lead) =>
   !l.konvertert_dato && !l.konvertert_til &&
@@ -81,7 +81,7 @@ export default function Ringemodus() {
   const hentHistorikk = useCallback(async (leadId: string) => {
     const { data } = await supabase
       .from("aktiviteter")
-      .select("id, type, tittel, beskrivelse, dato")
+      .select("id, type, tittel, beskrivelse, dato, aktivitet_kilde")
       .eq("lead_id", leadId)
       .order("dato", { ascending: false })
       .limit(HISTORIKK_ANTALL);
