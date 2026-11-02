@@ -893,12 +893,12 @@ function useCrmStoreInternal() {
   }, []);
 
   // Convert lead → salgsmulighet + selskap + kontakt
-  const konverterLead = useCallback((leadId: string, customNavn?: string, enrichment?: { orgnr?: string; bransje?: string; firmaadresse?: string; postadresse?: string }): string | undefined => {
+  const konverterLead = useCallback((leadId: string, customNavn?: string, enrichment?: { orgnr?: string; bransje?: string; firmaadresse?: string; postadresse?: string }, valg?: { selskapId?: string; ansvarlig?: string; forventet_mrr?: number; forventet_lukkedato?: string }): string | undefined => {
     const lead = leads.find(l => l.id === leadId);
     if (!lead) return undefined;
     const today = new Date().toISOString().split("T")[0];
 
-    let selskapId = selskaper.find(s => s.firmanavn.toLowerCase() === lead.firmanavn.toLowerCase())?.id;
+    let selskapId = valg?.selskapId || selskaper.find(s => s.firmanavn.toLowerCase() === lead.firmanavn.toLowerCase())?.id;
     if (!selskapId) {
       selskapId = crypto.randomUUID();
       const nyttSelskap: Selskap = {
@@ -935,8 +935,8 @@ function useCrmStoreInternal() {
     const smId = crypto.randomUUID();
     const nySm: Salgsmulighet = {
       id: smId, navn: customNavn || lead.use_case || lead.firmanavn, selskap_id: selskapId, kontakt_id: kontaktId || "",
-      ansvarlig: lead.ansvarlig, status: "Møte booket", forventet_mrr: 0, sla: 0, oppstartskostnad: 0,
-      kontraktslengde_mnd: 12, sannsynlighet: 50, forventet_lukkedato: "", vunnet_dato: "",
+      ansvarlig: valg?.ansvarlig || lead.ansvarlig, status: "Møte booket", forventet_mrr: valg?.forventet_mrr || 0, sla: 0, oppstartskostnad: 0,
+      kontraktslengde_mnd: 12, sannsynlighet: 50, forventet_lukkedato: valg?.forventet_lukkedato || "", vunnet_dato: "",
       tapt_dato: "", tapsaarsak: "", neste_steg: lead.neste_steg, notater: lead.notater,
       opprettet_dato: today, sist_aktivitet: today,
       kilde: "Direkte salg", partner_id: "", partner_provisjon: 0, partner_kostnad: 0, netto_inntekt: 0,
