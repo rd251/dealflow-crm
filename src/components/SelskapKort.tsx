@@ -166,17 +166,30 @@ export default function SelskapKort({ id, onClose, onKunde }: { id: string; onCl
             <Tittel>Historikk</Tittel>
             {hist.length === 0 ? <p className="text-sm text-muted-foreground">Ingen aktiviteter ennå.</p> : (
               <ul className="divide-y rounded-lg border">
-                {hist.map(h => (
-                  <li key={h.id} className="px-3 py-2">
-                    <p className="flex justify-between gap-2 text-sm font-medium"><span className="truncate">{h.tittel || h.type}</span><span className="shrink-0 text-xs font-normal text-muted-foreground tabular-nums">{format(new Date(h.dato), "d. MMM HH:mm", { locale: nb })}</span></p>
-                    {h.beskrivelse && h.beskrivelse !== h.tittel && <p className="line-clamp-2 text-xs text-muted-foreground">{h.beskrivelse}</p>}
-                  </li>
-                ))}
+                {hist.map(h => {
+                  const kropp = renAktivitetstekst(h.beskrivelse);
+                  const kontakt = epostKontaktTekst(h.beskrivelse, h.aktivitet_kilde === "gmail_sendt");
+                  const innhald = (
+                    <>
+                      <p className="flex justify-between gap-2 text-sm font-medium"><span className="min-w-0 flex-1 truncate">{h.tittel || h.type}</span><span className="shrink-0 text-xs font-normal text-muted-foreground tabular-nums">{kontakt && <span>{kontakt} · </span>}{format(new Date(h.dato), "d. MMM HH:mm", { locale: nb })}</span></p>
+                      {kropp && kropp !== (h.tittel || "").trim() && <p className="line-clamp-2 text-xs text-muted-foreground">{kropp}</p>}
+                    </>
+                  );
+                  return (
+                    <li key={h.id} className="px-3 py-2">
+                      {epostTraadId(h.beskrivelse) ? (
+                        <button type="button" onClick={() => setVisEpost(h)} className="-mx-3 -my-2 block w-full rounded-lg px-3 py-2 text-left hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{innhald}</button>
+                      ) : innhald}
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </section>
         </div>
       </SheetContent>
     </Sheet>
+
+    <EpostTraadDialog epost={visEpost} onOpenChange={o => !o && setVisEpost(null)} />
   );
 }
