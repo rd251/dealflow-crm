@@ -21,7 +21,7 @@ import ActivityLog from "@/components/ActivityLog";
 import CompanyLinker from "@/components/CompanyLinker";
 import DealSuggestions from "@/components/DealSuggestions";
 import { gravatarUrl } from "@/lib/gravatar";
-import InnboksSalgsmulighet from "@/components/InnboksSalgsmulighet";
+import InnboksPersonPanel from "@/components/InnboksPersonPanel";
 import { useKort } from "@/hooks/use-kort";
 
 interface KontaktStromPerson {
@@ -118,9 +118,7 @@ export default function Innboks() {
   const [selected, setSelected] = useState<KontaktStromPerson | null>(null);
   const [selectedCompany, setSelectedCompany] = useState<CompanyGroup | null>(null);
   const [creatingLead, setCreatingLead] = useState(false);
-  const [visSalgsSkjema, setVisSalgsSkjema] = useState(false);
   const { openKunde } = useKort();
-  useEffect(() => { setVisSalgsSkjema(false); }, [selected?.email]);
   const [creatingCompany, setCreatingCompany] = useState(false);
   const [syncing, setSyncing] = useState(false);
 
@@ -840,132 +838,14 @@ export default function Innboks() {
       )}
 
       {/* Person detail panel */}
-      <DetailPanelShell
-        open={!!selected}
+      <InnboksPersonPanel
+        person={selected}
         onClose={() => setSelected(null)}
-        title={selected?.navn || selected?.email || ""}
-        subtitle={selected?.firmanavn && selected?.selskapId ? undefined : selected?.firmanavn || undefined}
-        badges={selected ? (
-          <>
-            {selected.type === "Salgsmulighet" && selected.salgsmulighetId ? (
-              <button type="button" onClick={() => openKunde({ type: "sm", id: selected.salgsmulighetId! })} aria-label="Åpne salgsmulighet">
-                <Badge variant="secondary" className={`text-xs hover:underline ${TYPE_COLORS.Salgsmulighet}`}>Salgsmulighet</Badge>
-              </button>
-            ) : (
-              <Badge variant="secondary" className={`text-xs ${TYPE_COLORS[selected.type]}`}>
-                {selected.type}
-              </Badge>
-            )}
-            {selected.salgsmulighetId && selected.type !== "Salgsmulighet" && (
-              <button type="button" onClick={() => openKunde({ type: "sm", id: selected.salgsmulighetId! })} aria-label="Åpne salgsmulighet">
-                <Badge variant="secondary" className={`text-xs hover:underline ${TYPE_COLORS.Salgsmulighet}`}>Salgsmulighet</Badge>
-              </button>
-            )}
-            {selected.status && (
-              <Badge variant="outline" className="text-xs">{selected.status}</Badge>
-            )}
-          </>
-        ) : undefined}
-        actions={selected ? (
-          <>
-            {(!selected.inCrm || (!selected.leadId && !selected.salgsmulighetId && selected.type === "Ukjent")) && (
-              <Button size="sm" onClick={() => handleCreateLead(selected)} disabled={creatingLead}>
-                <UserPlus className="w-4 h-4 mr-1.5" />
-                {creatingLead ? "Oppretter..." : "Opprett lead"}
-              </Button>
-            )}
-            {selected.leadId && (
-              <Button size="sm" variant="outline" onClick={() => { navigate("/leads"); setSelected(null); }}>
-                <ExternalLink className="w-4 h-4 mr-1.5" />Lead
-              </Button>
-            )}
-            {!selected.salgsmulighetId && (
-              <Button size="sm" variant={visSalgsSkjema ? "secondary" : "default"} onClick={() => setVisSalgsSkjema(v => !v)}>
-                <Plus className="w-4 h-4 mr-1.5" />Salgsmulighet
-              </Button>
-            )}
-            {selected.salgsmulighetId && (
-              <Button size="sm" variant="outline" onClick={() => { navigate("/salgsmuligheter"); setSelected(null); }}>
-                <ExternalLink className="w-4 h-4 mr-1.5" />Salgsmulighet
-              </Button>
-            )}
-            {selected.partnerId && (
-              <Button size="sm" variant="outline" onClick={() => { navigate(`/partnere/${selected.partnerId}`); setSelected(null); }}>
-                <ExternalLink className="w-4 h-4 mr-1.5" />Partner
-              </Button>
-            )}
-          </>
-        ) : undefined}
-        tabContent={selected ? {
-          detaljer: (
-            <>
-              {visSalgsSkjema && !selected.salgsmulighetId && (
-                <InnboksSalgsmulighet
-                  key={selected.email}
-                  person={selected}
-                  onAvbryt={() => setVisSalgsSkjema(false)}
-                  onFerdig={() => { setVisSalgsSkjema(false); fetchEmailContacts(); setSelected(null); }}
-                />
-              )}
-              {selected.firmanavn && selected.selskapId && (
-                <SharedDetailField label="Selskap">
-                  <span
-                    className="text-sm text-primary hover:underline cursor-pointer"
-                    onClick={() => { navigate(`/selskaper/${selected.selskapId}`); setSelected(null); }}
-                  >
-                    {selected.firmanavn}
-                  </span>
-                </SharedDetailField>
-              )}
-              <DetailSection title="Kontaktdetaljer">
-                <SharedDetailField label="E-post" value={selected.email} />
-                {selected.ansvarlig && <SharedDetailField label="Ansvarlig" value={selected.ansvarlig} />}
-                {selected.nesteSteg && <SharedDetailField label="Neste steg" value={selected.nesteSteg} />}
-              </DetailSection>
-              <DetailDivider />
-              {(selected.totalSent > 0 || selected.totalReceived > 0 || selected.sistKontaktetDato) && (
-                <>
-                  <DetailSection title="E-poststatistikk">
-                    {(selected.totalSent > 0 || selected.totalReceived > 0) && (
-                      <SharedDetailField label="Totalt aktiviteter" value={`${selected.totalSent + selected.totalReceived}`} />
-                    )}
-                    {selected.sistKontaktetDato && (
-                      <SharedDetailField label="Siste aktivitet" value={format(new Date(selected.sistKontaktetDato), "d. MMM yyyy, HH:mm", { locale: nb })} />
-                    )}
-                    {(selected.totalSent > 0 || selected.totalReceived > 0) && (
-                      <DetailStatGrid>
-                        <DetailStatCard label="Sendt" value={selected.totalSent} />
-                        <DetailStatCard label="Mottatt" value={selected.totalReceived} />
-                      </DetailStatGrid>
-                    )}
-                  </DetailSection>
-                  <DetailDivider />
-                </>
-              )}
-              <CompanyLinker
-                email={selected.email}
-                kontaktId={selected.kontaktId}
-                currentSelskapId={selected.selskapId}
-                personNavn={selected.navn}
-                onLinked={() => { fetchEmailContacts(); refresh(); setSelected(null); }}
-              />
-              <DetailDivider />
-              <DealSuggestions
-                selskapId={selected.selskapId || selected.suggestedSelskapId}
-                kontaktId={selected.kontaktId}
-                email={selected.email}
-                currentSalgsmulighetId={selected.salgsmulighetId}
-                onLinked={() => { fetchEmailContacts(); refresh(); setSelected(null); }}
-              />
-            </>
-          ),
-          interaksjoner: (
-            <>
-              {selected.kontaktId && <ActivityLog kontakt_id={selected.kontaktId} />}
-              {selected.leadId && !selected.kontaktId && <ActivityLog lead_id={selected.leadId} />}
-              {!selected.kontaktId && !selected.leadId && <ActivityLog email={selected.email} />}
-            </>
-          ),
+        onEndret={() => { fetchEmailContacts(); refresh(); setSelected(null); }}
+        opprettLead={selected ? {
+          vis: !selected.inCrm || (!selected.leadId && !selected.salgsmulighetId && selected.type === "Ukjent"),
+          laster: creatingLead,
+          onClick: () => handleCreateLead(selected),
         } : undefined}
       />
 

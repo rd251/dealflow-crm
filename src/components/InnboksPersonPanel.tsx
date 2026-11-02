@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { nb } from "date-fns/locale";
-import { Building2, ChevronRight, Mail, Phone, Plus, ExternalLink } from "lucide-react";
+import { Building2, ChevronRight, Mail, Phone, Plus, ExternalLink, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -34,7 +34,7 @@ const vent = (ms: number) => new Promise(r => setTimeout(r, ms));
 type Felt = "e_post" | "telefon" | "rolle";
 
 /** Personpanelet i Innboks, i samme stil som det globale kundekortet. */
-export default function InnboksPersonPanel({ person, onClose, onEndret }: { person: PanelPerson | null; onClose: () => void; onEndret: () => void }) {
+export default function InnboksPersonPanel({ person, onClose, onEndret, opprettLead }: { person: PanelPerson | null; onClose: () => void; onEndret: () => void; opprettLead?: { vis: boolean; laster: boolean; onClick: () => void } }) {
   const isMobile = useIsMobile();
   const { selskaper, kontakter, leads, updateKontakter, updateLeads, refresh } = useCrmStore();
   const { openKunde, openSelskap } = useKort();
@@ -99,7 +99,6 @@ export default function InnboksPersonPanel({ person, onClose, onEndret }: { pers
       } else {
         const { error } = await supabase.from("kontakter").insert({ navn, e_post: person.email, [redigerer]: v || null } as never);
         if (error) throw error;
-        await supabase.from("email_contacts").select("id").eq("primary_email", person.email);
         refresh(); onEndret();
       }
       toast.success("Lagret");
@@ -162,6 +161,7 @@ export default function InnboksPersonPanel({ person, onClose, onEndret }: { pers
             {person.leadId
               ? <Button size="sm" variant="outline" onClick={() => openKunde({ type: "lead", id: person.leadId! })}>Åpne lead</Button>
               : person.kontaktId && <Button size="sm" variant="outline" onClick={() => openKunde({ type: "kontakt", id: person.kontaktId! })}>Åpne kontakt</Button>}
+            {opprettLead?.vis && <Button size="sm" variant="outline" className="gap-1" disabled={opprettLead.laster} onClick={opprettLead.onClick}><UserPlus className="h-3.5 w-3.5" />{opprettLead.laster ? "Oppretter..." : "Opprett lead"}</Button>}
             <Button asChild size="sm" variant="outline" className="gap-1"><a href={`mailto:${person.email}`}><Mail className="h-3.5 w-3.5" />Svar</a></Button>
             {tel && <Button asChild size="sm" variant="outline" className="gap-1"><a href={`tel:${tel}`}><Phone className="h-3.5 w-3.5" />Ring</a></Button>}
             {person.partnerId && <Button asChild size="sm" variant="ghost" className="gap-1"><a href={`/partnere/${person.partnerId}`}><ExternalLink className="h-3.5 w-3.5" />Partner</a></Button>}
