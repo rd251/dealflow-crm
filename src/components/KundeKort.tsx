@@ -5,19 +5,16 @@ import { nb } from "date-fns/locale";
 import { Mail, MessageSquare, Pencil, Phone, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useCrmStore } from "@/hooks/use-crm-store";
 import { useAuth } from "@/hooks/use-auth";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { loggAktivitet } from "@/lib/activity-logging";
-import { datoOm, idag } from "@/lib/sales-flow";
+import LoggUtfall from "@/components/LoggUtfall";
 import {
-  EPOST_MALER, SAMTALE_UTFALL, SMS_MALER, forslagDager, fyllMal, leadStatusEtterUtfall, mailtoLenke, smsLenke,
-  type MeldingMal, type SamtaleUtfall,
+  EPOST_MALER, SMS_MALER, fyllMal, mailtoLenke, smsLenke,
+  type MeldingMal,
 } from "@/lib/kundekort";
 import { cn } from "@/lib/utils";
 import { kundeParam, type KundeRef } from "@/hooks/use-kort";
@@ -82,13 +79,6 @@ export default function KundeKort({ r, onClose, onSelskap, onTilbake }: Props) {
   // ---------- Tilstand ----------
   const [redigerer, setRedigerer] = useState(false);
   const [form, setForm] = useState(info);
-  const [utfall, setUtfall] = useState<SamtaleUtfall | null>(null);
-  const [notat, setNotat] = useState("");
-  const [lagrer, setLagrer] = useState(false);
-  const [bekreftTapt, setBekreftTapt] = useState(false);
-  const [nesteForslag, setNesteForslag] = useState<{ dager: number | null } | null>(null);
-  const [egenDato, setEgenDato] = useState("");
-  const [nesteTid, setNesteTid] = useState("");
   const [malKanal, setMalKanal] = useState<Kanal | null>(null);
   const [ventende, setVentende] = useState<{ kanal: Kanal; mal: MeldingMal } | null>(null);
   const [bekreftMelding, setBekreftMelding] = useState<{ kanal: Kanal; mal?: MeldingMal } | null>(null);
@@ -96,8 +86,8 @@ export default function KundeKort({ r, onClose, onSelskap, onTilbake }: Props) {
   const [hist, setHist] = useState<Hist[]>([]);
 
   useEffect(() => {
-    setForm(info); setRedigerer(false); setBekreftTapt(false);
-    setUtfall(null); setNotat(""); setNesteForslag(null); setNesteTid(""); setMalKanal(null); setVentende(null); setBekreftMelding(null);
+    setForm(info); setRedigerer(false);
+    setMalKanal(null); setVentende(null); setBekreftMelding(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [kundeParam(r)]);
 
@@ -146,85 +136,6 @@ export default function KundeKort({ r, onClose, onSelskap, onTilbake }: Props) {
     toast.success("Kontaktinfo lagret");
   };
 
-  // ---------- Logg samtale ----------
-  const fullforGjeldende = () => {
-    if (ctx.oppgave && ctx.oppgave.status !== "Ferdig") {
-      const id = ctx.oppgave.id;
-      updateOppgaver(prev => prev.map(o => o.id === id ? { ...o, status: "Ferdig" } : o));
-    }
-  };
-
-  const loggSamtale = async () => {
-    if (!utfall) return;
-    if (utfall === "ikke_interessert" && !bekreftTapt) { setBekreftTapt(true); return; }
-    setBekreftTapt(false);
-    setLagrer(true);
-    const label = SAMTALE_UTFALL.find(u => u.id === utfall)?.label || "Samtale";
-    const dager = forslagDager(utfall);
-    try {
-      await loggAktivitet({
-        logg: utfall === "ikke_svar" || utfall === "beskjed" ? "ikke_svar" : "ringte",
-        target, tittel: `Ringte – ${label.toLowerCase()} – ${info.navn || info.firma}`,
-        notat: notat.trim() || label, ansvarlig,
-        utfall: utfall === "ikke_svar" || utfall === "beskjed" ? "svarte_ikke" : "snakket",
-        nesteOppfolging: dager ? datoOm(dager) : undefined,
-        markerIkkeAktuelt: utfall === "ikke_interessert",
-      });
-      fullforGjeldende();
-      if (ctx.lead) {
-        const id = ctx.lead.id;
-        updateLeads(prev => prev.map(l => l.id === id ? {
-          ...l, status: leadStatusEtterUtfall(l.status, utfall) as typeof l.status, sist_aktivitet: idag(),
-          neste_oppfolging: utfall === "ikke_interessert" ? "" : dager ? datoOm(dager) : l.neste_oppfolging,
-        } : l));
-      }
-      if (utfall === "ikke_interessert" && ctx.sm && ctx.sm.status !== "Vunnet" && ctx.sm.status !== "Tapt") {
-        const id = ctx.sm.id;
-        updateSalgsmuligheter(prev => prev.map(s => s.id === id ? { ...s, status: "Tapt", tapt_dato: idag(), tapsaarsak: s.tapsaarsak || "Ikke behov" } : s));
-      }
-      if (utfall === "booket" && ctx.lead && !ctx.sm) {
-        const lead = ctx.lead;
-        const smId = konverterLead(lead.id, lead.use_case || lead.firmanavn || lead.kontaktperson);
-        if (smId) {
-          toast.success(`${lead.firmanavn || lead.kontaktperson} er nå salgsmulighet (Møte booket)`, { action: { label: "Åpne", onClick: () => navigate(`/salgsmuligheter?open=${smId}`) } });
-          void (async () => {
-            for (let i = 0; i < 20; i++) {
-              const { data } = await supabase.from("salgsmuligheter").select("id").eq("id", smId).maybeSingle();
-              if (data) break;
-              await new Promise(r => setTimeout(r, 500));
-            }
-            updateOppgaver(prev => [...prev, {
-              id: crypto.randomUUID(), oppgave: "Gjennomfør demo", lead_id: "", selskap_id: "", salgsmulighet_id: smId, kontakt_id: "",
-              ansvarlig: lead.ansvarlig || user?.id || "", frist: datoOm(7), frist_tid: "", prioritet: "Høy", status: "Åpen", paaminnelse: true, notater: "",
-            }]);
-          })();
-        }
-      } else {
-        toast.success(utfall === "ikke_interessert" ? "Logget – tatt ut av oppfølging" : "Samtalen er logget");
-      }
-      setNesteForslag(dager !== null || utfall === "fikk_svar" ? { dager } : null);
-      setEgenDato("");
-      setNesteTid("");
-      setUtfall(null); setNotat("");
-      void hentHistorikk();
-    } catch (err) {
-      console.error(err); toast.error("Kunne ikke logge samtalen");
-    } finally { setLagrer(false); }
-  };
-
-  const lagNesteOppgave = (frist: string) => {
-    if (!frist) return;
-    const navn = info.navn || info.firma;
-    updateOppgaver(prev => [...prev, {
-      id: crypto.randomUUID(), oppgave: `Ring ${navn} igjen`, lead_id: ctx.lead?.id || "", selskap_id: ctx.selskap?.id || "",
-      salgsmulighet_id: ctx.sm?.id || "", kontakt_id: ctx.kontakt?.id || "",
-      ansvarlig, frist, frist_tid: nesteTid, prioritet: "Medium", status: "Åpen", paaminnelse: true, notater: "",
-    }]);
-    if (ctx.lead) { const id = ctx.lead.id; updateLeads(prev => prev.map(l => l.id === id ? { ...l, neste_oppfolging: frist } : l)); }
-    setNesteForslag(null);
-    toast.success(`Ny oppfølging ${format(new Date(frist), "d. MMM", { locale: nb })}`);
-  };
-
   // ---------- Meldinger ----------
   const aapneMal = (kanal: Kanal, mal: MeldingMal) => {
     const tekst = fyllMal(mal.tekst, { fornavn, firma: info.firma });
@@ -248,7 +159,6 @@ export default function KundeKort({ r, onClose, onSelskap, onTilbake }: Props) {
   };
 
   const tel = info.telefon.replace(/\s/g, "");
-  const dagerValg = [{ l: "I morgen", d: 1 }, { l: "3 dager", d: 3 }, { l: "1 uke", d: 7 }];
 
   return (
     <>
@@ -316,7 +226,6 @@ export default function KundeKort({ r, onClose, onSelskap, onTilbake }: Props) {
                     : canEdit && <Button size="sm" variant="outline" className="gap-1" onClick={() => { setForm(info); setRedigerer(true); }}><Plus className="h-3.5 w-3.5" />Legg til nummer</Button>}
                   {info.telefon && <Button size="sm" variant="outline" className="gap-1" onClick={() => setMalKanal(malKanal === "SMS" ? null : "SMS")}><MessageSquare className="h-3.5 w-3.5" />Send SMS</Button>}
                   {info.epost && <Button size="sm" variant="outline" className="gap-1" onClick={() => setMalKanal(malKanal === "E-post" ? null : "E-post")}><Mail className="h-3.5 w-3.5" />Send e-post</Button>}
-                  {canEdit && <Button size="sm" variant="ghost" onClick={() => setBekreftMelding({ kanal: info.telefon ? "SMS" : "E-post" })}>Logg melding</Button>}
                 </div>
               )}
               {malKanal && (
@@ -348,45 +257,12 @@ export default function KundeKort({ r, onClose, onSelskap, onTilbake }: Props) {
               )}
             </section>
 
-            {/* 2. Logg samtale */}
+            {/* 2. Hva skjedde? – felles loggkomponent */}
             {canEdit && (
-              <section aria-labelledby="kk-logg" className="space-y-2">
-                <h3 id="kk-logg" className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Logg samtale</h3>
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                  {SAMTALE_UTFALL.map(u => (
-                    <button key={u.id} type="button" aria-pressed={utfall === u.id} onClick={() => setUtfall(u.id)}
-                      className={cn("min-h-11 rounded-lg border px-3 py-2 text-left text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                        utfall === u.id ? "border-primary bg-primary text-primary-foreground" : "bg-card hover:bg-muted/60")}>
-                      {u.label}
-                    </button>
-                  ))}
-                </div>
-                <Textarea placeholder="Notat fra samtalen (valgfritt)" value={notat} onChange={e => setNotat(e.target.value)} rows={2} />
-                <Button disabled={!utfall || lagrer} onClick={loggSamtale} className="w-full sm:w-auto">{lagrer ? "Lagrer…" : "Logg samtale"}</Button>
-                {ctx.oppgave && ctx.oppgave.status !== "Ferdig" && <p className="text-xs text-muted-foreground">Oppgaven «{ctx.oppgave.oppgave}» markeres som ferdig når du logger.</p>}
-              </section>
-            )}
-
-            {/* 3. Neste steg */}
-            {nesteForslag && (
-              <section aria-labelledby="kk-neste" className="space-y-2 rounded-lg border bg-muted/30 p-3">
-                <h3 id="kk-neste" className="text-sm font-semibold">Neste steg: ny oppfølging?</h3>
-                {nesteForslag.dager && <p className="text-xs text-muted-foreground">Forslag: ring igjen om {nesteForslag.dager} dager ({format(new Date(datoOm(nesteForslag.dager)), "d. MMM", { locale: nb })})</p>}
-                <OppgaveTid value={nesteTid} onChange={setNesteTid} />
-                <div className="flex flex-wrap gap-2">
-                  {dagerValg.map(v => (
-                    <Button key={v.d} size="sm" variant={nesteForslag.dager === v.d ? "default" : "outline"} onClick={() => lagNesteOppgave(datoOm(v.d))}>{v.l}</Button>
-                  ))}
-                  {nesteForslag.dager && !dagerValg.some(v => v.d === nesteForslag.dager) && (
-                    <Button size="sm" onClick={() => { if (nesteForslag.dager) lagNesteOppgave(datoOm(nesteForslag.dager)); }}>Om {nesteForslag.dager} dager</Button>
-                  )}
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <Input type="date" aria-label="Egendefinert dato" value={egenDato} min={idag()} onChange={e => setEgenDato(e.target.value)} className="h-8 w-auto" />
-                  <Button size="sm" variant="outline" disabled={!egenDato} onClick={() => lagNesteOppgave(egenDato)}>Lag oppgave</Button>
-                  <Button size="sm" variant="ghost" onClick={() => setNesteForslag(null)}>Hopp over</Button>
-                </div>
-              </section>
+              <div className="space-y-1">
+                <LoggUtfall target={target} navn={info.navn || info.firma} oppgaveId={ctx.oppgave?.id} ansvarlig={ansvarlig} onLogged={() => void hentHistorikk()} />
+                {ctx.oppgave && ctx.oppgave.status !== "Ferdig" && <p className="text-xs text-muted-foreground">Oppgaven «{ctx.oppgave.oppgave}» markeres som ferdig når du lagrer.</p>}
+              </div>
             )}
 
             {/* 5. Historikk */}
@@ -413,20 +289,6 @@ export default function KundeKort({ r, onClose, onSelskap, onTilbake }: Props) {
         </SheetContent>
       </Sheet>
 
-      <AlertDialog open={bekreftTapt} onOpenChange={setBekreftTapt}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Ikke interessert?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Oppgaven lukkes{ctx.sm ? ` og salgsmuligheten «${ctx.sm.navn}» flyttes til Tapt` : ctx.lead ? " og leadet tas ut av oppfølging" : ""}.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Avbryt</AlertDialogCancel>
-            <AlertDialogAction onClick={() => { void loggSamtale(); }}>Ja, logg</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }
