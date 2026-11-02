@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { Building2 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,7 @@ export function nyttSelskap(firmanavn: string, ansvarlig = ""): Selskap {
 }
 
 /** «Koble til selskap»: søk i eksisterende selskaper eller opprett nytt. */
-export default function KobleSelskap({ forslag = "", onVelg }: { forslag?: string; onVelg: (s: Selskap) => void }) {
+export default function KobleSelskap({ forslag = "", onVelg, trigger }: { forslag?: string; onVelg: (s: Selskap) => void; trigger?: ReactNode }) {
   const { selskaper, updateSelskaper } = useCrmStore();
   const [apen, setApen] = useState(false);
   const [sok, setSok] = useState(forslag);
@@ -35,7 +35,7 @@ export default function KobleSelskap({ forslag = "", onVelg }: { forslag?: strin
   return (
     <Popover open={apen} onOpenChange={setApen}>
       <PopoverTrigger asChild>
-        <Button size="sm" variant="outline" className="h-7 gap-1"><Building2 className="h-3.5 w-3.5" />Koble til selskap</Button>
+        {trigger ?? <Button size="sm" variant="outline" className="h-7 gap-1"><Building2 className="h-3.5 w-3.5" />Koble til selskap</Button>}
       </PopoverTrigger>
       <PopoverContent align="start" className="w-72 p-2">
         <Input autoFocus placeholder="Søk etter selskap" value={sok} onChange={e => setSok(e.target.value)} className="h-8" />
