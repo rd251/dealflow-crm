@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react
 import { Link, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { nb } from "date-fns/locale";
-import { AlarmClock, CalendarDays, Check, ExternalLink, Mail, Phone, Sparkles, TrendingDown, UserPlus } from "lucide-react";
+import { AlarmClock, ListChecks, CalendarDays, Check, ExternalLink, Mail, Phone, Sparkles, TrendingDown, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import PageShell from "@/components/PageShell";
 import MoeteForslag from "@/components/MoeteForslag";
@@ -18,6 +18,7 @@ import { dagStr, dagerForfalt, erMin, filtrerVenter, folgOppNa, salgSomStarStill
 import { useKort } from "@/hooks/use-kort";
 import { KundeNavn, SelskapNavn } from "@/components/KortLenker";
 import { cn } from "@/lib/utils";
+import { byggGjort, midnattOslo, oppsummer, GJORT_EVENT, type GjortAkt, type GjortOppgave } from "@/lib/gjort-i-dag";
 
 interface Moete {
   id: string; tittel: string | null; dato: string; start_tid: string | null; user_id: string | null;
@@ -28,7 +29,14 @@ interface SisteAkt { type: string; tittel: string | null; beskrivelse: string; d
 interface Venter { id: string; status: string; sendt_dato: string; user_id: string; e_post: string | null; emne: string | null; ai_begrunnelse: string | null; kontakt_id: string | null; lead_id: string | null; selskap_id: string | null; salgsmulighet_id: string | null }
 interface Utkast { draft_id: string; til: string; emne: string; tekst: string }
 
-function Seksjon({ id, tittel, antall, children, lenke }: { id?: string; tittel: string; antall?: number; children: ReactNode; lenke?: ReactNode }) {
+function Seksjon({ id, tittel, antall, children, lenke, kompakt }: { id?: string; tittel: string; antall?: number; children: ReactNode; lenke?: ReactNode; kompakt?: boolean }) {
+  if (kompakt) return (
+    <section id={id} aria-label={tittel} className="scroll-mt-24 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border bg-card px-5 py-3 shadow-card">
+      <h2 className="font-display text-base font-semibold">{tittel}</h2>
+      <div className="min-w-0 flex-1">{children}</div>
+      {lenke}
+    </section>
+  );
   return (
     <section id={id} aria-label={tittel} className="scroll-mt-24 overflow-hidden rounded-lg border bg-card shadow-card">
       <header className="flex items-center justify-between gap-3 border-b px-5 py-4">
@@ -57,6 +65,10 @@ export default function IDag() {
   const [busy, setBusy] = useState<string | null>(null);
   const [utkast, setUtkast] = useState<Utkast | null>(null);
   const { openKunde } = useKort();
+  const [gjortAkt, setGjortAkt] = useState<GjortAkt[]>([]);
+  const [gjortOppg, setGjortOppg] = useState<GjortOppgave[]>([]);
+  const [profiler, setProfiler] = useState<Record<string, string>>({});
+  const [visAlleGjort, setVisAlleGjort] = useState(false);
   const setValgtRad = (r: FolgOppRad) => openKunde({ type: r.type, id: r.id });
 
   const now = new Date();
@@ -90,6 +102,41 @@ export default function IDag() {
       .in("status", ["venter", "varslet"]).order("sendt_dato", { ascending: true }).limit(200)
       .then(({ data }) => setVenter(filtrerVenter((data as Venter[]) || [])));
   }, []);
+
+  // ---------- Gjort i dag ----------
+  const hentGjort = useCallback(async () => {
+    const fra = midnattOslo();
+    const [a, o] = await Promise.all([
+      supabase.from("aktiviteter").select("id, type, tittel, beskrivelse, dato, user_id, lead_id, kontakt_id, salgsmulighet_id, selskap_id")
+        .eq("aktivitet_kilde", "manuell").gte("dato", fra).order("dato", { ascending: false }).limit(500),
+      supabase.from("oppgaver").select("id, oppgave, updated_at, user_id, ansvarlig, lead_id, kontakt_id, salgsmulighet_id, selskap_id")
+        .eq("status", "Ferdig").gte("updated_at", fra).limit(500),
+    ]);
+    setGjortAkt((a.data as GjortAkt[]) || []);
+    setGjortOppg((o.data as GjortOppgave[]) || []);
+  }, []);
+  useEffect(() => {
+    void hentGjort();
+    supabase.from("profiles").select("user_id, display_name").then(({ data }) =>
+      setProfiler(Object.fromEntries(((data as { user_id: string; display_name: string | null }[]) || []).map(p => [p.user_id, p.display_name || ""]))));
+    const h = () => { void hentGjort(); setTimeout(() => void hentGjort(), 1500); };
+    window.addEventListener(GJORT_EVENT, h);
+    window.addEventListener("focus", h);
+    return () => { window.removeEventListener(GJORT_EVENT, h); window.removeEventListener("focus", h); };
+  }, [hentGjort]);
+  // Oppgaver markert Ferdig lagres i bakgrunnen – hent på nytt kort etter endringer.
+  useEffect(() => { const t = setTimeout(() => void hentGjort(), 2000); return () => clearTimeout(t); }, [oppgaver, hentGjort]);
+  const gjort = useMemo(() => byggGjort(gjortAkt, gjortOppg, midnattOslo())
+    .filter(r => min({ user_id: r.user_id, ansvarlig: r.key.startsWith("o-") ? r.ansvarlig : undefined })), [gjortAkt, gjortOppg, min]);
+  const gjortSum = oppsummer(gjort);
+  const navnFor = (r: (typeof gjort)[number]) => {
+    if (r.lead_id) { const l = leads.find(x => x.id === r.lead_id); if (l) return { ref: { type: "lead" as const, id: l.id }, navn: l.kontaktperson || l.firmanavn }; }
+    if (r.kontakt_id) { const k = kontakter.find(x => x.id === r.kontakt_id); if (k) return { ref: { type: "kontakt" as const, id: k.id }, navn: k.navn }; }
+    if (r.salgsmulighet_id) { const s = salgsmuligheter.find(x => x.id === r.salgsmulighet_id); if (s) return { ref: { type: "sm" as const, id: s.id }, navn: s.navn }; }
+    if (r.selskap_id) { const s = selskaper.find(x => x.id === r.selskap_id); if (s) return { selskap: s.id, navn: s.navn }; }
+    return { navn: "" };
+  };
+  const initialer = (n: string) => n.split(/\s+/).filter(Boolean).slice(0, 2).map(x => x[0]!.toUpperCase()).join("");
 
   // ---------- Møter ----------
   const synligeMoeter = useMemo(() => moeter.filter(m => {
@@ -187,6 +234,7 @@ export default function IDag() {
     { label: "Forfalt", verdi: forfalt, ikon: AlarmClock, onClick: () => scroll("folg-opp"), haster: forfalt > 0 },
     { label: "Nye leads siden i går", verdi: nyeLeads, ikon: UserPlus, onClick: () => navigate("/leads?status=Ny") },
     { label: "Salg uten neste steg", verdi: utenNesteSteg, ikon: TrendingDown, onClick: () => scroll("stille") },
+    { label: "Gjort i dag", verdi: gjort.length, ikon: ListChecks, onClick: () => scroll("gjort") },
   ];
 
   return (
@@ -204,7 +252,7 @@ export default function IDag() {
       }
     >
       <div className="mx-auto max-w-[1300px] space-y-6">
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
           {tall.map(t => (
             <Button key={t.label} variant="outline" onClick={t.onClick} className="h-auto min-h-20 justify-start gap-3 whitespace-normal rounded-lg bg-card p-4 text-left shadow-card hover:bg-card">
               <span className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-md", t.haster ? "bg-warning/15 text-warning" : "bg-primary/15 text-foreground")}><t.ikon className="h-4 w-4" /></span>
@@ -217,8 +265,9 @@ export default function IDag() {
         </div>
 
         <div className="grid gap-6 lg:grid-cols-2">
-          <Seksjon id="moeter" tittel="Dagens møter" antall={synligeMoeter.length} lenke={<Link to="/kalender" className="text-xs font-medium text-muted-foreground hover:text-foreground">Kalender</Link>}>
-            {synligeMoeter.length === 0 ? <Tom>Ingen eksterne møter i dag eller i morgen.</Tom> : (
+          <div className="space-y-6">
+          <Seksjon id="moeter" tittel="Dagens møter" kompakt={synligeMoeter.length === 0} antall={synligeMoeter.length} lenke={<Link to="/kalender" className="text-xs font-medium text-muted-foreground hover:text-foreground">Kalender</Link>}>
+            {synligeMoeter.length === 0 ? <p className="px-2 text-sm text-muted-foreground">Ingen eksterne møter i dag eller i morgen.</p> : (
               <ul className="divide-y">
                 {synligeMoeter.map(m => {
                   const start = m.start_tid || m.dato;
@@ -244,6 +293,40 @@ export default function IDag() {
               </ul>
             )}
           </Seksjon>
+
+          <Seksjon id="gjort" tittel="Gjort i dag" antall={gjort.length}>
+            <div className="flex flex-wrap gap-x-4 gap-y-1 border-b px-3 pb-3 pt-1 text-xs text-muted-foreground">
+              {([["Samtaler", gjortSum.samtaler], ["Snakket med", gjortSum.snakket], ["Møter booket", gjortSum.booket], ["Meldinger", gjortSum.meldinger], ["Oppgaver fullført", gjortSum.oppgaver]] as const).map(([l, v]) => (
+                <span key={l}><span className="font-semibold text-foreground tabular-nums">{v}</span> {l}</span>
+              ))}
+            </div>
+            {gjort.length === 0 ? <Tom>Ingenting logget ennå i dag – første samtale venter!</Tom> : (
+              <>
+                <ul className="divide-y">
+                  {(visAlleGjort ? gjort : gjort.slice(0, 10)).map(r => {
+                    const n = navnFor(r);
+                    const hvem = profiler[r.user_id || ""] || r.ansvarlig || "";
+                    return (
+                      <li key={r.key} className="flex items-start gap-3 px-3 py-2.5">
+                        <span className="w-11 shrink-0 pt-0.5 text-xs font-semibold tabular-nums">{tid(r.tid)}</span>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm">
+                            <span className="font-medium">{r.label}</span>
+                            {n.navn && <> · {"ref" in n && n.ref ? <KundeNavn r={n.ref}>{n.navn}</KundeNavn> : "selskap" in n ? <SelskapNavn id={n.selskap}>{n.navn}</SelskapNavn> : n.navn}</>}
+                            {r.type === "oppgave" && <span className="text-muted-foreground"> · {r.tittel}</span>}
+                          </p>
+                          {r.notat && <p className="truncate text-xs text-muted-foreground">{r.notat}</p>}
+                        </div>
+                        {filter === "teamet" && hvem && <span title={hvem} className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-semibold">{initialer(hvem)}</span>}
+                      </li>
+                    );
+                  })}
+                </ul>
+                {gjort.length > 10 && <Button variant="link" size="sm" className="px-3" onClick={() => setVisAlleGjort(v => !v)}>{visAlleGjort ? "Vis færre" : `Vis alle (${gjort.length})`}</Button>}
+              </>
+            )}
+          </Seksjon>
+          </div>
 
           <Seksjon id="folg-opp" tittel="Følg opp nå" antall={folgOpp.length}>
             {folgOpp.length === 0 ? <Tom>Ingen forfalte oppfølginger.</Tom> : (
