@@ -11,7 +11,7 @@ export const LOGG_VALG: { id: LoggValg; label: string; hint: string }[] = [
   { id: "svarte_ikke", label: "Svarte ikke", hint: "Ny ring om 2 dager" },
   { id: "ring_tilbake", label: "Ring tilbake", hint: "Velg tidspunkt" },
   { id: "booket", label: "Booket møte", hint: "Blir salgsmulighet" },
-  { id: "ikke_naa", label: "Ikke nå", hint: "Ny kontakt om 30 dager" },
+  { id: "ikke_naa", label: "Ikke nå", hint: "Senere – ta opp igjen" },
   { id: "ikke_interessert", label: "Ikke interessert", hint: "Ut av oppfølging" },
   { id: "melding", label: "Melding sendt", hint: "SMS eller e-post" },
   { id: "notat", label: "Notat", hint: "Bare notat" },
@@ -50,6 +50,20 @@ export function ringTilbakeTid(valg: RingTilbake, naa: Date = new Date()): Oppfo
   return { dato: lokalDato(d), tid: "09:00" };
 }
 
+export const IKKE_NAA_VALG: { mnd: number | null; label: string }[] = [
+  { mnd: 1, label: "1 mnd" }, { mnd: 3, label: "3 mnd" }, { mnd: 6, label: "6 mnd" }, { mnd: null, label: "Egendefinert" },
+];
+
+/** «Ikke nå»: dato om N måneder (standard 3). */
+export function ikkeNaaDato(mnd: number, naa: Date = new Date()): Oppfolging {
+  const d = new Date(naa); d.setMonth(d.getMonth() + mnd);
+  return { dato: lokalDato(d), tid: "" };
+}
+
+/** Leadet er «Senere» så lenge datoen ikke er nådd – beregnes ved visning. */
+export const erSenere = (senereTil: string | null | undefined, idag: string = lokalDato(new Date())) =>
+  Boolean(senereTil && senereTil.slice(0, 10) > idag);
+
 /** Forhåndsutfylt «Neste oppfølging» per valg. Tom dato = ingen ny oppgave. */
 export function forslagOppfolging(valg: LoggValg, naa: Date = new Date()): Oppfolging {
   switch (valg) {
@@ -57,7 +71,7 @@ export function forslagOppfolging(valg: LoggValg, naa: Date = new Date()): Oppfo
     case "svarte_ikke": return { dato: plussDager(naa, 2), tid: "" };
     case "ring_tilbake": return ringTilbakeTid("1t", naa);
     case "booket": return { dato: plussDager(naa, 1), tid: "10:00" };
-    case "ikke_naa": return { dato: plussDager(naa, 30), tid: "" };
+    case "ikke_naa": return ikkeNaaDato(3, naa);
     case "melding": return { dato: plussDager(naa, 3), tid: "" };
     default: return { dato: "", tid: "" };
   }
