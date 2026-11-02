@@ -13,8 +13,10 @@ import { useAuth } from "@/hooks/use-auth";
 import { useIsMobile } from "@/hooks/use-mobile";
 import type { KundeRef } from "@/hooks/use-kort";
 import { cn } from "@/lib/utils";
+import EpostTraadDialog, { type EpostForVisning } from "@/components/EpostTraadDialog";
+import { epostKontaktTekst, epostTraadId, renAktivitetstekst } from "@/lib/aktivitet-visning";
 
-interface Hist { id: string; type: string; tittel: string | null; beskrivelse: string; dato: string }
+interface Hist { id: string; type: string; tittel: string | null; beskrivelse: string; dato: string; aktivitet_kilde?: string | null }
 const Tittel = ({ children }: { children: React.ReactNode }) => <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{children}</h3>;
 
 export default function SelskapKort({ id, onClose, onKunde }: { id: string; onClose: () => void; onKunde: (r: KundeRef) => void }) {
@@ -36,6 +38,7 @@ export default function SelskapKort({ id, onClose, onKunde }: { id: string; onCl
   const [form, setForm] = useState({ firmanavn: "", orgnr: "", telefon: "", e_post: "", domene: "" });
   const [ny, setNy] = useState<{ navn: string; telefon: string; e_post: string; rolle: string } | null>(null);
   const [hist, setHist] = useState<Hist[]>([]);
+  const [visEpost, setVisEpost] = useState<EpostForVisning | null>(null);
 
   useEffect(() => {
     supabase.from("selskaper").select("telefon, e_post").eq("id", id).maybeSingle()
@@ -49,7 +52,7 @@ export default function SelskapKort({ id, onClose, onKunde }: { id: string; onCl
     if (mineKontakter.length) deler.push(`kontakt_id.in.(${mineKontakter.map(k => k.id).join(",")})`);
     if (mineSm.length) deler.push(`salgsmulighet_id.in.(${mineSm.map(x => x.id).join(",")})`);
     if (mineLeads.length) deler.push(`lead_id.in.(${mineLeads.map(l => l.id).join(",")})`);
-    supabase.from("aktiviteter").select("id, type, tittel, beskrivelse, dato").or(deler.join(",")).order("dato", { ascending: false }).limit(25)
+    supabase.from("aktiviteter").select("id, type, tittel, beskrivelse, dato, aktivitet_kilde").or(deler.join(",")).order("dato", { ascending: false }).limit(25)
       .then(({ data }) => setHist((data as Hist[]) || []));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [histKey]);
@@ -75,6 +78,7 @@ export default function SelskapKort({ id, onClose, onKunde }: { id: string; onCl
   const nettside = s.domene ? (s.domene.startsWith("http") ? s.domene : `https://${s.domene}`) : "";
 
   return (
+    <>
     <Sheet open onOpenChange={o => !o && onClose()}>
       <SheetContent side={isMobile ? "bottom" : "right"} className={cn("overflow-y-auto", isMobile ? "max-h-[90vh] rounded-t-xl" : "w-full sm:max-w-md")}>
         <SheetHeader className="text-left">
@@ -163,17 +167,30 @@ export default function SelskapKort({ id, onClose, onKunde }: { id: string; onCl
             <Tittel>Historikk</Tittel>
             {hist.length === 0 ? <p className="text-sm text-muted-foreground">Ingen aktiviteter ennå.</p> : (
               <ul className="divide-y rounded-lg border">
-                {hist.map(h => (
-                  <li key={h.id} className="px-3 py-2">
-                    <p className="flex justify-between gap-2 text-sm font-medium"><span className="truncate">{h.tittel || h.type}</span><span className="shrink-0 text-xs font-normal text-muted-foreground tabular-nums">{format(new Date(h.dato), "d. MMM HH:mm", { locale: nb })}</span></p>
-                    {h.beskrivelse && h.beskrivelse !== h.tittel && <p className="line-clamp-2 text-xs text-muted-foreground">{h.beskrivelse}</p>}
-                  </li>
-                ))}
+                {hist.map(h => {
+                  const kropp = renAktivitetstekst(h.beskrivelse);
+                  const kontakt = epostKontaktTekst(h.beskrivelse, h.aktivitet_kilde === "gmail_sendt");
+                  const innhald = (
+                    <>
+                      <p className="flex justify-between gap-2 text-sm font-medium"><span className="min-w-0 flex-1 truncate">{h.tittel || h.type}</span><span className="shrink-0 text-xs font-normal text-muted-foreground tabular-nums">{kontakt && <span>{kontakt} · </span>}{format(new Date(h.dato), "d. MMM HH:mm", { locale: nb })}</span></p>
+                      {kropp && kropp !== (h.tittel || "").trim() && <p className="line-clamp-2 text-xs text-muted-foreground">{kropp}</p>}
+                    </>
+                  );
+                  return (
+                    <li key={h.id} className="px-3 py-2">
+                      {epostTraadId(h.beskrivelse) ? (
+                        <button type="button" onClick={() => setVisEpost(h)} className="-mx-3 -my-2 block w-full rounded-lg px-3 py-2 text-left hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{innhald}</button>
+                      ) : innhald}
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </section>
         </div>
       </SheetContent>
     </Sheet>
+    <EpostTraadDialog epost={visEpost} onOpenChange={o => !o && setVisEpost(null)} />
+    </>
   );
 }

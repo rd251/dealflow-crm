@@ -1,4 +1,5 @@
 /** Ren logikk for «Gjort i dag» på Oversikt. Leser kun eksisterende aktiviteter og ferdige oppgaver. */
+import { renAktivitetstekst } from "@/lib/aktivitet-visning";
 
 export type GjortType = "snakket" | "svarte_ikke" | "ring_tilbake" | "booket" | "ikke_naa" | "ikke_interessert" | "melding" | "notat" | "oppgave" | "annet";
 
@@ -47,7 +48,7 @@ export function byggGjort(akt: GjortAkt[], oppg: GjortOppgave[], fra: string): G
   const rader: GjortRad[] = [
     ...akt.filter(a => a.type !== "Møte" && new Date(a.dato).getTime() >= fraMs).map(a => {
       const type = klassifiser(a);
-      const besk = (a.beskrivelse || "").trim();
+      const besk = renAktivitetstekst(a.beskrivelse);
       return {
         key: `a-${a.id}`, tid: a.dato, type, label: GJORT_LABEL[type], tittel: a.tittel || "",
         notat: besk && besk !== (a.tittel || "").trim() ? besk.split("\n")[0] : "",

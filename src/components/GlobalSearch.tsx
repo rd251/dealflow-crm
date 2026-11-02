@@ -4,6 +4,7 @@ import { Search, Building2, User, Briefcase, Users, Handshake, X, Loader2, Mail,
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
+import { renAktivitetstekst } from "@/lib/aktivitet-visning";
 
 interface SearchResult {
   id: string;
@@ -119,7 +120,8 @@ export default function GlobalSearch({ className = "mb-4" }: { className?: strin
             ? m.deltakere.filter((d: string) => d && !uuidRe.test(d))
             : [];
           const deltakere = deltakereArr.length > 0 ? deltakereArr.slice(0, 2).join(", ") : null;
-          const beskrivelse = m.beskrivelse && !uuidRe.test(m.beskrivelse.trim()) ? m.beskrivelse.slice(0, 60) : null;
+          const ru = renAktivitetstekst(m.beskrivelse);
+          const beskrivelse = ru && !uuidRe.test(ru) ? ru.slice(0, 60) : null;
           out.push({
             id: m.id, type: "moete",
             title: m.tittel || "Møte uten tittel",

@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Trash2, RotateCcw, Loader2, ChevronDown, ChevronUp } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { nb } from "date-fns/locale";
+import { renAktivitetstekst } from "@/lib/aktivitet-visning";
 
 interface DeletedItem {
   id: string;
@@ -43,7 +44,7 @@ const TABLE_COLORS: Record<string, string> = {
 
 function getItemLabel(item: DeletedItem): string {
   const d = item.record_data;
-  return d.firmanavn || d.navn || d.prosjektnavn || d.partnernavn || d.oppgave || d.tittel || d.beskrivelse?.substring(0, 50) || item.record_id.substring(0, 8);
+  return d.firmanavn || d.navn || d.prosjektnavn || d.partnernavn || d.oppgave || d.tittel || renAktivitetstekst(d.beskrivelse).substring(0, 50) || item.record_id.substring(0, 8);
 }
 
 export default function DeletedItemsLog() {

@@ -5,6 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useProfiles } from "@/hooks/use-profiles";
 import { typeColors, typeIcons, type AktivitetType } from "@/components/ActivityLog";
+import EpostTraadDialog, { type EpostForVisning } from "@/components/EpostTraadDialog";
+import { epostKontaktTekst, epostTraadId, renAktivitetstekst } from "@/lib/aktivitet-visning";
 import { cn } from "@/lib/utils";
 
 /** Hvor mange rader som vises før «Vis alle». */
@@ -17,6 +19,7 @@ interface Rad {
   beskrivelse: string;
   dato: string;
   user_id?: string | null;
+  aktivitet_kilde?: string | null;
   fase: string;
 }
 
@@ -41,6 +44,7 @@ export default function PersonTimeline({ kontakt_id, selskap_id, e_post, maks, t
   const [rader, setRader] = useState<Rad[]>([]);
   const [laster, setLaster] = useState(true);
   const [utvidet, setUtvidet] = useState(false);
+  const [visEpost, setVisEpost] = useState<EpostForVisning | null>(null);
 
   const hent = useCallback(async () => {
     if (!kontakt_id && !selskap_id && !e_post) { setRader([]); setLaster(false); return; }
@@ -75,7 +79,7 @@ export default function PersonTimeline({ kontakt_id, selskap_id, e_post, maks, t
 
       const { data } = await supabase
         .from("aktiviteter")
-        .select("id, type, tittel, beskrivelse, dato, user_id, lead_id, salgsmulighet_id, selskap_id, partner_id, prosjekt_id")
+        .select("id, type, tittel, beskrivelse, dato, user_id, lead_id, salgsmulighet_id, selskap_id, partner_id, prosjekt_id, aktivitet_kilde")
         .or(filtre.join(","))
         .order("dato", { ascending: false })
         .limit(300);
@@ -94,6 +98,7 @@ export default function PersonTimeline({ kontakt_id, selskap_id, e_post, maks, t
           beskrivelse: a.beskrivelse || "",
           dato: a.dato,
           user_id: a.user_id,
+          aktivitet_kilde: a.aktivitet_kilde,
           fase,
         };
       });
@@ -117,6 +122,7 @@ export default function PersonTimeline({ kontakt_id, selskap_id, e_post, maks, t
   const synlige = rader.slice(0, grense);
 
   return (
+    <>
     <section className="rounded-lg border bg-card shadow-card">
       <header className="flex items-center justify-between gap-3 border-b px-4 py-3">
         <div className="flex items-center gap-2">
@@ -139,8 +145,15 @@ export default function PersonTimeline({ kontakt_id, selskap_id, e_post, maks, t
         <ol className="divide-y">
           {synlige.map(rad => {
             const Icon = typeIcons[rad.type] || typeIcons["Notat"];
+            const tråd = epostTraadId(rad.beskrivelse);
+            const kropp = renAktivitetstekst(rad.beskrivelse);
+            const kontakt = epostKontaktTekst(rad.beskrivelse, rad.aktivitet_kilde === "gmail_sendt");
             return (
-              <li key={rad.id} className="flex gap-3 px-4 py-3">
+              <li key={rad.id}
+                className={cn("flex gap-3 px-4 py-3", tråd && "cursor-pointer rounded-lg hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring")}
+                onClick={tråd ? () => setVisEpost(rad) : undefined}
+                onKeyDown={tråd ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setVisEpost(rad); } } : undefined}
+                {...(tråd ? { role: "button", tabIndex: 0 } : {})}>
                 <span className={cn("mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md", typeColors[rad.type] || typeColors["Notat"])}>
                   <Icon className="h-3.5 w-3.5" />
                 </span>
@@ -149,11 +162,11 @@ export default function PersonTimeline({ kontakt_id, selskap_id, e_post, maks, t
                     <p className="text-sm font-medium">{rad.tittel}</p>
                     <Badge variant="outline" className="text-[10px] font-normal text-muted-foreground">{rad.fase}</Badge>
                   </div>
-                  {rad.beskrivelse && rad.beskrivelse !== rad.tittel && (
-                    <p className="mt-0.5 whitespace-pre-wrap text-xs text-muted-foreground">{rad.beskrivelse}</p>
+                  {kropp && kropp !== rad.tittel && (
+                    <p className="mt-0.5 whitespace-pre-wrap text-xs text-muted-foreground">{kropp}</p>
                   )}
                   <p className="mt-1 text-[11px] text-muted-foreground tabular-nums">
-                    {tidspunkt(rad.dato)} · {navnPaa(rad.user_id)}
+                    {kontakt && <span>{kontakt} · </span>}{tidspunkt(rad.dato)} · {navnPaa(rad.user_id)}
                   </p>
                 </div>
               </li>
@@ -170,5 +183,7 @@ export default function PersonTimeline({ kontakt_id, selskap_id, e_post, maks, t
         </div>
       )}
     </section>
+    <EpostTraadDialog epost={visEpost} onOpenChange={o => !o && setVisEpost(null)} />
+    </>
   );
 }
