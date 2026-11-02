@@ -16,6 +16,7 @@ import { useAuth } from "@/hooks/use-auth";
 import LogActivityDialog from "@/components/LogActivityDialog";
 import type { ActivityTarget } from "@/lib/activity-logging";
 import type { ActivityLogResult } from "@/lib/lead-activity-result";
+import { epostKontaktTekst, epostTraadId, renAktivitetstekst } from "@/lib/aktivitet-visning";
 
 const API_URL = import.meta.env.VITE_SUPABASE_URL + '/rest/v1';
 const getApiHeaders = async () => {
@@ -261,15 +262,8 @@ export default function ActivityLog(props: ActivityLogProps) {
 
   const handleThreadAi = async (action: "summarize" | "extract" | "draft") => {
     if (!viewingEmail) return;
-    // Extract threadId from beskrivelse — gmail-sync stores it as [threadId:xxx]
-    const threadMatch = viewingEmail.beskrivelse.match(/\[threadId:([^\]]+)\]/);
-    // Fallback: use ekstern_id
-    const threadId = threadMatch?.[1] || viewingEmail.id;
-
-    // For draft, we need the ekstern_id which is the Gmail message id
-    // The threadId for Gmail is typically the first message id in the thread
-    // We'll try ekstern_id first as it's more reliable
-    const gmailThreadId = threadMatch?.[1];
+    // Tråd-ID blir tekne ut av beskrivelsen — gmail-sync lagrar han som [threadId:xxx]
+    const gmailThreadId = epostTraadId(viewingEmail.beskrivelse);
     if (!gmailThreadId) {
       toast.error("Kunne ikke finne tråd-ID for denne e-posten. Tråd-AI krever en synkronisert Gmail-melding.");
       return;
@@ -335,6 +329,8 @@ export default function ActivityLog(props: ActivityLogProps) {
             const isExternal = isGmail || isGCal;
             const FallbackIcon = typeIcons[a.type] || FileText;
             const displayTitle = a.tittel || a.type;
+            const kontakt = epostKontaktTekst(a.beskrivelse, isSent);
+            const kropp = renAktivitetstekst(a.beskrivelse);
             return (
               <div
                 key={a.id}
@@ -370,6 +366,7 @@ export default function ActivityLog(props: ActivityLogProps) {
                         </TooltipContent>
                       </Tooltip>
                     )}
+                    {kontakt && <span className="text-[10px] text-muted-foreground shrink-0 max-w-[150px] truncate">{kontakt} ·</span>}
                     <span className="text-[10px] text-muted-foreground flex items-center gap-0.5 shrink-0"><Clock className="w-2.5 h-2.5" />{formatDato(a.dato)}</span>
                     {!isExternal && (
                       <DropdownMenu>
@@ -389,7 +386,7 @@ export default function ActivityLog(props: ActivityLogProps) {
                       </DropdownMenu>
                     )}
                   </div>
-                  <p className="text-[11px] text-muted-foreground mt-0.5 whitespace-pre-line line-clamp-1 break-words">{a.beskrivelse}</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5 whitespace-pre-line line-clamp-1 break-words">{kropp}</p>
                 </div>
               </div>
             );
@@ -461,15 +458,8 @@ export default function ActivityLog(props: ActivityLogProps) {
           {(() => {
             if (!viewingEmail) return null;
             const isSent = viewingEmail.aktivitet_kilde === 'gmail_sendt';
-            const rawDesc = viewingEmail.beskrivelse || '';
-            // Extract email addresses from [xxx@yyy.zz] tags
-            const emailTags = rawDesc.match(/\[[^\]]+@[^\]]+\]/g) || [];
-            const addresses = emailTags.map(t => t.slice(1, -1));
-            // Clean body: remove [threadId:...] and [email] tags
-            const cleanBody = rawDesc
-              .replace(/\[threadId:[^\]]+\]\s*/g, '')
-              .replace(/\[[^\]]+@[^\]]+\]\s*/g, '')
-              .trim();
+            const addresses = epostAdresser(viewingEmail.beskrivelse);
+            const cleanBody = renAktivitetstekst(viewingEmail.beskrivelse);
             const subject = viewingEmail.tittel || 'E-post';
             const dateStr = new Date(viewingEmail.dato).toLocaleDateString("no-NO", {
               day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit",

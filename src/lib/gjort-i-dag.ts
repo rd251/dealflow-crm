@@ -47,7 +47,7 @@ export function byggGjort(akt: GjortAkt[], oppg: GjortOppgave[], fra: string): G
   const rader: GjortRad[] = [
     ...akt.filter(a => a.type !== "Møte" && new Date(a.dato).getTime() >= fraMs).map(a => {
       const type = klassifiser(a);
-      const besk = (a.beskrivelse || "").trim();
+      const besk = renAktivitetstekst(a.beskrivelse);
       return {
         key: `a-${a.id}`, tid: a.dato, type, label: GJORT_LABEL[type], tittel: a.tittel || "",
         notat: besk && besk !== (a.tittel || "").trim() ? besk.split("\n")[0] : "",
