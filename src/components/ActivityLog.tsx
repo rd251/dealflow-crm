@@ -14,7 +14,7 @@ import MeetingFields from "@/components/MeetingFields";
 import SendEmailDialog from "@/components/SendEmailDialog";
 import { useAuth } from "@/hooks/use-auth";
 import LogActivityDialog from "@/components/LogActivityDialog";
-import { QUICK_ACTIONS, loggAktivitet, type ActivityTarget } from "@/lib/activity-logging";
+import type { ActivityTarget } from "@/lib/activity-logging";
 import type { ActivityLogResult } from "@/lib/lead-activity-result";
 
 const API_URL = import.meta.env.VITE_SUPABASE_URL + '/rest/v1';
@@ -113,7 +113,6 @@ export default function ActivityLog(props: ActivityLogProps) {
   const [profiles, setProfiles] = useState<Record<string, UserProfile>>({});
   const [dialogOpen, setDialogOpen] = useState(false);
   const [logOpen, setLogOpen] = useState(false);
-  const [quickBusy, setQuickBusy] = useState<string | null>(null);
   const [type, setType] = useState<AktivitetType>("Telefonsamtale");
   const [beskrivelse, setBeskrivelse] = useState("");
   const [loading, setLoading] = useState(false);
@@ -181,23 +180,6 @@ export default function ActivityLog(props: ActivityLogProps) {
   const openCreate = () => {
     setEditingId(null);
     setLogOpen(true);
-  };
-
-  const kjørHurtighandling = async (id: string) => {
-    const handling = QUICK_ACTIONS.find(q => q.id === id);
-    if (!handling || !harTarget) return;
-    setQuickBusy(id);
-    try {
-      const result = await loggAktivitet({ logg: handling.logg, target: aktivitetTarget, tittel: handling.tittel, notat: handling.beskrivelse });
-      toast.success(`${handling.label} · logget`);
-      await fetchAktiviteter();
-      props.onActivityLogged?.(result);
-    } catch (e) {
-      console.error(e);
-      toast.error("Kunne ikke logge aktiviteten");
-    } finally {
-      setQuickBusy(null);
-    }
   };
 
   // Expose openCreate to parent via ref
@@ -338,29 +320,9 @@ export default function ActivityLog(props: ActivityLogProps) {
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Aktivitetslogg</span>
         <Button size="sm" variant="outline" className="text-xs h-7 gap-1" onClick={openCreate} disabled={!harTarget}>
-          <Plus className="w-3 h-3" /> Logg aktivitet
+          <Plus className="w-3 h-3" /> Logg
         </Button>
       </div>
-
-      {harTarget && (
-        <div className="flex flex-wrap gap-1.5">
-          {QUICK_ACTIONS.map(q => {
-            const QIcon = q.icon;
-            return (
-              <button
-                key={q.id}
-                type="button"
-                disabled={quickBusy !== null}
-                onClick={() => kjørHurtighandling(q.id)}
-                className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2 py-1 text-[11px] text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground disabled:opacity-50"
-              >
-                <QIcon className={`w-3 h-3 ${q.tone}`} />
-                {q.label}
-              </button>
-            );
-          })}
-        </div>
-      )}
 
       {aktiviteter.length === 0 ? (
         <p className="text-xs text-muted-foreground italic py-2">Ingen aktiviteter registrert</p>

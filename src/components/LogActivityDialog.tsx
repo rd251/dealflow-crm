@@ -1,386 +1,115 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon, Loader2, Search } from "lucide-react";
-import { format } from "date-fns";
-import { nb } from "date-fns/locale";
-import { cn } from "@/lib/utils";
-import { toast } from "sonner";
+import { Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import MeetingFields from "@/components/MeetingFields";
-import {
-  LOGG_TYPER,
-  loggAktivitet,
-  loggTypeDef,
-  type ActivityTarget,
-  type LoggType,
-} from "@/lib/activity-logging";
-import { LEAD_OPPFOLGING_DAGER, type LeadUtfallNokkel } from "@/lib/follow-up-rules";
+import LoggUtfall, { type LoggResultat } from "@/components/LoggUtfall";
+import type { ActivityTarget, LoggType } from "@/lib/activity-logging";
 
-/** Utfall per aktivitetstype – styrer foreslått oppfølgingsdato. */
-const UTFALL_FOR_TYPE: Record<LoggType, LeadUtfallNokkel> = {
-  ringte: "snakket",
-  ikke_svar: "svarte_ikke",
-  moete: "snakket",
-  epost: "snakket",
-  notat: "snakket",
-  neste_steg: "snakket",
-};
-
-/** Terskler for søket i «Gjelder». */
-const SOK_GRENSE = 25;
-const SOK_MAKS_TREFF = 12;
+const SOK_GRENSE = 15;
 const SOK_DEBOUNCE_MS = 250;
 
-interface KontaktOption { id: string; navn: string }
-
-
-interface TargetOption {
-  key: string;
-  label: string;
-  sublabel: string;
-  target: ActivityTarget;
-}
+interface TargetOption { key: string; label: string; sublabel: string; navn: string; target: ActivityTarget }
 
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   /** Fast tilknytning når dialogen åpnes fra et kort. */
   target?: ActivityTarget;
-  /** Lar brukeren velge tilknytning i dialogen (global hurtigknapp). */
+  /** Første steg er søk etter kontakt, lead eller selskap (global «+ Logg»). */
   allowTargetPick?: boolean;
   entityName?: string;
-  kontaktListe?: KontaktOption[];
+  /** Beholdt for bakoverkompatibilitet – brukes ikke lenger. */
+  kontaktListe?: { id: string; navn: string }[];
   defaultType?: LoggType;
-  onLogged?: (res?: { id: string | null; nesteOppfolging: string; ikkeAktuelt: boolean }) => void;
+  onLogged?: (res?: LoggResultat) => void;
 }
 
-export default function LogActivityDialog({
-  open,
-  onOpenChange,
-  target,
-  allowTargetPick,
-  entityName,
-  kontaktListe,
-  defaultType = "ringte",
-  onLogged,
-}: Props) {
-  const [type, setType] = useState<LoggType>(defaultType);
-  const [notat, setNotat] = useState("");
-  const [nesteSteg, setNesteSteg] = useState("");
-  const [nesteStegDato, setNesteStegDato] = useState<Date | undefined>();
-  const [oppfolgingDato, setOppfolgingDato] = useState<Date | undefined>();
-  const [ikkeInteressert, setIkkeInteressert] = useState(false);
-  const [saving, setSaving] = useState(false);
-
-  const [meetingTittel, setMeetingTittel] = useState("");
-  const [meetingDato, setMeetingDato] = useState("");
-  const [meetingStartTid, setMeetingStartTid] = useState("09:00");
-  const [meetingSluttTid, setMeetingSluttTid] = useState("10:00");
-  const [meetingDeltakere, setMeetingDeltakere] = useState<string[]>([]);
-
-  const [options, setOptions] = useState<TargetOption[]>([]);
+/** Dialog rundt den felles loggkomponenten. */
+export default function LogActivityDialog({ open, onOpenChange, target, allowTargetPick, entityName, onLogged }: Props) {
   const [søk, setSøk] = useState("");
+  const [options, setOptions] = useState<TargetOption[]>([]);
   const [valgt, setValgt] = useState<TargetOption | null>(null);
 
-  useEffect(() => {
-    if (!open) return;
-    setType(defaultType);
-    setNotat("");
-    setNesteSteg("");
-    setNesteStegDato(undefined);
-    setOppfolgingDato(undefined);
-    setIkkeInteressert(false);
-    setValgt(null);
-    setSøk("");
-    setMeetingTittel("");
-    setMeetingDato(new Date().toISOString().split("T")[0]);
-    setMeetingStartTid("09:00");
-    setMeetingSluttTid("10:00");
-    setMeetingDeltakere([]);
-  }, [open, defaultType]);
+  useEffect(() => { if (open) { setValgt(null); setSøk(""); } }, [open]);
 
-  // Søker direkte i databasen slik at hele CRM-et er tilgjengelig, ikke bare de først lastede radene.
   useEffect(() => {
-    if (!open || !allowTargetPick) return;
+    if (!open || !allowTargetPick || valgt) return;
     let avbrutt = false;
     const q = søk.trim();
     const timer = setTimeout(async () => {
       const like = `%${q}%`;
-      const selQ = supabase.from("selskaper").select("id, firmanavn").order("firmanavn").limit(SOK_GRENSE);
-      const leadQ = supabase.from("leads").select("id, firmanavn, kontaktperson").order("sist_aktivitet", { ascending: false }).limit(SOK_GRENSE);
-      const smQ = supabase.from("salgsmuligheter").select("id, navn, selskap_id, selskaper(firmanavn)").order("sist_aktivitet", { ascending: false }).limit(SOK_GRENSE);
+      const kQ = supabase.from("kontakter").select("id, navn, selskap_id, selskaper(firmanavn)").order("updated_at", { ascending: false }).limit(SOK_GRENSE);
+      const lQ = supabase.from("leads").select("id, firmanavn, kontaktperson").order("sist_aktivitet", { ascending: false }).limit(SOK_GRENSE);
+      const sQ = supabase.from("selskaper").select("id, firmanavn").order("firmanavn").limit(SOK_GRENSE);
+      const smQ = supabase.from("salgsmuligheter").select("id, navn, kontaktperson, selskap_id, kontakt_id, selskaper(firmanavn)").order("sist_aktivitet", { ascending: false }).limit(SOK_GRENSE);
       if (q) {
-        selQ.ilike("firmanavn", like);
-        leadQ.or(`firmanavn.ilike.${like},kontaktperson.ilike.${like}`);
-        smQ.or(`navn.ilike.${like}`);
+        kQ.ilike("navn", like);
+        lQ.or(`firmanavn.ilike.${like},kontaktperson.ilike.${like}`);
+        sQ.ilike("firmanavn", like);
+        smQ.or(`navn.ilike.${like},kontaktperson.ilike.${like}`);
       }
-      const [sel, lead, sm] = await Promise.all([selQ, leadQ, smQ]);
+      const [k, l, s, sm] = await Promise.all([kQ, lQ, sQ, smQ]);
       if (avbrutt) return;
-
-      const smRader = (sm.data || []) as Array<{ id: string; navn: string | null; selskap_id: string | null; selskaper?: { firmanavn: string | null } | null }>;
-      // Selskapsnavn er alltid hovedetiketten – salgsmulighetens navn er ofte et use case og dårlig søkbart.
-      const liste: TargetOption[] = [
-        ...smRader.map(s => {
-          const firma = s.selskaper?.firmanavn?.trim();
-          return {
-            key: `sm-${s.id}`,
-            label: firma || s.navn || "Uten navn",
-            sublabel: firma && s.navn ? `Salgsmulighet · ${s.navn}` : "Salgsmulighet",
-            target: { salgsmulighet_id: s.id, selskap_id: s.selskap_id ?? undefined },
-          } as TargetOption;
-        }),
-        ...(lead.data || []).map(l => ({
-          key: `lead-${l.id}`,
-          label: (l.firmanavn || l.kontaktperson || "Uten navn") as string,
-          sublabel: l.kontaktperson ? `Lead · ${l.kontaktperson}` : "Lead",
-          target: { lead_id: l.id },
+      type MedSelskap = { selskaper?: { firmanavn: string | null } | null };
+      setOptions([
+        ...((k.data || []) as Array<{ id: string; navn: string; selskap_id: string | null } & MedSelskap>).map(x => ({
+          key: `k-${x.id}`, label: x.navn, navn: x.navn, sublabel: `Kontakt${x.selskaper?.firmanavn ? ` · ${x.selskaper.firmanavn}` : ""}`,
+          target: { kontakt_id: x.id, selskap_id: x.selskap_id || undefined },
         })),
-        ...(sel.data || []).map(s => ({ key: `sel-${s.id}`, label: s.firmanavn, sublabel: "Kunde", target: { selskap_id: s.id } })),
-      ];
-      setOptions(liste);
+        ...((l.data || []) as Array<{ id: string; firmanavn: string | null; kontaktperson: string | null }>).map(x => ({
+          key: `l-${x.id}`, label: x.kontaktperson || x.firmanavn || "Uten navn", navn: x.kontaktperson || x.firmanavn || "",
+          sublabel: `Lead${x.firmanavn && x.kontaktperson ? ` · ${x.firmanavn}` : ""}`, target: { lead_id: x.id },
+        })),
+        ...((sm.data || []) as Array<{ id: string; navn: string | null; kontaktperson: string | null; selskap_id: string | null; kontakt_id: string | null } & MedSelskap>).map(x => ({
+          key: `sm-${x.id}`, label: x.selskaper?.firmanavn || x.navn || "Uten navn", navn: x.kontaktperson || x.selskaper?.firmanavn || x.navn || "",
+          sublabel: `Salgsmulighet${x.navn ? ` · ${x.navn}` : ""}`,
+          target: { salgsmulighet_id: x.id, selskap_id: x.selskap_id || undefined, kontakt_id: x.kontakt_id || undefined },
+        })),
+        ...((s.data || []) as Array<{ id: string; firmanavn: string }>).map(x => ({ key: `s-${x.id}`, label: x.firmanavn, navn: x.firmanavn, sublabel: "Selskap", target: { selskap_id: x.id } })),
+      ]);
     }, q ? SOK_DEBOUNCE_MS : 0);
     return () => { avbrutt = true; clearTimeout(timer); };
-  }, [open, allowTargetPick, søk]);
+  }, [open, allowTargetPick, søk, valgt]);
 
-  const filtrerte = useMemo(() => options.slice(0, SOK_MAKS_TREFF), [options]);
-
-
-  const effektivtTarget = allowTargetPick ? valgt?.target : target;
-  const erLead = Boolean(effektivtTarget?.lead_id);
-  const kanLagre = Boolean(effektivtTarget) && !saving;
-
-  const lagre = async () => {
-    if (!effektivtTarget) return;
-    setSaving(true);
-    try {
-      const res = await loggAktivitet({
-        logg: type,
-        target: effektivtTarget,
-        notat,
-        nesteSteg: ikkeInteressert ? undefined : nesteSteg,
-        nesteStegDato: !ikkeInteressert && nesteStegDato ? format(nesteStegDato, "yyyy-MM-dd") : undefined,
-        nesteOppfolging: !ikkeInteressert && oppfolgingDato ? format(oppfolgingDato, "yyyy-MM-dd") : undefined,
-        markerIkkeAktuelt: ikkeInteressert && erLead,
-        meeting: type === "moete"
-          ? { tittel: meetingTittel, dato: meetingDato, startTid: meetingStartTid, sluttTid: meetingSluttTid, deltakere: meetingDeltakere }
-          : undefined,
-      });
-      toast.success("Aktivitet logget");
-      onOpenChange(false);
-      onLogged?.(res);
-    } catch (err) {
-      console.error(err);
-      toast.error("Kunne ikke logge aktiviteten");
-    } finally {
-      setSaving(false);
-    }
-  };
+  const effektivt = allowTargetPick ? valgt?.target : target;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[95vw] sm:max-w-md max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] max-w-[95vw] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Logg aktivitet</DialogTitle>
-          <DialogDescription>
-            {entityName ? entityName : "Registrer det som skjedde"}
-          </DialogDescription>
+          <DialogTitle>Logg</DialogTitle>
+          <DialogDescription>{valgt?.label || entityName || (allowTargetPick ? "Hvem gjelder det?" : "Registrer det som skjedde")}</DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
-          {allowTargetPick && (
-            <div className="space-y-2">
-              <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Gjelder</Label>
-              {valgt ? (
-                <div className="flex items-center justify-between rounded-lg border bg-muted/40 px-3 py-2">
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium truncate">{valgt.label}</p>
-                    <p className="text-xs text-muted-foreground">{valgt.sublabel}</p>
-                  </div>
-                  <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setValgt(null)}>Bytt</Button>
-                </div>
-              ) : (
-                <div className="rounded-lg border">
-                  <div className="relative border-b">
-                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                    <Input
-                      autoFocus
-                      value={søk}
-                      onChange={e => setSøk(e.target.value)}
-                      placeholder="Søk etter selskap, lead eller salgsmulighet"
-                      className="h-9 border-0 pl-8 text-sm focus-visible:ring-0"
-                    />
-                  </div>
-                  <div className="max-h-44 overflow-y-auto">
-                    {filtrerte.length === 0 && <p className="px-3 py-2 text-xs text-muted-foreground">Ingen treff</p>}
-                    {filtrerte.map(o => (
-                      <button
-                        key={o.key}
-                        type="button"
-                        onClick={() => setValgt(o)}
-                        className="w-full text-left px-3 py-2 hover:bg-muted/60 transition-colors"
-                      >
-                        <span className="text-sm block truncate">{o.label}</span>
-                        <span className="text-[11px] text-muted-foreground">{o.sublabel}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
+        {allowTargetPick && (valgt ? (
+          <div className="flex items-center justify-between rounded-lg border bg-muted/40 px-3 py-2">
+            <div className="min-w-0"><p className="truncate text-sm font-medium">{valgt.label}</p><p className="text-xs text-muted-foreground">{valgt.sublabel}</p></div>
+            <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setValgt(null)}>Bytt</Button>
+          </div>
+        ) : (
+          <div className="rounded-lg border">
+            <div className="relative border-b">
+              <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+              <Input autoFocus value={søk} onChange={e => setSøk(e.target.value)} placeholder="Søk etter kontakt, lead eller selskap" aria-label="Søk etter kontakt, lead eller selskap" className="h-10 border-0 pl-8 text-sm focus-visible:ring-0" />
             </div>
-          )}
-
-          <div className="grid grid-cols-3 gap-1.5">
-            {LOGG_TYPER.map(t => {
-              const Icon = t.icon;
-              const aktiv = type === t.value;
-              return (
-                <button
-                  key={t.value}
-                  type="button"
-                  onClick={() => setType(t.value)}
-                  className={cn(
-                    "flex flex-col items-center gap-1 rounded-lg border p-2 text-xs transition-colors",
-                    aktiv ? "border-primary bg-primary/5 text-primary font-medium" : "border-border text-muted-foreground hover:bg-muted/50"
-                  )}
-                >
-                  <Icon className="w-4 h-4" />
-                  <span className="text-[11px] leading-tight text-center">{t.label}</span>
+            <div className="max-h-72 overflow-y-auto">
+              {options.length === 0 && <p className="px-3 py-2 text-xs text-muted-foreground">Ingen treff</p>}
+              {options.map(o => (
+                <button key={o.key} type="button" onClick={() => setValgt(o)} className="w-full px-3 py-2 text-left transition-colors hover:bg-muted/60 focus-visible:bg-muted/60 focus-visible:outline-none">
+                  <span className="block truncate text-sm">{o.label}</span>
+                  <span className="text-[11px] text-muted-foreground">{o.sublabel}</span>
                 </button>
-              );
-            })}
+              ))}
+            </div>
           </div>
+        ))}
 
-          {type === "moete" && (
-            <MeetingFields
-              tittel={meetingTittel}
-              dato={meetingDato}
-              startTid={meetingStartTid}
-              sluttTid={meetingSluttTid}
-              onTittelChange={setMeetingTittel}
-              onDatoChange={setMeetingDato}
-              onStartTidChange={setMeetingStartTid}
-              onSluttTidChange={setMeetingSluttTid}
-              deltakere={meetingDeltakere}
-              onDeltakereChange={setMeetingDeltakere}
-              kontaktListe={kontaktListe}
-            />
-          )}
-
-          <div className="space-y-1.5">
-            <Label htmlFor="logg-notat" className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Notat <span className="normal-case font-normal">(valgfritt)</span>
-            </Label>
-            <Textarea
-              id="logg-notat"
-              rows={3}
-              value={notat}
-              onChange={e => setNotat(e.target.value)}
-              placeholder={loggTypeDef(type).defaultTittel + "…"}
-            />
-          </div>
-
-          {erLead && (
-            <label
-              className={cn(
-                "flex items-start gap-2.5 rounded-lg border p-3 cursor-pointer transition-colors",
-                ikkeInteressert ? "border-destructive/40 bg-destructive/5" : "border-border hover:bg-muted/40"
-              )}
-            >
-              <input
-                type="checkbox"
-                checked={ikkeInteressert}
-                onChange={e => setIkkeInteressert(e.target.checked)}
-                className="mt-0.5 h-4 w-4 accent-destructive"
-              />
-              <span>
-                <span className="block text-sm font-medium">Ikke interessert</span>
-                <span className="block text-xs text-muted-foreground">
-                  Leadet markeres «Ikke aktuelt» og tas ut av automatisk oppfølging.
-                </span>
-              </span>
-            </label>
-          )}
-
-          {!ikkeInteressert && (
-          <div className="space-y-1.5 rounded-lg border border-blue-500/20 bg-blue-500/5 p-3">
-            <Label htmlFor="logg-neste-steg" className="text-xs font-medium uppercase tracking-wide text-blue-600">
-              Neste steg <span className="normal-case font-normal text-muted-foreground">(valgfritt)</span>
-            </Label>
-            <Input
-              id="logg-neste-steg"
-              value={nesteSteg}
-              onChange={e => setNesteSteg(e.target.value)}
-              placeholder="Hva skjer videre?"
-            />
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className={cn("w-full justify-start text-left font-normal", !nesteStegDato && "text-muted-foreground")}
-                >
-                  <CalendarIcon className="w-3.5 h-3.5 mr-2" />
-                  {nesteStegDato ? format(nesteStegDato, "d. MMMM yyyy", { locale: nb }) : "Velg frist"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={nesteStegDato}
-                  onSelect={setNesteStegDato}
-                  initialFocus
-                  className={cn("p-3 pointer-events-auto")}
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-          )}
-
-          {!ikkeInteressert && (
-          <div className="space-y-1.5 rounded-lg border bg-muted/30 p-3">
-            <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Neste oppfølging <span className="normal-case font-normal">(settes automatisk)</span>
-            </Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className={cn("w-full justify-start text-left font-normal", !oppfolgingDato && "text-muted-foreground")}
-                >
-                  <CalendarIcon className="w-3.5 h-3.5 mr-2" />
-                  {oppfolgingDato
-                    ? format(oppfolgingDato, "d. MMMM yyyy", { locale: nb })
-                    : `Automatisk – om ${LEAD_OPPFOLGING_DAGER[UTFALL_FOR_TYPE[type]]} dager`}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={oppfolgingDato}
-                  onSelect={setOppfolgingDato}
-                  initialFocus
-                  className={cn("p-3 pointer-events-auto")}
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-          )}
-
-          <Button className="w-full" onClick={lagre} disabled={!kanLagre}>
-            {saving && <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />}
-            Logg aktivitet
-          </Button>
-          {allowTargetPick && !valgt && (
-            <p className="text-xs text-muted-foreground text-center">Velg hva aktiviteten gjelder for å lagre.</p>
-          )}
-        </div>
+        {effektivt && (
+          <LoggUtfall key={JSON.stringify(effektivt)} target={effektivt} navn={valgt?.navn}
+            onLogged={res => { onOpenChange(false); onLogged?.(res); }} />
+        )}
       </DialogContent>
     </Dialog>
   );

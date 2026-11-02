@@ -18,3 +18,4 @@
 - Detach activities (salgsmulighet_id = null, keep selskap) before deleting a sales opportunity; this preserves email and meeting history.
 - Keep Oversikt (/dashboard) as a daily «I dag» work list derived in src/lib/i-dag.ts from the CRM store and live tables, with portfolio metrics on /portefolje unchanged; follow-up replies are only created as Gmail drafts via gmail-utkast, never sent.
 - Open customer and company cards app-wide through URL params (?kunde=<lead|kontakt|sm|oppgave>:ID, ?selskap=ID, fra=selskap for back) rendered once by GlobaleKort; link names with KortLenker; this keeps one card open at a time and makes cards linkable without new tables.
+- Log every outcome through the shared LoggUtfall component (rules in src/lib/logg-utfall.ts), wrapped by LogActivityDialog for the global search-first «+ Logg»; one «Neste oppfølging» creates the follow-up task and closes the current one, so logging behaves the same everywhere.
