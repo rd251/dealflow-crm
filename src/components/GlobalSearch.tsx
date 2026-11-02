@@ -4,6 +4,7 @@ import { Search, Building2, User, Briefcase, Users, Handshake, X, Loader2, Mail,
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
+import { renAktivitetstekst } from "@/lib/aktivitet-visning";
 
 interface SearchResult {
   id: string;

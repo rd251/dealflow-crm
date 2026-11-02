@@ -59,6 +59,7 @@ export default function Ringemodus() {
   const [notat, setNotat] = useState("");
   const [busy, setBusy] = useState(false);
   const [historikk, setHistorikk] = useState<Historikk[]>([]);
+  const [visEpost, setVisEpost] = useState<EpostForVisning | null>(null);
   const [redigerApen, setRedigerApen] = useState(false);
   const [loggDialogApen, setLoggDialogApen] = useState(false);
   const [redigering, setRedigering] = useState({ kontaktperson: "", telefon: "", e_post: "", rolle_i_firma: "", neste_steg: "" });
@@ -344,13 +345,24 @@ export default function Ringemodus() {
                   <p className="text-sm text-muted-foreground">Ingen aktivitet ennå.</p>
                 ) : (
                   <ul className="space-y-3">
-                    {historikk.map(h => (
-                      <li key={h.id} className="text-sm">
-                        <p className="font-medium leading-snug">{h.tittel || h.type}</p>
-                        {h.beskrivelse && h.beskrivelse !== h.tittel && <p className="text-muted-foreground line-clamp-3">{h.beskrivelse}</p>}
-                        <p className="text-[11px] text-muted-foreground">{relativTid(h.dato)}</p>
-                      </li>
-                    ))}
+                    {historikk.map(h => {
+                      const kropp = renAktivitetstekst(h.beskrivelse);
+                      const kontakt = epostKontaktTekst(h.beskrivelse, h.aktivitet_kilde === "gmail_sendt");
+                      const innhald = (
+                        <>
+                          <p className="font-medium leading-snug">{h.tittel || h.type}</p>
+                          {kropp && kropp !== (h.tittel || "").trim() && <p className="text-muted-foreground line-clamp-3">{kropp}</p>}
+                          <p className="text-[11px] text-muted-foreground">{kontakt && <span>{kontakt} · </span>}{relativTid(h.dato)}</p>
+                        </>
+                      );
+                      return (
+                        <li key={h.id} className="text-sm">
+                          {epostTraadId(h.beskrivelse) ? (
+                            <button type="button" onClick={() => setVisEpost(h)} className="-mx-2 block w-full rounded-lg px-2 py-1 text-left hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{innhald}</button>
+                          ) : innhald}
+                        </li>
+                      );
+                    })}
                   </ul>
                 )}
               </div>
@@ -394,6 +406,7 @@ export default function Ringemodus() {
           }}
         />
       )}
+      <EpostTraadDialog epost={visEpost} onOpenChange={o => !o && setVisEpost(null)} />
     </div>
   );
 }

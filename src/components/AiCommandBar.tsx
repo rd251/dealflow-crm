@@ -18,6 +18,7 @@ import {
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { useQueryClient } from "@tanstack/react-query";
+import { renAktivitetstekst } from "@/lib/aktivitet-visning";
 
 interface AiItem {
   navn: string;
