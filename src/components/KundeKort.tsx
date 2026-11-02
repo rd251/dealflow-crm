@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { nb } from "date-fns/locale";
 import { Mail, MessageSquare, Pencil, Phone, Plus } from "lucide-react";
@@ -32,9 +31,8 @@ interface Props { r: KundeRef; onClose: () => void; onSelskap: (id: string) => v
 export default function KundeKort({ r, onClose, onSelskap, onTilbake }: Props) {
   const rad = r;
   const isMobile = useIsMobile();
-  const navigate = useNavigate();
   const { user, canEdit } = useAuth();
-  const { leads, oppgaver, kontakter, salgsmuligheter, selskaper, updateLeads, updateKontakter, updateSalgsmuligheter, updateOppgaver, konverterLead } = useCrmStore();
+  const { leads, oppgaver, kontakter, salgsmuligheter, selskaper, updateLeads, updateKontakter, updateSalgsmuligheter, updateOppgaver } = useCrmStore();
 
   // ---------- Kontekst ----------
   const ctx = useMemo(() => {
