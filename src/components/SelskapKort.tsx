@@ -78,6 +78,7 @@ export default function SelskapKort({ id, onClose, onKunde }: { id: string; onCl
   const nettside = s.domene ? (s.domene.startsWith("http") ? s.domene : `https://${s.domene}`) : "";
 
   return (
+    <>
     <Sheet open onOpenChange={o => !o && onClose()}>
       <SheetContent side={isMobile ? "bottom" : "right"} className={cn("overflow-y-auto", isMobile ? "max-h-[90vh] rounded-t-xl" : "w-full sm:max-w-md")}>
         <SheetHeader className="text-left">
@@ -189,7 +190,7 @@ export default function SelskapKort({ id, onClose, onKunde }: { id: string; onCl
         </div>
       </SheetContent>
     </Sheet>
-
     <EpostTraadDialog epost={visEpost} onOpenChange={o => !o && setVisEpost(null)} />
+    </>
   );
 }
