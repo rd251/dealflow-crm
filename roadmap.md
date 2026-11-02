@@ -134,3 +134,4 @@
 
 ## Felles logging
 - [x] Én «Hva skjedde?»-komponent i kundekort, lead-panel, «+ Logg», Følg opp/ringeliste, aktivitetslogger og Innboks; gamle varianter fjernet
+- [x] «Ikke nå» → Senere (1/3/6 mnd), egen Senere-fane, badge og «Ta opp nå»
