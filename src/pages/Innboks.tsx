@@ -21,6 +21,8 @@ import ActivityLog from "@/components/ActivityLog";
 import CompanyLinker from "@/components/CompanyLinker";
 import DealSuggestions from "@/components/DealSuggestions";
 import { gravatarUrl } from "@/lib/gravatar";
+import InnboksSalgsmulighet from "@/components/InnboksSalgsmulighet";
+import { useKort } from "@/hooks/use-kort";
 
 interface KontaktStromPerson {
   email: string;
@@ -116,6 +118,9 @@ export default function Innboks() {
   const [selected, setSelected] = useState<KontaktStromPerson | null>(null);
   const [selectedCompany, setSelectedCompany] = useState<CompanyGroup | null>(null);
   const [creatingLead, setCreatingLead] = useState(false);
+  const [visSalgsSkjema, setVisSalgsSkjema] = useState(false);
+  const { openKunde } = useKort();
+  useEffect(() => { setVisSalgsSkjema(false); }, [selected?.email]);
   const [creatingCompany, setCreatingCompany] = useState(false);
   const [syncing, setSyncing] = useState(false);
 
@@ -756,7 +761,12 @@ export default function Innboks() {
                   <span className="w-36" />
                 )}
                 <span className="w-fit min-w-[7rem] flex items-center justify-end gap-1">
-                  {p.types.map(t => (
+                  {p.types.map(t => t === "Salgsmulighet" && p.salgsmulighetId ? (
+                    <button key={t} type="button" aria-label={`Åpne salgsmulighet for ${p.navn}`}
+                      onClick={e => { e.stopPropagation(); openKunde({ type: "sm", id: p.salgsmulighetId! }); }}>
+                      <Badge variant="secondary" className={`text-xs hover:underline ${TYPE_COLORS[t]}`}>{t}</Badge>
+                    </button>
+                  ) : (
                     <Badge key={t} variant="secondary" className={`text-xs ${TYPE_COLORS[t]}`}>
                       {t}
                     </Badge>
@@ -837,9 +847,20 @@ export default function Innboks() {
         subtitle={selected?.firmanavn && selected?.selskapId ? undefined : selected?.firmanavn || undefined}
         badges={selected ? (
           <>
-            <Badge variant="secondary" className={`text-xs ${TYPE_COLORS[selected.type]}`}>
-              {selected.type}
-            </Badge>
+            {selected.type === "Salgsmulighet" && selected.salgsmulighetId ? (
+              <button type="button" onClick={() => openKunde({ type: "sm", id: selected.salgsmulighetId! })} aria-label="Åpne salgsmulighet">
+                <Badge variant="secondary" className={`text-xs hover:underline ${TYPE_COLORS.Salgsmulighet}`}>Salgsmulighet</Badge>
+              </button>
+            ) : (
+              <Badge variant="secondary" className={`text-xs ${TYPE_COLORS[selected.type]}`}>
+                {selected.type}
+              </Badge>
+            )}
+            {selected.salgsmulighetId && selected.type !== "Salgsmulighet" && (
+              <button type="button" onClick={() => openKunde({ type: "sm", id: selected.salgsmulighetId! })} aria-label="Åpne salgsmulighet">
+                <Badge variant="secondary" className={`text-xs hover:underline ${TYPE_COLORS.Salgsmulighet}`}>Salgsmulighet</Badge>
+              </button>
+            )}
             {selected.status && (
               <Badge variant="outline" className="text-xs">{selected.status}</Badge>
             )}
@@ -858,6 +879,11 @@ export default function Innboks() {
                 <ExternalLink className="w-4 h-4 mr-1.5" />Lead
               </Button>
             )}
+            {!selected.salgsmulighetId && (
+              <Button size="sm" variant={visSalgsSkjema ? "secondary" : "default"} onClick={() => setVisSalgsSkjema(v => !v)}>
+                <Plus className="w-4 h-4 mr-1.5" />Salgsmulighet
+              </Button>
+            )}
             {selected.salgsmulighetId && (
               <Button size="sm" variant="outline" onClick={() => { navigate("/salgsmuligheter"); setSelected(null); }}>
                 <ExternalLink className="w-4 h-4 mr-1.5" />Salgsmulighet
@@ -873,6 +899,14 @@ export default function Innboks() {
         tabContent={selected ? {
           detaljer: (
             <>
+              {visSalgsSkjema && !selected.salgsmulighetId && (
+                <InnboksSalgsmulighet
+                  key={selected.email}
+                  person={selected}
+                  onAvbryt={() => setVisSalgsSkjema(false)}
+                  onFerdig={() => { setVisSalgsSkjema(false); fetchEmailContacts(); setSelected(null); }}
+                />
+              )}
               {selected.firmanavn && selected.selskapId && (
                 <SharedDetailField label="Selskap">
                   <span
