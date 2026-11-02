@@ -52,7 +52,8 @@ export default function InnboksPersonPanel({ person, onClose, onEndret, opprettL
   const navn = visningsnavn(person.navn && person.navn !== person.email ? person.navn : person.email.split("@")[0]);
   const selskap = person.selskapId ? selskaper.find(s => s.id === person.selskapId) : undefined;
   const forslag = !selskap && person.suggestedSelskapId ? selskaper.find(s => s.id === person.suggestedSelskapId) : undefined;
-  const firmaTekst = selskap?.firmanavn || person.firmanavn || forslag?.firmanavn || "";
+  const egenFirma = person.firmanavn && ![person.navn, navn, person.email].includes(person.firmanavn) && visningsnavn(person.firmanavn) !== navn ? person.firmanavn : "";
+  const firmaTekst = selskap?.firmanavn || forslag?.firmanavn || egenFirma;
   const telefon = kontakt?.telefon || lead?.telefon || "";
   const rolle = kontakt?.rolle || lead?.rolle_i_firma || "";
   const tel = telefon.replace(/\s/g, "");
