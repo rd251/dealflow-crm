@@ -1,10 +1,10 @@
 # Roadmap
 
 ## Valgfrie oppgavetider
-- [ ] Legg til felles klokkeslettvalg og rask lagring i oppgave- og kundekortflyter
-- [ ] Vis tidsbestemte oppgaver i 15 minutter og oppgaver uten tid i egen dagrad
-- [ ] Ringemerking og dato/tid-sortering i oppgavelister og Følg opp nå
-- [ ] Kjør tester og kontroller innlogget desktop/mobil uten å endre ekte oppgaver
+- [x] Legg til felles klokkeslettvalg og rask lagring i oppgave- og kundekortflyter
+- [x] Vis tidsbestemte oppgaver i 15 minutter og oppgaver uten tid i egen dagrad
+- [x] Ringemerking og dato/tid-sortering i oppgavelister og Følg opp nå
+- [x] 52 tester bestod; innlogget desktop/mobil kontrollert. Midlertidig ferdig testoppgave verifiserte 14:00-lagring, reload og nullstilling, og ble fjernet; ingen ekte oppgaver endret eller Google-hendelser laget.
 
 ## Project monitoring – leadstatus og oppgavekalender
 - [x] Verifiser og rett overskriving av «Ikke interessert» fra leadets detaljside
