@@ -16,6 +16,8 @@ import { idag, relativTid } from "@/lib/sales-flow";
 import { toast } from "sonner";
 import { X, Phone, Mail, ChevronLeft, ChevronRight, PhoneMissed, MessageSquare, CalendarCheck, Clock, Ban, ExternalLink, Check, Pencil, ListPlus } from "lucide-react";
 import type { Lead, LeadStatus } from "@/data/crm-data";
+import EpostTraadDialog, { type EpostForVisning } from "@/components/EpostTraadDialog";
+import { epostKontaktTekst, epostTraadId, renAktivitetstekst } from "@/lib/aktivitet-visning";
 
 /** Hvor mange aktiviteter som vises i historikken for hver lead. */
 const HISTORIKK_ANTALL = 6;
