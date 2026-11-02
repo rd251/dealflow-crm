@@ -44,3 +44,9 @@ export function aapenSalgsmulighet<T extends SmLite>(sm: T[], selskapId?: string
   if (!selskapId) return null;
   return sm.find(s => s.selskap_id === selskapId && !AVSLUTTET.has(s.status || "")) || null;
 }
+
+/** «Pietzner, Lars» → «Lars Pietzner». Andre navn vises som de er. */
+export function visningsnavn(navn: string): string {
+  const m = (navn || "").trim().match(/^([^,@]+),\s*([^,@]+)$/);
+  return m ? `${m[2].trim()} ${m[1].trim()}` : (navn || "").trim();
+}
