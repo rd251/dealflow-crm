@@ -26,8 +26,10 @@ import { ArrowLeft } from "lucide-react";
 import type { Selskap } from "@/data/crm-data";
 import OppgaveTid from "@/components/OppgaveTid";
 import { compareTaskSchedule, taskTitle } from "@/lib/oppgave-tid";
+import EpostTraadDialog, { type EpostForVisning } from "@/components/EpostTraadDialog";
+import { epostKontaktTekst, epostTraadId, renAktivitetstekst } from "@/lib/aktivitet-visning";
 
-interface Hist { id: string; type: string; tittel: string | null; beskrivelse: string; dato: string }
+interface Hist { id: string; type: string; tittel: string | null; beskrivelse: string; dato: string; aktivitet_kilde?: string | null }
 type Kanal = "SMS" | "E-post";
 
 interface Props { r: KundeRef; onClose: () => void; onSelskap: (id: string) => void; onTilbake?: () => void }
@@ -86,6 +88,7 @@ export default function KundeKort({ r, onClose, onSelskap, onTilbake }: Props) {
   const [bekreftMelding, setBekreftMelding] = useState<{ kanal: Kanal; mal?: MeldingMal } | null>(null);
   const [meldingNotat, setMeldingNotat] = useState("");
   const [hist, setHist] = useState<Hist[]>([]);
+  const [visEpost, setVisEpost] = useState<EpostForVisning | null>(null);
 
   useEffect(() => {
     setForm(info); setRedigerer(false);
@@ -96,7 +99,7 @@ export default function KundeKort({ r, onClose, onSelskap, onTilbake }: Props) {
   const hentHistorikk = useCallback(async () => {
     const deler = Object.entries(target).filter(([k, v]) => v && k !== "selskap_id").map(([k, v]) => `${k}.eq.${v}`);
     if (!deler.length) { setHist([]); return; }
-    const { data } = await supabase.from("aktiviteter").select("id, type, tittel, beskrivelse, dato").or(deler.join(",")).order("dato", { ascending: false }).limit(15);
+    const { data } = await supabase.from("aktiviteter").select("id, type, tittel, beskrivelse, dato, aktivitet_kilde").or(deler.join(",")).order("dato", { ascending: false }).limit(15);
     setHist((data as Hist[]) || []);
   }, [target]);
   useEffect(() => { if (rad) void hentHistorikk(); }, [rad, hentHistorikk]);
@@ -279,12 +282,23 @@ export default function KundeKort({ r, onClose, onSelskap, onTilbake }: Props) {
               <h3 id="kk-hist" className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Historikk</h3>
               {hist.length === 0 ? <p className="text-sm text-muted-foreground">Ingen aktiviteter ennå.</p> : (
                 <ul className="divide-y rounded-lg border">
-                  {hist.map(h => (
-                    <li key={h.id} className="px-3 py-2">
-                      <p className="flex justify-between gap-2 text-sm font-medium"><span className="truncate">{h.tittel || h.type}</span><span className="shrink-0 text-xs font-normal text-muted-foreground tabular-nums">{format(new Date(h.dato), "d. MMM HH:mm", { locale: nb })}</span></p>
-                      {h.beskrivelse && h.beskrivelse !== h.tittel && <p className="line-clamp-2 text-xs text-muted-foreground">{h.beskrivelse}</p>}
-                    </li>
-                  ))}
+                  {hist.map(h => {
+                    const kropp = renAktivitetstekst(h.beskrivelse);
+                    const kontakt = epostKontaktTekst(h.beskrivelse, h.aktivitet_kilde === "gmail_sendt");
+                    const innhald = (
+                      <>
+                        <p className="flex justify-between gap-2 text-sm font-medium"><span className="min-w-0 flex-1 truncate">{h.tittel || h.type}</span><span className="shrink-0 text-xs font-normal text-muted-foreground tabular-nums">{kontakt && <span>{kontakt} · </span>}{format(new Date(h.dato), "d. MMM HH:mm", { locale: nb })}</span></p>
+                        {kropp && kropp !== (h.tittel || "").trim() && <p className="line-clamp-2 text-xs text-muted-foreground">{kropp}</p>}
+                      </>
+                    );
+                    return (
+                      <li key={h.id} className="px-3 py-2">
+                        {epostTraadId(h.beskrivelse) ? (
+                          <button type="button" onClick={() => setVisEpost(h)} className="-mx-3 -my-2 block w-full rounded-lg px-3 py-2 text-left hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{innhald}</button>
+                        ) : innhald}
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
               {(ctx.kontakt?.notater || ctx.lead?.notater || ctx.sm?.notater) && (
