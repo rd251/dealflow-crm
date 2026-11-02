@@ -37,7 +37,9 @@ type Felt = "e_post" | "telefon" | "rolle";
 export default function InnboksPersonPanel({ person, onClose, onEndret, opprettLead }: { person: PanelPerson | null; onClose: () => void; onEndret: () => void; opprettLead?: { vis: boolean; laster: boolean; onClick: () => void } }) {
   const isMobile = useIsMobile();
   const { selskaper, kontakter, leads, updateKontakter, updateLeads, refresh } = useCrmStore();
-  const { openKunde, openSelskap } = useKort();
+  const kort = useKort();
+  const openKunde: typeof kort.openKunde = (r) => { onClose(); kort.openKunde(r); };
+  const openSelskap = (id: string) => { onClose(); kort.openSelskap(id); };
   const [visSkjema, setVisSkjema] = useState(false);
   const [redigerer, setRedigerer] = useState<Felt | null>(null);
   const [verdi, setVerdi] = useState("");
