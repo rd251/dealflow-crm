@@ -36,7 +36,7 @@ export function renAktivitetstekst(beskrivelse?: string | null): string {
     .replace(ADRESSE_RE, " ")
     .replace(/[ \t]{2,}/g, " ")
     .replace(/\s*\n\s*/g, "\n")
-    .replace(ENTITETS_RE, (_, e: string) => ENTITETAR[e.slice(1, -1).toLowerCase()] ?? _)
+    .replace(ENTITETS_RE, (_, e: string) => ENTITETAR[e.toLowerCase()] ?? _)
     .trim();
 }
 
