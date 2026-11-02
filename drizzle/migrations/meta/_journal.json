@@ -232,6 +232,13 @@
       "when": 1793570832806,
       "tag": "0032_selskap_telefon_epost",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1793621331445,
+      "tag": "0033_leads_senere_til",
+      "breakpoints": true
     }
   ]
 }

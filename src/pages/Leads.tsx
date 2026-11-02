@@ -32,6 +32,8 @@ import NesteStegTaskButton from "@/components/NesteStegTaskButton";
 import { PinnedNotatBoks, PinnedNotatFelt } from "@/components/PinnedNotat";
 import { skjemaOnske, produktInteresse } from "@/lib/lead-notater";
 import LeadHvaSkjedde from "@/components/LeadHvaSkjedde";
+import SenereListe from "@/components/SenereListe";
+import { erSenere } from "@/lib/logg-utfall";
 import { leadKvalitet, ekteOnske, nesteTekst, komInnTekst, kortDato, kildeVisning } from "@/lib/lead-kort";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import RingelisteIdag from "@/components/RingelisteIdag";
@@ -82,7 +84,7 @@ export default function Leads() {
   const { leads, partnere, updateLeads, updateOppgaver, konverterLead, konverterTilPartner, generateId } = useCrmStore();
   const [search, setSearch] = useState("");
   const { filter: eierFilter, setFilter: setEierFilter, tilhorerFilter } = useMineFilter("leads");
-  const [visning, setVisning] = useState<"leads" | "ringeliste" | "kalde">("leads");
+  const [visning, setVisning] = useState<"leads" | "ringeliste" | "kalde" | "senere">("leads");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
@@ -176,12 +178,14 @@ export default function Leads() {
   const normalizedSearch = search.trim().toLowerCase();
 
   /** Aktive (ikke konverterte) leads – grunnlag for oppfølging og kalde leads. */
-  const aktiveLeads = leads.filter(l => !isConverted(l) && l.status !== "Ikke aktuelt");
+  const aktiveLeads = leads.filter(l => !isConverted(l) && l.status !== "Ikke aktuelt" && !erSenere(l.senere_til));
+  const senereLeads = leads.filter(l => !isConverted(l) && l.status !== "Ikke aktuelt" && erSenere(l.senere_til));
   const kaldeLeads = aktiveLeads.filter(erKaldtLead);
 
   const filteredUnsorted = leads.filter(l => {
     // Hide converted leads to avoid duplication with salgsmuligheter/partnere
     if (isConverted(l)) return false;
+    if (erSenere(l.senere_til)) return false;
     // Kalde leads holdes utenfor hovedflyten – de har egen visning
     if (visning === "kalde") {
       if (!erKaldtLead(l) || l.status === "Ikke aktuelt") return false;
@@ -756,7 +760,7 @@ export default function Leads() {
         </div>
         <Select value={visning} onValueChange={value => setVisning(value as typeof visning)}>
           <SelectTrigger aria-label="Leadliste" className="h-9 w-[160px]"><SelectValue /></SelectTrigger>
-          <SelectContent><SelectItem value="leads">Aktive leads</SelectItem><SelectItem value="ringeliste">Ringeliste i dag</SelectItem><SelectItem value="kalde">Kalde leads ({kaldeLeads.length})</SelectItem></SelectContent>
+          <SelectContent><SelectItem value="leads">Aktive leads</SelectItem><SelectItem value="ringeliste">Ringeliste i dag</SelectItem><SelectItem value="kalde">Kalde leads ({kaldeLeads.length})</SelectItem><SelectItem value="senere">Senere ({senereLeads.length})</SelectItem></SelectContent>
         </Select>
         <Select value={statusFilter} onValueChange={value => setStatusFilter(value as typeof statusFilter)}>
           <SelectTrigger aria-label="Filtrer status" className="h-9 w-[170px]"><SelectValue /></SelectTrigger>
@@ -774,7 +778,7 @@ export default function Leads() {
         {statusParam && <Button size="sm" variant="secondary" onClick={() => clearDeepFilter("status")}>{statusParam} ×</Button>}
         {oppfolgingFilter && <Button size="sm" variant="secondary" onClick={() => clearDeepFilter("filter")}>Trenger oppfølging ×</Button>}
       </div>
-      {visning === "ringeliste" ? <RingelisteIdag /> : <>
+      {visning === "ringeliste" ? <RingelisteIdag /> : visning === "senere" ? <SenereListe leads={senereLeads.filter(l => tilhorerFilter(l.ansvarlig))} /> : <>
       <ul className="grid grid-cols-1 gap-3 md:grid-cols-2 2xl:grid-cols-3" aria-label="Leads">
         {filtered.map(lead => {
           const kvalitet = leadKvalitet(lead);

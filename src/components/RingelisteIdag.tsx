@@ -1,3 +1,4 @@
+import { erSenere } from "@/lib/logg-utfall";
 import { KundeNavn, SelskapNavn } from "@/components/KortLenker";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -24,7 +25,7 @@ export default function RingelisteIdag() {
 
   const rader = useMemo<Rad[]>(() => {
     const aktive = leads.filter(
-      l => !l.konvertert_dato && !l.konvertert_til && l.status !== "Ikke aktuelt" &&
+      l => !l.konvertert_dato && !l.konvertert_til && l.status !== "Ikke aktuelt" && !erSenere(l.senere_til) &&
         l.status !== "Konvertert til salg" && l.status !== "Konvertert til partner"
     );
 

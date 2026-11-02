@@ -14,7 +14,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { loggAktivitet, type ActivityTarget } from "@/lib/activity-logging";
 import {
-  LOGG_VALG, RING_TILBAKE_VALG, erGjeldendeOppfolging, forslagOppfolging, leadStatusEtterValg, lokalDato, lukkerOppgave,
+  IKKE_NAA_VALG, ikkeNaaDato, LOGG_VALG, RING_TILBAKE_VALG, erGjeldendeOppfolging, forslagOppfolging, leadStatusEtterValg, lokalDato, lukkerOppgave,
   oppfolgingTittel, ringTilbakeTid, type LoggValg, type RingTilbake,
 } from "@/lib/logg-utfall";
 import { cn } from "@/lib/utils";
@@ -60,6 +60,7 @@ export default function LoggUtfall({ target, navn: navnProp, oppgaveId, ansvarli
   const [tittel, setTittel] = useState("");
   const [tittelRedigert, setTittelRedigert] = useState(false);
   const [ringValg, setRingValg] = useState<RingTilbake>("1t");
+  const [naaMnd, setNaaMnd] = useState<number | null>(3);
   const [kanal, setKanal] = useState<"SMS" | "E-post">("SMS");
   const [moeteDato, setMoeteDato] = useState("");
   const [moeteTid, setMoeteTid] = useState("10:00");
@@ -72,6 +73,7 @@ export default function LoggUtfall({ target, navn: navnProp, oppgaveId, ansvarli
     setDato(f.dato); setTid(f.tid);
     if (!tittelRedigert) setTittel(oppfolgingTittel(v, navn));
     if (v === "ring_tilbake") setRingValg("1t");
+    if (v === "ikke_naa") setNaaMnd(3);
     if (v === "booket") { setMoeteDato(f.dato); setMoeteTid(f.tid); }
   };
 
@@ -133,7 +135,7 @@ export default function LoggUtfall({ target, navn: navnProp, oppgaveId, ansvarli
         updateOppgaver(prev => [...prev, {
           id: crypto.randomUUID(), oppgave: tittel.trim() || oppfolgingTittel(v, navn),
           lead_id: target.lead_id || "", selskap_id: target.selskap_id || "", salgsmulighet_id: target.salgsmulighet_id || "", kontakt_id: target.kontakt_id || "",
-          ansvarlig, frist: nyDato, frist_tid: tid, prioritet: "Medium", status: "Åpen", paaminnelse: true, notater: "",
+          ansvarlig, frist: nyDato, frist_tid: tid, prioritet: "Medium", status: "Åpen", paaminnelse: true, notater: v === "ikke_naa" ? notat.trim() : "",
         }]);
       }
 
@@ -142,6 +144,7 @@ export default function LoggUtfall({ target, navn: navnProp, oppgaveId, ansvarli
         updateLeads(prev => prev.map(l => l.id === id ? {
           ...l, status: leadStatusEtterValg(l.status, v) as typeof l.status, sist_aktivitet: lokalDato(new Date()),
           neste_oppfolging: v === "notat" && !nyDato ? l.neste_oppfolging : nyDato,
+          senere_til: v === "ikke_naa" && nyDato ? nyDato : v === "notat" ? l.senere_til : "",
         } : l));
       }
       if (v === "ikke_interessert" && sm && sm.status !== "Vunnet" && sm.status !== "Tapt") {
@@ -216,6 +219,14 @@ export default function LoggUtfall({ target, navn: navnProp, oppgaveId, ansvarli
               {lead && !sm && <p className="text-xs text-muted-foreground">Leadet blir salgsmulighet («Møte booket») når du lagrer.</p>}
             </div>
           )}
+          {valg === "ikke_naa" && (
+            <div className="flex flex-wrap gap-1.5" role="group" aria-label="Ta opp igjen om">
+              {IKKE_NAA_VALG.map(o => (
+                <Button key={o.label} type="button" size="sm" variant={naaMnd === o.mnd ? "default" : "outline"} className="h-8"
+                  onClick={() => { setNaaMnd(o.mnd); if (o.mnd) { setDato(ikkeNaaDato(o.mnd).dato); setTid(""); } }}>{o.label}</Button>
+              ))}
+            </div>
+          )}
           {valg === "melding" && (
             <div className="flex gap-1.5" role="group" aria-label="Kanal">
               {(["SMS", "E-post"] as const).map(k => <Button key={k} type="button" size="sm" variant={kanal === k ? "default" : "outline"} className="h-8" onClick={() => setKanal(k)}>{k}</Button>)}
@@ -223,7 +234,7 @@ export default function LoggUtfall({ target, navn: navnProp, oppgaveId, ansvarli
           )}
 
           <label className="grid gap-1 text-xs font-medium text-muted-foreground">Notat (valgfritt)
-            <Textarea rows={2} value={notat} onChange={e => setNotat(e.target.value)} placeholder="Hva ble sagt?" className="text-sm font-normal text-foreground" />
+            <Textarea rows={2} value={notat} onChange={e => setNotat(e.target.value)} placeholder={valg === "ikke_naa" ? "Hvorfor ikke nå?" : "Hva ble sagt?"} className="text-sm font-normal text-foreground" />
           </label>
 
           {visOppfolging && (

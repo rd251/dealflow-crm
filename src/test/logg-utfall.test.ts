@@ -1,11 +1,17 @@
 import { describe, it, expect } from "vitest";
-import { forslagOppfolging, ringTilbakeTid, oppfolgingTittel, leadStatusEtterValg, erGjeldendeOppfolging, lukkerOppgave } from "@/lib/logg-utfall";
+import { erSenere, ikkeNaaDato, forslagOppfolging, ringTilbakeTid, oppfolgingTittel, leadStatusEtterValg, erGjeldendeOppfolging, lukkerOppgave } from "@/lib/logg-utfall";
 
 const naa = new Date(2026, 10, 2, 12, 3); // man 2. nov 12:03
 
 describe("felles logg – Hva skjedde?", () => {
   it("Svarte ikke → ny ring om 2 dager", () => expect(forslagOppfolging("svarte_ikke", naa)).toEqual({ dato: "2026-11-04", tid: "" }));
-  it("Ikke nå → ny kontakt om 30 dager", () => expect(forslagOppfolging("ikke_naa", naa).dato).toBe("2026-12-02"));
+  it("Ikke nå → standard 3 mnd", () => expect(forslagOppfolging("ikke_naa", naa).dato).toBe("2027-02-02"));
+  it("Ikke nå 1 og 6 mnd", () => { expect(ikkeNaaDato(1, naa).dato).toBe("2026-12-02"); expect(ikkeNaaDato(6, naa).dato).toBe("2027-05-02"); });
+  it("Senere avsluttes automatisk når datoen er nådd", () => {
+    expect(erSenere("2027-02-02", "2026-11-02")).toBe(true);
+    expect(erSenere("2027-02-02", "2027-02-02")).toBe(false);
+    expect(erSenere("", "2026-11-02")).toBe(false);
+  });
   it("Ikke interessert og Notat → ingen ny oppgave", () => {
     expect(forslagOppfolging("ikke_interessert", naa).dato).toBe("");
     expect(forslagOppfolging("notat", naa).dato).toBe("");

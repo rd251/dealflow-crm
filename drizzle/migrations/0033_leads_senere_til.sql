@@ -1,0 +1,2 @@
+ALTER TABLE public.leads ADD COLUMN IF NOT EXISTS senere_til date;
+COMMENT ON COLUMN public.leads.senere_til IS 'Lead parkert som «Senere» til denne datoen; aktiv igjen når datoen er nådd (beregnes ved visning).';

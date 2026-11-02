@@ -53,6 +53,8 @@ export interface Lead {
   pinned_notat?: string;
   pinned_notat_av?: string;
   pinned_notat_dato?: string;
+  /** «Senere»: parkert til denne datoen (yyyy-mm-dd). */
+  senere_til?: string;
   /** Produkter AI-en ser at leadet er ute etter, lest ut av notatene. */
   produkt_interesse?: string[];
   produkt_oppsummering?: string;
