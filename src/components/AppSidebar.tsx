@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { LayoutDashboard, Handshake, FolderKanban, Building2, Users, ListTodo, Menu, ChevronLeft, ChevronDown, Users2, GitBranch, Shield, LogOut, Activity, BarChart3, CalendarDays, Inbox, NotebookPen, Mail, HeartHandshake, Copy } from "lucide-react";
+import { LayoutDashboard, Handshake, Building2, Users, ListTodo, Menu, ChevronLeft, ChevronDown, Users2, GitBranch, Shield, LogOut, Activity, BarChart3, CalendarDays, Inbox, NotebookPen, Mail, HeartHandshake, Copy } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -18,7 +18,6 @@ const mainItems: NavItem[] = [
   { to: "/innboks", icon: Inbox, label: "Innboks" },
   { to: "/leads", icon: Handshake, label: "Leads og salg" },
   { to: "/selskaper", icon: Building2, label: "Kundeforhold" },
-  { to: "/prosjekter", icon: FolderKanban, label: "Prosjekter" },
   { to: "/kontakter", icon: Users, label: "Kontakter" },
   { to: "/relasjoner", icon: HeartHandshake, label: "Relasjoner" },
   { to: "/partnere", icon: Users2, label: "Partnere" },
