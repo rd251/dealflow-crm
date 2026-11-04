@@ -100,8 +100,10 @@ Deno.serve(async (req) => {
     });
     if (!dr.ok) {
       const t = await dr.text(); console.error("draft", dr.status, t);
-      if (dr.status === 403 && t.includes("SCOPE")) return json({ error: "Gmail må kobles til på nytt for å kunne lage utkast. Gå til Innstillinger og koble til Google igjen." }, 400);
-      return json({ error: "Kunne ikke lage utkast i Gmail" }, 500);
+      const melding = dr.status === 403 && t.includes("SCOPE")
+        ? "Utkastet kunne ikke lagres i Gmail fordi Google må kobles til på nytt (Innstillinger → koble til Google). Du kan kopiere teksten under i mellomtiden."
+        : "Utkastet kunne ikke lagres i Gmail. Du kan kopiere teksten under.";
+      return json({ ikke_lagret: true, melding, til, emne, tekst: plain, thread_id: v.thread_id });
     }
     const d = await dr.json();
     return json({ draft_id: d.id, message_id: d.message?.id, thread_id: v.thread_id, til, emne, tekst: plain });
