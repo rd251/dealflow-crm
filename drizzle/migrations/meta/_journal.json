@@ -239,6 +239,13 @@
       "when": 1793621331445,
       "tag": "0033_leads_senere_til",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1793803386473,
+      "tag": "0034_changelog_linking_security_definer",
+      "breakpoints": true
     }
   ]
 }
