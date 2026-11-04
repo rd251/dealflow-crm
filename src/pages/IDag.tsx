@@ -27,7 +27,7 @@ interface Moete {
 }
 interface SisteAkt { type: string; tittel: string | null; beskrivelse: string; dato: string; lead_id: string | null; salgsmulighet_id: string | null; selskap_id: string | null; kontakt_id: string | null }
 interface Venter { id: string; status: string; sendt_dato: string; user_id: string; e_post: string | null; emne: string | null; ai_begrunnelse: string | null; kontakt_id: string | null; lead_id: string | null; selskap_id: string | null; salgsmulighet_id: string | null }
-interface Utkast { draft_id: string; til: string; emne: string; tekst: string }
+interface Utkast { draft_id?: string; til: string; emne: string; tekst: string; ikke_lagret?: boolean; melding?: string; thread_id?: string }
 
 function Seksjon({ id, tittel, antall, children, lenke, kompakt }: { id?: string; tittel: string; antall?: number; children: ReactNode; lenke?: ReactNode; kompakt?: boolean }) {
   if (kompakt) return (
@@ -199,11 +199,16 @@ export default function IDag() {
     setBusy(v.id);
     const { data, error } = await supabase.functions.invoke("gmail-utkast", { body: { venter_id: v.id } });
     setBusy(null);
-    if (error || data?.error) { toast.error(data?.error || "Kunne ikke lage utkast"); return; }
+    if (error || data?.error) {
+      let msg = data?.error as string | undefined;
+      try { msg = msg || (await (error as any)?.context?.json?.())?.error; } catch { /* ignore */ }
+      toast.error(msg || "Kunne ikke lage utkast"); return;
+    }
     setUtkast(data as Utkast);
   };
   const slettUtkast = async () => {
     if (!utkast) return;
+    if (!utkast.draft_id) { setUtkast(null); return; }
     await supabase.functions.invoke("gmail-utkast", { body: { action: "slett", draft_id: utkast.draft_id } });
     setUtkast(null);
     toast.success("Utkastet er slettet");
@@ -421,8 +426,8 @@ export default function IDag() {
       <Dialog open={!!utkast} onOpenChange={o => { if (!o) setUtkast(null); }}>
         <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2"><Sparkles className="h-4 w-4" />Utkast lagret i Gmail</DialogTitle>
-            <DialogDescription>Ingenting er sendt. Se over og send fra Gmail når du er fornøyd.</DialogDescription>
+            <DialogTitle className="flex items-center gap-2"><Sparkles className="h-4 w-4" />{utkast?.ikke_lagret ? "Forslag til oppfølging" : "Utkast lagret i Gmail"}</DialogTitle>
+            <DialogDescription>{utkast?.ikke_lagret ? utkast.melding : "Ingenting er sendt. Se over og send fra Gmail når du er fornøyd."}</DialogDescription>
           </DialogHeader>
           {utkast && (
             <div className="space-y-2 text-sm">
@@ -432,8 +437,12 @@ export default function IDag() {
             </div>
           )}
           <DialogFooter className="gap-2 sm:gap-0">
-            <Button variant="ghost" onClick={slettUtkast}>Slett utkast</Button>
-            <Button asChild><a href="https://mail.google.com/mail/u/0/#drafts" target="_blank" rel="noreferrer" className="gap-1"><ExternalLink className="h-4 w-4" />Åpne i Gmail</a></Button>
+            {utkast?.ikke_lagret ? (
+              <Button variant="ghost" onClick={async () => { await navigator.clipboard.writeText(utkast.tekst); toast.success("Teksten er kopiert"); }}>Kopier tekst</Button>
+            ) : (
+              <Button variant="ghost" onClick={slettUtkast}>Slett utkast</Button>
+            )}
+            <Button asChild><a href={utkast?.ikke_lagret && utkast.thread_id ? `https://mail.google.com/mail/u/0/#all/${utkast.thread_id}` : "https://mail.google.com/mail/u/0/#drafts"} target="_blank" rel="noreferrer" className="gap-1"><ExternalLink className="h-4 w-4" />Åpne i Gmail</a></Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
