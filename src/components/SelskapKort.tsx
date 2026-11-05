@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { gmailLenke } from "@/lib/kundekort";
 import { format } from "date-fns";
 import { nb } from "date-fns/locale";
 import { Pencil, Plus } from "lucide-react";
@@ -101,7 +102,7 @@ export default function SelskapKort({ id, onClose, onKunde }: { id: string; onCl
               <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-sm">
                 <dt className="text-muted-foreground">Org.nr</dt><dd className="tabular-nums">{s.orgnr || "–"}</dd>
                 <dt className="text-muted-foreground">Telefon</dt><dd>{ekstra.telefon ? <a className="tabular-nums hover:underline" href={`tel:${ekstra.telefon.replace(/\s/g, "")}`}>{ekstra.telefon}</a> : "–"}</dd>
-                <dt className="text-muted-foreground">E-post</dt><dd className="truncate">{ekstra.e_post ? <a className="hover:underline" href={`mailto:${ekstra.e_post}`}>{ekstra.e_post}</a> : "–"}</dd>
+                <dt className="text-muted-foreground">E-post</dt><dd className="truncate">{ekstra.e_post ? <a className="hover:underline" href={gmailLenke(ekstra.e_post)} target="_blank" rel="noopener noreferrer">{ekstra.e_post}</a> : "–"}</dd>
                 <dt className="text-muted-foreground">Nettside</dt><dd className="truncate">{nettside ? <a className="hover:underline" href={nettside} target="_blank" rel="noreferrer">{s.domene}</a> : "–"}</dd>
               </dl>
             )}

@@ -50,6 +50,12 @@ export function fyllMal(tekst: string, v: { fornavn?: string; firma?: string }):
 export function smsLenke(telefon: string, tekst: string): string {
   return `sms:${telefon.replace(/\s/g, "")}?body=${encodeURIComponent(tekst)}`;
 }
-export function mailtoLenke(epost: string, emne: string, tekst: string): string {
-  return `mailto:${epost}?subject=${encodeURIComponent(emne)}&body=${encodeURIComponent(tekst)}`;
+/** Åpner Gmails skrivevindu (kontoen rd@snakk.ai) i stedet for standard e-postprogram. */
+export function gmailLenke(epost: string, emne = "", tekst = ""): string {
+  const q = new URLSearchParams({ view: "cm", fs: "1", authuser: "rd@snakk.ai", to: epost });
+  if (emne) q.set("su", emne);
+  if (tekst) q.set("body", tekst);
+  return `https://mail.google.com/mail/?${q.toString()}`;
 }
+/** @deprecated bruk gmailLenke */
+export const mailtoLenke = gmailLenke;

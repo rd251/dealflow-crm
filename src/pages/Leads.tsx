@@ -1,4 +1,5 @@
 import { KundeNavn, SelskapNavn } from "@/components/KortLenker";
+import { gmailLenke } from "@/lib/kundekort";
 import { useState, useEffect, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import PageShell from "@/components/PageShell";
@@ -884,7 +885,7 @@ export default function Leads() {
                   </div>
                   <div className="min-w-0">
                     <dt className="text-[11px] uppercase tracking-wide text-muted-foreground">E-post</dt>
-                    <dd className="truncate font-medium">{currentLead.e_post ? <a href={`mailto:${currentLead.e_post}`} className="hover:underline" title={currentLead.e_post}>{currentLead.e_post}</a> : "—"}</dd>
+                    <dd className="truncate font-medium">{currentLead.e_post ? <a href={gmailLenke(currentLead.e_post)} target="_blank" rel="noopener noreferrer" className="hover:underline" title={currentLead.e_post}>{currentLead.e_post}</a> : "—"}</dd>
                   </div>
                   <div className="min-w-0">
                     <dt className="text-[11px] uppercase tracking-wide text-muted-foreground">Kom inn</dt>

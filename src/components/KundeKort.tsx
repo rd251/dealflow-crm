@@ -16,7 +16,7 @@ import { erSenere } from "@/lib/logg-utfall";
 import { taActivNaa } from "@/lib/senere";
 import { Badge } from "@/components/ui/badge";
 import {
-  EPOST_MALER, SMS_MALER, fyllMal, mailtoLenke, smsLenke,
+  EPOST_MALER, SMS_MALER, fyllMal, gmailLenke, smsLenke,
   type MeldingMal,
 } from "@/lib/kundekort";
 import { cn } from "@/lib/utils";
@@ -144,9 +144,9 @@ export default function KundeKort({ r, onClose, onSelskap, onTilbake }: Props) {
   // ---------- Meldinger ----------
   const aapneMal = (kanal: Kanal, mal: MeldingMal) => {
     const tekst = fyllMal(mal.tekst, { fornavn, firma: info.firma });
-    const url = kanal === "SMS" ? smsLenke(info.telefon, tekst) : mailtoLenke(info.epost, fyllMal(mal.emne || "", { fornavn, firma: info.firma }), tekst);
+    const url = kanal === "SMS" ? smsLenke(info.telefon, tekst) : gmailLenke(info.epost, fyllMal(mal.emne || "", { fornavn, firma: info.firma }), tekst);
     setVentende({ kanal, mal }); setMalKanal(null);
-    window.location.href = url;
+    if (kanal === "SMS") window.location.href = url; else window.open(url, "_blank", "noopener");
   };
 
   const loggMelding = async (kanal: Kanal, mal?: MeldingMal) => {
@@ -228,7 +228,7 @@ export default function KundeKort({ r, onClose, onSelskap, onTilbake }: Props) {
                   <dt className="text-muted-foreground">Telefon</dt>
                   <dd>{info.telefon ? <a className="tabular-nums underline-offset-2 hover:underline" href={`tel:${tel}`}>{info.telefon}</a> : <span className="text-muted-foreground">Mangler</span>}</dd>
                   <dt className="text-muted-foreground">E-post</dt>
-                  <dd className="min-w-0 truncate">{info.epost ? <a className="underline-offset-2 hover:underline" href={`mailto:${info.epost}`}>{info.epost}</a> : <span className="text-muted-foreground">Mangler</span>}</dd>
+                  <dd className="min-w-0 truncate">{info.epost ? <a className="underline-offset-2 hover:underline" href={gmailLenke(info.epost)} target="_blank" rel="noopener noreferrer">{info.epost}</a> : <span className="text-muted-foreground">Mangler</span>}</dd>
                 </dl>
               )}
               {!redigerer && (
