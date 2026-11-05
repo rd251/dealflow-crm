@@ -109,11 +109,11 @@ export default function IDag() {
   const hentGjort = useCallback(async () => {
     const fra = midnattOslo();
     const [a, o, e] = await Promise.all([
-      supabase.from("aktiviteter").select("id, type, tittel, beskrivelse, dato, user_id, lead_id, kontakt_id, salgsmulighet_id, selskap_id")
+      supabase.from("aktiviteter").select("id, type, tittel, beskrivelse, dato, user_id, aktivitet_kilde, lead_id, kontakt_id, salgsmulighet_id, selskap_id")
         .eq("aktivitet_kilde", "manuell").gte("dato", fra).order("dato", { ascending: false }).limit(500),
       supabase.from("oppgaver").select("id, oppgave, updated_at, user_id, ansvarlig, lead_id, kontakt_id, salgsmulighet_id, selskap_id")
         .eq("status", "Ferdig").gte("updated_at", fra).limit(500),
-      supabase.from("aktiviteter").select("id, type, tittel, beskrivelse, dato, user_id, lead_id, kontakt_id, salgsmulighet_id, selskap_id")
+      supabase.from("aktiviteter").select("id, type, tittel, beskrivelse, dato, user_id, aktivitet_kilde, lead_id, kontakt_id, salgsmulighet_id, selskap_id")
         .eq("aktivitet_kilde", "gmail_sendt").gte("dato", fra).order("dato", { ascending: false }).limit(500),
     ]);
     setGjortEpost((e.data as GjortAkt[]) || []);

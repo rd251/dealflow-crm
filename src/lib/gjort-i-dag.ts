@@ -3,7 +3,7 @@ import { renAktivitetstekst, epostAdresser } from "@/lib/aktivitet-visning";
 
 export type GjortType = "snakket" | "svarte_ikke" | "ring_tilbake" | "booket" | "ikke_naa" | "ikke_interessert" | "melding" | "notat" | "oppgave" | "epost" | "annet";
 
-export interface GjortAkt { id: string; type: string; tittel: string | null; beskrivelse: string | null; dato: string; user_id: string | null; lead_id?: string | null; kontakt_id?: string | null; salgsmulighet_id?: string | null; selskap_id?: string | null }
+export interface GjortAkt { id: string; type: string; tittel: string | null; beskrivelse: string | null; dato: string; user_id: string | null; aktivitet_kilde?: string | null; lead_id?: string | null; kontakt_id?: string | null; salgsmulighet_id?: string | null; selskap_id?: string | null }
 export interface GjortOppgave { id: string; oppgave: string; updated_at: string; user_id: string | null; ansvarlig?: string | null; lead_id?: string | null; kontakt_id?: string | null; salgsmulighet_id?: string | null; selskap_id?: string | null }
 
 export interface GjortRad {
@@ -18,6 +18,9 @@ export const GJORT_LABEL: Record<GjortType, string> = {
 };
 
 const SAMTALE: GjortType[] = ["snakket", "svarte_ikke", "ring_tilbake", "booket", "ikke_naa", "ikke_interessert"];
+
+/** Gmailsynk er ikke «gjort» i dag: mottatte e-poster hører ikke med, sendte telles via byggEposter. */
+const IKKE_GJORT_KILDE = new Set(["gmail_mottatt", "gmail_sendt"]);
 
 /** Utfall utledes fra titlene den felles loggkomponenten skriver. */
 export function klassifiser(a: Pick<GjortAkt, "type" | "tittel">): GjortType {
@@ -47,7 +50,7 @@ export function midnattOslo(naa: Date = new Date()): string {
 export function byggEposter(eposter: GjortAkt[], manuelle: GjortAkt[], fra: string, gmailEier: string | null = null): GjortRad[] {
   const fraMs = new Date(fra).getTime();
   const manuelleEpost = manuelle.filter(a => klassifiser(a) === "melding" && (a.type === "E-post" || /e-post/i.test(a.tittel || "")));
-  return eposter.filter(e => new Date(e.dato).getTime() >= fraMs && !/^→?\s*\[Snakk CRM\]/.test((e.tittel || "").trim()))
+  return eposter.filter(e => (!e.aktivitet_kilde || e.aktivitet_kilde === "gmail_sendt") && new Date(e.dato).getTime() >= fraMs && !/^→?\s*\[Snakk CRM\]/.test((e.tittel || "").trim()))
     .filter(e => {
       // Unngå dobbelttelling: manuell e-postlogg på samme kunde innen 15 min.
       const t = new Date(e.dato).getTime();
@@ -68,7 +71,7 @@ export function byggEposter(eposter: GjortAkt[], manuelle: GjortAkt[], fra: stri
 export function byggGjort(akt: GjortAkt[], oppg: GjortOppgave[], fra: string): GjortRad[] {
   const fraMs = new Date(fra).getTime();
   const rader: GjortRad[] = [
-    ...akt.filter(a => a.type !== "Møte" && new Date(a.dato).getTime() >= fraMs).map(a => {
+    ...akt.filter(a => a.type !== "Møte" && !IKKE_GJORT_KILDE.has(a.aktivitet_kilde || "") && new Date(a.dato).getTime() >= fraMs).map(a => {
       const type = klassifiser(a);
       const besk = renAktivitetstekst(a.beskrivelse);
       return {
