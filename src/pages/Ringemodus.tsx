@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { gmailLenke } from "@/lib/kundekort";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -280,7 +281,7 @@ export default function Ringemodus() {
                   <span className="rounded-xl border border-dashed px-5 py-3 text-sm text-muted-foreground">Mangler telefonnummer</span>
                 )}
                 {lead.e_post && (
-                  <a href={`mailto:${lead.e_post}`} className="inline-flex items-center gap-2 rounded-xl border px-4 py-3 text-sm hover:bg-muted">
+                  <a href={gmailLenke(lead.e_post)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl border px-4 py-3 text-sm hover:bg-muted">
                     <Mail className="w-4 h-4" />{lead.e_post}
                   </a>
                 )}

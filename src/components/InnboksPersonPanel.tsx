@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { gmailLenke } from "@/lib/kundekort";
 import { format } from "date-fns";
 import { nb } from "date-fns/locale";
 import { Building2, ChevronRight, Mail, Phone, Plus, ExternalLink, UserPlus } from "lucide-react";
@@ -123,7 +124,7 @@ export default function InnboksPersonPanel({ person, onClose, onEndret, opprettL
             </form>
           ) : v ? (
             <span className="flex min-w-0 items-center gap-2">
-              {lenke ? <a href={lenke} className={cn("truncate underline-offset-2 hover:underline", key === "telefon" && "tabular-nums")}>{v}</a> : <span className="truncate">{v}</span>}
+              {lenke ? <a href={lenke} {...(lenke.startsWith("http") ? { target: "_blank", rel: "noopener noreferrer" } : {})} className={cn("truncate underline-offset-2 hover:underline", key === "telefon" && "tabular-nums")}>{v}</a> : <span className="truncate">{v}</span>}
               {kanRedigere && <button type="button" className="shrink-0 text-xs text-muted-foreground underline-offset-2 hover:underline" onClick={() => { setVerdi(v); setRedigerer(key); }}>Endre</button>}
             </span>
           ) : kanRedigere ? (
@@ -165,7 +166,7 @@ export default function InnboksPersonPanel({ person, onClose, onEndret, opprettL
               ? <Button size="sm" variant="outline" onClick={() => openKunde({ type: "lead", id: person.leadId! })}>Åpne lead</Button>
               : person.kontaktId && <Button size="sm" variant="outline" onClick={() => openKunde({ type: "kontakt", id: person.kontaktId! })}>Åpne kontakt</Button>}
             {opprettLead?.vis && <Button size="sm" variant="outline" className="gap-1" disabled={opprettLead.laster} onClick={opprettLead.onClick}><UserPlus className="h-3.5 w-3.5" />{opprettLead.laster ? "Oppretter..." : "Opprett lead"}</Button>}
-            <Button asChild size="sm" variant="outline" className="gap-1"><a href={`mailto:${person.email}`}><Mail className="h-3.5 w-3.5" />Svar</a></Button>
+            <Button asChild size="sm" variant="outline" className="gap-1"><a href={gmailLenke(person.email)} target="_blank" rel="noopener noreferrer"><Mail className="h-3.5 w-3.5" />Svar</a></Button>
             {tel && <Button asChild size="sm" variant="outline" className="gap-1"><a href={`tel:${tel}`}><Phone className="h-3.5 w-3.5" />Ring</a></Button>}
             {person.partnerId && <Button asChild size="sm" variant="ghost" className="gap-1"><a href={`/partnere/${person.partnerId}`}><ExternalLink className="h-3.5 w-3.5" />Partner</a></Button>}
           </div>
@@ -214,7 +215,7 @@ export default function InnboksPersonPanel({ person, onClose, onEndret, opprettL
               <section aria-labelledby="ip-kontakt" className="space-y-2">
                 <h3 id="ip-kontakt" className={tittel}>Kontaktdetaljer</h3>
                 <dl className="grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-2 text-sm">
-                  {felt("e_post", "E-post", kontakt?.e_post || lead?.e_post || person.email, `mailto:${person.email}`)}
+                  {felt("e_post", "E-post", kontakt?.e_post || lead?.e_post || person.email, gmailLenke(person.email))}
                   {felt("telefon", "Telefon", telefon, tel ? `tel:${tel}` : undefined)}
                   {felt("rolle", "Rolle", rolle)}
                   {person.ansvarlig && <><dt className="text-muted-foreground">Ansvarlig</dt><dd>{person.ansvarlig}</dd></>}
