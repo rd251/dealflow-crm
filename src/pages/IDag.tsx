@@ -108,18 +108,18 @@ export default function IDag() {
   // ---------- Gjort i dag ----------
   const hentGjort = useCallback(async () => {
     const fra = midnattOslo();
-    const [a, o, e, g] = await Promise.all([
+    const [a, o, e] = await Promise.all([
       supabase.from("aktiviteter").select("id, type, tittel, beskrivelse, dato, user_id, lead_id, kontakt_id, salgsmulighet_id, selskap_id")
         .eq("aktivitet_kilde", "manuell").gte("dato", fra).order("dato", { ascending: false }).limit(500),
       supabase.from("oppgaver").select("id, oppgave, updated_at, user_id, ansvarlig, lead_id, kontakt_id, salgsmulighet_id, selskap_id")
         .eq("status", "Ferdig").gte("updated_at", fra).limit(500),
       supabase.from("aktiviteter").select("id, type, tittel, beskrivelse, dato, user_id, lead_id, kontakt_id, salgsmulighet_id, selskap_id")
         .eq("aktivitet_kilde", "gmail_sendt").gte("dato", fra).order("dato", { ascending: false }).limit(500),
-      supabase.from("google_calendar_connections").select("user_id").eq("gmail_sync_enabled", true).limit(2),
     ]);
     setGjortEpost((e.data as GjortAkt[]) || []);
-    const eiere = (g.data as { user_id: string }[] | null) || [];
-    setGmailEier(eiere.length === 1 ? eiere[0].user_id : null);
+    // Gmail-rader uten user_id tilhører samme synkede innboks – utled eieren fra rader som har den.
+    const eiere = [...new Set(((e.data as GjortAkt[]) || []).map(x => x.user_id).filter(Boolean))];
+    setGmailEier(eiere.length === 1 ? (eiere[0] as string) : null);
     setGjortAkt((a.data as GjortAkt[]) || []);
     setGjortOppg((o.data as GjortOppgave[]) || []);
   }, []);
