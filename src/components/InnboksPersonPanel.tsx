@@ -124,7 +124,7 @@ export default function InnboksPersonPanel({ person, onClose, onEndret, opprettL
             </form>
           ) : v ? (
             <span className="flex min-w-0 items-center gap-2">
-              {lenke ? <a href={lenke} className={cn("truncate underline-offset-2 hover:underline", key === "telefon" && "tabular-nums")}>{v}</a> : <span className="truncate">{v}</span>}
+              {lenke ? <a href={lenke} {...(lenke.startsWith("http") ? { target: "_blank", rel: "noopener noreferrer" } : {})} className={cn("truncate underline-offset-2 hover:underline", key === "telefon" && "tabular-nums")}>{v}</a> : <span className="truncate">{v}</span>}
               {kanRedigere && <button type="button" className="shrink-0 text-xs text-muted-foreground underline-offset-2 hover:underline" onClick={() => { setVerdi(v); setRedigerer(key); }}>Endre</button>}
             </span>
           ) : kanRedigere ? (
