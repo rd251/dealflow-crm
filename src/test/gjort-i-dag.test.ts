@@ -29,6 +29,17 @@ describe("Gjort i dag", () => {
     expect(rader.map(r => r.key)).toEqual(["a-4", "a-3", "a-2", "o-o1", "a-1"]);
     expect(oppsummer(rader)).toEqual({ samtaler: 3, snakket: 1, booket: 1, meldinger: 1, oppgaver: 1, eposter: 0 });
   });
+
+  it("utelater både mottatte og sendte Gmail-e-poster fra aktivitetlisten", () => {
+    const fra = "2026-11-01T23:00:00.000Z";
+    const rader = byggGjort([
+      { ...akt("1", "Snakket med – A", "2026-11-02T08:00:00Z"), aktivitet_kilde: "manuell" },
+      { ...akt("2", "E-post", "2026-11-02T09:00:00Z", "E-post"), aktivitet_kilde: "gmail_mottatt" },
+      { ...akt("3", "E-post", "2026-11-02T10:00:00Z", "E-post"), aktivitet_kilde: "gmail_sendt" },
+    ], [], fra);
+    expect(rader.map(r => r.key)).toEqual(["a-1"]);
+    expect(oppsummer(rader)).toEqual({ samtaler: 0, snakket: 1, booket: 0, meldinger: 0, oppgaver: 0, eposter: 0 });
+  });
 });
 
 import { byggEposter as _byggEposter, oppsummer as _oppsummer } from "@/lib/gjort-i-dag";
@@ -48,5 +59,9 @@ describe("E-poster i Gjort i dag", () => {
   it("dobbelttelles ikke når samme e-post er logget manuelt", () => {
     const manuell = { id: "m", type: "E-post", tittel: "Sendte e-post", beskrivelse: null, dato: "2026-11-05T07:05:00Z", user_id: "u1", lead_id: "L" };
     expect(_byggEposter([e("1", "2026-11-05T07:00:00Z", { lead_id: "L" })], [manuell], fra)).toHaveLength(0);
+  });
+  it("telles ikke som sendt når Gmail-raden er mottatt", () => {
+    expect(_byggEposter([e("1", "2026-11-05T07:00:00Z", { aktivitet_kilde: "gmail_mottatt" })], [], fra, "u1")).toHaveLength(0);
+    expect(_byggEposter([e("2", "2026-11-05T07:00:00Z", { aktivitet_kilde: "gmail_sendt" })], [], fra, "u1")).toHaveLength(1);
   });
 });
