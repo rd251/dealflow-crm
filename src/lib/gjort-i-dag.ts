@@ -50,7 +50,7 @@ export function midnattOslo(naa: Date = new Date()): string {
 export function byggEposter(eposter: GjortAkt[], manuelle: GjortAkt[], fra: string, gmailEier: string | null = null): GjortRad[] {
   const fraMs = new Date(fra).getTime();
   const manuelleEpost = manuelle.filter(a => klassifiser(a) === "melding" && (a.type === "E-post" || /e-post/i.test(a.tittel || "")));
-  return eposter.filter(e => new Date(e.dato).getTime() >= fraMs && !/^→?\s*\[Snakk CRM\]/.test((e.tittel || "").trim()))
+  return eposter.filter(e => (!e.aktivitet_kilde || e.aktivitet_kilde === "gmail_sendt") && new Date(e.dato).getTime() >= fraMs && !/^→?\s*\[Snakk CRM\]/.test((e.tittel || "").trim()))
     .filter(e => {
       // Unngå dobbelttelling: manuell e-postlogg på samme kunde innen 15 min.
       const t = new Date(e.dato).getTime();
@@ -71,7 +71,7 @@ export function byggEposter(eposter: GjortAkt[], manuelle: GjortAkt[], fra: stri
 export function byggGjort(akt: GjortAkt[], oppg: GjortOppgave[], fra: string): GjortRad[] {
   const fraMs = new Date(fra).getTime();
   const rader: GjortRad[] = [
-    ...akt.filter(a => a.type !== "Møte" && new Date(a.dato).getTime() >= fraMs).map(a => {
+    ...akt.filter(a => a.type !== "Møte" && !IKKE_GJORT_KILDE.has(a.aktivitet_kilde || "") && new Date(a.dato).getTime() >= fraMs).map(a => {
       const type = klassifiser(a);
       const besk = renAktivitetstekst(a.beskrivelse);
       return {
