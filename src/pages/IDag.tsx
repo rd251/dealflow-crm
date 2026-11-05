@@ -18,7 +18,7 @@ import { dagStr, dagerForfalt, erMin, filtrerVenter, folgOppNa, salgSomStarStill
 import { useKort } from "@/hooks/use-kort";
 import { KundeNavn, SelskapNavn } from "@/components/KortLenker";
 import { cn } from "@/lib/utils";
-import { byggGjort, midnattOslo, oppsummer, GJORT_EVENT, type GjortAkt, type GjortOppgave } from "@/lib/gjort-i-dag";
+import { byggGjort, byggEposter, type GjortRad, midnattOslo, oppsummer, GJORT_EVENT, type GjortAkt, type GjortOppgave } from "@/lib/gjort-i-dag";
 
 interface Moete {
   id: string; tittel: string | null; dato: string; start_tid: string | null; user_id: string | null;
@@ -67,6 +67,8 @@ export default function IDag() {
   const { openKunde } = useKort();
   const [gjortAkt, setGjortAkt] = useState<GjortAkt[]>([]);
   const [gjortOppg, setGjortOppg] = useState<GjortOppgave[]>([]);
+  const [gjortEpost, setGjortEpost] = useState<GjortAkt[]>([]);
+  const [gmailEier, setGmailEier] = useState<string | null>(null);
   const [profiler, setProfiler] = useState<Record<string, string>>({});
   const [visAlleGjort, setVisAlleGjort] = useState(false);
   const setValgtRad = (r: FolgOppRad) => openKunde({ type: r.type, id: r.id });
@@ -106,12 +108,18 @@ export default function IDag() {
   // ---------- Gjort i dag ----------
   const hentGjort = useCallback(async () => {
     const fra = midnattOslo();
-    const [a, o] = await Promise.all([
+    const [a, o, e, g] = await Promise.all([
       supabase.from("aktiviteter").select("id, type, tittel, beskrivelse, dato, user_id, lead_id, kontakt_id, salgsmulighet_id, selskap_id")
         .eq("aktivitet_kilde", "manuell").gte("dato", fra).order("dato", { ascending: false }).limit(500),
       supabase.from("oppgaver").select("id, oppgave, updated_at, user_id, ansvarlig, lead_id, kontakt_id, salgsmulighet_id, selskap_id")
         .eq("status", "Ferdig").gte("updated_at", fra).limit(500),
+      supabase.from("aktiviteter").select("id, type, tittel, beskrivelse, dato, user_id, lead_id, kontakt_id, salgsmulighet_id, selskap_id")
+        .eq("aktivitet_kilde", "gmail_sendt").gte("dato", fra).order("dato", { ascending: false }).limit(500),
+      supabase.from("google_calendar_connections").select("user_id").eq("gmail_sync_enabled", true).limit(2),
     ]);
+    setGjortEpost((e.data as GjortAkt[]) || []);
+    const eiere = (g.data as { user_id: string }[] | null) || [];
+    setGmailEier(eiere.length === 1 ? eiere[0].user_id : null);
     setGjortAkt((a.data as GjortAkt[]) || []);
     setGjortOppg((o.data as GjortOppgave[]) || []);
   }, []);
@@ -126,8 +134,9 @@ export default function IDag() {
   }, [hentGjort]);
   // Oppgaver markert Ferdig lagres i bakgrunnen – hent på nytt kort etter endringer.
   useEffect(() => { const t = setTimeout(() => void hentGjort(), 2000); return () => clearTimeout(t); }, [oppgaver, hentGjort]);
-  const gjort = useMemo(() => byggGjort(gjortAkt, gjortOppg, midnattOslo())
-    .filter(r => min({ user_id: r.user_id, ansvarlig: r.key.startsWith("o-") ? r.ansvarlig : undefined })), [gjortAkt, gjortOppg, min]);
+  const gjort = useMemo(() => [...byggGjort(gjortAkt, gjortOppg, midnattOslo()), ...byggEposter(gjortEpost, gjortAkt, midnattOslo(), gmailEier)]
+    .sort((a: GjortRad, b: GjortRad) => b.tid.localeCompare(a.tid))
+    .filter(r => min({ user_id: r.user_id, ansvarlig: r.key.startsWith("o-") ? r.ansvarlig : undefined })), [gjortAkt, gjortOppg, gjortEpost, gmailEier, min]);
   const gjortSum = oppsummer(gjort);
   const navnFor = (r: (typeof gjort)[number]) => {
     if (r.lead_id) { const l = leads.find(x => x.id === r.lead_id); if (l) return { ref: { type: "lead" as const, id: l.id }, navn: l.kontaktperson || l.firmanavn }; }
@@ -301,7 +310,7 @@ export default function IDag() {
 
           <Seksjon id="gjort" tittel="Gjort i dag" antall={gjort.length}>
             <div className="flex flex-wrap gap-x-4 gap-y-1 border-b px-3 pb-3 pt-1 text-xs text-muted-foreground">
-              {([["Samtaler", gjortSum.samtaler], ["Snakket med", gjortSum.snakket], ["Møter booket", gjortSum.booket], ["Meldinger", gjortSum.meldinger], ["Oppgaver fullført", gjortSum.oppgaver]] as const).map(([l, v]) => (
+              {([["Samtaler", gjortSum.samtaler], ["Snakket med", gjortSum.snakket], ["Møter booket", gjortSum.booket], ["Meldinger", gjortSum.meldinger], ["Oppgaver fullført", gjortSum.oppgaver], ["E-poster", gjortSum.eposter]] as const).map(([l, v]) => (
                 <span key={l}><span className="font-semibold text-foreground tabular-nums">{v}</span> {l}</span>
               ))}
             </div>
