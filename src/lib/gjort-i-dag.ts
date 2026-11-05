@@ -3,7 +3,7 @@ import { renAktivitetstekst, epostAdresser } from "@/lib/aktivitet-visning";
 
 export type GjortType = "snakket" | "svarte_ikke" | "ring_tilbake" | "booket" | "ikke_naa" | "ikke_interessert" | "melding" | "notat" | "oppgave" | "epost" | "annet";
 
-export interface GjortAkt { id: string; type: string; tittel: string | null; beskrivelse: string | null; dato: string; user_id: string | null; lead_id?: string | null; kontakt_id?: string | null; salgsmulighet_id?: string | null; selskap_id?: string | null }
+export interface GjortAkt { id: string; type: string; tittel: string | null; beskrivelse: string | null; dato: string; user_id: string | null; aktivitet_kilde?: string | null; lead_id?: string | null; kontakt_id?: string | null; salgsmulighet_id?: string | null; selskap_id?: string | null }
 export interface GjortOppgave { id: string; oppgave: string; updated_at: string; user_id: string | null; ansvarlig?: string | null; lead_id?: string | null; kontakt_id?: string | null; salgsmulighet_id?: string | null; selskap_id?: string | null }
 
 export interface GjortRad {
@@ -18,6 +18,9 @@ export const GJORT_LABEL: Record<GjortType, string> = {
 };
 
 const SAMTALE: GjortType[] = ["snakket", "svarte_ikke", "ring_tilbake", "booket", "ikke_naa", "ikke_interessert"];
+
+/** Gmailsynk er ikke «gjort» i dag: mottatte e-poster hører ikke med, sendte telles via byggEposter. */
+const IKKE_GJORT_KILDE = new Set(["gmail_mottatt", "gmail_sendt"]);
 
 /** Utfall utledes fra titlene den felles loggkomponenten skriver. */
 export function klassifiser(a: Pick<GjortAkt, "type" | "tittel">): GjortType {
