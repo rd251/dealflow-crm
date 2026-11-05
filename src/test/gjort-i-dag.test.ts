@@ -38,7 +38,7 @@ describe("Gjort i dag", () => {
       { ...akt("3", "E-post", "2026-11-02T10:00:00Z", "E-post"), aktivitet_kilde: "gmail_sendt" },
     ], [], fra);
     expect(rader.map(r => r.key)).toEqual(["a-1"]);
-    expect(oppsummer(rader)).toEqual({ samtaler: 0, snakket: 1, booket: 0, meldinger: 0, oppgaver: 0, eposter: 0 });
+    expect(oppsummer(rader)).toEqual({ samtaler: 1, snakket: 1, booket: 0, meldinger: 0, oppgaver: 0, eposter: 0 });
   });
 });
 
