@@ -27,7 +27,7 @@ describe("Gjort i dag", () => {
       akt("6", "Kundemøte", "2026-11-02T09:30:00Z", "Møte"),
     ], [{ id: "o1", oppgave: "Ring A", updated_at: "2026-11-02T08:30:00Z", user_id: "u1" }], fra);
     expect(rader.map(r => r.key)).toEqual(["a-4", "a-3", "a-2", "o-o1", "a-1"]);
-    expect(oppsummer(rader)).toEqual({ samtaler: 3, snakket: 1, booket: 1, meldinger: 1, oppgaver: 1 });
+    expect(oppsummer(rader)).toEqual({ samtaler: 3, snakket: 1, booket: 1, meldinger: 1, oppgaver: 1, eposter: 0 });
   });
 });
 
