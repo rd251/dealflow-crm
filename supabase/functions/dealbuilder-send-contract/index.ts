@@ -23,6 +23,9 @@ const BodySchema = z.object({
     pris: z.number(),
     minutter: z.string(),
   })).optional(),
+  // Ferdig kontrakt-PDF (base64) som sendes i stedet for generert PDF. Krever innlogget @snakk.ai-bruker.
+  pdf_base64: z.string().min(100).max(15_000_000).optional(),
+  tittel: z.string().min(1).max(200).optional(),
 });
 
 Deno.serve(async (req) => {
@@ -50,6 +53,23 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
+    let pdfBytes: Uint8Array;
+    if (data.pdf_base64) {
+      // Egen ferdig PDF: kun for innloggede Snakk-ansatte
+      const token = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "");
+      const { data: userData } = await supabase.auth.getUser(token);
+      const email = userData?.user?.email?.toLowerCase() ?? "";
+      if (!email.endsWith("@snakk.ai")) {
+        return new Response(JSON.stringify({ error: "Ikke tilgang" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      pdfBytes = Uint8Array.from(atob(data.pdf_base64), (c) => c.charCodeAt(0));
+      if (String.fromCharCode(...pdfBytes.slice(0, 5)) !== "%PDF-") {
+        throw new Error("Vedlegget er ikke en PDF");
+      }
+    } else {
     // 1. Generate PDF
     const pdfRes = await fetch(`${SUPABASE_URL}/functions/v1/generate-contract-pdf`, {
       method: "POST",
@@ -80,8 +100,8 @@ Deno.serve(async (req) => {
       throw new Error(`PDF generation failed: ${errText}`);
     }
 
-    const pdfBuffer = await pdfRes.arrayBuffer();
-    const pdfBytes = new Uint8Array(pdfBuffer);
+    pdfBytes = new Uint8Array(await pdfRes.arrayBuffer());
+    }
 
     // 2. Upload PDF to DealBuilder via their upload endpoint
     const pdfFileName = `kontrakt-${data.firmanavn.replace(/\s+/g, "-")}.pdf`;
@@ -132,7 +152,7 @@ Deno.serve(async (req) => {
       mode: "SendByEmail",
       templateId: "73bebc18-b668-4266-b323-3797b3e7ceab",
       uploadedPdfUrl,
-      title: `Avtale om bruk av Snakk Teknologi AS - ${data.firmanavn}`,
+      title: data.tittel ?? `Avtale om bruk av Snakk Teknologi AS - ${data.firmanavn}`,
       creatorEmail: data.sender_email,
       senderEmail: data.sender_email,
       validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
@@ -170,7 +190,7 @@ Deno.serve(async (req) => {
     }
 
     const dbResult = await dbRes.json();
-    const dokumentId = dbResult.id || dbResult.documentId || null;
+    const dokumentId = dbResult.id || dbResult.documentId || dbResult.data?.id || dbResult.data?.documentId || null;
 
     // 5. Update salgsmulighet
     const updateData: Record<string, unknown> = {

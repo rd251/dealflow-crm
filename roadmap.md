@@ -138,4 +138,4 @@
 
 ## Bryggeloftet – kontrakt
 - [x] Før inn Bryggestuen - Bryggeloftet AS og org.nr. 938 345 686 i Robins opplastede kontrakt (ny versjon, ellers uendret)
-- [ ] Send til DealBuilder (venter på klarsignal fra Robin)
+- [x] Sendt til DealBuilder for signering (Bjarne Waagenes, status Sendt)
