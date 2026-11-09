@@ -2285,6 +2285,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      kan_redigere_crm: { Args: { _user_id: string }; Returns: boolean }
       lead_velkomst_stopp: { Args: never; Returns: undefined }
       moete_forslag_til_salgsmulighet: {
         Args: { _moete_id: string }
