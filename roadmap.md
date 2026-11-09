@@ -135,3 +135,7 @@
 ## Felles logging
 - [x] Én «Hva skjedde?»-komponent i kundekort, lead-panel, «+ Logg», Følg opp/ringeliste, aktivitetslogger og Innboks; gamle varianter fjernet
 - [x] «Ikke nå» → Senere (1/3/6 mnd), egen Senere-fane, badge og «Ta opp nå»
+
+## Bryggeloftet – kontrakt
+- [x] Før inn Bryggestuen - Bryggeloftet AS og org.nr. 938 345 686 i Robins opplastede kontrakt (ny versjon, ellers uendret)
+- [ ] Send til DealBuilder (venter på klarsignal fra Robin)
