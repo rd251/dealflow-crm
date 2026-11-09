@@ -12,6 +12,8 @@ const MAKS_ALDER_TIMER = 24;
 const BATCH = 5;
 const EMNE_LANG = "Snakk AI – Skal vi ta en prat?";
 const EMNE_KORT = "Takk for henvendelsen – Snakk AI";
+const BROSJYRE_URL = "https://tchmujgzcklwgptocbno.supabase.co/storage/v1/object/public/email-assets/Snakk-salgsbrosjyre.pdf";
+const BROSJYRE_TEKST = "I mellomtiden kan du lese mer om hva vi tilbyr bedrifter i salgsbrosjyren vår:";
 const ARBEIDSTID_START = 8; // norsk tid
 const ARBEIDSTID_SLUTT = 16;
 function iArbeidstid(iso: string): boolean {
@@ -68,7 +70,7 @@ async function aiTekst(l: any): Promise<string | null> {
   const key = Deno.env.get("LOVABLE_API_KEY");
   if (!key) return null;
   const instr = `Du skriver en kort, varm og personlig første e-post på norsk (bokmål) fra Robin i Snakk AI til et nytt lead.
-Følg denne malen tett i tone, lengde og struktur, men tilpass setning 3 til det leadet faktisk har skrevet/meldt interesse for (bruksområde, notater, bedrift). Ikke finn på detaljer som ikke står i dataene. Ikke ta med hilsen/signatur til slutt – den legges på automatisk. Ingen plassholdere i klammer.
+Følg denne malen tett i tone, lengde og struktur, men tilpass setning 3 til det leadet faktisk har skrevet/meldt interesse for (bruksområde, notater, bedrift). Ikke finn på detaljer som ikke står i dataene. Ikke ta med hilsen/signatur eller lenker til slutt – lenke til salgsbrosjyre og signatur legges på automatisk. Ingen plassholdere i klammer.
 
 MAL:
 ${malTekst({ kontaktperson: "Stig Arne", firmanavn: "EasyMarketing" }).replace("Så hyggelig at du har vist interesse for Snakk AI!", "Så hyggelig at du har vist interesse for Snakk AI!\n\nJeg så at du hadde meldt interesse for løsningen vår for kundeservice og saksbehandling.")}`;
@@ -152,8 +154,9 @@ Deno.serve(async (req) => {
       const brodtekst = kort
         ? `Hei${fn ? " " + fn : ""}!\n\nTakk for henvendelsen, vi kontakter deg snart.`
         : (await aiTekst(l)) ?? malTekst(l);
-      const tekst = `${brodtekst}\n\n${robinSignatureText()}`;
-      const html = `<div style="font-family:Arial,Helvetica,sans-serif;">${escapeEmailHtml(brodtekst).replace(/\n/g, "<br>")}</div>${robinSignatureHtml()}`;
+      const tekst = `${brodtekst}\n\n${BROSJYRE_TEKST}\n${BROSJYRE_URL}\n\n${robinSignatureText()}`;
+      const brosjyreHtml = `<p style="margin:16px 0 0;">${escapeEmailHtml(BROSJYRE_TEKST)}<br><a href="${BROSJYRE_URL}" target="_blank" style="color:#111111;font-weight:bold;">Last ned salgsbrosjyren (PDF)</a></p>`;
+      const html = `<div style="font-family:Arial,Helvetica,sans-serif;">${escapeEmailHtml(brodtekst).replace(/\n/g, "<br>")}${brosjyreHtml}</div>${robinSignatureHtml()}`;
       const boundary = `snakk_${id}`;
       const raw = [
         `From: =?UTF-8?B?${b64(navn)}?= <${AVSENDER_EPOST}>`,
