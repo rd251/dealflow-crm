@@ -8,7 +8,7 @@ import { useCrmStore } from "@/hooks/use-crm-store";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, CartesianGrid, LineChart, Line, PieChart, Pie, Legend, ComposedChart } from "recharts";
 import { beregnTotalKontraktsverdi } from "@/data/crm-data";
-import { ArrowLeft, CalendarIcon, Download, Loader2 } from "lucide-react";
+import { ArrowLeft, CalendarIcon, Download, List, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -16,6 +16,11 @@ import { cn, nok } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { generateWeeklyReportPDF } from "@/lib/weekly-report-pdf";
 import { toast } from "sonner";
+import RapportDetaljer from "@/components/RapportDetaljer";
+import {
+  aktiveVed, erLiveVed, leadRad, leadsI, lukketI, moeteRad, moeterI, partnerRad, selskapRad, smRad, sorter, taptI, vunnetI,
+  type RapportMoete, type RapportRad,
+} from "@/lib/rapport-detaljer";
 
 function getMonthsBetween(from: Date, to: Date) {
   const months: { date: Date; label: string }[] = [];
@@ -46,17 +51,20 @@ export default function Rapporter() {
   const [fromDate, setFromDate] = useState<Date>(subMonths(startOfMonth(now), 11));
   const [toDate, setToDate] = useState<Date>(startOfMonth(now));
   const [downloadingPdf, setDownloadingPdf] = useState(false);
-  const [meetings, setMeetings] = useState<{ dato: string; no_show: boolean }[]>([]);
+  const [meetings, setMeetings] = useState<RapportMoete[]>([]);
+  const [valgt, setValgt] = useState<{ id: string; i: number | null } | null>(null);
+
+  useEffect(() => { setValgt(null); }, [fromDate, toDate]);
 
   useEffect(() => {
     const fetchMeetings = async () => {
       const { data } = await supabase
         .from("aktiviteter")
-        .select("dato, no_show")
+        .select("id, dato, no_show, tittel, beskrivelse, lead_id, kontakt_id, salgsmulighet_id, selskap_id")
         .eq("type", "Møte")
         .gte("dato", fromDate.toISOString())
         .lte("dato", endOfMonth(toDate).toISOString());
-      setMeetings(data || []);
+      setMeetings((data || []) as RapportMoete[]);
     };
     fetchMeetings();
   }, [fromDate, toDate]);
@@ -79,41 +87,22 @@ export default function Rapporter() {
 
   
   const months = getMonthsBetween(fromDate, toDate);
+  const mndDatoer = months.map(m => m.date);
+  const per = (date: Date) => [date];
 
   // --- MRR over tid ---
-  const mrrByMonth = months.map(({ date, label }) => {
-    const m = date.getMonth(), y = date.getFullYear();
-    const closed = selskaper.filter(s => {
-      if (!s.lukkedato) return false;
-      const dt = new Date(s.lukkedato);
-      return dt.getMonth() === m && dt.getFullYear() === y;
-    });
-    return { mnd: label, mrr: closed.reduce((sum, s) => sum + s.mrr, 0) };
-  });
+  const mrrByMonth = months.map(({ date, label }) => ({ mnd: label, mrr: lukketI(selskaper, per(date)).reduce((sum, s) => sum + s.mrr, 0) }));
 
   // --- Total ARR over tid (Live vs Ikke-live) ---
   const arrByMonth = months.map(({ date, label }) => {
-    const endOfM = endOfMonth(date);
-    const activeAtMonth = selskaper.filter(s => {
-      if (!s.lukkedato || new Date(s.lukkedato) > endOfM) return false;
-      if (s.kundestatus === "Kansellert" && s.kansellert_dato && new Date(s.kansellert_dato) <= endOfM) return false;
-      return true;
-    });
-    const liveArr = activeAtMonth
-      .filter(s => s.go_live_dato && new Date(s.go_live_dato) <= endOfM)
-      .reduce((sum, s) => sum + (s.mrr * 12), 0);
-    const ikkeLiveArr = activeAtMonth
-      .filter(s => !s.go_live_dato || new Date(s.go_live_dato) > endOfM)
-      .reduce((sum, s) => sum + (s.mrr * 12), 0);
+    const aktive = aktiveVed(selskaper, date);
+    const liveArr = aktive.filter(s => erLiveVed(s, date)).reduce((sum, s) => sum + s.mrr * 12, 0);
+    const ikkeLiveArr = aktive.filter(s => !erLiveVed(s, date)).reduce((sum, s) => sum + s.mrr * 12, 0);
     return { mnd: label, liveArr, ikkeLiveArr, totalArr: liveArr + ikkeLiveArr };
   });
 
   // --- Oppstartskostnader per måned ---
-  const oppstartByMonth = months.map(({ date, label }) => {
-    const m = date.getMonth(), y = date.getFullYear();
-    const vunnet = salgsmuligheter.filter(s => s.status === "Vunnet" && s.vunnet_dato && new Date(s.vunnet_dato).getMonth() === m && new Date(s.vunnet_dato).getFullYear() === y);
-    return { mnd: label, vunnet: vunnet.reduce((sum, s) => sum + (s.oppstartskostnad || 0), 0) };
-  });
+  const oppstartByMonth = months.map(({ date, label }) => ({ mnd: label, vunnet: vunnetI(salgsmuligheter, per(date)).reduce((sum, s) => sum + (s.oppstartskostnad || 0), 0) }));
 
   // --- Pipeline per status (snapshot, not date-filtered) ---
   const openSm = salgsmuligheter.filter(s => s.status !== "Vunnet" && s.status !== "Tapt");
@@ -128,29 +117,17 @@ export default function Rapporter() {
   const allCancelled = selskaper.filter(s => s.kundestatus === "Kansellert" && s.kanselleringsaarsak && isInRange(s.kansellert_dato, fromDate, toDate));
   const cancelReasons = ["Pris", "Lav bruk", "Teknisk utfordring", "Manglende verdi", "Byttet leverandør", "Midlertidig stopp", "Annet"];
   const cancelData = cancelReasons.map(r => ({
+    full: r,
     aarsak: r.length > 12 ? r.substring(0, 12) + "…" : r,
     antall: allCancelled.filter(s => s.kanselleringsaarsak === r).length,
   })).filter(d => d.antall > 0);
 
   // --- Leads per måned ---
-  const leadsByMonth = months.map(({ date, label }) => {
-    const m = date.getMonth(), y = date.getFullYear();
-    const count = leads.filter(l => {
-      if (!l.opprettet_dato) return false;
-      const dt = new Date(l.opprettet_dato);
-      return dt.getMonth() === m && dt.getFullYear() === y;
-    }).length;
-    return { mnd: label, antall: count };
-  });
+  const leadsByMonth = months.map(({ date, label }) => ({ mnd: label, antall: leadsI(leads, per(date)).length }));
 
   // --- Lukkede kunder per måned ---
   const closedByMonth = months.map(({ date, label }) => {
-    const m = date.getMonth(), y = date.getFullYear();
-    const closed = selskaper.filter(s => {
-      if (!s.lukkedato) return false;
-      const dt = new Date(s.lukkedato);
-      return dt.getMonth() === m && dt.getFullYear() === y;
-    });
+    const closed = lukketI(selskaper, per(date));
     return { mnd: label, antall: closed.length, mrr: closed.reduce((sum, s) => sum + s.mrr, 0) };
   });
 
@@ -164,50 +141,114 @@ export default function Rapporter() {
   })).filter(d => d.value > 0);
 
   // --- Vunnet/Tapt per måned ---
-  const wonLostByMonth = months.map(({ date, label }) => {
-    const m = date.getMonth(), y = date.getFullYear();
-    return {
-      mnd: label,
-      vunnet: salgsmuligheter.filter(s => s.status === "Vunnet" && s.vunnet_dato && new Date(s.vunnet_dato).getMonth() === m && new Date(s.vunnet_dato).getFullYear() === y).length,
-      tapt: salgsmuligheter.filter(s => s.status === "Tapt" && s.tapt_dato && new Date(s.tapt_dato).getMonth() === m && new Date(s.tapt_dato).getFullYear() === y).length,
-    };
-  });
+  const wonLostByMonth = months.map(({ date, label }) => ({
+    mnd: label,
+    vunnet: vunnetI(salgsmuligheter, per(date)).length,
+    tapt: taptI(salgsmuligheter, per(date)).length,
+  }));
 
   // --- Partner topp MRR (snapshot) ---
+  const liveKunderFor = (partnerId: string) => selskaper.filter(s => s.partner_id === partnerId && s.kundestatus === "Live");
   const topPartnere = partnere.map(p => {
-    const kunder = selskaper.filter(s => s.partner_id === p.id && s.kundestatus === "Live");
-    const mrr = kunder.reduce((sum, s) => sum + s.mrr, 0);
-    return { navn: p.partnernavn.length > 15 ? p.partnernavn.substring(0, 15) + "…" : p.partnernavn, mrr };
+    const mrr = liveKunderFor(p.id).reduce((sum, s) => sum + s.mrr, 0);
+    return { id: p.id, navn: p.partnernavn.length > 15 ? p.partnernavn.substring(0, 15) + "…" : p.partnernavn, mrr };
   }).sort((a, b) => b.mrr - a.mrr).slice(0, 10).filter(p => p.mrr > 0);
 
   // --- Partnere per type (snapshot) ---
   const partnerTypes = ["Provisjonspartner", "Integrasjonspartner", "Salgspartner", "Strategisk partner"];
   const partnerByTypeData = partnerTypes.map(t => ({
+    full: t,
     type: t.length > 14 ? t.substring(0, 14) + "…" : t,
     antall: partnere.filter(p => p.partnertype === t).length,
   })).filter(d => d.antall > 0);
 
   // --- Møter og No-shows per måned ---
   const meetingsByMonth = months.map(({ date, label }) => {
-    const m = date.getMonth(), y = date.getFullYear();
-    const inMonth = meetings.filter(mt => {
-      const d = new Date(mt.dato);
-      return d.getMonth() === m && d.getFullYear() === y;
-    });
+    const inMonth = moeterI(meetings, per(date));
     const total = inMonth.length;
     const noShows = inMonth.filter(mt => mt.no_show).length;
-    return {
-      mnd: label,
-      møter: total,
-      noShow: noShows,
-      noShowRate: total > 0 ? Math.round((noShows / total) * 100) : 0,
-    };
+    return { mnd: label, møter: total, noShow: noShows, noShowRate: total > 0 ? Math.round((noShows / total) * 100) : 0 };
   });
 
-  const chartCard = (title: string, children: React.ReactNode) => (
+  // --- Detaljlister: nøyaktig hvilke poster som ligger bak hver søyle ---
+  const periodeTekst = `${format(fromDate, "MMM yyyy", { locale: nb })} – ${format(toDate, "MMM yyyy", { locale: nb })}`;
+  const mndValg = (i: number | null) => (i == null ? mndDatoer : [months[i].date]);
+  const mndTekst = (i: number | null) => (i == null ? periodeTekst : format(months[i].date, "MMMM yyyy", { locale: nb }));
+  const vunnetTaptRader = (mnd: Date[]) => [
+    ...vunnetI(salgsmuligheter, mnd).map(s => smRad(s, selskaper, { dato: s.vunnet_dato, verdi: s.forventet_mrr || undefined })),
+    ...taptI(salgsmuligheter, mnd).map(s => ({ ...smRad(s, selskaper, { dato: s.tapt_dato, verdi: s.forventet_mrr || undefined }), status: s.tapsaarsak ? `Tapt – ${s.tapsaarsak}` : "Tapt" })),
+  ];
+
+  type Detalj = { tittel: string; enhet: string; rader: RapportRad[] };
+  const detaljer: Record<string, (i: number | null) => Detalj> = {
+    oppstart: i => ({ tittel: `Vunnet med oppstartskostnad · ${mndTekst(i)}`, enhet: "salgsmuligheter",
+      rader: vunnetI(salgsmuligheter, mndValg(i)).map(s => smRad(s, selskaper, { dato: s.vunnet_dato, verdi: s.oppstartskostnad || 0 })) }),
+    mrr: i => ({ tittel: `Nye kunder · ${mndTekst(i)}`, enhet: "kunder",
+      rader: lukketI(selskaper, mndValg(i)).map(s => selskapRad(s, { dato: s.lukkedato, verdi: s.mrr })) }),
+    arr: i => {
+      const idx = i ?? months.length - 1;
+      const date = months[idx]?.date ?? toDate;
+      return { tittel: `Aktive kunder ved utgangen av ${format(date, "MMMM yyyy", { locale: nb })}`, enhet: "kunder (ARR)",
+        rader: aktiveVed(selskaper, date).map(s => selskapRad(s, { dato: s.lukkedato, verdi: s.mrr * 12, status: erLiveVed(s, date) ? "Live" : "Ikke live" })) };
+    },
+    vunnetTapt: i => ({ tittel: `Vunnet og tapt · ${mndTekst(i)}`, enhet: "salgsmuligheter", rader: vunnetTaptRader(mndValg(i)) }),
+    leads: i => ({ tittel: `Nye leads · ${mndTekst(i)}`, enhet: "leads", rader: leadsI(leads, mndValg(i)).map(leadRad) }),
+    pipeline: i => {
+      const statuser = i == null ? pipelineStatuses : [pipelineStatuses[i]];
+      return { tittel: `Pipeline · ${i == null ? "alle steg" : pipelineStatuses[i]}`, enhet: "salgsmuligheter",
+        rader: openSm.filter(s => statuser.includes(s.status)).map(s => smRad(s, selskaper, { dato: s.forventet_lukkedato || undefined, verdi: beregnTotalKontraktsverdi(s) })) };
+    },
+    kundestatus: i => {
+      const navn = i == null ? null : kundestatusData[i]?.name;
+      return { tittel: `Kunder · ${navn ?? "alle statuser"}`, enhet: "selskaper",
+        rader: selskaper.filter(s => (navn ? s.kundestatus === navn : kundestatuser.includes(s.kundestatus))).map(s => selskapRad(s, { verdi: s.mrr || undefined })) };
+    },
+    lukket: i => ({ tittel: `Lukkede kunder · ${mndTekst(i)}`, enhet: "kunder",
+      rader: lukketI(selskaper, mndValg(i)).map(s => selskapRad(s, { dato: s.lukkedato, verdi: s.mrr })) }),
+    kansellert: i => {
+      const aarsak = i == null ? null : cancelData[i]?.full;
+      return { tittel: `Kansellerte kunder · ${aarsak ?? periodeTekst}`, enhet: "kunder",
+        rader: allCancelled.filter(s => !aarsak || s.kanselleringsaarsak === aarsak).map(s => selskapRad(s, { dato: s.kansellert_dato, verdi: s.mrr || undefined, status: s.kanselleringsaarsak || "Kansellert" })) };
+    },
+    partnerMrr: i => {
+      const p = i == null ? null : partnere.find(x => x.id === topPartnere[i]?.id);
+      if (p) return { tittel: `Live-kunder via ${p.partnernavn}`, enhet: "kunder", rader: liveKunderFor(p.id).map(s => selskapRad(s, { verdi: s.mrr })) };
+      return { tittel: "Topp partnere etter MRR", enhet: "partnere",
+        rader: topPartnere.map(tp => partnere.find(x => x.id === tp.id)).filter(Boolean).map(x => partnerRad(x!, { verdi: liveKunderFor(x!.id).reduce((sum, s) => sum + s.mrr, 0) })) };
+    },
+    partnerType: i => {
+      const type = i == null ? null : partnerByTypeData[i]?.full;
+      return { tittel: `Partnere · ${type ?? "alle typer"}`, enhet: "partnere",
+        rader: partnere.filter(p => (type ? p.partnertype === type : partnerTypes.includes(p.partnertype))).map(p => partnerRad(p)) };
+    },
+    moeter: i => ({ tittel: `Møter · ${mndTekst(i)}`, enhet: "møter", rader: moeterI(meetings, mndValg(i)).map(m => moeteRad(m, selskaper)) }),
+  };
+  const aktivDetalj = valgt && detaljer[valgt.id] ? detaljer[valgt.id](valgt.i) : null;
+  const aktivRader = aktivDetalj ? (valgt?.id === "partnerMrr" && valgt.i == null ? aktivDetalj.rader : sorter(aktivDetalj.rader)) : [];
+
+  // Klikk på en søyle/punkt viser postene for akkurat den måneden eller kategorien.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const klikk = (id: string) => (state: any) => {
+    const i = state?.activeTooltipIndex;
+    if (i == null || Number.isNaN(Number(i))) return;
+    setValgt({ id, i: Number(i) });
+  };
+  const klikkbar = { cursor: "pointer" } as const;
+
+  const chartCard = (title: string, children: React.ReactNode, id?: string) => (
     <div className="bg-card border rounded-xl p-4 sm:p-6">
-      <h2 className="text-base sm:text-lg font-semibold mb-4">{title}</h2>
+      <div className="mb-4 flex items-start justify-between gap-3">
+        <h2 className="text-base sm:text-lg font-semibold">{title}</h2>
+        {id && (
+          <Button variant="ghost" size="sm" className="h-8 shrink-0 gap-1.5 text-xs" onClick={() => setValgt(valgt?.id === id && valgt.i == null ? null : { id, i: null })} aria-pressed={valgt?.id === id && valgt.i == null}>
+            <List className="h-3.5 w-3.5" /> Vis liste
+          </Button>
+        )}
+      </div>
       {children}
+      {id && valgt?.id === id && aktivDetalj && (
+        <RapportDetaljer tittel={aktivDetalj.tittel} enhet={aktivDetalj.enhet} rader={aktivRader} onClose={() => setValgt(null)} />
+      )}
     </div>
   );
 
@@ -268,51 +309,53 @@ export default function Rapporter() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6">
+      <p className="-mt-3 mb-6 text-sm text-muted-foreground">Klikk på en søyle for å se nøyaktig hvilke poster som ligger bak, eller trykk «Vis liste» for hele perioden.</p>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 items-start gap-4 sm:gap-6 mb-6">
         {chartCard("Oppstartskostnader per måned", (
           <ResponsiveContainer width="100%" height={isMobile ? 250 : 340}>
-            <BarChart data={oppstartByMonth}>
+            <BarChart data={oppstartByMonth} onClick={klikk("oppstart")} style={klikkbar}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="mnd" tick={{ fontSize: isMobile ? 8 : 11 }} />
               <YAxis tick={{ fontSize: 11 }} tickFormatter={v => `${(v / 1000).toFixed(0)}k`} />
-              <Tooltip formatter={(value: number) => [`${nok(value)} NOK`, "Vunnet"]} contentStyle={{ borderRadius: "8px", fontSize: "13px" }} />
+              <Tooltip formatter={(value: number) => [nok(value), "Vunnet"]} contentStyle={{ borderRadius: "8px", fontSize: "13px" }} />
               <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: "12px" }} />
               <Bar dataKey="vunnet" name="Oppstartskostnad" fill="hsl(142, 71%, 45%)" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
-        ))}
+        ), "oppstart")}
 
         {chartCard("Ny MRR per måned", (
           <ResponsiveContainer width="100%" height={isMobile ? 250 : 340}>
-            <LineChart data={mrrByMonth}>
+            <LineChart data={mrrByMonth} onClick={klikk("mrr")} style={klikkbar}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="mnd" tick={{ fontSize: isMobile ? 8 : 11 }} />
               <YAxis tick={{ fontSize: 11 }} tickFormatter={v => `${(v / 1000).toFixed(0)}k`} />
-              <Tooltip formatter={(value: number) => [`${nok(value)} NOK`, "MRR"]} contentStyle={{ borderRadius: "8px", fontSize: "13px" }} />
+              <Tooltip formatter={(value: number) => [nok(value), "MRR"]} contentStyle={{ borderRadius: "8px", fontSize: "13px" }} />
               <Legend verticalAlign="bottom" height={36} iconType="line" wrapperStyle={{ fontSize: "12px" }} />
               <Line type="monotone" dataKey="mrr" name="Ny MRR" stroke="hsl(220, 70%, 55%)" strokeWidth={2} dot={{ r: 4 }} />
             </LineChart>
           </ResponsiveContainer>
-        ))}
+        ), "mrr")}
 
         {chartCard("Total ARR", (
           <ResponsiveContainer width="100%" height={isMobile ? 250 : 340}>
-            <LineChart data={arrByMonth}>
+            <LineChart data={arrByMonth} onClick={klikk("arr")} style={klikkbar}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="mnd" tick={{ fontSize: isMobile ? 8 : 11 }} />
               <YAxis tick={{ fontSize: 11 }} tickFormatter={v => `${(v / 1000).toFixed(0)}k`} />
-              <Tooltip formatter={(value: number, name: string) => [`${nok(value)} NOK`, name === "liveArr" ? "Live ARR" : name === "ikkeLiveArr" ? "Ikke-live ARR" : "Total ARR"]} contentStyle={{ borderRadius: "8px", fontSize: "13px" }} />
+              <Tooltip formatter={(value: number, name: string) => [nok(value), name === "liveArr" ? "Live ARR" : name === "ikkeLiveArr" ? "Ikke-live ARR" : "Total ARR"]} contentStyle={{ borderRadius: "8px", fontSize: "13px" }} />
               <Legend verticalAlign="bottom" height={36} iconType="line" wrapperStyle={{ fontSize: "12px" }} />
               <Line type="monotone" dataKey="totalArr" name="Total ARR" stroke="hsl(220, 70%, 55%)" strokeWidth={2} dot={{ r: 4 }} strokeDasharray="5 3" />
               <Line type="monotone" dataKey="liveArr" name="Live ARR" stroke="hsl(142, 71%, 45%)" strokeWidth={2} dot={{ r: 4 }} />
               <Line type="monotone" dataKey="ikkeLiveArr" name="Ikke-live ARR" stroke="hsl(38, 92%, 50%)" strokeWidth={2} dot={{ r: 4 }} />
             </LineChart>
           </ResponsiveContainer>
-        ))}
+        ), "arr")}
 
         {chartCard("Vunnet vs Tapt per måned", (
           <ResponsiveContainer width="100%" height={isMobile ? 250 : 340}>
-            <BarChart data={wonLostByMonth}>
+            <BarChart data={wonLostByMonth} onClick={klikk("vunnetTapt")} style={klikkbar}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="mnd" tick={{ fontSize: isMobile ? 8 : 11 }} />
               <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
@@ -322,11 +365,11 @@ export default function Rapporter() {
               <Bar dataKey="tapt" name="Tapt" fill="hsl(0, 72%, 51%)" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
-        ))}
+        ), "vunnetTapt")}
 
         {chartCard("Nye leads per måned", (
           <ResponsiveContainer width="100%" height={isMobile ? 250 : 340}>
-            <BarChart data={leadsByMonth}>
+            <BarChart data={leadsByMonth} onClick={klikk("leads")} style={klikkbar}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="mnd" tick={{ fontSize: isMobile ? 8 : 11 }} />
               <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
@@ -335,56 +378,54 @@ export default function Rapporter() {
               <Bar dataKey="antall" name="Leads" fill="hsl(199, 89%, 48%)" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
-        ))}
+        ), "leads")}
 
         {chartCard("Pipeline per status", (
           <ResponsiveContainer width="100%" height={isMobile ? 250 : 340}>
-            <BarChart data={pipelineData}>
+            <BarChart data={pipelineData} onClick={klikk("pipeline")} style={klikkbar}>
               <XAxis dataKey="status" tick={{ fontSize: isMobile ? 8 : 11 }} />
               <YAxis tick={{ fontSize: 11 }} tickFormatter={v => `${(v / 1000).toFixed(0)}k`} />
-              <Tooltip formatter={(value: number) => [`${nok(value)} NOK`, "Verdi"]} contentStyle={{ borderRadius: "8px", fontSize: "13px" }} />
+              <Tooltip formatter={(value: number) => [nok(value), "Verdi"]} contentStyle={{ borderRadius: "8px", fontSize: "13px" }} />
               <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: "12px" }} />
               <Bar dataKey="verdi" name="Pipeline-verdi" radius={[6, 6, 0, 0]}>
                 {pipelineData.map((_, i) => <Cell key={i} fill={pipelineColors[i % pipelineColors.length]} />)}
               </Bar>
             </BarChart>
           </ResponsiveContainer>
-        ))}
+        ), "pipeline")}
 
         {kundestatusData.length > 0 && chartCard("Kundestatus fordeling", (
           <ResponsiveContainer width="100%" height={isMobile ? 250 : 340}>
             <PieChart>
-              <Pie data={kundestatusData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={isMobile ? 70 : 100} label={({ name, value }) => `${name}: ${value}`}>
+              <Pie data={kundestatusData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={isMobile ? 70 : 100} label={({ name, value }) => `${name}: ${value}`}
+                onClick={(_: unknown, i: number) => setValgt({ id: "kundestatus", i })} style={klikkbar}>
                 {kundestatusData.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
               </Pie>
               <Tooltip contentStyle={{ borderRadius: "8px", fontSize: "13px" }} />
               <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: "12px" }} />
             </PieChart>
           </ResponsiveContainer>
-        ))}
+        ), "kundestatus")}
 
         {chartCard("Lukkede kunder per måned", (
           <ResponsiveContainer width="100%" height={isMobile ? 250 : 340}>
-            <BarChart data={closedByMonth}>
+            <BarChart data={closedByMonth} onClick={klikk("lukket")} style={klikkbar}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="mnd" tick={{ fontSize: isMobile ? 8 : 11 }} />
               <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
               <Tooltip
-                formatter={(value: number, name: string) => [
-                  name === "Kunder" ? value : `${nok(value)} NOK`,
-                  name
-                ]}
+                formatter={(value: number, name: string) => [name === "Kunder" ? value : nok(value), name]}
                 contentStyle={{ borderRadius: "8px", fontSize: "13px" }}
               />
               <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: "12px" }} />
               <Bar dataKey="antall" name="Kunder" fill="hsl(220, 70%, 55%)" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
-        ))}
+        ), "lukket")}
 
         {cancelData.length > 0 && chartCard("Kanselleringsårsaker", (
           <ResponsiveContainer width="100%" height={isMobile ? 250 : 340}>
-            <BarChart data={cancelData} layout="vertical">
+            <BarChart data={cancelData} layout="vertical" onClick={klikk("kansellert")} style={klikkbar}>
               <XAxis type="number" tick={{ fontSize: 11 }} />
               <YAxis type="category" dataKey="aarsak" tick={{ fontSize: isMobile ? 9 : 11 }} width={isMobile ? 70 : 100} />
               <Tooltip contentStyle={{ borderRadius: "8px", fontSize: "13px" }} />
@@ -392,23 +433,23 @@ export default function Rapporter() {
               <Bar dataKey="antall" name="Antall" fill="hsl(0, 72%, 51%)" radius={[0, 6, 6, 0]} />
             </BarChart>
           </ResponsiveContainer>
-        ))}
+        ), "kansellert")}
 
         {topPartnere.length > 0 && chartCard("Topp partnere etter MRR", (
           <ResponsiveContainer width="100%" height={isMobile ? 250 : 340}>
-            <BarChart data={topPartnere} layout="vertical">
+            <BarChart data={topPartnere} layout="vertical" onClick={klikk("partnerMrr")} style={klikkbar}>
               <XAxis type="number" tick={{ fontSize: 11 }} tickFormatter={v => `${(v / 1000).toFixed(0)}k`} />
               <YAxis type="category" dataKey="navn" tick={{ fontSize: isMobile ? 9 : 11 }} width={isMobile ? 80 : 120} />
-              <Tooltip formatter={(value: number) => [`${nok(value)} NOK`, "MRR"]} contentStyle={{ borderRadius: "8px", fontSize: "13px" }} />
+              <Tooltip formatter={(value: number) => [nok(value), "MRR"]} contentStyle={{ borderRadius: "8px", fontSize: "13px" }} />
               <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: "12px" }} />
               <Bar dataKey="mrr" name="MRR" fill="hsl(3, 76%, 48%)" radius={[0, 6, 6, 0]} />
             </BarChart>
           </ResponsiveContainer>
-        ))}
+        ), "partnerMrr")}
 
         {partnerByTypeData.length > 0 && chartCard("Partnere per type", (
           <ResponsiveContainer width="100%" height={isMobile ? 250 : 340}>
-            <BarChart data={partnerByTypeData}>
+            <BarChart data={partnerByTypeData} onClick={klikk("partnerType")} style={klikkbar}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="type" tick={{ fontSize: isMobile ? 8 : 11 }} />
               <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
@@ -417,20 +458,17 @@ export default function Rapporter() {
               <Bar dataKey="antall" name="Partnere" fill="hsl(262, 60%, 55%)" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
-        ))}
+        ), "partnerType")}
 
         {chartCard("Møter og No-shows per måned", (
           <ResponsiveContainer width="100%" height={isMobile ? 250 : 340}>
-            <ComposedChart data={meetingsByMonth}>
+            <ComposedChart data={meetingsByMonth} onClick={klikk("moeter")} style={klikkbar}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="mnd" tick={{ fontSize: isMobile ? 8 : 11 }} />
               <YAxis yAxisId="left" tick={{ fontSize: 11 }} allowDecimals={false} />
               <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} tickFormatter={v => `${v}%`} domain={[0, 100]} />
               <Tooltip
-                formatter={(value: number, name: string) => [
-                  name === "No-show %" ? `${value}%` : value,
-                  name
-                ]}
+                formatter={(value: number, name: string) => [name === "No-show %" ? `${value}%` : value, name]}
                 contentStyle={{ borderRadius: "8px", fontSize: "13px" }}
               />
               <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: "12px" }} />
@@ -439,7 +477,7 @@ export default function Rapporter() {
               <Line yAxisId="right" type="monotone" dataKey="noShowRate" name="No-show %" stroke="hsl(0, 72%, 51%)" strokeWidth={2} dot={{ r: 4 }} />
             </ComposedChart>
           </ResponsiveContainer>
-        ))}
+        ), "moeter")}
       </div>
     </PageShell>
   );

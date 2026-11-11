@@ -21,3 +21,4 @@
 - Log every outcome through the shared LoggUtfall component (rules in src/lib/logg-utfall.ts), wrapped by LogActivityDialog for the global search-first «+ Logg»; one «Neste oppfølging» creates the follow-up task and closes the current one, so logging behaves the same everywhere.
 - Treat leads as «Senere» while leads.senere_til is in the future (computed at display via erSenere, no cron); «Ikke nå» sets it plus a follow-up task on that date, so leads return to Følg opp nå automatically.
 - Derive Oversikt «Gjort i dag» from manual aktiviteter (outcome inferred from shared LoggUtfall titles in src/lib/gjort-i-dag.ts) plus oppgaver set Ferdig since Oslo midnight; refresh via the crm:logget window event so no new tables or columns are needed.
+- Derive Rapporter chart counts and their click-through lists from the same filters in src/lib/rapport-detaljer.ts; this keeps every list exactly matching its bar.
