@@ -2,7 +2,7 @@ import { varsleLogget } from "@/lib/gjort-i-dag";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { nb } from "date-fns/locale";
-import { Mail, MessageSquare, Pencil, Phone, Plus } from "lucide-react";
+import { Mail, MessageSquare, Pencil, Phone, Plus, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -180,6 +180,11 @@ export default function KundeKort({ r, onClose, onSelskap, onTilbake }: Props) {
                 {ctx.selskap
                   ? <Button variant="link" className="h-auto p-0 font-medium text-foreground" onClick={() => { if (ctx.selskap) onSelskap(ctx.selskap.id); }}>{ctx.selskap.firmanavn}</Button>
                   : <>{info.firma && <span>{info.firma}</span>}{canEdit && <KobleSelskap forslag={info.firma} onVelg={kobleSelskap} />}</>}
+                {ctx.selskap && (
+                  <Button variant="link" size="sm" className="h-auto gap-1 p-0 text-xs font-normal text-muted-foreground" onClick={() => onSelskap(ctx.selskap!.id)}>
+                    <FileText className="h-3 w-3" />Dokumenter og kontrakt
+                  </Button>
+                )}
                 {info.rolle && <span>· {info.rolle}</span>}
               </div>
             </SheetDescription>

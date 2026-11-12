@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { gmailLenke } from "@/lib/kundekort";
 import { format } from "date-fns";
 import { nb } from "date-fns/locale";
-import { Pencil, Plus } from "lucide-react";
+import { Pencil, Plus, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import type { KundeRef } from "@/hooks/use-kort";
 import { cn } from "@/lib/utils";
 import EpostTraadDialog, { type EpostForVisning } from "@/components/EpostTraadDialog";
+import CompanyDocuments from "@/components/CompanyDocuments";
 import { epostKontaktTekst, epostTraadId, renAktivitetstekst } from "@/lib/aktivitet-visning";
 
 interface Hist { id: string; type: string; tittel: string | null; beskrivelse: string; dato: string; aktivitet_kilde?: string | null }
@@ -22,6 +24,7 @@ const Tittel = ({ children }: { children: React.ReactNode }) => <h3 className="t
 
 export default function SelskapKort({ id, onClose, onKunde }: { id: string; onClose: () => void; onKunde: (r: KundeRef) => void }) {
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
   const { canEdit } = useAuth();
   const { selskaper, kontakter, leads, salgsmuligheter, oppgaver, updateSelskaper, updateKontakter } = useCrmStore();
   const s = selskaper.find(x => x.id === id);
@@ -162,6 +165,13 @@ export default function SelskapKort({ id, onClose, onKunde }: { id: string; onCl
                 ))}
               </ul>
             )}
+          </section>
+
+          <section className="space-y-2">
+            <CompanyDocuments selskapId={id} />
+            <Button variant="ghost" size="sm" className="h-7 w-full gap-1 text-xs text-muted-foreground" onClick={() => { onClose(); navigate(`/selskaper/${id}?tab=dokumenter`); }}>
+              <ExternalLink className="h-3.5 w-3.5" />Åpne kundeforholdet
+            </Button>
           </section>
 
           <section className="space-y-2">

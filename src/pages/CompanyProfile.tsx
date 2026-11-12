@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams, Link } from "react-router-dom";
 import { useCrmStore } from "@/hooks/use-crm-store";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useSidebarCollapsed } from "@/hooks/use-sidebar-collapsed";
@@ -57,6 +57,9 @@ const smStatusColors: Record<SalgsmulighetStatus, string> = {
 export default function CompanyProfile() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [sok, settSok] = useSearchParams();
+  const aapneTab = (v: string) => { const p = new URLSearchParams(sok); p.set("tab", v); settSok(p, { replace: true }); };
+  const valgtTab = sok.get("tab") || "oversikt";
   const isMobile = useIsMobile();
   const { collapsed } = useSidebarCollapsed();
   const {
@@ -252,7 +255,7 @@ export default function CompanyProfile() {
         </header>
 
         <main className={`${isMobile ? "p-4" : "p-8"}`}>
-          <Tabs defaultValue="oversikt" className="space-y-6">
+          <Tabs value={valgtTab} onValueChange={aapneTab} className="space-y-6">
             <TabsList className="flex-wrap h-auto">
               <TabsTrigger value="oversikt">Oversikt</TabsTrigger>
               <TabsTrigger value="aktivitet">Aktivitet</TabsTrigger>

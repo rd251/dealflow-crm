@@ -56,7 +56,7 @@ function formatDate(d: string | null) {
 }
 
 export default function CompanyDocuments({ selskapId }: { selskapId: string }) {
-  const { user } = useAuth();
+  const { user, canEdit } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dealDocs, setDealDocs] = useState<DealBuilderDoc[]>([]);
   const [uploadedDocs, setUploadedDocs] = useState<UploadedDoc[]>([]);
@@ -284,7 +284,8 @@ export default function CompanyDocuments({ selskapId }: { selskapId: string }) {
             size="sm"
             className="h-7 text-xs gap-1"
             onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
+            disabled={uploading || !canEdit}
+            title={canEdit ? "Last opp PDF eller Word" : "Du har ikke skrivetilgang til dette selskapet"}
           >
             {uploading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
             Last opp
