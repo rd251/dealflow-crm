@@ -253,6 +253,13 @@
       "when": 1794264159529,
       "tag": "0035_tighten_crm_rls_policies",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1794477744718,
+      "tag": "0036_kontrakt_pdf_uttrekk",
+      "breakpoints": true
     }
   ]
 }

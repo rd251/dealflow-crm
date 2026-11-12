@@ -98,6 +98,8 @@ export interface Salgsmulighet {
   valgt_pakke: string;
   /** Flere valgte moduler/pakker. valgt_pakke er oppsummering (navn sammenkjørt med " + "). */
   valgte_pakker: PakkeLinje[];
+  /** Kontraktens startdato (fra opplastet kontrakt eller manuelt). */
+  kontrakt_startdato?: string;
   videresendt_til_partner_id?: string;
   videresendt_dato?: string;
   /** Kort notat som vises direkte på kortet i kanban. */

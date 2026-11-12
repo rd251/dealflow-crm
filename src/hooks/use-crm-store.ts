@@ -69,6 +69,7 @@ function rowToSalgsmulighet(r: any): Salgsmulighet {
     dealbuilder_dokument_id: r.dealbuilder_dokument_id || "",
     valgt_pakke: r.valgt_pakke || "",
     valgte_pakker: Array.isArray(r.valgte_pakker) ? r.valgte_pakker : [],
+    kontrakt_startdato: r.kontrakt_startdato || "",
     ai_recap: r.ai_recap || null,
     videresendt_til_partner_id: r.videresendt_til_partner_id || "",
     videresendt_dato: r.videresendt_dato || "",
@@ -732,6 +733,7 @@ function useCrmStoreInternal() {
           pinned_notat_av: emptyToNull(item.pinned_notat_av),
           pinned_notat_dato: emptyToNull(item.pinned_notat_dato),
           valgte_pakker: item.valgte_pakker || [],
+          kontrakt_startdato: emptyToNull(item.kontrakt_startdato),
         });
       }
     }
@@ -759,6 +761,7 @@ function useCrmStoreInternal() {
           pinned_notat_av: emptyToNull(item.pinned_notat_av),
           pinned_notat_dato: emptyToNull(item.pinned_notat_dato),
           valgte_pakker: item.valgte_pakker || [],
+          kontrakt_startdato: emptyToNull(item.kontrakt_startdato),
         });
       }
     }

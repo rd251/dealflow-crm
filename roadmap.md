@@ -139,3 +139,10 @@
 ## Bryggeloftet – kontrakt
 - [x] Før inn Bryggestuen - Bryggeloftet AS og org.nr. 938 345 686 i Robins opplastede kontrakt (ny versjon, ellers uendret)
 - [x] Sendt til DealBuilder for signering (Bjarne Waagenes, status Sendt)
+
+## Kontrakt-PDF på kundekortet
+- [x] Lagre AI-uttrekk på dokumentraden og kontraktstart på salgsmuligheten
+- [x] AI-lesing av opplastet PDF med usikre felt og ARR beregnet i kode
+- [x] Bekreftelsesdialog som lagrer på valgt eller ny salgsmulighet og logger aktivitet
+- [x] Send opplastet PDF via eksisterende DealBuilder-sending med bekreftelse; marker dokumentet som sendt
+- [x] Tester for MRR/ARR og forhåndsvalg; testkontrakt lest og lagret i preview, testdata ryddet (selve utsendingen til DealBuilder ikke kjørt)

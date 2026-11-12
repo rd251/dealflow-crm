@@ -1375,6 +1375,9 @@ export default function Salgsmuligheter() {
                     <DetailField label="Kontraktslengde (Mnd)">
                       <Input type="number" value={currentSm.kontraktslengde_mnd || ""} onChange={e => updateField("kontraktslengde_mnd", Number(e.target.value))} className="h-7 text-xs" readOnly={!canEdit} />
                     </DetailField>
+                    <DetailField label="Kontraktstart">
+                      <Input type="date" value={currentSm.kontrakt_startdato || ""} onChange={e => updateField("kontrakt_startdato", e.target.value)} className="h-7 text-xs" readOnly={!canEdit} />
+                    </DetailField>
                   </div>
                   <DetailField label="Vektet verdi">
                     <div className="text-sm font-medium">{nok(vektetVerdi)}</div>

@@ -26,6 +26,8 @@ const BodySchema = z.object({
   // Ferdig kontrakt-PDF (base64) som sendes i stedet for generert PDF. Krever innlogget @snakk.ai-bruker.
   pdf_base64: z.string().min(100).max(15_000_000).optional(),
   tittel: z.string().min(1).max(200).optional(),
+  // Opplastet dokument (selskap_dokumenter) som markeres som sendt etter vellykket utsending.
+  selskap_dokument_id: z.string().uuid().optional(),
 });
 
 Deno.serve(async (req) => {
@@ -219,6 +221,21 @@ Deno.serve(async (req) => {
       salgsmulighet_id: data.salgsmulighet_id,
       tittel: `Kontrakt sendt: ${data.firmanavn}`,
     });
+
+    // 7. Marker opplastet dokument som sendt (vises da under «Kontrakter (DealBuilder)»)
+    if (data.selskap_dokument_id && data.pdf_base64) {
+      const { error: dokErr } = await supabase
+        .from("selskap_dokumenter")
+        .update({
+          status: "Sendt",
+          tittel: data.tittel ?? null,
+          opprettet_dato: new Date().toISOString(),
+          salgsmulighet_id: data.salgsmulighet_id,
+          ...(dokumentId ? { dealbuilder_dokument_id: String(dokumentId), kilde: "dealbuilder" } : {}),
+        })
+        .eq("id", data.selskap_dokument_id);
+      if (dokErr) console.error("Kunne ikke markere dokument som sendt:", dokErr);
+    }
 
     return new Response(JSON.stringify({
       success: true,

@@ -1586,6 +1586,7 @@ export type Database = {
           kontakt_id: string | null
           kontaktperson: string | null
           kontrakt_signert_dato: string | null
+          kontrakt_startdato: string | null
           kontrakt_status: string
           kontraktslengde_mnd: number | null
           navn: string
@@ -1631,6 +1632,7 @@ export type Database = {
           kontakt_id?: string | null
           kontaktperson?: string | null
           kontrakt_signert_dato?: string | null
+          kontrakt_startdato?: string | null
           kontrakt_status?: string
           kontraktslengde_mnd?: number | null
           navn: string
@@ -1676,6 +1678,7 @@ export type Database = {
           kontakt_id?: string | null
           kontaktperson?: string | null
           kontrakt_signert_dato?: string | null
+          kontrakt_startdato?: string | null
           kontrakt_status?: string
           kontraktslengde_mnd?: number | null
           navn?: string
@@ -1747,6 +1750,8 @@ export type Database = {
       }
       selskap_dokumenter: {
         Row: {
+          ai_uttrekk: Json | null
+          ai_uttrukket_dato: string | null
           created_at: string
           dealbuilder_dokument_id: string | null
           fil_navn: string
@@ -1757,11 +1762,14 @@ export type Database = {
           opplastet_av: string
           opplastet_av_user_id: string | null
           opprettet_dato: string | null
+          salgsmulighet_id: string | null
           selskap_id: string
           status: string | null
           tittel: string | null
         }
         Insert: {
+          ai_uttrekk?: Json | null
+          ai_uttrukket_dato?: string | null
           created_at?: string
           dealbuilder_dokument_id?: string | null
           fil_navn: string
@@ -1772,11 +1780,14 @@ export type Database = {
           opplastet_av?: string
           opplastet_av_user_id?: string | null
           opprettet_dato?: string | null
+          salgsmulighet_id?: string | null
           selskap_id: string
           status?: string | null
           tittel?: string | null
         }
         Update: {
+          ai_uttrekk?: Json | null
+          ai_uttrukket_dato?: string | null
           created_at?: string
           dealbuilder_dokument_id?: string | null
           fil_navn?: string
@@ -1787,6 +1798,7 @@ export type Database = {
           opplastet_av?: string
           opplastet_av_user_id?: string | null
           opprettet_dato?: string | null
+          salgsmulighet_id?: string | null
           selskap_id?: string
           status?: string | null
           tittel?: string | null
