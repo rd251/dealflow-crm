@@ -24,6 +24,8 @@ interface Props {
   selskapId: string;
   filNavn: string;
   uttrekk: KontraktUttrekk | null;
+  /** Forhåndsvelg denne salgsmuligheten (når dialogen åpnes fra salgsmuligheten selv). */
+  salgsmulighetId?: string;
   onLagret?: (salgsmulighetId: string) => void;
 }
 
@@ -38,7 +40,7 @@ function UsikkerMerke({ vis }: { vis: boolean }) {
   );
 }
 
-export default function KontraktInfoDialog({ open, onOpenChange, selskapId, filNavn, uttrekk, onLagret }: Props) {
+export default function KontraktInfoDialog({ open, onOpenChange, selskapId, filNavn, uttrekk, salgsmulighetId, onLagret }: Props) {
   const { user } = useAuth();
   const { salgsmuligheter, selskaper, updateSalgsmuligheter, updateSelskaper } = useCrmStore();
   const selskap = selskaper.find((s) => s.id === selskapId);
@@ -53,7 +55,7 @@ export default function KontraktInfoDialog({ open, onOpenChange, selskapId, filN
   useEffect(() => {
     if (!open || !uttrekk) return;
     setSkjema({ ...uttrekk, pakker: uttrekk.pakker.map((p) => ({ ...p })) });
-    const standard = standardSalgsmulighet(kandidater);
+    const standard = salgsmulighetId && kandidater.some((s) => s.id === salgsmulighetId) ? salgsmulighetId : standardSalgsmulighet(kandidater);
     setMaal(standard);
     const valgt = kandidater.find((s) => s.id === standard);
     setOppdaterMrr(selskap?.kundestatus === "Live" || selskap?.kundestatus === "Pilot" || valgt?.status === "Vunnet");

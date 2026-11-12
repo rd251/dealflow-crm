@@ -38,6 +38,7 @@ import { loggAktivitet } from "@/lib/activity-logging";
 import EntityChangelog from "@/components/EntityChangelog";
 import MeetingNotesList from "@/components/MeetingNotesList";
 import SendContractModal from "@/components/SendContractModal";
+import SalgsmulighetKontraktPdf from "@/components/kontrakt/SalgsmulighetKontraktPdf";
 import OfferTab from "@/components/OfferTab";
 import DealRecapCard from "@/components/DealRecapCard";
 import LastMeetingCard from "@/components/LastMeetingCard";
@@ -1423,7 +1424,7 @@ export default function Salgsmuligheter() {
                   {canEdit && (
                     <div className="flex flex-wrap gap-2">
                       <Button size="default" variant="destructive" className="text-sm gap-2" onClick={() => setContractModalOpen(true)}>
-                        <FileSignature className="w-4 h-4" />Send kontrakt
+                        <FileSignature className="w-4 h-4" />Lag og send kontrakt
                       </Button>
                       {(currentSm.kontrakt_status === "Sendt" || currentSm.kontrakt_status === "Åpnet") && (
                         <Button size="sm" variant="outline" className="text-xs" onClick={() => {
@@ -1445,6 +1446,10 @@ export default function Salgsmuligheter() {
                       )}
                     </div>
                   )}
+                  <div className="space-y-1.5 pt-1">
+                    <p className="text-[11px] text-muted-foreground">Har du en ferdig kontrakt? Last den opp her, så leses den med AI og kan sendes til signering.</p>
+                    <SalgsmulighetKontraktPdf salgsmulighetId={currentSm.id} selskapId={currentSm.selskap_id} />
+                  </div>
                   {currentSm && (() => {
                     return (
                       <SendContractModal
