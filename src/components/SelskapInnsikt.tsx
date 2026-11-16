@@ -104,8 +104,8 @@ export default function SelskapInnsikt({ leadId, selskapId, firmanavn, kanEndre 
   if (!id) return null;
   if (laster) {
     return (
-      <div className="rounded-lg border bg-muted/30 p-3 flex items-center justify-center gap-2 text-xs text-muted-foreground">
-        <Loader2 className="w-3.5 h-3.5 animate-spin" /> Henter fra Brønnøysund…
+      <div className="rounded-lg border bg-muted/30 p-6 flex items-center justify-center gap-2 text-base text-muted-foreground">
+        <Loader2 className="w-5 h-5 animate-spin" /> Henter fra Brønnøysund…
       </div>
     );
   }
@@ -125,38 +125,38 @@ export default function SelskapInnsikt({ leadId, selskapId, firmanavn, kanEndre 
   const harData = (status === "sikker" || status === "manuell") && d?.orgnr;
 
   return (
-    <section className="rounded-lg border bg-card p-3 space-y-3" aria-label="Selskap i Brønnøysund">
+    <section className="rounded-lg border bg-card p-6 space-y-5" aria-label="Selskap i Brønnøysund">
       <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
-          <Building2 className="w-3 h-3" /> Brønnøysundregistrene
+        <div className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground uppercase tracking-wide">
+          <Building2 className="w-4 h-4" /> Brønnøysundregistrene
         </div>
-        {jobber && <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" aria-label="Jobber" />}
+        {jobber && <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" aria-label="Jobber" />}
       </div>
 
       {oppgitt !== null && oppgitt !== undefined && (
-        <p className="text-xs text-muted-foreground">Oppgitt i skjemaet: «{oppgitt || "—"}»</p>
+        <p className="text-base text-muted-foreground">Oppgitt i skjemaet: «{oppgitt || "—"}»</p>
       )}
 
       {harData && d && (
         <div className="space-y-2.5">
           {erProblem(d as BrregData) && (
-            <div className="flex items-center gap-2 rounded-md bg-destructive/10 text-destructive px-2.5 py-2 text-xs font-medium">
-              <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+            <div className="flex items-center gap-2 rounded-md bg-destructive/10 text-destructive px-2.5 py-2 text-base font-medium">
+              <AlertTriangle className="w-5 h-5 shrink-0" />
               {d.status ?? "Avvikling"} registrert i Brønnøysund{d.slettedato ? ` (slettet ${dato(d.slettedato)})` : ""}
             </div>
           )}
           <div>
-            <div className="text-sm font-semibold">{d.navn}</div>
-            <button type="button" onClick={() => kopier(d.orgnr!)} className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground tabular-nums" title="Kopier org.nr">
+            <div className="text-xl font-semibold">{d.navn}</div>
+            <button type="button" onClick={() => kopier(d.orgnr!)} className="inline-flex items-center gap-1 text-base text-muted-foreground hover:text-foreground tabular-nums" title="Kopier org.nr">
               Org.nr {d.orgnr} {copied ? <Check className="w-3 h-3 text-success" /> : <Copy className="w-3 h-3" />}
             </button>
           </div>
           {d.kontakt_rolle && rad?.kontaktperson && (
-            <div className="flex items-center gap-1.5 text-xs text-success">
-              <CheckCircle2 className="w-3.5 h-3.5" /> {rad.kontaktperson} står som {d.kontakt_rolle.rolle.toLowerCase()} i registeret
+            <div className="flex items-center gap-1.5 text-base text-success">
+              <CheckCircle2 className="w-5 h-5" /> {rad.kontaktperson} står som {d.kontakt_rolle.rolle.toLowerCase()} i registeret
             </div>
           )}
-          <dl className="grid grid-cols-[auto,1fr] gap-x-3 gap-y-1 text-xs">
+          <dl className="grid grid-cols-[auto,1fr] gap-x-6 gap-y-2 text-base">
             <Felt t="Organisasjonsform" v={d.organisasjonsform?.beskrivelse} />
             <Felt t="Bransje" v={d.naeringskode1 ? `${d.naeringskode1.beskrivelse} (${d.naeringskode1.kode})` : null} />
             <Felt t="Ansatte" v={d.antallAnsatte != null ? String(d.antallAnsatte) : null} />
@@ -171,7 +171,7 @@ export default function SelskapInnsikt({ leadId, selskapId, firmanavn, kanEndre 
             <Felt t="Stiftet" v={dato(d.stiftelsesdato)} />
           </dl>
           {d.regnskap ? (
-            <div className="rounded-md bg-muted/40 px-2.5 py-2 text-xs space-y-0.5">
+            <div className="rounded-md bg-muted/40 px-4 py-3 text-base space-y-0.5">
               <div className="font-medium">Regnskap {d.regnskap.aar}</div>
               <dl className="grid grid-cols-[auto,1fr] gap-x-3 gap-y-0.5 tabular-nums">
                 <Felt t="Driftsinntekter" v={d.regnskap.driftsinntekter != null ? nok(d.regnskap.driftsinntekter) : null} />
@@ -181,15 +181,15 @@ export default function SelskapInnsikt({ leadId, selskapId, firmanavn, kanEndre 
               </dl>
             </div>
           ) : (
-            <p className="text-xs text-muted-foreground">Ingen regnskap levert.</p>
+            <p className="text-base text-muted-foreground">Ingen regnskap levert.</p>
           )}
-          <p className="text-[11px] text-muted-foreground">Kilde: Brønnøysundregistrene · hentet {dato(rad?.brreg_hentet)}</p>
+          <p className="text-sm text-muted-foreground">Kilde: Brønnøysundregistrene · hentet {dato(rad?.brreg_hentet)}</p>
           {kanEndre && (
             <div className="flex flex-wrap gap-2">
-              <Button size="sm" variant="outline" className="h-7 text-xs" disabled={jobber} onClick={() => kjor({ ...idKey, velg: d.orgnr })}>
+              <Button size="sm" variant="outline" className="h-10 text-base" disabled={jobber} onClick={() => kjor({ ...idKey, velg: d.orgnr })}>
                 <RefreshCw className="w-3 h-3 mr-1" /> {selskapId ? "Oppdater fra Brønnøysund" : "Oppdater"}
               </Button>
-              <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setVisSok((v) => !v)}>
+              <Button size="sm" variant="ghost" className="h-10 text-base" onClick={() => setVisSok((v) => !v)}>
                 <ArrowLeftRight className="w-3 h-3 mr-1" /> Bytt selskap
               </Button>
             </div>
@@ -199,10 +199,10 @@ export default function SelskapInnsikt({ leadId, selskapId, firmanavn, kanEndre 
 
       {status === "usikker" && !harData && (
         <div className="space-y-2">
-          <div className="text-sm font-medium">Velg riktig selskap</div>
+          <div className="text-lg font-semibold">Velg riktig selskap</div>
           <ul className="space-y-1.5">
             {(rad?.brreg_kandidater ?? []).map((k) => (
-              <li key={k.orgnr} className="rounded-md border px-2.5 py-2 text-xs flex items-start justify-between gap-2">
+              <li key={k.orgnr} className="rounded-md border px-2.5 py-2 text-base flex items-start justify-between gap-2">
                 <div className="min-w-0 space-y-0.5">
                   <div className="font-medium">{k.navn} <span className="text-muted-foreground tabular-nums font-normal">· {k.orgnr}</span></div>
                   <div className="text-muted-foreground">
@@ -211,25 +211,25 @@ export default function SelskapInnsikt({ leadId, selskapId, firmanavn, kanEndre 
                   {k.status && <div className="text-destructive font-medium">{k.status}</div>}
                   <div className="text-muted-foreground tabular-nums">{k.score} poeng · {k.begrunnelse.join(" · ")}</div>
                 </div>
-                {kanEndre && <Button size="sm" variant="outline" className="h-7 text-xs shrink-0" disabled={jobber} onClick={() => velg(k.orgnr)}>Velg</Button>}
+                {kanEndre && <Button size="sm" variant="outline" className="h-10 text-base shrink-0" disabled={jobber} onClick={() => velg(k.orgnr)}>Velg</Button>}
               </li>
             ))}
           </ul>
           {kanEndre && !visSok && (
-            <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setVisSok(true)}>Ingen av disse – søk selv</Button>
+            <Button size="sm" variant="ghost" className="h-10 text-base" onClick={() => setVisSok(true)}>Ingen av disse – søk selv</Button>
           )}
         </div>
       )}
 
       {(status === "ingen" || (status === null && selskapId)) && !harData && (
         <div className="space-y-1">
-          <div className="text-sm font-medium">{status === "ingen" ? "Fant ikke firmaet i Brønnøysund" : "Ikke koblet til Brønnøysund ennå"}</div>
-          {d?.melding && <p className="text-xs text-muted-foreground">{d.melding}</p>}
+          <div className="text-lg font-semibold">{status === "ingen" ? "Fant ikke firmaet i Brønnøysund" : "Ikke koblet til Brønnøysund ennå"}</div>
+          {d?.melding && <p className="text-base text-muted-foreground">{d.melding}</p>}
         </div>
       )}
 
       {status === null && leadId && !jobber && (
-        <p className="text-xs text-muted-foreground">Ikke sjekket ennå.{kanEndre && <> <button className="underline" onClick={() => kjor({ lead_id: leadId })}>Sjekk nå</button></>}</p>
+        <p className="text-base text-muted-foreground">Ikke sjekket ennå.{kanEndre && <> <button className="underline" onClick={() => kjor({ lead_id: leadId })}>Sjekk nå</button></>}</p>
       )}
 
       {kanEndre && (visSok || ((status === "ingen" || (status === null && selskapId)) && !harData)) && (
@@ -262,15 +262,15 @@ export function BrregSok({ onVelg, opptatt }: { onVelg: (orgnr: string) => void;
   return (
     <div className="space-y-1.5">
       <div className="relative">
-        <Search className="w-3.5 h-3.5 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
-        <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Søk på firmanavn eller org.nr" className="h-8 text-xs pl-7" aria-label="Søk i Brønnøysundregistrene" />
-        {soker && <Loader2 className="w-3.5 h-3.5 animate-spin absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground" />}
+        <Search className="w-5 h-5 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
+        <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Søk på firmanavn eller org.nr" className="h-11 text-base pl-9" aria-label="Søk i Brønnøysundregistrene" />
+        {soker && <Loader2 className="w-5 h-5 animate-spin absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground" />}
       </div>
       {treff.length > 0 && (
         <ul className="max-h-60 overflow-y-auto rounded-md border divide-y">
           {treff.map((k) => (
             <li key={k.orgnr}>
-              <button type="button" disabled={opptatt} onClick={() => onVelg(k.orgnr)} className="w-full text-left px-2.5 py-1.5 text-xs hover:bg-muted/50 disabled:opacity-50">
+              <button type="button" disabled={opptatt} onClick={() => onVelg(k.orgnr)} className="w-full text-left px-2.5 py-1.5 text-base hover:bg-muted/50 disabled:opacity-50">
                 <div className="font-medium">{k.navn} <span className="text-muted-foreground tabular-nums font-normal">· {k.orgnr}</span></div>
                 <div className="text-muted-foreground">{[k.organisasjonsform, k.kommune, k.bransje].filter(Boolean).join(" · ")}{k.status ? ` · ${k.status}` : ""}</div>
               </button>
@@ -278,7 +278,7 @@ export function BrregSok({ onVelg, opptatt }: { onVelg: (orgnr: string) => void;
           ))}
         </ul>
       )}
-      {q.trim().length >= 3 && !soker && treff.length === 0 && <p className="text-xs text-muted-foreground">Ingen treff.</p>}
+      {q.trim().length >= 3 && !soker && treff.length === 0 && <p className="text-base text-muted-foreground">Ingen treff.</p>}
     </div>
   );
 }
