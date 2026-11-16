@@ -25,7 +25,8 @@ import {
 } from "lucide-react";
 import SendEmailDialog from "@/components/SendEmailDialog";
 import CompanyLogo from "@/components/CompanyLogo";
-import SelskapInnsikt from "@/components/SelskapInnsikt";
+import SelskapInnsikt, { BrregMerke, LaastInput, erBrregLaast } from "@/components/SelskapInnsikt";
+import { useAuth } from "@/hooks/use-auth";
 import CompanyDocuments from "@/components/CompanyDocuments";
 import OnboardingAnswers from "@/components/OnboardingAnswers";
 import OpprettProsjektDialog from "@/components/prosjekt/OpprettProsjektDialog";
@@ -66,6 +67,7 @@ export default function CompanyProfile() {
     selskaper, updateSelskaper, kontakter, updateKontakter, salgsmuligheter, updateSalgsmuligheter,
     prosjekter, updateProsjekter, oppgaver, updateOppgaver, partnere, generateId, settProsjektLive,
   } = useCrmStore();
+  const { canEdit } = useAuth();
 
   const [showAddContact, setShowAddContact] = useState(false);
   const [expandedContact, setExpandedContact] = useState<string | null>(null);
@@ -212,6 +214,7 @@ export default function CompanyProfile() {
                 <div className="flex items-center gap-2 mt-2 flex-wrap">
                   <Badge className={kundestatusFarge[selskap.kundestatus]}>{selskap.kundestatus}</Badge>
                   <Badge className={tilstandFarge[selskap.kundetilstand]}>{selskap.kundetilstand}</Badge>
+                  <BrregMerke brreg={selskap.brreg} variant="selskap" />
                   {selskap.partner_id && (() => {
                     const p = partnere.find(pp => pp.id === selskap.partner_id);
                     return p ? (
@@ -356,7 +359,7 @@ export default function CompanyProfile() {
                       </div>
                       <div>
                         <span className="text-muted-foreground block text-xs mb-1">Bransje</span>
-                        <Input value={selskap.bransje} onChange={e => updateField("bransje", e.target.value)} className="h-8 text-sm" />
+                        <LaastInput laast={erBrregLaast(selskap)} value={selskap.bransje} onChange={e => updateField("bransje", e.target.value)} className="h-8 text-sm" />
                       </div>
                       <div>
                         <span className="text-muted-foreground block text-xs mb-1">Domene</span>
@@ -364,33 +367,18 @@ export default function CompanyProfile() {
                       </div>
                       <div>
                         <span className="text-muted-foreground block text-xs mb-1">Org.nr</span>
-                        <Input value={selskap.orgnr} onChange={e => updateField("orgnr", e.target.value)} className="h-8 text-sm tabular-nums" />
+                        <LaastInput laast={erBrregLaast(selskap)} value={selskap.orgnr} onChange={e => updateField("orgnr", e.target.value)} className="h-8 text-sm tabular-nums" />
                       </div>
                       <div>
                         <span className="text-muted-foreground block text-xs mb-1">Firmaadresse</span>
-                        <Input value={selskap.firmaadresse || ""} onChange={e => updateField("firmaadresse", e.target.value)} className="h-8 text-sm" />
+                        <LaastInput laast={erBrregLaast(selskap)} value={selskap.firmaadresse || ""} onChange={e => updateField("firmaadresse", e.target.value)} className="h-8 text-sm" />
                       </div>
                       <div>
                         <span className="text-muted-foreground block text-xs mb-1">Postadresse</span>
-                        <Input value={selskap.postadresse || ""} onChange={e => updateField("postadresse", e.target.value)} className="h-8 text-sm" />
+                        <LaastInput laast={erBrregLaast(selskap)} value={selskap.postadresse || ""} onChange={e => updateField("postadresse", e.target.value)} className="h-8 text-sm" />
                       </div>
                     </div>
-                    <SelskapInnsikt
-                      domene={selskap.domene}
-                      firmanavn={selskap.firmanavn}
-                      e_post={hovedkontakt?.e_post}
-                      onEnriched={(innsikt) => {
-                        const patch: Record<string, string> = {};
-                        if (innsikt.bransje && !selskap.bransje) patch.bransje = innsikt.bransje;
-                        if (innsikt.orgnr && !selskap.orgnr) patch.orgnr = innsikt.orgnr;
-                        if (innsikt.firmaadresse && !selskap.firmaadresse) patch.firmaadresse = innsikt.firmaadresse;
-                        if (innsikt.postadresse && !selskap.postadresse) patch.postadresse = innsikt.postadresse;
-                        if (Object.keys(patch).length) {
-                          updateSelskaper(prev => prev.map(s => s.id === selskap.id ? { ...s, ...patch } : s));
-                          toast.success("Selskapsfelt oppdatert fra berikelsesdata");
-                        }
-                      }}
-                    />
+                    <SelskapInnsikt selskapId={selskap.id} kanEndre={canEdit} />
                   </div>
 
                   {selskapSm.length > 0 && (

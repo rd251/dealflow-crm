@@ -158,20 +158,12 @@ Deno.serve(async (req) => {
       body: JSON.stringify({ hendelse: "nytt_lead", lead_id: data.id }),
     }).catch((err) => console.error("Nytt-lead-varsel feilet:", err));
 
-    // Fire-and-forget: trigger company enrichment in background
-    const enrichDomain = e_post ? e_post.split("@")[1] || "" : "";
-    const enrichFirma = data.firmanavn || firmanavn;
-    if (enrichDomain || enrichFirma) {
-      const enrichUrl = `${supabaseUrl}/functions/v1/company-enrich`;
-      fetch(enrichUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${supabaseServiceKey}`,
-        },
-        body: JSON.stringify({ domene: enrichDomain, firmanavn: enrichFirma }),
-      }).catch((err) => console.error("Enrichment trigger failed:", err));
-    }
+    // Fire-and-forget: match firma mot Brønnøysundregistrene
+    fetch(`${supabaseUrl}/functions/v1/brreg-match`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${supabaseServiceKey}` },
+      body: JSON.stringify({ lead_id: data.id }),
+    }).catch((err) => console.error("Brreg-matching feilet:", err));
 
     return new Response(
       JSON.stringify({ success: true, lead: data }),

@@ -58,6 +58,17 @@ export interface Lead {
   /** Produkter AI-en ser at leadet er ute etter, lest ut av notatene. */
   produkt_interesse?: string[];
   produkt_oppsummering?: string;
+  /** Brønnøysund-matching (skrives av brreg-match, aldri av storen). */
+  orgnr?: string;
+  brreg?: BrregFelt | null;
+}
+
+/** Brønnøysund-felt som lagres på leads og selskaper. */
+export interface BrregFelt {
+  status: "sikker" | "usikker" | "ingen" | "manuell" | null;
+  kandidater: unknown[] | null;
+  data: Record<string, any> | null;
+  hentet: string | null;
 }
 
 export type KontraktStatus = "Ikke sendt" | "Sendt" | "Åpnet" | "Signert" | "Utløpt";
@@ -254,6 +265,7 @@ export interface Selskap {
   orgnr: string;
   firmaadresse: string;
   postadresse: string;
+  brreg?: BrregFelt | null;
 }
 
 export interface Kontakt {

@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { Partnerstatus, Partnertype, Provisjonstype, Kontakt, PartnerPipelineStatus, Selskap, Salgsmulighet, Kilde } from "@/data/crm-data";
 import ActivityLog from "@/components/ActivityLog";
-import SelskapInnsikt from "@/components/SelskapInnsikt";
+import SelskapInnsikt, { BrregSok, LaastInput, erBrregLaast } from "@/components/SelskapInnsikt";
 import SendPartnerContractModal from "@/components/SendPartnerContractModal";
 import PartnerDocuments from "@/components/PartnerDocuments";
 import PartnerPricing from "@/components/PartnerPricing";
@@ -457,15 +457,7 @@ export default function PartnerProfile() {
                         Selskapsinfo
                       </div>
                       <p className="text-xs text-muted-foreground">Ingen selskap funnet med navn «{partner.partnernavn}» i CRM.</p>
-                      <SelskapInnsikt
-                        domene=""
-                        firmanavn={partner.partnernavn}
-                        e_post={partner.e_post}
-                        onEnriched={(data) => {
-                          if (data.orgnr && !standaloneOrgnr) setStandaloneOrgnr(data.orgnr);
-                          if (data.firmaadresse && !standaloneAdresse) setStandaloneAdresse(data.firmaadresse);
-                        }}
-                      />
+                      <BrregSok onVelg={(orgnr) => setStandaloneOrgnr(orgnr)} />
                       <div className="grid grid-cols-2 gap-2">
                         <div>
                           <span className="text-muted-foreground block text-xs mb-1">Org.nr</span>
@@ -493,43 +485,24 @@ export default function PartnerProfile() {
                       {!partner.selskap_id && (
                         <p className="text-[10px] text-muted-foreground">Auto-koblet via firmanavn</p>
                       )}
-                      <SelskapInnsikt
-                        domene={selskap.domene}
-                        firmanavn={selskap.firmanavn}
-                        e_post={partner.e_post}
-                        onEnriched={(data) => {
-                          const needsOrgnr = data.orgnr && !selskap.orgnr;
-                          const needsBransje = data.bransje && !selskap.bransje;
-                          const needsFirmaadresse = data.firmaadresse && !selskap.firmaadresse;
-                          const needsPostadresse = data.postadresse && !selskap.postadresse;
-                          if (needsOrgnr || needsBransje || needsFirmaadresse || needsPostadresse) {
-                            updateSelskaper(prev => prev.map(s => s.id === selskap.id ? {
-                              ...s,
-                              ...(needsOrgnr ? { orgnr: data.orgnr } : {}),
-                              ...(needsBransje ? { bransje: data.bransje } : {}),
-                              ...(needsFirmaadresse ? { firmaadresse: data.firmaadresse } : {}),
-                              ...(needsPostadresse ? { postadresse: data.postadresse } : {}),
-                            } : s));
-                          }
-                        }}
-                      />
+                      <SelskapInnsikt selskapId={selskap.id} />
                       <div className="grid grid-cols-2 gap-2">
                         <div>
                           <span className="text-muted-foreground block text-xs mb-1">Org.nr</span>
-                          <Input value={selskap.orgnr || ""} onChange={e => updateSelskapField("orgnr", e.target.value)} className="h-7 text-xs" />
+                          <LaastInput laast={erBrregLaast(selskap)} value={selskap.orgnr || ""} onChange={e => updateSelskapField("orgnr", e.target.value)} className="h-7 text-xs" />
                         </div>
                         <div>
                           <span className="text-muted-foreground block text-xs mb-1">Bransje</span>
-                          <Input value={selskap.bransje || ""} onChange={e => updateSelskapField("bransje", e.target.value)} className="h-7 text-xs" />
+                          <LaastInput laast={erBrregLaast(selskap)} value={selskap.bransje || ""} onChange={e => updateSelskapField("bransje", e.target.value)} className="h-7 text-xs" />
                         </div>
                       </div>
                       <div>
                         <span className="text-muted-foreground block text-xs mb-1">Firmaadresse</span>
-                        <Input value={selskap.firmaadresse || ""} onChange={e => updateSelskapField("firmaadresse", e.target.value)} className="h-7 text-xs" />
+                        <LaastInput laast={erBrregLaast(selskap)} value={selskap.firmaadresse || ""} onChange={e => updateSelskapField("firmaadresse", e.target.value)} className="h-7 text-xs" />
                       </div>
                       <div>
                         <span className="text-muted-foreground block text-xs mb-1">Postadresse</span>
-                        <Input value={selskap.postadresse || ""} onChange={e => updateSelskapField("postadresse", e.target.value)} className="h-7 text-xs" />
+                        <LaastInput laast={erBrregLaast(selskap)} value={selskap.postadresse || ""} onChange={e => updateSelskapField("postadresse", e.target.value)} className="h-7 text-xs" />
                       </div>
                     </div>
                   );

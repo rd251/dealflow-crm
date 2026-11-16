@@ -550,6 +550,10 @@ export type Database = {
       leads: {
         Row: {
           ansvarlig: string | null
+          brreg_data: Json | null
+          brreg_hentet: string | null
+          brreg_kandidater: Json | null
+          brreg_status: string | null
           created_at: string
           e_post: string | null
           eier_id: string | null
@@ -562,6 +566,7 @@ export type Database = {
           neste_steg: string | null
           notater: string | null
           opprettet_dato: string | null
+          orgnr: string | null
           pinned_notat: string | null
           pinned_notat_av: string | null
           pinned_notat_dato: string | null
@@ -583,6 +588,10 @@ export type Database = {
         }
         Insert: {
           ansvarlig?: string | null
+          brreg_data?: Json | null
+          brreg_hentet?: string | null
+          brreg_kandidater?: Json | null
+          brreg_status?: string | null
           created_at?: string
           e_post?: string | null
           eier_id?: string | null
@@ -595,6 +604,7 @@ export type Database = {
           neste_steg?: string | null
           notater?: string | null
           opprettet_dato?: string | null
+          orgnr?: string | null
           pinned_notat?: string | null
           pinned_notat_av?: string | null
           pinned_notat_dato?: string | null
@@ -616,6 +626,10 @@ export type Database = {
         }
         Update: {
           ansvarlig?: string | null
+          brreg_data?: Json | null
+          brreg_hentet?: string | null
+          brreg_kandidater?: Json | null
+          brreg_status?: string | null
           created_at?: string
           e_post?: string | null
           eier_id?: string | null
@@ -628,6 +642,7 @@ export type Database = {
           neste_steg?: string | null
           notater?: string | null
           opprettet_dato?: string | null
+          orgnr?: string | null
           pinned_notat?: string | null
           pinned_notat_av?: string | null
           pinned_notat_dato?: string | null
@@ -1860,6 +1875,10 @@ export type Database = {
         Row: {
           arr: number | null
           bransje: string | null
+          brreg_data: Json | null
+          brreg_hentet: string | null
+          brreg_kandidater: Json | null
+          brreg_status: string | null
           created_at: string
           domene: string
           e_post: string | null
@@ -1897,6 +1916,10 @@ export type Database = {
         Insert: {
           arr?: number | null
           bransje?: string | null
+          brreg_data?: Json | null
+          brreg_hentet?: string | null
+          brreg_kandidater?: Json | null
+          brreg_status?: string | null
           created_at?: string
           domene?: string
           e_post?: string | null
@@ -1934,6 +1957,10 @@ export type Database = {
         Update: {
           arr?: number | null
           bransje?: string | null
+          brreg_data?: Json | null
+          brreg_hentet?: string | null
+          brreg_kandidater?: Json | null
+          brreg_status?: string | null
           created_at?: string
           domene?: string
           e_post?: string | null

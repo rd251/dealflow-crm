@@ -255,6 +255,13 @@ Deno.serve(async (req) => {
         leadId = data.id;
         created = true;
 
+        // Fire-and-forget: match firma mot Brønnøysundregistrene (blokkerer ikke innsettingen)
+        fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/brreg-match`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}` },
+          body: JSON.stringify({ lead_id: leadId }),
+        }).catch((err) => console.error("Brreg-matching feilet:", err));
+
         // Fire-and-forget: internt varsel om nytt lead
         fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/crm-varsel`, {
           method: "POST",

@@ -191,12 +191,21 @@ export default function MeetingPrepPanel({ meeting, open, onOpenChange }: Props)
           (async () => {
             try {
               const { data } = await supabase
-                .from("selskap_innsikt")
-                .select("bransje, beskrivelse, stoerrelse, estimert_ansatte, estimert_omsetning")
-                .or(`firmanavn.ilike.%${selskapData.firmanavn}%`)
-                .limit(1)
+                .from("selskaper")
+                .select("brreg_data")
+                .eq("id", selskapId)
                 .maybeSingle();
-              if (data) enrichment = data;
+              const b: any = data?.brreg_data;
+              if (b?.orgnr) {
+                enrichment = {
+                  bransje: b.naeringskode1?.beskrivelse ?? null,
+                  ansatte: b.antallAnsatte ?? null,
+                  kommune: b.kommune ?? null,
+                  daglig_leder: b.daglig_leder ?? null,
+                  regnskap: b.regnskap ?? null,
+                  kilde: "Brønnøysundregistrene",
+                };
+              }
             } catch {}
           })()
         );

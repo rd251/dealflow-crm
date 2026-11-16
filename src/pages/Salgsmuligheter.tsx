@@ -22,7 +22,7 @@ import DetailPanelShell, { DetailSection, DetailField, DetailDivider, DetailStat
 import EntityCalendarTab from "@/components/EntityCalendarTab";
 import { MoreHorizontal, Plus, GripVertical, Trophy, XCircle, Trash2, Phone, User, AlertTriangle, Clock, Building2, DollarSign, Mail, FileSignature, PartyPopper, Globe, ExternalLink, Linkedin, PenLine, Send } from "lucide-react";
 import SendEmailDialog from "@/components/SendEmailDialog";
-import SelskapInnsikt from "@/components/SelskapInnsikt";
+import SelskapInnsikt, { BrregMerke, LaastInput, erBrregLaast } from "@/components/SelskapInnsikt";
 import CompanyLogo from "@/components/CompanyLogo";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { gravatarUrl } from "@/lib/gravatar";
@@ -1118,6 +1118,7 @@ export default function Salgsmuligheter() {
         badges={currentSm ? (
           <>
             <Badge variant="secondary" className="text-xs">{currentSm.status}</Badge>
+            <BrregMerke brreg={selskaper.find(x => x.id === currentSm.selskap_id)?.brreg} variant="selskap" />
             {currentSm.sannsynlighet != null && <Badge variant="outline" className="text-xs">{currentSm.sannsynlighet}%</Badge>}
             <Badge className={`text-[10px] ${kontraktStatusColors[currentSm.kontrakt_status as KontraktStatus] || kontraktStatusColors["Ikke sendt"]}`}>
               <FileSignature className="w-3 h-3 mr-0.5" />{currentSm.kontrakt_status || "Ikke sendt"}
@@ -1522,16 +1523,16 @@ export default function Salgsmuligheter() {
                     <>
                       <DetailField label="Selskapsnavn" value={selskap.firmanavn} />
                       <DetailField label="Organisasjonsnummer">
-                        <Input value={selskap.orgnr || ""} onChange={e => updateSelskapField("orgnr", e.target.value)} className="h-7 text-xs" readOnly={!canEdit} placeholder="Org.nr" />
+                        <LaastInput laast={erBrregLaast(selskap)} value={selskap.orgnr || ""} onChange={e => updateSelskapField("orgnr", e.target.value)} className="h-7 text-xs" readOnly={!canEdit} placeholder="Org.nr" />
                       </DetailField>
                       <DetailField label="Firmaadresse (besøk)">
-                        <Input value={selskap.firmaadresse || ""} onChange={e => updateSelskapField("firmaadresse", e.target.value)} className="h-7 text-xs" readOnly={!canEdit} placeholder="Besøksadresse" />
+                        <LaastInput laast={erBrregLaast(selskap)} value={selskap.firmaadresse || ""} onChange={e => updateSelskapField("firmaadresse", e.target.value)} className="h-7 text-xs" readOnly={!canEdit} placeholder="Besøksadresse" />
                       </DetailField>
                       <DetailField label="Postadresse">
-                        <Input value={selskap.postadresse || ""} onChange={e => updateSelskapField("postadresse", e.target.value)} className="h-7 text-xs" readOnly={!canEdit} placeholder="Postadresse" />
+                        <LaastInput laast={erBrregLaast(selskap)} value={selskap.postadresse || ""} onChange={e => updateSelskapField("postadresse", e.target.value)} className="h-7 text-xs" readOnly={!canEdit} placeholder="Postadresse" />
                       </DetailField>
                       <DetailField label="Bransje">
-                        <Input value={selskap.bransje || ""} onChange={e => updateSelskapField("bransje", e.target.value)} className="h-7 text-xs" readOnly={!canEdit} />
+                        <LaastInput laast={erBrregLaast(selskap)} value={selskap.bransje || ""} onChange={e => updateSelskapField("bransje", e.target.value)} className="h-7 text-xs" readOnly={!canEdit} />
                       </DetailField>
                       <DetailField label="Nettside">
                         {selskap.domene ? (
@@ -1558,34 +1559,7 @@ export default function Salgsmuligheter() {
                   </>
                 )}
 
-                <SelskapInnsikt
-                  domene={getSelskapDomain(currentSm.selskap_id)}
-                  firmanavn={getSelskapNavn(currentSm.selskap_id || "")}
-                  e_post={currentSm.e_post}
-                  onEnriched={(innsikt) => {
-                    if (currentSm.selskap_id) {
-                      const selskap = selskaper.find(s => s.id === currentSm.selskap_id);
-                      if (selskap) {
-                        const needsOrgnr = innsikt.orgnr && (!selskap.orgnr || selskap.orgnr === "");
-                        const needsBransje = innsikt.bransje && (!selskap.bransje || selskap.bransje === "");
-                        const needsFirmaadresse = innsikt.firmaadresse && (!selskap.firmaadresse || selskap.firmaadresse === "");
-                        const needsPostadresse = innsikt.postadresse && (!selskap.postadresse || selskap.postadresse === "");
-                        if (needsOrgnr || needsBransje || needsFirmaadresse || needsPostadresse) {
-                          updateSelskaper(prev => prev.map(s =>
-                            s.id === currentSm.selskap_id ? {
-                              ...s,
-                              ...(needsOrgnr ? { orgnr: innsikt.orgnr! } : {}),
-                              ...(needsBransje ? { bransje: innsikt.bransje! } : {}),
-                              ...(needsFirmaadresse ? { firmaadresse: innsikt.firmaadresse! } : {}),
-                              ...(needsPostadresse ? { postadresse: innsikt.postadresse! } : {}),
-                            } : s
-                          ));
-                          toast.success("Selskapsfelt oppdatert fra selskapsinnsikt");
-                        }
-                      }
-                    }
-                  }}
-                />
+                {selskap && <SelskapInnsikt selskapId={selskap.id} kanEndre={canEdit} />}
               </>
             ),
             kontakt: (

@@ -19,7 +19,7 @@ import EntityCalendarTab from "@/components/EntityCalendarTab";
 import { Plus, Search, ArrowRightCircle, Trash2, Users2, Upload, Lock, Mail, ArrowUp, ArrowDown, ChevronsUpDown, PenLine, Send, Phone, CalendarDays, UserPlus, CheckCircle2, TrendingUp, AlertTriangle } from "lucide-react";
 import { relativTid, dagerSiden, kildeGruppe, KILDE_GRUPPER, leadStatusFarge, leadStatusKort, idag, datoOm, type KildeGruppe } from "@/lib/sales-flow";
 import SendEmailDialog from "@/components/SendEmailDialog";
-import SelskapInnsikt from "@/components/SelskapInnsikt";
+import SelskapInnsikt, { BrregMerke } from "@/components/SelskapInnsikt";
 import { Lead, LeadStatus, LeadKilde, Partner } from "@/data/crm-data";
 import { Badge } from "@/components/ui/badge";
 import InlineTaskForm from "@/components/InlineTaskForm";
@@ -362,6 +362,19 @@ export default function Leads() {
     }
   };
 
+  // Forhåndsfyll selskapsinfo fra Brønnøysund når konverteringsdialogen åpnes
+  useEffect(() => {
+    const l = convertDialogLead || partnerDialogLead;
+    const d = l?.brreg?.data;
+    if (!l || !d?.orgnr) return;
+    setEnrichFields({
+      orgnr: d.orgnr || "",
+      bransje: d.naeringskode1?.beskrivelse || "",
+      firmaadresse: d.forretningsadresse || "",
+      postadresse: d.postadresse || d.forretningsadresse || "",
+    });
+  }, [convertDialogLead, partnerDialogLead]);
+
   const konverterOgOpprettOppgave = (lead: Lead, navn: string, enrich?: typeof enrichFields) => {
     const smId = konverterLead(lead.id, navn, enrich);
     if (selectedLead?.id === lead.id) setSelectedLead(null);
@@ -492,21 +505,7 @@ export default function Leads() {
             <DialogDescription>Gi salgsmuligheten et navn og fyll inn selskapsinfo for {convertDialogLead?.firmanavn}.</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
-            {convertDialogLead && (
-              <SelskapInnsikt
-                domene={undefined}
-                firmanavn={convertDialogLead.firmanavn}
-                e_post={convertDialogLead.e_post}
-                onEnriched={(data) => {
-                  setEnrichFields(prev => ({
-                    orgnr: prev.orgnr || data.orgnr || "",
-                    bransje: prev.bransje || data.bransje || "",
-                    firmaadresse: prev.firmaadresse || data.firmaadresse || "",
-                    postadresse: prev.postadresse || data.postadresse || "",
-                  }));
-                }}
-              />
-            )}
+            {convertDialogLead && <BrregKonverteringVarsel lead={convertDialogLead} />}
             <Input
               placeholder="Navn på salgsmulighet / use case"
               value={convertNavn}
@@ -557,21 +556,7 @@ export default function Leads() {
             <DialogDescription>Bekreft konvertering av {partnerDialogLead?.firmanavn} til partner.</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
-            {partnerDialogLead && (
-              <SelskapInnsikt
-                domene={undefined}
-                firmanavn={partnerDialogLead.firmanavn}
-                e_post={partnerDialogLead.e_post}
-                onEnriched={(data) => {
-                  setEnrichFields(prev => ({
-                    orgnr: prev.orgnr || data.orgnr || "",
-                    bransje: prev.bransje || data.bransje || "",
-                    firmaadresse: prev.firmaadresse || data.firmaadresse || "",
-                    postadresse: prev.postadresse || data.postadresse || "",
-                  }));
-                }}
-              />
-            )}
+            {partnerDialogLead && <BrregKonverteringVarsel lead={partnerDialogLead} />}
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className="text-xs text-muted-foreground mb-1 block">Org.nr</label>
@@ -836,6 +821,7 @@ export default function Leads() {
         badges={currentLead ? (
           <>
             <Badge variant="outline" className={`text-xs ${statusColors[currentLead.status] || ""}`}>{currentLead.status}</Badge>
+            <BrregMerke brreg={currentLead.brreg} />
             {getConversionType(currentLead) && (
               <Badge className={`text-xs gap-0.5 ${getConversionType(currentLead) === "salg" ? "bg-success/10 text-success" : "bg-primary/10 text-primary"}`}>
                 <Lock className="w-3 h-3" />
@@ -951,7 +937,7 @@ export default function Leads() {
                   </div>
                 </div>
 
-                <SelskapInnsikt domene="" firmanavn={currentLead.firmanavn} e_post={currentLead.e_post} />
+                <SelskapInnsikt leadId={currentLead.id} firmanavn={currentLead.firmanavn} kanEndre={kanEndre} />
 
                 {getConversionType(currentLead) && (
                   <div className={`p-2.5 rounded-lg text-xs font-medium flex items-center gap-2 ${getConversionType(currentLead) === "salg" ? "bg-success/10 text-success" : "bg-primary/10 text-primary"}`}>
@@ -1046,5 +1032,22 @@ export default function Leads() {
         />
       )}
     </PageShell>
+  );
+}
+
+function BrregKonverteringVarsel({ lead }: { lead: Lead }) {
+  const d = lead.brreg?.data;
+  const ok = (lead.brreg?.status === "sikker" || lead.brreg?.status === "manuell") && d?.orgnr;
+  if (ok) {
+    return (
+      <div className="flex items-center gap-2 rounded-md bg-success/10 text-success px-3 py-2 text-xs font-medium">
+        <Lock className="w-3.5 h-3.5" /> Bekreftet i Brønnøysund: {d.navn} · <span className="tabular-nums">{d.orgnr}</span>
+      </div>
+    );
+  }
+  return (
+    <div role="alert" className="flex items-center gap-2 rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-xs">
+      <AlertTriangle className="w-3.5 h-3.5 text-warning shrink-0" /> Selskapet er ikke bekreftet i Brønnøysund
+    </div>
   );
 }

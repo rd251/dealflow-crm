@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import DeletedItemsLog from "@/components/DeletedItemsLog";
 import DealBuilderSyncCard from "@/components/DealBuilderSyncCard";
 import MetaLeadsCard from "@/components/MetaLeadsCard";
+import BrregAdminCard from "@/components/BrregAdminCard";
 import { useSignatur, signaturBlokk } from "@/lib/email-signature";
 import NudgeSettingsCard from "@/components/NudgeSettingsCard";
 
@@ -486,6 +487,7 @@ export default function Innstillinger() {
 
         {/* Meta Lead Ads */}
         <MetaLeadsCard />
+        <BrregAdminCard />
 
         {/* DealBuilder sync */}
         <DealBuilderSyncCard />

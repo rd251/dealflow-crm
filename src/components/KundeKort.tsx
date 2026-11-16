@@ -1,4 +1,5 @@
 import { varsleLogget } from "@/lib/gjort-i-dag";
+import SelskapInnsikt, { BrregMerke } from "@/components/SelskapInnsikt";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { nb } from "date-fns/locale";
@@ -186,6 +187,7 @@ export default function KundeKort({ r, onClose, onSelskap, onTilbake }: Props) {
                   </Button>
                 )}
                 {info.rolle && <span>· {info.rolle}</span>}
+                {ctx.lead && <BrregMerke brreg={ctx.lead.brreg} />}
               </div>
             </SheetDescription>
           </SheetHeader>
@@ -313,6 +315,9 @@ export default function KundeKort({ r, onClose, onSelskap, onTilbake }: Props) {
                 </div>
               )}
             </section>
+
+            {/* Selskap fra Brønnøysund – alltid nederst */}
+            {ctx.lead && <SelskapInnsikt leadId={ctx.lead.id} firmanavn={ctx.lead.firmanavn} kanEndre={canEdit} />}
           </div>
         </SheetContent>
       </Sheet>

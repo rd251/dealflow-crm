@@ -10,8 +10,18 @@ import {
 } from "@/data/crm-data";
 
 // Map DB row to app type (handle nulls)
+function rowToBrreg(r: any) {
+  return r.brreg_status || r.brreg_data
+    ? { status: r.brreg_status ?? null, kandidater: r.brreg_kandidater ?? null, data: r.brreg_data ?? null, hentet: r.brreg_hentet ?? null }
+    : null;
+}
+function brregTilRad(b: Selskap["brreg"]) {
+  return b ? { brreg_status: b.status, brreg_kandidater: b.kandidater as any, brreg_data: b.data, brreg_hentet: b.hentet } : {};
+}
+
 function rowToLead(r: any): Lead {
   return {
+    orgnr: r.orgnr || "", brreg: rowToBrreg(r),
     id: r.id, firmanavn: r.firmanavn, kontaktperson: r.kontaktperson || "",
     e_post: r.e_post || "", telefon: r.telefon || "", kilde: r.kilde || "Annet",
     status: r.status || "Ny", ansvarlig: r.ansvarlig || "", neste_steg: r.neste_steg || "",
@@ -42,6 +52,7 @@ function rowToSelskap(r: any): Selskap {
     kilde: r.kilde || "Direkte salg", partner_id: r.partner_id || "", partner_pakke_id: r.partner_pakke_id || null,
     lukkedato: r.lukkedato || "", domene: r.domene || "", orgnr: r.orgnr || "",
     firmaadresse: r.firmaadresse || "", postadresse: r.postadresse || "",
+    brreg: rowToBrreg(r),
   };
 }
 function rowToKontakt(r: any): Kontakt {
@@ -649,6 +660,7 @@ function useCrmStoreInternal() {
           kilde: emptyToNull(item.kilde), partner_id: emptyToNull(item.partner_id),
           partner_pakke_id: emptyToNull(item.partner_pakke_id as any),
           lukkedato: emptyToNull(item.lukkedato),
+          ...brregTilRad(item.brreg),
         });
       }
     }
@@ -670,6 +682,7 @@ function useCrmStoreInternal() {
           kilde: emptyToNull(item.kilde), partner_id: emptyToNull(item.partner_id),
           partner_pakke_id: emptyToNull(item.partner_pakke_id as any),
           lukkedato: emptyToNull(item.lukkedato),
+          ...(item.brreg && item.brreg !== old.brreg ? brregTilRad(item.brreg) : {}),
         });
       }
     }
@@ -914,6 +927,7 @@ function useCrmStoreInternal() {
         sist_aktivitet: today, neste_steg: "", notater: "",
         kilde: "Direkte salg", partner_id: "", lukkedato: "", domene: "", orgnr: enrichment?.orgnr || "",
         firmaadresse: enrichment?.firmaadresse || "", postadresse: enrichment?.postadresse || "",
+        brreg: lead.brreg?.data?.orgnr ? lead.brreg : null,
       };
       updateSelskaper(prev => [...prev, nyttSelskap]);
     } else if (enrichment) {
@@ -924,6 +938,7 @@ function useCrmStoreInternal() {
         ...(enrichment.bransje && !s.bransje ? { bransje: enrichment.bransje } : {}),
         ...(enrichment.firmaadresse && !s.firmaadresse ? { firmaadresse: enrichment.firmaadresse } : {}),
         ...(enrichment.postadresse && !s.postadresse ? { postadresse: enrichment.postadresse } : {}),
+        ...(lead.brreg?.data?.orgnr && !s.brreg?.data?.orgnr ? { brreg: lead.brreg } : {}),
       } : s));
     }
 
@@ -975,6 +990,7 @@ function useCrmStoreInternal() {
         sist_aktivitet: today, neste_steg: "", notater: "",
         kilde: "Partner", partner_id: "", lukkedato: "", domene: "", orgnr: enrichment?.orgnr || "",
         firmaadresse: enrichment?.firmaadresse || "", postadresse: enrichment?.postadresse || "",
+        brreg: lead.brreg?.data?.orgnr ? lead.brreg : null,
       };
       updateSelskaper(prev => [...prev, nyttSelskap]);
     } else if (enrichment) {
@@ -984,6 +1000,7 @@ function useCrmStoreInternal() {
         ...(enrichment.bransje && !s.bransje ? { bransje: enrichment.bransje } : {}),
         ...(enrichment.firmaadresse && !s.firmaadresse ? { firmaadresse: enrichment.firmaadresse } : {}),
         ...(enrichment.postadresse && !s.postadresse ? { postadresse: enrichment.postadresse } : {}),
+        ...(lead.brreg?.data?.orgnr && !s.brreg?.data?.orgnr ? { brreg: lead.brreg } : {}),
       } : s));
     }
 
