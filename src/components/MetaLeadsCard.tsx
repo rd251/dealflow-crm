@@ -166,9 +166,8 @@ export default function MetaLeadsCard() {
               <div className="rounded-lg border bg-destructive/10 border-destructive/40 p-3 text-xs">
                 <p className="font-medium text-destructive mb-1">Meta-innloggingen er utløpt</p>
                 <p className="text-muted-foreground">
-                  Tilgangstokenet må fornyes hos Meta. Leads som venter i køen
-                  {" "}{status.counts.pending} blir hentet automatisk så snart innloggingen er på plass igjen —
-                  de er ikke mistet.
+                  Tilgangstokenet må fornyes hos Meta. Dei {status.counts.pending} leadsene som venter i køen
+                  blir hentet automatisk så snart innloggingen er på plass igjen — de er ikke mistet.
                 </p>
               </div>
             )}
