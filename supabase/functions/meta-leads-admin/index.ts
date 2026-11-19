@@ -177,7 +177,12 @@ Deno.serve(async (req) => {
   if (action === "retry") {
     const { error } = await supabase
       .from("meta_lead_events")
-      .update({ status: "pending", next_attempt_at: new Date().toISOString(), locked_until: null })
+      .update({
+        status: "pending",
+        next_attempt_at: new Date().toISOString(),
+        locked_until: null,
+        attempts: 0,
+      })
       .in("status", ["failed"]);
     if (error) {
       return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: jsonHeaders });

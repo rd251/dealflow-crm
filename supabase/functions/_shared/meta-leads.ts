@@ -235,6 +235,26 @@ export function isRetryableStatus(status: number): boolean {
   return status === 429 || status === 408 || (status >= 500 && status <= 599);
 }
 
+/**
+ * Failures caused by an expired or invalid access token (Meta login died).
+ * These are NOT a problem with the lead: the lead stays valid at Meta until the
+ * login is renewed, so the queue must keep waiting instead of giving up.
+ * Permission errors without a token signal (e.g. code 200) are deliberately excluded.
+ */
+export function isAuthFailure(status: number, body: Record<string, unknown> | null): boolean {
+  if (status !== 401 && status !== 403) return false;
+  const err = (body?.error ?? {}) as Record<string, unknown>;
+  const code = Number(err.code ?? 0);
+  const subcode = Number(err.error_subcode ?? 0);
+  if (code === 190) return true; // OAuthException: invalid or expired access token
+  if (subcode === 458 || subcode === 460 || subcode === 463) return true;
+  const msg = String(err.message ?? "").toLowerCase();
+  return msg.includes("error validating access token") ||
+    msg.includes("session has expired") ||
+    msg.includes("unsupported access token") ||
+    msg.includes("invalid oauth_access_token");
+}
+
 export function graphVersion(): string {
   const v = (Deno.env.get("META_GRAPH_VERSION") ?? "").trim();
   return /^v\d+\.\d+$/.test(v) ? v : DEFAULT_GRAPH_VERSION;

@@ -4,6 +4,7 @@ import {
   extractLeadgenEvents,
   handleChallenge,
   isAllowedPage,
+  isAuthFailure,
   isRetryableStatus,
   mapLeadFields,
   parsePageAllowlist,
@@ -170,4 +171,25 @@ Deno.test("skjemanavn er valgfri berikelse og stopper ikke importen", () => {
   assert(notes.includes("Om 1-3 maneder"));
   assert(notes.includes("1738450803894904"));
   assertFalse(notes.toLowerCase().includes("null"));
+});
+
+Deno.test("isAuthFailure: expired Meta session is a waiting condition, not a lost lead", () => {
+  const expired = { error: { message: "Error validating access token: Session has expired on Tuesday, 17-Nov-26 01:36:48 PST.", type: "OAuthException", code: 190, error_subcode: 463 } };
+  assert(isAuthFailure(401, expired as unknown as Record<string, unknown>));
+  assertFalse(isRetryableStatus(401)); // must be caught by isAuthFailure before the retryable check
+});
+
+Deno.test("isAuthFailure: only token problems count, other errors do not", () => {
+  const permission = { error: { message: "Requires user access token with permission", code: 200 } };
+  assertFalse(isAuthFailure(403, permission as unknown as Record<string, unknown>));
+  assertFalse(isAuthFailure(500, { error: { message: "Something went wrong", code: 1 } } as unknown as Record<string, unknown>));
+  assertFalse(isAuthFailure(404, null));
+  assertFalse(isAuthFailure(200, { error: { message: "Session has expired", code: 190 } } as unknown as Record<string, unknown>));
+});
+
+Deno.test("isAuthFailure: invalid token variants count as waiting", () => {
+  const invalid = { error: { message: "Invalid OAuth access token.", type: "OAuthException", code: 190 } };
+  assert(isAuthFailure(401, invalid as unknown as Record<string, unknown>));
+  const sub = { error: { message: "x", code: 0, error_subcode: 458 } };
+  assert(isAuthFailure(401, sub as unknown as Record<string, unknown>));
 });

@@ -5,6 +5,7 @@ import {
   buildNotes,
   graphVersion,
   isAllowedPage,
+  isAuthFailure,
   isRetryableStatus,
   mapLeadFields,
   parsePageAllowlist,
@@ -21,6 +22,8 @@ const jsonHeaders = { ...corsHeaders, "Content-Type": "application/json" };
 const GRAPH_TIMEOUT_MS = 15_000;
 const LEASE_SECONDS = 120;
 const BATCH_SIZE = 10;
+/** How long a lead waits in the queue while the Meta login is renewed. */
+const AUTH_WAIT_SECONDS = 3600;
 
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -178,6 +181,25 @@ Deno.serve(async (req) => {
       results.push({ leadgen_id: ev.leadgen_id, status: isPermanent ? "failed" : "retry", error: message.slice(0, 200) });
     };
 
+    /**
+     * Expired or invalid Meta login: the lead itself is fine and stays retrievable at
+     * Meta, so it must keep waiting in the queue instead of being written off. The
+     * attempt counter is refunded so a long outage does not exhaust the retry budget.
+     */
+    const ventPaInnlogging = async (message: string) => {
+      await supabase.from("meta_lead_events").update({
+        status: "pending",
+        locked_until: null,
+        attempts: Math.max(0, (ev.attempts as number) - 1),
+        last_error: message.slice(0, 1000),
+        next_attempt_at: new Date(Date.now() + AUTH_WAIT_SECONDS * 1000).toISOString(),
+      }).eq("id", ev.id);
+      await supabase.from("meta_integration_state").upsert({
+        id: "default", last_error: message.slice(0, 500), last_error_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+      });
+      results.push({ leadgen_id: ev.leadgen_id, status: "venter_pa_innlogging", error: message.slice(0, 200) });
+    };
+
     // Page must still be part of the integration.
     if (!isAllowedPage(ev.page_id, allowlist)) {
       await supabase.from("meta_lead_events").update({
@@ -190,6 +212,10 @@ Deno.serve(async (req) => {
 
     const graph = await fetchLeadFromGraph(ev.leadgen_id, pageToken);
     if (!graph.ok) {
+      if (isAuthFailure(graph.status, graph.body)) {
+        await ventPaInnlogging(`Graph API ${graph.status}: ${graph.error ?? "Meta-innlogging utløpt"}`);
+        continue;
+      }
       await fail(`Graph API ${graph.status}: ${graph.error ?? "ukjent feil"}`, !isRetryableStatus(graph.status));
       continue;
     }
