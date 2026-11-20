@@ -747,6 +747,8 @@ function useCrmStoreInternal() {
           pinned_notat_dato: emptyToNull(item.pinned_notat_dato),
           valgte_pakker: item.valgte_pakker || [],
           kontrakt_startdato: emptyToNull(item.kontrakt_startdato),
+          // Eksplisitt lead→salg-relasjon; skrives bare ved oppretting, aldri ved senere oppdateringer.
+          kilde_lead_id: emptyToNull(item.kilde_lead_id),
         });
       }
     }
@@ -963,6 +965,7 @@ function useCrmStoreInternal() {
       rolle_i_firma: lead.rolle_i_firma || "", use_case: lead.use_case || "",
       kontaktperson: lead.kontaktperson || "", e_post: lead.e_post || "", telefon: lead.telefon || "",
       kontrakt_status: "Ikke sendt", kontrakt_signert_dato: "", dealbuilder_dokument_id: "", valgt_pakke: "", valgte_pakker: [],
+      kilde_lead_id: leadId,
     };
     updateSalgsmuligheter(prev => [...prev, nySm]);
 

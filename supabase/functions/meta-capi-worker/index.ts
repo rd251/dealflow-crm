@@ -5,17 +5,21 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { authenticateCronRequest } from "../_shared/cron-auth.ts";
 import { graphVersion, parsePageAllowlist } from "../_shared/meta-leads.ts";
 import {
+  LEASE_SEKUNDER,
   MAX_FORSOK,
+  SIGNALER,
   TID_GRUNN_TEKST,
   byggCapiHendelse,
   driftsstatus,
   erGyldigLeadgenId,
   erGyldigTestkode,
+  harTidTilNesteRad,
   kanAktiveres,
   klassifiserSvar,
   lesKonfig,
   metaFeiltekst,
   redigerFeil,
+  sideGodkjent,
   ventetidSekunder,
   vurderTid,
 } from "../_shared/meta-capi.ts";
@@ -29,7 +33,6 @@ const jsonHeaders = { ...corsHeaders, "Content-Type": "application/json" };
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const TIMEOUT_MS = 15_000;
-const LEASE_SECONDS = 120;
 const BATCH = 25;
 const PAUSE_MELLOM_MS = 250;
 const AUTH_VENT_SEKUNDER = 3600;
@@ -117,6 +120,13 @@ async function behandle(supabase: ReturnType<typeof db>, ev: Record<string, any>
       .select("id");
     return Array.isArray(data) && data.length === 1;
   };
+  // Still ours? A row whose lease ran out may already be claimed by another worker.
+  const eierFortsatt = async (): Promise<boolean> => {
+    const { data } = await supabase.from("meta_capi_events").select("id")
+      .eq("id", ev.id).eq("claim_token", ev.claim_token).eq("status", "processing")
+      .gt("locked_until", new Date().toISOString());
+    return Array.isArray(data) && data.length === 1;
+  };
 
   if (!erGyldigLeadgenId(ev.leadgen_id)) {
     return (await oppdater({ status: "skipped", last_error: "Ugyldig Meta lead-ID" })) ? "hoppet_over" : "tapt_lease";
@@ -127,7 +137,7 @@ async function behandle(supabase: ReturnType<typeof db>, ev: Record<string, any>
     let sideOk = false;
     if (ev.meta_lead_event_id) {
       const { data: kilde } = await supabase.from("meta_lead_events").select("page_id, status").eq("id", ev.meta_lead_event_id).maybeSingle();
-      sideOk = !!kilde && kilde.status === "done" && sider.includes(String(kilde.page_id));
+      sideOk = !!kilde && kilde.status === "done" && sideGodkjent(kilde.page_id, sider);
     }
     if (!sideOk) {
       return (await oppdater({ status: "skipped", last_error: "Meta-leadet er ikke koblet til godkjent side" })) ? "hoppet_over" : "tapt_lease";
@@ -140,6 +150,7 @@ async function behandle(supabase: ReturnType<typeof db>, ev: Record<string, any>
   }
 
   const hendelse = byggCapiHendelse(ev as any);
+  if (!(await eierFortsatt())) return "tapt_lease";
   const res = await sendTilMeta(hendelse, ev.miljo === "test" ? ev.test_event_code : null);
   const klasse = klassifiserSvar(res.status, res.body, 1);
   const respons = { events_received: res.body?.events_received ?? null, fbtrace_id: res.body?.fbtrace_id ?? null, http: res.status };
@@ -172,29 +183,28 @@ async function behandle(supabase: ReturnType<typeof db>, ev: Record<string, any>
   return "feilet";
 }
 
-/** Give claimed-but-untouched rows back without spending an attempt (after auth/rate stop). */
-async function frigi(supabase: ReturnType<typeof db>, rader: Array<Record<string, any>>, venteSek: number) {
-  for (const ev of rader) {
-    await supabase.from("meta_capi_events").update({
-      status: "pending", locked_until: null, attempts: Math.max(0, Number(ev.attempts ?? 1) - 1),
-      next_attempt_at: new Date(Date.now() + venteSek * 1000).toISOString(), updated_at: new Date().toISOString(),
-    }).eq("id", ev.id).eq("claim_token", ev.claim_token).eq("status", "processing");
-  }
-}
-
+/**
+ * Drain the queue ONE row per claim: the 120 s lease only ever covers a single send
+ * (max ~20 s), and behandle() re-checks ownership right before sending. A run stops
+ * claiming when its time budget is used, so no row is held while waiting behind others.
+ */
 async function kjor(supabase: ReturnType<typeof db>, miljo: "produksjon" | "test", id?: string) {
   const sider = parsePageAllowlist(Deno.env.get("META_PAGE_IDS"));
-  const { data: rader, error } = await supabase.rpc("meta_capi_claim", {
-    p_miljo: miljo, p_limit: id ? 1 : BATCH, p_lease_seconds: LEASE_SECONDS, p_id: id ?? null,
-  });
-  if (error) throw new Error(`Kunne ikke hente kø: ${redigerFeil(error.message)}`);
-
+  const start = Date.now();
   const telling: Record<string, number> = { sendt: 0, hoppet_over: 0, ny_runde: 0, feilet: 0, auth: 0, rate: 0, tapt_lease: 0 };
-  const liste = (rader ?? []) as Array<Record<string, any>>;
+  let behandlet = 0;
   let sisteFeil: { tekst: string; type: string } | null = null;
+  const maks = id ? 1 : BATCH;
 
-  for (let i = 0; i < liste.length; i++) {
-    const ev = liste[i];
+  while (behandlet < maks && harTidTilNesteRad(start, Date.now())) {
+    const { data: rader, error } = await supabase.rpc("meta_capi_claim", {
+      p_miljo: miljo, p_limit: 1, p_lease_seconds: LEASE_SEKUNDER, p_id: id ?? null,
+    });
+    if (error) throw new Error(`Kunne ikke hente kø: ${redigerFeil(error.message)}`);
+    const ev = ((rader ?? []) as Array<Record<string, any>>)[0];
+    if (!ev) break;
+    behandlet++;
+
     let utfall: Utfall;
     try {
       utfall = await behandle(supabase, ev, sider);
@@ -203,18 +213,18 @@ async function kjor(supabase: ReturnType<typeof db>, miljo: "produksjon" | "test
       await supabase.from("meta_capi_events").update({
         status: Number(ev.attempts ?? 1) >= MAX_FORSOK ? "failed" : "pending", locked_until: null, last_error: tekst,
         next_attempt_at: new Date(Date.now() + ventetidSekunder(Number(ev.attempts ?? 1)) * 1000).toISOString(),
-      }).eq("id", ev.id).eq("claim_token", ev.claim_token);
+      }).eq("id", ev.id).eq("claim_token", ev.claim_token).eq("status", "processing");
       utfall = "ny_runde";
       sisteFeil = { tekst, type: "intern" };
     }
     telling[utfall]++;
     if (utfall === "auth" || utfall === "rate") {
+      // Stop the run; the remaining rows were never claimed, so they keep their attempts.
       sisteFeil = { tekst: utfall === "auth" ? "Meta-innloggingen for CRM-tilbakemelding er utløpt eller ugyldig" : "Meta begrenser antall kall – prøver igjen senere", type: utfall };
-      await frigi(supabase, liste.slice(i + 1), utfall === "auth" ? AUTH_VENT_SEKUNDER : 300);
       break;
     }
     if (utfall === "feilet" && !sisteFeil) sisteFeil = { tekst: "En hendelse ble avvist av Meta", type: "avvist" };
-    if (i < liste.length - 1) await sov(PAUSE_MELLOM_MS);
+    await sov(PAUSE_MELLOM_MS);
   }
 
   if (miljo === "produksjon") {
@@ -224,7 +234,7 @@ async function kjor(supabase: ReturnType<typeof db>, miljo: "produksjon" | "test
     else if (telling.sendt > 0) Object.assign(felt, { last_error: null, last_error_kind: null });
     await settTilstand(supabase, felt);
   }
-  return { behandlet: liste.length, ...telling };
+  return { behandlet, ...telling };
 }
 
 async function status(supabase: ReturnType<typeof db>) {
@@ -299,14 +309,17 @@ Deno.serve(async (req) => {
       if (!konfig.token || !konfig.datasett) return svar({ error: "Mangler tilgangstoken eller datasett-ID", konfig }, 409);
       const testkode = String(body.test_event_code ?? "").trim();
       if (!erGyldigTestkode(testkode)) return svar({ error: "Lim inn testkoden fra Meta Events Manager (Testhendelser)" }, 400);
+      const sider = parsePageAllowlist(Deno.env.get("META_PAGE_IDS"));
+      if (sider.length === 0) return svar({ error: "Mangler godkjent Meta-side" }, 409);
       const { data: kilde } = await supabase.from("meta_lead_events")
         .select("id, leadgen_id, created_time").eq("status", "done").not("lead_id", "is", null)
+        .in("page_id", sider)
         .order("received_at", { ascending: false }).limit(1).maybeSingle();
       if (!kilde || !erGyldigLeadgenId(kilde.leadgen_id)) return svar({ error: "Fant ingen importert Meta-lead å teste med" }, 409);
       const unik = crypto.randomUUID();
       const { data: rad, error } = await supabase.from("meta_capi_events").insert({
         miljo: "test", milestone_key: `test:${unik}`, event_id: `snakk-crm-test:${unik}`,
-        event_name: "Test: Snakk CRM", stage_key: "test", event_time: new Date().toISOString(),
+        event_name: SIGNALER.leads, stage_key: "test", event_time: new Date().toISOString(),
         leadgen_id: kilde.leadgen_id, lead_opprettet_meta: kilde.created_time, meta_lead_event_id: kilde.id,
         kilde: "admin_test", test_event_code: testkode,
       }).select("id").single();

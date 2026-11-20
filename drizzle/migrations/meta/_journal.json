@@ -281,6 +281,13 @@
       "when": 1795135464194,
       "tag": "0039_meta_capi_outbox",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1795136314163,
+      "tag": "0040_meta_capi_eksplisitt_kobling",
+      "breakpoints": true
     }
   ]
 }

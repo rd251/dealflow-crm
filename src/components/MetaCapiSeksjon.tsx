@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { STEG, SLUTTKONVERTERING } from "@/lib/meta-capi";
+import { STEG, SIGNALER, SLUTTKONVERTERING } from "@/lib/meta-capi";
 import { Loader2, Pause, Play, RefreshCw, Send } from "lucide-react";
 
 interface CapiStatus {
@@ -40,9 +40,13 @@ const KONFIG: Record<keyof CapiStatus["konfig"], string> = {
 
 const tid = (iso: string | null | undefined) => (iso ? new Date(iso).toLocaleString("nb-NO") : "—");
 
-function unike(liste: { key: string; navn: string }[]) {
+/** CRM-status → navnet Meta får, én rad per steg (eldre statuser som deler steg slås sammen). */
+function unike(steg: Record<string, { key: string; navn: string }>) {
+  const liste = Object.entries(steg).map(([status, s]) => ({ status, ...s }));
   return liste.filter((s, i) => liste.findIndex((x) => x.key === s.key) === i);
 }
+
+const ER_SIGNAL = new Set<string>(Object.values(SIGNALER));
 
 export default function MetaCapiSeksjon() {
   const [status, setStatus] = useState<CapiStatus | null>(null);
@@ -75,8 +79,8 @@ export default function MetaCapiSeksjon() {
     else if (data) toast.error("Meta bekreftet ikke testhendelsen");
   };
 
-  const leadSteg = unike(Object.values(STEG.lead));
-  const salgSteg = unike(Object.values(STEG.salgsmulighet));
+  const leadSteg = unike(STEG.lead);
+  const salgSteg = unike(STEG.salgsmulighet);
   const t = status?.tilstand;
 
   return (
@@ -138,21 +142,29 @@ export default function MetaCapiSeksjon() {
             <div className="mt-2 grid gap-3 text-muted-foreground sm:grid-cols-2">
               <div>
                 <p className="mb-1 font-medium text-foreground">Lead</p>
-                <ul className="space-y-0.5">{leadSteg.map((s) => <li key={s.key}>{s.navn}</li>)}</ul>
+                <ul className="space-y-0.5">
+                  {leadSteg.map((s) => (
+                    <li key={s.key}>{ER_SIGNAL.has(s.navn) ? <>{s.status} → <strong className="text-foreground">{s.navn}</strong></> : s.navn}</li>
+                  ))}
+                </ul>
               </div>
               <div>
                 <p className="mb-1 font-medium text-foreground">Salgsmulighet</p>
                 <ul className="space-y-0.5">
                   {salgSteg.map((s) => (
-                    <li key={s.key}>{s.navn}{s.key === SLUTTKONVERTERING ? " – eneste sluttkonvertering" : ""}</li>
+                    <li key={s.key}>
+                      {ER_SIGNAL.has(s.navn) ? <>{s.status} → <strong className="text-foreground">{s.navn}</strong></> : s.navn}
+                      {s.key === SLUTTKONVERTERING ? " – eneste sluttkonvertering" : ""}
+                    </li>
                   ))}
                 </ul>
               </div>
             </div>
             <ul className="mt-3 list-disc space-y-0.5 pl-4 text-muted-foreground">
-              <li>«Lead: Ny» sendes når et nytt Meta-lead er importert. Andre steg sendes første gang leadet faktisk når dem, med tidspunktet for endringen.</li>
-              <li>«Konvertert til salgsmulighet» betyr at det er opprettet en salgsmulighet – ikke at kunden er vunnet. «Konvertert til partner» regnes aldri som salg.</li>
-              <li>Salgsmuligheter rapporteres bare når de er sikkert koblet til nøyaktig ett Meta-lead. Steg på salgsmuligheten går til leadets opprinnelige Meta-skjema, ikke til senere duplikater.</li>
+              <li>LEADS sendes når et nytt Meta-lead er importert, QUALIFIED bare når leadet settes til «Kvalifisert», og CONVERTED bare når salgsmuligheten er «Vunnet». Alle andre steg sendes med eget navn, første gang de faktisk nås og med tidspunktet for endringen.</li>
+              <li>«Konvertert til salgsmulighet» betyr at det er opprettet en salgsmulighet – ikke at leadet er kvalifisert eller kunden vunnet. Negative steg og «Konvertert til partner» regnes aldri som positive.</li>
+              <li>Salgsmuligheter rapporteres bare når de er koblet til leadet ved selve konverteringen (eldre salgsmuligheter: en entydig registrert aktivitet). Lik e-postadresse brukes aldri. Steg går til leadets opprinnelige Meta-skjema, ikke til senere duplikater.</li>
+              <li>«Møte booket» sendes bare når et faktisk møte er koblet til salgsmuligheten, eller når noen velger steget selv – ikke fordi en ny salgsmulighet starter der.</li>
               <li>Ingenting sendes bakover i tid: eksisterende statuser og gamle kunder blir ikke meldt som nye.</li>
             </ul>
           </details>

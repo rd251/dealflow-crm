@@ -14,13 +14,23 @@ export const MAKS_FREMTID_SEKUNDER = 300;
 export type CrmType = "lead" | "salgsmulighet";
 export interface Steg { key: string; navn: string }
 
-/** CRM stage -> Meta event_name. Unknown or empty statuses are never reported. */
+/**
+ * Meta's three standard funnel signals. Exact, and only for these CRM statuses:
+ * «Ny» from a Meta import → LEADS, lead «Kvalifisert» → QUALIFIED, sales «Vunnet» → CONVERTED.
+ */
+export const SIGNALER = { leads: "LEADS", qualified: "QUALIFIED", converted: "CONVERTED" } as const;
+
+/**
+ * CRM stage -> Meta event_name. Every other real stage keeps its own CRM name, so negative
+ * outcomes (Ikke aktuelt, Svarte ikke telefon, Tapt, partner) never look like a positive signal.
+ * «Konvertert til salg» is not a qualification. Unknown or empty statuses are never reported.
+ */
 export const STEG: Record<CrmType, Record<string, Steg>> = {
   lead: {
-    "Ny": { key: "lead_ny", navn: "Lead: Ny" },
+    "Ny": { key: "lead_ny", navn: SIGNALER.leads },
     "Kontaktet": { key: "lead_kontaktet", navn: "Lead: Kontaktet" },
     "Svarte ikke telefon": { key: "lead_svarte_ikke", navn: "Lead: Svarte ikke telefon" },
-    "Kvalifisert": { key: "lead_kvalifisert", navn: "Lead: Kvalifisert" },
+    "Kvalifisert": { key: "lead_kvalifisert", navn: SIGNALER.qualified },
     "Ikke aktuelt": { key: "lead_ikke_aktuelt", navn: "Lead: Ikke aktuelt" },
     "Konvertert til salg": { key: "lead_til_salgsmulighet", navn: "Lead: Konvertert til salgsmulighet" },
     "Konvertert til partner": { key: "lead_til_partner", navn: "Lead: Konvertert til partner" },
@@ -33,7 +43,7 @@ export const STEG: Record<CrmType, Record<string, Steg>> = {
     "Demo-prosjekt": { key: "salg_demo_prosjekt", navn: "Salgsmulighet: Demo-prosjekt" },
     "Tilbud sendt": { key: "salg_tilbud_sendt", navn: "Salgsmulighet: Tilbud sendt" },
     "Kontrakt sendt": { key: "salg_kontrakt_sendt", navn: "Salgsmulighet: Kontrakt sendt" },
-    "Vunnet": { key: "salg_vunnet", navn: "Salgsmulighet: Vunnet" },
+    "Vunnet": { key: "salg_vunnet", navn: SIGNALER.converted },
     "Tapt": { key: "salg_tapt", navn: "Salgsmulighet: Tapt" },
   },
 };
@@ -44,6 +54,26 @@ export const SLUTTKONVERTERING = "salg_vunnet";
 export function metaCapiSteg(type: CrmType, status: string | null | undefined): Steg | null {
   if (!status) return null;
   return STEG[type]?.[status] ?? null;
+}
+
+/** A Meta lead only counts when it came in through an approved page. Empty allowlist = nothing approved. */
+export function sideGodkjent(pageId: unknown, sider: string[]): boolean {
+  const id = String(pageId ?? "").trim();
+  return id.length > 0 && sider.includes(id);
+}
+
+/**
+ * The worker claims ONE row at a time. The lease covers that single row with wide margin
+ * (request timeout + pause + DB writes), and ownership is re-checked right before sending.
+ */
+export const MAKS_RAD_MS = 15_000 + 250 + 5_000;
+export const LEASE_SEKUNDER = 120;
+/** A run stops claiming new rows after this budget, so it ends well inside the function time limit. */
+export const KJORING_BUDSJETT_SEKUNDER = 110;
+
+/** Claim another row only if it can be finished inside the run budget. */
+export function harTidTilNesteRad(startMs: number, naaMs: number, budsjettSekunder = KJORING_BUDSJETT_SEKUNDER, maksRadMs = MAKS_RAD_MS): boolean {
+  return naaMs + maksRadMs < startMs + budsjettSekunder * 1000;
 }
 
 export function erGyldigLeadgenId(id: unknown): id is string {

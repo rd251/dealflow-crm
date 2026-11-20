@@ -25,6 +25,11 @@ Deno.test("ugyldig lead-ID sendes aldri", () => {
 
 Deno.test("bare Vunnet er sluttkonvertering, konvertert til salg er ikke vunnet", () => {
   assertEquals(SLUTTKONVERTERING, "salg_vunnet");
+  assertEquals(metaCapiSteg("lead", "Ny")?.navn, "LEADS");
+  assertEquals(metaCapiSteg("lead", "Kvalifisert")?.navn, "QUALIFIED");
+  assertEquals(metaCapiSteg("salgsmulighet", "Vunnet")?.navn, "CONVERTED");
+  assertEquals(metaCapiSteg("lead", "Konvertert til salg")?.navn, "Lead: Konvertert til salgsmulighet");
+  assertEquals(metaCapiSteg("salgsmulighet", "Tapt")?.navn, "Salgsmulighet: Tapt");
   assertEquals(metaCapiSteg("lead", "Konvertert til salg")?.key, "lead_til_salgsmulighet");
   assertEquals(metaCapiSteg("lead", "Konvertert til partner")?.key, "lead_til_partner");
   const vunnet = Object.values(STEG.lead).concat(Object.values(STEG.salgsmulighet)).filter((s) => s.key === SLUTTKONVERTERING);

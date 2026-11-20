@@ -1810,6 +1810,7 @@ export type Database = {
           forventet_mrr: number | null
           id: string
           kilde: Database["public"]["Enums"]["kilde"] | null
+          kilde_lead_id: string | null
           kontakt_id: string | null
           kontaktperson: string | null
           kontrakt_signert_dato: string | null
@@ -1856,6 +1857,7 @@ export type Database = {
           forventet_mrr?: number | null
           id?: string
           kilde?: Database["public"]["Enums"]["kilde"] | null
+          kilde_lead_id?: string | null
           kontakt_id?: string | null
           kontaktperson?: string | null
           kontrakt_signert_dato?: string | null
@@ -1902,6 +1904,7 @@ export type Database = {
           forventet_mrr?: number | null
           id?: string
           kilde?: Database["public"]["Enums"]["kilde"] | null
+          kilde_lead_id?: string | null
           kontakt_id?: string | null
           kontaktperson?: string | null
           kontrakt_signert_dato?: string | null
@@ -1938,6 +1941,13 @@ export type Database = {
           vunnet_dato?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "salgsmuligheter_kilde_lead_id_fkey"
+            columns: ["kilde_lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "salgsmuligheter_kontakt_id_fkey"
             columns: ["kontakt_id"]
@@ -2609,6 +2619,26 @@ export type Database = {
           p_steg: string[]
         }
         Returns: undefined
+      }
+      meta_capi_sm_kobling: {
+        Args: { p_sm: Database["public"]["Tables"]["salgsmuligheter"]["Row"] }
+        Returns: {
+          created_at: string
+          id: string
+          kilde_lead_id: string | null
+          lead_id: string | null
+          lead_opprettet_meta: string | null
+          leadgen_id: string
+          meta_lead_event_id: string
+          metode: string
+          salgsmulighet_id: string | null
+        }
+        SetofOptions: {
+          from: "salgsmuligheter"
+          to: "meta_capi_koblinger"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       meta_capi_steg: {
         Args: { p_status: string; p_type: string }

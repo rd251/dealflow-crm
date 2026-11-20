@@ -111,6 +111,8 @@ export interface Salgsmulighet {
   valgte_pakker: PakkeLinje[];
   /** Kontraktens startdato (fra opplastet kontrakt eller manuelt). */
   kontrakt_startdato?: string;
+  /** Leadet salgsmuligheten ble konvertert fra. Settes kun ved faktisk konvertering. */
+  kilde_lead_id?: string;
   videresendt_til_partner_id?: string;
   videresendt_dato?: string;
   /** Kort notat som vises direkte på kortet i kanban. */

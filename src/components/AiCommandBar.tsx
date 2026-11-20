@@ -465,6 +465,7 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
         status: "Møte booket",
         opprettet_dato: today,
         sist_aktivitet: today,
+        kilde_lead_id: conversion.lead_id || null,
       });
       if (smError) throw smError;
 

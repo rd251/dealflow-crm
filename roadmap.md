@@ -155,3 +155,8 @@
 - [ ] META_CAPI_ACCESS_TOKEN mangler (Robin legger inn)
 - [ ] Godkjent testhendelse og påslåing av sending (Robin)
 - [ ] Planlagt kjøring av serverjobben settes opp ved påslåing
+- [x] Signalnavn: Ny (import) → LEADS, Kvalifisert → QUALIFIED, Vunnet → CONVERTED; øvrige steg beholder egne navn
+- [x] Én køpost per claim og lease-sjekk før sending; test samtidighet
+- [x] Testhandling bruker bare import fra godkjent Meta-side
+- [x] Eksplisitt kilde_lead_id ved lead→salg (også møtetrigger); eldre bare via entydig aktivitet, ingen e-postgjetning
+- [x] Standard «Møte booket» rapporteres bare med møtebevis eller eksplisitt valg
