@@ -672,6 +672,218 @@ export type Database = {
           },
         ]
       }
+      meta_capi_events: {
+        Row: {
+          attempts: number
+          claim_token: string | null
+          created_at: string
+          event_id: string
+          event_name: string
+          event_time: string
+          id: string
+          kilde: string
+          last_error: string | null
+          lead_id: string | null
+          lead_opprettet_meta: string | null
+          leadgen_id: string
+          locked_until: string | null
+          meta_lead_event_id: string | null
+          meta_respons: Json | null
+          milestone_key: string
+          miljo: string
+          next_attempt_at: string
+          salgsmulighet_id: string | null
+          sent_at: string | null
+          stage_key: string
+          status: string
+          test_event_code: string | null
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          claim_token?: string | null
+          created_at?: string
+          event_id: string
+          event_name: string
+          event_time: string
+          id?: string
+          kilde: string
+          last_error?: string | null
+          lead_id?: string | null
+          lead_opprettet_meta?: string | null
+          leadgen_id: string
+          locked_until?: string | null
+          meta_lead_event_id?: string | null
+          meta_respons?: Json | null
+          milestone_key: string
+          miljo?: string
+          next_attempt_at?: string
+          salgsmulighet_id?: string | null
+          sent_at?: string | null
+          stage_key: string
+          status?: string
+          test_event_code?: string | null
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          claim_token?: string | null
+          created_at?: string
+          event_id?: string
+          event_name?: string
+          event_time?: string
+          id?: string
+          kilde?: string
+          last_error?: string | null
+          lead_id?: string | null
+          lead_opprettet_meta?: string | null
+          leadgen_id?: string
+          locked_until?: string | null
+          meta_lead_event_id?: string | null
+          meta_respons?: Json | null
+          milestone_key?: string
+          miljo?: string
+          next_attempt_at?: string
+          salgsmulighet_id?: string | null
+          sent_at?: string | null
+          stage_key?: string
+          status?: string
+          test_event_code?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_capi_events_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meta_capi_events_meta_lead_event_id_fkey"
+            columns: ["meta_lead_event_id"]
+            isOneToOne: false
+            referencedRelation: "meta_lead_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meta_capi_events_salgsmulighet_id_fkey"
+            columns: ["salgsmulighet_id"]
+            isOneToOne: false
+            referencedRelation: "salgsmuligheter"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meta_capi_koblinger: {
+        Row: {
+          created_at: string
+          id: string
+          kilde_lead_id: string | null
+          lead_id: string | null
+          lead_opprettet_meta: string | null
+          leadgen_id: string
+          meta_lead_event_id: string
+          metode: string
+          salgsmulighet_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kilde_lead_id?: string | null
+          lead_id?: string | null
+          lead_opprettet_meta?: string | null
+          leadgen_id: string
+          meta_lead_event_id: string
+          metode: string
+          salgsmulighet_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kilde_lead_id?: string | null
+          lead_id?: string | null
+          lead_opprettet_meta?: string | null
+          leadgen_id?: string
+          meta_lead_event_id?: string
+          metode?: string
+          salgsmulighet_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_capi_koblinger_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: true
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meta_capi_koblinger_meta_lead_event_id_fkey"
+            columns: ["meta_lead_event_id"]
+            isOneToOne: false
+            referencedRelation: "meta_lead_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meta_capi_koblinger_salgsmulighet_id_fkey"
+            columns: ["salgsmulighet_id"]
+            isOneToOne: true
+            referencedRelation: "salgsmuligheter"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meta_capi_state: {
+        Row: {
+          aktivert_at: string | null
+          aktivert_av: string | null
+          id: string
+          last_error: string | null
+          last_error_at: string | null
+          last_error_kind: string | null
+          last_run_at: string | null
+          last_sent_at: string | null
+          pauset: boolean
+          produksjon_aktiv: boolean
+          test_ok_at: string | null
+          test_sist_at: string | null
+          test_sist_resultat: string | null
+          updated_at: string
+        }
+        Insert: {
+          aktivert_at?: string | null
+          aktivert_av?: string | null
+          id?: string
+          last_error?: string | null
+          last_error_at?: string | null
+          last_error_kind?: string | null
+          last_run_at?: string | null
+          last_sent_at?: string | null
+          pauset?: boolean
+          produksjon_aktiv?: boolean
+          test_ok_at?: string | null
+          test_sist_at?: string | null
+          test_sist_resultat?: string | null
+          updated_at?: string
+        }
+        Update: {
+          aktivert_at?: string | null
+          aktivert_av?: string | null
+          id?: string
+          last_error?: string | null
+          last_error_at?: string | null
+          last_error_kind?: string | null
+          last_run_at?: string | null
+          last_sent_at?: string | null
+          pauset?: boolean
+          produksjon_aktiv?: boolean
+          test_ok_at?: string | null
+          test_sist_at?: string | null
+          test_sist_resultat?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       meta_integration_state: {
         Row: {
           connection_verified: boolean
@@ -2326,6 +2538,82 @@ export type Database = {
       }
       kan_redigere_crm: { Args: { _user_id: string }; Returns: boolean }
       lead_velkomst_stopp: { Args: never; Returns: undefined }
+      meta_capi_claim: {
+        Args: {
+          p_id?: string
+          p_lease_seconds?: number
+          p_limit?: number
+          p_miljo: string
+        }
+        Returns: {
+          attempts: number
+          claim_token: string | null
+          created_at: string
+          event_id: string
+          event_name: string
+          event_time: string
+          id: string
+          kilde: string
+          last_error: string | null
+          lead_id: string | null
+          lead_opprettet_meta: string | null
+          leadgen_id: string
+          locked_until: string | null
+          meta_lead_event_id: string | null
+          meta_respons: Json | null
+          milestone_key: string
+          miljo: string
+          next_attempt_at: string
+          salgsmulighet_id: string | null
+          sent_at: string | null
+          stage_key: string
+          status: string
+          test_event_code: string | null
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "meta_capi_events"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      meta_capi_lead_anker: {
+        Args: { p_lead_id: string }
+        Returns: {
+          created_at: string
+          id: string
+          kilde_lead_id: string | null
+          lead_id: string | null
+          lead_opprettet_meta: string | null
+          leadgen_id: string
+          meta_lead_event_id: string
+          metode: string
+          salgsmulighet_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "meta_capi_koblinger"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      meta_capi_legg_i_ko: {
+        Args: {
+          p_kilde: string
+          p_lead_id: string
+          p_lead_opprettet: string
+          p_leadgen_id: string
+          p_meta_lead_event_id: string
+          p_salgsmulighet_id: string
+          p_steg: string[]
+        }
+        Returns: undefined
+      }
+      meta_capi_steg: {
+        Args: { p_status: string; p_type: string }
+        Returns: string[]
+      }
       moete_forslag_til_salgsmulighet: {
         Args: { _moete_id: string }
         Returns: string

@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import { erMetaInnloggingUloept } from "@/lib/meta-leads";
+import MetaCapiSeksjon from "@/components/MetaCapiSeksjon";
 import { Check, Copy, Loader2, Megaphone, RefreshCw } from "lucide-react";
 
 interface MetaEvent {
@@ -214,6 +215,8 @@ export default function MetaLeadsCard() {
             {status.events.length === 0 && (
               <p className="text-xs text-muted-foreground">Ingen Meta-leveranser mottatt ennå.</p>
             )}
+
+            <MetaCapiSeksjon />
           </>
         )}
       </CardContent>

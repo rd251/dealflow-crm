@@ -274,6 +274,13 @@
       "when": 1794860546839,
       "tag": "0038_company_documents_storage_intern",
       "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1795135464194,
+      "tag": "0039_meta_capi_outbox",
+      "breakpoints": true
     }
   ]
 }

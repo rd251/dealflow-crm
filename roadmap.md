@@ -146,3 +146,12 @@
 - [x] Bekreftelsesdialog som lagrer på valgt eller ny salgsmulighet og logger aktivitet
 - [x] Send opplastet PDF via eksisterende DealBuilder-sending med bekreftelse; marker dokumentet som sendt
 - [x] Tester for MRR/ARR og forhåndsvalg; testkontrakt lest og lagret i preview, testdata ryddet (selve utsendingen til DealBuilder ikke kjørt)
+
+## CRM → Meta-tilbakemelding (Conversions API)
+- [x] Kø, koblingstabell og driftsstatus med triggere på Meta-import, leads og salgsmuligheter
+- [x] Egen serverjobb med test/produksjon-skille, lease, backoff, auth-venting og redigerte feil
+- [x] Status under Innstillinger → Meta-leads
+- [x] Tester (database-scenarier, app og server) og bygg
+- [ ] META_CAPI_ACCESS_TOKEN mangler (Robin legger inn)
+- [ ] Godkjent testhendelse og påslåing av sending (Robin)
+- [ ] Planlagt kjøring av serverjobben settes opp ved påslåing
