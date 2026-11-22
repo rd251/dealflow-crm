@@ -312,14 +312,19 @@ async function syncGmailForUser(supabase: any, connection: any) {
     }
   }
 
-  // Get existing ekstern_ids to skip already-synced messages
-  const { data: existingAktiviteter } = await supabase
-    .from('aktiviteter')
-    .select('ekstern_id')
-    .eq('ekstern_provider', 'gmail')
-    .not('ekstern_id', 'is', null);
-  
-  const existingIds = new Set((existingAktiviteter || []).map((a: any) => a.ekstern_id));
+  // Get existing ekstern_ids for exactly these messages (no global list, which the
+  // API caps at 1000 rows and would let already-synced messages through).
+  const existingIds = new Set<string>();
+  const meldingsIder = [...new Set(result.messages.map((m: any) => m.id).filter(Boolean))] as string[];
+  for (let i = 0; i < meldingsIder.length; i += 200) {
+    const { data: funnet, error: oppslagFeil } = await supabase
+      .from('aktiviteter')
+      .select('ekstern_id')
+      .eq('ekstern_provider', 'gmail')
+      .in('ekstern_id', meldingsIder.slice(i, i + 200));
+    if (oppslagFeil) console.error('Existing-ID lookup error:', oppslagFeil);
+    for (const a of funnet || []) existingIds.add((a as any).ekstern_id);
+  }
 
   let synced = 0;
   const insertBatch: any[] = [];
@@ -542,16 +547,24 @@ async function syncGmailForUser(supabase: any, connection: any) {
     });
   }
 
-  // Batch insert new aktiviteter
+  // Batch insert new aktiviteter. If a chunk is rejected (e.g. one message was saved
+  // by an overlapping run), retry row by row so the other new emails are still saved.
+  let lagringFeilet = false;
   if (insertBatch.length > 0) {
+    let lagret = 0, duplikater = 0;
     for (let i = 0; i < insertBatch.length; i += 100) {
       const chunk = insertBatch.slice(i, i + 100);
       const { error: insertError } = await supabase.from('aktiviteter').insert(chunk);
-      if (insertError) {
-        console.error(`Insert batch error at ${i}:`, insertError);
+      if (!insertError) { lagret += chunk.length; continue; }
+      console.warn(`Insert batch error at ${i}, retrying row by row:`, insertError.message);
+      for (const rad of chunk) {
+        const { error: radFeil } = await supabase.from('aktiviteter').insert(rad);
+        if (!radFeil) lagret++;
+        else if (radFeil.code === '23505') duplikater++;
+        else { lagringFeilet = true; console.error(`Insert row error for ${rad.ekstern_id}:`, radFeil.message); }
       }
     }
-    console.log(`Inserted ${insertBatch.length} new aktiviteter`);
+    console.log(`Inserted ${lagret} new aktiviteter (${duplikater} already saved)`);
   }
 
   // Upsert email_contacts
@@ -736,7 +749,8 @@ async function syncGmailForUser(supabase: any, connection: any) {
 
   // Update connection
   const updateData: Record<string, any> = { gmail_last_synced_at: new Date().toISOString() };
-  if (result.newHistoryId) updateData.gmail_history_id = result.newHistoryId;
+  // Keep the old history position when an email could not be saved, so the next run retries it.
+  if (result.newHistoryId && !lagringFeilet) updateData.gmail_history_id = result.newHistoryId;
 
   await supabase
     .from('google_calendar_connections')

@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
-import { erMetaInnloggingUloept } from "@/lib/meta-leads";
+import { visMetaInnloggingVarsel } from "@/lib/meta-leads";
 import MetaCapiSeksjon from "@/components/MetaCapiSeksjon";
 import { Check, Copy, Loader2, Megaphone, RefreshCw } from "lucide-react";
 
@@ -163,12 +163,14 @@ export default function MetaLeadsCard() {
               </div>
             </div>
 
-            {erMetaInnloggingUloept(status.state?.last_error) && (
+            {visMetaInnloggingVarsel(status.state) && (
               <div className="rounded-lg border bg-destructive/10 border-destructive/40 p-3 text-xs">
                 <p className="font-medium text-destructive mb-1">Meta-innloggingen er utløpt</p>
                 <p className="text-muted-foreground">
-                  Tilgangstokenet må fornyes hos Meta. Dei {status.counts.pending} leadsene som venter i køen
-                  blir hentet automatisk så snart innloggingen er på plass igjen — de er ikke mistet.
+                  Tilgangstokenet må fornyes hos Meta.{" "}
+                  {status.counts.pending > 0
+                    ? `${status.counts.pending} ${status.counts.pending === 1 ? "lead venter" : "leads venter"} i køen og hentes automatisk så snart innloggingen er på plass igjen — de er ikke mistet.`
+                    : "Nye leads hentes automatisk så snart innloggingen er på plass igjen — de er ikke mistet."}
                 </p>
               </div>
             )}

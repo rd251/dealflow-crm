@@ -329,6 +329,9 @@ Deno.serve(async (req) => {
         connection_verified: true,
         verified_page_id: ev.page_id,
         last_processed_at: new Date().toISOString(),
+        // A successful import proves the login works again, so the old error is cleared.
+        last_error: null,
+        last_error_at: null,
         updated_at: new Date().toISOString(),
       });
 
