@@ -12,7 +12,7 @@ describe("felles logg – Hva skjedde?", () => {
     expect(erSenere("2027-02-02", "2027-02-02")).toBe(false);
     expect(erSenere("", "2026-11-02")).toBe(false);
   });
-  it("Ikke interessert og Notat → ingen ny oppgave", () => {
+  it("Ikke interessert og Notat → ingen forhåndsutfylt oppfølgingsdato", () => {
     expect(forslagOppfolging("ikke_interessert", naa).dato).toBe("");
     expect(forslagOppfolging("notat", naa).dato).toBe("");
   });

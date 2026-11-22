@@ -120,9 +120,11 @@ export interface LoggAktivitetInput {
   tittel?: string;
   /** Valgfritt kort notat. */
   notat?: string;
-  /** Valgfritt neste steg — oppretter oppgave og oppdaterer posten. */
+  /** Valgfritt neste steg — oppdaterer «neste steg» på posten. Lager ikke oppgave alene. */
   nesteSteg?: string;
   nesteStegDato?: string;
+  /** Eksplisitt valg om å lage én oppgave av neste steg. Standard av. */
+  opprettOppgave?: boolean;
   meeting?: MeetingDetails;
   /** Default «manuell». Brukes f.eks. av AI-assistenten. */
   kilde?: string;
@@ -157,9 +159,32 @@ const harTarget = (t: ActivityTarget) =>
   Boolean(t.lead_id || t.salgsmulighet_id || t.selskap_id || t.partner_id || t.prosjekt_id || t.kontakt_id);
 
 /**
+ * Oppgaveraden som skal lagres for neste steg, eller null.
+ * Oppgaver lages bare når brukeren eksplisitt har valgt det – aldri bare fordi neste steg er fylt ut.
+ */
+export function nesteStegOppgaveRad(input: Pick<LoggAktivitetInput, "nesteSteg" | "nesteStegDato" | "opprettOppgave" | "ansvarlig" | "target">, userId: string | null) {
+  const nesteSteg = (input.nesteSteg ?? "").trim();
+  const t = input.target;
+  if (input.opprettOppgave !== true || !nesteSteg || !harTarget(t)) return null;
+  return {
+    oppgave: nesteSteg,
+    frist: input.nesteStegDato || null,
+    prioritet: "Medium",
+    status: "Åpen",
+    paaminnelse: true,
+    ansvarlig: input.ansvarlig || "",
+    user_id: userId,
+    lead_id: t.lead_id || null,
+    salgsmulighet_id: t.salgsmulighet_id || null,
+    selskap_id: t.selskap_id || null,
+    kontakt_id: t.kontakt_id || null,
+  };
+}
+
+/**
  * Eneste vei inn for å logge en aktivitet i CRM-et.
  * Skriver til den eksisterende `aktiviteter`-tabellen, oppdaterer «sist kontaktet»
- * og oppretter oppgave for neste steg når det er fylt ut.
+ * og «neste steg» på posten. Oppgave lages bare ved eksplisitt `opprettOppgave: true`.
  */
 export async function loggAktivitet(input: LoggAktivitetInput): Promise<{ id: string | null; nesteOppfolging: string; ikkeAktuelt: boolean }> {
   const def = loggTypeDef(input.logg);
@@ -199,22 +224,11 @@ export async function loggAktivitet(input: LoggAktivitetInput): Promise<{ id: st
 
   const nesteSteg = (input.nesteSteg ?? "").trim();
 
-  // Neste steg → oppgave + felt på posten
-  if (nesteSteg && harTarget(t)) {
+  // Oppgave kun ved eksplisitt valg
+  const oppgaveRad = nesteStegOppgaveRad(input, userId);
+  if (oppgaveRad) {
     try {
-      await supabase.from("oppgaver").insert({
-        oppgave: nesteSteg,
-        frist: input.nesteStegDato || null,
-        prioritet: "Medium",
-        status: "Åpen",
-        paaminnelse: true,
-        ansvarlig: input.ansvarlig || "",
-        user_id: userId,
-        lead_id: t.lead_id || null,
-        salgsmulighet_id: t.salgsmulighet_id || null,
-        selskap_id: t.selskap_id || null,
-        kontakt_id: t.kontakt_id || null,
-      } as never);
+      await supabase.from("oppgaver").insert(oppgaveRad as never);
     } catch (err) {
       console.warn("Kunne ikke opprette oppgave for neste steg", err);
     }

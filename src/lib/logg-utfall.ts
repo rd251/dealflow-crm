@@ -64,7 +64,7 @@ export function ikkeNaaDato(mnd: number, naa: Date = new Date()): Oppfolging {
 export const erSenere = (senereTil: string | null | undefined, idag: string = lokalDato(new Date())) =>
   Boolean(senereTil && senereTil.slice(0, 10) > idag);
 
-/** Forhåndsutfylt «Neste oppfølging» per valg. Tom dato = ingen ny oppgave. */
+/** Forhåndsutfylt «Neste oppfølging» per valg (dato på kortet). Lager aldri oppgave alene. */
 export function forslagOppfolging(valg: LoggValg, naa: Date = new Date()): Oppfolging {
   switch (valg) {
     case "snakket": return { dato: plussDager(naa, 7), tid: "" };
@@ -102,4 +102,17 @@ export const lukkerOppgave = (valg: LoggValg) => valg !== "notat";
 export function erGjeldendeOppfolging(o: { status?: string; frist?: string | null; oppgave: string }, idag: string): boolean {
   if (o.status === "Ferdig") return false;
   return Boolean((o.frist && o.frist.slice(0, 10) <= idag) || /^ring\b/i.test(o.oppgave.trim()));
+}
+
+export interface OppgaveValg { opprett: boolean; tittel: string; dato: string; tid?: string }
+
+/**
+ * Oppgaven som skal lagres etter en logg, eller null.
+ * Bare når brukeren eksplisitt har slått på «Opprett oppgave» og fylt inn tittel og forfallsdato.
+ */
+export function oppgaveFraLogg(v: OppgaveValg): { oppgave: string; frist: string; frist_tid: string } | null {
+  const oppgave = v.tittel.trim();
+  const frist = v.dato.trim();
+  if (v.opprett !== true || !oppgave || !frist) return null;
+  return { oppgave, frist, frist_tid: (v.tid ?? "").trim() };
 }

@@ -17,7 +17,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import DetailPanelShell, { DetailSection, DetailField, DetailDivider } from "@/components/DetailPanelShell";
 import EntityCalendarTab from "@/components/EntityCalendarTab";
 import { Plus, Search, ArrowRightCircle, Trash2, Users2, Upload, Lock, Mail, ArrowUp, ArrowDown, ChevronsUpDown, PenLine, Send, Phone, CalendarDays, UserPlus, CheckCircle2, TrendingUp, AlertTriangle } from "lucide-react";
-import { relativTid, dagerSiden, kildeGruppe, KILDE_GRUPPER, leadStatusFarge, leadStatusKort, idag, datoOm, type KildeGruppe } from "@/lib/sales-flow";
+import { relativTid, dagerSiden, kildeGruppe, KILDE_GRUPPER, leadStatusFarge, leadStatusKort, idag, type KildeGruppe } from "@/lib/sales-flow";
 import SendEmailDialog from "@/components/SendEmailDialog";
 import SelskapInnsikt, { BrregMerke } from "@/components/SelskapInnsikt";
 import { Lead, LeadStatus, LeadKilde, Partner } from "@/data/crm-data";
@@ -82,7 +82,7 @@ export default function Leads() {
   const { canEdit, isAdmin, user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { leads, partnere, updateLeads, updateOppgaver, konverterLead, konverterTilPartner, generateId } = useCrmStore();
+  const { leads, partnere, updateLeads, konverterLead, konverterTilPartner, generateId } = useCrmStore();
   const [search, setSearch] = useState("");
   const { filter: eierFilter, setFilter: setEierFilter, tilhorerFilter } = useMineFilter("leads");
   const [visning, setVisning] = useState<"leads" | "ringeliste" | "kalde" | "senere">("leads");
@@ -375,14 +375,15 @@ export default function Leads() {
     });
   }, [convertDialogLead, partnerDialogLead]);
 
-  const konverterOgOpprettOppgave = (lead: Lead, navn: string, enrich?: typeof enrichFields) => {
+  /** Konverterer leadet og flytter aktivitetene. Oppretter aldri oppgaver automatisk. */
+  const konverterOgFlyttAktiviteter = (lead: Lead, navn: string, enrich?: typeof enrichFields) => {
     const smId = konverterLead(lead.id, navn, enrich);
     if (selectedLead?.id === lead.id) setSelectedLead(null);
     if (!smId) return;
     toast.success(`${lead.firmanavn || lead.kontaktperson} er nå salgsmulighet (Møte booket)`, {
       action: { label: "Åpne", onClick: () => navigate(`/salgsmuligheter?open=${smId}`) },
     });
-    // Vent til salgsmuligheten er lagret før oppgave og aktiviteter kobles på (ellers avvises koblingen).
+    // Vent til salgsmuligheten er lagret før aktivitetene kobles på (ellers avvises koblingen).
     void (async () => {
       for (let i = 0; i < 20; i++) {
         const { data } = await supabase.from("salgsmuligheter").select("id").eq("id", smId).maybeSingle();
@@ -392,10 +393,6 @@ export default function Leads() {
       const { error } = await supabase.from("aktiviteter").update({ salgsmulighet_id: smId })
         .eq("lead_id", lead.id).is("salgsmulighet_id", null);
       if (error) console.warn("Kunne ikke flytte aktiviteter", error);
-      updateOppgaver(prev => [...prev, {
-        id: crypto.randomUUID(), oppgave: "Gjennomfør demo", lead_id: "", selskap_id: "", salgsmulighet_id: smId, kontakt_id: "",
-        ansvarlig: lead.ansvarlig || user?.id || "", frist: datoOm(7), frist_tid: "", prioritet: "Høy", status: "Åpen", paaminnelse: true, notater: "",
-      }]);
     })();
   };
 
@@ -535,7 +532,7 @@ export default function Leads() {
               disabled={!convertNavn.trim()}
               onClick={() => {
                 if (convertDialogLead) {
-                  konverterOgOpprettOppgave(convertDialogLead, convertNavn.trim(), enrichFields);
+                  konverterOgFlyttAktiviteter(convertDialogLead, convertNavn.trim(), enrichFields);
                   setConvertDialogLead(null);
                   setConvertNavn("");
                   setEnrichFields({ orgnr: "", bransje: "", firmaadresse: "", postadresse: "" });
@@ -888,7 +885,7 @@ export default function Leads() {
                 {currentLead.pinned_notat?.trim() && <PinnedNotatBoks notat={currentLead.pinned_notat} />}
 
                 {kanEndre && <LeadHvaSkjedde lead={currentLead} onBooketMoete={(l) => {
-                  konverterOgOpprettOppgave(l, l.use_case || l.firmanavn);
+                  konverterOgFlyttAktiviteter(l, l.use_case || l.firmanavn);
                 }} />}
 
                 {/* Neste steg */}

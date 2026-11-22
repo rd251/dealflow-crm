@@ -255,16 +255,8 @@ export default function AiCommandBar({ context, userName }: AiCommandBarProps) {
       const aiData = data as AiResponse;
       setResponse(aiData);
 
-      // Auto-create leads flagged with auto_create
-      // Auto-create tasks flagged with auto_create
-      if (aiData.suggested_tasks?.length) {
-        for (let i = 0; i < aiData.suggested_tasks.length; i++) {
-          const task = aiData.suggested_tasks[i];
-          if (task.auto_create) {
-            handleCreateTask(task, i);
-          }
-        }
-      }
+      // Oppgaveforslag opprettes aldri automatisk (heller ikke med auto_create) –
+      // de vises som forslag og krever klikk på «Opprett» eller «Opprett alle».
 
       // Auto-create leads flagged with auto_create
       if (aiData.suggested_leads?.length) {

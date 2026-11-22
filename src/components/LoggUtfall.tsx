@@ -7,6 +7,7 @@ import { Ban, CalendarCheck, Clock, FileText, MessageSquare, Phone, PhoneCall, P
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import OppgaveTid from "@/components/OppgaveTid";
 import { useCrmStore } from "@/hooks/use-crm-store";
@@ -14,7 +15,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { loggAktivitet, type ActivityTarget } from "@/lib/activity-logging";
 import {
-  IKKE_NAA_VALG, ikkeNaaDato, LOGG_VALG, RING_TILBAKE_VALG, erGjeldendeOppfolging, forslagOppfolging, leadStatusEtterValg, lokalDato, lukkerOppgave,
+  IKKE_NAA_VALG, ikkeNaaDato, LOGG_VALG, RING_TILBAKE_VALG, erGjeldendeOppfolging, forslagOppfolging, leadStatusEtterValg, lokalDato, lukkerOppgave, oppgaveFraLogg,
   oppfolgingTittel, ringTilbakeTid, type LoggValg, type RingTilbake,
 } from "@/lib/logg-utfall";
 import { cn } from "@/lib/utils";
@@ -64,6 +65,9 @@ export default function LoggUtfall({ target, navn: navnProp, oppgaveId, ansvarli
   const [kanal, setKanal] = useState<"SMS" | "E-post">("SMS");
   const [moeteDato, setMoeteDato] = useState("");
   const [moeteTid, setMoeteTid] = useState("10:00");
+  const [opprettOppgave, setOpprettOppgave] = useState(false);
+  const [oppgaveDato, setOppgaveDato] = useState("");
+  const [oppgaveTid, setOppgaveTid] = useState("");
   const [lagrer, setLagrer] = useState(false);
   const [bekreft, setBekreft] = useState(false);
 
@@ -99,10 +103,25 @@ export default function LoggUtfall({ target, navn: navnProp, oppgaveId, ansvarli
     }
   }, [valg, navn, dato, tid, moeteDato, moeteTid, kanal]);
 
-  const nullstill = () => { setValg(null); setNotat(""); setDato(""); setTid(""); setTittel(""); setTittelRedigert(false); };
+  const nullstill = () => {
+    setValg(null); setNotat(""); setDato(""); setTid(""); setTittel(""); setTittelRedigert(false);
+    setOpprettOppgave(false); setOppgaveDato(""); setOppgaveTid("");
+  };
+
+  /** Eksplisitt valg: slå på/av «Opprett oppgave». Forfallsdato foreslås fra neste oppfølging og kan endres. */
+  const velgOppgave = (paa: boolean) => {
+    setOpprettOppgave(paa);
+    if (paa && !oppgaveDato) { setOppgaveDato(dato); setOppgaveTid(tid); }
+    if (paa && !tittel.trim() && valg) setTittel(oppfolgingTittel(valg, navn));
+  };
+
+  const koblingNavn = sm ? `salgsmuligheten «${sm.navn}»` : lead ? `leadet ${lead.firmanavn || lead.kontaktperson}` : kontakt ? `kontakten ${kontakt.navn}` : selskap ? `selskapet ${selskap.firmanavn}` : "";
+  const nyOppgave = valg && valg !== "ikke_interessert" ? oppgaveFraLogg({ opprett: opprettOppgave, tittel, dato: oppgaveDato, tid: oppgaveTid }) : null;
+  const oppgaveMangler = opprettOppgave && valg !== "ikke_interessert" && !nyOppgave;
 
   const lagre = async () => {
     if (!valg) return;
+    if (oppgaveMangler) { toast.error("Fyll inn tittel og forfallsdato for oppgaven, eller slå av «Opprett oppgave»"); return; }
     if (valg === "ikke_interessert" && !bekreft) { setBekreft(true); return; }
     setBekreft(false);
     setLagrer(true);
@@ -130,12 +149,13 @@ export default function LoggUtfall({ target, navn: navnProp, oppgaveId, ansvarli
         }));
       }
 
-      // Ny oppgave fra «Neste oppfølging»
-      if (nyDato) {
+      // Ny oppgave bare når brukeren eksplisitt har valgt «Opprett oppgave»
+      const oppgave = v === "ikke_interessert" ? null : nyOppgave;
+      if (oppgave) {
         updateOppgaver(prev => [...prev, {
-          id: crypto.randomUUID(), oppgave: tittel.trim() || oppfolgingTittel(v, navn),
+          id: crypto.randomUUID(), ...oppgave,
           lead_id: target.lead_id || "", selskap_id: target.selskap_id || "", salgsmulighet_id: target.salgsmulighet_id || "", kontakt_id: target.kontakt_id || "",
-          ansvarlig, frist: nyDato, frist_tid: tid, prioritet: "Medium", status: "Åpen", paaminnelse: true, notater: v === "ikke_naa" ? notat.trim() : "",
+          ansvarlig, prioritet: "Medium", status: "Åpen", paaminnelse: true, notater: v === "ikke_naa" ? notat.trim() : "",
         }]);
       }
 
@@ -169,7 +189,8 @@ export default function LoggUtfall({ target, navn: navnProp, oppgaveId, ansvarli
           }
         }
       } else {
-        toast.success(v === "ikke_interessert" ? "Logget – tatt ut av oppfølging" : nyDato ? `Logget · ny oppfølging ${format(new Date(`${nyDato}T12:00`), "d. MMM", { locale: nb })}${tid ? ` ${tid}` : ""}` : "Logget");
+        const oppfolgingTekst = nyDato ? ` · neste oppfølging ${format(new Date(`${nyDato}T12:00`), "d. MMM", { locale: nb })}${tid ? ` ${tid}` : ""}` : "";
+        toast.success(v === "ikke_interessert" ? "Logget – tatt ut av oppfølging" : `Logget${oppfolgingTekst}${oppgave ? " · oppgave opprettet" : ""}`);
       }
 
       onLogged?.(res);
@@ -239,22 +260,36 @@ export default function LoggUtfall({ target, navn: navnProp, oppgaveId, ansvarli
 
           {visOppfolging && (
             <div className="space-y-2">
-              <p className="text-xs font-medium text-muted-foreground">Neste oppfølging <span className="font-normal">(tom = ingen ny oppgave)</span></p>
+              <p className="text-xs font-medium text-muted-foreground">Neste oppfølging <span className="font-normal">(dato på kortet – lager ikke oppgave)</span></p>
               <div className="flex flex-wrap items-center gap-2">
                 <Input type="date" aria-label="Dato for neste oppfølging" value={dato} onChange={e => setDato(e.target.value)} className="h-9 w-auto" />
                 {dato && <Button type="button" size="sm" variant="ghost" className="h-8" onClick={() => { setDato(""); setTid(""); }}>Ingen</Button>}
               </div>
-              {dato && (
-                <>
-                  <OppgaveTid value={tid} onChange={setTid} />
-                  <Input aria-label="Tittel på oppfølgingsoppgaven" value={tittel} onChange={e => { setTittel(e.target.value); setTittelRedigert(true); }} className="h-8 text-sm" />
-                </>
-              )}
+
+              <div className="space-y-2 rounded-md border bg-background p-2.5">
+                <label className="flex cursor-pointer items-center gap-2 text-sm font-medium">
+                  <Checkbox checked={opprettOppgave} onCheckedChange={c => velgOppgave(c === true)} aria-describedby="oppgave-hjelp" />
+                  Opprett oppgave
+                </label>
+                <p id="oppgave-hjelp" className="text-xs text-muted-foreground">
+                  {opprettOppgave ? `Én oppgave lagres${koblingNavn ? ` på ${koblingNavn}` : ""} når du trykker Lagre.` : "Av: ingen oppgave blir laget."}
+                </p>
+                {opprettOppgave && (
+                  <div className="space-y-2">
+                    <Input aria-label="Tittel på oppgaven" placeholder="Hva skal gjøres?" value={tittel} onChange={e => { setTittel(e.target.value); setTittelRedigert(true); }} className="h-8 text-sm" />
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Input type="date" aria-label="Forfallsdato for oppgaven" value={oppgaveDato} onChange={e => setOppgaveDato(e.target.value)} className="h-9 w-auto" />
+                    </div>
+                    {oppgaveDato && <OppgaveTid value={oppgaveTid} onChange={setOppgaveTid} />}
+                    {oppgaveMangler && <p className="text-xs text-destructive">Fyll inn tittel og forfallsdato.</p>}
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
           <div className="flex gap-2">
-            <Button onClick={lagre} disabled={lagrer} variant={valg === "ikke_interessert" ? "destructive" : "default"}>{lagrer ? "Lagrer…" : "Lagre"}</Button>
+            <Button onClick={lagre} disabled={lagrer || oppgaveMangler} variant={valg === "ikke_interessert" ? "destructive" : "default"}>{lagrer ? "Lagrer…" : "Lagre"}</Button>
             <Button variant="ghost" onClick={nullstill}>Avbryt</Button>
           </div>
         </div>

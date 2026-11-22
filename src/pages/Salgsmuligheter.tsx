@@ -45,7 +45,7 @@ import LastMeetingCard from "@/components/LastMeetingCard";
 import NesteStegTaskButton from "@/components/NesteStegTaskButton";
 import MineTeametToggle from "@/components/MineTeametToggle";
 import confetti from "canvas-confetti";
-import { tilKanbanStadium, dagerSiden, initialer, idag, datoOm } from "@/lib/sales-flow";
+import { tilKanbanStadium, dagerSiden, initialer, idag } from "@/lib/sales-flow";
 import {
   KANBAN_SYNLIGE_KORT,
   AUTO_TAP_DAGER,
@@ -203,7 +203,7 @@ export default function Salgsmuligheter() {
   const isMobile = useIsMobile();
   const { canEdit, isAdmin, user } = useAuth();
   const { profiles } = useProfiles();
-  const { salgsmuligheter, selskaper, kontakter, partnere, oppgaver, updateSalgsmuligheter, updateSelskaper, updateKontakter, updateOppgaver, vinnSalgsmulighet, tapSalgsmulighet, generateId } = useCrmStore();
+  const { salgsmuligheter, selskaper, kontakter, partnere, updateSalgsmuligheter, updateSelskaper, updateKontakter, vinnSalgsmulighet, tapSalgsmulighet, generateId } = useCrmStore();
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [dragOverStage, setDragOverStage] = useState<string | null>(null);
   const [selectedSm, setSelectedSm] = useState<Salgsmulighet | null>(null);
@@ -319,35 +319,6 @@ export default function Salgsmuligheter() {
   const getSelskapNavn = (id: string) => selskaper.find(s => s.id === id)?.firmanavn || "–";
   const getSelskapDomain = (id: string | null) => id ? selskaper.find(s => s.id === id)?.domene || "" : "";
   const getProfileName = (id: string) => profiles.find(p => p.user_id === id)?.display_name || "";
-  /** Oppretter en oppgave hvis en tilsvarende ikke allerede finnes på dealen. */
-  const opprettOppgave = useCallback((deal: Salgsmulighet, tekst: string, frist: string) => {
-    const finnes = oppgaver.some(o => o.salgsmulighet_id === deal.id && o.oppgave === tekst && o.status !== "Ferdig");
-    if (finnes) return;
-    updateOppgaver(prev => [...prev, {
-      id: crypto.randomUUID(),
-      oppgave: tekst,
-      lead_id: "",
-      selskap_id: deal.selskap_id || "",
-      salgsmulighet_id: deal.id,
-      kontakt_id: deal.kontakt_id || "",
-      ansvarlig: deal.ansvarlig || user?.id || "",
-      frist,
-      frist_tid: "",
-      prioritet: "Høy",
-      status: "Åpen",
-      paaminnelse: true,
-      notater: "",
-    }]);
-    toast.success(`Oppgave opprettet: ${tekst}`);
-  }, [oppgaver, updateOppgaver, user?.id]);
-
-  /** Automatikk når en deal flyttes til et nytt stadium. */
-  const etterStegEndring = useCallback((deal: Salgsmulighet, nyStatus: SalgsmulighetStatus) => {
-    if (nyStatus === "Demo gjennomført") {
-      opprettOppgave(deal, "Send kontrakt", datoOm(2));
-    }
-  }, [opprettOppgave]);
-
   const feirVunnet = useCallback(() => {
     confetti({ particleCount: 140, spread: 75, origin: { y: 0.6 }, colors: ["#c0392b", "#e67e22", "#2ecc71", "#ffffff"] });
   }, []);
@@ -370,22 +341,19 @@ export default function Salgsmuligheter() {
     if (stage === "Vunnet") { setWinPartnerId(""); setWinDialog(draggedId); }
     else if (stage === "Tapt") { setLossDialog(draggedId); }
     else {
-      const deal = salgsmuligheter.find(s => s.id === draggedId);
       updateSalgsmuligheter(prev => prev.map(s =>
         s.id === draggedId ? { ...s, status: stage, sist_aktivitet: idag() } : s
       ));
-      if (deal) etterStegEndring(deal, stage);
     }
     setDraggedId(null);
   };
 
+  // Faseendring oppretter aldri oppgaver automatisk – oppgaver lages bare manuelt.
   const moveDealToStage = useCallback((dealId: string, newStage: SalgsmulighetStatus) => {
-    const deal = salgsmuligheter.find(s => s.id === dealId);
     updateSalgsmuligheter(prev => prev.map(s =>
       s.id === dealId ? { ...s, status: newStage, sist_aktivitet: idag() } : s
     ));
-    if (deal) etterStegEndring(deal, newStage);
-  }, [salgsmuligheter, updateSalgsmuligheter, etterStegEndring]);
+  }, [updateSalgsmuligheter]);
 
   const addSm = () => {
     if (!form.use_case.trim()) {
@@ -787,9 +755,7 @@ export default function Salgsmuligheter() {
             </select>
             <Button className="w-full" onClick={() => {
               if (!lossDialog) return;
-              const deal = salgsmuligheter.find(s => s.id === lossDialog);
               tapSalgsmulighet(lossDialog, lossReason);
-              if (deal) opprettOppgave(deal, "Følg opp igjen", datoOm(90));
               setLossDialog(null);
             }}>Bekreft tap</Button>
           </div>
