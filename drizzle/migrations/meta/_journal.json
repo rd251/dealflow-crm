@@ -288,6 +288,13 @@
       "when": 1795136314163,
       "tag": "0040_meta_capi_eksplisitt_kobling",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1795376454949,
+      "tag": "0041_stram_inn_prosjekt_og_kontraktfiler",
+      "breakpoints": true
     }
   ]
 }
