@@ -1,6 +1,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { sendTemplateEmailWithLog } from '../_shared/transactional-email-templates/send-and-log.ts'
 import { rangerAgenda, AgendaAiError, type AgendaPunkt } from '../_shared/agenda-ai.ts'
+import { serveUtenAutoEpost } from "../_shared/auto-epost-stopp.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,7 +14,7 @@ const MAKS_PUNKTER = 7
 const KALD_DEAL_DAGER = 10
 const RISIKO_LUKKEDATO_DAGER = 14
 
-Deno.serve(async (req) => {
+serveUtenAutoEpost("weekly-priorities", async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders })
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')

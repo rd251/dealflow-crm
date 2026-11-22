@@ -1,8 +1,6 @@
-import { supabase } from "@/integrations/supabase/client";
-
 /**
- * Interne driftsvarsler på e-post. Kallene er «fire and forget» – en e-post som
- * ikke går gjennom skal aldri stoppe handlingen brukeren utførte i CRM-et.
+ * Interne driftsvarsler på e-post er slått av (22.11.2026). varsleCrm beholdes
+ * slik at eksisterende kall i CRM-et fungerer, men den sender ingenting.
  */
 export type CrmHendelse =
   | "nytt_lead"
@@ -22,11 +20,8 @@ export interface CrmVarselPayload {
   lead_id?: string;
 }
 
-export async function varsleCrm(payload: CrmVarselPayload): Promise<void> {
-  try {
-    const { error } = await supabase.functions.invoke("crm-varsel", { body: payload });
-    if (error) console.warn("Kunne ikke sende internt varsel", payload.hendelse, error.message);
-  } catch (err) {
-    console.warn("Kunne ikke sende internt varsel", payload.hendelse, err);
-  }
+export const CRM_VARSEL_AKTIV = false;
+
+export async function varsleCrm(_payload: CrmVarselPayload): Promise<void> {
+  if (!CRM_VARSEL_AKTIV) return;
 }

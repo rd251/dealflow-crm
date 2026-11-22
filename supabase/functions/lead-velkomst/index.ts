@@ -1,7 +1,8 @@
-// Sender en personlig «Skal vi ta en prat?»-e-post fra Robins Gmail ca. 5 min etter at et nytt lead kom inn.
-// Vekkes av en minuttsjobb som bare finnes mens leads venter, og som stopper seg selv når køen er tom.
+// SLÅTT AV 22.11.2026: sendte tidligere en automatisk «Skal vi ta en prat?»-e-post til nye leads.
+// Nå sendes ingenting; se ../_shared/auto-epost-stopp.ts.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { registrerVenterPaSvar } from "../_shared/awaiting-reply.ts";
+import { serveUtenAutoEpost } from "../_shared/auto-epost-stopp.ts";
 import { ROBIN_SIGNATURE, robinSignatureText, robinSignatureHtml, escapeEmailHtml } from "../_shared/robin-signature.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -101,7 +102,16 @@ ${malTekst({ kontaktperson: "Stig Arne", firmanavn: "EasyMarketing" }).replace("
   } catch (e) { console.error("AI-feil", e); return null; }
 }
 
-Deno.serve(async (req) => {
+// Automatisk velkomstmail er slått av: funksjonen sender aldri noe, rydder bare opp
+// eventuelle ventende leads og en gjenværende minuttsjobb hvis noe har satt den opp igjen.
+async function ryddOppVelkomst(): Promise<void> {
+  const sb = createClient(SUPABASE_URL, SERVICE_KEY);
+  await sb.from("leads").update({ velkomst_status: "hoppet_over", velkomst_feil: "Automatisk velkomstmail er slått av" })
+    .eq("velkomst_status", "venter");
+  await sb.rpc("lead_velkomst_stopp");
+}
+
+serveUtenAutoEpost("lead-velkomst", async (req) => {
   if (req.method !== "POST") return new Response("ok");
   const sb = createClient(SUPABASE_URL, SERVICE_KEY);
   const naa = Date.now();
@@ -201,4 +211,4 @@ Deno.serve(async (req) => {
 
   await sb.rpc("lead_velkomst_stopp");
   return new Response(JSON.stringify({ behandlet: resultater }), { headers: json });
-});
+}, ryddOppVelkomst);

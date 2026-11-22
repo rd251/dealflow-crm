@@ -2,6 +2,7 @@ import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2'
 import { TOM_OPPGAVEOVERSIKT, type OppgaveLinje, type VarselInnhold } from './mal.ts'
 import { hentForfalteOppgaver, hentOppgaveOversikt, norskDato, tilLinje } from './oppgaver.ts'
 import { sendVarsel, sendVarslerTil, type SendVarselResultat, type VarselMottaker } from './send.ts'
+import { AUTO_EPOST_STOPPET } from '../auto-epost-stopp.ts'
 
 /** Får alltid kopi av signerte kontrakter. */
 export const KONTRAKT_KOPI_EPOST = 'rd@snakk.ai'
@@ -86,6 +87,8 @@ export async function behandleHendelse(
   supabase: SupabaseClient,
   payload: HendelsePayload,
 ): Promise<SendVarselResultat[]> {
+  // Automatiske interne e-poster er slått av – ingenting leses eller sendes.
+  if (AUTO_EPOST_STOPPET) return []
   const profiler = await alleProfiler(supabase)
   const utforer = navnFor(profiler, payload.utfort_av_user_id)
 
@@ -344,6 +347,7 @@ async function hentTilknytning(supabase: SupabaseClient, o: any): Promise<{ navn
 
 /** Daglig varsel om forfalte oppgaver til hver ansvarlig. */
 export async function sendForfalteOppgaver(supabase: SupabaseClient): Promise<SendVarselResultat[]> {
+  if (AUTO_EPOST_STOPPET) return []
   const profiler = await alleProfiler(supabase)
   const resultater: SendVarselResultat[] = []
 

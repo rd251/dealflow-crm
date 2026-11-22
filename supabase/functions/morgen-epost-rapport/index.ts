@@ -3,6 +3,7 @@
 // Internt driftsvarsel – ingen avmeldingslenke.
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { robinSignatureHtml, robinSignatureText } from '../_shared/robin-signature.ts'
+import { serveUtenAutoEpost } from "../_shared/auto-epost-stopp.ts";
 
 const AVSENDER = { name: 'Snakk CRM', email: 'rd@snakk.ai' }
 const MOTTAKER = 'rd@snakk.ai'
@@ -38,7 +39,7 @@ function klokke(iso: string): string {
   })
 }
 
-Deno.serve(async () => {
+serveUtenAutoEpost("morgen-epost-rapport", async () => {
   if (Deno.env.get('SUPABASE_URL') === undefined) {
     return new Response(JSON.stringify({ error: 'Mangler konfigurasjon' }), { status: 500 })
   }

@@ -1,77 +1,21 @@
-import { createClient } from 'npm:@supabase/supabase-js@2'
-import { adminKlient, behandleHendelse, type HendelsePayload, type HendelseType } from '../_shared/crm-varsel/hendelser.ts'
+// SLÅTT AV 22.11.2026: interne auto-e-poster (nytt lead, oppgave tildelt, deal vunnet,
+// kontrakt signert, lead konvertert, kunde live, prosjekt tildelt) sendes ikke lenger.
+// Endepunktet beholdes slik at eldre kall (lead-intake, meta-lead-worker, appen) får et
+// raskt, trygt svar og aldri blokkerer leadregistrering. Det leser og sender ingenting.
+import { autoEpostAvslattSvar } from '../_shared/auto-epost-stopp.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const GYLDIGE_HENDELSER: HendelseType[] = [
-  'nytt_lead',
-  'prosjekt_tildelt',
-  'oppgave_tildelt',
-  'lead_konvertert',
-  'deal_vunnet',
-  'kontrakt_signert',
-  'kunde_live',
-]
-
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-
-function json(body: unknown, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-  })
-}
-
-Deno.serve(async (req) => {
+Deno.serve((req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
-  if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405)
-
-  const authHeader = req.headers.get('Authorization') || ''
-  if (!authHeader.startsWith('Bearer ')) return json({ error: 'Ikke autorisert' }, 401)
-
-  // Systemkall (f.eks. fra lead-intake eller meta-lead-worker) bruker service-nøkkelen.
-  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-  const erSystemkall = serviceKey && authHeader === `Bearer ${serviceKey}`
-
-  let utfortAvUserId: string | null = null
-  if (!erSystemkall) {
-    const bruker = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!, {
-      global: { headers: { Authorization: authHeader } },
+  if (req.method !== 'POST') {
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+      status: 405,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
-    const { data: userData, error: userError } = await bruker.auth.getUser()
-    if (userError || !userData?.user) return json({ error: 'Ikke autorisert' }, 401)
-    // Avsenderen er alltid den innloggede brukeren – aldri klientens påstand.
-    utfortAvUserId = userData.user.id
   }
-
-  let body: HendelsePayload
-  try {
-    body = await req.json()
-  } catch {
-    return json({ error: 'Ugyldig JSON' }, 400)
-  }
-
-  if (!body?.hendelse || !GYLDIGE_HENDELSER.includes(body.hendelse)) {
-    return json({ error: `Ukjent hendelse. Gyldige: ${GYLDIGE_HENDELSER.join(', ')}` }, 400)
-  }
-  for (const nokkel of ['prosjekt_id', 'oppgave_id', 'salgsmulighet_id', 'selskap_id', 'lead_id'] as const) {
-    const verdi = body[nokkel]
-    if (verdi !== undefined && verdi !== null && !UUID_RE.test(String(verdi))) {
-      return json({ error: `${nokkel} må være en gyldig id` }, 400)
-    }
-  }
-
-  try {
-    const resultater = await behandleHendelse(adminKlient(), {
-      ...body,
-      utfort_av_user_id: utfortAvUserId,
-    })
-    return json({ ok: true, sendt: resultater.filter(r => r.sendt).length, resultater })
-  } catch (error) {
-    console.error('Varsling feilet', error instanceof Error ? error.message : String(error))
-    return json({ error: 'Kunne ikke sende varsel' }, 500)
-  }
+  return autoEpostAvslattSvar('crm-varsel')
 })

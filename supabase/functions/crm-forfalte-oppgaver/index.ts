@@ -1,4 +1,5 @@
 import { adminKlient, sendForfalteOppgaver } from '../_shared/crm-varsel/hendelser.ts'
+import { serveUtenAutoEpost } from "../_shared/auto-epost-stopp.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -6,7 +7,7 @@ const corsHeaders = {
 }
 
 // Kjøres daglig kl. 08:00 norsk tid av en cron-jobb.
-Deno.serve(async (req) => {
+serveUtenAutoEpost("crm-forfalte-oppgaver", async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
   try {

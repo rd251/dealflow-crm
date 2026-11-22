@@ -2,6 +2,7 @@
 // Kjøres av cron kl. 06:00 UTC.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { sendTemplateEmail } from "../_shared/transactional-email-templates/send-email.ts";
+import { serveUtenAutoEpost } from "../_shared/auto-epost-stopp.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -27,7 +28,7 @@ function dyplenke(rad: Record<string, any>): { lenke: string; tekst: string } {
   return { lenke: `${APP_URL}/relasjoner`, tekst: "Åpne relasjoner" };
 }
 
-Deno.serve(async (req) => {
+serveUtenAutoEpost("nudge-awaiting-reply", async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {

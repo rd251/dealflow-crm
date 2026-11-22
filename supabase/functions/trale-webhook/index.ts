@@ -312,7 +312,8 @@ Deno.serve(async (req) => {
       }).eq("id", matchedSm.id);
     }
 
-    // 6. Auto-oppgaver fra action items (eller AI neste steg)
+    // 6. Oppgaver lages ikke automatisk fra møtenotater (kun forslag i neste_steg).
+    //    Brukeren oppretter oppgaven selv hvis forslaget er riktig.
     const createdTaskIds: string[] = [];
     const ansvarligName = matchedSm?.ansvarlig || null;
     let ansvarligUserId: string | null = null;
@@ -321,58 +322,6 @@ Deno.serve(async (req) => {
       const { data: profile } = await supabase
         .from("profiles").select("user_id").eq("display_name", ansvarligName).maybeSingle();
       ansvarligUserId = profile?.user_id || null;
-    }
-
-    // Calculate deadline: 2 business days
-    const frist = new Date();
-    let daysAdded = 0;
-    while (daysAdded < 2) {
-      frist.setDate(frist.getDate() + 1);
-      const day = frist.getDay();
-      if (day !== 0 && day !== 6) daysAdded++;
-    }
-    const fristStr = frist.toISOString().split("T")[0];
-
-    if (actionItems.length > 0 && (matchedSm || selskapId)) {
-      // Create tasks from parsed action items
-      for (const item of actionItems.slice(0, 5)) { // Max 5 tasks
-        const { data: task } = await supabase
-          .from("oppgaver")
-          .insert({
-            oppgave: item,
-            ansvarlig: ansvarligName,
-            user_id: ansvarligUserId,
-            salgsmulighet_id: matchedSm?.id || null,
-            selskap_id: selskapId,
-            kontakt_id: kontaktId,
-            frist: fristStr,
-            prioritet: "Høy",
-            status: "Åpen",
-            notater: `Automatisk fra Trale-møte: ${meeting.name || meeting.title || "Møte"}`,
-          })
-          .select("id")
-          .single();
-        if (task?.id) createdTaskIds.push(task.id);
-      }
-    } else if (aiNesteSteg && matchedSm) {
-      // Fallback: single task from AI suggestion
-      const { data: task } = await supabase
-        .from("oppgaver")
-        .insert({
-          oppgave: aiNesteSteg,
-          ansvarlig: ansvarligName,
-          user_id: ansvarligUserId,
-          salgsmulighet_id: matchedSm.id,
-          selskap_id: selskapId,
-          kontakt_id: kontaktId,
-          frist: fristStr,
-          prioritet: "Høy",
-          status: "Åpen",
-          notater: `Automatisk fra Trale-møte: ${meeting.name || meeting.title || "Møte"}`,
-        })
-        .select("id")
-        .single();
-      if (task?.id) createdTaskIds.push(task.id);
     }
 
     // 7. Notify responsible user

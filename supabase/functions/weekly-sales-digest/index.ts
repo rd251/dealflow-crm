@@ -1,12 +1,13 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { sendTemplateEmailWithLog } from '../_shared/transactional-email-templates/send-and-log.ts'
+import { serveUtenAutoEpost } from "../_shared/auto-epost-stopp.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-Deno.serve(async (req) => {
+serveUtenAutoEpost("weekly-sales-digest", async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
