@@ -1516,6 +1516,19 @@ export default function Salgsmuligheter() {
                   )}
                 </DetailSection>
 
+                {canEdit && (
+                  <DetailSection title="Koble til selskap">
+                    <EntityLinkPicker
+                      options={selskaper
+                        .map(s => ({ id: s.id, label: s.firmanavn, sublabel: s.domene || s.orgnr || undefined }))
+                        .sort((a, b) => a.label.localeCompare(b.label, "nb"))}
+                      value={currentSm.selskap_id || null}
+                      onChange={(id) => updateField("selskap_id", id)}
+                      placeholder="Søk etter selskap..."
+                    />
+                  </DetailSection>
+                )}
+
                 {selskap && (
                   <>
                     <DetailDivider />
