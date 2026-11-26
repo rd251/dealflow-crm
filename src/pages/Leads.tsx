@@ -779,6 +779,9 @@ export default function Leads() {
                   <span className="truncate tabular-nums">{linje2}</span>
                   {kvalitet.firmaUklart && <span className="shrink-0 rounded bg-destructive/10 px-1.5 py-0.5 text-[10px] font-medium text-destructive">Firma uklart</span>}
                 </span>
+                <span className="min-w-0 max-w-full [&>span]:max-w-full [&>span]:break-words [&>span]:whitespace-normal [&>svg]:shrink-0">
+                  <BrregMerke brreg={lead.brreg} />
+                </span>
                 {onske && <span className="line-clamp-2 text-xs text-foreground/80">Ønsker: {onske}</span>}
                 {lead.pinned_notat?.trim() && <PinnedNotatBoks notat={lead.pinned_notat} />}
                 {neste && <span className={`text-xs tabular-nums ${neste.haster ? "font-semibold text-warning" : "text-muted-foreground"}`}>{neste.tekst}</span>}
