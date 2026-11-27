@@ -197,7 +197,12 @@ export default function LoggUtfall({ target, navn: navnProp, oppgaveId, ansvarli
       nullstill();
     } catch (err) {
       console.error(err);
-      toast.error("Kunne ikke lagre loggen");
+      const e = err as { message?: string; code?: string; status?: number };
+      const msg = `${e?.message ?? ""} ${e?.code ?? ""}`;
+      const utlogget = e?.status === 401 || /jwt|PGRST30[0-3]|not authenticated|row-level security/i.test(msg);
+      toast.error(utlogget
+        ? "Kunne ikke lagre loggen – du er logget ut. Logg inn igjen og prøv på nytt (kopier gjerne notatet først)."
+        : `Kunne ikke lagre loggen${e?.message ? `: ${e.message}` : ""}`);
     } finally { setLagrer(false); }
   };
 
